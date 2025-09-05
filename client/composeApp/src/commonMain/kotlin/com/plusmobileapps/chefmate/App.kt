@@ -16,8 +16,8 @@ import androidx.compose.ui.Modifier
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-import chefmate.composeapp.generated.resources.Res
-import chefmate.composeapp.generated.resources.compose_multiplatform
+import chefmate.client.composeapp.generated.resources.Res
+import chefmate.client.composeapp.generated.resources.compose_multiplatform
 
 @Composable
 @Preview
