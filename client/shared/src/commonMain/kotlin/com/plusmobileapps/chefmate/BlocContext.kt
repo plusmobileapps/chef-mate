@@ -7,11 +7,14 @@ import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.arkivanov.essenty.instancekeeper.InstanceKeeperOwner
 import com.arkivanov.essenty.lifecycle.LifecycleOwner
 import com.arkivanov.essenty.statekeeper.StateKeeperOwner
+import com.plusmobileapps.chefmate.database.Database
 import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.IO
 
 interface BlocContext : GenericComponentContext<BlocContext> {
+
+    val database: Database
 
     val mainContext: CoroutineContext
 
@@ -24,6 +27,7 @@ interface BlocContext : GenericComponentContext<BlocContext> {
 
 class DefaultBlocContext(
     componentContext: ComponentContext,
+    override val database: Database,
     override val mainContext: CoroutineContext = Dispatchers.Main,
     override val ioContext: CoroutineContext = Dispatchers.IO,
     override val defaultContext: CoroutineContext = Dispatchers.Default,
@@ -44,6 +48,7 @@ class DefaultBlocContext(
             )
             DefaultBlocContext(
                 componentContext = ctx,
+                database = database,
                 mainContext = mainContext,
                 ioContext = ioContext,
                 defaultContext = defaultContext,
