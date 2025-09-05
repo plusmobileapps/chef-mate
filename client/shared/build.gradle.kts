@@ -18,15 +18,16 @@ kotlin {
     iosSimulatorArm64()
     
     jvm()
-    
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        browser()
-    }
+//
+//    @OptIn(ExperimentalWasmDsl::class)
+//    wasmJs {
+//        browser()
+//    }
     
     sourceSets {
         commonMain.dependencies {
-            // put your Multiplatform dependencies here
+            api(libs.arkivanov.decompose.core)
+            api(libs.kotlin.coroutines.core)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

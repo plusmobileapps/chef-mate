@@ -35,3 +35,4 @@ plugins {
 include(":client:composeApp")
 include(":server")
 include(":client:shared")
+include(":client:groceryList")
