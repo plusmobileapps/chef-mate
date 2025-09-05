@@ -1,0 +1,59 @@
+@file:OptIn(ExperimentalTime::class)
+
+package com.plusmobileapps.chefmate.grocerylist
+
+import app.cash.sqldelight.coroutines.asFlow
+import com.plusmobileapps.chefmate.database.GroceryQueries
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
+
+interface GroceryRepository {
+
+    fun getGroceries(): Flow<List<GroceryItem>>
+
+    suspend fun addGrocery(name: String)
+
+    suspend fun updateChecked(item: GroceryItem, isChecked: Boolean)
+
+    suspend fun deleteGrocery(item: GroceryItem)
+}
+
+class GroceryRepositoryImpl(
+    private val queries: GroceryQueries,
+    private val ioContext: CoroutineContext,
+) : GroceryRepository {
+    override fun getGroceries(): Flow<List<GroceryItem>> =
+        queries.readAll()
+            .asFlow()
+            .map { it.executeAsList() }
+            .map { items -> items.map { GroceryItem.fromEntity(it) } }
+            .flowOn(ioContext)
+
+    override suspend fun addGrocery(name: String)  {
+        withContext(ioContext) {
+            val now = Clock.System.now().toString()
+            queries.create(name = name, isChecked = false, createdAt = now, updatedAt = now)
+        }
+    }
+
+    override suspend fun updateChecked(item: GroceryItem, isChecked: Boolean){
+        withContext(ioContext) {
+            queries.updateChecked(
+                isChecked = isChecked,
+                updatedAt = Clock.System.now().toString(),
+                id = item.id
+            )
+        }
+    }
+
+    override suspend fun deleteGrocery(item: GroceryItem) {
+        withContext(ioContext) {
+            queries.delete(item.id)
+        }
+    }
+}
