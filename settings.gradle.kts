@@ -33,6 +33,7 @@ plugins {
 }
 
 include(":client:composeApp")
-include(":server")
-include(":client:shared")
+include(":client:database")
 include(":client:groceryList")
+include(":client:shared")
+include(":server")

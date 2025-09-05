@@ -44,6 +44,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(projects.client.shared)
             implementation(projects.client.groceryList)
+            implementation(projects.client.database)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

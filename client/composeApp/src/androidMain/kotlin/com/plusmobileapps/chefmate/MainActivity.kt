@@ -10,7 +10,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        val context = DefaultBlocContext(defaultComponentContext())
+        val application = application as MyApplication
+        val context = DefaultBlocContext(
+            componentContext = defaultComponentContext(),
+            database = application.database
+        )
         setContent {
             App(context)
         }

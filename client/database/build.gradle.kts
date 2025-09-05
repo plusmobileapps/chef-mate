@@ -1,10 +1,9 @@
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.sqldelight)
 }
 
 kotlin {
@@ -13,26 +12,34 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
+
     iosArm64()
     iosSimulatorArm64()
-    
+
     jvm()
-    
+
     sourceSets {
         commonMain.dependencies {
-            api(libs.arkivanov.decompose.core)
-            api(libs.kotlin.coroutines.core)
-            api(projects.client.database)
+            api(libs.sqldelight.coroutines)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlin.coroutines.test)
+        }
+        androidMain.dependencies {
+            implementation(libs.sqldelight.drivers.android)
+        }
+        iosMain.dependencies {
+            implementation(libs.sqldelight.drivers.native)
+        }
+        jvmMain.dependencies {
+            implementation(libs.sqldelight.drivers.jvm)
         }
     }
 }
 
 android {
-    namespace = "com.plusmobileapps.chefmate.shared"
+    namespace = "com.plusmobileapps.chefmate.client.database"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -40,5 +47,13 @@ android {
     }
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
+    }
+}
+
+sqldelight {
+    databases {
+        create("Database") {
+            packageName.set("com.plusmobileapps.chefmate.database")
+        }
     }
 }

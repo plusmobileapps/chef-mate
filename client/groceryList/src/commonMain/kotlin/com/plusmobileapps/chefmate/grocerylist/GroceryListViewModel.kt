@@ -7,12 +7,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
 class GroceryListViewModel(
     mainContext: CoroutineContext,
+    private val repository: GroceryRepository
 ) : ViewModel(mainContext) {
 
     private val _state = MutableStateFlow(State())
@@ -22,28 +24,28 @@ class GroceryListViewModel(
 
     val newGroceryItemName: StateFlow<String> = _newGroceryItemName.asStateFlow()
 
+    init {
+        scope.launch {
+            repository.getGroceries().collect {
+                _state.update { currentState ->
+                    currentState.copy(items = it)
+                }
+            }
+        }
+    }
+
     fun onGroceryItemCheckedChange(
         item: GroceryItem,
         isChecked: Boolean
     ) {
-        _state.update { currentState ->
-            val newItems = currentState.items.map {
-                if (it.id == item.id) {
-                    it.copy(isChecked = isChecked)
-                } else {
-                    it
-                }
-            }
-            currentState.copy(items = newItems)
+        scope.launch {
+            repository.updateChecked(item, isChecked)
         }
     }
 
     fun onGroceryItemDelete(item: GroceryItem) {
-        _state.update { currentState ->
-            val newItems = currentState.items.filter {
-                it.id != item.id
-            }
-            currentState.copy(items = newItems)
+        scope.launch {
+            repository.deleteGrocery(item)
         }
     }
 
@@ -60,8 +62,8 @@ class GroceryListViewModel(
             name = name,
             isChecked = false
         )
-        _state.update { currentState ->
-            currentState.copy(items = currentState.items + newItem)
+        scope.launch {
+            repository.addGrocery(newItem.name)
         }
         _newGroceryItemName.value = ""
     }

@@ -10,7 +10,7 @@ class GroceryListBlocImpl(
 ) : GroceryListBloc, BlocContext by context {
 
     private val viewModel = instanceKeeper.getViewModel {
-        GroceryListViewModel(mainContext)
+        GroceryListViewModel(mainContext, GroceryRepositoryImpl(database.groceryQueries, ioContext))
     }
 
     override val state: StateFlow<GroceryListBloc.Model> = viewModel.state.mapState {
