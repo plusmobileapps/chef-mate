@@ -13,6 +13,7 @@ composeHotReload = "1.0.0-beta06"
 composeMultiplatform = "1.8.2"
 coroutines = "1.10.2"
 decompose = "3.3.0"
+essenty = "2.5.0"
 junit = "4.13.2"
 kotlin = "2.2.10"
 kotlinx-coroutines = "1.10.2"
@@ -32,6 +33,9 @@ androidx-lifecycle-viewmodelCompose = { module = "org.jetbrains.androidx.lifecyc
 androidx-lifecycle-runtimeCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 arkivanov-decompose-core = { group = "com.arkivanov.decompose", name = "decompose", version.ref = "decompose" }
 arkivanov-decompose-compose-extensions = { group = "com.arkivanov.decompose", name = "extensions-compose", version.ref = "decompose" }
+essenty-lifecycle = { group = "com.arkivanov.essenty", name = "lifecycle", version.ref = "essenty" }
+essenty-backhandler = { group = "com.arkivanov.essenty", name = "back-handler", version.ref = "essenty" }
+essenty-lifecycle-coroutines = {group = "com.arkivanov.essenty", name = "lifecycle-coroutines", version.ref = "essenty" }
 kotlinx-coroutinesSwing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 kotlinx-serialization-json = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0"
 kotlin-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }

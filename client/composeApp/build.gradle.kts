@@ -25,6 +25,8 @@ kotlin {
             baseName = "ComposeApp"
             isStatic = true
             export(libs.arkivanov.decompose.core)
+            export(libs.essenty.lifecycle)
+            export(libs.essenty.backhandler)
         }
     }
 
@@ -38,6 +40,8 @@ kotlin {
         commonMain.dependencies {
             api(libs.arkivanov.decompose.core)
             api(libs.arkivanov.decompose.compose.extensions)
+            api(libs.essenty.lifecycle)
+            api(libs.essenty.backhandler)
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
