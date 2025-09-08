@@ -1,5 +1,6 @@
-package com.plusmobileapps.chefmate.grocerylist
+package com.plusmobileapps.chefmate.grocerylist.list
 
+import com.plusmobileapps.chefmate.grocerylist.GroceryItem
 import kotlinx.coroutines.flow.StateFlow
 
 interface GroceryListBloc {
@@ -16,7 +17,13 @@ interface GroceryListBloc {
 
     fun saveGroceryItem()
 
+    fun onGroceryItemClicked(item: GroceryItem)
+
     data class Model(
         val items: List<GroceryItem> = emptyList(),
     )
+
+    sealed class Output {
+        data class OpenDetail(val id: Long) : Output()
+    }
 }

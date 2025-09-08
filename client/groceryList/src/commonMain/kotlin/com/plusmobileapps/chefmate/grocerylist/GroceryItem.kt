@@ -8,6 +8,12 @@ data class GroceryItem(
     val isChecked: Boolean = false
 ) {
     companion object {
+        val empty = GroceryItem(
+            id = 0L,
+            name = "",
+            isChecked = false
+        )
+
         fun fromEntity(entity: Grocery): GroceryItem {
             return GroceryItem(
                 id = entity.id,

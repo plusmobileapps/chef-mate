@@ -6,9 +6,12 @@ import com.arkivanov.decompose.GenericComponentContext
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.arkivanov.essenty.instancekeeper.InstanceKeeperOwner
 import com.arkivanov.essenty.lifecycle.LifecycleOwner
+import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import com.arkivanov.essenty.statekeeper.StateKeeperOwner
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.SupervisorJob
 import kotlin.coroutines.CoroutineContext
 
 interface BlocContext : GenericComponentContext<BlocContext> {
@@ -20,6 +23,8 @@ interface BlocContext : GenericComponentContext<BlocContext> {
     val defaultContext: CoroutineContext
 
     val unconfinedContext: CoroutineContext
+
+    fun createScope(): CoroutineScope
 }
 
 class DefaultBlocContext(
@@ -50,4 +55,8 @@ class DefaultBlocContext(
                 unconfinedContext = unconfinedContext
             )
         }
+
+    override fun createScope(): CoroutineScope {
+        return coroutineScope(mainContext + SupervisorJob())
+    }
 }
