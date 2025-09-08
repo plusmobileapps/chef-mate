@@ -8,18 +8,13 @@ import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 
 fun main() {
     val lifecycle = LifecycleRegistry()
+    val rootBloc = buildRoot(DefaultComponentContext(lifecycle))
     application {
         Window(
             onCloseRequest = ::exitApplication,
             title = "Chef Mate",
         ) {
-            App(
-                DefaultBlocContext(
-                    componentContext = DefaultComponentContext(
-                        lifecycle = lifecycle
-                    )
-                )
-            )
+            App(rootBloc = rootBloc)
         }
     }
 }
