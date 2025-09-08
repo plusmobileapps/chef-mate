@@ -2,7 +2,7 @@ package com.plusmobileapps.chefmate.root
 
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
-import com.plusmobileapps.chefmate.grocerylist.GroceryListBloc
+import com.plusmobileapps.chefmate.grocerylist.list.GroceryListBloc
 
 interface RootBloc {
 

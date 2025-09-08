@@ -1,5 +1,6 @@
-package com.plusmobileapps.chefmate.grocerylist
+package com.plusmobileapps.chefmate.grocerylist.list
 
+import com.plusmobileapps.chefmate.grocerylist.GroceryItem
 import kotlinx.coroutines.flow.StateFlow
 
 interface GroceryListBloc {

@@ -2,7 +2,7 @@ package com.plusmobileapps.chefmate.root
 
 import com.plusmobileapps.chefmate.ApplicationComponent
 import com.plusmobileapps.chefmate.BlocContext
-import com.plusmobileapps.chefmate.grocerylist.GroceryListBlocImpl
+import com.plusmobileapps.chefmate.grocerylist.list.GroceryListBlocImpl
 
 object RootBlocFactory {
     fun create(

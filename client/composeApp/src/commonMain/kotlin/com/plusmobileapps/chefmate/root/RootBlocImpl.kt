@@ -5,7 +5,7 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
-import com.plusmobileapps.chefmate.grocerylist.GroceryListBloc
+import com.plusmobileapps.chefmate.grocerylist.list.GroceryListBloc
 import kotlinx.serialization.Serializable
 
 class RootBlocImpl(

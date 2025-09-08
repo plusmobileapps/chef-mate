@@ -1,7 +1,9 @@
-package com.plusmobileapps.chefmate.grocerylist
+package com.plusmobileapps.chefmate.grocerylist.list
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.getViewModel
+import com.plusmobileapps.chefmate.grocerylist.GroceryItem
+import com.plusmobileapps.chefmate.grocerylist.GroceryRepository
 import com.plusmobileapps.chefmate.mapState
 import kotlinx.coroutines.flow.StateFlow
 
