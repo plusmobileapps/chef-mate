@@ -3,16 +3,25 @@ import SwiftUI
 import ComposeApp
 
 struct ComposeView: UIViewControllerRepresentable {
+    let rootBloc: RootBloc
+    
     func makeUIViewController(context: Context) -> UIViewController {
-        MainViewControllerKt.MainViewController()
+        let controller = MainViewControllerKt.MainViewController(rootBloc: rootBloc)
+        controller.overrideUserInterfaceStyle = .light
+        return controller
     }
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
 }
 
 struct ContentView: View {
+    @UIApplicationDelegateAdaptor(AppDelegate.self)
+    var appDelegate: AppDelegate
+    
     var body: some View {
-        ComposeView()
+        ComposeView(
+            rootBloc: appDelegate.root
+        )
             .ignoresSafeArea()
     }
 }
