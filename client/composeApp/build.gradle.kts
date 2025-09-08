@@ -24,6 +24,7 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
+            linkerOpts.add("-lsqlite3")
             export(libs.arkivanov.decompose.core)
             export(libs.essenty.lifecycle)
             export(libs.essenty.backhandler)
