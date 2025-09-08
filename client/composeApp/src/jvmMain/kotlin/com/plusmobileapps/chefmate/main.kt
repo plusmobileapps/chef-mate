@@ -8,7 +8,11 @@ import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 
 fun main() {
     val lifecycle = LifecycleRegistry()
-    val rootBloc = buildRoot(DefaultComponentContext(lifecycle))
+    val appComponent = JvmApplicationComponent()
+    val rootBloc = buildRoot(
+        componentContext = DefaultComponentContext(lifecycle = lifecycle),
+        applicationComponent = appComponent,
+    )
     application {
         Window(
             onCloseRequest = ::exitApplication,

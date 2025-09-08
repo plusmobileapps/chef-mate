@@ -8,8 +8,8 @@ import com.arkivanov.essenty.instancekeeper.InstanceKeeperOwner
 import com.arkivanov.essenty.lifecycle.LifecycleOwner
 import com.arkivanov.essenty.statekeeper.StateKeeperOwner
 import kotlinx.coroutines.Dispatchers
-import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.IO
+import kotlin.coroutines.CoroutineContext
 
 interface BlocContext : GenericComponentContext<BlocContext> {
 

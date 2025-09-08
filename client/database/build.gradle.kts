@@ -3,9 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.composeMultiplatform)
-    alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.composeHotReload)
+    alias(libs.plugins.sqldelight)
 }
 
 kotlin {
@@ -22,30 +20,26 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.client.shared)
-            implementation(projects.client.database)
-            implementation(libs.arkivanov.decompose.core)
-            implementation(libs.kotlin.coroutines.core)
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.materialIconsExtended)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
+            api(libs.sqldelight.coroutines)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlin.coroutines.test)
         }
         androidMain.dependencies {
-            implementation(compose.preview)
+            implementation(libs.sqldelight.drivers.android)
+        }
+        iosMain.dependencies {
+            implementation(libs.sqldelight.drivers.native)
+        }
+        jvmMain.dependencies {
+            implementation(libs.sqldelight.drivers.jvm)
         }
     }
 }
 
 android {
-    namespace = "com.plusmobileapps.chefmate.grocerylist"
+    namespace = "com.plusmobileapps.chefmate.client.database"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -53,5 +47,13 @@ android {
     }
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
+    }
+}
+
+sqldelight {
+    databases {
+        create("Database") {
+            packageName.set("com.plusmobileapps.chefmate.database")
+        }
     }
 }

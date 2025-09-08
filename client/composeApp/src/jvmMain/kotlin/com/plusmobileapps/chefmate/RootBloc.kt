@@ -6,8 +6,10 @@ import com.plusmobileapps.chefmate.root.RootBlocFactory
 
 fun buildRoot(
     componentContext: ComponentContext,
+    applicationComponent: ApplicationComponent,
 ): RootBloc = RootBlocFactory.create(
-    DefaultBlocContext(
+    context = DefaultBlocContext(
         componentContext = componentContext,
-    )
+    ),
+    appComponent = applicationComponent,
 )

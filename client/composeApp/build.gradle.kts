@@ -24,6 +24,7 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
+            linkerOpts.add("-lsqlite3")
             export(libs.arkivanov.decompose.core)
             export(libs.essenty.lifecycle)
             export(libs.essenty.backhandler)
@@ -53,6 +54,7 @@ kotlin {
             implementation(projects.client.shared)
             implementation(projects.client.groceryList)
             implementation(libs.kotlinx.serialization.json)
+            implementation(projects.client.database)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

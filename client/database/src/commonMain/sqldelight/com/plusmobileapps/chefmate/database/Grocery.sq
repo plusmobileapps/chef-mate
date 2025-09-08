@@ -1,0 +1,21 @@
+import kotlin.Boolean;
+
+CREATE TABLE Grocery (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    isChecked INTEGER AS Boolean NOT NULL DEFAULT 0,
+    createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+    updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+create:
+INSERT INTO Grocery (name, isChecked, createdAt, updatedAt) VALUES (?, ?, ?, ?);
+
+readAll:
+SELECT * FROM Grocery ORDER BY name DESC;
+
+updateChecked:
+UPDATE Grocery SET isChecked = ?, updatedAt = ? WHERE id = ?;
+
+delete:
+DELETE FROM Grocery WHERE id = ?;

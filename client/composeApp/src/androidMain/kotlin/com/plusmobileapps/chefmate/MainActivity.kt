@@ -10,7 +10,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        val rootBloc = buildRootBloc(defaultComponentContext())
+        val appComponent = (application as MyApplication).appComponent
+        val rootBloc = buildRootBloc(
+            componentContext = defaultComponentContext(),
+            applicationComponent = appComponent,
+        )
         setContent {
             App(rootBloc)
         }

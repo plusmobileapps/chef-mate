@@ -7,10 +7,11 @@ import kotlinx.coroutines.flow.StateFlow
 
 class GroceryListBlocImpl(
     context: BlocContext,
+    private val repository: GroceryRepository,
 ) : GroceryListBloc, BlocContext by context {
 
     private val viewModel = instanceKeeper.getViewModel {
-        GroceryListViewModel(mainContext)
+        GroceryListViewModel(mainContext, repository)
     }
 
     override val state: StateFlow<GroceryListBloc.Model> = viewModel.state.mapState {
