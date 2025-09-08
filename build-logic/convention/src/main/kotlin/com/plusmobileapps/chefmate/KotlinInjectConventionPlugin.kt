@@ -117,5 +117,11 @@ class KotlinInjectConventionPlugin : Plugin<Project> {
             .configureEach {
                 dependsOn("kspCommonMainKotlinMetadata")
             }
+
+        // Add explicit dependency for KSP JVM tasks
+        project.tasks.matching { it.name.startsWith("ksp") && it.name.contains("Jvm") }
+            .configureEach {
+                dependsOn("kspCommonMainKotlinMetadata")
+            }
     }
 }
