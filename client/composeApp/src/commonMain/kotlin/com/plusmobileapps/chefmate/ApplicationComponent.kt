@@ -15,7 +15,6 @@ interface ApplicationComponent {
     val database: Database
 
     val ioContext: CoroutineContext
-        get() = Dispatchers.IO
 
     val groceryRepository: GroceryRepository
 }
@@ -24,6 +23,9 @@ class DefaultApplicationComponent(
     override val driverFactory: DriverFactory,
 ) : ApplicationComponent {
     override val database: Database = createDatabase(driverFactory)
+
+    override val ioContext: CoroutineContext
+        get() = Dispatchers.IO
 
     override val groceryRepository: GroceryRepository = GroceryRepositoryImpl(
         queries = database.groceryQueries,
