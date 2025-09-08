@@ -19,3 +19,9 @@ UPDATE Grocery SET isChecked = ?, updatedAt = ? WHERE id = ?;
 
 delete:
 DELETE FROM Grocery WHERE id = ?;
+
+getGroceryById:
+SELECT * FROM Grocery WHERE id = ?;
+
+update:
+UPDATE Grocery SET name = ?, isChecked = ?, updatedAt = ? WHERE id = ?;

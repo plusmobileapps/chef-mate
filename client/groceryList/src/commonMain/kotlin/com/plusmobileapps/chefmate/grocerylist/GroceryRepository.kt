@@ -21,6 +21,10 @@ interface GroceryRepository {
     suspend fun updateChecked(item: GroceryItem, isChecked: Boolean)
 
     suspend fun deleteGrocery(item: GroceryItem)
+
+    suspend fun getGrocery(id: Long): GroceryItem?
+
+    suspend fun updateGrocery(item: GroceryItem)
 }
 
 class GroceryRepositoryImpl(
@@ -54,6 +58,23 @@ class GroceryRepositoryImpl(
     override suspend fun deleteGrocery(item: GroceryItem) {
         withContext(ioContext) {
             queries.delete(item.id)
+        }
+    }
+
+    override suspend fun getGrocery(id: Long): GroceryItem? = withContext(ioContext) {
+        queries.getGroceryById(id)
+            .executeAsOneOrNull()
+            ?.let { GroceryItem.fromEntity(it) }
+    }
+
+    override suspend fun updateGrocery(item: GroceryItem) {
+        withContext(ioContext) {
+            queries.update(
+                name = item.name,
+                isChecked = item.isChecked,
+                updatedAt = Clock.System.now().toString(),
+                id = item.id
+            )
         }
     }
 }

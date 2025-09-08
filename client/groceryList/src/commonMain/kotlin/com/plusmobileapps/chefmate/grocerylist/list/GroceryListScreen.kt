@@ -50,14 +50,15 @@ fun GroceryListScreen(bloc: GroceryListBloc) {
                     GroceryListItem(
                         item = item,
                         onCheckedChange = bloc::onGroceryItemCheckedChange,
-                        onDeleteClick = bloc::onGroceryItemDelete
+                        onDeleteClick = bloc::onGroceryItemDelete,
+                        onGroceryClick = bloc::onGroceryItemClicked,
                     )
                 }
             }
             GroceryListInput(
                 name = bloc.newGroceryItemName,
                 onNameChange = bloc::onNewGroceryItemNameChange,
-                onAddClick = bloc::saveGroceryItem
+                onAddClick = bloc::saveGroceryItem,
             )
         }
     }
@@ -91,12 +92,13 @@ private fun GroceryListItem(
     item: GroceryItem,
     onCheckedChange: (GroceryItem, Boolean) -> Unit,
     onDeleteClick: (GroceryItem) -> Unit,
+    onGroceryClick: (GroceryItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
         modifier = modifier.fillMaxWidth()
             .clickable {
-                onCheckedChange(item, !item.isChecked)
+                onGroceryClick(item)
             },
         verticalAlignment = Alignment.CenterVertically,
     ) {

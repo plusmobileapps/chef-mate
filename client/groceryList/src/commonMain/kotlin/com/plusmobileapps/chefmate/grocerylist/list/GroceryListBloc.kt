@@ -17,7 +17,13 @@ interface GroceryListBloc {
 
     fun saveGroceryItem()
 
+    fun onGroceryItemClicked(item: GroceryItem)
+
     data class Model(
         val items: List<GroceryItem> = emptyList(),
     )
+
+    sealed class Output {
+        data class OpenDetail(val id: Long) : Output()
+    }
 }

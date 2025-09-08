@@ -23,6 +23,7 @@ kotlin {
         commonMain.dependencies {
             api(libs.arkivanov.decompose.core)
             api(libs.kotlin.coroutines.core)
+            implementation(libs.essenty.lifecycle.coroutines)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
