@@ -6,12 +6,22 @@ import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.grocerylist.GroceryItem
 import com.plusmobileapps.chefmate.grocerylist.GroceryRepository
 import com.plusmobileapps.chefmate.mapState
+import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
 import kotlinx.coroutines.flow.StateFlow
+import me.tatarka.inject.annotations.Assisted
+import me.tatarka.inject.annotations.Inject
+import software.amazon.lastmile.kotlin.inject.anvil.AppScope
+import software.amazon.lastmile.kotlin.inject.anvil.ContributesBinding
 
+@Inject
+@ContributesAssistedFactory(
+    scope = AppScope::class,
+    assistedFactory = GroceryListBloc.Factory::class
+)
 class GroceryListBlocImpl(
-    context: BlocContext,
-    private val repository: GroceryRepository,
-    private val output: Consumer<GroceryListBloc.Output>
+    @Assisted context: BlocContext,
+    @Assisted private val output: Consumer<GroceryListBloc.Output>,
+    private val repository: GroceryRepository
 ) : GroceryListBloc, BlocContext by context {
 
     private val viewModel = instanceKeeper.getViewModel {

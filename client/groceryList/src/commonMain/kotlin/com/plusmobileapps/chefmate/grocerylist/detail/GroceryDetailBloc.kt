@@ -1,6 +1,8 @@
 package com.plusmobileapps.chefmate.grocerylist.detail
 
 import com.plusmobileapps.chefmate.BackClickBloc
+import com.plusmobileapps.chefmate.BlocContext
+import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.grocerylist.GroceryItem
 import kotlinx.coroutines.flow.StateFlow
 
@@ -23,6 +25,14 @@ interface GroceryDetailBloc : BackClickBloc {
 
     sealed class Output {
         data object Finished : Output()
+    }
+
+    fun interface Factory {
+        fun create(
+            context: BlocContext,
+            id: Long,
+            output: Consumer<Output>
+        ): GroceryDetailBloc
     }
 
 }

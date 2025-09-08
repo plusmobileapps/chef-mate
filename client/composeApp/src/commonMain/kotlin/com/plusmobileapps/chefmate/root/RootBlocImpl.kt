@@ -16,8 +16,8 @@ import kotlinx.serialization.Serializable
 
 class RootBlocImpl(
     context: BlocContext,
-    private val groceryListBloc: (BlocContext, Consumer<GroceryListBloc.Output>) -> GroceryListBloc,
-    private val groceryDetail: (BlocContext, Long, Consumer<GroceryDetailBloc.Output>) -> GroceryDetailBloc
+    private val groceryListBloc: GroceryListBloc.Factory,
+    private val groceryDetail: GroceryDetailBloc.Factory
 ) : RootBloc, BlocContext by context {
 
     private val navigation = StackNavigation<Configuration>()
@@ -39,11 +39,11 @@ class RootBlocImpl(
     private fun createChild(config: Configuration, context: BlocContext): RootBloc.Child =
         when (config) {
             Configuration.GroceryList -> GroceryList(
-                bloc = groceryListBloc(context, ::onListOutput)
+                bloc = groceryListBloc.create(context, ::onListOutput)
             )
 
             is Configuration.GroceryDetail -> GroceryDetail(
-                bloc = groceryDetail(
+                bloc = groceryDetail.create(
                     context,
                     config.itemId,
                     ::onDetailOutput,

@@ -4,10 +4,15 @@ package com.plusmobileapps.chefmate.grocerylist
 
 import app.cash.sqldelight.coroutines.asFlow
 import com.plusmobileapps.chefmate.database.GroceryQueries
+import com.plusmobileapps.chefmate.di.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import me.tatarka.inject.annotations.Inject
+import software.amazon.lastmile.kotlin.inject.anvil.AppScope
+import software.amazon.lastmile.kotlin.inject.anvil.ContributesBinding
+import software.amazon.lastmile.kotlin.inject.anvil.SingleIn
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -27,9 +32,15 @@ interface GroceryRepository {
     suspend fun updateGrocery(item: GroceryItem)
 }
 
+@Inject
+@SingleIn(AppScope::class)
+@ContributesBinding(
+    scope = AppScope::class,
+    boundType = GroceryRepository::class,
+)
 class GroceryRepositoryImpl(
     private val queries: GroceryQueries,
-    private val ioContext: CoroutineContext,
+    @IO private val ioContext: CoroutineContext,
 ) : GroceryRepository {
     override fun getGroceries(): Flow<List<GroceryItem>> =
         queries.readAll()
