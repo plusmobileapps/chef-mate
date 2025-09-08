@@ -32,6 +32,7 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
-include(":composeApp")
+include(":client:composeApp")
 include(":server")
-include(":shared")
+include(":client:shared")
+include(":client:groceryList")
