@@ -12,12 +12,21 @@ import com.plusmobileapps.chefmate.grocerylist.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.grocerylist.list.GroceryListBloc
 import com.plusmobileapps.chefmate.root.RootBloc.Child.GroceryDetail
 import com.plusmobileapps.chefmate.root.RootBloc.Child.GroceryList
+import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
 import kotlinx.serialization.Serializable
+import me.tatarka.inject.annotations.Assisted
+import me.tatarka.inject.annotations.Inject
+import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 
+@Inject
+@ContributesAssistedFactory(
+    scope = AppScope::class,
+    assistedFactory = RootBloc.Factory::class,
+)
 class RootBlocImpl(
-    context: BlocContext,
-    private val groceryListBloc: (BlocContext, Consumer<GroceryListBloc.Output>) -> GroceryListBloc,
-    private val groceryDetail: (BlocContext, Long, Consumer<GroceryDetailBloc.Output>) -> GroceryDetailBloc
+    @Assisted context: BlocContext,
+    private val groceryListBloc: GroceryListBloc.Factory,
+    private val groceryDetail: GroceryDetailBloc.Factory
 ) : RootBloc, BlocContext by context {
 
     private val navigation = StackNavigation<Configuration>()
@@ -39,11 +48,11 @@ class RootBlocImpl(
     private fun createChild(config: Configuration, context: BlocContext): RootBloc.Child =
         when (config) {
             Configuration.GroceryList -> GroceryList(
-                bloc = groceryListBloc(context, ::onListOutput)
+                bloc = groceryListBloc.create(context, ::onListOutput)
             )
 
             is Configuration.GroceryDetail -> GroceryDetail(
-                bloc = groceryDetail(
+                bloc = groceryDetail.create(
                     context,
                     config.itemId,
                     ::onDetailOutput,

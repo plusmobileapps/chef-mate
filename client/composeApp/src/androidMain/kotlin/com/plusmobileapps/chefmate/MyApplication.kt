@@ -1,6 +1,8 @@
 package com.plusmobileapps.chefmate
 
 import android.app.Application
+import com.plusmobileapps.chefmate.di.AndroidApplicationComponent
+import com.plusmobileapps.chefmate.di.create
 
 class MyApplication : Application() {
 
@@ -8,6 +10,6 @@ class MyApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        appComponent = AndroidApplicationComponent(this)
+        appComponent = AndroidApplicationComponent::class.create(this)
     }
 }

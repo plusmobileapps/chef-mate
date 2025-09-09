@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.grocerylist.list
 
+import com.plusmobileapps.chefmate.BlocContext
+import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.grocerylist.GroceryItem
 import kotlinx.coroutines.flow.StateFlow
 
@@ -25,5 +27,9 @@ interface GroceryListBloc {
 
     sealed class Output {
         data class OpenDetail(val id: Long) : Output()
+    }
+
+    fun interface Factory {
+        fun create(context: BlocContext, output: Consumer<Output>): GroceryListBloc
     }
 }

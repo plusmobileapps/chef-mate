@@ -17,6 +17,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             stateKeeper: nil,
             instanceKeeper: nil,
             backHandler: nil
-        )
+        ),
+        application: UIApplication.shared
     )
 }

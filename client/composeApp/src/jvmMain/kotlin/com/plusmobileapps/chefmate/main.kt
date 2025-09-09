@@ -8,7 +8,7 @@ import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 
 fun main() {
     val lifecycle = LifecycleRegistry()
-    val appComponent = JvmApplicationComponent()
+    val appComponent = JvmApplicationComponent::class.create()
     val rootBloc = buildRoot(
         componentContext = DefaultComponentContext(lifecycle = lifecycle),
         applicationComponent = appComponent,

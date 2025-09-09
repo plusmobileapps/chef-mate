@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.kotlinInject)
 }
 
 kotlin {
@@ -54,7 +55,7 @@ kotlin {
             implementation(projects.client.shared)
             implementation(projects.client.groceryList)
             implementation(libs.kotlinx.serialization.json)
-            implementation(projects.client.database)
+            api(projects.client.database)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
