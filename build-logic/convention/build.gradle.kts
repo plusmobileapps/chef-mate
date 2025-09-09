@@ -11,6 +11,10 @@ gradlePlugin {
             id = "com.plusmobileapps.chefmate.kotlin-inject"
             implementationClass = "com.plusmobileapps.chefmate.KotlinInjectConventionPlugin"
         }
+        create("kotlinMultiplatform") {
+            id = "com.plusmobileapps.chefmate.kotlin-multiplatform"
+            implementationClass = "com.plusmobileapps.chefmate.KotlinMultiplatformConventionPlugin"
+        }
     }
 }
 
