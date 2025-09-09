@@ -12,10 +12,19 @@ import com.plusmobileapps.chefmate.grocerylist.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.grocerylist.list.GroceryListBloc
 import com.plusmobileapps.chefmate.root.RootBloc.Child.GroceryDetail
 import com.plusmobileapps.chefmate.root.RootBloc.Child.GroceryList
+import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
 import kotlinx.serialization.Serializable
+import me.tatarka.inject.annotations.Assisted
+import me.tatarka.inject.annotations.Inject
+import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 
+@Inject
+@ContributesAssistedFactory(
+    scope = AppScope::class,
+    assistedFactory = RootBloc.Factory::class,
+)
 class RootBlocImpl(
-    context: BlocContext,
+    @Assisted context: BlocContext,
     private val groceryListBloc: GroceryListBloc.Factory,
     private val groceryDetail: GroceryDetailBloc.Factory
 ) : RootBloc, BlocContext by context {
