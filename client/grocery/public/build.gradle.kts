@@ -3,16 +3,14 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
-    alias(libs.plugins.kotlinInject)
 }
 
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.client.shared)
-            implementation(projects.client.database)
-            implementation(libs.arkivanov.decompose.core)
-            implementation(libs.kotlin.coroutines.core)
+            api(libs.arkivanov.decompose.core)
+            api(libs.kotlin.coroutines.core)
+            api(projects.client.shared)
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
@@ -23,8 +21,8 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
-            implementation(libs.kotlin.coroutines.test)
         }
+
         androidMain.dependencies {
             implementation(compose.preview)
         }
@@ -32,5 +30,5 @@ kotlin {
 }
 
 plusMobile {
-    namespace = "com.plusmobileapps.chefmate.grocerylist"
+    namespace = "com.plusmobileapps.chefmate.grocery"
 }

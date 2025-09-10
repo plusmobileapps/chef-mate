@@ -1,9 +1,9 @@
-package com.plusmobileapps.chefmate.grocerylist.detail
+package com.plusmobileapps.chefmate.grocery.detail
 
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
-import com.plusmobileapps.chefmate.grocerylist.GroceryItem
+import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import kotlinx.coroutines.flow.StateFlow
 
 interface GroceryDetailBloc : BackClickBloc {

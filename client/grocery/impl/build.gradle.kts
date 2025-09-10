@@ -1,13 +1,14 @@
 plugins {
     alias(libs.plugins.kmpLibrary)
+    alias(libs.plugins.kotlinInject)
 }
 
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            api(libs.arkivanov.decompose.core)
-            implementation(projects.client.shared)
             implementation(projects.client.grocery.public)
+            implementation(libs.arkivanov.decompose.core)
+            implementation(projects.client.database)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -16,5 +17,5 @@ kotlin {
 }
 
 plusMobile {
-    namespace = "com.plusmobileapps.chefmate.root"
+    namespace = "com.plusmobileapps.chefmate.grocery.impl"
 }

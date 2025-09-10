@@ -10,7 +10,7 @@ kotlin {
             implementation(projects.client.root.public)
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
-            implementation(projects.client.groceryList)
+            implementation(projects.client.grocery.public)
             implementation(libs.kotlinx.serialization.json)
         }
         commonTest.dependencies {

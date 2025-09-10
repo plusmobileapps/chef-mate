@@ -1,17 +1,16 @@
-package com.plusmobileapps.chefmate.grocerylist.list
+package com.plusmobileapps.chefmate.grocery.list
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.getViewModel
-import com.plusmobileapps.chefmate.grocerylist.GroceryItem
-import com.plusmobileapps.chefmate.grocerylist.GroceryRepository
+import com.plusmobileapps.chefmate.grocery.data.GroceryItem
+import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
 import kotlinx.coroutines.flow.StateFlow
 import me.tatarka.inject.annotations.Assisted
 import me.tatarka.inject.annotations.Inject
 import software.amazon.lastmile.kotlin.inject.anvil.AppScope
-import software.amazon.lastmile.kotlin.inject.anvil.ContributesBinding
 
 @Inject
 @ContributesAssistedFactory(

@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.grocerylist.list
+package com.plusmobileapps.chefmate.grocery.list
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -25,7 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.plusmobileapps.chefmate.grocerylist.GroceryItem
+import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import kotlinx.coroutines.flow.StateFlow
 
 @OptIn(ExperimentalMaterial3Api::class)

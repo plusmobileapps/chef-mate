@@ -1,10 +1,10 @@
 @file:OptIn(ExperimentalTime::class)
 
-package com.plusmobileapps.chefmate.grocerylist.list
+package com.plusmobileapps.chefmate.grocery.list
 
 import com.plusmobileapps.chefmate.ViewModel
-import com.plusmobileapps.chefmate.grocerylist.GroceryItem
-import com.plusmobileapps.chefmate.grocerylist.GroceryRepository
+import com.plusmobileapps.chefmate.grocery.data.GroceryItem
+import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

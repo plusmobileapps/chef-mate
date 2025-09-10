@@ -8,8 +8,8 @@ import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.plusmobileapps.chefmate.grocerylist.detail.GroceryDetailScreen
-import com.plusmobileapps.chefmate.grocerylist.list.GroceryListScreen
+import com.plusmobileapps.chefmate.grocery.list.GroceryListScreen
+import com.plusmobileapps.chefmate.grocery.detail.GroceryDetailScreen
 import com.plusmobileapps.chefmate.root.RootBloc
 import org.jetbrains.compose.ui.tooling.preview.Preview
 

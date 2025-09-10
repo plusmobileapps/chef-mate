@@ -1,8 +1,8 @@
-package com.plusmobileapps.chefmate.grocerylist.detail
+package com.plusmobileapps.chefmate.grocery.detail
 
 import com.plusmobileapps.chefmate.ViewModel
-import com.plusmobileapps.chefmate.grocerylist.GroceryItem
-import com.plusmobileapps.chefmate.grocerylist.GroceryRepository
+import com.plusmobileapps.chefmate.grocery.data.GroceryItem
+import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
