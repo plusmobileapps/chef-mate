@@ -7,7 +7,7 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.client.root.api)
+            implementation(projects.client.root.public)
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
             implementation(projects.client.groceryList)

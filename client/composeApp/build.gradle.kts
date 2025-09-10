@@ -30,7 +30,7 @@ kotlin {
             export(libs.arkivanov.decompose.core)
             export(libs.essenty.lifecycle)
             export(libs.essenty.backhandler)
-            export(projects.client.root.api)
+            export(projects.client.root.public)
         }
     }
 
@@ -56,7 +56,7 @@ kotlin {
             api(projects.client.groceryList)
             implementation(libs.kotlinx.serialization.json)
             api(projects.client.database)
-            api(projects.client.root.api)
+            api(projects.client.root.public)
             api(projects.client.root.impl)
         }
         androidMain.dependencies {
