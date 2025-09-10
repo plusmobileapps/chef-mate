@@ -1,7 +1,5 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
-    alias(libs.plugins.kmp)
+    alias(libs.plugins.kmpLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
@@ -33,6 +31,6 @@ kotlin {
     }
 }
 
-android {
+plusMobile {
     namespace = "com.plusmobileapps.chefmate.grocerylist"
 }

@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.kmp)
+    alias(libs.plugins.kmpLibrary)
     alias(libs.plugins.kotlinInject)
 }
 
@@ -16,6 +16,6 @@ kotlin {
     }
 }
 
-android {
+plusMobile {
     namespace = "com.plusmobileapps.chefmate.root"
 }

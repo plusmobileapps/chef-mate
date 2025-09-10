@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.kmp)
+    alias(libs.plugins.kmpLibrary)
     alias(libs.plugins.kotlinInject)
     alias(libs.plugins.kotlinSerialization)
 }
@@ -17,4 +17,8 @@ kotlin {
             implementation(libs.kotlin.test)
         }
     }
+}
+
+plusMobile {
+    namespace = "com.plusmobileapps.chefmate.root.impl"
 }

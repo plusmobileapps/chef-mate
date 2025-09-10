@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate
+package com.plusmobileapps.chefmate.convention
 
 import com.google.devtools.ksp.gradle.KspAATask
 import org.gradle.api.Plugin
@@ -10,7 +10,6 @@ import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 class KotlinInjectConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {

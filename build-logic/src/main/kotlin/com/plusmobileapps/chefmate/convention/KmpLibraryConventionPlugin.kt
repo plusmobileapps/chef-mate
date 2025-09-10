@@ -1,37 +1,50 @@
-package com.plusmobileapps.chefmate
+package com.plusmobileapps.chefmate.convention
 
+import com.android.build.api.variant.LibraryAndroidComponentsExtension
 import com.android.build.gradle.LibraryExtension
+import com.plusmobileapps.chefmate.libs
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
-import org.gradle.kotlin.dsl.kotlin
-import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.gradle.kotlin.dsl.create
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.gradle.api.artifacts.VersionCatalogsExtension
-import org.gradle.kotlin.dsl.getByType
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
-class KotlinMultiplatformConventionPlugin : Plugin<Project> {
+class KmpLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
+            // Create plusMobile extension for configuration
+            val plusMobileExtension = extensions.create<PlusMobileExtension>("plusMobile")
+
             with(pluginManager) {
                 apply("org.jetbrains.kotlin.multiplatform")
                 apply("com.android.library")
             }
 
-            val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
+            val androidComponents =
+                extensions.getByType(LibraryAndroidComponentsExtension::class.java)
 
-            extensions.configure<LibraryExtension> {
-                namespace = "com.plusmobileapps.chefmate.${project.name}"
-                compileSdk = libs.findVersion("android.compileSdk").get().toString().toInt()
+            androidComponents.finalizeDsl {
+                extensions.configure<LibraryExtension> {
+                    // Use the configured namespace or fall back to the default
+                    namespace = plusMobileExtension.namespace ?: throw IllegalStateException("""
+                    Please set the namespace for the module $name in the plusMobile extension in the module's build.gradle.kts file.
+                    Example:
+                    plusMobile {
+                        namespace = "com.plusmobileapps.chefmate.${project.name}"
+                    }
+                """.trimIndent())
+                    compileSdk = libs.versions.android.compileSdk.get().toInt()
 
-                compileOptions {
-                    sourceCompatibility = JavaVersion.VERSION_11
-                    targetCompatibility = JavaVersion.VERSION_11
-                }
+                    compileOptions {
+                        sourceCompatibility = JavaVersion.VERSION_11
+                        targetCompatibility = JavaVersion.VERSION_11
+                    }
 
-                defaultConfig {
-                    minSdk = libs.findVersion("android.minSdk").get().toString().toInt()
+                    defaultConfig {
+                        minSdk = libs.versions.android.minSdk.get().toInt()
+                    }
                 }
             }
 

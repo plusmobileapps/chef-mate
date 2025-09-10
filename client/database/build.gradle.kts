@@ -1,7 +1,5 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
-    alias(libs.plugins.kmp)
+    alias(libs.plugins.kmpLibrary)
     alias(libs.plugins.sqldelight)
     alias(libs.plugins.kotlinInject)
 }
@@ -34,4 +32,8 @@ sqldelight {
             packageName.set("com.plusmobileapps.chefmate.database")
         }
     }
+}
+
+plusMobile {
+    namespace = "com.plusmobileapps.chefmate.database"
 }

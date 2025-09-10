@@ -9,11 +9,11 @@ gradlePlugin {
     plugins {
         create("kotlinInject") {
             id = "com.plusmobileapps.chefmate.kotlin-inject"
-            implementationClass = "com.plusmobileapps.chefmate.KotlinInjectConventionPlugin"
+            implementationClass = "com.plusmobileapps.chefmate.convention.KotlinInjectConventionPlugin"
         }
-        create("kotlinMultiplatform") {
-            id = "com.plusmobileapps.chefmate.kotlin-multiplatform"
-            implementationClass = "com.plusmobileapps.chefmate.KotlinMultiplatformConventionPlugin"
+        create("kmpLibrary") {
+            id = "com.plusmobileapps.chefmate.kmp-library"
+            implementationClass = "com.plusmobileapps.chefmate.convention.KmpLibraryConventionPlugin"
         }
     }
 }
@@ -25,7 +25,9 @@ repositories {
 }
 
 dependencies {
-    implementation(libs.kotlin.gradle.plugin)
-    implementation(libs.android.gradle.plugin)
+    compileOnly(libs.kotlin.gradle.plugin)
+    compileOnly(libs.android.gradle.plugin)
+
     implementation("com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:${libs.versions.ksp.get()}")
+    implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
 }
