@@ -13,88 +13,92 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 class KotlinInjectConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
-        with(target) {
-            val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
+        target.applyKotlinInject()
+    }
+}
 
-            // Apply KSP plugin first
-            pluginManager.apply("com.google.devtools.ksp")
+fun Project.applyKotlinInject() {
+    with(this) {
+        val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
-            // Configure Kotlin Multiplatform
-            extensions.configure<KotlinMultiplatformExtension> {
+        // Apply KSP plugin first
+        pluginManager.apply("com.google.devtools.ksp")
 
-                androidTarget {
-                    compilerOptions {
-                        jvmTarget.set(JvmTarget.JVM_11)
-                    }
-                }
+        // Configure Kotlin Multiplatform
+        extensions.configure<KotlinMultiplatformExtension> {
 
-                iosArm64()
-                iosSimulatorArm64()
-
-                jvm()
-
-                // Configure source sets
-                sourceSets.apply {
-                    getByName("commonMain") {
-                        kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
-                        dependencies {
-                            implementation(libs.findLibrary("kotlininject-core-runtime").get())
-                            implementation(libs.findLibrary("kotlininject-anvil-runtime").get())
-                            implementation(
-                                libs.findLibrary("kotlininject-anvil-runtime-optional").get()
-                            )
-                        }
-                    }
+            androidTarget {
+                compilerOptions {
+                    jvmTarget.set(JvmTarget.JVM_11)
                 }
             }
 
-            // Add dependencies after KSP plugin is applied
-            dependencies {
-                val targets = listOf(
-                    "kspAndroid",
-                    "kspIosArm64",
-                    "kspIosSimulatorArm64",
-                    "kspJvm"
-                )
+            iosArm64()
+            iosSimulatorArm64()
 
-                // kotlin-inject
-                add("kspCommonMainMetadata", libs.findLibrary("kotlininject-core-compiler").get())
-                add("commonMainImplementation", libs.findLibrary("kotlininject-core-runtime").get())
-                targets.forEach {
-                    add(it, libs.findLibrary("kotlininject-core-compiler").get())
-                }
+            jvm()
 
-                // kotlin-inject-anvil
-                add(
-                    "commonMainImplementation",
-                    libs.findLibrary("kotlininject-anvil-runtime").get()
-                )
-                add(
-                    "commonMainImplementation",
-                    libs.findLibrary("kotlininject-anvil-runtime-optional").get()
-                )
-                targets.forEach {
-                    add(it, libs.findLibrary("kotlininject-anvil-compiler").get())
-                }
-
-                // kotlin-inject-anvil-extensions
-                add(
-                    "commonMainImplementation",
-                    libs.findLibrary("kotlininject-anvil-extensions-assisted-factory-runtime").get()
-                )
-                targets.forEach {
-                    add(
-                        it,
-                        libs.findLibrary("kotlininject-anvil-extensions-assisted-factory-compiler")
-                            .get()
-                    )
+            // Configure source sets
+            sourceSets.apply {
+                getByName("commonMain") {
+                    kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
+                    dependencies {
+                        implementation(libs.findLibrary("kotlininject-core-runtime").get())
+                        implementation(libs.findLibrary("kotlininject-anvil-runtime").get())
+                        implementation(
+                            libs.findLibrary("kotlininject-anvil-runtime-optional").get()
+                        )
+                    }
                 }
             }
+        }
 
-            tasks.withType<KspAATask>().configureEach {
-                if (name != "kspCommonMainKotlinMetadata") {
-                    dependsOn("kspCommonMainKotlinMetadata")
-                }
+        // Add dependencies after KSP plugin is applied
+        dependencies {
+            val targets = listOf(
+                "kspAndroid",
+                "kspIosArm64",
+                "kspIosSimulatorArm64",
+                "kspJvm"
+            )
+
+            // kotlin-inject
+            add("kspCommonMainMetadata", libs.findLibrary("kotlininject-core-compiler").get())
+            add("commonMainImplementation", libs.findLibrary("kotlininject-core-runtime").get())
+            targets.forEach {
+                add(it, libs.findLibrary("kotlininject-core-compiler").get())
+            }
+
+            // kotlin-inject-anvil
+            add(
+                "commonMainImplementation",
+                libs.findLibrary("kotlininject-anvil-runtime").get()
+            )
+            add(
+                "commonMainImplementation",
+                libs.findLibrary("kotlininject-anvil-runtime-optional").get()
+            )
+            targets.forEach {
+                add(it, libs.findLibrary("kotlininject-anvil-compiler").get())
+            }
+
+            // kotlin-inject-anvil-extensions
+            add(
+                "commonMainImplementation",
+                libs.findLibrary("kotlininject-anvil-extensions-assisted-factory-runtime").get()
+            )
+            targets.forEach {
+                add(
+                    it,
+                    libs.findLibrary("kotlininject-anvil-extensions-assisted-factory-compiler")
+                        .get()
+                )
+            }
+        }
+
+        tasks.withType<KspAATask>().configureEach {
+            if (name != "kspCommonMainKotlinMetadata") {
+                dependsOn("kspCommonMainKotlinMetadata")
             }
         }
     }

@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.kmpLibrary)
     alias(libs.plugins.sqldelight)
-    alias(libs.plugins.kotlinInject)
 }
 
 kotlin {
@@ -34,6 +33,7 @@ sqldelight {
     }
 }
 
-plusMobile {
+plusLibrary {
     namespace = "com.plusmobileapps.chefmate.database"
+    enableDi = true
 }

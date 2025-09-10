@@ -16,6 +16,6 @@ kotlin {
     }
 }
 
-plusMobile {
+plusLibrary {
     namespace = "com.plusmobileapps.chefmate.grocery"
 }

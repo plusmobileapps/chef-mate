@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.kmpLibrary)
-    alias(libs.plugins.kotlinInject)
 }
 
 kotlin {
@@ -16,6 +15,7 @@ kotlin {
     }
 }
 
-plusMobile {
+plusLibrary {
     namespace = "com.plusmobileapps.chefmate.shared"
+    enableDi = true
 }

@@ -15,12 +15,20 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
             // Create plusMobile extension for configuration
-            val plusMobileExtension = extensions.create<PlusMobileExtension>("plusMobile")
+            val plusLibraryExtension = extensions.create<PlusLibraryExtension>("plusLibrary")
+
+            // Add afterEvaluate hook to catch property changes
+            afterEvaluate {
+                if (plusLibraryExtension.enableDi) {
+                    applyKotlinInject()
+                }
+            }
 
             with(pluginManager) {
                 apply("org.jetbrains.kotlin.multiplatform")
                 apply("com.android.library")
             }
+
 
             val androidComponents =
                 extensions.getByType(LibraryAndroidComponentsExtension::class.java)
@@ -28,10 +36,10 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
             androidComponents.finalizeDsl {
                 extensions.configure<LibraryExtension> {
                     // Use the configured namespace or fall back to the default
-                    namespace = plusMobileExtension.namespace ?: throw IllegalStateException("""
+                    namespace = plusLibraryExtension.namespace ?: throw IllegalStateException("""
                     Please set the namespace for the module $name in the plusMobile extension in the module's build.gradle.kts file.
                     Example:
-                    plusMobile {
+                    plusLibrary {
                         namespace = "com.plusmobileapps.chefmate.${project.name}"
                     }
                 """.trimIndent())
