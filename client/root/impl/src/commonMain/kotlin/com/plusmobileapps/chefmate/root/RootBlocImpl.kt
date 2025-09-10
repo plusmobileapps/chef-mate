@@ -7,11 +7,8 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
-import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.grocerylist.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.grocerylist.list.GroceryListBloc
-import com.plusmobileapps.chefmate.root.RootBloc.Child.GroceryDetail
-import com.plusmobileapps.chefmate.root.RootBloc.Child.GroceryList
 import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
 import kotlinx.serialization.Serializable
 import me.tatarka.inject.annotations.Assisted
@@ -47,11 +44,11 @@ class RootBlocImpl(
 
     private fun createChild(config: Configuration, context: BlocContext): RootBloc.Child =
         when (config) {
-            Configuration.GroceryList -> GroceryList(
+            Configuration.GroceryList -> RootBloc.Child.GroceryList(
                 bloc = groceryListBloc.create(context, ::onListOutput)
             )
 
-            is Configuration.GroceryDetail -> GroceryDetail(
+            is Configuration.GroceryDetail -> RootBloc.Child.GroceryDetail(
                 bloc = groceryDetail.create(
                     context,
                     config.itemId,

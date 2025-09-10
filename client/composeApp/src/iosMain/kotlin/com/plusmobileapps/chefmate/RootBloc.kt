@@ -6,14 +6,16 @@ import com.plusmobileapps.chefmate.di.createIosAppComponent
 import com.plusmobileapps.chefmate.root.RootBloc
 import platform.UIKit.UIApplication
 
-fun buildRootBloc(
-    componentContext: ComponentContext,
-    application: UIApplication,
-): RootBloc {
-    val applicationComponent = IosApplicationComponent::class.createIosAppComponent(application)
-    return applicationComponent.rootBlocFactory.create(
-        DefaultBlocContext(
-            componentContext = componentContext,
+object RootBlocProvider {
+    fun buildRootBloc(
+        componentContext: ComponentContext,
+        application: UIApplication,
+    ): RootBloc {
+        val applicationComponent = IosApplicationComponent::class.createIosAppComponent(application)
+        return applicationComponent.rootBlocFactory.create(
+            DefaultBlocContext(
+                componentContext = componentContext,
+            )
         )
-    )
+    }
 }

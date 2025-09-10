@@ -6,7 +6,7 @@ struct ComposeView: UIViewControllerRepresentable {
     let rootBloc: RootBloc
     
     func makeUIViewController(context: Context) -> UIViewController {
-        let controller = MainViewControllerKt.MainViewController(rootBloc: rootBloc)
+        let controller = MainViewController.shared.create(rootBloc: rootBloc)
         controller.overrideUserInterfaceStyle = .light
         return controller
     }

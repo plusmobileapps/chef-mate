@@ -7,6 +7,7 @@ plugins {
 }
 
 kotlin {
+
     sourceSets {
         commonMain.dependencies {
             api(libs.sqldelight.coroutines)
@@ -25,10 +26,6 @@ kotlin {
             implementation(libs.sqldelight.drivers.jvm)
         }
     }
-}
-
-android {
-    namespace = "com.plusmobileapps.chefmate.client.database"
 }
 
 sqldelight {

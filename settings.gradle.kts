@@ -36,5 +36,7 @@ plugins {
 include(":client:composeApp")
 include(":client:database")
 include(":client:groceryList")
+include(":client:root:impl")
+include(":client:root:api")
 include(":client:shared")
 include(":server")

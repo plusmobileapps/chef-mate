@@ -1,11 +1,13 @@
 package com.plusmobileapps.chefmate
 
+import com.google.devtools.ksp.gradle.KspAATask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.getByType
+import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
@@ -35,6 +37,7 @@ class KotlinInjectConventionPlugin : Plugin<Project> {
                 // Configure source sets
                 sourceSets.apply {
                     getByName("commonMain") {
+                        kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
                         dependencies {
                             implementation(libs.findLibrary("kotlininject-core-runtime").get())
                             implementation(libs.findLibrary("kotlininject-anvil-runtime").get())
@@ -44,9 +47,6 @@ class KotlinInjectConventionPlugin : Plugin<Project> {
                         }
                     }
                 }
-
-                // Apply KSP configuration
-                configureCommonMainKsp()
             }
 
             // Add dependencies after KSP plugin is applied
@@ -91,37 +91,12 @@ class KotlinInjectConventionPlugin : Plugin<Project> {
                     )
                 }
             }
-        }
-    }
 
-    // Extension function to configure KSP for commonMain
-    private fun KotlinMultiplatformExtension.configureCommonMainKsp() {
-        sourceSets.named("commonMain").configure {
-            kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
-        }
-
-        project.tasks.withType(KotlinCompilationTask::class.java).configureEach {
-            if (name != "kspCommonMainKotlinMetadata") {
-                dependsOn("kspCommonMainKotlinMetadata")
+            tasks.withType<KspAATask>().configureEach {
+                if (name != "kspCommonMainKotlinMetadata") {
+                    dependsOn("kspCommonMainKotlinMetadata")
+                }
             }
         }
-
-        // Add explicit dependency for KSP Android tasks
-        project.tasks.matching { it.name.startsWith("ksp") && it.name.contains("Android") }
-            .configureEach {
-                dependsOn("kspCommonMainKotlinMetadata")
-            }
-
-        // Add explicit dependency for KSP iOS tasks
-        project.tasks.matching { it.name.startsWith("ksp") && it.name.contains("Ios") }
-            .configureEach {
-                dependsOn("kspCommonMainKotlinMetadata")
-            }
-
-        // Add explicit dependency for KSP JVM tasks
-        project.tasks.matching { it.name.startsWith("ksp") && it.name.contains("Jvm") }
-            .configureEach {
-                dependsOn("kspCommonMainKotlinMetadata")
-            }
     }
 }

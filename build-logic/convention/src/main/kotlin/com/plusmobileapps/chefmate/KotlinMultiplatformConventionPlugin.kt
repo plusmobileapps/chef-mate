@@ -43,12 +43,12 @@ class KotlinMultiplatformConventionPlugin : Plugin<Project> {
                     }
                 }
 
-                // Configure iOS targets
-                listOf(
-                    iosArm64(),
-                    iosSimulatorArm64()
-                ).forEach { iosTarget ->
-                    // iOS-specific configurations can be added here if needed
+                // Configure iOS targets with explicit source set assignment
+                val iosArm64Target = iosArm64()
+                val iosSimulatorArm64Target = iosSimulatorArm64()
+
+                // Configure framework for iOS
+                listOf(iosArm64Target, iosSimulatorArm64Target).forEach { iosTarget ->
                     iosTarget.binaries.framework {
                         baseName = target.name.replaceFirstChar { it.uppercase() }
                         isStatic = true
@@ -60,23 +60,31 @@ class KotlinMultiplatformConventionPlugin : Plugin<Project> {
 
                 // Default source sets configuration
                 sourceSets.apply {
-                    getByName("commonMain").dependencies {
+                    val commonMain = getByName("commonMain")
+                    val androidMain = getByName("androidMain")
+                    val jvmMain = getByName("jvmMain")
+                    val iosMain = create("iosMain") {
+                    }
+
+                    // Add dependencies to source sets
+                    commonMain.dependencies {
                         // Common dependencies can be added here if needed
+                    }
+
+                    androidMain.dependencies {
+                        // Android-specific dependencies can be added here
+                    }
+
+                    jvmMain.dependencies {
+                        // JVM-specific dependencies can be added here
+                    }
+
+                    iosMain.dependencies {
+
                     }
 
                     getByName("commonTest").dependencies {
                         implementation(kotlin("test"))
-                    }
-
-                    getByName("androidMain").dependencies {
-                        // Android-specific dependencies can be added here
-                    }
-
-                    val iosMain = create("iosMain")
-                    iosMain.dependsOn(getByName("commonMain"))
-
-                    getByName("jvmMain").dependencies {
-                        // JVM-specific dependencies can be added here
                     }
                 }
             }

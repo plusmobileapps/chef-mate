@@ -1,5 +1,6 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -29,16 +30,15 @@ kotlin {
             export(libs.arkivanov.decompose.core)
             export(libs.essenty.lifecycle)
             export(libs.essenty.backhandler)
+            export(projects.client.root.api)
         }
     }
 
     jvm()
 
+    applyDefaultHierarchyTemplate()
+
     sourceSets {
-        androidMain.dependencies {
-            implementation(compose.preview)
-            implementation(libs.androidx.activity.compose)
-        }
         commonMain.dependencies {
             api(libs.arkivanov.decompose.core)
             api(libs.arkivanov.decompose.compose.extensions)
@@ -52,10 +52,16 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
-            implementation(projects.client.shared)
-            implementation(projects.client.groceryList)
+            api(projects.client.shared)
+            api(projects.client.groceryList)
             implementation(libs.kotlinx.serialization.json)
             api(projects.client.database)
+            api(projects.client.root.api)
+            api(projects.client.root.impl)
+        }
+        androidMain.dependencies {
+            implementation(compose.preview)
+            implementation(libs.androidx.activity.compose)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

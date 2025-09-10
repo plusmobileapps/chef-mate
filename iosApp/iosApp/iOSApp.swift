@@ -11,7 +11,7 @@ struct iOSApp: App {
 }
 
 class AppDelegate: NSObject, UIApplicationDelegate {
-    lazy var root: RootBloc = RootBlocKt.buildRootBloc(
+    lazy var root: RootBloc = RootBlocProvider.shared.buildRootBloc(
         componentContext: DefaultComponentContext(
             lifecycle: ApplicationLifecycle(),
             stateKeeper: nil,
