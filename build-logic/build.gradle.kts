@@ -24,6 +24,11 @@ gradlePlugin {
             id = "com.plusmobileapps.chefmate.ktlint"
             implementationClass = "com.plusmobileapps.chefmate.convention.KtlintConventionPlugin"
         }
+
+        create("testing") {
+            id = "com.plusmobileapps.chefmate.testing"
+            implementationClass = "com.plusmobileapps.chefmate.convention.TestingConventionPlugin"
+        }
     }
 }
 
