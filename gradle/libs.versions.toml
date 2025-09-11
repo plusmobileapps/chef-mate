@@ -15,6 +15,8 @@ coroutines = "1.10.2"
 decompose = "3.3.0"
 essenty = "2.5.0"
 junit = "4.13.2"
+mokkery = "2.8.0"
+kotest = "6.0.3"
 kotlin = "2.1.21"
 kotlinx-coroutines = "1.10.2"
 kotlininject = "0.7.2"
@@ -25,6 +27,7 @@ ktlint = "13.1.0"
 ksp = "2.1.21-2.0.2"
 logback = "1.5.18"
 sqldelight = "2.1.0"
+turbine = "1.2.1"
 
 [libraries]
 android-gradle-plugin = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
@@ -45,6 +48,11 @@ compose-multiplatform-gradle-plugin = { module = "org.jetbrains.compose:org.jetb
 essenty-lifecycle = { group = "com.arkivanov.essenty", name = "lifecycle", version.ref = "essenty" }
 essenty-backhandler = { group = "com.arkivanov.essenty", name = "back-handler", version.ref = "essenty" }
 essenty-lifecycle-coroutines = {group = "com.arkivanov.essenty", name = "lifecycle-coroutines", version.ref = "essenty" }
+kotest-framework = { group = "io.kotest", name = "kotest-framework-engine", version.ref = "kotest" }
+kotest-runner-junit5 = { group = "io.kotest", name = "kotest-runner-junit5", version.ref = "kotest" }
+kotest-html-reporter = { group = "io.kotest", name = "kotest-extensions-htmlreporter", version.ref = "kotest" }
+kotest-assertions = { group = "io.kotest", name = "kotest-assertions-core", version.ref = "kotest" }
+kotest-properties = { group = "io.kotest", name = "kotest-property", version.ref = "kotest" }
 kotlinx-coroutinesSwing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 kotlinx-serialization-json = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"
 kotlin-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
@@ -67,6 +75,7 @@ sqldelight-primitive-adapters = { group = "app.cash.sqldelight", name = "primiti
 sqldelight-drivers-android = { group = "app.cash.sqldelight", name = "android-driver", version.ref = "sqldelight" }
 sqldelight-drivers-native = { group = "app.cash.sqldelight", name = "native-driver", version.ref = "sqldelight" }
 sqldelight-drivers-jvm = { group = "app.cash.sqldelight", name = "sqlite-driver", version.ref = "sqldelight" }
+turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -74,12 +83,14 @@ androidLibrary = { id = "com.android.library", version.ref = "agp" }
 composeHotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "composeHotReload" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotest = { id = "io.kotest", version.ref = "kotest" }
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+mokkery = { id = "dev.mokkery",  version.ref = "mokkery" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 kotlinInject = { id = "com.plusmobileapps.chefmate.kotlin-inject" }
 kmpLibrary = { id = "com.plusmobileapps.chefmate.kmp-library" }

@@ -22,6 +22,10 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
                 if (plusLibraryExtension.enableDi) {
                     applyKotlinInject()
                 }
+
+                if (plusLibraryExtension.enableTesting) {
+                    applyTesting()
+                }
             }
 
             with(pluginManager) {
