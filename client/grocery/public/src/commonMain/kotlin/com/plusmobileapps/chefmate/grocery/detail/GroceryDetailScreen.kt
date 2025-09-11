@@ -38,7 +38,7 @@ fun GroceryDetailScreen(bloc: GroceryDetailBloc) {
                     IconButton(bloc::onBackClicked) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = "Back",
                         )
                     }
                 },
@@ -50,17 +50,18 @@ fun GroceryDetailScreen(bloc: GroceryDetailBloc) {
             ) {
                 Text("Save")
             }
-        }
+        },
     ) {
         Column(
-            modifier = Modifier.fillMaxSize()
-                .padding(it)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(it),
         ) {
             when (val model = state.value) {
                 is GroceryDetailBloc.Model.Loading -> CircularProgressIndicator()
                 is GroceryDetailBloc.Model.Loaded -> GroceryDetailBody(model.item, bloc)
             }
-
         }
     }
 }
@@ -76,9 +77,11 @@ fun ColumnScope.GroceryDetailBody(
         onValueChange = bloc::onGroceryNameChanged,
     )
     Row(
-        modifier = Modifier.fillMaxWidth()
-            .clickable { bloc.onGroceryCheckedChanged(!item.isChecked) },
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable { bloc.onGroceryCheckedChanged(!item.isChecked) },
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Checkbox(
             checked = item.isChecked,

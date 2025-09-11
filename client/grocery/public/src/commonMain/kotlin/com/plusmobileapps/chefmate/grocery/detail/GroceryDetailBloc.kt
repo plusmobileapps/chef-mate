@@ -7,7 +7,6 @@ import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import kotlinx.coroutines.flow.StateFlow
 
 interface GroceryDetailBloc : BackClickBloc {
-
     val models: StateFlow<Model>
 
     fun onGroceryNameChanged(name: String)
@@ -18,8 +17,9 @@ interface GroceryDetailBloc : BackClickBloc {
 
     sealed class Model {
         object Loading : Model()
+
         data class Loaded(
-            val item: GroceryItem
+            val item: GroceryItem,
         ) : Model()
     }
 
@@ -31,8 +31,7 @@ interface GroceryDetailBloc : BackClickBloc {
         fun create(
             context: BlocContext,
             id: Long,
-            output: Consumer<Output>
+            output: Consumer<Output>,
         ): GroceryDetailBloc
     }
-
 }

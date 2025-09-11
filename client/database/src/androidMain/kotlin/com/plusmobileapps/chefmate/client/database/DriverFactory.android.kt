@@ -6,11 +6,12 @@ import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import com.plusmobileapps.chefmate.database.Database
 
 actual class DriverFactory(
-    private val context: Context
+    private val context: Context,
 ) {
-    actual fun createDriver(): SqlDriver = AndroidSqliteDriver(
-        schema = Database.Schema,
-        context = context,
-        name = "chefmate.db"
-    )
+    actual fun createDriver(): SqlDriver =
+        AndroidSqliteDriver(
+            schema = Database.Schema,
+            context = context,
+            name = "chefmate.db",
+        )
 }

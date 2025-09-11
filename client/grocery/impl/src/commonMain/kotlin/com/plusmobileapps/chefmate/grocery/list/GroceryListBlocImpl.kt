@@ -15,29 +15,31 @@ import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 @Inject
 @ContributesAssistedFactory(
     scope = AppScope::class,
-    assistedFactory = GroceryListBloc.Factory::class
+    assistedFactory = GroceryListBloc.Factory::class,
 )
 class GroceryListBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<GroceryListBloc.Output>,
-    private val repository: GroceryRepository
-) : GroceryListBloc, BlocContext by context {
+    private val repository: GroceryRepository,
+) : GroceryListBloc,
+    BlocContext by context {
+    private val viewModel =
+        instanceKeeper.getViewModel {
+            GroceryListViewModel(mainContext, repository)
+        }
 
-    private val viewModel = instanceKeeper.getViewModel {
-        GroceryListViewModel(mainContext, repository)
-    }
-
-    override val state: StateFlow<GroceryListBloc.Model> = viewModel.state.mapState {
-        GroceryListBloc.Model(
-            items = it.items
-        )
-    }
+    override val state: StateFlow<GroceryListBloc.Model> =
+        viewModel.state.mapState {
+            GroceryListBloc.Model(
+                items = it.items,
+            )
+        }
 
     override val newGroceryItemName: StateFlow<String> = viewModel.newGroceryItemName
 
     override fun onGroceryItemCheckedChange(
         item: GroceryItem,
-        isChecked: Boolean
+        isChecked: Boolean,
     ) {
         viewModel.onGroceryItemCheckedChange(item, isChecked)
     }

@@ -36,14 +36,16 @@ fun GroceryListScreen(bloc: GroceryListBloc) {
         modifier = Modifier.fillMaxWidth(),
         topBar = {
             TopAppBar(title = { Text("Grocery List") })
-        }
+        },
     ) { paddingValues ->
         Column(
-            modifier = Modifier.padding(paddingValues)
-                .fillMaxSize()
+            modifier =
+                Modifier
+                    .padding(paddingValues)
+                    .fillMaxSize(),
         ) {
             LazyColumn(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             ) {
                 items(state.items.size) { index ->
                     val item = state.items[index]
@@ -69,7 +71,7 @@ private fun GroceryListInput(
     name: StateFlow<String>,
     onNameChange: (String) -> Unit,
     onAddClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val state = name.collectAsState()
     OutlinedTextField(
@@ -79,11 +81,11 @@ private fun GroceryListInput(
         trailingIcon = {
             IconButton(
                 onClick = onAddClick,
-                enabled = state.value.isNotBlank()
+                enabled = state.value.isNotBlank(),
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Item")
             }
-        }
+        },
     )
 }
 
@@ -93,17 +95,19 @@ private fun GroceryListItem(
     onCheckedChange: (GroceryItem, Boolean) -> Unit,
     onDeleteClick: (GroceryItem) -> Unit,
     onGroceryClick: (GroceryItem) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier.fillMaxWidth()
-            .clickable {
-                onGroceryClick(item)
-            },
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable {
+                    onGroceryClick(item)
+                },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(
-            onClick = { onCheckedChange(item, !item.isChecked) }
+            onClick = { onCheckedChange(item, !item.isChecked) },
         ) {
             if (item.isChecked) {
                 Icon(Icons.Default.CheckBox, contentDescription = "Checked")
@@ -113,12 +117,14 @@ private fun GroceryListItem(
         }
         Text(
             text = item.name,
-            modifier = Modifier.weight(1f)
-                .padding(start = 8.dp)
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp),
         )
 
         IconButton(
-            onClick = { onDeleteClick(item) }
+            onClick = { onDeleteClick(item) },
         ) {
             Icon(Icons.Default.Delete, "Delete Item")
         }

@@ -31,25 +31,29 @@ class GroceryRepositoryImpl(
     @IO private val ioContext: CoroutineContext,
 ) : GroceryRepository {
     override fun getGroceries(): Flow<List<GroceryItem>> =
-        queries.readAll()
+        queries
+            .readAll()
             .asFlow()
             .map { it.executeAsList() }
             .map { items -> items.map { fromEntity(it) } }
             .flowOn(ioContext)
 
-    override suspend fun addGrocery(name: String)  {
+    override suspend fun addGrocery(name: String) {
         withContext(ioContext) {
             val now = Clock.System.now().toString()
             queries.create(name = name, isChecked = false, createdAt = now, updatedAt = now)
         }
     }
 
-    override suspend fun updateChecked(item: GroceryItem, isChecked: Boolean){
+    override suspend fun updateChecked(
+        item: GroceryItem,
+        isChecked: Boolean,
+    ) {
         withContext(ioContext) {
             queries.updateChecked(
                 isChecked = isChecked,
                 updatedAt = Clock.System.now().toString(),
-                id = item.id
+                id = item.id,
             )
         }
     }
@@ -60,11 +64,13 @@ class GroceryRepositoryImpl(
         }
     }
 
-    override suspend fun getGrocery(id: Long): GroceryItem? = withContext(ioContext) {
-        queries.getGroceryById(id)
-            .executeAsOneOrNull()
-            ?.let { fromEntity(it) }
-    }
+    override suspend fun getGrocery(id: Long): GroceryItem? =
+        withContext(ioContext) {
+            queries
+                .getGroceryById(id)
+                .executeAsOneOrNull()
+                ?.let { fromEntity(it) }
+        }
 
     override suspend fun updateGrocery(item: GroceryItem) {
         withContext(ioContext) {
@@ -72,16 +78,15 @@ class GroceryRepositoryImpl(
                 name = item.name,
                 isChecked = item.isChecked,
                 updatedAt = Clock.System.now().toString(),
-                id = item.id
+                id = item.id,
             )
         }
     }
 
-    fun fromEntity(entity: Grocery): GroceryItem {
-        return GroceryItem(
+    fun fromEntity(entity: Grocery): GroceryItem =
+        GroceryItem(
             id = entity.id,
             name = entity.name,
-            isChecked = entity.isChecked
+            isChecked = entity.isChecked,
         )
-    }
 }

@@ -14,7 +14,6 @@ import kotlin.reflect.KClass
 abstract class IosApplicationComponent(
     @get:Provides val application: UIApplication,
 ) : ApplicationComponent {
-
     @Provides
     fun driverFactory(): DriverFactory = DriverFactory()
 }

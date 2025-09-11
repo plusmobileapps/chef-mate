@@ -9,7 +9,6 @@ import software.amazon.lastmile.kotlin.inject.anvil.SingleIn
 @SingleIn(AppScope::class)
 @MergeComponent(AppScope::class)
 abstract class JvmApplicationComponent : ApplicationComponent {
-
     @Provides
     fun providesDriverFactory(): DriverFactory = DriverFactory()
 }

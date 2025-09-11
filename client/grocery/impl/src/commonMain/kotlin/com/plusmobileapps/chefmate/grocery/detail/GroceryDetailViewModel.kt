@@ -16,8 +16,7 @@ class GroceryDetailViewModel(
     id: Long,
     mainContext: CoroutineContext,
     private val repository: GroceryRepository,
-): ViewModel(mainContext) {
-
+) : ViewModel(mainContext) {
     private val _state = MutableStateFlow(State())
     private val output = Channel<Output>(Channel.BUFFERED)
 
@@ -35,15 +34,17 @@ class GroceryDetailViewModel(
     }
 
     fun onGroceryNameChanged(name: String) {
-        _state.value = _state.value.copy(
-            groceryItem = _state.value.groceryItem.copy(name = name)
-        )
+        _state.value =
+            _state.value.copy(
+                groceryItem = _state.value.groceryItem.copy(name = name),
+            )
     }
 
     fun onGroceryCheckedChanged(isChecked: Boolean) {
-        _state.value = _state.value.copy(
-            groceryItem = _state.value.groceryItem.copy(isChecked = isChecked)
-        )
+        _state.value =
+            _state.value.copy(
+                groceryItem = _state.value.groceryItem.copy(isChecked = isChecked),
+            )
     }
 
     fun save() {
@@ -70,5 +71,4 @@ class GroceryDetailViewModel(
     sealed class Output {
         data object Finished : Output()
     }
-
 }

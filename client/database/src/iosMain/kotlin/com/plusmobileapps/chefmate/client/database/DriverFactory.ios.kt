@@ -5,8 +5,9 @@ import app.cash.sqldelight.driver.native.NativeSqliteDriver
 import com.plusmobileapps.chefmate.database.Database
 
 actual class DriverFactory {
-    actual fun createDriver(): SqlDriver = NativeSqliteDriver(
-        schema = Database.Schema,
-        name = "chefmate.db"
-    )
+    actual fun createDriver(): SqlDriver =
+        NativeSqliteDriver(
+            schema = Database.Schema,
+            name = "chefmate.db",
+        )
 }

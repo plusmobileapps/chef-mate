@@ -15,7 +15,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlin.coroutines.CoroutineContext
 
 interface BlocContext : GenericComponentContext<BlocContext> {
-
     val mainContext: CoroutineContext
 
     val ioContext: CoroutineContext
@@ -38,25 +37,23 @@ class DefaultBlocContext(
     StateKeeperOwner by componentContext,
     InstanceKeeperOwner by componentContext,
     BackHandlerOwner by componentContext {
-
     override val componentContextFactory: ComponentContextFactory<BlocContext> =
         ComponentContextFactory { lifecycle, stateKeeper, instanceKeeper, backHandler ->
-            val ctx = componentContext.componentContextFactory(
-                lifecycle = lifecycle,
-                stateKeeper = stateKeeper,
-                instanceKeeper = instanceKeeper,
-                backHandler = backHandler
-            )
+            val ctx =
+                componentContext.componentContextFactory(
+                    lifecycle = lifecycle,
+                    stateKeeper = stateKeeper,
+                    instanceKeeper = instanceKeeper,
+                    backHandler = backHandler,
+                )
             DefaultBlocContext(
                 componentContext = ctx,
                 mainContext = mainContext,
                 ioContext = ioContext,
                 defaultContext = defaultContext,
-                unconfinedContext = unconfinedContext
+                unconfinedContext = unconfinedContext,
             )
         }
 
-    override fun createScope(): CoroutineScope {
-        return coroutineScope(mainContext + SupervisorJob())
-    }
+    override fun createScope(): CoroutineScope = coroutineScope(mainContext + SupervisorJob())
 }
