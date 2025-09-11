@@ -1,12 +1,11 @@
 package com.plusmobileapps.chefmate.convention
 
 import com.google.devtools.ksp.gradle.KspAATask
+import com.plusmobileapps.chefmate.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
@@ -19,8 +18,6 @@ class KotlinInjectConventionPlugin : Plugin<Project> {
 
 fun Project.applyKotlinInject() {
     with(this) {
-        val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
-
         // Apply KSP plugin first
         pluginManager.apply("com.google.devtools.ksp")
 
@@ -43,11 +40,9 @@ fun Project.applyKotlinInject() {
                 getByName("commonMain") {
                     kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
                     dependencies {
-                        implementation(libs.findLibrary("kotlininject-core-runtime").get())
-                        implementation(libs.findLibrary("kotlininject-anvil-runtime").get())
-                        implementation(
-                            libs.findLibrary("kotlininject-anvil-runtime-optional").get()
-                        )
+                        implementation(libs.kotlininject.core.runtime)
+                        implementation(libs.kotlininject.anvil.runtime)
+                        implementation(libs.kotlininject.anvil.runtime.optional)
                     }
                 }
             }
@@ -63,35 +58,28 @@ fun Project.applyKotlinInject() {
             )
 
             // kotlin-inject
-            add("kspCommonMainMetadata", libs.findLibrary("kotlininject-core-compiler").get())
-            add("commonMainImplementation", libs.findLibrary("kotlininject-core-runtime").get())
+            add("kspCommonMainMetadata", libs.kotlininject.core.compiler)
+            add("commonMainImplementation", libs.kotlininject.core.runtime)
             targets.forEach {
-                add(it, libs.findLibrary("kotlininject-core-compiler").get())
+                add(it, libs.kotlininject.core.compiler)
             }
 
             // kotlin-inject-anvil
-            add(
-                "commonMainImplementation",
-                libs.findLibrary("kotlininject-anvil-runtime").get()
-            )
-            add(
-                "commonMainImplementation",
-                libs.findLibrary("kotlininject-anvil-runtime-optional").get()
-            )
+            add("commonMainImplementation", libs.kotlininject.anvil.runtime)
+            add("commonMainImplementation", libs.kotlininject.anvil.runtime.optional)
             targets.forEach {
-                add(it, libs.findLibrary("kotlininject-anvil-compiler").get())
+                add(it, libs.kotlininject.anvil.compiler)
             }
 
             // kotlin-inject-anvil-extensions
             add(
                 "commonMainImplementation",
-                libs.findLibrary("kotlininject-anvil-extensions-assisted-factory-runtime").get()
+                libs.kotlininject.anvil.extensions.assisted.factory.runtime
             )
             targets.forEach {
                 add(
                     it,
-                    libs.findLibrary("kotlininject-anvil-extensions-assisted-factory-compiler")
-                        .get()
+                    libs.kotlininject.anvil.extensions.assisted.factory.compiler
                 )
             }
         }
