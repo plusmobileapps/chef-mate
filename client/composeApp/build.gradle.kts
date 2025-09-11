@@ -1,14 +1,13 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
-    alias(libs.plugins.composeMultiplatform)
-    alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.composeHotReload)
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.kotlinInject)
+    alias(libs.plugins.compose)
 }
 
 kotlin {
@@ -29,40 +28,32 @@ kotlin {
             export(libs.arkivanov.decompose.core)
             export(libs.essenty.lifecycle)
             export(libs.essenty.backhandler)
+            export(projects.client.root.public)
         }
     }
 
     jvm()
 
     sourceSets {
-        androidMain.dependencies {
-            implementation(compose.preview)
-            implementation(libs.androidx.activity.compose)
-        }
         commonMain.dependencies {
             api(libs.arkivanov.decompose.core)
             api(libs.arkivanov.decompose.compose.extensions)
             api(libs.essenty.lifecycle)
             api(libs.essenty.backhandler)
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
-            implementation(projects.client.shared)
-            implementation(projects.client.groceryList)
+            api(projects.client.shared)
+            api(projects.client.grocery.impl)
+            api(projects.client.grocery.public)
             implementation(libs.kotlinx.serialization.json)
             api(projects.client.database)
+            api(projects.client.root.public)
+            api(projects.client.root.impl)
+        }
+        androidMain.dependencies {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
-        }
-        jvmMain.dependencies {
-            implementation(compose.desktop.currentOs)
-            implementation(libs.kotlinx.coroutinesSwing)
         }
     }
 }
@@ -94,9 +85,6 @@ android {
     }
 }
 
-dependencies {
-    debugImplementation(compose.uiTooling)
-}
 
 compose.desktop {
     application {

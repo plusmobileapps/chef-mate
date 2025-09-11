@@ -5,9 +5,9 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            api(libs.arkivanov.decompose.core)
-            api(libs.kotlin.coroutines.core)
-            implementation(libs.essenty.lifecycle.coroutines)
+            implementation(projects.client.grocery.public)
+            implementation(libs.arkivanov.decompose.core)
+            implementation(projects.client.database)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -16,6 +16,6 @@ kotlin {
 }
 
 plusLibrary {
-    namespace = "com.plusmobileapps.chefmate.shared"
+    namespace = "com.plusmobileapps.chefmate.grocery.impl"
     enableDi = true
 }

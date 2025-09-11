@@ -7,13 +7,18 @@ import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 
 
 fun main() {
+    // Only initialize the lifecycle outside the application block
     val lifecycle = LifecycleRegistry()
     val appComponent = JvmApplicationComponent::class.create()
-    val rootBloc = buildRoot(
-        componentContext = DefaultComponentContext(lifecycle = lifecycle),
-        applicationComponent = appComponent,
-    )
+
     application {
+        // Initialize the DefaultComponentContext inside the application block
+        // to ensure it runs on the main thread
+        val rootBloc = buildRoot(
+            componentContext = DefaultComponentContext(lifecycle = lifecycle),
+            applicationComponent = appComponent,
+        )
+
         Window(
             onCloseRequest = ::exitApplication,
             title = "Chef Mate",

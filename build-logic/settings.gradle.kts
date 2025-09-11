@@ -1,19 +1,24 @@
+rootProject.name = "build-logic"
+
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+
+@Suppress("UnstableApiUsage")
 dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
         gradlePluginPortal()
     }
+
     versionCatalogs {
         create("libs") {
             from(files("../gradle/libs.versions.toml"))
         }
     }
 }
-
-rootProject.name = "build-logic"
-
-include(":convention")
-
-// Necessary to expose the version catalog to convention plugins
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")

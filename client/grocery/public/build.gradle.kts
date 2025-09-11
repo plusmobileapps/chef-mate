@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.kmpLibrary)
+    alias(libs.plugins.compose)
 }
 
 kotlin {
@@ -7,7 +8,7 @@ kotlin {
         commonMain.dependencies {
             api(libs.arkivanov.decompose.core)
             api(libs.kotlin.coroutines.core)
-            implementation(libs.essenty.lifecycle.coroutines)
+            api(projects.client.shared)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -16,6 +17,5 @@ kotlin {
 }
 
 plusLibrary {
-    namespace = "com.plusmobileapps.chefmate.shared"
-    enableDi = true
+    namespace = "com.plusmobileapps.chefmate.grocery"
 }

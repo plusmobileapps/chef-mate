@@ -6,8 +6,8 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(libs.arkivanov.decompose.core)
-            api(libs.kotlin.coroutines.core)
-            implementation(libs.essenty.lifecycle.coroutines)
+            implementation(projects.client.shared)
+            implementation(projects.client.grocery.public)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -16,6 +16,5 @@ kotlin {
 }
 
 plusLibrary {
-    namespace = "com.plusmobileapps.chefmate.shared"
-    enableDi = true
+    namespace = "com.plusmobileapps.chefmate.root"
 }
