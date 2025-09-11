@@ -29,6 +29,7 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
                 apply("com.android.library")
             }
 
+            target.applyKtlint()
 
             val androidComponents =
                 extensions.getByType(LibraryAndroidComponentsExtension::class.java)

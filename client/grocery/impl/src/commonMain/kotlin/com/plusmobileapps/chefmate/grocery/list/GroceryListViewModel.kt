@@ -15,9 +15,8 @@ import kotlin.time.ExperimentalTime
 
 class GroceryListViewModel(
     mainContext: CoroutineContext,
-    private val repository: GroceryRepository
+    private val repository: GroceryRepository,
 ) : ViewModel(mainContext) {
-
     private val _state = MutableStateFlow(State())
     private val _newGroceryItemName = MutableStateFlow("")
 
@@ -37,7 +36,7 @@ class GroceryListViewModel(
 
     fun onGroceryItemCheckedChange(
         item: GroceryItem,
-        isChecked: Boolean
+        isChecked: Boolean,
     ) {
         scope.launch {
             repository.updateChecked(item, isChecked)
@@ -66,5 +65,4 @@ class GroceryListViewModel(
     data class State(
         val items: List<GroceryItem> = emptyList(),
     )
-
 }

@@ -21,6 +21,7 @@ kotlininject = "0.7.2"
 kotlininject-anvil= "0.1.2"
 kotlininject-anvil-extensions = "0.1"
 ktor = "3.2.3"
+ktlint = "13.1.0"
 ksp = "2.1.21-2.0.2"
 logback = "1.5.18"
 sqldelight = "2.1.0"
@@ -56,6 +57,7 @@ kotlininject-anvil-runtime = { module = "software.amazon.lastmile.kotlin.inject.
 kotlininject-anvil-runtime-optional = { module = "software.amazon.lastmile.kotlin.inject.anvil:runtime-optional", version.ref = "kotlininject-anvil" }
 kotlininject-anvil-extensions-assisted-factory-compiler = { module = "com.plusmobileapps.kotlin-inject-anvil-extensions:assisted-factory-compiler", version.ref = "kotlininject-anvil-extensions" }
 kotlininject-anvil-extensions-assisted-factory-runtime = { module = "com.plusmobileapps.kotlin-inject-anvil-extensions:assisted-factory-runtime", version.ref = "kotlininject-anvil-extensions" }
+ktlint-gradle-plugin = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlint" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 ktor-serverCore = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor" }
 ktor-serverNetty = { module = "io.ktor:ktor-server-netty-jvm", version.ref = "ktor" }
@@ -77,7 +79,9 @@ ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 kotlinInject = { id = "com.plusmobileapps.chefmate.kotlin-inject" }
 kmpLibrary = { id = "com.plusmobileapps.chefmate.kmp-library" }
 compose = { id = "com.plusmobileapps.chefmate.compose" }
+plusKtlint = { id = "com.plusmobileapps.chefmate.ktlint" }

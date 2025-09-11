@@ -11,14 +11,11 @@ import software.amazon.lastmile.kotlin.inject.anvil.SingleIn
 @SingleIn(AppScope::class)
 @ContributesTo(AppScope::class)
 interface DatabaseComponent {
-
     @SingleIn(AppScope::class)
     @Provides
-    fun database(driverFactory: DriverFactory): Database =
-        Database.Companion.invoke(driverFactory.createDriver())
+    fun database(driverFactory: DriverFactory): Database = Database.Companion.invoke(driverFactory.createDriver())
 
     @SingleIn(AppScope::class)
     @Provides
     fun providesGroceryQueries(database: Database): GroceryQueries = database.groceryQueries
-
 }

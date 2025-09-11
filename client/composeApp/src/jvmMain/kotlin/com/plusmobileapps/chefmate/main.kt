@@ -1,10 +1,11 @@
+@file:Suppress("ktlint:standard:filename")
+
 package com.plusmobileapps.chefmate
 
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
-
 
 fun main() {
     // Only initialize the lifecycle outside the application block
@@ -14,10 +15,11 @@ fun main() {
     application {
         // Initialize the DefaultComponentContext inside the application block
         // to ensure it runs on the main thread
-        val rootBloc = buildRoot(
-            componentContext = DefaultComponentContext(lifecycle = lifecycle),
-            applicationComponent = appComponent,
-        )
+        val rootBloc =
+            buildRoot(
+                componentContext = DefaultComponentContext(lifecycle = lifecycle),
+                applicationComponent = appComponent,
+            )
 
         Window(
             onCloseRequest = ::exitApplication,

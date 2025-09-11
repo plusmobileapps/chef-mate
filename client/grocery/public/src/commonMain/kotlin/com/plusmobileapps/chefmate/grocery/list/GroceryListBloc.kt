@@ -6,12 +6,14 @@ import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import kotlinx.coroutines.flow.StateFlow
 
 interface GroceryListBloc {
-
     val state: StateFlow<Model>
 
     val newGroceryItemName: StateFlow<String>
 
-    fun onGroceryItemCheckedChange(item: GroceryItem, isChecked: Boolean)
+    fun onGroceryItemCheckedChange(
+        item: GroceryItem,
+        isChecked: Boolean,
+    )
 
     fun onGroceryItemDelete(item: GroceryItem)
 
@@ -26,10 +28,15 @@ interface GroceryListBloc {
     )
 
     sealed class Output {
-        data class OpenDetail(val id: Long) : Output()
+        data class OpenDetail(
+            val id: Long,
+        ) : Output()
     }
 
     fun interface Factory {
-        fun create(context: BlocContext, output: Consumer<Output>): GroceryListBloc
+        fun create(
+            context: BlocContext,
+            output: Consumer<Output>,
+        ): GroceryListBloc
     }
 }

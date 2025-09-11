@@ -23,25 +23,27 @@ class GroceryDetailBlocImpl(
     @Assisted id: Long,
     @Assisted private val output: Consumer<Output>,
     repository: GroceryRepository,
-) : GroceryDetailBloc, BlocContext by context {
-
+) : GroceryDetailBloc,
+    BlocContext by context {
     private val scope = createScope()
 
-    private val viewModel = instanceKeeper.getViewModel {
-        GroceryDetailViewModel(
-            id = id,
-            mainContext = mainContext,
-            repository = repository,
-        )
-    }
-
-    override val models: StateFlow<GroceryDetailBloc.Model> = viewModel.state.mapState {
-        if (it.isLoading) {
-            GroceryDetailBloc.Model.Loading
-        } else {
-            GroceryDetailBloc.Model.Loaded(it.groceryItem)
+    private val viewModel =
+        instanceKeeper.getViewModel {
+            GroceryDetailViewModel(
+                id = id,
+                mainContext = mainContext,
+                repository = repository,
+            )
         }
-    }
+
+    override val models: StateFlow<GroceryDetailBloc.Model> =
+        viewModel.state.mapState {
+            if (it.isLoading) {
+                GroceryDetailBloc.Model.Loading
+            } else {
+                GroceryDetailBloc.Model.Loaded(it.groceryItem)
+            }
+        }
 
     init {
         scope.launch {

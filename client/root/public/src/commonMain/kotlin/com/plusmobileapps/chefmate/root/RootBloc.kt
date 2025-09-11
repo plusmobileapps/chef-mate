@@ -7,13 +7,16 @@ import com.plusmobileapps.chefmate.grocery.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.grocery.list.GroceryListBloc
 
 interface RootBloc {
-
     val state: Value<ChildStack<*, Child>>
 
     sealed class Child {
-        data class GroceryList(val bloc: GroceryListBloc) : Child()
+        data class GroceryList(
+            val bloc: GroceryListBloc,
+        ) : Child()
 
-        data class GroceryDetail(val bloc: GroceryDetailBloc) : Child()
+        data class GroceryDetail(
+            val bloc: GroceryDetailBloc,
+        ) : Child()
     }
 
     fun interface Factory {

@@ -23,9 +23,9 @@ import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 class RootBlocImpl(
     @Assisted context: BlocContext,
     private val groceryListBloc: GroceryListBloc.Factory,
-    private val groceryDetail: GroceryDetailBloc.Factory
-) : RootBloc, BlocContext by context {
-
+    private val groceryDetail: GroceryDetailBloc.Factory,
+) : RootBloc,
+    BlocContext by context {
     private val navigation = StackNavigation<Configuration>()
 
     private val stack =
@@ -42,19 +42,25 @@ class RootBlocImpl(
 
     override val state: Value<ChildStack<*, RootBloc.Child>> = stack
 
-    private fun createChild(config: Configuration, context: BlocContext): RootBloc.Child =
+    private fun createChild(
+        config: Configuration,
+        context: BlocContext,
+    ): RootBloc.Child =
         when (config) {
-            Configuration.GroceryList -> RootBloc.Child.GroceryList(
-                bloc = groceryListBloc.create(context, ::onListOutput)
-            )
-
-            is Configuration.GroceryDetail -> RootBloc.Child.GroceryDetail(
-                bloc = groceryDetail.create(
-                    context,
-                    config.itemId,
-                    ::onDetailOutput,
+            Configuration.GroceryList ->
+                RootBloc.Child.GroceryList(
+                    bloc = groceryListBloc.create(context, ::onListOutput),
                 )
-            )
+
+            is Configuration.GroceryDetail ->
+                RootBloc.Child.GroceryDetail(
+                    bloc =
+                        groceryDetail.create(
+                            context,
+                            config.itemId,
+                            ::onDetailOutput,
+                        ),
+                )
         }
 
     private fun onDetailOutput(output: GroceryDetailBloc.Output) {
@@ -73,11 +79,12 @@ class RootBlocImpl(
 
     @Serializable
     private sealed class Configuration {
-
         @Serializable
         data object GroceryList : Configuration()
 
         @Serializable
-        data class GroceryDetail(val itemId: Long) : Configuration()
+        data class GroceryDetail(
+            val itemId: Long,
+        ) : Configuration()
     }
 }

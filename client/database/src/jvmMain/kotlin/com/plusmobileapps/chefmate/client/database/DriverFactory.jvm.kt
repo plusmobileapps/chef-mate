@@ -6,9 +6,10 @@ import com.plusmobileapps.chefmate.database.Database
 import java.util.Properties
 
 actual class DriverFactory {
-    actual fun createDriver(): SqlDriver = JdbcSqliteDriver(
-        url = "jdbc:sqlite:chefmate.db",
-        properties = Properties(),
-        schema = Database.Schema
-    )
+    actual fun createDriver(): SqlDriver =
+        JdbcSqliteDriver(
+            url = "jdbc:sqlite:chefmate.db",
+            properties = Properties(),
+            schema = Database.Schema,
+        )
 }

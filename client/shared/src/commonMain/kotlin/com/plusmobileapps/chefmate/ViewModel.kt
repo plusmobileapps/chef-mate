@@ -8,7 +8,6 @@ import kotlin.coroutines.CoroutineContext
 abstract class ViewModel(
     mainContext: CoroutineContext,
 ) {
-
     protected val scope = CoroutineScope(mainContext + SupervisorJob())
 
     open fun onCleared() {

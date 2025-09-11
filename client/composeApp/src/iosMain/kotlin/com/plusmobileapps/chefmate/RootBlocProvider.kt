@@ -15,7 +15,7 @@ object RootBlocProvider {
         return applicationComponent.rootBlocFactory.create(
             DefaultBlocContext(
                 componentContext = componentContext,
-            )
+            ),
         )
     }
 }

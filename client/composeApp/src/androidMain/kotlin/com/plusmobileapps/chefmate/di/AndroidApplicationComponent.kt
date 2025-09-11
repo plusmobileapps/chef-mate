@@ -11,9 +11,8 @@ import software.amazon.lastmile.kotlin.inject.anvil.SingleIn
 @MergeComponent(AppScope::class)
 @SingleIn(AppScope::class)
 abstract class AndroidApplicationComponent(
-    @get:Provides val context: Context
+    @get:Provides val context: Context,
 ) : ApplicationComponent {
-
     @Provides
     fun driverFactory(): DriverFactory = DriverFactory(context = context)
 }
