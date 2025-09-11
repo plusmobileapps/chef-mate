@@ -29,6 +29,7 @@ class ComposeConventionPlugin : Plugin<Project> {
             kotlin.sourceSets.apply {
                 val commonMain = getByName("commonMain")
                 val androidMain = getByName("androidMain")
+                val jvmMain = getByName("jvmMain")
                 val compose = ComposePlugin.Dependencies(project)
 
                 commonMain.dependencies {
@@ -43,7 +44,18 @@ class ComposeConventionPlugin : Plugin<Project> {
 
                 androidMain.dependencies {
                     implementation(compose.preview)
+                    implementation(libs.androidx.activity.compose)
                 }
+                jvmMain.dependencies {
+                    implementation(compose.desktop.currentOs)
+                    implementation(libs.kotlinx.coroutinesSwing)
+                }
+            }
+
+            // Add debug-specific dependencies
+            dependencies {
+                val compose = ComposePlugin.Dependencies(project)
+                "debugImplementation"(compose.uiTooling)
             }
         }
     }
