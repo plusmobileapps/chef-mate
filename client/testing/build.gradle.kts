@@ -5,11 +5,13 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.client.shared)
-            implementation(libs.arkivanov.decompose.core)
-            implementation(libs.kotlin.coroutines.test)
-            implementation(libs.essenty.lifecycle.coroutines)
-            implementation(libs.kotest.framework)
+            api(kotlin("test-common"))
+            api(kotlin("test-annotations-common"))
+            api(projects.client.shared)
+            api(libs.arkivanov.decompose.core)
+            api(libs.kotlin.coroutines.test)
+            api(libs.essenty.lifecycle.coroutines)
+            api(libs.kotest.framework)
         }
     }
 }

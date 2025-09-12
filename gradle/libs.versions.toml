@@ -96,3 +96,4 @@ kotlinInject = { id = "com.plusmobileapps.chefmate.kotlin-inject" }
 kmpLibrary = { id = "com.plusmobileapps.chefmate.kmp-library" }
 compose = { id = "com.plusmobileapps.chefmate.compose" }
 plusKtlint = { id = "com.plusmobileapps.chefmate.ktlint" }
+plusTesting = { id = "com.plusmobileapps.chefmate.testing" }
