@@ -24,6 +24,7 @@ fun Project.applyTesting() {
             val commonTest = getByName("commonTest")
             val jvmTest = getByName("jvmTest")
             val androidUnitTest = getByName("androidUnitTest")
+            val iosMain = getByName("iosMain")
 
             commonTest.dependencies {
                 implementation(libs.kotlin.test)

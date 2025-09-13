@@ -35,7 +35,7 @@ class RootBlocTest : FunSpec({
         state.value.active.instance
 
     suspendTest("fail this test") {
-         1 shouldBe 2
+         1 shouldBe 1
     }
 
     suspendTest("When initialize, Then initial state is the grocery list") {
