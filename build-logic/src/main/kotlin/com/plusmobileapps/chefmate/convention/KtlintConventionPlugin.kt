@@ -20,6 +20,8 @@ fun Project.applyKtlint() {
         filter {
             exclude("**/generated/**")
             exclude("**/build/**")
+            exclude("**/build/generated/ksp/**")
+            exclude { it.file.path.contains("generated") }
         }
     }
 }
