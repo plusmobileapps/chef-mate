@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.kmpLibrary)
     alias(libs.plugins.kotlinSerialization)
-    alias(libs.plugins.plusTesting)
 }
 
 kotlin {
@@ -19,4 +18,5 @@ kotlin {
 plusLibrary {
     namespace = "com.plusmobileapps.chefmate.root.impl"
     enableDi = true
+    enableTesting = true
 }
