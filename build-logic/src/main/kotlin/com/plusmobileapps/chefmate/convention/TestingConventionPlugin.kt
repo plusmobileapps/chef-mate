@@ -30,28 +30,15 @@ fun Project.applyTesting() {
                 implementation(libs.kotlin.test)
                 implementation(libs.kotlin.coroutines.test)
                 implementation(libs.turbine)
-                implementation(libs.kotest.framework)
+//                implementation(libs.kotest.framework)
                 implementation(libs.kotest.assertions)
                 implementation(libs.kotest.properties)
                 implementation(project(":client:testing"))
             }
-            jvmTest.dependencies {
-                implementation(libs.kotest.runner.junit5)
-            }
-            androidUnitTest.dependencies {
-                implementation(libs.kotest.runner.junit5)
-            }
-        }
-    }
-
-    // Configure all Test tasks to use JUnit 5
-    tasks.withType<Test>().configureEach {
-        useJUnitPlatform()
-        filter {
-            isFailOnNoMatchingTests = false
         }
 
-        // Ensure tests are always run
-        outputs.upToDateWhen { false }
+        tasks.withType<Test>().configureEach {
+            useJUnitPlatform()
+        }
     }
 }

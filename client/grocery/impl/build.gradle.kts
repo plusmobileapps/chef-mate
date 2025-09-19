@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.kmpLibrary)
+    alias(libs.plugins.plusTesting)
 }
 
 kotlin {
@@ -15,5 +16,4 @@ kotlin {
 plusLibrary {
     namespace = "com.plusmobileapps.chefmate.grocery.impl"
     enableDi = true
-    enableTesting = true
 }

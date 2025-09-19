@@ -110,7 +110,7 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
                     }
 
                     getByName("commonTest").dependencies {
-                        implementation(kotlin("test"))
+                        implementation(libs.kotlin.test)
                     }
                 }
             }
