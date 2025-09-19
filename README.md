@@ -1,85 +1,70 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Web, Desktop (JVM), Server.
+# Chef Mate
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+An app that is your mate in the kitchen managing the grocery list and keeping recipes to help you cook.
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+## Getting Started
 
-* [/server](./server/src/main/kotlin) is for the Ktor server application.
+This is a [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html) project targeting Android, iOS, Web, Desktop (JVM), Server. It aims to share as much code as possible in a modular way, so the general file structure of the project is as follows: 
 
-* [/shared](./shared/src) is for the code that will be shared between all targets in the project.
-  The most important subfolder is [commonMain](./shared/src/commonMain/kotlin). If preferred, you
-  can add code to the platform-specific folders here too.
+* [client](./client/) - all the shared client code and client application code
+  * [composeApp](./client/composeApp/) - the compose multiplatform applications
+  * [database](./client/database/) - client database
+  * [root](./client/root/) - root BLoC (business logic component) to manage navigation of the whole app
+  * [grocery](./client/grocery/) - list and detail BLoCs for groceries
+  * [shared](./client/shared/) - common client code
+  * [testing](./client/testing/) - common testing helpers
+* [server](./server/) - backend code
+* [build-logic](./build-logic/) - all the convention plugins to share logic of modular libraries
 
-### Build and Run Android Application
+### Android
 
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE’s toolbar or build it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:assembleDebug
-  ```
+```shell
+./gradlew :client:composeApp:installDebug
+```
 
-### Build and Run Desktop (JVM) Application
+### Desktop (JVM)
 
-To build and run the development version of the desktop app, use the run configuration from the run widget
-in your IDE’s toolbar or run it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:run
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:run
-  ```
+```shell
+./gradlew :client:composeApp:installDebug
+```
 
-### Build and Run Server
-
-To build and run the development version of the server, use the run configuration from the run widget
-in your IDE’s toolbar or run it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :server:run
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :server:run
-  ```
-
-### Build and Run Web Application
-
-To build and run the development version of the web app, use the run configuration from the run widget
-in your IDE’s toolbar or run it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:wasmJsBrowserDevelopmentRun
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:wasmJsBrowserDevelopmentRun
-  ```
-
-### Build and Run iOS Application
+### iOS
 
 To build and run the development version of the iOS app, use the run configuration from the run widget
 in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
 
+
+### Server
+
+```shell
+./gradlew :server:run
+```
 ---
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html),
-[Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform/#compose-multiplatform),
-[Kotlin/Wasm](https://kotl.in/wasm/)…
+## Libraries Used
 
-We would appreciate your feedback on Compose/Web and Kotlin/Wasm in the public Slack channel [#compose-web](https://slack-chats.kotlinlang.org/c/compose-web).
-If you face any issues, please report them on [YouTrack](https://youtrack.jetbrains.com/newIssue?project=CMP).
+### Shared
+
+* [Coroutines](https://github.com/Kotlin/kotlinx.coroutines) - asynchronous programming framework
+* [Ktlint](https://github.com/JLLeitschuh/ktlint-gradle) - kotlin code formatting and linter
+
+### Client
+
+* [Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform/#compose-multiplatform) - shared UI for client
+* [SqlDelight](https://sqldelight.github.io/sqldelight/2.1.0/) - sqlite database
+* [Essenty](https://github.com/arkivanov/Essenty) - lifecycle, instance keeper, back handler, state keeper
+* [Decompose](https://github.com/arkivanov/Decompose) - navigation
+* [kotlin-inject](https://github.com/evant/kotlin-inject) - dependency injection
+* [kotlin-inject-anvil](https://github.com/amzn/kotlin-inject-anvil) - dependency injection extensions
+* [kotlin-inject-anvil-extensions](https://github.com/plusmobileapps/kotlin-inject-anvil-extensions) - assisted factory dependency injection
+
+### Server
+
+* [Ktor](https://github.com/ktorio/ktor) - backend framework
+
+### Testing
+
+* [Kotlin test](https://kotlinlang.org/api/core/kotlin-test/) - KMP testing framework
+* [Kotest](https://kotest.io/docs/assertions/assertions.html) - assertions
+* [Mokkery](https://mokkery.dev/) - mocking library
+* [Turbine](https://github.com/cashapp/turbine) - coroutines testing library
