@@ -1,5 +1,8 @@
+@file:OptIn(ExperimentalForInheritanceCoroutinesApi::class)
+
 package com.plusmobileapps.chefmate
 
+import kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow

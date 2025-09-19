@@ -1,5 +1,8 @@
+@file:OptIn(DelicateDecomposeApi::class)
+
 package com.plusmobileapps.chefmate.root
 
+import com.arkivanov.decompose.DelicateDecomposeApi
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack

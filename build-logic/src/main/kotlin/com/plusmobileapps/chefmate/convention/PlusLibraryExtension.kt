@@ -13,6 +13,11 @@ open class PlusLibraryExtension {
      * Flag to enable Dependency Injection setup. Default is false.
      */
     var enableDi: Boolean = false
+
+    /**
+     * Flag to enable test dependencies and configurations. Default is false.
+     */
+    var enableTesting: Boolean = false
 }
 
 

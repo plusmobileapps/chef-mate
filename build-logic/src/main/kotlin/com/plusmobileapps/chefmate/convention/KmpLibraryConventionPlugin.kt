@@ -22,6 +22,10 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
                 if (plusLibraryExtension.enableDi) {
                     applyKotlinInject()
                 }
+
+                if (plusLibraryExtension.enableTesting) {
+                    applyTesting()
+                }
             }
 
             with(pluginManager) {
@@ -106,7 +110,7 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
                     }
 
                     getByName("commonTest").dependencies {
-                        implementation(kotlin("test"))
+                        implementation(libs.kotlin.test)
                     }
                 }
             }

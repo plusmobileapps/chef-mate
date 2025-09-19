@@ -12,13 +12,11 @@ kotlin {
             implementation(projects.client.grocery.public)
             implementation(libs.kotlinx.serialization.json)
         }
-        commonTest.dependencies {
-            implementation(libs.kotlin.test)
-        }
     }
 }
 
 plusLibrary {
     namespace = "com.plusmobileapps.chefmate.root.impl"
     enableDi = true
+    enableTesting = true
 }
