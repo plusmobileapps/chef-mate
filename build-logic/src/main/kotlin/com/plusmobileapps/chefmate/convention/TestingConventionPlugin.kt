@@ -16,7 +16,6 @@ class TestingConventionPlugin : Plugin<Project> {
 }
 fun Project.applyTesting() {
     pluginManager.apply(libs.plugins.ksp.get().pluginId)
-    pluginManager.apply(libs.plugins.kotest.get().pluginId)
     pluginManager.apply(libs.plugins.mokkery.get().pluginId)
 
     extensions.configure<KotlinMultiplatformExtension> {
@@ -30,9 +29,7 @@ fun Project.applyTesting() {
                 implementation(libs.kotlin.test)
                 implementation(libs.kotlin.coroutines.test)
                 implementation(libs.turbine)
-//                implementation(libs.kotest.framework)
                 implementation(libs.kotest.assertions)
-                implementation(libs.kotest.properties)
                 implementation(project(":client:testing"))
             }
         }
