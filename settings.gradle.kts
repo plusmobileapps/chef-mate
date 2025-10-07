@@ -1,4 +1,4 @@
-rootProject.name = "ChefMate"
+rootProject.name = "chef-mate"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
@@ -37,6 +37,9 @@ include(":client:composeApp")
 include(":client:database")
 include(":client:grocery:impl")
 include(":client:grocery:public")
+include(":client:recipe:data:impl")
+include(":client:recipe:data:public")
+include(":client:recipe:data:testing")
 include(":client:root:impl")
 include(":client:root:public")
 include(":client:shared")

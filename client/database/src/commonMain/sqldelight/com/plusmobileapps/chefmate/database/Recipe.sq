@@ -1,0 +1,38 @@
+import kotlin.Boolean;
+
+CREATE TABLE Recipe (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT,
+    imageUrl TEXT,
+    sourceUrl TEXT,
+    servings INTEGER,
+    prepTime INTEGER,
+    cookTime INTEGER,
+    totalTime INTEGER,
+    calories INTEGER,
+    starRating INTEGER,
+    isFavorite INTEGER AS Boolean NOT NULL DEFAULT 0,
+    createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+    updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+getAll:
+SELECT * FROM Recipe ORDER BY title DESC;
+
+getById:
+SELECT * FROM Recipe WHERE id = ?;
+
+lastInsertRowId:
+SELECT last_insert_rowid();
+
+create:
+INSERT INTO Recipe (title, description, imageUrl, sourceUrl, servings, prepTime, cookTime, totalTime, calories, starRating, isFavorite, createdAt, updatedAt)
+ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+update:
+UPDATE Recipe SET title = ?, description = ?, imageUrl = ?, sourceUrl = ?, servings = ?, prepTime = ?, cookTime = ?, totalTime = ?, calories = ?, starRating = ?, isFavorite = ?, updatedAt = ?
+WHERE id = ?;
+
+delete:
+DELETE FROM Recipe WHERE id = ?;

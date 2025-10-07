@@ -1,11 +1,11 @@
 plugins {
     alias(libs.plugins.kmpLibrary)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation($projectDirectory)
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
         }
@@ -13,7 +13,7 @@ kotlin {
 }
 
 plusLibrary {
-    namespace = "$namespace"
+    namespace = "com.plusmobileapps.chefmate.recipe.data"
     enableDi = true
     enableTesting = true
 }

@@ -6,7 +6,6 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation($projectDirectory.$directoryName)
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
         }

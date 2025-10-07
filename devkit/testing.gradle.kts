@@ -6,7 +6,6 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation($projectDirectory)
-            implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
         }
     }
@@ -14,6 +13,4 @@ kotlin {
 
 plusLibrary {
     namespace = "$namespace"
-    enableDi = true
-    enableTesting = true
 }

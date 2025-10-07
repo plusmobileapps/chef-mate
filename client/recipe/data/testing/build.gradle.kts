@@ -5,15 +5,12 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation($projectDirectory)
-            implementation(libs.arkivanov.decompose.core)
+            implementation(projects.client.recipe.data.public)
             implementation(projects.client.shared)
         }
     }
 }
 
 plusLibrary {
-    namespace = "$namespace"
-    enableDi = true
-    enableTesting = true
+    namespace = "com.plusmobileapps.chefmate.recipe.data.testing"
 }
