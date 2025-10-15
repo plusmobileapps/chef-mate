@@ -7,13 +7,15 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.arkivanov.decompose.core)
+            api(libs.kotlin.coroutines.core)
             implementation(projects.client.shared)
+            implementation(projects.client.recipe.data.public)
         }
     }
 }
 
 plusLibrary {
-    namespace = "$namespace"
+    namespace = "com.plusmobileapps.chefmate.recipe.list"
     enableDi = true
     enableTesting = true
 }
