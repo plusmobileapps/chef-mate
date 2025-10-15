@@ -6,18 +6,16 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.client.root.public)
+            implementation(projects.client.bottomnav.public)
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
-            implementation(projects.client.bottomnav.public)
-            implementation(projects.client.grocery.public)
             implementation(libs.kotlinx.serialization.json)
         }
     }
 }
 
 plusLibrary {
-    namespace = "com.plusmobileapps.chefmate.root.impl"
+    namespace = "com.plusmobileapps.chefmate.recipe.bottomnav.impl"
     enableDi = true
     enableTesting = true
 }

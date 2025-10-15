@@ -12,6 +12,7 @@ import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.grocery.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.grocery.list.GroceryListBloc
+import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
 import kotlinx.serialization.Serializable
 import me.tatarka.inject.annotations.Assisted
@@ -25,7 +26,7 @@ import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 )
 class RootBlocImpl(
     @Assisted context: BlocContext,
-    private val groceryListBloc: GroceryListBloc.Factory,
+    private val bottomNav: BottomNavBloc.Factory,
     private val groceryDetail: GroceryDetailBloc.Factory,
 ) : RootBloc,
     BlocContext by context {
@@ -36,7 +37,7 @@ class RootBlocImpl(
             source = navigation,
             serializer = Configuration.serializer(),
             initialStack = {
-                listOf(Configuration.GroceryList)
+                listOf(Configuration.BottomNavigation)
             },
             handleBackButton = true,
             key = "RootRouter",
@@ -50,21 +51,32 @@ class RootBlocImpl(
         context: BlocContext,
     ): RootBloc.Child =
         when (config) {
-            Configuration.GroceryList ->
-                RootBloc.Child.GroceryList(
-                    bloc = groceryListBloc.create(context, ::onListOutput),
+            Configuration.BottomNavigation ->
+                RootBloc.Child.BottomNavigation(
+                    bottomNav.create(
+                        context = context,
+                        output = ::handleBottomNavOutput
+                    )
                 )
 
             is Configuration.GroceryDetail ->
                 RootBloc.Child.GroceryDetail(
                     bloc =
                         groceryDetail.create(
-                            context,
-                            config.itemId,
-                            ::onDetailOutput,
+                            context = context,
+                            id = config.itemId,
+                            output = ::onDetailOutput,
                         ),
                 )
         }
+
+    private fun handleBottomNavOutput(output: BottomNavBloc.Output) {
+        when (output) {
+            BottomNavBloc.Output.AddNewRecipe -> TODO()
+            is BottomNavBloc.Output.OpenGrocery -> TODO()
+            is BottomNavBloc.Output.OpenRecipe -> TODO()
+        }
+    }
 
     private fun onDetailOutput(output: GroceryDetailBloc.Output) {
         when (output) {
@@ -72,18 +84,10 @@ class RootBlocImpl(
         }
     }
 
-    private fun onListOutput(output: GroceryListBloc.Output) {
-        when (output) {
-            is GroceryListBloc.Output.OpenDetail -> {
-                navigation.push(Configuration.GroceryDetail(output.id))
-            }
-        }
-    }
-
     @Serializable
     private sealed class Configuration {
         @Serializable
-        data object GroceryList : Configuration()
+        data object BottomNavigation : Configuration()
 
         @Serializable
         data class GroceryDetail(

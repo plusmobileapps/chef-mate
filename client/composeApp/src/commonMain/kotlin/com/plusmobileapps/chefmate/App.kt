@@ -1,33 +1,12 @@
 package com.plusmobileapps.chefmate
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import com.arkivanov.decompose.extensions.compose.stack.Children
-import com.arkivanov.decompose.extensions.compose.stack.animation.slide
-import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
-import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.plusmobileapps.chefmate.grocery.detail.GroceryDetailScreen
-import com.plusmobileapps.chefmate.grocery.list.GroceryListScreen
 import com.plusmobileapps.chefmate.root.RootBloc
+import com.plusmobileapps.chefmate.root.RootScreen
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 @Preview
 fun App(rootBloc: RootBloc) {
-    val state = rootBloc.state.subscribeAsState()
-    MaterialTheme {
-        Children(
-            modifier = Modifier.fillMaxSize(),
-            stack = state.value,
-            animation = stackAnimation(slide()),
-            content = {
-                when (val child = it.instance) {
-                    is RootBloc.Child.GroceryList -> GroceryListScreen(child.bloc)
-                    is RootBloc.Child.GroceryDetail -> GroceryDetailScreen(child.bloc)
-                }
-            },
-        )
-    }
+    RootScreen(rootBloc)
 }
