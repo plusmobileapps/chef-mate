@@ -18,9 +18,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import chef_mate.client.bottomnav.public.generated.resources.Res
-import chef_mate.client.bottomnav.public.generated.resources.tab_grocery
-import chef_mate.client.bottomnav.public.generated.resources.tab_recipes
+import chefmate.client.bottomnav.public.generated.resources.Res
+import chefmate.client.bottomnav.public.generated.resources.tab_grocery
+import chefmate.client.bottomnav.public.generated.resources.tab_recipes
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.plusmobileapps.chefmate.grocery.list.GroceryListScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.GROCERIES

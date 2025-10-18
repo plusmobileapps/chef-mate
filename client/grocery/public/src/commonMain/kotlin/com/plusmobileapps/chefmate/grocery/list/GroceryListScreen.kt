@@ -16,7 +16,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -32,37 +31,27 @@ import kotlinx.coroutines.flow.StateFlow
 @Composable
 fun GroceryListScreen(bloc: GroceryListBloc) {
     val state by bloc.state.collectAsState()
-    Scaffold(
-        modifier = Modifier.fillMaxWidth(),
-        topBar = {
-            TopAppBar(title = { Text("Grocery List") })
-        },
-    ) { paddingValues ->
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
+    Column(
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        LazyColumn(
+            modifier = Modifier.weight(1f),
         ) {
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-            ) {
-                items(state.items.size) { index ->
-                    val item = state.items[index]
-                    GroceryListItem(
-                        item = item,
-                        onCheckedChange = bloc::onGroceryItemCheckedChange,
-                        onDeleteClick = bloc::onGroceryItemDelete,
-                        onGroceryClick = bloc::onGroceryItemClicked,
-                    )
-                }
+            items(state.items.size) { index ->
+                val item = state.items[index]
+                GroceryListItem(
+                    item = item,
+                    onCheckedChange = bloc::onGroceryItemCheckedChange,
+                    onDeleteClick = bloc::onGroceryItemDelete,
+                    onGroceryClick = bloc::onGroceryItemClicked,
+                )
             }
-            GroceryListInput(
-                name = bloc.newGroceryItemName,
-                onNameChange = bloc::onNewGroceryItemNameChange,
-                onAddClick = bloc::saveGroceryItem,
-            )
         }
+        GroceryListInput(
+            name = bloc.newGroceryItemName,
+            onNameChange = bloc::onNewGroceryItemNameChange,
+            onAddClick = bloc::saveGroceryItem,
+        )
     }
 }
 
