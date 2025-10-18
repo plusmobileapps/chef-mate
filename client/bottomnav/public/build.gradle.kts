@@ -12,6 +12,7 @@ kotlin {
             implementation(projects.client.shared)
             api(projects.client.recipe.list.public)
             api(projects.client.grocery.public)
+            implementation(compose.components.resources)
         }
     }
 }
