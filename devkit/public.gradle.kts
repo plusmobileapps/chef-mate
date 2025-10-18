@@ -14,6 +14,4 @@ kotlin {
 
 plusLibrary {
     namespace = "$namespace"
-    enableDi = true
-    enableTesting = true
 }

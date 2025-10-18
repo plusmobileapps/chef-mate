@@ -5,6 +5,7 @@ package com.plusmobileapps.chefmate.root
 import com.arkivanov.decompose.DelicateDecomposeApi
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.bringToFront
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.Value
@@ -71,7 +72,9 @@ class RootBlocImpl(
     private fun handleBottomNavOutput(output: BottomNavBloc.Output) {
         when (output) {
             BottomNavBloc.Output.AddNewRecipe -> TODO()
-            is BottomNavBloc.Output.OpenGrocery -> TODO()
+            is BottomNavBloc.Output.OpenGrocery -> {
+                navigation.bringToFront(Configuration.GroceryDetail(output.groceryId))
+            }
             is BottomNavBloc.Output.OpenRecipe -> TODO()
         }
     }

@@ -11,7 +11,6 @@ kotlin {
             implementation(projects.client.shared)
             api(projects.client.bottomnav.public)
             api(projects.client.grocery.public)
-            api(projects.client.recipe.core.public)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

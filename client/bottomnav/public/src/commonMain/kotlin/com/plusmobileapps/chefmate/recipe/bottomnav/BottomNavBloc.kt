@@ -5,7 +5,6 @@ import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.grocery.list.GroceryListBloc
-import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import kotlinx.coroutines.flow.StateFlow
 
 interface BottomNavBloc {
@@ -28,7 +27,7 @@ interface BottomNavBloc {
     }
 
     sealed class Child {
-        data class RecipeList(val bloc: RecipeListBloc) : Child()
+        data object RecipeList : Child()
         data class GroceryList(val bloc: GroceryListBloc) : Child()
     }
 
