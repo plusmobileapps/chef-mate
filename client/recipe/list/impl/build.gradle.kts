@@ -8,6 +8,7 @@ kotlin {
             implementation(projects.client.recipe.list.public)
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
+            implementation(projects.client.recipe.data.public)
         }
     }
 }

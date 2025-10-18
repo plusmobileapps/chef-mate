@@ -9,9 +9,9 @@ kotlin {
             api(libs.arkivanov.decompose.core)
             implementation(libs.arkivanov.decompose.compose.extensions)
             implementation(projects.client.shared)
-            implementation(projects.client.bottomnav.public)
-            implementation(projects.client.grocery.public)
-            implementation(projects.client.recipe.core.public)
+            api(projects.client.bottomnav.public)
+            api(projects.client.grocery.public)
+            api(projects.client.recipe.core.public)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

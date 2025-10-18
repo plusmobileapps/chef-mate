@@ -24,7 +24,7 @@ import me.tatarka.inject.annotations.Inject
 import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 
 @Inject
-@ContributesAssistedFactory(AppScope::class, BottomNavBloc.Factory::class)
+@ContributesAssistedFactory(AppScope::class, assistedFactory = BottomNavBloc.Factory::class)
 class BottomNavBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<BottomNavBloc.Output>,
