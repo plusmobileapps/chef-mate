@@ -15,7 +15,6 @@ import kotlin.coroutines.CoroutineContext
 class BottomNavViewModel(
     @Main mainContext: CoroutineContext,
 ) : ViewModel(mainContext) {
-
     private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state.asStateFlow()
 

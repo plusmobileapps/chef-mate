@@ -54,8 +54,8 @@ class RootBlocImpl(
                 RootBloc.Child.BottomNavigation(
                     bottomNav.create(
                         context = context,
-                        output = ::handleBottomNavOutput
-                    )
+                        output = ::handleBottomNavOutput,
+                    ),
                 )
 
             is Configuration.GroceryDetail ->

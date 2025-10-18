@@ -35,22 +35,26 @@ fun BottomNavigationScreen(bloc: BottomNavBloc) {
         bottomBar = {
             PlusBottomBar(
                 state = state.value,
-                onClick = bloc::onTabSelected
+                onClick = bloc::onTabSelected,
             )
-        }
+        },
     ) { paddingValues ->
         Children(
-            modifier = Modifier.fillMaxSize()
-                .padding(paddingValues),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
             stack = bloc.content,
         ) { created ->
             when (val instance = created.instance) {
                 is BottomNavBloc.Child.GroceryList -> GroceryListScreen(instance.bloc)
                 is BottomNavBloc.Child.RecipeList -> {
                     Box(
-                        modifier = Modifier.fillMaxSize()
-                            .background(Color.Blue),
-                        contentAlignment = Alignment.Center
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .background(Color.Blue),
+                        contentAlignment = Alignment.Center,
                     ) {
                         Text("Recipes: TODO")
                     }
@@ -77,7 +81,7 @@ private fun PlusBottomBar(
                         when (tab) {
                             RECIPES -> stringResource(Res.string.tab_recipes)
                             GROCERIES -> stringResource(Res.string.tab_grocery)
-                        }
+                        },
                     )
                 },
                 icon = {
@@ -88,7 +92,7 @@ private fun PlusBottomBar(
                         },
                         contentDescription = null,
                     )
-                }
+                },
             )
         }
     }

@@ -8,13 +8,11 @@ import com.plusmobileapps.chefmate.grocery.list.GroceryListBloc
 import kotlinx.coroutines.flow.StateFlow
 
 interface BottomNavBloc {
-
     val state: StateFlow<Model>
 
     val content: Value<ChildStack<*, Child>>
 
     fun onTabSelected(tab: Tab)
-
 
     data class Model(
         val selectedTab: Tab = Tab.RECIPES,
@@ -23,21 +21,33 @@ interface BottomNavBloc {
 
     enum class Tab {
         RECIPES,
-        GROCERIES
+        GROCERIES,
     }
 
     sealed class Child {
         data object RecipeList : Child()
-        data class GroceryList(val bloc: GroceryListBloc) : Child()
+
+        data class GroceryList(
+            val bloc: GroceryListBloc,
+        ) : Child()
     }
 
     sealed class Output {
-        data class OpenRecipe(val recipeId: Long) : Output()
+        data class OpenRecipe(
+            val recipeId: Long,
+        ) : Output()
+
         object AddNewRecipe : Output()
-        data class OpenGrocery(val groceryId: Long) : Output()
+
+        data class OpenGrocery(
+            val groceryId: Long,
+        ) : Output()
     }
 
     interface Factory {
-        fun create(context: BlocContext, output: Consumer<Output>): BottomNavBloc
+        fun create(
+            context: BlocContext,
+            output: Consumer<Output>,
+        ): BottomNavBloc
     }
 }

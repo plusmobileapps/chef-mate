@@ -11,9 +11,7 @@ import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.grocery.list.GroceryListBloc
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
-import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.AddNewRecipe
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenGrocery
-import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenRecipe
 import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -29,43 +27,46 @@ class BottomNavBlocImpl(
     @Assisted private val output: Consumer<BottomNavBloc.Output>,
     viewModelFactory: () -> BottomNavViewModel,
     private val groceryList: GroceryListBloc.Factory,
-) : BottomNavBloc, BlocContext by context {
-
+) : BottomNavBloc,
+    BlocContext by context {
     private val scope = createScope()
 
     private val viewModel: BottomNavViewModel = instanceKeeper.getViewModel { viewModelFactory() }
 
     private val navigation = StackNavigation<Configuration>()
 
-    private val stack = childStack(
-        source = navigation,
-        serializer = Configuration.serializer(),
-        initialStack = {
-            listOf(Configuration.Recipe)
-        },
-        handleBackButton = true,
-        key = "BottomNavRouter",
-        childFactory = ::createChild,
-    )
+    private val stack =
+        childStack(
+            source = navigation,
+            serializer = Configuration.serializer(),
+            initialStack = {
+                listOf(Configuration.Recipe)
+            },
+            handleBackButton = true,
+            key = "BottomNavRouter",
+            childFactory = ::createChild,
+        )
 
     init {
         scope.launch {
             viewModel.state.collect {
-                val configuration = when (it.selectedTab) {
-                    BottomNavBloc.Tab.RECIPES -> Configuration.Recipe
-                    BottomNavBloc.Tab.GROCERIES -> Configuration.Grocery
-                }
+                val configuration =
+                    when (it.selectedTab) {
+                        BottomNavBloc.Tab.RECIPES -> Configuration.Recipe
+                        BottomNavBloc.Tab.GROCERIES -> Configuration.Grocery
+                    }
                 navigation.bringToFront(configuration)
             }
         }
     }
 
-    override val state: StateFlow<BottomNavBloc.Model> = viewModel.state.mapState {
-        BottomNavBloc.Model(
-            selectedTab = it.selectedTab,
-            tabs = it.tabs,
-        )
-    }
+    override val state: StateFlow<BottomNavBloc.Model> =
+        viewModel.state.mapState {
+            BottomNavBloc.Model(
+                selectedTab = it.selectedTab,
+                tabs = it.tabs,
+            )
+        }
 
     override val content: Value<ChildStack<*, BottomNavBloc.Child>> = stack
 
@@ -76,19 +77,21 @@ class BottomNavBlocImpl(
     private fun createChild(
         configuration: Configuration,
         context: BlocContext,
-    ): BottomNavBloc.Child = when (configuration) {
-        Configuration.Recipe -> {
-            BottomNavBloc.Child.RecipeList
-        }
+    ): BottomNavBloc.Child =
+        when (configuration) {
+            Configuration.Recipe -> {
+                BottomNavBloc.Child.RecipeList
+            }
 
-        Configuration.Grocery -> {
-            val bloc = groceryList.create(
-                context = context,
-                output = ::handleGroceryListOutput,
-            )
-            BottomNavBloc.Child.GroceryList(bloc)
+            Configuration.Grocery -> {
+                val bloc =
+                    groceryList.create(
+                        context = context,
+                        output = ::handleGroceryListOutput,
+                    )
+                BottomNavBloc.Child.GroceryList(bloc)
+            }
         }
-    }
 
     private fun handleGroceryListOutput(output: GroceryListBloc.Output) {
         when (output) {

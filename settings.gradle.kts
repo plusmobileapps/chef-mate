@@ -1,4 +1,4 @@
-rootProject.name = "chef-mate"
+rootProject.name = "ChefMate"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {

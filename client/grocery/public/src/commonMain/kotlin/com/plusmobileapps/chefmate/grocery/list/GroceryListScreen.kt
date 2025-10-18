@@ -40,7 +40,8 @@ fun GroceryListScreen(bloc: GroceryListBloc) {
     ) { paddingValues ->
         Column(
             modifier =
-                Modifier.fillMaxSize()
+                Modifier
+                    .fillMaxSize()
                     .padding(paddingValues),
         ) {
             LazyColumn(
