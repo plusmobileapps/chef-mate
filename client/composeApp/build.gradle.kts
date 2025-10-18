@@ -49,6 +49,7 @@ kotlin {
             api(projects.client.database)
             api(projects.client.root.public)
             api(projects.client.root.impl)
+            api(projects.client.bottomnav.impl)
         }
         androidMain.dependencies {
         }
