@@ -20,4 +20,24 @@ data class Recipe(
     val isFavorite: Boolean = false,
     val createdAt: Instant,
     val updatedAt: Instant,
-)
+) {
+    companion object {
+        val Empty =
+            Recipe(
+                id = -1,
+                title = "",
+                description = null,
+                imageUrl = null,
+                sourceUrl = null,
+                servings = null,
+                prepTime = null,
+                cookTime = null,
+                totalTime = null,
+                calories = null,
+                starRating = null,
+                isFavorite = false,
+                createdAt = Instant.DISTANT_PAST,
+                updatedAt = Instant.DISTANT_PAST,
+            )
+    }
+}

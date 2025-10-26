@@ -1,11 +1,12 @@
 package com.plusmobileapps.chefmate.recipe.core.detail
 
+import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import kotlinx.coroutines.flow.StateFlow
 
-interface RecipeDetailBloc {
+interface RecipeDetailBloc: BackClickBloc {
     val state: StateFlow<Model>
 
     fun onEditClicked()
@@ -21,6 +22,9 @@ interface RecipeDetailBloc {
 
     sealed class Output {
         data object Finished : Output()
+        data class EditRecipe(
+            val recipeId: Long,
+        ) : Output()
     }
 
     interface Factory {
