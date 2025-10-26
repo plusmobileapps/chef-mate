@@ -52,6 +52,7 @@ kotlin {
             api(projects.client.bottomnav.impl)
             api(projects.client.recipe.data.impl)
             api(projects.client.recipe.list.impl)
+            api(projects.client.recipe.core.impl)
         }
         androidMain.dependencies {
         }
