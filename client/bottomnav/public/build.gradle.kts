@@ -10,6 +10,7 @@ kotlin {
             implementation(libs.arkivanov.decompose.compose.extensions)
             implementation(projects.client.shared)
             api(projects.client.grocery.public)
+            api(projects.client.recipe.list.public)
             implementation(compose.components.resources)
         }
     }

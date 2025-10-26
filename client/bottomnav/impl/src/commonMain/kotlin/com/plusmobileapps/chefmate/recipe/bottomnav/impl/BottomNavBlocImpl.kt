@@ -12,6 +12,7 @@ import com.plusmobileapps.chefmate.grocery.list.GroceryListBloc
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenGrocery
+import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -27,6 +28,7 @@ class BottomNavBlocImpl(
     @Assisted private val output: Consumer<BottomNavBloc.Output>,
     viewModelFactory: () -> BottomNavViewModel,
     private val groceryList: GroceryListBloc.Factory,
+    private val recipeList: RecipeListBloc.Factory,
 ) : BottomNavBloc,
     BlocContext by context {
     private val scope = createScope()
@@ -80,7 +82,12 @@ class BottomNavBlocImpl(
     ): BottomNavBloc.Child =
         when (configuration) {
             Configuration.Recipe -> {
-                BottomNavBloc.Child.RecipeList
+                BottomNavBloc.Child.RecipeList(
+                    recipeList.create(
+                        context = context,
+                        output = ::handleRecipeListOutput,
+                    ),
+                )
             }
 
             Configuration.Grocery -> {
@@ -92,6 +99,17 @@ class BottomNavBlocImpl(
                 BottomNavBloc.Child.GroceryList(bloc)
             }
         }
+
+    private fun handleRecipeListOutput(output: RecipeListBloc.Output) {
+        when (output) {
+            RecipeListBloc.Output.AddNewRecipe -> {
+                this.output.onNext(BottomNavBloc.Output.AddNewRecipe)
+            }
+            is RecipeListBloc.Output.OpenRecipe -> {
+                this.output.onNext(BottomNavBloc.Output.OpenRecipe(output.recipeId))
+            }
+        }
+    }
 
     private fun handleGroceryListOutput(output: GroceryListBloc.Output) {
         when (output) {
