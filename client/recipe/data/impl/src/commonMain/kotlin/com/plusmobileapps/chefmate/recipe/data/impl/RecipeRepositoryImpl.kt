@@ -62,6 +62,7 @@ class RecipeRepositoryImpl(
 
     override suspend fun updateRecipe(recipe: Recipe): Recipe =
         withContext(ioContext) {
+            val now = dateTimeUtil.now
             db.transactionWithResult {
                 db.update(
                     id = recipe.id,
@@ -78,9 +79,9 @@ class RecipeRepositoryImpl(
                     calories = recipe.calories?.toLong(),
                     starRating = recipe.starRating?.toLong(),
                     isFavorite = recipe.isFavorite,
-                    updatedAt = dateTimeUtil.now.toString(),
+                    updatedAt = now.toString(),
                 )
-                db.getById(recipe.id).executeAsOne().toRecipe()
+                recipe.copy(updatedAt = now)
             }
         }
 

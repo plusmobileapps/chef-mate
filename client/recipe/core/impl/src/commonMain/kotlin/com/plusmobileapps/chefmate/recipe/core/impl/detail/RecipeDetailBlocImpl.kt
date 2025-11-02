@@ -21,7 +21,7 @@ import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 )
 class RecipeDetailBlocImpl(
     @Assisted context: BlocContext,
-    @Assisted recipeId: Long,
+    @Assisted private val recipeId: Long,
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: (Long) -> RecipeDetailViewModel,
 ): RecipeDetailBloc, BlocContext by context {
@@ -38,7 +38,7 @@ class RecipeDetailBlocImpl(
     }
 
     override fun onEditClicked() {
-        TODO("Not yet implemented")
+        output.onNext(Output.EditRecipe(recipeId))
     }
 
     override fun onDeleteClicked() {

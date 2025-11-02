@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
@@ -47,6 +48,14 @@ fun RecipeDetailScreen(
         topBar = {
             TopAppBar(
                 title = { Text(state.recipe.title) },
+                navigationIcon = {
+                    IconButton(onClick = bloc::onBackClicked) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                            contentDescription = "Back",
+                        )
+                    }
+                },
                 actions = {
                     IconButton(onClick = { bloc.onFavoriteToggled() }) {
                         Icon(

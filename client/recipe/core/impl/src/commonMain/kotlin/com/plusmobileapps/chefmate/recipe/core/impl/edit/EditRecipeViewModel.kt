@@ -220,7 +220,7 @@ class EditRecipeViewModel(
                 starRating != _starRating.value
 
     private fun currentRecipe(): Recipe = Recipe(
-        id = -1L,
+        id = recipeId ?: -1,
         title = _title.value,
         description = _description.value.ifBlank { null },
         ingredients = _ingredients.value,
