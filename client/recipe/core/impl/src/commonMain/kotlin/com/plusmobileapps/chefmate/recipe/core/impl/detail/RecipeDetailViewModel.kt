@@ -4,9 +4,13 @@ import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import me.tatarka.inject.annotations.Assisted
@@ -19,6 +23,9 @@ class RecipeDetailViewModel(
     @Main mainContext: CoroutineContext,
     private val repository: RecipeRepository,
 ) : ViewModel(mainContext) {
+    private val _output = Channel<Output>(Channel.BUFFERED)
+    val output: Flow<Output> = _output.receiveAsFlow()
+
     private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state.asStateFlow()
 
@@ -37,8 +44,42 @@ class RecipeDetailViewModel(
         }
     }
 
+    fun showDeleteConfirmationDialog() {
+        _state.update { it.copy(showDeleteConfirmationDialog = true) }
+    }
+
+    fun dismissDeleteConfirmationDialog() {
+        _state.update { it.copy(showDeleteConfirmationDialog = false) }
+    }
+
+    fun confirmDelete() {
+        _state.update { it.copy(showDeleteConfirmationDialog = false, isDeleting = true) }
+        scope.launch {
+            repository.deleteRecipe(recipeId)
+            _output.send(Output.RecipeDeleted)
+        }
+    }
+
+    fun toggleFavorite() {
+        scope.launch {
+            val recipe = repository.getRecipe(recipeId).first() ?: return@launch
+            repository.updateRecipe(recipe.copy(isFavorite = !recipe.isFavorite))
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        _output.close()
+    }
+
     data class State(
         val isLoading: Boolean = true,
+        val isDeleting: Boolean = false,
+        val showDeleteConfirmationDialog: Boolean = false,
         val recipe: Recipe = Recipe.Empty,
     )
+
+    sealed class Output {
+        data object RecipeDeleted : Output()
+    }
 }

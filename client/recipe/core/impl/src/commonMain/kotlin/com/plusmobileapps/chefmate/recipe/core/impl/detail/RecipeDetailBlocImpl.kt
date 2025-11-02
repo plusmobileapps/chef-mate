@@ -6,10 +6,9 @@ import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc.Output
-import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import me.tatarka.inject.annotations.Assisted
 import me.tatarka.inject.annotations.Inject
 import software.amazon.lastmile.kotlin.inject.anvil.AppScope
@@ -26,13 +25,27 @@ class RecipeDetailBlocImpl(
     private val viewModelFactory: (Long) -> RecipeDetailViewModel,
 ): RecipeDetailBloc, BlocContext by context {
 
+    private val scope = createScope()
+
     private val viewModel: RecipeDetailViewModel = instanceKeeper.getViewModel {
         viewModelFactory(recipeId)
+    }
+
+    init {
+        scope.launch {
+            viewModel.output.collect { viewModelOutput ->
+                when (viewModelOutput) {
+                    RecipeDetailViewModel.Output.RecipeDeleted -> output.onNext(Output.Finished)
+                }
+            }
+        }
     }
 
     override val state: StateFlow<RecipeDetailBloc.Model> = viewModel.state.mapState {
         RecipeDetailBloc.Model(
             isLoading = it.isLoading,
+            isDeleting = it.isDeleting,
+            showDeleteConfirmationDialog = it.showDeleteConfirmationDialog,
             recipe = it.recipe,
         )
     }
@@ -42,11 +55,19 @@ class RecipeDetailBlocImpl(
     }
 
     override fun onDeleteClicked() {
-        TODO("Not yet implemented")
+        viewModel.showDeleteConfirmationDialog()
+    }
+
+    override fun onDeleteConfirmed() {
+        viewModel.confirmDelete()
+    }
+
+    override fun onDeleteDismissed() {
+        viewModel.dismissDeleteConfirmationDialog()
     }
 
     override fun onFavoriteToggled() {
-        TODO("Not yet implemented")
+        viewModel.toggleFavorite()
     }
 
     override fun onBackClicked() {

@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,6 +27,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -107,6 +109,20 @@ fun RecipeDetailScreen(
                         .fillMaxSize()
                         .padding(paddingValues),
             )
+        }
+
+        // Delete confirmation dialog
+        if (state.showDeleteConfirmationDialog) {
+            DeleteConfirmationDialog(
+                recipeName = state.recipe.title,
+                onConfirm = bloc::onDeleteConfirmed,
+                onDismiss = bloc::onDeleteDismissed,
+            )
+        }
+
+        // Deleting progress dialog
+        if (state.isDeleting) {
+            DeletingDialog()
         }
     }
 }
@@ -321,3 +337,52 @@ private fun DetailRow(
         )
     }
 }
+
+@Composable
+private fun DeleteConfirmationDialog(
+    recipeName: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Delete Recipe?") },
+        text = {
+            Text("Are you sure you want to delete \"$recipeName\"? This action cannot be undone.")
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Delete")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun DeletingDialog(
+    modifier: Modifier = Modifier,
+) {
+    AlertDialog(
+        onDismissRequest = { /* Prevent dismissal while deleting */ },
+        title = { Text("Deleting Recipe") },
+        text = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CircularProgressIndicator()
+                Text("Please wait...")
+            }
+        },
+        confirmButton = { },
+        modifier = modifier,
+    )
+}
+

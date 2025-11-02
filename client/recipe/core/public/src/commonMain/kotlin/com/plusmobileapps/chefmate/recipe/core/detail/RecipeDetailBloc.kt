@@ -13,10 +13,16 @@ interface RecipeDetailBloc: BackClickBloc {
 
     fun onDeleteClicked()
 
+    fun onDeleteConfirmed()
+
+    fun onDeleteDismissed()
+
     fun onFavoriteToggled()
 
     data class Model(
         val isLoading: Boolean,
+        val isDeleting: Boolean,
+        val showDeleteConfirmationDialog: Boolean,
         val recipe: Recipe,
     )
 
