@@ -137,6 +137,12 @@ private fun EditRecipeContent(
         RecipeTitleField(bloc = bloc)
         RecipeDescriptionField(bloc = bloc)
         RecipeImageUrlField(bloc = bloc)
+        RecipeSourceUrlField(bloc = bloc)
+        RecipeServingsField(bloc = bloc)
+        RecipePrepTimeField(bloc = bloc)
+        RecipeCookTimeField(bloc = bloc)
+        RecipeTotalTimeField(bloc = bloc)
+        RecipeCaloriesField(bloc = bloc)
         RecipeIngredientsField(bloc = bloc)
         RecipeDirectionsField(bloc = bloc)
     }
@@ -189,6 +195,108 @@ private fun RecipeImageUrlField(
         onValueChange = bloc::onImageUrlChanged,
         label = { Text("Image URL") },
         placeholder = { Text("Enter image URL") },
+        modifier = modifier.fillMaxWidth(),
+        singleLine = true,
+    )
+}
+
+@Composable
+private fun RecipeSourceUrlField(
+    bloc: EditRecipeBloc,
+    modifier: Modifier = Modifier,
+) {
+    val sourceUrl by bloc.sourceUrl.collectAsState()
+
+    OutlinedTextField(
+        value = sourceUrl,
+        onValueChange = bloc::onSourceUrlChanged,
+        label = { Text("Source URL") },
+        placeholder = { Text("Enter source URL") },
+        modifier = modifier.fillMaxWidth(),
+        singleLine = true,
+    )
+}
+
+@Composable
+private fun RecipeServingsField(
+    bloc: EditRecipeBloc,
+    modifier: Modifier = Modifier,
+) {
+    val servings by bloc.servings.collectAsState()
+
+    OutlinedTextField(
+        value = servings,
+        onValueChange = bloc::onServingsChanged,
+        label = { Text("Servings") },
+        placeholder = { Text("Enter number of servings") },
+        modifier = modifier.fillMaxWidth(),
+        singleLine = true,
+    )
+}
+
+@Composable
+private fun RecipePrepTimeField(
+    bloc: EditRecipeBloc,
+    modifier: Modifier = Modifier,
+) {
+    val prepTime by bloc.prepTime.collectAsState()
+
+    OutlinedTextField(
+        value = prepTime,
+        onValueChange = bloc::onPrepTimeChanged,
+        label = { Text("Prep Time (minutes)") },
+        placeholder = { Text("Enter prep time in minutes") },
+        modifier = modifier.fillMaxWidth(),
+        singleLine = true,
+    )
+}
+
+@Composable
+private fun RecipeCookTimeField(
+    bloc: EditRecipeBloc,
+    modifier: Modifier = Modifier,
+) {
+    val cookTime by bloc.cookTime.collectAsState()
+
+    OutlinedTextField(
+        value = cookTime,
+        onValueChange = bloc::onCookTimeChanged,
+        label = { Text("Cook Time (minutes)") },
+        placeholder = { Text("Enter cook time in minutes") },
+        modifier = modifier.fillMaxWidth(),
+        singleLine = true,
+    )
+}
+
+@Composable
+private fun RecipeTotalTimeField(
+    bloc: EditRecipeBloc,
+    modifier: Modifier = Modifier,
+) {
+    val totalTime by bloc.totalTime.collectAsState()
+
+    OutlinedTextField(
+        value = totalTime,
+        onValueChange = bloc::onTotalTimeChanged,
+        label = { Text("Total Time (minutes)") },
+        placeholder = { Text("Enter total time in minutes") },
+        modifier = modifier.fillMaxWidth(),
+        singleLine = true,
+    )
+}
+
+@Composable
+private fun RecipeCaloriesField(
+    bloc: EditRecipeBloc,
+    modifier: Modifier = Modifier,
+) {
+    val calories by bloc.calories.collectAsState()
+
+    OutlinedTextField(
+        value = calories,
+        onValueChange = bloc::onCaloriesChanged,
+        label = { Text("Calories") },
+        placeholder = { Text("Enter calories per serving") },
         modifier = modifier.fillMaxWidth(),
         singleLine = true,
     )

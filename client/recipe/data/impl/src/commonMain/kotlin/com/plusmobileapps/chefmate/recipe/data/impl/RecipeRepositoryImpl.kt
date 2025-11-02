@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package com.plusmobileapps.chefmate.recipe.data.impl
 
 import app.cash.sqldelight.coroutines.asFlow
@@ -7,6 +5,7 @@ import com.plusmobileapps.chefmate.database.RecipeQueries
 import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
+import com.plusmobileapps.chefmate.util.DateTimeUtil
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -15,7 +14,6 @@ import me.tatarka.inject.annotations.Inject
 import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 import software.amazon.lastmile.kotlin.inject.anvil.ContributesBinding
 import kotlin.coroutines.CoroutineContext
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import com.plusmobileapps.chefmate.database.Recipe as DbRecipe
 
@@ -24,6 +22,7 @@ import com.plusmobileapps.chefmate.database.Recipe as DbRecipe
 class RecipeRepositoryImpl(
     private val db: RecipeQueries,
     @IO private val ioContext: CoroutineContext,
+    private val dateTimeUtil: DateTimeUtil,
 ) : RecipeRepository {
     override fun getRecipes(): Flow<List<Recipe>> =
         db
@@ -39,6 +38,8 @@ class RecipeRepositoryImpl(
                 db.create(
                     title = recipe.title,
                     description = recipe.description,
+                    ingredients = recipe.ingredients,
+                    directions = recipe.directions,
                     imageUrl = recipe.imageUrl,
                     sourceUrl = recipe.sourceUrl,
                     servings = recipe.servings?.toLong(),
@@ -48,8 +49,8 @@ class RecipeRepositoryImpl(
                     calories = recipe.calories?.toLong(),
                     starRating = recipe.starRating?.toLong(),
                     isFavorite = recipe.isFavorite,
-                    createdAt = recipe.createdAt.toString(),
-                    updatedAt = recipe.updatedAt.toString(),
+                    createdAt = dateTimeUtil.now.toString(),
+                    updatedAt = dateTimeUtil.now.toString(),
                 )
                 val id =
                     db
@@ -66,6 +67,8 @@ class RecipeRepositoryImpl(
                     id = recipe.id,
                     title = recipe.title,
                     description = recipe.description,
+                    ingredients = recipe.ingredients,
+                    directions = recipe.directions,
                     imageUrl = recipe.imageUrl,
                     sourceUrl = recipe.sourceUrl,
                     servings = recipe.servings?.toLong(),
@@ -75,7 +78,7 @@ class RecipeRepositoryImpl(
                     calories = recipe.calories?.toLong(),
                     starRating = recipe.starRating?.toLong(),
                     isFavorite = recipe.isFavorite,
-                    updatedAt = recipe.updatedAt.toString(),
+                    updatedAt = dateTimeUtil.now.toString(),
                 )
                 db.getById(recipe.id).executeAsOne().toRecipe()
             }
@@ -100,6 +103,8 @@ class RecipeRepositoryImpl(
             id = id,
             title = title,
             description = description,
+            ingredients = ingredients.orEmpty(),
+            directions = directions.orEmpty(),
             imageUrl = imageUrl,
             sourceUrl = sourceUrl,
             servings = servings?.toInt(),

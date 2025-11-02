@@ -18,6 +18,20 @@ interface EditRecipeBloc : BackClickBloc {
 
     val directions: StateFlow<String>
 
+    val sourceUrl: StateFlow<String>
+
+    val servings: StateFlow<String>
+
+    val prepTime: StateFlow<String>
+
+    val cookTime: StateFlow<String>
+
+    val totalTime: StateFlow<String>
+
+    val calories: StateFlow<String>
+
+    val starRating: StateFlow<Int?>
+
     fun onTitleChanged(title: String)
 
     fun onDescriptionChanged(description: String)
@@ -27,6 +41,20 @@ interface EditRecipeBloc : BackClickBloc {
     fun onIngredientsChanged(ingredients: String)
 
     fun onDirectionsChanged(directions: String)
+
+    fun onSourceUrlChanged(sourceUrl: String)
+
+    fun onServingsChanged(servings: String)
+
+    fun onPrepTimeChanged(prepTime: String)
+
+    fun onCookTimeChanged(cookTime: String)
+
+    fun onTotalTimeChanged(totalTime: String)
+
+    fun onCaloriesChanged(calories: String)
+
+    fun onStarRatingChanged(starRating: Int?)
 
     fun onDiscardChangesConfirmed()
 

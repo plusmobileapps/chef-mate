@@ -8,6 +8,7 @@ kotlin {
             implementation(projects.client.recipe.data.public)
             implementation(projects.client.shared)
             implementation(projects.client.database)
+            api(projects.client.util.public)
         }
     }
 }

@@ -4,6 +4,8 @@ CREATE TABLE Recipe (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     description TEXT,
+    ingredients TEXT,
+    directions TEXT,
     imageUrl TEXT,
     sourceUrl TEXT,
     servings INTEGER,
@@ -27,11 +29,11 @@ lastInsertRowId:
 SELECT last_insert_rowid();
 
 create:
-INSERT INTO Recipe (title, description, imageUrl, sourceUrl, servings, prepTime, cookTime, totalTime, calories, starRating, isFavorite, createdAt, updatedAt)
- VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO Recipe (title, description, ingredients, directions, imageUrl, sourceUrl, servings, prepTime, cookTime, totalTime, calories, starRating, isFavorite, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 update:
-UPDATE Recipe SET title = ?, description = ?, imageUrl = ?, sourceUrl = ?, servings = ?, prepTime = ?, cookTime = ?, totalTime = ?, calories = ?, starRating = ?, isFavorite = ?, updatedAt = ?
+UPDATE Recipe SET title = ?, description = ?, ingredients = ?, directions = ?, imageUrl = ?, sourceUrl = ?, servings = ?, prepTime = ?, cookTime = ?, totalTime = ?, calories = ?, starRating = ?, isFavorite = ?, updatedAt = ?
 WHERE id = ?;
 
 delete:

@@ -83,7 +83,8 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
 
                 // Configure JVM target
                 jvm()
-
+                compilerOptions.optIn.add("kotlin.time.ExperimentalTime")
+                
                 // Default source sets configuration
                 sourceSets.apply {
                     val commonMain = getByName("commonMain")
