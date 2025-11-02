@@ -2,6 +2,8 @@ package com.plusmobileapps.chefmate.recipe.core.impl.detail
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.getViewModel
+import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc.Output
 import com.plusmobileapps.chefmate.recipe.data.Recipe
@@ -20,15 +22,20 @@ import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 class RecipeDetailBlocImpl(
     @Assisted context: BlocContext,
     @Assisted recipeId: Long,
-    @Assisted private val output: Consumer<Output>
+    @Assisted private val output: Consumer<Output>,
+    private val viewModelFactory: (Long) -> RecipeDetailViewModel,
 ): RecipeDetailBloc, BlocContext by context {
 
-    override val state: StateFlow<RecipeDetailBloc.Model> = MutableStateFlow(
+    private val viewModel: RecipeDetailViewModel = instanceKeeper.getViewModel {
+        viewModelFactory(recipeId)
+    }
+
+    override val state: StateFlow<RecipeDetailBloc.Model> = viewModel.state.mapState {
         RecipeDetailBloc.Model(
-            isLoading = false,
-            recipe = Recipe.Empty,
-        ),
-    )
+            isLoading = it.isLoading,
+            recipe = it.recipe,
+        )
+    }
 
     override fun onEditClicked() {
         TODO("Not yet implemented")

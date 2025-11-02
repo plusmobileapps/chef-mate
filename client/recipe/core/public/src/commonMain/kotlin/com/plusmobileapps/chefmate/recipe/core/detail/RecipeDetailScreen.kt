@@ -230,6 +230,48 @@ private fun RecipeDetailContent(
             }
         }
 
+        // Ingredients
+        if (recipe.ingredients.isNotBlank()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        text = "Ingredients",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Text(
+                        text = recipe.ingredients,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
+        }
+
+        // Directions
+        if (recipe.directions.isNotBlank()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        text = "Directions",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Text(
+                        text = recipe.directions,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
+        }
+
         // Timestamps
         Card(
             modifier = Modifier.fillMaxWidth(),
