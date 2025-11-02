@@ -24,17 +24,18 @@ class RecipeListBlocImpl(
     private val viewModelFactory: () -> RecipeListViewModel,
 ) : RecipeListBloc,
     BlocContext by context {
+    private val viewModel: RecipeListViewModel =
+        instanceKeeper.getViewModel {
+            viewModelFactory()
+        }
 
-    private val viewModel: RecipeListViewModel = instanceKeeper.getViewModel {
-        viewModelFactory()
-    }
-
-    override val state: StateFlow<RecipeListBloc.Model> = viewModel.state.mapState {
-        RecipeListBloc.Model(
-            isLoading = it.isLoading,
-            recipes = it.recipes,
-        )
-    }
+    override val state: StateFlow<RecipeListBloc.Model> =
+        viewModel.state.mapState {
+            RecipeListBloc.Model(
+                isLoading = it.isLoading,
+                recipes = it.recipes,
+            )
+        }
 
     override fun onRecipeClicked(recipe: RecipeListItem) {
         output.onNext(Output.OpenRecipe(recipe.id))

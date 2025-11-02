@@ -63,4 +63,3 @@ class RecipeListViewModel(
         val recipes: List<RecipeListItem> = emptyList(),
     )
 }
-

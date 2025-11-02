@@ -149,11 +149,12 @@ class EditRecipeViewModel(
         val currentRecipe = currentRecipe()
         _state.update { it.copy(isLoading = true) }
         scope.launch {
-            val savedRecipe = if (originalRecipe != null) {
-                repository.updateRecipe(currentRecipe)
-            } else {
-                repository.createRecipe(currentRecipe)
-            }
+            val savedRecipe =
+                if (originalRecipe != null) {
+                    repository.updateRecipe(currentRecipe)
+                } else {
+                    repository.createRecipe(currentRecipe)
+                }
             _output.send(Output.Finished(savedRecipe.id))
         }
     }
@@ -187,10 +188,11 @@ class EditRecipeViewModel(
     private fun shouldShowDiscardChangesDialog(
         originalRecipe: Recipe?,
         currentRecipe: Recipe,
-    ): Boolean {
-        return when {
+    ): Boolean =
+        when {
             originalRecipe != null -> originalRecipe.isDirty()
-            else -> currentRecipe.title.isNotBlank() ||
+            else ->
+                currentRecipe.title.isNotBlank() ||
                     currentRecipe.description?.isNotBlank() == true ||
                     currentRecipe.ingredients.isNotBlank() ||
                     currentRecipe.directions.isNotBlank() ||
@@ -203,39 +205,39 @@ class EditRecipeViewModel(
                     currentRecipe.calories != null ||
                     currentRecipe.starRating != null
         }
-    }
 
     private fun Recipe.isDirty(): Boolean =
         title != _title.value ||
-                description.orEmpty() != _description.value ||
-                ingredients != _ingredients.value ||
-                directions != _directions.value ||
-                imageUrl.orEmpty() != _imageUrl.value ||
-                sourceUrl.orEmpty() != _sourceUrl.value ||
-                servings?.toString().orEmpty() != _servings.value ||
-                prepTime?.toString().orEmpty() != _prepTime.value ||
-                cookTime?.toString().orEmpty() != _cookTime.value ||
-                totalTime?.toString().orEmpty() != _totalTime.value ||
-                calories?.toString().orEmpty() != _calories.value ||
-                starRating != _starRating.value
+            description.orEmpty() != _description.value ||
+            ingredients != _ingredients.value ||
+            directions != _directions.value ||
+            imageUrl.orEmpty() != _imageUrl.value ||
+            sourceUrl.orEmpty() != _sourceUrl.value ||
+            servings?.toString().orEmpty() != _servings.value ||
+            prepTime?.toString().orEmpty() != _prepTime.value ||
+            cookTime?.toString().orEmpty() != _cookTime.value ||
+            totalTime?.toString().orEmpty() != _totalTime.value ||
+            calories?.toString().orEmpty() != _calories.value ||
+            starRating != _starRating.value
 
-    private fun currentRecipe(): Recipe = Recipe(
-        id = recipeId ?: -1,
-        title = _title.value,
-        description = _description.value.ifBlank { null },
-        ingredients = _ingredients.value,
-        directions = _directions.value,
-        imageUrl = _imageUrl.value.ifBlank { null },
-        sourceUrl = _sourceUrl.value.ifBlank { null },
-        servings = _servings.value.toIntOrNull(),
-        prepTime = _prepTime.value.toIntOrNull(),
-        cookTime = _cookTime.value.toIntOrNull(),
-        totalTime = _totalTime.value.toIntOrNull(),
-        calories = _calories.value.toIntOrNull(),
-        starRating = _starRating.value,
-        createdAt = Instant.DISTANT_PAST,
-        updatedAt = Instant.DISTANT_PAST,
-    )
+    private fun currentRecipe(): Recipe =
+        Recipe(
+            id = recipeId ?: -1,
+            title = _title.value,
+            description = _description.value.ifBlank { null },
+            ingredients = _ingredients.value,
+            directions = _directions.value,
+            imageUrl = _imageUrl.value.ifBlank { null },
+            sourceUrl = _sourceUrl.value.ifBlank { null },
+            servings = _servings.value.toIntOrNull(),
+            prepTime = _prepTime.value.toIntOrNull(),
+            cookTime = _cookTime.value.toIntOrNull(),
+            totalTime = _totalTime.value.toIntOrNull(),
+            calories = _calories.value.toIntOrNull(),
+            starRating = _starRating.value,
+            createdAt = Instant.DISTANT_PAST,
+            updatedAt = Instant.DISTANT_PAST,
+        )
 
     data class State(
         val isLoading: Boolean = false,
@@ -246,6 +248,7 @@ class EditRecipeViewModel(
 
     sealed class Output {
         data object Cancelled : Output()
+
         data class Finished(
             val recipeId: Long,
         ) : Output()

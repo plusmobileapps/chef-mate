@@ -31,25 +31,27 @@ class RecipeRootBlocImpl(
     private val editBloc: EditRecipeBloc.Factory,
 ) : RecipeRootBloc,
     BlocContext by context {
-
     private val navigation = StackNavigation<Configuration>()
-    private val stack = childStack(
-        source = navigation,
-        serializer = Configuration.serializer(),
-        initialStack = {
-            when (props) {
-                is RecipeRootBloc.Props.Detail -> listOf(
-                    Configuration.Detail(recipeId = props.recipeId),
-                )
-                is RecipeRootBloc.Props.Create -> listOf(
-                    Configuration.Edit(recipeId = null),
-                )
-            }
-        },
-        handleBackButton = true,
-        key = "RecipeRootRouter",
-        childFactory = ::createChild,
-    )
+    private val stack =
+        childStack(
+            source = navigation,
+            serializer = Configuration.serializer(),
+            initialStack = {
+                when (props) {
+                    is RecipeRootBloc.Props.Detail ->
+                        listOf(
+                            Configuration.Detail(recipeId = props.recipeId),
+                        )
+                    is RecipeRootBloc.Props.Create ->
+                        listOf(
+                            Configuration.Edit(recipeId = null),
+                        )
+                }
+            },
+            handleBackButton = true,
+            key = "RecipeRootRouter",
+            childFactory = ::createChild,
+        )
 
     override val routerState: Value<ChildStack<*, RecipeRootBloc.Child>> = stack
 
@@ -60,19 +62,21 @@ class RecipeRootBlocImpl(
         when (config) {
             is Configuration.Detail ->
                 RecipeRootBloc.Child.Detail(
-                    bloc = detailBloc.create(
-                        context = context,
-                        recipeId = config.recipeId,
-                        output = ::handleDetailOutput,
-                    ),
+                    bloc =
+                        detailBloc.create(
+                            context = context,
+                            recipeId = config.recipeId,
+                            output = ::handleDetailOutput,
+                        ),
                 )
             is Configuration.Edit ->
                 RecipeRootBloc.Child.Edit(
-                    bloc = editBloc.create(
-                        context = context,
-                        recipeId = config.recipeId,
-                        output = ::handleEditOutput,
-                    ),
+                    bloc =
+                        editBloc.create(
+                            context = context,
+                            recipeId = config.recipeId,
+                            output = ::handleEditOutput,
+                        ),
                 )
         }
 
@@ -100,7 +104,7 @@ class RecipeRootBlocImpl(
             }
             is RecipeDetailBloc.Output.EditRecipe -> {
                 navigation.bringToFront(
-                    Configuration.Edit(recipeId = output.recipeId)
+                    Configuration.Edit(recipeId = output.recipeId),
                 )
             }
         }

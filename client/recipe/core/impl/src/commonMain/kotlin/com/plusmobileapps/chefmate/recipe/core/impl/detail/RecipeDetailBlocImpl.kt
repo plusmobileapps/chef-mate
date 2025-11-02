@@ -23,13 +23,14 @@ class RecipeDetailBlocImpl(
     @Assisted private val recipeId: Long,
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: (Long) -> RecipeDetailViewModel,
-): RecipeDetailBloc, BlocContext by context {
-
+) : RecipeDetailBloc,
+    BlocContext by context {
     private val scope = createScope()
 
-    private val viewModel: RecipeDetailViewModel = instanceKeeper.getViewModel {
-        viewModelFactory(recipeId)
-    }
+    private val viewModel: RecipeDetailViewModel =
+        instanceKeeper.getViewModel {
+            viewModelFactory(recipeId)
+        }
 
     init {
         scope.launch {
@@ -41,14 +42,15 @@ class RecipeDetailBlocImpl(
         }
     }
 
-    override val state: StateFlow<RecipeDetailBloc.Model> = viewModel.state.mapState {
-        RecipeDetailBloc.Model(
-            isLoading = it.isLoading,
-            isDeleting = it.isDeleting,
-            showDeleteConfirmationDialog = it.showDeleteConfirmationDialog,
-            recipe = it.recipe,
-        )
-    }
+    override val state: StateFlow<RecipeDetailBloc.Model> =
+        viewModel.state.mapState {
+            RecipeDetailBloc.Model(
+                isLoading = it.isLoading,
+                isDeleting = it.isDeleting,
+                showDeleteConfirmationDialog = it.showDeleteConfirmationDialog,
+                recipe = it.recipe,
+            )
+        }
 
     override fun onEditClicked() {
         output.onNext(Output.EditRecipe(recipeId))

@@ -7,7 +7,6 @@ import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc.Output
 import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import me.tatarka.inject.annotations.Assisted
@@ -24,21 +23,23 @@ class EditRecipeBlocImpl(
     @Assisted recipeId: Long?,
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: (Long?) -> EditRecipeViewModel,
-) : EditRecipeBloc, BlocContext by context {
-
+) : EditRecipeBloc,
+    BlocContext by context {
     private val scope = createScope()
 
-    private val viewModel: EditRecipeViewModel = instanceKeeper.getViewModel {
-        viewModelFactory(recipeId)
-    }
+    private val viewModel: EditRecipeViewModel =
+        instanceKeeper.getViewModel {
+            viewModelFactory(recipeId)
+        }
 
-    override val state: StateFlow<EditRecipeBloc.Model> = viewModel.state.mapState {
-        EditRecipeBloc.Model(
-            isLoading = it.isLoading,
-            isSaving = it.isSaving,
-            showDiscardChangesDialog = it.showDiscardChangesDialog,
-        )
-    }
+    override val state: StateFlow<EditRecipeBloc.Model> =
+        viewModel.state.mapState {
+            EditRecipeBloc.Model(
+                isLoading = it.isLoading,
+                isSaving = it.isSaving,
+                showDiscardChangesDialog = it.showDiscardChangesDialog,
+            )
+        }
     override val title: StateFlow<String> = viewModel.title
     override val description: StateFlow<String> = viewModel.description
     override val imageUrl: StateFlow<String> = viewModel.imageUrl

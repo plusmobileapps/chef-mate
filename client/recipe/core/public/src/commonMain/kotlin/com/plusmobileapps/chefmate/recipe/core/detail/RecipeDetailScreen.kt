@@ -366,9 +366,7 @@ private fun DeleteConfirmationDialog(
 }
 
 @Composable
-private fun DeletingDialog(
-    modifier: Modifier = Modifier,
-) {
+private fun DeletingDialog(modifier: Modifier = Modifier) {
     AlertDialog(
         onDismissRequest = { /* Prevent dismissal while deleting */ },
         title = { Text("Deleting Recipe") },
@@ -385,4 +383,3 @@ private fun DeletingDialog(
         modifier = modifier,
     )
 }
-
