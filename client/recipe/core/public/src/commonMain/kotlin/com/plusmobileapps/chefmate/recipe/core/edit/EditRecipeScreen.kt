@@ -27,6 +27,37 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import chefmate.client.recipe.core.public.generated.resources.Res
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_back
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_discard_cancel
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_discard_confirm
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_discard_message
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_discard_title
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_calories
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_calories_placeholder
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_cook_time
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_cook_time_placeholder
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_description
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_description_placeholder
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_directions
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_directions_placeholder
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_image_url
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_image_url_placeholder
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_ingredients
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_ingredients_placeholder
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_prep_time
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_prep_time_placeholder
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_servings
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_servings_placeholder
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_source_url
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_source_url_placeholder
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_title
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_title_placeholder
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_total_time
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_total_time_placeholder
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_save
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_title
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,12 +110,12 @@ private fun EditRecipeTopBar(
     modifier: Modifier = Modifier,
 ) {
     TopAppBar(
-        title = { Text("Edit Recipe") },
+        title = { Text(stringResource(Res.string.edit_recipe_title)) },
         navigationIcon = {
             IconButton(onClick = onBackClicked) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(Res.string.edit_recipe_back),
                 )
             }
         },
@@ -107,7 +138,7 @@ private fun SaveRecipeFab(
                 modifier = Modifier.padding(end = 8.dp),
             )
         }
-        Text("Save")
+        Text(stringResource(Res.string.edit_recipe_save))
     }
 }
 
@@ -158,8 +189,8 @@ private fun RecipeTitleField(
     OutlinedTextField(
         value = title,
         onValueChange = bloc::onTitleChanged,
-        label = { Text("Title") },
-        placeholder = { Text("Enter recipe title") },
+        label = { Text(stringResource(Res.string.edit_recipe_field_title)) },
+        placeholder = { Text(stringResource(Res.string.edit_recipe_field_title_placeholder)) },
         modifier = modifier.fillMaxWidth(),
         singleLine = true,
     )
@@ -175,8 +206,8 @@ private fun RecipeDescriptionField(
     OutlinedTextField(
         value = description,
         onValueChange = bloc::onDescriptionChanged,
-        label = { Text("Description") },
-        placeholder = { Text("Enter recipe description") },
+        label = { Text(stringResource(Res.string.edit_recipe_field_description)) },
+        placeholder = { Text(stringResource(Res.string.edit_recipe_field_description_placeholder)) },
         modifier = modifier.fillMaxWidth(),
         minLines = 3,
         maxLines = 5,
@@ -193,8 +224,8 @@ private fun RecipeImageUrlField(
     OutlinedTextField(
         value = imageUrl,
         onValueChange = bloc::onImageUrlChanged,
-        label = { Text("Image URL") },
-        placeholder = { Text("Enter image URL") },
+        label = { Text(stringResource(Res.string.edit_recipe_field_image_url)) },
+        placeholder = { Text(stringResource(Res.string.edit_recipe_field_image_url_placeholder)) },
         modifier = modifier.fillMaxWidth(),
         singleLine = true,
     )
@@ -210,8 +241,8 @@ private fun RecipeSourceUrlField(
     OutlinedTextField(
         value = sourceUrl,
         onValueChange = bloc::onSourceUrlChanged,
-        label = { Text("Source URL") },
-        placeholder = { Text("Enter source URL") },
+        label = { Text(stringResource(Res.string.edit_recipe_field_source_url)) },
+        placeholder = { Text(stringResource(Res.string.edit_recipe_field_source_url_placeholder)) },
         modifier = modifier.fillMaxWidth(),
         singleLine = true,
     )
@@ -227,8 +258,8 @@ private fun RecipeServingsField(
     OutlinedTextField(
         value = servings,
         onValueChange = bloc::onServingsChanged,
-        label = { Text("Servings") },
-        placeholder = { Text("Enter number of servings") },
+        label = { Text(stringResource(Res.string.edit_recipe_field_servings)) },
+        placeholder = { Text(stringResource(Res.string.edit_recipe_field_servings_placeholder)) },
         modifier = modifier.fillMaxWidth(),
         singleLine = true,
     )
@@ -244,8 +275,8 @@ private fun RecipePrepTimeField(
     OutlinedTextField(
         value = prepTime,
         onValueChange = bloc::onPrepTimeChanged,
-        label = { Text("Prep Time (minutes)") },
-        placeholder = { Text("Enter prep time in minutes") },
+        label = { Text(stringResource(Res.string.edit_recipe_field_prep_time)) },
+        placeholder = { Text(stringResource(Res.string.edit_recipe_field_prep_time_placeholder)) },
         modifier = modifier.fillMaxWidth(),
         singleLine = true,
     )
@@ -261,8 +292,8 @@ private fun RecipeCookTimeField(
     OutlinedTextField(
         value = cookTime,
         onValueChange = bloc::onCookTimeChanged,
-        label = { Text("Cook Time (minutes)") },
-        placeholder = { Text("Enter cook time in minutes") },
+        label = { Text(stringResource(Res.string.edit_recipe_field_cook_time)) },
+        placeholder = { Text(stringResource(Res.string.edit_recipe_field_cook_time_placeholder)) },
         modifier = modifier.fillMaxWidth(),
         singleLine = true,
     )
@@ -278,8 +309,8 @@ private fun RecipeTotalTimeField(
     OutlinedTextField(
         value = totalTime,
         onValueChange = bloc::onTotalTimeChanged,
-        label = { Text("Total Time (minutes)") },
-        placeholder = { Text("Enter total time in minutes") },
+        label = { Text(stringResource(Res.string.edit_recipe_field_total_time)) },
+        placeholder = { Text(stringResource(Res.string.edit_recipe_field_total_time_placeholder)) },
         modifier = modifier.fillMaxWidth(),
         singleLine = true,
     )
@@ -295,8 +326,8 @@ private fun RecipeCaloriesField(
     OutlinedTextField(
         value = calories,
         onValueChange = bloc::onCaloriesChanged,
-        label = { Text("Calories") },
-        placeholder = { Text("Enter calories per serving") },
+        label = { Text(stringResource(Res.string.edit_recipe_field_calories)) },
+        placeholder = { Text(stringResource(Res.string.edit_recipe_field_calories_placeholder)) },
         modifier = modifier.fillMaxWidth(),
         singleLine = true,
     )
@@ -312,8 +343,8 @@ private fun RecipeIngredientsField(
     OutlinedTextField(
         value = ingredients,
         onValueChange = bloc::onIngredientsChanged,
-        label = { Text("Ingredients") },
-        placeholder = { Text("Enter ingredients (one per line)") },
+        label = { Text(stringResource(Res.string.edit_recipe_field_ingredients)) },
+        placeholder = { Text(stringResource(Res.string.edit_recipe_field_ingredients_placeholder)) },
         modifier = modifier.fillMaxWidth(),
         minLines = 5,
         maxLines = 10,
@@ -330,8 +361,8 @@ private fun RecipeDirectionsField(
     OutlinedTextField(
         value = directions,
         onValueChange = bloc::onDirectionsChanged,
-        label = { Text("Directions") },
-        placeholder = { Text("Enter cooking directions") },
+        label = { Text(stringResource(Res.string.edit_recipe_field_directions)) },
+        placeholder = { Text(stringResource(Res.string.edit_recipe_field_directions_placeholder)) },
         modifier = modifier.fillMaxWidth(),
         minLines = 5,
         maxLines = 10,
@@ -346,16 +377,16 @@ private fun DiscardChangesDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Discard Changes?") },
-        text = { Text("You have unsaved changes. Are you sure you want to discard them?") },
+        title = { Text(stringResource(Res.string.edit_recipe_discard_title)) },
+        text = { Text(stringResource(Res.string.edit_recipe_discard_message)) },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("Discard")
+                Text(stringResource(Res.string.edit_recipe_discard_confirm))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(Res.string.edit_recipe_discard_cancel))
             }
         },
         modifier = modifier,

@@ -12,6 +12,7 @@ kotlin {
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
             api(libs.kotlinx.serialization.json)
+            implementation(compose.components.resources)
         }
     }
 }
