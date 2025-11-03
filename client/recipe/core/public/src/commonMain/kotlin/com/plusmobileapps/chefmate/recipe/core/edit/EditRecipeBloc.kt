@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.recipe.core.edit
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.text.TextData
 import kotlinx.coroutines.flow.StateFlow
 
 interface EditRecipeBloc : BackClickBloc {
@@ -63,6 +64,7 @@ interface EditRecipeBloc : BackClickBloc {
     fun onSaveClicked()
 
     data class Model(
+        val title: TextData,
         val isLoading: Boolean,
         val isSaving: Boolean,
         val showDiscardChangesDialog: Boolean,

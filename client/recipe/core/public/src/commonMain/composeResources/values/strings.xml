@@ -5,9 +5,9 @@
     <string name="recipe_detail_add_favorite">Add to favorites</string>
     <string name="recipe_detail_edit">Edit recipe</string>
     <string name="recipe_detail_delete">Delete recipe</string>
-    <string name="recipe_detail_image">Image: %1$s</string>
+    <string name="recipe_detail_image">Image: {url}</string>
     <string name="recipe_detail_rating_label">Rating:</string>
-    <string name="recipe_detail_rating_value">%1$s/5 &#11088;</string>
+    <string name="recipe_detail_rating_value">{star_rating}/5 &#11088;</string>
     <string name="recipe_detail_description">Description</string>
     <string name="recipe_detail_details">Details</string>
     <string name="recipe_detail_servings">Servings</string>
@@ -15,8 +15,8 @@
     <string name="recipe_detail_cook_time">Cook Time</string>
     <string name="recipe_detail_total_time">Total Time</string>
     <string name="recipe_detail_calories">Calories</string>
-    <string name="recipe_detail_minutes">%1$s minutes</string>
-    <string name="recipe_detail_kcal">%1$s kcal</string>
+    <string name="recipe_detail_minutes">{minutes} minutes</string>
+    <string name="recipe_detail_kcal">{calories} kcal</string>
     <string name="recipe_detail_source">Source</string>
     <string name="recipe_detail_ingredients">Ingredients</string>
     <string name="recipe_detail_directions">Directions</string>
@@ -24,7 +24,7 @@
     <string name="recipe_detail_created">Created</string>
     <string name="recipe_detail_updated">Updated</string>
     <string name="recipe_detail_delete_title">Delete Recipe?</string>
-    <string name="recipe_detail_delete_message">Are you sure you want to delete "%1$s"? This action cannot be undone.</string>
+    <string name="recipe_detail_delete_message">Are you sure you want to delete "{recipe_name}"? This action cannot be undone.</string>
     <string name="recipe_detail_delete_confirm">Delete</string>
     <string name="recipe_detail_delete_cancel">Cancel</string>
     <string name="recipe_detail_deleting_title">Deleting Recipe</string>

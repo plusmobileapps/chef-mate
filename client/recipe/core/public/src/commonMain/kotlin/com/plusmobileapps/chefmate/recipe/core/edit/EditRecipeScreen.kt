@@ -62,7 +62,7 @@ import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_total_time
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_total_time_placeholder
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_save
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_title
+import com.plusmobileapps.chefmate.text.TextData
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -77,6 +77,7 @@ fun EditRecipeScreen(
         modifier = modifier,
         topBar = {
             EditRecipeTopBar(
+                title = state.title,
                 onBackClicked = bloc::onBackClicked,
             )
         },
@@ -112,11 +113,12 @@ fun EditRecipeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EditRecipeTopBar(
+    title: TextData,
     onBackClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     TopAppBar(
-        title = { Text(stringResource(Res.string.edit_recipe_title)) },
+        title = { Text(title.localized()) },
         navigationIcon = {
             IconButton(onClick = onBackClicked) {
                 Icon(

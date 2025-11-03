@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.kmpLibrary)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.compose)
 }
 
 kotlin {
@@ -11,6 +12,7 @@ kotlin {
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
             implementation(libs.kotlinx.serialization.json)
+            implementation(projects.client.text.public)
         }
     }
 }

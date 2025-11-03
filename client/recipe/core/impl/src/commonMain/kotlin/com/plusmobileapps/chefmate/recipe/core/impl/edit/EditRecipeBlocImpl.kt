@@ -1,11 +1,15 @@
 package com.plusmobileapps.chefmate.recipe.core.impl.edit
 
+import chefmate.client.recipe.core.impl.generated.resources.Res
+import chefmate.client.recipe.core.impl.generated.resources.create_recipe
+import chefmate.client.recipe.core.impl.generated.resources.edit_recipe
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc.Output
+import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -35,6 +39,12 @@ class EditRecipeBlocImpl(
     override val state: StateFlow<EditRecipeBloc.Model> =
         viewModel.state.mapState {
             EditRecipeBloc.Model(
+                title =
+                    if (recipeId != null) {
+                        ResourceString(Res.string.edit_recipe)
+                    } else {
+                        ResourceString(Res.string.create_recipe)
+                    },
                 isLoading = it.isLoading,
                 isSaving = it.isSaving,
                 showDiscardChangesDialog = it.showDiscardChangesDialog,
