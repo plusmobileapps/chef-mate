@@ -35,7 +35,38 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import chefmate.client.recipe.core.public.generated.resources.Res
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_favorite
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_back
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_calories
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_cook_time
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_created
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_delete
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_delete_cancel
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_delete_confirm
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_delete_message
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_delete_title
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_deleting_message
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_deleting_title
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_description
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_details
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_directions
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_edit
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_image
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_ingredients
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_kcal
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_minutes
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_prep_time
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_rating_label
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_rating_value
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_remove_favorite
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_servings
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_source
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_timestamps
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_total_time
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_updated
 import com.plusmobileapps.chefmate.recipe.data.Recipe
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,7 +85,7 @@ fun RecipeDetailScreen(
                     IconButton(onClick = bloc::onBackClicked) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(Res.string.recipe_detail_back),
                         )
                     }
                 },
@@ -69,22 +100,22 @@ fun RecipeDetailScreen(
                                 },
                             contentDescription =
                                 if (state.recipe.isFavorite) {
-                                    "Remove from favorites"
+                                    stringResource(Res.string.recipe_detail_remove_favorite)
                                 } else {
-                                    "Add to favorites"
+                                    stringResource(Res.string.recipe_detail_add_favorite)
                                 },
                         )
                     }
                     IconButton(onClick = { bloc.onEditClicked() }) {
                         Icon(
                             imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit recipe",
+                            contentDescription = stringResource(Res.string.recipe_detail_edit),
                         )
                     }
                     IconButton(onClick = { bloc.onDeleteClicked() }) {
                         Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete recipe",
+                            contentDescription = stringResource(Res.string.recipe_detail_delete),
                         )
                     }
                 },
@@ -152,7 +183,7 @@ private fun RecipeDetailContent(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = "Image: $imageUrl",
+                        text = stringResource(Res.string.recipe_detail_image, imageUrl),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -164,14 +195,14 @@ private fun RecipeDetailContent(
         recipe.starRating?.let { rating ->
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Rating:",
+                    text = stringResource(Res.string.recipe_detail_rating_label),
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(
-                    text = "$rating/5 ⭐",
+                    text = stringResource(Res.string.recipe_detail_rating_value, rating.toString()),
                     style = MaterialTheme.typography.bodyLarge,
                 )
             }
@@ -187,7 +218,7 @@ private fun RecipeDetailContent(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
-                        text = "Description",
+                        text = stringResource(Res.string.recipe_detail_description),
                         style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
@@ -207,28 +238,43 @@ private fun RecipeDetailContent(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(
-                    text = "Details",
+                    text = stringResource(Res.string.recipe_detail_details),
                     style = MaterialTheme.typography.titleMedium,
                 )
 
                 recipe.servings?.let { servings ->
-                    DetailRow(label = "Servings", value = "$servings")
+                    DetailRow(
+                        label = stringResource(Res.string.recipe_detail_servings),
+                        value = "$servings",
+                    )
                 }
 
                 recipe.prepTime?.let { prepTime ->
-                    DetailRow(label = "Prep Time", value = "$prepTime minutes")
+                    DetailRow(
+                        label = stringResource(Res.string.recipe_detail_prep_time),
+                        value = stringResource(Res.string.recipe_detail_minutes, prepTime.toString()),
+                    )
                 }
 
                 recipe.cookTime?.let { cookTime ->
-                    DetailRow(label = "Cook Time", value = "$cookTime minutes")
+                    DetailRow(
+                        label = stringResource(Res.string.recipe_detail_cook_time),
+                        value = stringResource(Res.string.recipe_detail_minutes, cookTime.toString()),
+                    )
                 }
 
                 recipe.totalTime?.let { totalTime ->
-                    DetailRow(label = "Total Time", value = "$totalTime minutes")
+                    DetailRow(
+                        label = stringResource(Res.string.recipe_detail_total_time),
+                        value = stringResource(Res.string.recipe_detail_minutes, totalTime.toString()),
+                    )
                 }
 
                 recipe.calories?.let { calories ->
-                    DetailRow(label = "Calories", value = "$calories kcal")
+                    DetailRow(
+                        label = stringResource(Res.string.recipe_detail_calories),
+                        value = stringResource(Res.string.recipe_detail_kcal, calories.toString()),
+                    )
                 }
             }
         }
@@ -243,7 +289,7 @@ private fun RecipeDetailContent(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
-                        text = "Source",
+                        text = stringResource(Res.string.recipe_detail_source),
                         style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
@@ -265,7 +311,7 @@ private fun RecipeDetailContent(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
-                        text = "Ingredients",
+                        text = stringResource(Res.string.recipe_detail_ingredients),
                         style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
@@ -286,7 +332,7 @@ private fun RecipeDetailContent(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
-                        text = "Directions",
+                        text = stringResource(Res.string.recipe_detail_directions),
                         style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
@@ -306,11 +352,11 @@ private fun RecipeDetailContent(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(
-                    text = "Timestamps",
+                    text = stringResource(Res.string.recipe_detail_timestamps),
                     style = MaterialTheme.typography.titleMedium,
                 )
-                DetailRow(label = "Created", value = recipe.createdAt.toString())
-                DetailRow(label = "Updated", value = recipe.updatedAt.toString())
+                DetailRow(label = stringResource(Res.string.recipe_detail_created), value = recipe.createdAt.toString())
+                DetailRow(label = stringResource(Res.string.recipe_detail_updated), value = recipe.updatedAt.toString())
             }
         }
     }
@@ -347,18 +393,18 @@ private fun DeleteConfirmationDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Delete Recipe?") },
+        title = { Text(stringResource(Res.string.recipe_detail_delete_title)) },
         text = {
-            Text("Are you sure you want to delete \"$recipeName\"? This action cannot be undone.")
+            Text(stringResource(Res.string.recipe_detail_delete_message, recipeName))
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("Delete")
+                Text(stringResource(Res.string.recipe_detail_delete_confirm))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(Res.string.recipe_detail_delete_cancel))
             }
         },
         modifier = modifier,
@@ -369,14 +415,14 @@ private fun DeleteConfirmationDialog(
 private fun DeletingDialog(modifier: Modifier = Modifier) {
     AlertDialog(
         onDismissRequest = { /* Prevent dismissal while deleting */ },
-        title = { Text("Deleting Recipe") },
+        title = { Text(stringResource(Res.string.recipe_detail_deleting_title)) },
         text = {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 CircularProgressIndicator()
-                Text("Please wait...")
+                Text(stringResource(Res.string.recipe_detail_deleting_message))
             }
         },
         confirmButton = { },
