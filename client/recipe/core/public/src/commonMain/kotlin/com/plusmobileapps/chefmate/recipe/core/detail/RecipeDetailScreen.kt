@@ -68,6 +68,7 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_upda
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
+import com.plusmobileapps.chefmate.text.TextData
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -137,6 +138,8 @@ fun RecipeDetailScreen(
         } else {
             RecipeDetailContent(
                 recipe = state.recipe,
+                createdAt = state.createdAt,
+                updatedAt = state.updatedAt,
                 modifier =
                     Modifier
                         .fillMaxSize()
@@ -163,6 +166,8 @@ fun RecipeDetailScreen(
 @Composable
 private fun RecipeDetailContent(
     recipe: Recipe,
+    createdAt: TextData,
+    updatedAt: TextData,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -381,8 +386,14 @@ private fun RecipeDetailContent(
                     text = stringResource(Res.string.recipe_detail_timestamps),
                     style = MaterialTheme.typography.titleMedium,
                 )
-                DetailRow(label = stringResource(Res.string.recipe_detail_created), value = recipe.createdAt.toString())
-                DetailRow(label = stringResource(Res.string.recipe_detail_updated), value = recipe.updatedAt.toString())
+                DetailRow(
+                    label = stringResource(Res.string.recipe_detail_created),
+                    value = createdAt.localized(),
+                )
+                DetailRow(
+                    label = stringResource(Res.string.recipe_detail_updated),
+                    value = updatedAt.localized(),
+                )
             }
         }
     }

@@ -4,6 +4,7 @@ import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.text.TextData
 import kotlinx.coroutines.flow.StateFlow
 
 interface RecipeDetailBloc : BackClickBloc {
@@ -24,6 +25,8 @@ interface RecipeDetailBloc : BackClickBloc {
         val isDeleting: Boolean,
         val showDeleteConfirmationDialog: Boolean,
         val recipe: Recipe,
+        val createdAt: TextData,
+        val updatedAt: TextData,
     )
 
     sealed class Output {
