@@ -18,7 +18,7 @@ class FakeDateTimeUtil(
 
     override fun shortDate(
         instant: Instant,
-        timeZone: TimeZone
+        timeZone: TimeZone,
     ): String {
         val localDateTime = KotlinxInstant.fromEpochMilliseconds(instant.toEpochMilliseconds()).toLocalDateTime(timeZone)
         return "${localDateTime.month.ordinal + 1}/${localDateTime.dayOfMonth}/${localDateTime.year}"
@@ -26,7 +26,7 @@ class FakeDateTimeUtil(
 
     override fun longDate(
         instant: Instant,
-        timeZone: TimeZone
+        timeZone: TimeZone,
     ): String {
         val localDateTime = KotlinxInstant.fromEpochMilliseconds(instant.toEpochMilliseconds()).toLocalDateTime(timeZone)
         return "${localDateTime.month.ordinal + 1}/${localDateTime.dayOfMonth}/${localDateTime.year}"
@@ -34,7 +34,7 @@ class FakeDateTimeUtil(
 
     override fun formatTime(
         instant: Instant,
-        timeZone: TimeZone
+        timeZone: TimeZone,
     ): String {
         val localDateTime = KotlinxInstant.fromEpochMilliseconds(instant.toEpochMilliseconds()).toLocalDateTime(timeZone)
         val hour = localDateTime.hour.toString().padStart(2, '0')
@@ -44,8 +44,6 @@ class FakeDateTimeUtil(
 
     override fun formatDateTime(
         instant: Instant,
-        timeZone: TimeZone
-    ): String {
-        return "${shortDate(instant, timeZone)} ${formatTime(instant, timeZone)}"
-    }
+        timeZone: TimeZone,
+    ): String = "${shortDate(instant, timeZone)} ${formatTime(instant, timeZone)}"
 }
