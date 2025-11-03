@@ -16,6 +16,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -144,6 +146,27 @@ private fun RecipeListItemContent(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
+            }
+            recipe.starRating?.let { rating ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    repeat(5) { index ->
+                        val isFilled = index < rating
+                        Icon(
+                            imageVector = if (isFilled) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint =
+                                if (isFilled) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                },
+                        )
+                    }
+                }
             }
         }
     }

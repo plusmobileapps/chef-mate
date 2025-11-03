@@ -4,6 +4,7 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
+import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc.Output
 import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
@@ -33,7 +34,7 @@ class RecipeListBlocImpl(
         viewModel.state.mapState {
             RecipeListBloc.Model(
                 isLoading = it.isLoading,
-                recipes = it.recipes,
+                recipes = it.recipes.map { recipe -> recipe.toRecipeListItem() },
             )
         }
 
@@ -52,4 +53,13 @@ class RecipeListBlocImpl(
     override fun onToggleFavorite(recipe: RecipeListItem) {
         viewModel.toggleFavorite(recipe.id)
     }
+
+    private fun Recipe.toRecipeListItem(): RecipeListItem =
+        RecipeListItem(
+            id = id,
+            title = title,
+            description = description,
+            imageUrl = imageUrl,
+            starRating = starRating,
+        )
 }

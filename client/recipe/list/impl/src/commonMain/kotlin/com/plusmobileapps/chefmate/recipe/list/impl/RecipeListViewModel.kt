@@ -4,7 +4,6 @@ import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
-import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,7 +30,7 @@ class RecipeListViewModel(
             _state.update {
                 it.copy(
                     isLoading = false,
-                    recipes = recipes.map { recipe -> recipe.toRecipeListItem() },
+                    recipes = recipes,
                 )
             }
         }
@@ -50,16 +49,8 @@ class RecipeListViewModel(
         }
     }
 
-    private fun Recipe.toRecipeListItem(): RecipeListItem =
-        RecipeListItem(
-            id = id,
-            title = title,
-            description = description,
-            imageUrl = imageUrl,
-        )
-
     data class State(
         val isLoading: Boolean = true,
-        val recipes: List<RecipeListItem> = emptyList(),
+        val recipes: List<Recipe> = emptyList(),
     )
 }
