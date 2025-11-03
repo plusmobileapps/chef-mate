@@ -185,7 +185,11 @@ private fun RecipeDetailContent(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = stringResource(Res.string.recipe_detail_image, imageUrl),
+                        text =
+                            PhraseModel(
+                                Res.string.recipe_detail_image,
+                                "url" to FixedString(imageUrl),
+                            ).localized(),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -258,28 +262,44 @@ private fun RecipeDetailContent(
                 recipe.prepTime?.let { prepTime ->
                     DetailRow(
                         label = stringResource(Res.string.recipe_detail_prep_time),
-                        value = stringResource(Res.string.recipe_detail_minutes, prepTime.toString()),
+                        value =
+                            PhraseModel(
+                                Res.string.recipe_detail_minutes,
+                                "minutes" to FixedString(prepTime.toString()),
+                            ).localized(),
                     )
                 }
 
                 recipe.cookTime?.let { cookTime ->
                     DetailRow(
                         label = stringResource(Res.string.recipe_detail_cook_time),
-                        value = stringResource(Res.string.recipe_detail_minutes, cookTime.toString()),
+                        value =
+                            PhraseModel(
+                                Res.string.recipe_detail_minutes,
+                                "minutes" to FixedString(cookTime.toString()),
+                            ).localized(),
                     )
                 }
 
                 recipe.totalTime?.let { totalTime ->
                     DetailRow(
                         label = stringResource(Res.string.recipe_detail_total_time),
-                        value = stringResource(Res.string.recipe_detail_minutes, totalTime.toString()),
+                        value =
+                            PhraseModel(
+                                Res.string.recipe_detail_minutes,
+                                "minutes" to FixedString(totalTime.toString()),
+                            ).localized(),
                     )
                 }
 
                 recipe.calories?.let { calories ->
                     DetailRow(
                         label = stringResource(Res.string.recipe_detail_calories),
-                        value = stringResource(Res.string.recipe_detail_kcal, calories.toString()),
+                        value =
+                            PhraseModel(
+                                Res.string.recipe_detail_kcal,
+                                "calories" to FixedString(calories.toString()),
+                            ).localized(),
                     )
                 }
             }
@@ -401,7 +421,12 @@ private fun DeleteConfirmationDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(Res.string.recipe_detail_delete_title)) },
         text = {
-            Text(stringResource(Res.string.recipe_detail_delete_message, recipeName))
+            Text(
+                PhraseModel(
+                    Res.string.recipe_detail_delete_message,
+                    "recipe_name" to FixedString(recipeName),
+                ).localized(),
+            )
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
