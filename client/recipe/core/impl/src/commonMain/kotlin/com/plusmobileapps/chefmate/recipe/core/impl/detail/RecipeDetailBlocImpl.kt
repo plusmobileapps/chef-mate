@@ -7,7 +7,6 @@ import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc.Output
 import com.plusmobileapps.chefmate.text.FixedString
-import com.plusmobileapps.chefmate.util.DateTimeFormatterUtil
 import com.plusmobileapps.chefmate.util.DateTimeUtil
 import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +25,6 @@ class RecipeDetailBlocImpl(
     @Assisted private val recipeId: Long,
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: (Long) -> RecipeDetailViewModel,
-    private val dateTimeFormatter: DateTimeFormatterUtil,
     private val dateTimeUtil: DateTimeUtil,
 ) : RecipeDetailBloc,
     BlocContext by context {
@@ -56,16 +54,14 @@ class RecipeDetailBlocImpl(
                 recipe = it.recipe,
                 createdAt =
                     FixedString(
-                        dateTimeFormatter.formatDateTime(
+                        dateTimeUtil.formatDateTime(
                             instant = it.recipe.createdAt,
-                            timeZone = dateTimeUtil.currentTimezone,
                         ),
                     ),
                 updatedAt =
                     FixedString(
-                        dateTimeFormatter.formatDateTime(
+                        dateTimeUtil.formatDateTime(
                             instant = it.recipe.updatedAt,
-                            timeZone = dateTimeUtil.currentTimezone,
                         ),
                     ),
             )
