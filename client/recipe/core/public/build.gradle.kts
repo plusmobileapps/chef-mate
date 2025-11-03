@@ -13,6 +13,7 @@ kotlin {
             implementation(projects.client.shared)
             api(libs.kotlinx.serialization.json)
             implementation(compose.components.resources)
+            api(projects.client.text.public)
         }
     }
 }

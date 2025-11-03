@@ -1,0 +1,4 @@
+<resources>
+    <string name="create_recipe">Create Recipe</string>
+    <string name="edit_recipe">Edit Recipe</string>
+</resources>

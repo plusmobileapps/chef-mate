@@ -66,6 +66,9 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_time
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_total_time
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_updated
 import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.PhraseModel
+import com.plusmobileapps.chefmate.text.localized
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -202,7 +205,11 @@ private fun RecipeDetailContent(
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(
-                    text = stringResource(Res.string.recipe_detail_rating_value, rating.toString()),
+                    text =
+                        PhraseModel(
+                            Res.string.recipe_detail_rating_value,
+                            "star_rating" to FixedString(rating.toString()),
+                        ).localized(),
                     style = MaterialTheme.typography.bodyLarge,
                 )
             }
