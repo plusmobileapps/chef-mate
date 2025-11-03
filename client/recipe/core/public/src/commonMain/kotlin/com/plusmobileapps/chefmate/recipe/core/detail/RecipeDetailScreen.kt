@@ -68,7 +68,6 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_upda
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
-import com.plusmobileapps.chefmate.text.localized
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)

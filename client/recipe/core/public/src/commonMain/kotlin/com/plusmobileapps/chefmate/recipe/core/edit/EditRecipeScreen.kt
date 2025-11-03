@@ -63,7 +63,6 @@ import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_total_time_placeholder
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_save
 import com.plusmobileapps.chefmate.text.TextData
-import com.plusmobileapps.chefmate.text.localized
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
