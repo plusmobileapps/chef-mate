@@ -10,6 +10,7 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.plusmobileapps.chefmate.grocery.detail.GroceryDetailScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavigationScreen
+import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootScreen
 
 @Composable
 fun RootScreen(rootBloc: RootBloc) {
@@ -23,6 +24,7 @@ fun RootScreen(rootBloc: RootBloc) {
                 when (val child = it.instance) {
                     is RootBloc.Child.BottomNavigation -> BottomNavigationScreen(child.bloc)
                     is RootBloc.Child.GroceryDetail -> GroceryDetailScreen(child.bloc)
+                    is RootBloc.Child.RecipeRoot -> RecipeRootScreen(child.bloc)
                 }
             },
         )

@@ -11,6 +11,7 @@ kotlin {
             implementation(projects.client.shared)
             implementation(projects.client.bottomnav.public)
             implementation(projects.client.grocery.public)
+            implementation(projects.client.recipe.core.public)
             implementation(libs.kotlinx.serialization.json)
         }
     }

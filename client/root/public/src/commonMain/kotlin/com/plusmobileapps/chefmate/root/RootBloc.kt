@@ -5,6 +5,7 @@ import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.grocery.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
+import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 
 interface RootBloc {
     val state: Value<ChildStack<*, Child>>
@@ -16,6 +17,10 @@ interface RootBloc {
 
         data class GroceryDetail(
             val bloc: GroceryDetailBloc,
+        ) : Child()
+
+        data class RecipeRoot(
+            val bloc: RecipeRootBloc,
         ) : Child()
     }
 

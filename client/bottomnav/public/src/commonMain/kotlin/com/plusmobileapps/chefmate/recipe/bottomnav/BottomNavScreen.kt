@@ -1,7 +1,5 @@
 package com.plusmobileapps.chefmate.recipe.bottomnav
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,9 +13,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import chefmate.client.bottomnav.public.generated.resources.Res
 import chefmate.client.bottomnav.public.generated.resources.tab_grocery
 import chefmate.client.bottomnav.public.generated.resources.tab_recipes
@@ -27,6 +23,7 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.plusmobileapps.chefmate.grocery.list.GroceryListScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.GROCERIES
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.RECIPES
+import com.plusmobileapps.chefmate.recipe.list.RecipeListScreen
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -47,21 +44,11 @@ fun BottomNavigationScreen(bloc: BottomNavBloc) {
                     .fillMaxSize()
                     .padding(paddingValues),
             stack = bloc.content,
-            animation = stackAnimation(scale())
+            animation = stackAnimation(scale()),
         ) { created ->
             when (val instance = created.instance) {
                 is BottomNavBloc.Child.GroceryList -> GroceryListScreen(instance.bloc)
-                is BottomNavBloc.Child.RecipeList -> {
-                    Box(
-                        modifier =
-                            Modifier
-                                .fillMaxSize()
-                                .background(Color.Blue),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text("Recipes: TODO")
-                    }
-                }
+                is BottomNavBloc.Child.RecipeList -> RecipeListScreen(instance.bloc)
             }
         }
     }

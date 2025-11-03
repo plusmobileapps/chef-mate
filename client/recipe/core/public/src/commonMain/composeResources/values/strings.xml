@@ -1,0 +1,64 @@
+<resources>
+    <!-- Recipe Detail Screen -->
+    <string name="recipe_detail_back">Back</string>
+    <string name="recipe_detail_remove_favorite">Remove from favorites</string>
+    <string name="recipe_detail_add_favorite">Add to favorites</string>
+    <string name="recipe_detail_edit">Edit recipe</string>
+    <string name="recipe_detail_delete">Delete recipe</string>
+    <string name="recipe_detail_image">Image: %1$s</string>
+    <string name="recipe_detail_rating_label">Rating:</string>
+    <string name="recipe_detail_rating_value">%1$s/5 &#11088;</string>
+    <string name="recipe_detail_description">Description</string>
+    <string name="recipe_detail_details">Details</string>
+    <string name="recipe_detail_servings">Servings</string>
+    <string name="recipe_detail_prep_time">Prep Time</string>
+    <string name="recipe_detail_cook_time">Cook Time</string>
+    <string name="recipe_detail_total_time">Total Time</string>
+    <string name="recipe_detail_calories">Calories</string>
+    <string name="recipe_detail_minutes">%1$s minutes</string>
+    <string name="recipe_detail_kcal">%1$s kcal</string>
+    <string name="recipe_detail_source">Source</string>
+    <string name="recipe_detail_ingredients">Ingredients</string>
+    <string name="recipe_detail_directions">Directions</string>
+    <string name="recipe_detail_timestamps">Timestamps</string>
+    <string name="recipe_detail_created">Created</string>
+    <string name="recipe_detail_updated">Updated</string>
+    <string name="recipe_detail_delete_title">Delete Recipe?</string>
+    <string name="recipe_detail_delete_message">Are you sure you want to delete "%1$s"? This action cannot be undone.</string>
+    <string name="recipe_detail_delete_confirm">Delete</string>
+    <string name="recipe_detail_delete_cancel">Cancel</string>
+    <string name="recipe_detail_deleting_title">Deleting Recipe</string>
+    <string name="recipe_detail_deleting_message">Please wait...</string>
+
+    <!-- Edit Recipe Screen -->
+    <string name="edit_recipe_title">Edit Recipe</string>
+    <string name="edit_recipe_back">Back</string>
+    <string name="edit_recipe_save">Save</string>
+    <string name="edit_recipe_field_title">Title</string>
+    <string name="edit_recipe_field_title_placeholder">Enter recipe title</string>
+    <string name="edit_recipe_field_description">Description</string>
+    <string name="edit_recipe_field_description_placeholder">Enter recipe description</string>
+    <string name="edit_recipe_field_image_url">Image URL</string>
+    <string name="edit_recipe_field_image_url_placeholder">Enter image URL</string>
+    <string name="edit_recipe_field_source_url">Source URL</string>
+    <string name="edit_recipe_field_source_url_placeholder">Enter source URL</string>
+    <string name="edit_recipe_field_servings">Servings</string>
+    <string name="edit_recipe_field_servings_placeholder">Enter number of servings</string>
+    <string name="edit_recipe_field_prep_time">Prep Time (minutes)</string>
+    <string name="edit_recipe_field_prep_time_placeholder">Enter prep time in minutes</string>
+    <string name="edit_recipe_field_cook_time">Cook Time (minutes)</string>
+    <string name="edit_recipe_field_cook_time_placeholder">Enter cook time in minutes</string>
+    <string name="edit_recipe_field_total_time">Total Time (minutes)</string>
+    <string name="edit_recipe_field_total_time_placeholder">Enter total time in minutes</string>
+    <string name="edit_recipe_field_calories">Calories</string>
+    <string name="edit_recipe_field_calories_placeholder">Enter calories per serving</string>
+    <string name="edit_recipe_field_ingredients">Ingredients</string>
+    <string name="edit_recipe_field_ingredients_placeholder">Enter ingredients (one per line)</string>
+    <string name="edit_recipe_field_directions">Directions</string>
+    <string name="edit_recipe_field_directions_placeholder">Enter cooking directions</string>
+    <string name="edit_recipe_discard_title">Discard Changes?</string>
+    <string name="edit_recipe_discard_message">You have unsaved changes. Are you sure you want to discard them?</string>
+    <string name="edit_recipe_discard_confirm">Discard</string>
+    <string name="edit_recipe_discard_cancel">Cancel</string>
+</resources>
+
