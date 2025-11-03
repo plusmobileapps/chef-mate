@@ -30,6 +30,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import chefmate.client.recipe.list.public.generated.resources.Res
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_add_recipe
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_title
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun RecipeListScreen(
@@ -58,12 +62,12 @@ private fun RecipeListHeader(
     modifier: Modifier = Modifier,
 ) {
     TopAppBar(
-        title = { Text("Recipes") },
+        title = { Text(stringResource(Res.string.recipe_list_title)) },
         actions = {
             IconButton(onClick = onAddRecipeClicked) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "Add recipe",
+                    contentDescription = stringResource(Res.string.recipe_list_add_recipe),
                 )
             }
         },

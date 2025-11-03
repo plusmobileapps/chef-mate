@@ -1,0 +1,6 @@
+<resources>
+    <!-- Recipe List Screen -->
+    <string name="recipe_list_title">Recipes</string>
+    <string name="recipe_list_add_recipe">Add recipe</string>
+</resources>
+
