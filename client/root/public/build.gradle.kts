@@ -6,13 +6,13 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            api(libs.arkivanov.decompose.core)
-            implementation(libs.arkivanov.decompose.compose.extensions)
-            implementation(projects.client.shared)
             api(projects.client.bottomnav.public)
-            api(projects.client.grocery.public)
+            api(projects.client.grocery.core.public)
             api(projects.client.recipe.core.public)
+            api(libs.arkivanov.decompose.core)
+            implementation(projects.client.shared)
             implementation(projects.client.ui.public)
+            implementation(libs.arkivanov.decompose.compose.extensions)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

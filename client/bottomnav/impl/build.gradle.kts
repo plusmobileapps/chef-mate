@@ -10,7 +10,7 @@ kotlin {
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
             implementation(libs.kotlinx.serialization.json)
-            api(projects.client.grocery.public)
+            api(projects.client.grocery.core.public)
             api(projects.client.recipe.list.public)
         }
     }

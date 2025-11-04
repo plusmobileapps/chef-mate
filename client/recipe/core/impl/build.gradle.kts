@@ -13,8 +13,7 @@ kotlin {
             implementation(projects.client.shared)
             implementation(libs.kotlinx.serialization.json)
             implementation(projects.client.text.public)
-            // TODO refactor into grocery data module
-            implementation(projects.client.grocery.public)
+            implementation(projects.client.grocery.data.public)
             implementation(projects.client.util.public)
         }
     }
