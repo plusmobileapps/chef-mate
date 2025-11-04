@@ -45,6 +45,22 @@ class GroceryRepositoryImpl(
         }
     }
 
+    override suspend fun addGroceries(names: List<String>) {
+        withContext(ioContext) {
+            val now = Clock.System.now().toString()
+            queries.transaction {
+                names.forEach { name ->
+                    queries.create(
+                        name = name,
+                        isChecked = false,
+                        createdAt = now,
+                        updatedAt = now,
+                    )
+                }
+            }
+        }
+    }
+
     override suspend fun updateChecked(
         item: GroceryItem,
         isChecked: Boolean,
