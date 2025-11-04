@@ -6,12 +6,13 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.arkivanov.decompose.core)
-            implementation(libs.arkivanov.decompose.compose.extensions)
-            implementation(projects.client.shared)
             api(projects.client.grocery.public)
             api(projects.client.recipe.list.public)
+            implementation(projects.client.shared)
+            implementation(projects.client.ui.public)
             implementation(compose.components.resources)
+            implementation(libs.arkivanov.decompose.core)
+            implementation(libs.arkivanov.decompose.compose.extensions)
         }
     }
 }

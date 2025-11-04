@@ -4,9 +4,10 @@ import ComposeApp
 
 struct ComposeView: UIViewControllerRepresentable {
     let rootBloc: RootBloc
+    let backDispatcher: BackDispatcher
     
     func makeUIViewController(context: Context) -> UIViewController {
-        let controller = MainViewController.shared.create(rootBloc: rootBloc)
+        let controller = MainViewController.shared.create(rootBloc: rootBloc, backDispatcher: backDispatcher)
         controller.overrideUserInterfaceStyle = .light
         return controller
     }
@@ -20,9 +21,11 @@ struct ContentView: View {
     
     var body: some View {
         ComposeView(
-            rootBloc: appDelegate.root
+            rootBloc: appDelegate.root,
+            backDispatcher: appDelegate.backDispatcher
         )
-            .ignoresSafeArea()
+        .ignoresSafeArea(.all)
+        .ignoresSafeArea(.keyboard)
     }
 }
 

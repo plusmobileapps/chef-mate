@@ -1,10 +1,14 @@
 package com.plusmobileapps.chefmate.recipe.bottomnav.impl
 
+import com.arkivanov.decompose.Cancellation
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.bringToFront
 import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.lifecycle.doOnPause
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.getViewModel
@@ -15,7 +19,6 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenGro
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import me.tatarka.inject.annotations.Assisted
 import me.tatarka.inject.annotations.Inject
@@ -50,16 +53,7 @@ class BottomNavBlocImpl(
         )
 
     init {
-        scope.launch {
-            viewModel.state.collect {
-                val configuration =
-                    when (it.selectedTab) {
-                        BottomNavBloc.Tab.RECIPES -> Configuration.Recipe
-                        BottomNavBloc.Tab.GROCERIES -> Configuration.Grocery
-                    }
-                navigation.bringToFront(configuration)
-            }
-        }
+        observeRouter()
     }
 
     override val state: StateFlow<BottomNavBloc.Model> =
@@ -72,7 +66,17 @@ class BottomNavBlocImpl(
 
     override val content: Value<ChildStack<*, BottomNavBloc.Child>> = stack
 
+    override fun onBackClicked() {
+        navigation.pop()
+    }
+
     override fun onTabSelected(tab: BottomNavBloc.Tab) {
+        val configuration =
+            when (tab) {
+                BottomNavBloc.Tab.RECIPES -> Configuration.Recipe
+                BottomNavBloc.Tab.GROCERIES -> Configuration.Grocery
+            }
+        navigation.bringToFront(configuration)
         viewModel.selectTab(tab)
     }
 
@@ -116,6 +120,23 @@ class BottomNavBlocImpl(
             is GroceryListBloc.Output.OpenDetail -> {
                 this.output.onNext(OpenGrocery(output.id))
             }
+        }
+    }
+
+    private fun observeRouter() {
+        var cancellation: Cancellation? = null
+        lifecycle.doOnResume {
+            cancellation =
+                stack.subscribe { value ->
+                    when (value.active.instance) {
+                        is BottomNavBloc.Child.GroceryList -> BottomNavBloc.Tab.GROCERIES
+                        is BottomNavBloc.Child.RecipeList -> BottomNavBloc.Tab.RECIPES
+                    }.let(viewModel::selectTab)
+                }
+        }
+        lifecycle.doOnPause {
+            cancellation?.cancel()
+            cancellation = null
         }
     }
 

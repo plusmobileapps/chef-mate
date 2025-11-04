@@ -48,6 +48,10 @@ class RootBlocImpl(
 
     override val state: Value<ChildStack<*, RootBloc.Child>> = stack
 
+    override fun onBackClicked() {
+        navigation.pop()
+    }
+
     private fun createChild(
         config: Configuration,
         context: BlocContext,
