@@ -2,12 +2,16 @@ package com.plusmobileapps.chefmate.root
 
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.backhandler.BackHandlerOwner
+import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.grocery.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 
-interface RootBloc {
+interface RootBloc :
+    BackHandlerOwner,
+    BackClickBloc {
     val state: Value<ChildStack<*, Child>>
 
     sealed class Child {

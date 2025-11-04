@@ -2,13 +2,17 @@ package com.plusmobileapps.chefmate.recipe.core.root
 
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.backhandler.BackHandlerOwner
+import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
 import kotlinx.serialization.Serializable
 
-interface RecipeRootBloc {
+interface RecipeRootBloc :
+    BackHandlerOwner,
+    BackClickBloc {
     val routerState: Value<ChildStack<*, Child>>
 
     sealed class Child {

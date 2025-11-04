@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalDecomposeApi::class)
+
 package com.plusmobileapps.chefmate.recipe.bottomnav
 
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,13 +19,18 @@ import androidx.compose.ui.Modifier
 import chefmate.client.bottomnav.public.generated.resources.Res
 import chefmate.client.bottomnav.public.generated.resources.tab_grocery
 import chefmate.client.bottomnav.public.generated.resources.tab_recipes
+import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.stack.Children
+import com.arkivanov.decompose.extensions.compose.stack.animation.fade
+import com.arkivanov.decompose.extensions.compose.stack.animation.plus
+import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.predictiveBackAnimation
 import com.arkivanov.decompose.extensions.compose.stack.animation.scale
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.plusmobileapps.chefmate.grocery.list.GroceryListScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.GROCERIES
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.RECIPES
 import com.plusmobileapps.chefmate.recipe.list.RecipeListScreen
+import com.plusmobileapps.chefmate.ui.fadeScalePredictiveBackAnimatable
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -44,7 +51,17 @@ fun BottomNavigationScreen(bloc: BottomNavBloc) {
                     .fillMaxSize()
                     .padding(paddingValues),
             stack = bloc.content,
-            animation = stackAnimation(scale()),
+            animation =
+                predictiveBackAnimation(
+                    backHandler = bloc.backHandler,
+                    fallbackAnimation = stackAnimation(fade() + scale()),
+                    onBack = bloc::onBackClicked,
+                    selector = { backEvent, _, _ ->
+                        fadeScalePredictiveBackAnimatable(
+                            initialEvent = backEvent,
+                        )
+                    },
+                ),
         ) { created ->
             when (val instance = created.instance) {
                 is BottomNavBloc.Child.GroceryList -> GroceryListScreen(instance.bloc)

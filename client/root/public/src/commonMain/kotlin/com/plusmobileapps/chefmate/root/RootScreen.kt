@@ -5,21 +5,27 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
-import com.arkivanov.decompose.extensions.compose.stack.animation.slide
-import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.plusmobileapps.chefmate.grocery.detail.GroceryDetailScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavigationScreen
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootScreen
+import com.plusmobileapps.chefmate.ui.backAnimation
 
 @Composable
-fun RootScreen(rootBloc: RootBloc) {
+fun RootScreen(
+    rootBloc: RootBloc,
+    modifier: Modifier = Modifier,
+) {
     val state = rootBloc.state.subscribeAsState()
     MaterialTheme {
         Children(
-            modifier = Modifier.fillMaxSize(),
+            modifier = modifier.fillMaxSize(),
             stack = state.value,
-            animation = stackAnimation(slide()),
+            animation =
+                backAnimation(
+                    backHandler = rootBloc.backHandler,
+                    onBack = rootBloc::onBackClicked,
+                ),
             content = {
                 when (val child = it.instance) {
                     is RootBloc.Child.BottomNavigation -> BottomNavigationScreen(child.bloc)

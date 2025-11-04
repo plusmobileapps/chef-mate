@@ -2,13 +2,17 @@ package com.plusmobileapps.chefmate.recipe.bottomnav
 
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.backhandler.BackHandlerOwner
+import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.grocery.list.GroceryListBloc
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import kotlinx.coroutines.flow.StateFlow
 
-interface BottomNavBloc {
+interface BottomNavBloc :
+    BackHandlerOwner,
+    BackClickBloc {
     val state: StateFlow<Model>
 
     val content: Value<ChildStack<*, Child>>

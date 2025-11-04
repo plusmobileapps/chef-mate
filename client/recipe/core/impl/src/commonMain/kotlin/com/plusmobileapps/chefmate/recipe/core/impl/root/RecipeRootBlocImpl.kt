@@ -55,6 +55,10 @@ class RecipeRootBlocImpl(
 
     override val routerState: Value<ChildStack<*, RecipeRootBloc.Child>> = stack
 
+    override fun onBackClicked() {
+        navigation.pop()
+    }
+
     private fun createChild(
         config: Configuration,
         context: BlocContext,

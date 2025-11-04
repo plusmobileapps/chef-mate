@@ -4,10 +4,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
-import com.arkivanov.decompose.extensions.compose.stack.animation.slide
-import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailScreen
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeScreen
+import com.plusmobileapps.chefmate.ui.backAnimation
 
 @Composable
 fun RecipeRootScreen(
@@ -17,7 +16,11 @@ fun RecipeRootScreen(
     Children(
         modifier = modifier.fillMaxSize(),
         stack = recipeRootBloc.routerState,
-        animation = stackAnimation(slide()),
+        animation =
+            backAnimation(
+                backHandler = recipeRootBloc.backHandler,
+                onBack = recipeRootBloc::onBackClicked,
+            ),
     ) { child ->
         when (val instance = child.instance) {
             is RecipeRootBloc.Child.Detail -> RecipeDetailScreen(bloc = instance.bloc)

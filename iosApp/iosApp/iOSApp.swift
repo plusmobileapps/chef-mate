@@ -11,12 +11,14 @@ struct iOSApp: App {
 }
 
 class AppDelegate: NSObject, UIApplicationDelegate {
+    var backDispatcher: BackDispatcher = BackDispatcherKt.BackDispatcher()
+
     lazy var root: RootBloc = RootBlocProvider.shared.buildRootBloc(
         componentContext: DefaultComponentContext(
             lifecycle: ApplicationLifecycle(),
             stateKeeper: nil,
             instanceKeeper: nil,
-            backHandler: nil
+            backHandler: backDispatcher
         ),
         application: UIApplication.shared
     )

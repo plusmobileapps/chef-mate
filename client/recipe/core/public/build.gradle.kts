@@ -8,12 +8,14 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(projects.client.recipe.data.public)
+            api(projects.client.text.public)
+            api(libs.kotlinx.serialization.json)
+
+            implementation(projects.client.shared)
+            implementation(projects.client.ui.public)
             implementation(libs.arkivanov.decompose.compose.extensions)
             implementation(libs.arkivanov.decompose.core)
-            implementation(projects.client.shared)
-            api(libs.kotlinx.serialization.json)
             implementation(compose.components.resources)
-            api(projects.client.text.public)
         }
     }
 }

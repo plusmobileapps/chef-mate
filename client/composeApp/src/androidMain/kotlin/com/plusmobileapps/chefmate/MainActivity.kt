@@ -8,8 +8,8 @@ import com.arkivanov.decompose.defaultComponentContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         val appComponent = (application as MyApplication).appComponent
         val rootBloc =
             buildRootBloc(
