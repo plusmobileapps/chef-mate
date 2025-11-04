@@ -235,6 +235,7 @@ class EditRecipeViewModel(
             totalTime = _totalTime.value.toIntOrNull(),
             calories = _calories.value.toIntOrNull(),
             starRating = _starRating.value,
+            isFavorite = state.value.recipe?.isFavorite ?: false,
             createdAt = Instant.DISTANT_PAST,
             updatedAt = Instant.DISTANT_PAST,
         )
