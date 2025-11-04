@@ -6,6 +6,8 @@ import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc.Output
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.util.DateTimeUtil
 import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -23,6 +25,7 @@ class RecipeDetailBlocImpl(
     @Assisted private val recipeId: Long,
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: (Long) -> RecipeDetailViewModel,
+    private val dateTimeUtil: DateTimeUtil,
 ) : RecipeDetailBloc,
     BlocContext by context {
     private val scope = createScope()
@@ -49,6 +52,18 @@ class RecipeDetailBlocImpl(
                 isDeleting = it.isDeleting,
                 showDeleteConfirmationDialog = it.showDeleteConfirmationDialog,
                 recipe = it.recipe,
+                createdAt =
+                    FixedString(
+                        dateTimeUtil.formatDateTime(
+                            instant = it.recipe.createdAt,
+                        ),
+                    ),
+                updatedAt =
+                    FixedString(
+                        dateTimeUtil.formatDateTime(
+                            instant = it.recipe.updatedAt,
+                        ),
+                    ),
             )
         }
 

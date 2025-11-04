@@ -2,6 +2,8 @@ package com.plusmobileapps.chefmate.di
 
 import com.plusmobileapps.chefmate.ApplicationComponent
 import com.plusmobileapps.chefmate.client.database.DriverFactory
+import com.plusmobileapps.chefmate.util.DateTimeFormatterUtil
+import com.plusmobileapps.chefmate.util.DateTimeFormatterUtilImpl
 import me.tatarka.inject.annotations.Provides
 import platform.UIKit.UIApplication
 import software.amazon.lastmile.kotlin.inject.anvil.AppScope
@@ -16,6 +18,10 @@ abstract class IosApplicationComponent(
 ) : ApplicationComponent {
     @Provides
     fun driverFactory(): DriverFactory = DriverFactory()
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun provideDateTimeFormatterUtil(): DateTimeFormatterUtil = DateTimeFormatterUtilImpl()
 }
 
 /**

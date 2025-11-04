@@ -1,14 +1,12 @@
 package com.plusmobileapps.chefmate.util
 
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 import kotlin.time.Instant
 
-interface DateTimeUtil {
-    val now: Instant
-
-    val currentTimezone: TimeZone
-
+interface DateTimeFormatterUtil {
     /**
      * Formats the given [Instant] into a short date string.
      *
@@ -16,7 +14,7 @@ interface DateTimeUtil {
      */
     fun shortDate(
         instant: Instant,
-        timeZone: TimeZone = currentTimezone,
+        timeZone: TimeZone = TimeZone.currentSystemDefault(),
     ): String
 
     /**
@@ -26,7 +24,7 @@ interface DateTimeUtil {
      */
     fun longDate(
         instant: Instant,
-        timeZone: TimeZone = currentTimezone,
+        timeZone: TimeZone = TimeZone.currentSystemDefault(),
     ): String
 
     /**
@@ -36,7 +34,7 @@ interface DateTimeUtil {
      */
     fun formatTime(
         instant: Instant,
-        timeZone: TimeZone = currentTimezone,
+        timeZone: TimeZone = TimeZone.currentSystemDefault(),
     ): String
 
     /**
@@ -46,14 +44,28 @@ interface DateTimeUtil {
      */
     fun formatDateTime(
         instant: Instant,
-        timeZone: TimeZone = currentTimezone,
+        timeZone: TimeZone = TimeZone.currentSystemDefault(),
     ): String
 
     fun formatLocalDate(
         date: LocalDate,
-        timeZone: TimeZone = currentTimezone,
+        timeZone: TimeZone = TimeZone.currentSystemDefault(),
     ): String {
         val startOfDay = date.toInstantAtStartOfDay(timeZone)
         return longDate(startOfDay, timeZone)
     }
+}
+
+expect class DateTimeFormatterUtilImpl : DateTimeFormatterUtil
+
+fun LocalDate.atStartOfDayIn(): LocalDateTime {
+    // Assuming start of day is at 00:00, adjust if necessary for your use case
+    return LocalDateTime(this.year, this.monthNumber, this.dayOfMonth, 0, 0)
+}
+
+fun LocalDate.toInstantAtStartOfDay(timeZone: TimeZone = TimeZone.currentSystemDefault()): Instant {
+    // Convert LocalDate to LocalDateTime at the start of the day (midnight)
+    val startOfDay = this.atStartOfDayIn()
+    // Convert LocalDateTime to Instant
+    return startOfDay.toInstant(timeZone)
 }
