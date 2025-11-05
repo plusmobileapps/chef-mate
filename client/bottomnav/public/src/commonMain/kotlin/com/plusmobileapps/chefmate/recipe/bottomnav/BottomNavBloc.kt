@@ -51,7 +51,7 @@ interface BottomNavBloc :
         ) : Output()
     }
 
-    interface Factory {
+    fun interface Factory {
         fun create(
             context: BlocContext,
             output: Consumer<Output>,
