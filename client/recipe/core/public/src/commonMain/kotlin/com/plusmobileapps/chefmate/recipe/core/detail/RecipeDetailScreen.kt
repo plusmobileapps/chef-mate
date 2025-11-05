@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AddShoppingCart
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
@@ -25,10 +26,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -36,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.core.public.generated.resources.Res
+import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_grocery_list
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_favorite
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_back
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_calories
@@ -65,6 +69,8 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_sour
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_timestamps
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_total_time
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_updated
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListScreen
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
@@ -78,6 +84,7 @@ fun RecipeDetailScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by bloc.state.collectAsState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     Scaffold(
         modifier = modifier,
@@ -93,6 +100,12 @@ fun RecipeDetailScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = bloc::onAddToGroceryListClicked) {
+                        Icon(
+                            imageVector = Icons.Default.AddShoppingCart,
+                            contentDescription = stringResource(Res.string.recipe_add_to_grocery_list),
+                        )
+                    }
                     IconButton(onClick = { bloc.onFavoriteToggled() }) {
                         Icon(
                             imageVector =
@@ -159,6 +172,28 @@ fun RecipeDetailScreen(
         // Deleting progress dialog
         if (state.isDeleting) {
             DeletingDialog()
+        }
+
+        // Add to Grocery List Bottom Sheet
+        RecipeDetailSheet(bloc = bloc, sheetState = sheetState)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RecipeDetailSheet(
+    bloc: RecipeDetailBloc,
+    sheetState: androidx.compose.material3.SheetState,
+) {
+    val slot = bloc.childSlot.subscribeAsState()
+    val child = slot.value.child?.instance
+
+    if (child is RecipeDetailBloc.Sheet.AddToGroceryList) {
+        ModalBottomSheet(
+            onDismissRequest = { child.bloc.onBackClicked() },
+            sheetState = sheetState,
+        ) {
+            AddRecipeToGroceryListScreen(child.bloc)
         }
     }
 }

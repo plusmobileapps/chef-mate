@@ -1,5 +1,9 @@
 <resources>
     <!-- Recipe Detail Screen -->
+    <string name="recipe_add_to_grocery_list">Add Ingredients to Grocery List</string>
+    <string name="recipe_add_to_grocery_list_back">Back</string>
+    <string name="recipe_add_to_grocery_list_add">Add to Grocery List</string>
+    <string name="recipe_add_to_grocery_list_no_ingredients">No ingredients available</string>
     <string name="recipe_detail_back">Back</string>
     <string name="recipe_detail_remove_favorite">Remove from favorites</string>
     <string name="recipe_detail_add_favorite">Add to favorites</string>

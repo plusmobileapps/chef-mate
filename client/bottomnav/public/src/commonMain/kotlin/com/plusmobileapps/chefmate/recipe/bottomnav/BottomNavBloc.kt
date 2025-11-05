@@ -6,7 +6,7 @@ import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
-import com.plusmobileapps.chefmate.grocery.list.GroceryListBloc
+import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import kotlinx.coroutines.flow.StateFlow
 
@@ -51,7 +51,7 @@ interface BottomNavBloc :
         ) : Output()
     }
 
-    interface Factory {
+    fun interface Factory {
         fun create(
             context: BlocContext,
             output: Consumer<Output>,

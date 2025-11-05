@@ -1,9 +1,16 @@
 package com.plusmobileapps.chefmate.recipe.core.impl.detail
 
+import com.arkivanov.decompose.router.slot.ChildSlot
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.childSlot
+import com.arkivanov.decompose.router.slot.dismiss
+import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
+import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc.Output
 import com.plusmobileapps.chefmate.text.FixedString
@@ -11,6 +18,7 @@ import com.plusmobileapps.chefmate.util.DateTimeUtil
 import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import me.tatarka.inject.annotations.Assisted
 import me.tatarka.inject.annotations.Inject
 import software.amazon.lastmile.kotlin.inject.anvil.AppScope
@@ -26,6 +34,7 @@ class RecipeDetailBlocImpl(
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: (Long) -> RecipeDetailViewModel,
     private val dateTimeUtil: DateTimeUtil,
+    private val addToGroceryList: AddRecipeToGroceryListBloc.Factory,
 ) : RecipeDetailBloc,
     BlocContext by context {
     private val scope = createScope()
@@ -44,6 +53,17 @@ class RecipeDetailBlocImpl(
             }
         }
     }
+
+    private val sheetNavigation = SlotNavigation<SheetConfig>()
+    private val sheetRouter =
+        childSlot(
+            source = sheetNavigation,
+            serializer = SheetConfig.serializer(),
+            key = "RecipeDetailBloc_Sheet",
+            childFactory = ::createSheet,
+        )
+
+    override val childSlot: Value<ChildSlot<*, RecipeDetailBloc.Sheet>> = sheetRouter
 
     override val state: StateFlow<RecipeDetailBloc.Model> =
         viewModel.state.mapState {
@@ -87,7 +107,38 @@ class RecipeDetailBlocImpl(
         viewModel.toggleFavorite()
     }
 
+    override fun onAddToGroceryListClicked() {
+        sheetNavigation.activate(SheetConfig.AddToGroceryList(recipeId))
+    }
+
     override fun onBackClicked() {
         output.onNext(Output.Finished)
+    }
+
+    private fun createSheet(
+        config: SheetConfig,
+        context: BlocContext,
+    ): RecipeDetailBloc.Sheet =
+        when (config) {
+            is SheetConfig.AddToGroceryList ->
+                RecipeDetailBloc.Sheet.AddToGroceryList(
+                    bloc =
+                        addToGroceryList.create(
+                            context = context,
+                            recipeId = config.recipeId,
+                            output = { output ->
+                                when (output) {
+                                    AddRecipeToGroceryListBloc.Output.Finished -> sheetNavigation.dismiss()
+                                }
+                            },
+                        ),
+                )
+        }
+
+    @Serializable
+    sealed class SheetConfig {
+        data class AddToGroceryList(
+            val recipeId: Long,
+        ) : SheetConfig()
     }
 }

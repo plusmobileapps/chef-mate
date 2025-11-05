@@ -4,7 +4,6 @@ import com.plusmobileapps.chefmate.util.DateTimeUtil
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
-import kotlinx.datetime.Instant as KotlinxInstant
 
 class FakeDateTimeUtil(
     var fakeNow: Instant = Instant.parse("2024-01-01T00:00:00Z"),
@@ -20,7 +19,7 @@ class FakeDateTimeUtil(
         instant: Instant,
         timeZone: TimeZone,
     ): String {
-        val localDateTime = KotlinxInstant.fromEpochMilliseconds(instant.toEpochMilliseconds()).toLocalDateTime(timeZone)
+        val localDateTime = Instant.fromEpochMilliseconds(instant.toEpochMilliseconds()).toLocalDateTime(timeZone)
         return "${localDateTime.month.ordinal + 1}/${localDateTime.dayOfMonth}/${localDateTime.year}"
     }
 
@@ -28,7 +27,7 @@ class FakeDateTimeUtil(
         instant: Instant,
         timeZone: TimeZone,
     ): String {
-        val localDateTime = KotlinxInstant.fromEpochMilliseconds(instant.toEpochMilliseconds()).toLocalDateTime(timeZone)
+        val localDateTime = Instant.fromEpochMilliseconds(instant.toEpochMilliseconds()).toLocalDateTime(timeZone)
         return "${localDateTime.month.ordinal + 1}/${localDateTime.dayOfMonth}/${localDateTime.year}"
     }
 
@@ -36,7 +35,7 @@ class FakeDateTimeUtil(
         instant: Instant,
         timeZone: TimeZone,
     ): String {
-        val localDateTime = KotlinxInstant.fromEpochMilliseconds(instant.toEpochMilliseconds()).toLocalDateTime(timeZone)
+        val localDateTime = Instant.fromEpochMilliseconds(instant.toEpochMilliseconds()).toLocalDateTime(timeZone)
         val hour = localDateTime.hour.toString().padStart(2, '0')
         val minute = localDateTime.minute.toString().padStart(2, '0')
         return "$hour:$minute"
