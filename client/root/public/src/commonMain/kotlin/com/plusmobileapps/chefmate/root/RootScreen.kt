@@ -10,6 +10,7 @@ import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavigationScreen
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootScreen
 import com.plusmobileapps.chefmate.ui.backAnimation
+import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
 @Composable
 fun RootScreen(
@@ -17,7 +18,7 @@ fun RootScreen(
     modifier: Modifier = Modifier,
 ) {
     val state = rootBloc.state.subscribeAsState()
-    MaterialTheme {
+    ChefMateTheme {
         Children(
             modifier = modifier.fillMaxSize(),
             stack = state.value,
