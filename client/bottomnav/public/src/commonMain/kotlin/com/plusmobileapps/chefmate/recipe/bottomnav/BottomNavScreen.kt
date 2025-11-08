@@ -31,6 +31,7 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.GROCERIES
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.RECIPES
 import com.plusmobileapps.chefmate.recipe.list.RecipeListScreen
 import com.plusmobileapps.chefmate.ui.fadeScalePredictiveBackAnimatable
+import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -89,6 +90,7 @@ private fun PlusBottomBar(
                             RECIPES -> stringResource(Res.string.tab_recipes)
                             GROCERIES -> stringResource(Res.string.tab_grocery)
                         },
+                        color = ChefMateTheme.colorScheme.onSurface
                     )
                 },
                 icon = {
