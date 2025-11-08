@@ -1,8 +1,10 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 
 package com.plusmobileapps.chefmate.ui.components
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -26,14 +28,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import chefmate.client.ui.public.generated.resources.Res
@@ -46,9 +52,12 @@ import org.jetbrains.compose.resources.stringResource
 fun PlusHeaderContainer(
     data: PlusHeaderData,
     modifier: Modifier = Modifier,
+    verticalArrangement: Arrangement.Vertical = Arrangement.Top,
+    horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     scrollEnabled: Boolean = true,
     snackbarHost: @Composable () -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
+    floatingToolbar: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val scrollState = rememberScrollState()
@@ -59,6 +68,8 @@ fun PlusHeaderContainer(
             modifier
                 .fillMaxSize()
                 .background(ChefMateTheme.colorScheme.background),
+        verticalArrangement = verticalArrangement,
+        horizontalAlignment = horizontalAlignment,
     ) {
         if (data !is PlusHeaderData.None) {
             PlusHeader(
@@ -66,63 +77,106 @@ fun PlusHeaderContainer(
             )
         }
 
-        Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.Center,
+        Surface(
+            modifier = modifier.weight(1f),
+            color = ChefMateTheme.colorScheme.background,
+            contentColor = ChefMateTheme.colorScheme.onBackground,
         ) {
-            Column(
-                modifier =
-                    if (scrollEnabled) {
-                        Modifier
-                            .fillMaxHeight()
-                            .widthIn(max = 600.dp)
-                            .scaffoldContentInsetPadding()
-                            .verticalScroll(scrollState)
-                    } else {
-                        Modifier
-                            .fillMaxHeight()
-                            .widthIn(max = 600.dp)
-                            .scaffoldContentInsetPadding()
-                    },
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
             ) {
-                content()
-                Spacer(modifier = Modifier.padding(WindowInsets.systemGestures.asPaddingValues()))
-            }
-            Column {
-                Spacer(modifier = Modifier.weight(1f))
-                Row(
-                    modifier =
-                        Modifier.padding(
-                            end =
-                                with(density) {
-                                    WindowInsets.displayCutout
-                                        .getRight(
-                                            density,
-                                            LayoutDirection.Ltr,
-                                        ).toDp()
-                                },
-                        ),
-                ) {
-                    Spacer(modifier = Modifier.weight(1f))
+                ScrollingContent(
+                    scrollEnabled = scrollEnabled,
+                    scrollState = scrollState,
+                    content = content,
+                )
+                BottomBarBox(
+                    density = density,
+                    floatingActionButton = floatingActionButton,
+                    snackbarHost = snackbarHost,
+                )
+
+                floatingToolbar?.let {
                     Box(
-                        modifier = Modifier.padding(end = ChefMateTheme.dimens.paddingNormal),
+                        modifier =
+                            Modifier
+                                .align(BottomCenter)
+                                .floatingToolbarPadding(),
                     ) {
-                        floatingActionButton()
+                        it()
                     }
                 }
-
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(top = ChefMateTheme.dimens.paddingNormal),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    snackbarHost()
-                }
-                Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.systemBars))
             }
         }
+    }
+}
+
+@Composable
+private fun BottomBarBox(
+    density: Density,
+    floatingActionButton: @Composable (() -> Unit),
+    snackbarHost: @Composable (() -> Unit),
+) {
+    Column {
+        Spacer(modifier = Modifier.weight(1f))
+        Row(
+            modifier =
+                Modifier.padding(
+                    end =
+                        with(density) {
+                            WindowInsets.displayCutout
+                                .getRight(
+                                    density,
+                                    LayoutDirection.Ltr,
+                                ).toDp()
+                        },
+                ),
+        ) {
+            Spacer(modifier = Modifier.weight(1f))
+            Box(
+                modifier = Modifier.padding(end = ChefMateTheme.dimens.paddingNormal),
+            ) {
+                floatingActionButton()
+            }
+        }
+
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = ChefMateTheme.dimens.paddingNormal),
+            contentAlignment = Alignment.Center,
+        ) {
+            snackbarHost()
+        }
+        Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.systemBars))
+    }
+}
+
+@Composable
+private fun ScrollingContent(
+    scrollEnabled: Boolean,
+    scrollState: ScrollState,
+    content: @Composable (ColumnScope.() -> Unit),
+) {
+    Column(
+        modifier =
+            if (scrollEnabled) {
+                Modifier
+                    .fillMaxHeight()
+                    .widthIn(max = 600.dp)
+                    .scaffoldContentInsetPadding()
+                    .verticalScroll(scrollState)
+            } else {
+                Modifier
+                    .fillMaxHeight()
+                    .widthIn(max = 600.dp)
+                    .scaffoldContentInsetPadding()
+            },
+    ) {
+        content()
+        Spacer(modifier = Modifier.padding(WindowInsets.systemGestures.asPaddingValues()))
     }
 }
 
@@ -151,34 +205,27 @@ fun PlusHeader(
             when (data) {
                 is PlusHeaderData.Child -> {
                     {
-                        IconButton(
+                        PlusIconButton(
+                            modifier = Modifier.padding(end = ChefMateTheme.dimens.paddingSmall),
+                            icon = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(Res.string.back),
                             onClick = data.onBackClick,
-                        ) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(Res.string.back),
-                                tint = ChefMateTheme.colorScheme.onBackground,
-                            )
-                        }
+                        )
                     }
                 }
 
                 is PlusHeaderData.Modal -> {
                     {
-                        IconButton(
+                        PlusIconButton(
+                            icon = Icons.Default.Close,
+                            contentDescription = stringResource(Res.string.close),
                             onClick = data.onCloseClick,
-                        ) {
-                            Icon(
-                                Icons.Default.Close,
-                                contentDescription = stringResource(Res.string.close),
-                                tint = ChefMateTheme.colorScheme.onBackground,
-                            )
-                        }
+                        )
                     }
                 }
 
                 is PlusHeaderData.Parent -> {
-                    {  }
+                    { }
                 }
                 PlusHeaderData.None -> {
                     { }

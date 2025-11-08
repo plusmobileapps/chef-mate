@@ -15,8 +15,9 @@ fun PlusLoadingIndicator(
     modifier: Modifier = Modifier,
 ) {
     CircularWavyProgressIndicator(
-        modifier = modifier.semantics {
-            this.contentDescription = contentDescription.orEmpty()
-        }
+        modifier =
+            modifier.semantics {
+                this.contentDescription = contentDescription.orEmpty()
+            },
     )
 }

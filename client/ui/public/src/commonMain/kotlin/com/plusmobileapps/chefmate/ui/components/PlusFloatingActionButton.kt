@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
 @Composable
@@ -27,6 +28,29 @@ fun PlusFloatingActionButton(
             Spacer(Modifier.width(ChefMateTheme.dimens.paddingNormal))
             Icon(
                 painter = icon,
+                contentDescription = null,
+            )
+        }
+    }
+}
+
+@Composable
+fun PlusFloatingActionButton(
+    modifier: Modifier = Modifier,
+    text: String? = null,
+    onClick: () -> Unit,
+    icon: ImageVector? = null,
+) {
+    ExtendedFloatingActionButton(
+        modifier = modifier,
+        onClick = onClick,
+        shape = ChefMateTheme.shapes.extraLarge,
+    ) {
+        text?.let { Text(text = text) }
+        if (icon != null) {
+            Spacer(Modifier.width(ChefMateTheme.dimens.paddingNormal))
+            Icon(
+                imageVector = icon,
                 contentDescription = null,
             )
         }

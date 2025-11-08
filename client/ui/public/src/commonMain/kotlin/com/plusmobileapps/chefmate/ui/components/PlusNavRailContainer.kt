@@ -15,10 +15,10 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.systemGestures
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Text
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
@@ -62,7 +62,7 @@ fun PlusNavRailHeaderContainer(
                     when (windowSize) {
                         WindowSizeClass.COMPACT,
                         WindowSizeClass.MEDIUM,
-                            -> {
+                        -> {
                             navRail.forEach { item ->
                                 NavigationRailItem(
                                     selected = item.selected,
