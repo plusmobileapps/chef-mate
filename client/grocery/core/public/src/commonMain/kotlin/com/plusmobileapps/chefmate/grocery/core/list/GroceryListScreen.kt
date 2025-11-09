@@ -1,7 +1,6 @@
 package com.plusmobileapps.chefmate.grocery.core.list
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,7 +22,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import chefmate.client.grocery.core.public.generated.resources.Res
+import chefmate.client.grocery.core.public.generated.resources.grocery_list
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
+import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
+import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import kotlinx.coroutines.flow.StateFlow
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,28 +37,34 @@ fun GroceryListScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by bloc.state.collectAsState()
-    Column(
+    PlusNavContainer(
         modifier = modifier.fillMaxSize(),
-    ) {
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-        ) {
-            items(state.items.size) { index ->
-                val item = state.items[index]
-                GroceryListItem(
-                    item = item,
-                    onCheckedChange = bloc::onGroceryItemCheckedChange,
-                    onDeleteClick = bloc::onGroceryItemDelete,
-                    onGroceryClick = bloc::onGroceryItemClicked,
-                )
+        data =
+            PlusHeaderData.Parent(
+                title = Res.string.grocery_list.asTextData(),
+            ),
+        scrollEnabled = false,
+        content = {
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+            ) {
+                items(state.items.size, key = { state.items[it].id }) { index ->
+                    val item = state.items[index]
+                    GroceryListItem(
+                        item = item,
+                        onCheckedChange = bloc::onGroceryItemCheckedChange,
+                        onDeleteClick = bloc::onGroceryItemDelete,
+                        onGroceryClick = bloc::onGroceryItemClicked,
+                    )
+                }
             }
-        }
-        GroceryListInput(
-            name = bloc.newGroceryItemName,
-            onNameChange = bloc::onNewGroceryItemNameChange,
-            onAddClick = bloc::saveGroceryItem,
-        )
-    }
+            GroceryListInput(
+                name = bloc.newGroceryItemName,
+                onNameChange = bloc::onNewGroceryItemNameChange,
+                onAddClick = bloc::saveGroceryItem,
+            )
+        },
+    )
 }
 
 @Composable

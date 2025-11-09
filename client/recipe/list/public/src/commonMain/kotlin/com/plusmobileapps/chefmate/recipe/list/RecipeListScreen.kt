@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,12 +17,9 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -35,7 +31,9 @@ import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.list.public.generated.resources.Res
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_add_recipe
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_title
-import org.jetbrains.compose.resources.stringResource
+import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
+import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 
 @Composable
 fun RecipeListScreen(
@@ -43,38 +41,26 @@ fun RecipeListScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by bloc.state.collectAsState()
-    Column(
+    PlusNavContainer(
         modifier = modifier.fillMaxSize(),
-    ) {
-        RecipeListHeader(
-            onAddRecipeClicked = bloc::onAddRecipeClicked,
-        )
-        RecipeList(
-            modifier = Modifier.weight(1f),
-            recipes = state.recipes,
-            onRecipeClicked = bloc::onRecipeClicked,
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun RecipeListHeader(
-    onAddRecipeClicked: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    TopAppBar(
-        title = { Text(stringResource(Res.string.recipe_list_title)) },
-        actions = {
-            IconButton(onClick = onAddRecipeClicked) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = stringResource(Res.string.recipe_list_add_recipe),
-                )
-            }
+        data =
+            PlusHeaderData.Parent(
+                title = Res.string.recipe_list_title.asTextData(),
+                trailingAccessory =
+                    PlusHeaderData.TrailingAccessory.Icon(
+                        icon = Icons.Default.Add,
+                        contentDesc = Res.string.recipe_list_add_recipe.asTextData(),
+                        onClick = bloc::onAddRecipeClicked,
+                    ),
+            ),
+        scrollEnabled = false,
+        content = {
+            RecipeList(
+                modifier = Modifier.weight(1f),
+                recipes = state.recipes,
+                onRecipeClicked = bloc::onRecipeClicked,
+            )
         },
-        windowInsets = WindowInsets(left = 0.dp),
-        modifier = modifier,
     )
 }
 

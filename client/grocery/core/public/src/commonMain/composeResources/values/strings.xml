@@ -1,4 +1,5 @@
 <resources>
+    <string name="grocery_list">Grocery List</string>
     <string name="grocery_detail">Grocery Detail</string>
     <string name="purchased">Purchased</string>
 </resources>
