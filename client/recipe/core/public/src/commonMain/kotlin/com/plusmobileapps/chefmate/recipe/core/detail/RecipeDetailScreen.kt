@@ -1,19 +1,18 @@
-@file:OptIn(kotlin.time.ExperimentalTime::class)
+@file:OptIn(ExperimentalTime::class, ExperimentalMaterial3ExpressiveApi::class)
 
 package com.plusmobileapps.chefmate.recipe.core.detail
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Arrangement.Absolute.spacedBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddShoppingCart
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -23,14 +22,15 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -39,9 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.core.public.generated.resources.Res
-import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_grocery_list
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_favorite
-import chefmate.client.recipe.core.public.generated.resources.recipe_detail_back
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_calories
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_cook_time
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_created
@@ -70,12 +68,25 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_time
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_total_time
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_updated
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.arkivanov.decompose.router.slot.ChildSlot
+import com.arkivanov.decompose.value.MutableValue
+import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListScreen
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.TextData
+import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
+import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
+import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
+import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,96 +97,88 @@ fun RecipeDetailScreen(
     val state by bloc.state.collectAsState()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = { Text(state.recipe.title) },
-                navigationIcon = {
-                    IconButton(onClick = bloc::onBackClicked) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                            contentDescription = stringResource(Res.string.recipe_detail_back),
-                        )
+    // Delete confirmation dialog
+    if (state.showDeleteConfirmationDialog) {
+        DeleteConfirmationDialog(
+            recipeName = state.recipe.title,
+            onConfirm = bloc::onDeleteConfirmed,
+            onDismiss = bloc::onDeleteDismissed,
+        )
+    }
+
+    // Deleting progress dialog
+    if (state.isDeleting) {
+        DeletingDialog()
+    }
+
+    // Add to Grocery List Bottom Sheet
+    RecipeDetailSheet(bloc = bloc, sheetState = sheetState)
+
+    PlusHeaderContainer(
+        modifier = modifier.fillMaxSize(),
+        data =
+            PlusHeaderData.Child(
+                title = state.recipe.title.asTextData(),
+                onBackClick = bloc::onBackClicked,
+            ),
+        verticalArrangement = spacedBy(ChefMateTheme.dimens.paddingNormal),
+        floatingToolbar = {
+            HorizontalFloatingToolbar(
+                expanded = true,
+                floatingActionButton = {
+                    FloatingActionButton(
+                        onClick = bloc::onAddToGroceryListClicked,
+                        shape = ChefMateTheme.shapes.large,
+                    ) {
+                        Icon(Icons.Default.AddShoppingCart, null)
                     }
                 },
-                actions = {
-                    IconButton(onClick = bloc::onAddToGroceryListClicked) {
-                        Icon(
-                            imageVector = Icons.Default.AddShoppingCart,
-                            contentDescription = stringResource(Res.string.recipe_add_to_grocery_list),
-                        )
-                    }
-                    IconButton(onClick = { bloc.onFavoriteToggled() }) {
-                        Icon(
-                            imageVector =
-                                if (state.recipe.isFavorite) {
-                                    Icons.Default.Favorite
-                                } else {
-                                    Icons.Default.FavoriteBorder
-                                },
-                            contentDescription =
-                                if (state.recipe.isFavorite) {
-                                    stringResource(Res.string.recipe_detail_remove_favorite)
-                                } else {
-                                    stringResource(Res.string.recipe_detail_add_favorite)
-                                },
-                        )
-                    }
-                    IconButton(onClick = { bloc.onEditClicked() }) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = stringResource(Res.string.recipe_detail_edit),
-                        )
-                    }
-                    IconButton(onClick = { bloc.onDeleteClicked() }) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = stringResource(Res.string.recipe_detail_delete),
-                        )
-                    }
-                },
-            )
+            ) {
+                IconButton(onClick = { bloc.onFavoriteToggled() }) {
+                    Icon(
+                        imageVector =
+                            if (state.recipe.isFavorite) {
+                                Icons.Default.Favorite
+                            } else {
+                                Icons.Default.FavoriteBorder
+                            },
+                        contentDescription =
+                            if (state.recipe.isFavorite) {
+                                stringResource(Res.string.recipe_detail_remove_favorite)
+                            } else {
+                                stringResource(Res.string.recipe_detail_add_favorite)
+                            },
+                    )
+                }
+                IconButton(onClick = { bloc.onEditClicked() }) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = stringResource(Res.string.recipe_detail_edit),
+                    )
+                }
+                IconButton(onClick = { bloc.onDeleteClicked() }) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = stringResource(Res.string.recipe_detail_delete),
+                    )
+                }
+            }
         },
-    ) { paddingValues ->
+    ) {
         if (state.isLoading) {
             Box(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
+                modifier = Modifier.weight(1f),
                 contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator()
+                PlusLoadingIndicator()
             }
         } else {
             RecipeDetailContent(
                 recipe = state.recipe,
                 createdAt = state.createdAt,
                 updatedAt = state.updatedAt,
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
             )
         }
-
-        // Delete confirmation dialog
-        if (state.showDeleteConfirmationDialog) {
-            DeleteConfirmationDialog(
-                recipeName = state.recipe.title,
-                onConfirm = bloc::onDeleteConfirmed,
-                onDismiss = bloc::onDeleteDismissed,
-            )
-        }
-
-        // Deleting progress dialog
-        if (state.isDeleting) {
-            DeletingDialog()
-        }
-
-        // Add to Grocery List Bottom Sheet
-        RecipeDetailSheet(bloc = bloc, sheetState = sheetState)
     }
 }
 
@@ -199,87 +202,59 @@ private fun RecipeDetailSheet(
 }
 
 @Composable
-private fun RecipeDetailContent(
+private fun ColumnScope.RecipeDetailContent(
     recipe: Recipe,
     createdAt: TextData,
     updatedAt: TextData,
-    modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier =
-            modifier
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        // Recipe Image
-        recipe.imageUrl?.let { imageUrl ->
-            Card(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .height(240.dp),
+    // Recipe Image
+    recipe.imageUrl?.let { imageUrl ->
+        Card(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(240.dp),
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
             ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text =
-                            PhraseModel(
-                                Res.string.recipe_detail_image,
-                                "url" to FixedString(imageUrl),
-                            ).localized(),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-        }
-
-        // Star Rating
-        recipe.starRating?.let { rating ->
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(Res.string.recipe_detail_rating_label),
-                    style = MaterialTheme.typography.titleMedium,
-                )
                 Text(
                     text =
                         PhraseModel(
-                            Res.string.recipe_detail_rating_value,
-                            "star_rating" to FixedString(rating.toString()),
+                            Res.string.recipe_detail_image,
+                            "url" to FixedString(imageUrl),
                         ).localized(),
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = ChefMateTheme.typography.bodySmall,
+                    color = ChefMateTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
+    }
 
-        // Description
-        recipe.description?.let { description ->
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Text(
-                        text = stringResource(Res.string.recipe_detail_description),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-            }
+    // Star Rating
+    recipe.starRating?.let { rating ->
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(Res.string.recipe_detail_rating_label),
+                style = ChefMateTheme.typography.titleMedium,
+            )
+            Text(
+                text =
+                    PhraseModel(
+                        Res.string.recipe_detail_rating_value,
+                        "star_rating" to FixedString(rating.toString()),
+                    ).localized(),
+                style = ChefMateTheme.typography.bodyLarge,
+            )
         }
+    }
 
-        // Servings and Times
+    // Description
+    recipe.description?.let { description ->
         Card(
             modifier = Modifier.fillMaxWidth(),
         ) {
@@ -288,128 +263,85 @@ private fun RecipeDetailContent(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(
-                    text = stringResource(Res.string.recipe_detail_details),
+                    text = stringResource(Res.string.recipe_detail_description),
                     style = MaterialTheme.typography.titleMedium,
                 )
-
-                recipe.servings?.let { servings ->
-                    DetailRow(
-                        label = stringResource(Res.string.recipe_detail_servings),
-                        value = "$servings",
-                    )
-                }
-
-                recipe.prepTime?.let { prepTime ->
-                    DetailRow(
-                        label = stringResource(Res.string.recipe_detail_prep_time),
-                        value =
-                            PhraseModel(
-                                Res.string.recipe_detail_minutes,
-                                "minutes" to FixedString(prepTime.toString()),
-                            ).localized(),
-                    )
-                }
-
-                recipe.cookTime?.let { cookTime ->
-                    DetailRow(
-                        label = stringResource(Res.string.recipe_detail_cook_time),
-                        value =
-                            PhraseModel(
-                                Res.string.recipe_detail_minutes,
-                                "minutes" to FixedString(cookTime.toString()),
-                            ).localized(),
-                    )
-                }
-
-                recipe.totalTime?.let { totalTime ->
-                    DetailRow(
-                        label = stringResource(Res.string.recipe_detail_total_time),
-                        value =
-                            PhraseModel(
-                                Res.string.recipe_detail_minutes,
-                                "minutes" to FixedString(totalTime.toString()),
-                            ).localized(),
-                    )
-                }
-
-                recipe.calories?.let { calories ->
-                    DetailRow(
-                        label = stringResource(Res.string.recipe_detail_calories),
-                        value =
-                            PhraseModel(
-                                Res.string.recipe_detail_kcal,
-                                "calories" to FixedString(calories.toString()),
-                            ).localized(),
-                    )
-                }
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
             }
         }
+    }
 
-        // Source URL
-        recipe.sourceUrl?.let { sourceUrl ->
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Text(
-                        text = stringResource(Res.string.recipe_detail_source),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Text(
-                        text = sourceUrl,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
+    // Servings and Times
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = stringResource(Res.string.recipe_detail_details),
+                style = MaterialTheme.typography.titleMedium,
+            )
+
+            recipe.servings?.let { servings ->
+                DetailRow(
+                    label = stringResource(Res.string.recipe_detail_servings),
+                    value = "$servings",
+                )
+            }
+
+            recipe.prepTime?.let { prepTime ->
+                DetailRow(
+                    label = stringResource(Res.string.recipe_detail_prep_time),
+                    value =
+                        PhraseModel(
+                            Res.string.recipe_detail_minutes,
+                            "minutes" to FixedString(prepTime.toString()),
+                        ).localized(),
+                )
+            }
+
+            recipe.cookTime?.let { cookTime ->
+                DetailRow(
+                    label = stringResource(Res.string.recipe_detail_cook_time),
+                    value =
+                        PhraseModel(
+                            Res.string.recipe_detail_minutes,
+                            "minutes" to FixedString(cookTime.toString()),
+                        ).localized(),
+                )
+            }
+
+            recipe.totalTime?.let { totalTime ->
+                DetailRow(
+                    label = stringResource(Res.string.recipe_detail_total_time),
+                    value =
+                        PhraseModel(
+                            Res.string.recipe_detail_minutes,
+                            "minutes" to FixedString(totalTime.toString()),
+                        ).localized(),
+                )
+            }
+
+            recipe.calories?.let { calories ->
+                DetailRow(
+                    label = stringResource(Res.string.recipe_detail_calories),
+                    value =
+                        PhraseModel(
+                            Res.string.recipe_detail_kcal,
+                            "calories" to FixedString(calories.toString()),
+                        ).localized(),
+                )
             }
         }
+    }
 
-        // Ingredients
-        if (recipe.ingredients.isNotBlank()) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Text(
-                        text = stringResource(Res.string.recipe_detail_ingredients),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Text(
-                        text = recipe.ingredients,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-            }
-        }
-
-        // Directions
-        if (recipe.directions.isNotBlank()) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Text(
-                        text = stringResource(Res.string.recipe_detail_directions),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Text(
-                        text = recipe.directions,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-            }
-        }
-
-        // Timestamps
+    // Source URL
+    recipe.sourceUrl?.let { sourceUrl ->
         Card(
             modifier = Modifier.fillMaxWidth(),
         ) {
@@ -418,18 +350,80 @@ private fun RecipeDetailContent(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(
-                    text = stringResource(Res.string.recipe_detail_timestamps),
+                    text = stringResource(Res.string.recipe_detail_source),
                     style = MaterialTheme.typography.titleMedium,
                 )
-                DetailRow(
-                    label = stringResource(Res.string.recipe_detail_created),
-                    value = createdAt.localized(),
-                )
-                DetailRow(
-                    label = stringResource(Res.string.recipe_detail_updated),
-                    value = updatedAt.localized(),
+                Text(
+                    text = sourceUrl,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
+        }
+    }
+
+    // Ingredients
+    if (recipe.ingredients.isNotBlank()) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    text = stringResource(Res.string.recipe_detail_ingredients),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text = recipe.ingredients,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
+    }
+
+    // Directions
+    if (recipe.directions.isNotBlank()) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    text = stringResource(Res.string.recipe_detail_directions),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text = recipe.directions,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
+    }
+
+    // Timestamps
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = stringResource(Res.string.recipe_detail_timestamps),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            DetailRow(
+                label = stringResource(Res.string.recipe_detail_created),
+                value = createdAt.localized(),
+            )
+            DetailRow(
+                label = stringResource(Res.string.recipe_detail_updated),
+                value = updatedAt.localized(),
+            )
         }
     }
 }
@@ -505,4 +499,105 @@ private fun DeletingDialog(modifier: Modifier = Modifier) {
         confirmButton = { },
         modifier = modifier,
     )
+}
+
+private val previewBloc =
+    object : RecipeDetailBloc {
+        override val state: StateFlow<RecipeDetailBloc.Model> =
+            MutableStateFlow(
+                RecipeDetailBloc.Model(
+                    isLoading = false,
+                    recipe =
+                        Recipe(
+                            id = 1L,
+                            title = "Spaghetti Bolognese",
+                            description = "A classic Italian pasta dish.",
+                            imageUrl = null,
+                            starRating = 4,
+                            servings = 4,
+                            prepTime = 15,
+                            cookTime = 60,
+                            totalTime = 75,
+                            calories = 600,
+                            sourceUrl = "https://example.com/spaghetti-bolognese",
+                            ingredients =
+                                """
+                                - 400g spaghetti
+                                - 2 tbsp olive oil
+                                - 1 onion, chopped
+                                - 2 garlic cloves, crushed
+                                - 400g minced beef
+                                - 800g canned tomatoes
+                                - Salt and pepper to taste
+                                """.trimIndent(),
+                            directions =
+                                """
+                                1. Cook the spaghetti according to the package instructions.
+                                2. Heat the olive oil in a pan and sauté the onion and garlic until soft.
+                                3. Add the minced beef and cook until browned.
+                                4. Stir in the canned tomatoes and simmer for 45 minutes.
+                                5. Season with salt and pepper.
+                                6. Serve the sauce over the cooked spaghetti.
+                                """.trimIndent(),
+                            createdAt = Instant.parse("2023-01-01T12:00:00Z"),
+                            updatedAt = Instant.parse("2023-02-01T12:00:00Z"),
+                        ),
+                    createdAt = FixedString("January 1, 2023"),
+                    updatedAt = FixedString("February 1, 2023"),
+                    isDeleting = false,
+                    showDeleteConfirmationDialog = false,
+                ),
+            )
+        override val childSlot: Value<ChildSlot<*, RecipeDetailBloc.Sheet>> =
+            MutableValue(
+                ChildSlot<Any, RecipeDetailBloc.Sheet>(null),
+            )
+
+        override fun onEditClicked() {
+            TODO("Not yet implemented")
+        }
+
+        override fun onDeleteClicked() {
+            TODO("Not yet implemented")
+        }
+
+        override fun onDeleteConfirmed() {
+            TODO("Not yet implemented")
+        }
+
+        override fun onDeleteDismissed() {
+            TODO("Not yet implemented")
+        }
+
+        override fun onFavoriteToggled() {
+            TODO("Not yet implemented")
+        }
+
+        override fun onAddToGroceryListClicked() {
+            TODO("Not yet implemented")
+        }
+
+        override fun onBackClicked() {
+            TODO("Not yet implemented")
+        }
+    }
+
+@Preview(heightDp = 1100)
+@Composable
+private fun RecipeDetailContentPreview() {
+    ChefMateTheme {
+        RecipeDetailScreen(
+            bloc = previewBloc,
+        )
+    }
+}
+
+@Preview(heightDp = 1100)
+@Composable
+private fun RecipeDetailContentDarkPreview() {
+    ChefMateTheme(darkTheme = true) {
+        RecipeDetailScreen(
+            bloc = previewBloc,
+        )
+    }
 }

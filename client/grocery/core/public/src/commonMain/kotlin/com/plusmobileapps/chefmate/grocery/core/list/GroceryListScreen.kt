@@ -28,10 +28,13 @@ import kotlinx.coroutines.flow.StateFlow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GroceryListScreen(bloc: GroceryListBloc) {
+fun GroceryListScreen(
+    bloc: GroceryListBloc,
+    modifier: Modifier = Modifier,
+) {
     val state by bloc.state.collectAsState()
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
     ) {
         LazyColumn(
             modifier = Modifier.weight(1f),

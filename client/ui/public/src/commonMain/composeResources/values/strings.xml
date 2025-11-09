@@ -1,0 +1,7 @@
+<resources>
+    <string name="back">Back</string>
+    <string name="close">Close</string>
+    <string name="loading">Loading</string>
+    <string name="save">Save</string>
+    <string name="okay">Okay</string>
+</resources>

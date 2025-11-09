@@ -7,12 +7,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.AlertDialog
@@ -20,13 +18,10 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -34,7 +29,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.core.public.generated.resources.Res
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_back
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_discard_cancel
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_discard_confirm
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_discard_message
@@ -62,8 +56,15 @@ import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_total_time
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_total_time_placeholder
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_save
-import com.plusmobileapps.chefmate.text.TextData
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
+import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
+import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
+import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,62 +74,39 @@ fun EditRecipeScreen(
 ) {
     val state by bloc.state.collectAsState()
 
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            EditRecipeTopBar(
+    if (state.showDiscardChangesDialog) {
+        DiscardChangesDialog(
+            onConfirm = bloc::onDiscardChangesConfirmed,
+            onDismiss = bloc::onDiscardChangesCancelled,
+        )
+    }
+
+    PlusHeaderContainer(
+        modifier = modifier.fillMaxSize(),
+        data =
+            PlusHeaderData.Child(
                 title = state.title,
-                onBackClicked = bloc::onBackClicked,
-            )
-        },
+                onBackClick = bloc::onBackClicked,
+            ),
+        verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingNormal),
         floatingActionButton = {
             SaveRecipeFab(
                 isSaving = state.isSaving,
                 onSaveClicked = bloc::onSaveClicked,
             )
         },
-    ) { paddingValues ->
-        Box(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-        ) {
-            if (state.isLoading) {
+    ) {
+        if (state.isLoading) {
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center,
+            ) {
                 LoadingIndicator()
-            } else {
-                EditRecipeContent(bloc = bloc)
             }
-        }
-
-        if (state.showDiscardChangesDialog) {
-            DiscardChangesDialog(
-                onConfirm = bloc::onDiscardChangesConfirmed,
-                onDismiss = bloc::onDiscardChangesCancelled,
-            )
+        } else {
+            EditRecipeContent(bloc = bloc)
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun EditRecipeTopBar(
-    title: TextData,
-    onBackClicked: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    TopAppBar(
-        title = { Text(title.localized()) },
-        navigationIcon = {
-            IconButton(onClick = onBackClicked) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(Res.string.edit_recipe_back),
-                )
-            }
-        },
-        modifier = modifier,
-    )
 }
 
 @Composable
@@ -142,8 +120,8 @@ private fun SaveRecipeFab(
         modifier = modifier,
     ) {
         if (isSaving) {
-            CircularProgressIndicator(
-                modifier = Modifier.padding(end = 8.dp),
+            PlusLoadingIndicator(
+                modifier = Modifier.padding(end = ChefMateTheme.dimens.paddingSmall),
             )
         }
         Text(stringResource(Res.string.edit_recipe_save))
@@ -168,10 +146,10 @@ private fun EditRecipeContent(
     Column(
         modifier =
             modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+                .fillMaxWidth()
+                .padding(ChefMateTheme.dimens.paddingNormal)
+                .imePadding(),
+        verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingNormal),
     ) {
         RecipeTitleField(bloc = bloc)
         RecipeDescriptionField(bloc = bloc)
@@ -232,7 +210,7 @@ private fun RecipeStarRatingField(
 
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
     ) {
         Text(
             text = "Rating",
@@ -241,7 +219,7 @@ private fun RecipeStarRatingField(
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
         ) {
             for (i in 1..5) {
                 val isFilled = starRating != null && i <= starRating!!
@@ -443,4 +421,97 @@ private fun DiscardChangesDialog(
         },
         modifier = modifier,
     )
+}
+
+private val previewBloc =
+    object : EditRecipeBloc {
+        override val state: StateFlow<EditRecipeBloc.Model> =
+            MutableStateFlow(
+                EditRecipeBloc.Model(
+                    title = FixedString("Edit Recipe"),
+                    isLoading = false,
+                    isSaving = false,
+                    showDiscardChangesDialog = false,
+                ),
+            )
+        override val title: StateFlow<String> = MutableStateFlow("Spaghetti Carbonara")
+        override val description: StateFlow<String> =
+            MutableStateFlow("A classic Italian pasta dish with eggs, cheese, pancetta, and black pepper")
+        override val imageUrl: StateFlow<String> = MutableStateFlow("https://example.com/carbonara.jpg")
+        override val ingredients: StateFlow<String> =
+            MutableStateFlow(
+                """400g spaghetti
+200g pancetta
+4 large eggs
+100g Pecorino Romano cheese
+Black pepper to taste
+Salt for pasta water""",
+            )
+        override val directions: StateFlow<String> =
+            MutableStateFlow(
+                """1. Bring a large pot of salted water to boil
+2. Cook spaghetti until al dente
+3. While pasta cooks, fry pancetta until crispy
+4. Beat eggs and mix with grated cheese
+5. Drain pasta, reserving some pasta water
+6. Combine hot pasta with pancetta
+7. Remove from heat and add egg mixture
+8. Toss quickly, adding pasta water if needed
+9. Season with black pepper and serve""",
+            )
+        override val sourceUrl: StateFlow<String> = MutableStateFlow("https://example.com/recipe/carbonara")
+        override val servings: StateFlow<String> = MutableStateFlow("4")
+        override val prepTime: StateFlow<String> = MutableStateFlow("10 minutes")
+        override val cookTime: StateFlow<String> = MutableStateFlow("15 minutes")
+        override val totalTime: StateFlow<String> = MutableStateFlow("25 minutes")
+        override val calories: StateFlow<String> = MutableStateFlow("550")
+        override val starRating: StateFlow<Int?> = MutableStateFlow(4)
+
+        override fun onTitleChanged(title: String) {}
+
+        override fun onDescriptionChanged(description: String) {}
+
+        override fun onImageUrlChanged(imageUrl: String) {}
+
+        override fun onIngredientsChanged(ingredients: String) {}
+
+        override fun onDirectionsChanged(directions: String) {}
+
+        override fun onSourceUrlChanged(sourceUrl: String) {}
+
+        override fun onServingsChanged(servings: String) {}
+
+        override fun onPrepTimeChanged(prepTime: String) {}
+
+        override fun onCookTimeChanged(cookTime: String) {}
+
+        override fun onTotalTimeChanged(totalTime: String) {}
+
+        override fun onCaloriesChanged(calories: String) {}
+
+        override fun onStarRatingChanged(starRating: Int?) {}
+
+        override fun onDiscardChangesConfirmed() {}
+
+        override fun onDiscardChangesCancelled() {}
+
+        override fun onSaveClicked() {}
+
+        override fun onBackClicked() {}
+    }
+
+@Preview
+@Composable
+private fun EditRecipeScreenLightPreview() {
+    ChefMateTheme(darkTheme = false) {
+        EditRecipeScreen(bloc = previewBloc)
+    }
+}
+
+@Preview
+@Composable
+private fun EditRecipeScreenDarkPreview() {
+    ChefMateTheme(darkTheme = true) {
+        EditRecipeScreen(bloc = previewBloc)
+    }
 }

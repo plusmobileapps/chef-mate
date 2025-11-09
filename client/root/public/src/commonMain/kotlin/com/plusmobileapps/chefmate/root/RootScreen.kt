@@ -1,7 +1,6 @@
 package com.plusmobileapps.chefmate.root
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
@@ -10,6 +9,7 @@ import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavigationScreen
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootScreen
 import com.plusmobileapps.chefmate.ui.backAnimation
+import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
 @Composable
 fun RootScreen(
@@ -17,7 +17,7 @@ fun RootScreen(
     modifier: Modifier = Modifier,
 ) {
     val state = rootBloc.state.subscribeAsState()
-    MaterialTheme {
+    ChefMateTheme {
         Children(
             modifier = modifier.fillMaxSize(),
             stack = state.value,
