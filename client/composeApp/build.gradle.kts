@@ -55,6 +55,7 @@ kotlin {
             api(projects.client.recipe.list.impl)
             api(projects.client.recipe.core.impl)
             api(projects.client.util.impl)
+            api(projects.client.settings.impl)
         }
         androidMain.dependencies {
         }

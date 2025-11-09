@@ -5,6 +5,7 @@ import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.GROCERIES
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.RECIPES
+import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.SETTINGS
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,6 +25,6 @@ class BottomNavViewModel(
 
     data class State(
         val selectedTab: BottomNavBloc.Tab = RECIPES,
-        val tabs: List<BottomNavBloc.Tab> = listOf(RECIPES, GROCERIES),
+        val tabs: List<BottomNavBloc.Tab> = listOf(RECIPES, GROCERIES, SETTINGS),
     )
 }

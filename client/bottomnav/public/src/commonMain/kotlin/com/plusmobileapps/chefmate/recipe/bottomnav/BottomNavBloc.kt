@@ -8,6 +8,7 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
+import com.plusmobileapps.chefmate.settings.SettingsBloc
 import kotlinx.coroutines.flow.StateFlow
 
 interface BottomNavBloc :
@@ -27,6 +28,7 @@ interface BottomNavBloc :
     enum class Tab {
         RECIPES,
         GROCERIES,
+        SETTINGS,
     }
 
     sealed class Child {
@@ -36,6 +38,10 @@ interface BottomNavBloc :
 
         data class GroceryList(
             val bloc: GroceryListBloc,
+        ) : Child()
+
+        data class Settings(
+            val bloc: SettingsBloc
         ) : Child()
     }
 
