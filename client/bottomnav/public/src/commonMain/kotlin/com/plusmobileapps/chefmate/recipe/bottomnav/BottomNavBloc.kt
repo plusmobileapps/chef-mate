@@ -55,6 +55,10 @@ interface BottomNavBloc :
         data class OpenGrocery(
             val groceryId: Long,
         ) : Output()
+
+        data object OpenSignIn : Output()
+
+        data object OpenSignUp : Output()
     }
 
     fun interface Factory {

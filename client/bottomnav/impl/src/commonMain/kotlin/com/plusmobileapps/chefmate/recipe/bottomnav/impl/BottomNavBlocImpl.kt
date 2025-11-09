@@ -19,6 +19,8 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.GroceryL
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.RecipeList
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.Settings
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenGrocery
+import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenSignIn
+import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenSignUp
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.settings.SettingsBloc
 import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
@@ -139,7 +141,12 @@ class BottomNavBlocImpl(
     }
 
     private fun handleSettingsOutput(output: SettingsBloc.Output) {
-        TODO()
+        when (output) {
+            SettingsBloc.Output.OpenSignIn -> OpenSignIn
+            SettingsBloc.Output.OpenSignUp -> OpenSignUp
+        }.let {
+            this.output.onNext(it)
+        }
     }
 
     private fun observeRouter() {
