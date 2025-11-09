@@ -13,7 +13,10 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
+import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc.Props.Detail
 import com.plusmobileapps.chefmate.root.RootBloc.Child.BottomNavigation
+import com.plusmobileapps.chefmate.root.RootBlocImpl.Configuration.GroceryDetail
+import com.plusmobileapps.chefmate.root.RootBlocImpl.Configuration.RecipeRoot
 import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
 import kotlinx.serialization.Serializable
 import me.tatarka.inject.annotations.Assisted
@@ -90,19 +93,24 @@ class RootBlocImpl(
         when (output) {
             BottomNavBloc.Output.AddNewRecipe -> {
                 navigation.bringToFront(
-                    Configuration.RecipeRoot(RecipeRootBloc.Props.Create),
+                    RecipeRoot(RecipeRootBloc.Props.Create),
                 )
             }
+
             is BottomNavBloc.Output.OpenGrocery -> {
-                navigation.bringToFront(Configuration.GroceryDetail(output.groceryId))
+                navigation.bringToFront(GroceryDetail(output.groceryId))
             }
+
             is BottomNavBloc.Output.OpenRecipe -> {
                 navigation.bringToFront(
-                    Configuration.RecipeRoot(
-                        RecipeRootBloc.Props.Detail(output.recipeId),
+                    RecipeRoot(
+                        Detail(output.recipeId),
                     ),
                 )
             }
+
+            BottomNavBloc.Output.OpenSignIn -> TODO("Implement auth")
+            BottomNavBloc.Output.OpenSignUp -> TODO("Implement auth")
         }
     }
 

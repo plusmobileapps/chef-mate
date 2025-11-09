@@ -10,6 +10,7 @@ kotlin {
             api(libs.arkivanov.decompose.core)
             api(projects.client.shared)
             implementation(compose.components.resources)
+            implementation(projects.client.ui.public)
         }
     }
 }

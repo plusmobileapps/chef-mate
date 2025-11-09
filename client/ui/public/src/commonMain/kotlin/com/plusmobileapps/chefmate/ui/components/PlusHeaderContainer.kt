@@ -183,13 +183,14 @@ private fun ScrollingContent(
 @Composable
 fun PlusHeader(
     data: PlusHeaderData,
+    windowInsets: WindowInsets? = null,
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
     TopAppBar(
         modifier = modifier,
         windowInsets =
-            WindowInsets(
+            windowInsets ?: WindowInsets(
                 left = WindowInsets.displayCutout.getLeft(density, LayoutDirection.Ltr),
                 right = WindowInsets.displayCutout.getRight(density, LayoutDirection.Ltr),
                 top = WindowInsets.statusBars.getTop(density),

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
@@ -21,6 +22,7 @@ import androidx.compose.ui.Modifier
 import chefmate.client.bottomnav.public.generated.resources.Res
 import chefmate.client.bottomnav.public.generated.resources.tab_grocery
 import chefmate.client.bottomnav.public.generated.resources.tab_recipes
+import chefmate.client.bottomnav.public.generated.resources.tab_settings
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.fade
@@ -31,7 +33,9 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.GROCERIES
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.RECIPES
+import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.SETTINGS
 import com.plusmobileapps.chefmate.recipe.list.RecipeListScreen
+import com.plusmobileapps.chefmate.settings.SettingsScreen
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.NavRailItem
 import com.plusmobileapps.chefmate.ui.components.PlusNavRailHeaderContainer
@@ -139,6 +143,7 @@ private fun BottomNavContentContainer(
         when (val instance = created.instance) {
             is BottomNavBloc.Child.GroceryList -> GroceryListScreen(instance.bloc)
             is BottomNavBloc.Child.RecipeList -> RecipeListScreen(instance.bloc)
+            is BottomNavBloc.Child.Settings -> SettingsScreen(instance.bloc)
         }
     }
 }
@@ -176,10 +181,12 @@ private fun BottomNavBloc.Tab.getLabel(): StringResource =
     when (this) {
         RECIPES -> Res.string.tab_recipes
         GROCERIES -> Res.string.tab_grocery
+        SETTINGS -> Res.string.tab_settings
     }
 
 private fun BottomNavBloc.Tab.getIcon() =
     when (this) {
         RECIPES -> Icons.AutoMirrored.Filled.List
         GROCERIES -> Icons.Default.ShoppingCart
+        SETTINGS -> Icons.Default.Settings
     }
