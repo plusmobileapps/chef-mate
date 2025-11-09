@@ -8,18 +8,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -29,8 +22,13 @@ import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.core.public.generated.resources.Res
 import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_grocery_list
 import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_grocery_list_add
-import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_grocery_list_back
 import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_grocery_list_no_ingredients
+import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
+import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
+import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
+import com.plusmobileapps.chefmate.ui.components.lastItemFloatingActionButtonSpacer
+import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,69 +39,55 @@ fun AddRecipeToGroceryListScreen(
 ) {
     val state by bloc.state.collectAsState()
 
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(Res.string.recipe_add_to_grocery_list)) },
-                navigationIcon = {
-                    IconButton(onClick = bloc::onBackClicked) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                            contentDescription = stringResource(Res.string.recipe_add_to_grocery_list_back),
-                        )
-                    }
-                },
-            )
-        },
+    PlusHeaderContainer(
+        modifier = modifier.fillMaxSize(),
+        data =
+            PlusHeaderData.Modal(
+                title = stringResource(Res.string.recipe_add_to_grocery_list).asTextData(),
+                onCloseClick = bloc::onBackClicked,
+            ),
+        scrollEnabled = false,
         floatingActionButton = {
             if (!state.isLoading && state.ingredients.any { it.isSelected }) {
                 ExtendedFloatingActionButton(
                     onClick = bloc::onSaveClicked,
                 ) {
                     if (state.isAdding) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.padding(end = 8.dp),
+                        PlusLoadingIndicator(
+                            modifier = Modifier.padding(end = ChefMateTheme.dimens.paddingSmall),
                         )
                     }
                     Text(stringResource(Res.string.recipe_add_to_grocery_list_add))
                 }
             }
         },
-    ) { paddingValues ->
-        Box(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-        ) {
-            when {
-                state.isLoading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        CircularProgressIndicator()
-                    }
+    ) {
+        when {
+            state.isLoading -> {
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    PlusLoadingIndicator()
                 }
-                state.ingredients.isEmpty() -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = stringResource(Res.string.recipe_add_to_grocery_list_no_ingredients),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-                else -> {
-                    IngredientsList(
-                        ingredients = state.ingredients,
-                        onIngredientToggled = bloc::onIngredientToggled,
+            }
+            state.ingredients.isEmpty() -> {
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = stringResource(Res.string.recipe_add_to_grocery_list_no_ingredients),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+            }
+            else -> {
+                IngredientsList(
+                    ingredients = state.ingredients,
+                    onIngredientToggled = bloc::onIngredientToggled,
+                )
             }
         }
     }
@@ -125,6 +109,8 @@ private fun IngredientsList(
                 onToggle = { onIngredientToggled(ingredient.id) },
             )
         }
+
+        lastItemFloatingActionButtonSpacer()
     }
 }
 
@@ -139,7 +125,10 @@ private fun IngredientListItem(
             modifier
                 .fillMaxWidth()
                 .clickable(onClick = onToggle)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(
+                    horizontal = ChefMateTheme.dimens.paddingNormal,
+                    vertical = ChefMateTheme.dimens.paddingSmall,
+                ),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
