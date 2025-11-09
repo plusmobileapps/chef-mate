@@ -90,7 +90,7 @@ private fun PlusBottomBar(
                             RECIPES -> stringResource(Res.string.tab_recipes)
                             GROCERIES -> stringResource(Res.string.tab_grocery)
                         },
-                        color = ChefMateTheme.colorScheme.onSurface
+                        color = ChefMateTheme.colorScheme.onSurface,
                     )
                 },
                 icon = {

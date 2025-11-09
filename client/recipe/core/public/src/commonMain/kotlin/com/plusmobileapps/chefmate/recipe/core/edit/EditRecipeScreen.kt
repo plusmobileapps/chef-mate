@@ -421,28 +421,33 @@ private fun DiscardChangesDialog(
     )
 }
 
-private val previewBloc = object : EditRecipeBloc {
-    override val state: StateFlow<EditRecipeBloc.Model> = MutableStateFlow(
-        EditRecipeBloc.Model(
-            title = FixedString("Edit Recipe"),
-            isLoading = false,
-            isSaving = false,
-            showDiscardChangesDialog = false,
-        )
-    )
-    override val title: StateFlow<String> = MutableStateFlow("Spaghetti Carbonara")
-    override val description: StateFlow<String> = MutableStateFlow("A classic Italian pasta dish with eggs, cheese, pancetta, and black pepper")
-    override val imageUrl: StateFlow<String> = MutableStateFlow("https://example.com/carbonara.jpg")
-    override val ingredients: StateFlow<String> = MutableStateFlow(
-        """400g spaghetti
+private val previewBloc =
+    object : EditRecipeBloc {
+        override val state: StateFlow<EditRecipeBloc.Model> =
+            MutableStateFlow(
+                EditRecipeBloc.Model(
+                    title = FixedString("Edit Recipe"),
+                    isLoading = false,
+                    isSaving = false,
+                    showDiscardChangesDialog = false,
+                ),
+            )
+        override val title: StateFlow<String> = MutableStateFlow("Spaghetti Carbonara")
+        override val description: StateFlow<String> =
+            MutableStateFlow("A classic Italian pasta dish with eggs, cheese, pancetta, and black pepper")
+        override val imageUrl: StateFlow<String> = MutableStateFlow("https://example.com/carbonara.jpg")
+        override val ingredients: StateFlow<String> =
+            MutableStateFlow(
+                """400g spaghetti
 200g pancetta
 4 large eggs
 100g Pecorino Romano cheese
 Black pepper to taste
-Salt for pasta water"""
-    )
-    override val directions: StateFlow<String> = MutableStateFlow(
-        """1. Bring a large pot of salted water to boil
+Salt for pasta water""",
+            )
+        override val directions: StateFlow<String> =
+            MutableStateFlow(
+                """1. Bring a large pot of salted water to boil
 2. Cook spaghetti until al dente
 3. While pasta cooks, fry pancetta until crispy
 4. Beat eggs and mix with grated cheese
@@ -450,33 +455,48 @@ Salt for pasta water"""
 6. Combine hot pasta with pancetta
 7. Remove from heat and add egg mixture
 8. Toss quickly, adding pasta water if needed
-9. Season with black pepper and serve"""
-    )
-    override val sourceUrl: StateFlow<String> = MutableStateFlow("https://example.com/recipe/carbonara")
-    override val servings: StateFlow<String> = MutableStateFlow("4")
-    override val prepTime: StateFlow<String> = MutableStateFlow("10 minutes")
-    override val cookTime: StateFlow<String> = MutableStateFlow("15 minutes")
-    override val totalTime: StateFlow<String> = MutableStateFlow("25 minutes")
-    override val calories: StateFlow<String> = MutableStateFlow("550")
-    override val starRating: StateFlow<Int?> = MutableStateFlow(4)
+9. Season with black pepper and serve""",
+            )
+        override val sourceUrl: StateFlow<String> = MutableStateFlow("https://example.com/recipe/carbonara")
+        override val servings: StateFlow<String> = MutableStateFlow("4")
+        override val prepTime: StateFlow<String> = MutableStateFlow("10 minutes")
+        override val cookTime: StateFlow<String> = MutableStateFlow("15 minutes")
+        override val totalTime: StateFlow<String> = MutableStateFlow("25 minutes")
+        override val calories: StateFlow<String> = MutableStateFlow("550")
+        override val starRating: StateFlow<Int?> = MutableStateFlow(4)
 
-    override fun onTitleChanged(title: String) {}
-    override fun onDescriptionChanged(description: String) {}
-    override fun onImageUrlChanged(imageUrl: String) {}
-    override fun onIngredientsChanged(ingredients: String) {}
-    override fun onDirectionsChanged(directions: String) {}
-    override fun onSourceUrlChanged(sourceUrl: String) {}
-    override fun onServingsChanged(servings: String) {}
-    override fun onPrepTimeChanged(prepTime: String) {}
-    override fun onCookTimeChanged(cookTime: String) {}
-    override fun onTotalTimeChanged(totalTime: String) {}
-    override fun onCaloriesChanged(calories: String) {}
-    override fun onStarRatingChanged(starRating: Int?) {}
-    override fun onDiscardChangesConfirmed() {}
-    override fun onDiscardChangesCancelled() {}
-    override fun onSaveClicked() {}
-    override fun onBackClicked() {}
-}
+        override fun onTitleChanged(title: String) {}
+
+        override fun onDescriptionChanged(description: String) {}
+
+        override fun onImageUrlChanged(imageUrl: String) {}
+
+        override fun onIngredientsChanged(ingredients: String) {}
+
+        override fun onDirectionsChanged(directions: String) {}
+
+        override fun onSourceUrlChanged(sourceUrl: String) {}
+
+        override fun onServingsChanged(servings: String) {}
+
+        override fun onPrepTimeChanged(prepTime: String) {}
+
+        override fun onCookTimeChanged(cookTime: String) {}
+
+        override fun onTotalTimeChanged(totalTime: String) {}
+
+        override fun onCaloriesChanged(calories: String) {}
+
+        override fun onStarRatingChanged(starRating: Int?) {}
+
+        override fun onDiscardChangesConfirmed() {}
+
+        override fun onDiscardChangesCancelled() {}
+
+        override fun onSaveClicked() {}
+
+        override fun onBackClicked() {}
+    }
 
 @Preview
 @Composable
