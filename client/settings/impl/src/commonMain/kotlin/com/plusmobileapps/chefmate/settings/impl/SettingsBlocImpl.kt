@@ -1,6 +1,5 @@
 package com.plusmobileapps.chefmate.settings.impl
 
-import com.arkivanov.decompose.ComponentContext
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.settings.SettingsBloc
@@ -13,12 +12,13 @@ import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 @Inject
 @ContributesAssistedFactory(
     scope = AppScope::class,
-    assistedFactory = SettingsBloc.Factory::class
+    assistedFactory = SettingsBloc.Factory::class,
 )
 class SettingsBlocImpl(
     @Assisted context: BlocContext,
-    @Assisted private val output: Consumer<Output>
-) : SettingsBloc, BlocContext by context {
+    @Assisted private val output: Consumer<Output>,
+) : SettingsBloc,
+    BlocContext by context {
     override fun onSignInClicked() {
         output.onNext(Output.OpenSignIn)
     }

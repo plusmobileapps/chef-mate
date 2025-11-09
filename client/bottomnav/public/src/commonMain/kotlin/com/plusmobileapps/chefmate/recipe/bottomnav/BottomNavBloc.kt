@@ -41,7 +41,7 @@ interface BottomNavBloc :
         ) : Child()
 
         data class Settings(
-            val bloc: SettingsBloc
+            val bloc: SettingsBloc,
         ) : Child()
     }
 

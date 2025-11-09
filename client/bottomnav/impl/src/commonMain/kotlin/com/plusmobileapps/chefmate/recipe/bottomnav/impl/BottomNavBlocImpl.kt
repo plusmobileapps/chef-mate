@@ -15,7 +15,9 @@ import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
-import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.*
+import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.GroceryList
+import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.RecipeList
+import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.Settings
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenGrocery
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.settings.SettingsBloc
@@ -108,10 +110,11 @@ class BottomNavBlocImpl(
             }
 
             Configuration.Settings -> {
-                val bloc = settings.create(
-                    context = context,
-                    output = ::handleSettingsOutput
-                )
+                val bloc =
+                    settings.create(
+                        context = context,
+                        output = ::handleSettingsOutput,
+                    )
                 Settings(bloc)
             }
         }

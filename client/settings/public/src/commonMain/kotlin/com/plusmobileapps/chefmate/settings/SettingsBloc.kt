@@ -4,7 +4,6 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 
 interface SettingsBloc {
-
     fun onSignInClicked()
 
     fun onSignUpClicked()
@@ -13,13 +12,14 @@ interface SettingsBloc {
 
     sealed class Output {
         data object OpenSignUp : Output()
+
         data object OpenSignIn : Output()
     }
 
     fun interface Factory {
         fun create(
             context: BlocContext,
-            output: Consumer<Output>
+            output: Consumer<Output>,
         ): SettingsBloc
     }
 }

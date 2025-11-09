@@ -33,6 +33,7 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.GROCERIES
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.RECIPES
+import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.SETTINGS
 import com.plusmobileapps.chefmate.recipe.list.RecipeListScreen
 import com.plusmobileapps.chefmate.settings.SettingsScreen
 import com.plusmobileapps.chefmate.text.asTextData
@@ -180,12 +181,12 @@ private fun BottomNavBloc.Tab.getLabel(): StringResource =
     when (this) {
         RECIPES -> Res.string.tab_recipes
         GROCERIES -> Res.string.tab_grocery
-        BottomNavBloc.Tab.SETTINGS -> Res.string.tab_settings
+        SETTINGS -> Res.string.tab_settings
     }
 
 private fun BottomNavBloc.Tab.getIcon() =
     when (this) {
         RECIPES -> Icons.AutoMirrored.Filled.List
         GROCERIES -> Icons.Default.ShoppingCart
-        BottomNavBloc.Tab.SETTINGS -> Icons.Default.Settings
+        SETTINGS -> Icons.Default.Settings
     }
