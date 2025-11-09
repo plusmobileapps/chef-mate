@@ -8,6 +8,8 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
+            implementation(projects.client.ui.public)
+            implementation(compose.components.resources)
         }
     }
 }
