@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -87,7 +88,7 @@ fun EditRecipeScreen(
                 title = state.title,
                 onBackClick = bloc::onBackClicked,
             ),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingNormal),
         floatingActionButton = {
             SaveRecipeFab(
                 isSaving = state.isSaving,
@@ -120,7 +121,7 @@ private fun SaveRecipeFab(
     ) {
         if (isSaving) {
             PlusLoadingIndicator(
-                modifier = Modifier.padding(end = 8.dp),
+                modifier = Modifier.padding(end = ChefMateTheme.dimens.paddingSmall),
             )
         }
         Text(stringResource(Res.string.edit_recipe_save))
@@ -146,8 +147,9 @@ private fun EditRecipeContent(
         modifier =
             modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(ChefMateTheme.dimens.paddingNormal)
+                .imePadding(),
+        verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingNormal),
     ) {
         RecipeTitleField(bloc = bloc)
         RecipeDescriptionField(bloc = bloc)
@@ -208,7 +210,7 @@ private fun RecipeStarRatingField(
 
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
     ) {
         Text(
             text = "Rating",
@@ -217,7 +219,7 @@ private fun RecipeStarRatingField(
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
         ) {
             for (i in 1..5) {
                 val isFilled = starRating != null && i <= starRating!!

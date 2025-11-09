@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.systemGestures
@@ -18,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -102,10 +104,16 @@ fun PlusNavRailHeaderContainer(
                                         LayoutDirection.Ltr,
                                     ).toDp(),
                             top = WindowInsets.statusBars.getTop(density).toDp(),
-                            bottom = WindowInsets.statusBars.getBottom(density).toDp(),
+                            bottom = WindowInsets.navigationBars.getBottom(density).toDp(),
                         )
                     }
-                content(paddingValues)
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = ChefMateTheme.colorScheme.background,
+                    contentColor = ChefMateTheme.colorScheme.onBackground,
+                ) {
+                    content(paddingValues)
+                }
             }
         }
     }

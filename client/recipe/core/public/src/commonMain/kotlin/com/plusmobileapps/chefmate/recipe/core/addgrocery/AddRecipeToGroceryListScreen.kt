@@ -102,7 +102,7 @@ private fun IngredientsList(
     LazyColumn(
         modifier = modifier.fillMaxSize(),
     ) {
-        items(ingredients.size, key = { ingredients[it].id }) { index ->
+        items(ingredients.size, key = { it }) { index ->
             val ingredient = ingredients[index]
             IngredientListItem(
                 ingredient = ingredient,
