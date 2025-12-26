@@ -33,6 +33,11 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
+include(":client:auth:data:impl")
+include(":client:auth:data:public")
+include(":client:auth:data:testing")
+include(":client:auth:ui:impl")
+include(":client:auth:ui:public")
 include(":client:bottomnav:impl")
 include(":client:bottomnav:public")
 include(":client:composeApp")

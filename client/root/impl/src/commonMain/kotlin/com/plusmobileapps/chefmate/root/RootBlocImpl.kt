@@ -10,6 +10,7 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
+import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
@@ -33,6 +34,7 @@ class RootBlocImpl(
     private val bottomNav: BottomNavBloc.Factory,
     private val groceryDetail: GroceryDetailBloc.Factory,
     private val recipeRoot: RecipeRootBloc.Factory,
+    private val authentication: AuthenticationBloc.Factory,
 ) : RootBloc,
     BlocContext by context {
     private val navigation = StackNavigation<Configuration>()
@@ -87,6 +89,16 @@ class RootBlocImpl(
                             output = ::handleRecipeRootOutput,
                         ),
                 )
+
+            is Configuration.Authentication ->
+                RootBloc.Child.Authentication(
+                    bloc =
+                        authentication.create(
+                            context = context,
+                            props = config.props,
+                            output = ::handleAuthenticationOutput,
+                        ),
+                )
         }
 
     private fun handleBottomNavOutput(output: BottomNavBloc.Output) {
@@ -109,8 +121,13 @@ class RootBlocImpl(
                 )
             }
 
-            BottomNavBloc.Output.OpenSignIn -> TODO("Implement auth")
-            BottomNavBloc.Output.OpenSignUp -> TODO("Implement auth")
+            BottomNavBloc.Output.OpenSignIn -> {
+                navigation.bringToFront(Configuration.Authentication(AuthenticationBloc.Props.SignIn))
+            }
+
+            BottomNavBloc.Output.OpenSignUp -> {
+                navigation.bringToFront(Configuration.Authentication(AuthenticationBloc.Props.SignUp))
+            }
         }
     }
 
@@ -123,6 +140,13 @@ class RootBlocImpl(
     private fun handleRecipeRootOutput(output: RecipeRootBloc.Output) {
         when (output) {
             RecipeRootBloc.Output.Finished -> navigation.pop()
+        }
+    }
+
+    private fun handleAuthenticationOutput(output: AuthenticationBloc.Output) {
+        when (output) {
+            AuthenticationBloc.Output.Finished -> navigation.pop()
+            AuthenticationBloc.Output.AuthenticationSuccess -> navigation.pop()
         }
     }
 
@@ -139,6 +163,11 @@ class RootBlocImpl(
         @Serializable
         data class RecipeRoot(
             val props: RecipeRootBloc.Props,
+        ) : Configuration()
+
+        @Serializable
+        data class Authentication(
+            val props: AuthenticationBloc.Props,
         ) : Configuration()
     }
 }

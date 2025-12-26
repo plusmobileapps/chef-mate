@@ -12,6 +12,7 @@ kotlin {
             implementation(projects.client.bottomnav.public)
             implementation(projects.client.grocery.core.public)
             implementation(projects.client.recipe.core.public)
+            implementation(projects.client.auth.ui.public)
             implementation(libs.kotlinx.serialization.json)
         }
     }
