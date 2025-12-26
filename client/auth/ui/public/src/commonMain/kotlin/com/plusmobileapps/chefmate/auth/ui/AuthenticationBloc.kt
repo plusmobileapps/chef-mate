@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.auth.ui
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.text.TextData
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 
@@ -29,7 +30,7 @@ interface AuthenticationBloc : BackClickBloc {
     data class Model(
         val mode: Mode = Mode.SignIn,
         val isLoading: Boolean = false,
-        val errorMessage: String? = null,
+        val errorMessage: TextData? = null,
     ) {
         enum class Mode {
             SignIn,

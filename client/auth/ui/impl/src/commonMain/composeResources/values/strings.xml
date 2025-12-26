@@ -1,0 +1,13 @@
+<resources>
+    <!-- Authentication errors -->
+    <string name="auth_error_email_required">Email is required</string>
+    <string name="auth_error_password_required">Password is required</string>
+    <string name="auth_error_confirm_password_required">Please confirm your password</string>
+    <string name="auth_error_passwords_do_not_match">Passwords do not match</string>
+    <string name="auth_error_authentication_failed">Authentication failed</string>
+    <string name="auth_error_sign_up_failed">Sign up failed</string>
+    <string name="auth_error_password_reset_failed">Failed to send password reset email</string>
+    
+    <!-- Success messages -->
+    <string name="auth_success_password_reset_sent">Password reset email sent</string>
+</resources>

@@ -1,8 +1,20 @@
 package com.plusmobileapps.chefmate.auth.ui.impl
 
+import chefmate.client.auth.ui.impl.generated.resources.Res
+import chefmate.client.auth.ui.impl.generated.resources.auth_error_authentication_failed
+import chefmate.client.auth.ui.impl.generated.resources.auth_error_confirm_password_required
+import chefmate.client.auth.ui.impl.generated.resources.auth_error_email_required
+import chefmate.client.auth.ui.impl.generated.resources.auth_error_password_required
+import chefmate.client.auth.ui.impl.generated.resources.auth_error_password_reset_failed
+import chefmate.client.auth.ui.impl.generated.resources.auth_error_passwords_do_not_match
+import chefmate.client.auth.ui.impl.generated.resources.auth_error_sign_up_failed
+import chefmate.client.auth.ui.impl.generated.resources.auth_success_password_reset_sent
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
 import com.plusmobileapps.chefmate.di.Main
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.ResourceString
+import com.plusmobileapps.chefmate.text.TextData
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,8 +30,6 @@ import kotlin.coroutines.CoroutineContext
 class AuthenticationViewModel(
     @Assisted initialProps: AuthenticationBloc.Props,
     @Main mainContext: CoroutineContext,
-    // TODO: Add AuthRepository parameter when available
-    // private val repository: AuthRepository,
 ) : ViewModel(mainContext) {
     private val _state =
         MutableStateFlow(
@@ -91,11 +101,15 @@ class AuthenticationViewModel(
 
         // Validate input
         if (email.isBlank()) {
-            _state.value = _state.value.copy(errorMessage = "Email is required")
+            _state.value = _state.value.copy(
+                errorMessage = ResourceString(Res.string.auth_error_email_required)
+            )
             return
         }
         if (password.isBlank()) {
-            _state.value = _state.value.copy(errorMessage = "Password is required")
+            _state.value = _state.value.copy(
+                errorMessage = ResourceString(Res.string.auth_error_password_required)
+            )
             return
         }
 
@@ -112,7 +126,8 @@ class AuthenticationViewModel(
                 _state.value =
                     _state.value.copy(
                         isLoading = false,
-                        errorMessage = e.message ?: "Authentication failed",
+                        errorMessage = e.message?.let { FixedString(it) }
+                            ?: ResourceString(Res.string.auth_error_authentication_failed),
                     )
             }
         }
@@ -125,19 +140,27 @@ class AuthenticationViewModel(
 
         // Validate input
         if (email.isBlank()) {
-            _state.value = _state.value.copy(errorMessage = "Email is required")
+            _state.value = _state.value.copy(
+                errorMessage = ResourceString(Res.string.auth_error_email_required)
+            )
             return
         }
         if (password.isBlank()) {
-            _state.value = _state.value.copy(errorMessage = "Password is required")
+            _state.value = _state.value.copy(
+                errorMessage = ResourceString(Res.string.auth_error_password_required)
+            )
             return
         }
         if (confirmPassword.isBlank()) {
-            _state.value = _state.value.copy(errorMessage = "Please confirm your password")
+            _state.value = _state.value.copy(
+                errorMessage = ResourceString(Res.string.auth_error_confirm_password_required)
+            )
             return
         }
         if (password != confirmPassword) {
-            _state.value = _state.value.copy(errorMessage = "Passwords do not match")
+            _state.value = _state.value.copy(
+                errorMessage = ResourceString(Res.string.auth_error_passwords_do_not_match)
+            )
             return
         }
 
@@ -154,7 +177,8 @@ class AuthenticationViewModel(
                 _state.value =
                     _state.value.copy(
                         isLoading = false,
-                        errorMessage = e.message ?: "Sign up failed",
+                        errorMessage = e.message?.let { FixedString(it) }
+                            ?: ResourceString(Res.string.auth_error_sign_up_failed),
                     )
             }
         }
@@ -165,7 +189,9 @@ class AuthenticationViewModel(
 
         // Validate input
         if (email.isBlank()) {
-            _state.value = _state.value.copy(errorMessage = "Email is required")
+            _state.value = _state.value.copy(
+                errorMessage = ResourceString(Res.string.auth_error_email_required)
+            )
             return
         }
 
@@ -179,13 +205,14 @@ class AuthenticationViewModel(
                 _state.value =
                     _state.value.copy(
                         isLoading = false,
-                        errorMessage = "Password reset email sent",
+                        errorMessage = ResourceString(Res.string.auth_success_password_reset_sent),
                     )
             } catch (e: Exception) {
                 _state.value =
                     _state.value.copy(
                         isLoading = false,
-                        errorMessage = e.message ?: "Failed to send password reset email",
+                        errorMessage = e.message?.let { FixedString(it) }
+                            ?: ResourceString(Res.string.auth_error_password_reset_failed),
                     )
             }
         }
@@ -194,7 +221,7 @@ class AuthenticationViewModel(
     data class State(
         val mode: AuthenticationBloc.Model.Mode = AuthenticationBloc.Model.Mode.SignIn,
         val isLoading: Boolean = false,
-        val errorMessage: String? = null,
+        val errorMessage: TextData? = null,
     )
 
     sealed class Output {
