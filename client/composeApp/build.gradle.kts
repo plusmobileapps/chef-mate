@@ -43,6 +43,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             api(projects.client.shared)
+            api(projects.client.auth.ui.impl)
             api(projects.client.grocery.data.impl)
             api(projects.client.grocery.core.impl)
             api(projects.client.grocery.core.public)

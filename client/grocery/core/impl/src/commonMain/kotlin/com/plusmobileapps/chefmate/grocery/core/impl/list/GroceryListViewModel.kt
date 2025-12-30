@@ -3,6 +3,7 @@
 package com.plusmobileapps.chefmate.grocery.core.impl.list
 
 import com.plusmobileapps.chefmate.ViewModel
+import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,11 +11,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import me.tatarka.inject.annotations.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.ExperimentalTime
 
+@Inject
 class GroceryListViewModel(
-    mainContext: CoroutineContext,
+    @Main mainContext: CoroutineContext,
     private val repository: GroceryRepository,
 ) : ViewModel(mainContext) {
     private val _state = MutableStateFlow(State())

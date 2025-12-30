@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.plusmobileapps.chefmate.auth.ui.AuthenticationScreen
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavigationScreen
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootScreen
@@ -31,6 +32,7 @@ fun RootScreen(
                     is RootBloc.Child.BottomNavigation -> BottomNavigationScreen(child.bloc)
                     is RootBloc.Child.GroceryDetail -> GroceryDetailScreen(child.bloc)
                     is RootBloc.Child.RecipeRoot -> RecipeRootScreen(child.bloc)
+                    is RootBloc.Child.Authentication -> AuthenticationScreen(child.bloc)
                 }
             },
         )

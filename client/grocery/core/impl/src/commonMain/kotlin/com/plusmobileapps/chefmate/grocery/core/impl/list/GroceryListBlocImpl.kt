@@ -21,12 +21,12 @@ import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 class GroceryListBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<GroceryListBloc.Output>,
-    private val repository: GroceryRepository,
+    viewModelFactory: () -> GroceryListViewModel,
 ) : GroceryListBloc,
     BlocContext by context {
     private val viewModel =
         instanceKeeper.getViewModel {
-            GroceryListViewModel(mainContext, repository)
+            viewModelFactory()
         }
 
     override val state: StateFlow<GroceryListBloc.Model> =
