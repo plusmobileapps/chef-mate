@@ -43,6 +43,8 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             api(projects.client.shared)
+            api(projects.client.auth.data.impl)
+            api(projects.client.auth.data.public)
             api(projects.client.auth.ui.impl)
             api(projects.client.grocery.data.impl)
             api(projects.client.grocery.core.impl)
@@ -57,8 +59,17 @@ kotlin {
             api(projects.client.recipe.core.impl)
             api(projects.client.util.impl)
             api(projects.client.settings.impl)
+            implementation(libs.supabase.client)
+            implementation(libs.supabase.auth)
         }
         androidMain.dependencies {
+            implementation(libs.ktor.client.cio)
+        }
+        jvmMain.dependencies {
+            implementation(libs.ktor.client.cio)
+        }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

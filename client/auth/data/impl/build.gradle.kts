@@ -8,6 +8,17 @@ kotlin {
             implementation(projects.client.auth.data.public)
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
+            implementation(libs.supabase.client)
+            implementation(libs.supabase.auth)
+        }
+        jvmMain.dependencies {
+            implementation(libs.ktor.client.cio)
+        }
+        androidMain.dependencies {
+            implementation(libs.ktor.client.cio)
+        }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
         }
     }
 }

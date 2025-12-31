@@ -10,6 +10,7 @@ import chefmate.client.auth.ui.impl.generated.resources.auth_error_passwords_do_
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_sign_up_failed
 import chefmate.client.auth.ui.impl.generated.resources.auth_success_password_reset_sent
 import com.plusmobileapps.chefmate.ViewModel
+import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.text.FixedString
@@ -30,6 +31,7 @@ import kotlin.coroutines.CoroutineContext
 class AuthenticationViewModel(
     @Assisted initialProps: AuthenticationBloc.Props,
     @Main mainContext: CoroutineContext,
+    private val authRepository: AuthenticationRepository,
 ) : ViewModel(mainContext) {
     private val _state =
         MutableStateFlow(
@@ -122,24 +124,25 @@ class AuthenticationViewModel(
             return
         }
 
-        // TODO: Implement actual authentication logic
         _state.value = _state.value.copy(isLoading = true, errorMessage = null)
 
         scope.launch {
-            try {
-                // TODO: Call repository.signIn(email, password)
-                // For now, simulate success
-                _state.value = _state.value.copy(isLoading = false)
-                output.send(Output.AuthenticationSuccess)
-            } catch (e: Exception) {
-                _state.value =
-                    _state.value.copy(
-                        isLoading = false,
-                        errorMessage =
-                            e.message?.let { FixedString(it) }
-                                ?: ResourceString(Res.string.auth_error_authentication_failed),
-                    )
-            }
+            val result = authRepository.signInWithEmailAndPassword(email, password)
+            result.fold(
+                onSuccess = {
+                    _state.value = _state.value.copy(isLoading = false)
+                    output.send(Output.AuthenticationSuccess)
+                },
+                onFailure = { e ->
+                    _state.value =
+                        _state.value.copy(
+                            isLoading = false,
+                            errorMessage =
+                                e.message?.let { FixedString(it) }
+                                    ?: ResourceString(Res.string.auth_error_authentication_failed),
+                        )
+                },
+            )
         }
     }
 
@@ -178,24 +181,25 @@ class AuthenticationViewModel(
             return
         }
 
-        // TODO: Implement actual sign up logic
         _state.value = _state.value.copy(isLoading = true, errorMessage = null)
 
         scope.launch {
-            try {
-                // TODO: Call repository.signUp(email, password)
-                // For now, simulate success
-                _state.value = _state.value.copy(isLoading = false)
-                output.send(Output.AuthenticationSuccess)
-            } catch (e: Exception) {
-                _state.value =
-                    _state.value.copy(
-                        isLoading = false,
-                        errorMessage =
-                            e.message?.let { FixedString(it) }
-                                ?: ResourceString(Res.string.auth_error_sign_up_failed),
-                    )
-            }
+            val result = authRepository.signUpWithEmailAndPassword(email, password)
+            result.fold(
+                onSuccess = {
+                    _state.value = _state.value.copy(isLoading = false)
+                    output.send(Output.AuthenticationSuccess)
+                },
+                onFailure = { e ->
+                    _state.value =
+                        _state.value.copy(
+                            isLoading = false,
+                            errorMessage =
+                                e.message?.let { FixedString(it) }
+                                    ?: ResourceString(Res.string.auth_error_sign_up_failed),
+                        )
+                },
+            )
         }
     }
 
@@ -211,27 +215,28 @@ class AuthenticationViewModel(
             return
         }
 
-        // TODO: Implement forgot password logic
         _state.value = _state.value.copy(isLoading = true, errorMessage = null)
 
         scope.launch {
-            try {
-                // TODO: Call repository.sendPasswordResetEmail(email)
-                // For now, simulate success
-                _state.value =
-                    _state.value.copy(
-                        isLoading = false,
-                        errorMessage = ResourceString(Res.string.auth_success_password_reset_sent),
-                    )
-            } catch (e: Exception) {
-                _state.value =
-                    _state.value.copy(
-                        isLoading = false,
-                        errorMessage =
-                            e.message?.let { FixedString(it) }
-                                ?: ResourceString(Res.string.auth_error_password_reset_failed),
-                    )
-            }
+            val result = authRepository.sendPasswordResetEmail(email)
+            result.fold(
+                onSuccess = {
+                    _state.value =
+                        _state.value.copy(
+                            isLoading = false,
+                            errorMessage = ResourceString(Res.string.auth_success_password_reset_sent),
+                        )
+                },
+                onFailure = { e ->
+                    _state.value =
+                        _state.value.copy(
+                            isLoading = false,
+                            errorMessage =
+                                e.message?.let { FixedString(it) }
+                                    ?: ResourceString(Res.string.auth_error_password_reset_failed),
+                        )
+                },
+            )
         }
     }
 
