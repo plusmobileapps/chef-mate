@@ -68,12 +68,8 @@ class AuthenticationBlocImpl(
         viewModel.onConfirmPasswordChanged(confirmPassword)
     }
 
-    override fun onSignInClicked() {
-        viewModel.signIn()
-    }
-
-    override fun onSignUpClicked() {
-        viewModel.signUp()
+    override fun onSubmitClicked() {
+        viewModel.onSubmitClicked()
     }
 
     override fun onToggleMode() {
@@ -86,5 +82,9 @@ class AuthenticationBlocImpl(
 
     override fun onBackClicked() {
         output.onNext(Output.Finished)
+    }
+
+    override fun onDismissError() {
+        viewModel.onDismissError()
     }
 }

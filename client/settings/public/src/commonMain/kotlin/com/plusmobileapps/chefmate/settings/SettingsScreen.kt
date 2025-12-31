@@ -35,7 +35,6 @@ import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-
 @Composable
 fun SettingsScreen(
     bloc: SettingsBloc,

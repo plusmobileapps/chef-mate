@@ -95,21 +95,30 @@ class AuthenticationViewModel(
             )
     }
 
-    fun signIn() {
+    fun onSubmitClicked() {
+        when (_state.value.mode) {
+            AuthenticationBloc.Model.Mode.SignIn -> signIn()
+            AuthenticationBloc.Model.Mode.SignUp -> signUp()
+        }
+    }
+
+    private fun signIn() {
         val email = _email.value
         val password = _password.value
 
         // Validate input
         if (email.isBlank()) {
-            _state.value = _state.value.copy(
-                errorMessage = ResourceString(Res.string.auth_error_email_required)
-            )
+            _state.value =
+                _state.value.copy(
+                    errorMessage = ResourceString(Res.string.auth_error_email_required),
+                )
             return
         }
         if (password.isBlank()) {
-            _state.value = _state.value.copy(
-                errorMessage = ResourceString(Res.string.auth_error_password_required)
-            )
+            _state.value =
+                _state.value.copy(
+                    errorMessage = ResourceString(Res.string.auth_error_password_required),
+                )
             return
         }
 
@@ -126,41 +135,46 @@ class AuthenticationViewModel(
                 _state.value =
                     _state.value.copy(
                         isLoading = false,
-                        errorMessage = e.message?.let { FixedString(it) }
-                            ?: ResourceString(Res.string.auth_error_authentication_failed),
+                        errorMessage =
+                            e.message?.let { FixedString(it) }
+                                ?: ResourceString(Res.string.auth_error_authentication_failed),
                     )
             }
         }
     }
 
-    fun signUp() {
+    private fun signUp() {
         val email = _email.value
         val password = _password.value
         val confirmPassword = _confirmPassword.value
 
         // Validate input
         if (email.isBlank()) {
-            _state.value = _state.value.copy(
-                errorMessage = ResourceString(Res.string.auth_error_email_required)
-            )
+            _state.value =
+                _state.value.copy(
+                    errorMessage = ResourceString(Res.string.auth_error_email_required),
+                )
             return
         }
         if (password.isBlank()) {
-            _state.value = _state.value.copy(
-                errorMessage = ResourceString(Res.string.auth_error_password_required)
-            )
+            _state.value =
+                _state.value.copy(
+                    errorMessage = ResourceString(Res.string.auth_error_password_required),
+                )
             return
         }
         if (confirmPassword.isBlank()) {
-            _state.value = _state.value.copy(
-                errorMessage = ResourceString(Res.string.auth_error_confirm_password_required)
-            )
+            _state.value =
+                _state.value.copy(
+                    errorMessage = ResourceString(Res.string.auth_error_confirm_password_required),
+                )
             return
         }
         if (password != confirmPassword) {
-            _state.value = _state.value.copy(
-                errorMessage = ResourceString(Res.string.auth_error_passwords_do_not_match)
-            )
+            _state.value =
+                _state.value.copy(
+                    errorMessage = ResourceString(Res.string.auth_error_passwords_do_not_match),
+                )
             return
         }
 
@@ -177,8 +191,9 @@ class AuthenticationViewModel(
                 _state.value =
                     _state.value.copy(
                         isLoading = false,
-                        errorMessage = e.message?.let { FixedString(it) }
-                            ?: ResourceString(Res.string.auth_error_sign_up_failed),
+                        errorMessage =
+                            e.message?.let { FixedString(it) }
+                                ?: ResourceString(Res.string.auth_error_sign_up_failed),
                     )
             }
         }
@@ -189,9 +204,10 @@ class AuthenticationViewModel(
 
         // Validate input
         if (email.isBlank()) {
-            _state.value = _state.value.copy(
-                errorMessage = ResourceString(Res.string.auth_error_email_required)
-            )
+            _state.value =
+                _state.value.copy(
+                    errorMessage = ResourceString(Res.string.auth_error_email_required),
+                )
             return
         }
 
@@ -211,11 +227,16 @@ class AuthenticationViewModel(
                 _state.value =
                     _state.value.copy(
                         isLoading = false,
-                        errorMessage = e.message?.let { FixedString(it) }
-                            ?: ResourceString(Res.string.auth_error_password_reset_failed),
+                        errorMessage =
+                            e.message?.let { FixedString(it) }
+                                ?: ResourceString(Res.string.auth_error_password_reset_failed),
                     )
             }
         }
+    }
+
+    fun onDismissError() {
+        _state.value = _state.value.copy(errorMessage = null)
     }
 
     data class State(

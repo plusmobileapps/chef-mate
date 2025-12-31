@@ -10,6 +10,7 @@ kotlin {
             api(libs.kotlin.coroutines.core)
             api(projects.client.shared)
             api(projects.client.text.public)
+            implementation(projects.client.ui.public)
         }
     }
 }
