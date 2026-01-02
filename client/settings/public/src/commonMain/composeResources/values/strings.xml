@@ -3,4 +3,5 @@
     <string name="sign_in">Sign In</string>
     <string name="sign_out">Sign Out</string>
     <string name="sign_up">Sign Up</string>
+    <string name="greeting_authenticated">Hello {name}!</string>
 </resources>

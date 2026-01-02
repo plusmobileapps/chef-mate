@@ -19,11 +19,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import chefmate.client.settings.public.generated.resources.Res
+import chefmate.client.settings.public.generated.resources.greeting_authenticated
 import chefmate.client.settings.public.generated.resources.settings
 import chefmate.client.settings.public.generated.resources.sign_in
 import chefmate.client.settings.public.generated.resources.sign_out
@@ -40,28 +43,36 @@ fun SettingsScreen(
     bloc: SettingsBloc,
     modifier: Modifier = Modifier,
 ) {
+    val viewState by bloc.state.collectAsState()
+
     PlusNavContainer(
         data =
             PlusHeaderData.Parent(
                 title = Res.string.settings.asTextData(),
             ),
         content = {
-            // TODO: Conditional logic to show rows once auth is implemented.
-            SettingsRow(
-                name = Res.string.sign_in.asTextData(),
-                onClick = bloc::onSignInClicked,
-            )
-            HorizontalDivider()
-            SettingsRow(
-                name = Res.string.sign_up.asTextData(),
-                onClick = bloc::onSignUpClicked,
-            )
-            HorizontalDivider()
-
-            SettingsRow(
-                name = Res.string.sign_out.asTextData(),
-                onClick = bloc::onSignOutClicked,
-            )
+            if (viewState.isAuthenticated) {
+                // Show greeting and sign out button when authenticated
+                viewState.greeting?.let { greeting ->
+                    GreetingSection(greeting = greeting)
+                    HorizontalDivider()
+                }
+                SettingsRow(
+                    name = Res.string.sign_out.asTextData(),
+                    onClick = bloc::onSignOutClicked,
+                )
+            } else {
+                // Show sign in/sign up buttons when not authenticated
+                SettingsRow(
+                    name = Res.string.sign_in.asTextData(),
+                    onClick = bloc::onSignInClicked,
+                )
+                HorizontalDivider()
+                SettingsRow(
+                    name = Res.string.sign_up.asTextData(),
+                    onClick = bloc::onSignUpClicked,
+                )
+            }
         },
     )
     Column(
@@ -76,6 +87,26 @@ fun SettingsScreen(
                 )
             },
             windowInsets = WindowInsets(),
+        )
+    }
+}
+
+@Composable
+private fun GreetingSection(
+    greeting: TextData,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(ChefMateTheme.dimens.rowHeight)
+                .padding(horizontal = ChefMateTheme.dimens.paddingNormal),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            greeting.localized(),
+            style = ChefMateTheme.typography.headlineSmall,
         )
     }
 }
@@ -108,8 +139,39 @@ private fun SettingsRow(
     }
 }
 
-private val previewBloc =
+private val previewBlocUnauthenticated =
     object : SettingsBloc {
+        override val state =
+            kotlinx.coroutines.flow.MutableStateFlow(
+                SettingsBloc.Model(
+                    isAuthenticated = false,
+                    greeting = null,
+                ),
+            )
+
+        override fun onSignInClicked() = Unit
+
+        override fun onSignUpClicked() = Unit
+
+        override fun onSignOutClicked() = Unit
+    }
+
+private val previewBlocAuthenticated =
+    object : SettingsBloc {
+        override val state =
+            kotlinx.coroutines.flow.MutableStateFlow(
+                SettingsBloc.Model(
+                    isAuthenticated = true,
+                    greeting =
+                        com.plusmobileapps.chefmate.text.PhraseModel(
+                            resource = Res.string.greeting_authenticated,
+                            "name" to
+                                com.plusmobileapps.chefmate.text
+                                    .FixedString("John Doe"),
+                        ),
+                ),
+            )
+
         override fun onSignInClicked() = Unit
 
         override fun onSignUpClicked() = Unit
@@ -119,9 +181,17 @@ private val previewBloc =
 
 @Preview(showBackground = true)
 @Composable
-internal fun SettingsScreenPreview() {
+internal fun SettingsScreenUnauthenticatedPreview() {
     ChefMateTheme {
-        SettingsScreen(bloc = previewBloc)
+        SettingsScreen(bloc = previewBlocUnauthenticated)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+internal fun SettingsScreenAuthenticatedPreview() {
+    ChefMateTheme {
+        SettingsScreen(bloc = previewBlocAuthenticated)
     }
 }
 
@@ -129,6 +199,6 @@ internal fun SettingsScreenPreview() {
 @Composable
 internal fun SettingsScreenDarkPreview() {
     ChefMateTheme(darkTheme = true) {
-        SettingsScreen(bloc = previewBloc)
+        SettingsScreen(bloc = previewBlocUnauthenticated)
     }
 }

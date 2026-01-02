@@ -16,6 +16,7 @@ import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.text.TextData
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -134,6 +135,7 @@ class AuthenticationViewModel(
                     output.send(Output.AuthenticationSuccess)
                 },
                 onFailure = { e ->
+                    Napier.e("Authentication failed", e)
                     _state.value =
                         _state.value.copy(
                             isLoading = false,

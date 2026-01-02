@@ -98,6 +98,7 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
                     // Add dependencies to source sets
                     commonMain.dependencies {
                         // Common dependencies can be added here if needed
+                        implementation(libs.napier)
                     }
 
                     androidMain.dependencies {
