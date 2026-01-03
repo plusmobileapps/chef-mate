@@ -8,14 +8,19 @@ interface AuthenticationRepository {
     suspend fun signInWithEmailAndPassword(
         email: String,
         password: String,
-    ): Result<ChefMateUser>
+    ): Result<Unit>
 
     suspend fun signUpWithEmailAndPassword(
         email: String,
         password: String,
-    ): Result<ChefMateUser>
+    ): Result<SignUpResult>
 
     suspend fun signOut()
 
     suspend fun sendPasswordResetEmail(email: String): Result<Unit>
+}
+
+sealed class SignUpResult {
+    data object Success : SignUpResult()
+    data object AwaitingEmailVerification : SignUpResult()
 }

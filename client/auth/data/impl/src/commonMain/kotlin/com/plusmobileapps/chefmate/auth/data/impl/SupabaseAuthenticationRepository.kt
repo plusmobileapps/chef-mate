@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.auth.data.impl
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.auth.data.ChefMateUser
+import com.plusmobileapps.chefmate.auth.data.SignUpResult
 import com.plusmobileapps.chefmate.di.Main
 import io.github.aakira.napier.Napier
 import io.github.jan.supabase.SupabaseClient
@@ -61,19 +62,13 @@ class SupabaseAuthenticationRepository(
     override suspend fun signInWithEmailAndPassword(
         email: String,
         password: String,
-    ): Result<ChefMateUser> =
+    ): Result<Unit> =
         try {
             supabaseClient.auth.signInWith(Email) {
                 this.email = email
                 this.password = password
             }
-
-            val user = supabaseClient.auth.currentUserOrNull()
-            if (user != null) {
-                Result.success(user.toChefMateUser())
-            } else {
-                Result.failure(Exception("Sign in succeeded but no user found"))
-            }
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -81,18 +76,24 @@ class SupabaseAuthenticationRepository(
     override suspend fun signUpWithEmailAndPassword(
         email: String,
         password: String,
-    ): Result<ChefMateUser> =
+    ): Result<SignUpResult> =
         try {
             supabaseClient.auth.signUpWith(Email) {
                 this.email = email
                 this.password = password
             }
-
-            val user = supabaseClient.auth.currentUserOrNull()
-            if (user != null) {
-                Result.success(user.toChefMateUser())
+            
+            // Check if email confirmation is required by checking the current user
+            val currentUser = supabaseClient.auth.currentUserOrNull()
+            val userNeedsConfirmation = currentUser?.emailConfirmedAt == null
+            
+            if (userNeedsConfirmation) {
+                // Sign out the user but set state to awaiting verification
+                supabaseClient.auth.signOut()
+                _state.value = AuthState.AwaitingEmailVerification(email)
+                Result.success(SignUpResult.AwaitingEmailVerification)
             } else {
-                Result.failure(Exception("Sign up succeeded but no user found"))
+                Result.success(SignUpResult.Success)
             }
         } catch (e: Exception) {
             Result.failure(e)

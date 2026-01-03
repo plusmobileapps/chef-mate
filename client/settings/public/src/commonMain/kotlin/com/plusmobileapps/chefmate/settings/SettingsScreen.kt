@@ -2,6 +2,7 @@
 
 package com.plusmobileapps.chefmate.settings
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -62,6 +64,11 @@ fun SettingsScreen(
                     onClick = bloc::onSignOutClicked,
                 )
             } else {
+                // Show email verification message if present
+                viewState.verificationMessage?.let { message ->
+                    EmailVerificationMessage(message = message)
+                    HorizontalDivider()
+                }
                 // Show sign in/sign up buttons when not authenticated
                 SettingsRow(
                     name = Res.string.sign_in.asTextData(),
@@ -107,6 +114,26 @@ private fun GreetingSection(
         Text(
             greeting.localized(),
             style = ChefMateTheme.typography.headlineSmall,
+        )
+    }
+}
+
+@Composable
+private fun EmailVerificationMessage(
+    message: TextData,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.secondaryContainer)
+                .padding(ChefMateTheme.dimens.paddingNormal),
+    ) {
+        Text(
+            message.localized(),
+            style = ChefMateTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
         )
     }
 }

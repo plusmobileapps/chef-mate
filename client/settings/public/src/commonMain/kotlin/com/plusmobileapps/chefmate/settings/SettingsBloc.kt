@@ -17,6 +17,7 @@ interface SettingsBloc {
     data class Model(
         val isAuthenticated: Boolean = false,
         val greeting: TextData? = null,
+        val verificationMessage: TextData? = null,
     )
 
     sealed class Output {

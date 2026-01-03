@@ -11,6 +11,7 @@ import chefmate.client.auth.ui.impl.generated.resources.auth_error_sign_up_faile
 import chefmate.client.auth.ui.impl.generated.resources.auth_success_password_reset_sent
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
+import com.plusmobileapps.chefmate.auth.data.SignUpResult
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.text.FixedString
@@ -188,9 +189,16 @@ class AuthenticationViewModel(
         scope.launch {
             val result = authRepository.signUpWithEmailAndPassword(email, password)
             result.fold(
-                onSuccess = {
+                onSuccess = { signUpResult ->
                     _state.value = _state.value.copy(isLoading = false)
-                    output.send(Output.AuthenticationSuccess)
+                    when (signUpResult) {
+                        SignUpResult.Success -> {
+                            output.send(Output.AuthenticationSuccess)
+                        }
+                        SignUpResult.AwaitingEmailVerification -> {
+                            output.send(Output.EmailVerificationRequired(email))
+                        }
+                    }
                 },
                 onFailure = { e ->
                     _state.value =
@@ -254,5 +262,6 @@ class AuthenticationViewModel(
 
     sealed class Output {
         data object AuthenticationSuccess : Output()
+        data class EmailVerificationRequired(val email: String) : Output()
     }
 }

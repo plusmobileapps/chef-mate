@@ -6,6 +6,7 @@ import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.settings.SettingsBloc
 import com.plusmobileapps.chefmate.settings.SettingsBloc.Output
+import com.plusmobileapps.chefmate.settings.createEmailVerificationMessage
 import com.plusmobileapps.chefmate.settings.createGreeting
 import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
 import kotlinx.coroutines.flow.StateFlow
@@ -34,6 +35,9 @@ class SettingsBlocImpl(
             SettingsBloc.Model(
                 isAuthenticated = it.isAuthenticated,
                 greeting = it.userName?.let { name -> createGreeting(name) },
+                verificationMessage = it.emailAwaitingVerification?.let { email ->
+                    createEmailVerificationMessage(email)
+                },
             )
         }
 

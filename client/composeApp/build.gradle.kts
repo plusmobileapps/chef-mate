@@ -59,6 +59,7 @@ kotlin {
             api(projects.client.recipe.core.impl)
             api(projects.client.util.impl)
             api(projects.client.settings.impl)
+            api(libs.napier)
             implementation(libs.supabase.client)
             implementation(libs.supabase.auth)
         }

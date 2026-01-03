@@ -38,6 +38,7 @@ class SettingsViewModel(
                             State(
                                 isAuthenticated = true,
                                 userName = displayName,
+                                emailAwaitingVerification = null,
                             )
                     }
                     is AuthState.Unauthenticated -> {
@@ -45,6 +46,15 @@ class SettingsViewModel(
                             State(
                                 isAuthenticated = false,
                                 userName = null,
+                                emailAwaitingVerification = null,
+                            )
+                    }
+                    is AuthState.AwaitingEmailVerification -> {
+                        _state.value =
+                            State(
+                                isAuthenticated = false,
+                                userName = null,
+                                emailAwaitingVerification = authState.email,
                             )
                     }
                 }
@@ -60,5 +70,6 @@ class SettingsViewModel(
     data class State(
         val isAuthenticated: Boolean = false,
         val userName: String? = null,
+        val emailAwaitingVerification: String? = null,
     )
 }

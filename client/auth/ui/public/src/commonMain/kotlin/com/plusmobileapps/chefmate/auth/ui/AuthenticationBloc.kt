@@ -42,6 +42,8 @@ interface AuthenticationBloc : BackClickBloc {
         data object Finished : Output()
 
         data object AuthenticationSuccess : Output()
+        
+        data class EmailVerificationRequired(val email: String) : Output()
     }
 
     @Serializable

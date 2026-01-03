@@ -51,6 +51,8 @@ class AuthenticationBlocImpl(
                 when (it) {
                     AuthenticationViewModel.Output.AuthenticationSuccess ->
                         output.onNext(Output.AuthenticationSuccess)
+                    is AuthenticationViewModel.Output.EmailVerificationRequired ->
+                        output.onNext(Output.EmailVerificationRequired(it.email))
                 }
             }
         }
