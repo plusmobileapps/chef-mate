@@ -262,6 +262,9 @@ class AuthenticationViewModel(
 
     sealed class Output {
         data object AuthenticationSuccess : Output()
-        data class EmailVerificationRequired(val email: String) : Output()
+
+        data class EmailVerificationRequired(
+            val email: String,
+        ) : Output()
     }
 }

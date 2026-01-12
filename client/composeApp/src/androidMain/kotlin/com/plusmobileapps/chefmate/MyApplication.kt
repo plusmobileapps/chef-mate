@@ -22,10 +22,10 @@ class MyApplication : Application() {
                         priority: LogLevel,
                         tag: String?,
                         throwable: Throwable?,
-                        message: String?
+                        message: String?,
                     ) = Unit
                 }
-            }
+            },
         )
         appComponent = AndroidApplicationComponent::class.create(this)
     }

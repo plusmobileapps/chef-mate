@@ -35,9 +35,10 @@ class SettingsBlocImpl(
             SettingsBloc.Model(
                 isAuthenticated = it.isAuthenticated,
                 greeting = it.userName?.let { name -> createGreeting(name) },
-                verificationMessage = it.emailAwaitingVerification?.let { email ->
-                    createEmailVerificationMessage(email)
-                },
+                verificationMessage =
+                    it.emailAwaitingVerification?.let { email ->
+                        createEmailVerificationMessage(email)
+                    },
             )
         }
 

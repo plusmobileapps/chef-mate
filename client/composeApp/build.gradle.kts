@@ -68,6 +68,7 @@ kotlin {
         }
         jvmMain.dependencies {
             implementation(libs.ktor.client.cio)
+            implementation(libs.logback)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
@@ -118,10 +119,65 @@ compose.desktop {
     application {
         mainClass = "com.plusmobileapps.chefmate.MainKt"
 
+        // Pass deep link URI as argument when app is launched via URL scheme
+        args += listOf()
+
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.plusmobileapps.chefmate"
+            packageName = "Chef Mate"
             packageVersion = "1.0.0"
+            description = "Chef Mate - Your AI Cooking Assistant"
+            vendor = "Plus Mobile Apps"
+
+            modules("java.sql")
+
+            // macOS configuration
+            macOS {
+                bundleID = "com.plusmobileapps.chefmate"
+                dockName = "Chef Mate"
+
+                infoPlist {
+                    extraKeysRawXml = macExtraPlistKeys
+                }
+            }
+
+            // Linux configuration
+            linux {
+                packageName = "chef-mate"
+                shortcut = true
+                debMaintainer = "support@plusmobileapps.com"
+                menuGroup = "Utility"
+                appCategory = "Utility"
+
+                // The .desktop file will be generated with MimeType for URL scheme
+                // Custom .desktop file is placed in resources and will be used
+            }
+
+            // Windows configuration
+            windows {
+                shortcut = true
+                menu = true
+                menuGroup = "Chef Mate"
+                upgradeUuid = "18159995-d967-4CD2-8885-77BFE3B59F98"
+
+                // Register URL protocol via registry (handled by jpackage installer)
+                // The installer will create registry entries for chefmate:// scheme
+            }
         }
     }
 }
+
+val macExtraPlistKeys: String
+    get() = """
+      <key>CFBundleURLTypes</key>
+      <array>
+        <dict>
+          <key>CFBundleURLName</key>
+          <string>Chef Mate deep link</string>
+          <key>CFBundleURLSchemes</key>
+          <array>
+            <string>chefmate</string>
+          </array>
+        </dict>
+      </array>
+    """

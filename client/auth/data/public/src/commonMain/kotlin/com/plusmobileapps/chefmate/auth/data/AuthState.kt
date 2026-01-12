@@ -6,7 +6,7 @@ sealed class AuthState {
     data class Authenticated(
         val user: ChefMateUser,
     ) : AuthState()
-    
+
     data class AwaitingEmailVerification(
         val email: String,
     ) : AuthState()

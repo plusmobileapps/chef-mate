@@ -78,15 +78,17 @@ class SupabaseAuthenticationRepository(
         password: String,
     ): Result<SignUpResult> =
         try {
-            supabaseClient.auth.signUpWith(Email) {
+            // Note: The redirectUrl will be used by Supabase for email verification links
+            // Format is platform-specific via expect/actual
+            supabaseClient.auth.signUpWith(Email, authCallbackUrl) {
                 this.email = email
                 this.password = password
             }
-            
+
             // Check if email confirmation is required by checking the current user
             val currentUser = supabaseClient.auth.currentUserOrNull()
             val userNeedsConfirmation = currentUser?.emailConfirmedAt == null
-            
+
             if (userNeedsConfirmation) {
                 // Sign out the user but set state to awaiting verification
                 supabaseClient.auth.signOut()

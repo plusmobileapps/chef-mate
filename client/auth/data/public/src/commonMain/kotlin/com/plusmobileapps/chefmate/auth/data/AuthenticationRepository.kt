@@ -22,5 +22,6 @@ interface AuthenticationRepository {
 
 sealed class SignUpResult {
     data object Success : SignUpResult()
+
     data object AwaitingEmailVerification : SignUpResult()
 }

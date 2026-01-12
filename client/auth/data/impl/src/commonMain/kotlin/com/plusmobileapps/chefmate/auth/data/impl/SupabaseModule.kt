@@ -22,6 +22,8 @@ interface SupabaseModule {
             supabaseKey = BuildConfig.SUPABASE_KEY,
         ) {
             install(Auth) {
+                scheme = "chefmate"
+                host = "auth"
             }
         }
     }
