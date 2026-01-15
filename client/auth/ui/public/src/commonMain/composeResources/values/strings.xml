@@ -19,7 +19,7 @@
     <string name="auth_loading_creating_account">Creating account...</string>
     
     <!-- Switch mode messages -->
-    <string name="auth_switch_to_sign_up">Don\'t have an account?</string>
+    <string name="auth_switch_to_sign_up">Don’t have an account?</string>
     <string name="auth_switch_to_sign_in">Already have an account?</string>
     
     <!-- Password visibility -->
