@@ -129,7 +129,7 @@ compose.desktop {
             description = "Chef Mate - Your AI Cooking Assistant"
             vendor = "Plus Mobile Apps"
 
-            modules("java.sql")
+            modules("java.sql", "java.naming")
 
             // macOS configuration
             macOS {
