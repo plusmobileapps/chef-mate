@@ -1,0 +1,20 @@
+Windows Registry Editor Version 5.00
+
+; Chef Mate URL Protocol Handler
+; This file registers the chefmate:// URL scheme on Windows
+; 
+; For development/testing, run this file as administrator after replacing
+; the path with your actual executable location.
+;
+; For production, jpackage installer will create these entries automatically.
+
+[HKEY_CLASSES_ROOT\chefmate]
+@="URL:ChefMate Protocol"
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\chefmate\shell]
+
+[HKEY_CLASSES_ROOT\chefmate\shell\open]
+
+[HKEY_CLASSES_ROOT\chefmate\shell\open\command]
+@="\"C:\\Program Files\\Chef Mate\\Chef Mate.exe\" \"%1\""

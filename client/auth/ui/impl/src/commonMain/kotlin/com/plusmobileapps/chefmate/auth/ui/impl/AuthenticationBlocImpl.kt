@@ -51,6 +51,8 @@ class AuthenticationBlocImpl(
                 when (it) {
                     AuthenticationViewModel.Output.AuthenticationSuccess ->
                         output.onNext(Output.AuthenticationSuccess)
+                    is AuthenticationViewModel.Output.EmailVerificationRequired ->
+                        output.onNext(Output.EmailVerificationRequired(it.email))
                 }
             }
         }
@@ -68,12 +70,8 @@ class AuthenticationBlocImpl(
         viewModel.onConfirmPasswordChanged(confirmPassword)
     }
 
-    override fun onSignInClicked() {
-        viewModel.signIn()
-    }
-
-    override fun onSignUpClicked() {
-        viewModel.signUp()
+    override fun onSubmitClicked() {
+        viewModel.onSubmitClicked()
     }
 
     override fun onToggleMode() {
@@ -86,5 +84,9 @@ class AuthenticationBlocImpl(
 
     override fun onBackClicked() {
         output.onNext(Output.Finished)
+    }
+
+    override fun onDismissError() {
+        viewModel.onDismissError()
     }
 }

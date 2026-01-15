@@ -147,6 +147,11 @@ class RootBlocImpl(
         when (output) {
             AuthenticationBloc.Output.Finished -> navigation.pop()
             AuthenticationBloc.Output.AuthenticationSuccess -> navigation.pop()
+            is AuthenticationBloc.Output.EmailVerificationRequired -> {
+                // User signed up successfully but needs to verify email
+                // Pop back to settings where they'll see the verification message
+                navigation.pop()
+            }
         }
     }
 

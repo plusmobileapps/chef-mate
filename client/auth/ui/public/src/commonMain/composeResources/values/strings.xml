@@ -1,0 +1,27 @@
+<resources>
+    <!-- Screen titles -->
+    <string name="auth_screen_title_sign_in">Sign In</string>
+    <string name="auth_screen_title_sign_up">Create Account</string>
+    
+    <!-- Form labels -->
+    <string name="auth_label_email">Email</string>
+    <string name="auth_label_password">Password</string>
+    <string name="auth_label_confirm_password">Confirm Password</string>
+    
+    <!-- Buttons -->
+    <string name="auth_button_sign_in">Sign In</string>
+    <string name="auth_button_sign_up">Create Account</string>
+    <string name="auth_button_forgot_password">Forgot Password?</string>
+    <string name="auth_button_okay">OK</string>
+    
+    <!-- Loading messages -->
+    <string name="auth_loading_signing_in">Signing in...</string>
+    <string name="auth_loading_creating_account">Creating account...</string>
+    
+    <!-- Switch mode messages -->
+    <string name="auth_switch_to_sign_up">Don\'t have an account?</string>
+    <string name="auth_switch_to_sign_in">Already have an account?</string>
+    
+    <!-- Password visibility -->
+    <string name="auth_password_toggle">Toggle password visibility</string>
+</resources>

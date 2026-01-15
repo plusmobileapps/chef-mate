@@ -8,6 +8,7 @@ kotlin {
             implementation(projects.client.settings.public)
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
+            implementation(projects.client.auth.data.public)
         }
     }
 }

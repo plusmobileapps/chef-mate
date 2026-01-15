@@ -19,13 +19,13 @@ interface AuthenticationBloc : BackClickBloc {
 
     fun onConfirmPasswordChanged(confirmPassword: String)
 
-    fun onSignInClicked()
-
-    fun onSignUpClicked()
+    fun onSubmitClicked()
 
     fun onToggleMode()
 
     fun onForgotPasswordClicked()
+
+    fun onDismissError()
 
     data class Model(
         val mode: Mode = Mode.SignIn,
@@ -42,6 +42,10 @@ interface AuthenticationBloc : BackClickBloc {
         data object Finished : Output()
 
         data object AuthenticationSuccess : Output()
+
+        data class EmailVerificationRequired(
+            val email: String,
+        ) : Output()
     }
 
     @Serializable

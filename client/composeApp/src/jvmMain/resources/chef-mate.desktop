@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Chef Mate
+Comment=Your AI Cooking Assistant
+Exec=chef-mate %u
+Icon=chef-mate
+Terminal=false
+Categories=Utility;
+MimeType=x-scheme-handler/chefmate;
+StartupNotify=true
