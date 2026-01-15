@@ -1,7 +1,5 @@
 package com.plusmobileapps.chefmate
 
-import io.github.aakira.napier.Napier
-
 /**
  * Singleton for handling deep link URIs across platforms.
  *
@@ -25,7 +23,6 @@ object DeepLinkHandler {
             field = value
             if (value != null) {
                 cached?.let { uri ->
-                    Napier.d("DeepLinkHandler: Delivering cached URI: $uri")
                     value.invoke(uri)
                 }
                 cached = null
@@ -38,7 +35,6 @@ object DeepLinkHandler {
      * @param uri The full deep link URI (e.g., "chefmate://auth/callback#access_token=...")
      */
     fun onNewUri(uri: String) {
-        Napier.d("DeepLinkHandler: Received URI: $uri")
         cached = uri
         listener?.let {
             it.invoke(uri)

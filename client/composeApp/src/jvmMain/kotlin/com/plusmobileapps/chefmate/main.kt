@@ -28,7 +28,6 @@ import kotlin.time.ExperimentalTime
 fun main(args: Array<String>) {
     // Initialize Napier logging for JVM
     Napier.base(DebugAntilog())
-    Napier.d { "Args: ${args.joinToString()}" }
     // Only initialize the lifecycle outside the application block
     val lifecycle = LifecycleRegistry()
     val backDispatcher = BackDispatcher()
@@ -41,7 +40,6 @@ fun main(args: Array<String>) {
      * The URI format is: chefmate://auth/callback#access_token=...&refresh_token=...&expires_in=...&token_type=bearer
      */
     fun handleDeepLinkUri(uriString: String) {
-        Napier.d("Processing deep link: $uriString")
         scope.launch {
             supabaseClient.handleDeeplinks(uriString)
         }
@@ -51,7 +49,6 @@ fun main(args: Array<String>) {
     // When the OS opens a deep link, it launches the app with the URI as an argument
     args.firstOrNull()?.let { uri ->
         if (uri.startsWith("chefmate://")) {
-            Napier.d("Received deep link from command line: $uri")
             DeepLinkHandler.onNewUri(uri)
         }
     }
@@ -65,7 +62,6 @@ fun main(args: Array<String>) {
             if (desktop.isSupported(Desktop.Action.APP_OPEN_URI)) {
                 desktop.setOpenURIHandler { event ->
                     val uri = event.uri.toString()
-                    Napier.d("Received macOS deep link: $uri")
                     DeepLinkHandler.onNewUri(uri)
                 }
             }

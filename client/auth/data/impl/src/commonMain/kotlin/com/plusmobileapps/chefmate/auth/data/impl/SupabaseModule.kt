@@ -1,7 +1,6 @@
 package com.plusmobileapps.chefmate.auth.data.impl
 
 import com.plusmobileapps.chefmate.buildconfig.BuildConfig
-import io.github.aakira.napier.Napier
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
@@ -16,7 +15,6 @@ interface SupabaseModule {
     @SingleIn(AppScope::class)
     @Provides
     fun provideSupabaseClient(): SupabaseClient {
-        Napier.d("Initializing Supabase client")
         return createSupabaseClient(
             supabaseUrl = BuildConfig.SUPABASE_URL,
             supabaseKey = BuildConfig.SUPABASE_KEY,

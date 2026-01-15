@@ -5,7 +5,6 @@ import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.auth.data.ChefMateUser
 import com.plusmobileapps.chefmate.auth.data.SignUpResult
 import com.plusmobileapps.chefmate.di.Main
-import io.github.aakira.napier.Napier
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
@@ -38,7 +37,6 @@ class SupabaseAuthenticationRepository(
         // Listen to auth state changes
         scope.launch {
             supabaseClient.auth.sessionStatus.collect { sessionStatus ->
-                Napier.d("Auth state changed: $sessionStatus")
                 when (sessionStatus) {
                     is SessionStatus.Authenticated -> {
                         val user = sessionStatus.session.user
