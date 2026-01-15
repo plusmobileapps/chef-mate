@@ -2,12 +2,14 @@ package com.plusmobileapps.chefmate.auth.ui.impl
 
 import chefmate.client.auth.ui.impl.generated.resources.Res
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_authentication_failed
+import chefmate.client.auth.ui.impl.generated.resources.auth_error_invalid_credentials
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_confirm_password_required
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_email_required
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_password_required
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_password_reset_failed
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_passwords_do_not_match
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_sign_up_failed
+import chefmate.client.auth.ui.impl.generated.resources.auth_error_user_already_exists
 import chefmate.client.auth.ui.impl.generated.resources.auth_success_password_reset_sent
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
@@ -140,9 +142,7 @@ class AuthenticationViewModel(
                     _state.value =
                         _state.value.copy(
                             isLoading = false,
-                            errorMessage =
-                                e.message?.let { FixedString(it) }
-                                    ?: ResourceString(Res.string.auth_error_authentication_failed),
+                            errorMessage = getSignInErrorMessage(e),
                         )
                 },
             )
@@ -190,13 +190,20 @@ class AuthenticationViewModel(
             val result = authRepository.signUpWithEmailAndPassword(email, password)
             result.fold(
                 onSuccess = { signUpResult ->
-                    _state.value = _state.value.copy(isLoading = false)
                     when (signUpResult) {
                         SignUpResult.Success -> {
+                            _state.value = _state.value.copy(isLoading = false)
                             output.send(Output.AuthenticationSuccess)
                         }
                         SignUpResult.AwaitingEmailVerification -> {
+                            _state.value = _state.value.copy(isLoading = false)
                             output.send(Output.EmailVerificationRequired(email))
+                        }
+                        SignUpResult.UserAlreadyExists -> {
+                            _state.value = _state.value.copy(
+                                isLoading = false,
+                                errorMessage = ResourceString(Res.string.auth_error_user_already_exists),
+                            )
                         }
                     }
                 },
@@ -252,6 +259,22 @@ class AuthenticationViewModel(
 
     fun onDismissError() {
         _state.value = _state.value.copy(errorMessage = null)
+    }
+
+    /**
+     * Determines the appropriate error message for sign-in failures.
+     * Supabase returns "Invalid login credentials" for wrong email/password combinations.
+     */
+    private fun getSignInErrorMessage(e: Throwable): TextData {
+        val message = e.message?.lowercase() ?: ""
+        return when {
+            message.contains("invalid") && message.contains("credentials") ->
+                ResourceString(Res.string.auth_error_invalid_credentials)
+            message.contains("invalid login") ->
+                ResourceString(Res.string.auth_error_invalid_credentials)
+            else ->
+                ResourceString(Res.string.auth_error_authentication_failed)
+        }
     }
 
     data class State(
