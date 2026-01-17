@@ -14,8 +14,8 @@ import software.amazon.lastmile.kotlin.inject.anvil.SingleIn
 interface SupabaseModule {
     @SingleIn(AppScope::class)
     @Provides
-    fun provideSupabaseClient(): SupabaseClient {
-        return createSupabaseClient(
+    fun provideSupabaseClient(): SupabaseClient =
+        createSupabaseClient(
             supabaseUrl = BuildConfig.SUPABASE_URL,
             supabaseKey = BuildConfig.SUPABASE_KEY,
         ) {
@@ -24,5 +24,4 @@ interface SupabaseModule {
                 host = "auth"
             }
         }
-    }
 }

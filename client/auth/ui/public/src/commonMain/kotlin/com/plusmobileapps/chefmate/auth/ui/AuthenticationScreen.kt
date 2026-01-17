@@ -1,7 +1,6 @@
 package com.plusmobileapps.chefmate.auth.ui
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -20,14 +19,12 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -62,8 +59,11 @@ import chefmate.client.auth.ui.public.generated.resources.auth_screen_title_sign
 import chefmate.client.auth.ui.public.generated.resources.auth_switch_to_sign_in
 import chefmate.client.auth.ui.public.generated.resources.auth_switch_to_sign_up
 import com.plusmobileapps.chefmate.text.ResourceString
+import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
+import com.plusmobileapps.chefmate.ui.components.PlusLoadingDialog
+import com.plusmobileapps.chefmate.ui.components.PlusTextField
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
 
@@ -109,12 +109,12 @@ fun AuthenticationScreen(
                     onDismissError = bloc::onDismissError,
                 )
                 if (model.isLoading) {
-                    LoadingDialog(
+                    PlusLoadingDialog(
                         message =
                             if (model.mode == AuthenticationBloc.Model.Mode.SignIn) {
-                                stringResource(Res.string.auth_loading_signing_in)
+                                ResourceString(Res.string.auth_loading_signing_in)
                             } else {
-                                stringResource(Res.string.auth_loading_creating_account)
+                                ResourceString(Res.string.auth_loading_creating_account)
                             },
                     )
                 }
@@ -137,31 +137,6 @@ fun AuthenticationScreen(
             )
         },
     )
-}
-
-@Composable
-private fun LoadingDialog(
-    message: String,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier =
-            modifier
-                .fillMaxSize()
-                .padding(ChefMateTheme.dimens.paddingNormal),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingNormal),
-        ) {
-            CircularProgressIndicator()
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyLarge,
-            )
-        }
-    }
 }
 
 @Composable
@@ -213,6 +188,7 @@ private fun AuthenticationBody(
     ) {
         EmailField(
             email = email,
+            error = model.emailError,
             onEmailChanged = onEmailChanged,
             onImeAction = {
                 passwordFocusRequester.requestFocus()
@@ -256,6 +232,7 @@ private fun AuthenticationBody(
                     password = confirmPassword,
                     onPasswordChanged = onConfirmPasswordChanged,
                     label = stringResource(Res.string.auth_label_confirm_password),
+                    error = model.confirmPasswordError,
                     imeAction = ImeAction.Done,
                     onImeAction = {
                         keyboardController?.hide()
@@ -319,14 +296,16 @@ fun AuthenticationSwitcher(
 fun EmailField(
     modifier: Modifier = Modifier,
     email: String,
+    error: TextData? = null,
     onEmailChanged: (String) -> Unit,
     onImeAction: () -> Unit,
 ) {
-    OutlinedTextField(
+    PlusTextField(
         modifier = modifier.fillMaxWidth(),
         value = email,
         onValueChange = onEmailChanged,
         label = { Text(stringResource(Res.string.auth_label_email)) },
+        error = error,
         singleLine = true,
         keyboardOptions =
             KeyboardOptions(
@@ -346,15 +325,17 @@ fun PasswordField(
     password: String,
     onPasswordChanged: (String) -> Unit,
     label: String = stringResource(Res.string.auth_label_password),
+    error: TextData? = null,
     imeAction: ImeAction,
     onImeAction: () -> Unit,
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
-    OutlinedTextField(
+    PlusTextField(
         modifier = modifier.fillMaxWidth(),
         value = password,
         onValueChange = onPasswordChanged,
         label = { Text(label) },
+        error = error,
         singleLine = true,
         visualTransformation =
             if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),

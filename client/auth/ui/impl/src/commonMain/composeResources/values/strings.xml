@@ -1,6 +1,7 @@
 <resources>
     <!-- Authentication errors -->
     <string name="auth_error_email_required">Email is required</string>
+    <string name="auth_error_invalid_email">Please enter a valid email address</string>
     <string name="auth_error_password_required">Password is required</string>
     <string name="auth_error_confirm_password_required">Please confirm your password</string>
     <string name="auth_error_passwords_do_not_match">Passwords do not match</string>

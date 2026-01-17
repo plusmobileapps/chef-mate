@@ -78,10 +78,11 @@ class SupabaseAuthenticationRepository(
         return try {
             // Note: The redirectUrl will be used by Supabase for email verification links
             // Format is platform-specific via expect/actual
-            val result = supabaseClient.auth.signUpWith(Email, authCallbackUrl) {
-                this.email = email
-                this.password = password
-            }
+            val result =
+                supabaseClient.auth.signUpWith(Email, authCallbackUrl) {
+                    this.email = email
+                    this.password = password
+                }
 
             // Supabase returns a fake user with empty identities when email already exists
             // This is intentional to prevent email enumeration attacks

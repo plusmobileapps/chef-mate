@@ -31,6 +31,8 @@ interface AuthenticationBloc : BackClickBloc {
         val mode: Mode = Mode.SignIn,
         val isLoading: Boolean = false,
         val errorMessage: TextData? = null,
+        val emailError: TextData? = null,
+        val confirmPasswordError: TextData? = null,
     ) {
         enum class Mode {
             SignIn,
