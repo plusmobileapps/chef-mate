@@ -9,7 +9,9 @@
     <string name="auth_error_invalid_credentials">The email or password you entered is incorrect. Please try again.</string>
     <string name="auth_error_sign_up_failed">Sign up failed</string>
     <string name="auth_error_user_already_exists">An account with this email already exists. Please sign in instead.</string>
-    <string name="auth_error_password_reset_failed">Failed to send password reset email</string>
+    <string name="auth_error_password_reset_failed">Failed to send password reset email. Please try again.</string>
+    <string name="auth_error_password_reset_rate_limit">Too many password reset requests. Please wait a few minutes before trying again.</string>
+    <string name="auth_error_password_reset_user_not_found">If an account exists with this email, you will receive a password reset link.</string>
     
     <!-- Success messages -->
     <string name="auth_success_password_reset_sent">Password reset email sent</string>
