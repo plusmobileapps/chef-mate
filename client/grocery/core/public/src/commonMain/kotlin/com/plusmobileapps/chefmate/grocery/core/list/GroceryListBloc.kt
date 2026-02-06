@@ -23,6 +23,8 @@ interface GroceryListBloc {
 
     fun onGroceryItemClicked(item: GroceryItem)
 
+    fun onSyncClicked()
+
     data class Model(
         val items: List<GroceryItem> = emptyList(),
     )

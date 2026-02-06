@@ -4,6 +4,7 @@ data class GroceryItem(
     val id: Long,
     val name: String,
     val isChecked: Boolean = false,
+    val syncStatus: SyncStatus = SyncStatus.NOT_SYNCED,
 ) {
     companion object {
         val empty =
@@ -13,4 +14,10 @@ data class GroceryItem(
                 isChecked = false,
             )
     }
+}
+
+enum class SyncStatus {
+    NOT_SYNCED,
+    SYNCING,
+    SYNCED,
 }

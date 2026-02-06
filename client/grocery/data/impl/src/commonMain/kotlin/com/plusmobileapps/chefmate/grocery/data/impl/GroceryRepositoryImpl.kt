@@ -8,14 +8,18 @@ import com.plusmobileapps.chefmate.database.GroceryQueries
 import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
+import com.plusmobileapps.chefmate.grocery.data.SyncStatus
 import com.plusmobileapps.chefmate.grocery.data.impl.remote.GroceryRemoteDataSource
 import com.plusmobileapps.chefmate.grocery.data.impl.remote.RemoteGroceryItem
 import com.plusmobileapps.chefmate.util.DateTimeUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.tatarka.inject.annotations.Inject
@@ -40,6 +44,7 @@ class GroceryRepositoryImpl(
 ) : GroceryRepository {
 
     private val scope = CoroutineScope(ioContext + SupervisorJob())
+    private val syncingIds = MutableStateFlow<Set<Long>>(emptySet())
 
     init {
         scope.launch {
@@ -52,12 +57,15 @@ class GroceryRepositoryImpl(
     }
 
     override fun getGroceries(): Flow<List<GroceryItem>> =
-        queries
-            .readAll()
-            .asFlow()
-            .map { it.executeAsList() }
-            .map { items -> items.map { fromEntity(it) } }
-            .flowOn(ioContext)
+        combine(
+            queries
+                .readAll()
+                .asFlow()
+                .map { it.executeAsList() },
+            syncingIds,
+        ) { items, syncing ->
+            items.map { fromEntity(it, syncing) }
+        }.flowOn(ioContext)
 
     override suspend fun addGrocery(name: String) {
         withContext(ioContext) {
@@ -119,7 +127,7 @@ class GroceryRepositoryImpl(
             queries
                 .getGroceryById(id)
                 .executeAsOneOrNull()
-                ?.let { fromEntity(it) }
+                ?.let { fromEntity(it, syncingIds.value) }
         }
 
     override suspend fun updateGrocery(item: GroceryItem) {
@@ -134,6 +142,13 @@ class GroceryRepositoryImpl(
         pushUpdateToRemote(item.id)
     }
 
+    override suspend fun syncAllUnsynced() {
+        val authState = authRepository.state.value
+        if (authState is AuthState.Authenticated) {
+            syncWithRemote(authState.user.userId)
+        }
+    }
+
     private fun pushAddToRemote(name: String) {
         val authState = authRepository.state.value
         if (authState !is AuthState.Authenticated) return
@@ -143,20 +158,25 @@ class GroceryRepositoryImpl(
                 val unsyncedItems = queries.getUnsynced().executeAsList()
                 val match = unsyncedItems.firstOrNull { it.name == name }
                 if (match != null) {
-                    val remoteItem = remoteDataSource.upsertGroceryItem(
-                        RemoteGroceryItem(
-                            listId = listId,
-                            name = match.name,
-                            isChecked = match.isChecked,
-                            createdAt = match.createdAt,
-                            updatedAt = match.updatedAt,
-                        ),
-                    )
-                    queries.updateRemoteId(
-                        remoteId = remoteItem.id,
-                        listRemoteId = listId,
-                        id = match.id,
-                    )
+                    syncingIds.update { it + match.id }
+                    try {
+                        val remoteItem = remoteDataSource.upsertGroceryItem(
+                            RemoteGroceryItem(
+                                listId = listId,
+                                name = match.name,
+                                isChecked = match.isChecked,
+                                createdAt = match.createdAt,
+                                updatedAt = match.updatedAt,
+                            ),
+                        )
+                        queries.updateRemoteId(
+                            remoteId = remoteItem.id,
+                            listRemoteId = listId,
+                            id = match.id,
+                        )
+                    } finally {
+                        syncingIds.update { it - match.id }
+                    }
                 }
             } catch (_: Exception) {
             }
@@ -171,15 +191,20 @@ class GroceryRepositoryImpl(
                 val entity = queries.getGroceryById(localId).executeAsOneOrNull() ?: return@launch
                 val remoteId = entity.remoteId ?: return@launch
                 val listId = entity.listRemoteId ?: return@launch
-                remoteDataSource.upsertGroceryItem(
-                    RemoteGroceryItem(
-                        id = remoteId,
-                        listId = listId,
-                        name = entity.name,
-                        isChecked = entity.isChecked,
-                        updatedAt = entity.updatedAt,
-                    ),
-                )
+                syncingIds.update { it + localId }
+                try {
+                    remoteDataSource.upsertGroceryItem(
+                        RemoteGroceryItem(
+                            id = remoteId,
+                            listId = listId,
+                            name = entity.name,
+                            isChecked = entity.isChecked,
+                            updatedAt = entity.updatedAt,
+                        ),
+                    )
+                } finally {
+                    syncingIds.update { it - localId }
+                }
             } catch (_: Exception) {
             }
         }
@@ -195,21 +220,26 @@ class GroceryRepositoryImpl(
             }
             for (item in unsynced) {
                 try {
-                    val remoteItem = remoteDataSource.upsertGroceryItem(
-                        RemoteGroceryItem(
-                            listId = listId,
-                            name = item.name,
-                            isChecked = item.isChecked,
-                            createdAt = item.createdAt,
-                            updatedAt = item.updatedAt,
-                        ),
-                    )
-                    withContext(ioContext) {
-                        queries.updateRemoteId(
-                            remoteId = remoteItem.id,
-                            listRemoteId = listId,
-                            id = item.id,
+                    syncingIds.update { it + item.id }
+                    try {
+                        val remoteItem = remoteDataSource.upsertGroceryItem(
+                            RemoteGroceryItem(
+                                listId = listId,
+                                name = item.name,
+                                isChecked = item.isChecked,
+                                createdAt = item.createdAt,
+                                updatedAt = item.updatedAt,
+                            ),
                         )
+                        withContext(ioContext) {
+                            queries.updateRemoteId(
+                                remoteId = remoteItem.id,
+                                listRemoteId = listId,
+                                id = item.id,
+                            )
+                        }
+                    } finally {
+                        syncingIds.update { it - item.id }
                     }
                 } catch (_: Exception) {
                 }
@@ -237,10 +267,17 @@ class GroceryRepositoryImpl(
         }
     }
 
-    fun fromEntity(entity: Grocery): GroceryItem =
-        GroceryItem(
+    private fun fromEntity(entity: Grocery, syncing: Set<Long>): GroceryItem {
+        val syncStatus = when {
+            entity.id in syncing -> SyncStatus.SYNCING
+            entity.remoteId != null -> SyncStatus.SYNCED
+            else -> SyncStatus.NOT_SYNCED
+        }
+        return GroceryItem(
             id = entity.id,
             name = entity.name,
             isChecked = entity.isChecked,
+            syncStatus = syncStatus,
         )
+    }
 }

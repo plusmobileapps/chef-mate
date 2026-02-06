@@ -65,6 +65,12 @@ class GroceryListViewModel(
         _newGroceryItemName.value = ""
     }
 
+    fun onSyncClicked() {
+        scope.launch {
+            repository.syncAllUnsynced()
+        }
+    }
+
     data class State(
         val items: List<GroceryItem> = emptyList(),
     )

@@ -63,4 +63,8 @@ class GroceryListBlocImpl(
     override fun onGroceryItemClicked(item: GroceryItem) {
         output.onNext(GroceryListBloc.Output.OpenDetail(item.id))
     }
+
+    override fun onSyncClicked() {
+        viewModel.onSyncClicked()
+    }
 }
