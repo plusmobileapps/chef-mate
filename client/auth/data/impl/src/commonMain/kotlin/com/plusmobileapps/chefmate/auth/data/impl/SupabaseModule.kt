@@ -4,6 +4,7 @@ import com.plusmobileapps.chefmate.buildconfig.BuildConfig
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.postgrest.Postgrest
 import me.tatarka.inject.annotations.Provides
 import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 import software.amazon.lastmile.kotlin.inject.anvil.ContributesTo
@@ -23,5 +24,6 @@ interface SupabaseModule {
                 scheme = "chefmate"
                 host = "auth"
             }
+            install(Postgrest)
         }
 }

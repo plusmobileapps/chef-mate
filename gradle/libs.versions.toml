@@ -86,6 +86,7 @@ sqldelight-drivers-native = { group = "app.cash.sqldelight", name = "native-driv
 sqldelight-drivers-jvm = { group = "app.cash.sqldelight", name = "sqlite-driver", version.ref = "sqldelight" }
 supabase-client = { module = "io.github.jan-tennert.supabase:supabase-kt", version.ref = "supabase" }
 supabase-auth = { module = "io.github.jan-tennert.supabase:auth-kt", version.ref = "supabase" }
+supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt", version.ref = "supabase" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 
 [plugins]
