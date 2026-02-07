@@ -8,7 +8,8 @@ CREATE TABLE Grocery (
     updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
     remoteId TEXT,
     listRemoteId TEXT,
-    clientId TEXT
+    clientId TEXT,
+    isDirty INTEGER AS Boolean NOT NULL DEFAULT 0
 );
 
 create:
@@ -21,7 +22,7 @@ readAll:
 SELECT * FROM Grocery ORDER BY name DESC;
 
 updateChecked:
-UPDATE Grocery SET isChecked = ?, updatedAt = ? WHERE id = ?;
+UPDATE Grocery SET isChecked = ?, updatedAt = ?, isDirty = 1 WHERE id = ?;
 
 delete:
 DELETE FROM Grocery WHERE id = ?;
@@ -39,10 +40,16 @@ getUnsynced:
 SELECT * FROM Grocery WHERE remoteId IS NULL;
 
 updateRemoteId:
-UPDATE Grocery SET remoteId = ?, listRemoteId = ? WHERE id = ?;
+UPDATE Grocery SET remoteId = ?, listRemoteId = ?, isDirty = 0 WHERE id = ?;
 
 updateClientId:
 UPDATE Grocery SET clientId = ? WHERE id = ?;
 
 update:
-UPDATE Grocery SET name = ?, isChecked = ?, updatedAt = ? WHERE id = ?;
+UPDATE Grocery SET name = ?, isChecked = ?, updatedAt = ?, isDirty = 1 WHERE id = ?;
+
+getDirty:
+SELECT * FROM Grocery WHERE isDirty = 1 AND remoteId IS NOT NULL;
+
+clearDirty:
+UPDATE Grocery SET isDirty = 0 WHERE id = ?;

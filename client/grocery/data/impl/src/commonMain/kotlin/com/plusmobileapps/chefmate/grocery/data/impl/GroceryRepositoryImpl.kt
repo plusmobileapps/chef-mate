@@ -212,6 +212,7 @@ class GroceryRepositoryImpl(
                             clientId = entity.clientId,
                         ),
                     )
+                    queries.clearDirty(localId)
                 } finally {
                     syncingIds.update { it - localId }
                 }
@@ -261,6 +262,36 @@ class GroceryRepositoryImpl(
                 }
             }
 
+            // Push dirty items (modified while offline)
+            val dirty = withContext(ioContext) {
+                queries.getDirty().executeAsList()
+            }
+            for (item in dirty) {
+                try {
+                    val remoteId = item.remoteId ?: continue
+                    val itemListId = item.listRemoteId ?: listId
+                    syncingIds.update { it + item.id }
+                    try {
+                        remoteDataSource.upsertGroceryItem(
+                            RemoteGroceryItem(
+                                id = remoteId,
+                                listId = itemListId,
+                                name = item.name,
+                                isChecked = item.isChecked,
+                                updatedAt = item.updatedAt,
+                                clientId = item.clientId,
+                            ),
+                        )
+                        withContext(ioContext) {
+                            queries.clearDirty(item.id)
+                        }
+                    } finally {
+                        syncingIds.update { it - item.id }
+                    }
+                } catch (_: Exception) {
+                }
+            }
+
             // Pull remote items
             val remoteItems = remoteDataSource.fetchAllGroceryItems(listId)
             withContext(ioContext) {
@@ -300,6 +331,7 @@ class GroceryRepositoryImpl(
     private fun fromEntity(entity: Grocery, syncing: Set<Long>): GroceryItem {
         val syncStatus = when {
             entity.id in syncing -> SyncStatus.SYNCING
+            entity.isDirty -> SyncStatus.NOT_SYNCED
             entity.remoteId != null -> SyncStatus.SYNCED
             else -> SyncStatus.NOT_SYNCED
         }
