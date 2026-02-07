@@ -11,6 +11,7 @@ data class RemoteGroceryItem(
     @SerialName("is_checked") val isChecked: Boolean = false,
     @SerialName("created_at") val createdAt: String? = null,
     @SerialName("updated_at") val updatedAt: String? = null,
+    @SerialName("client_id") val clientId: String? = null,
 )
 
 @Serializable

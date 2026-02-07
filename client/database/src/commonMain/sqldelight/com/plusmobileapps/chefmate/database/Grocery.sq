@@ -7,14 +7,15 @@ CREATE TABLE Grocery (
     createdAt TEXT NOT NULL DEFAULT (datetime('now')),
     updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
     remoteId TEXT,
-    listRemoteId TEXT
+    listRemoteId TEXT,
+    clientId TEXT
 );
 
 create:
-INSERT INTO Grocery (name, isChecked, createdAt, updatedAt) VALUES (?, ?, ?, ?);
+INSERT INTO Grocery (name, isChecked, createdAt, updatedAt, clientId) VALUES (?, ?, ?, ?, ?);
 
 createWithRemoteId:
-INSERT INTO Grocery (name, isChecked, createdAt, updatedAt, remoteId, listRemoteId) VALUES (?, ?, ?, ?, ?, ?);
+INSERT INTO Grocery (name, isChecked, createdAt, updatedAt, remoteId, listRemoteId, clientId) VALUES (?, ?, ?, ?, ?, ?, ?);
 
 readAll:
 SELECT * FROM Grocery ORDER BY name DESC;
@@ -31,11 +32,17 @@ SELECT * FROM Grocery WHERE id = ?;
 getByRemoteId:
 SELECT * FROM Grocery WHERE remoteId = ?;
 
+getByClientId:
+SELECT * FROM Grocery WHERE clientId = ?;
+
 getUnsynced:
 SELECT * FROM Grocery WHERE remoteId IS NULL;
 
 updateRemoteId:
 UPDATE Grocery SET remoteId = ?, listRemoteId = ? WHERE id = ?;
+
+updateClientId:
+UPDATE Grocery SET clientId = ? WHERE id = ?;
 
 update:
 UPDATE Grocery SET name = ?, isChecked = ?, updatedAt = ? WHERE id = ?;

@@ -28,7 +28,10 @@ import software.amazon.lastmile.kotlin.inject.anvil.ContributesBinding
 import software.amazon.lastmile.kotlin.inject.anvil.SingleIn
 import kotlin.collections.map
 import kotlin.coroutines.CoroutineContext
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
+@OptIn(ExperimentalUuidApi::class)
 @Inject
 @SingleIn(AppScope::class)
 @ContributesBinding(
@@ -70,7 +73,8 @@ class GroceryRepositoryImpl(
     override suspend fun addGrocery(name: String) {
         withContext(ioContext) {
             val now = dateTimeUtil.now.toString()
-            queries.create(name = name, isChecked = false, createdAt = now, updatedAt = now)
+            val clientId = Uuid.random().toString()
+            queries.create(name = name, isChecked = false, createdAt = now, updatedAt = now, clientId = clientId)
         }
         pushAddToRemote(name)
     }
@@ -85,6 +89,7 @@ class GroceryRepositoryImpl(
                         isChecked = false,
                         createdAt = now,
                         updatedAt = now,
+                        clientId = Uuid.random().toString(),
                     )
                 }
             }
@@ -158,6 +163,9 @@ class GroceryRepositoryImpl(
                 val unsyncedItems = queries.getUnsynced().executeAsList()
                 val match = unsyncedItems.firstOrNull { it.name == name }
                 if (match != null) {
+                    val clientId = match.clientId ?: Uuid.random().toString().also { newId ->
+                        queries.updateClientId(clientId = newId, id = match.id)
+                    }
                     syncingIds.update { it + match.id }
                     try {
                         val remoteItem = remoteDataSource.upsertGroceryItem(
@@ -167,6 +175,7 @@ class GroceryRepositoryImpl(
                                 isChecked = match.isChecked,
                                 createdAt = match.createdAt,
                                 updatedAt = match.updatedAt,
+                                clientId = clientId,
                             ),
                         )
                         queries.updateRemoteId(
@@ -200,6 +209,7 @@ class GroceryRepositoryImpl(
                             name = entity.name,
                             isChecked = entity.isChecked,
                             updatedAt = entity.updatedAt,
+                            clientId = entity.clientId,
                         ),
                     )
                 } finally {
@@ -220,6 +230,11 @@ class GroceryRepositoryImpl(
             }
             for (item in unsynced) {
                 try {
+                    val clientId = item.clientId ?: Uuid.random().toString().also { newId ->
+                        withContext(ioContext) {
+                            queries.updateClientId(clientId = newId, id = item.id)
+                        }
+                    }
                     syncingIds.update { it + item.id }
                     try {
                         val remoteItem = remoteDataSource.upsertGroceryItem(
@@ -229,6 +244,7 @@ class GroceryRepositoryImpl(
                                 isChecked = item.isChecked,
                                 createdAt = item.createdAt,
                                 updatedAt = item.updatedAt,
+                                clientId = clientId,
                             ),
                         )
                         withContext(ioContext) {
@@ -251,7 +267,20 @@ class GroceryRepositoryImpl(
                 for (remoteItem in remoteItems) {
                     val remoteId = remoteItem.id ?: continue
                     val existing = queries.getByRemoteId(remoteId).executeAsOneOrNull()
-                    if (existing == null) {
+                    if (existing != null) continue
+
+                    // Check if we have a local item matched by clientId (push succeeded but response was lost)
+                    val matchedByClientId = remoteItem.clientId?.let { clientId ->
+                        queries.getByClientId(clientId).executeAsOneOrNull()
+                    }
+                    if (matchedByClientId != null) {
+                        // Link the existing local item to the remote row
+                        queries.updateRemoteId(
+                            remoteId = remoteId,
+                            listRemoteId = listId,
+                            id = matchedByClientId.id,
+                        )
+                    } else {
                         queries.createWithRemoteId(
                             name = remoteItem.name,
                             isChecked = remoteItem.isChecked,
@@ -259,6 +288,7 @@ class GroceryRepositoryImpl(
                             updatedAt = remoteItem.updatedAt ?: dateTimeUtil.now.toString(),
                             remoteId = remoteId,
                             listRemoteId = listId,
+                            clientId = remoteItem.clientId,
                         )
                     }
                 }

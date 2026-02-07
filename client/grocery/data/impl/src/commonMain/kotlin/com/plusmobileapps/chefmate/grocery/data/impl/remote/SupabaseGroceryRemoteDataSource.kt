@@ -45,6 +45,9 @@ class SupabaseGroceryRemoteDataSource(
             .from("grocery_items")
             .upsert(item) {
                 select()
+                if (item.id == null && item.clientId != null) {
+                    onConflict = "client_id"
+                }
             }
             .decodeSingle<RemoteGroceryItem>()
 
