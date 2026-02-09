@@ -67,11 +67,17 @@ class GroceryListViewModel(
 
     fun onSyncClicked() {
         scope.launch {
-            repository.syncAllUnsynced()
+            _state.update { it.copy(isSyncing = true) }
+            try {
+                repository.syncAllUnsynced()
+            } finally {
+                _state.update { it.copy(isSyncing = false) }
+            }
         }
     }
 
     data class State(
         val items: List<GroceryItem> = emptyList(),
+        val isSyncing: Boolean = false,
     )
 }

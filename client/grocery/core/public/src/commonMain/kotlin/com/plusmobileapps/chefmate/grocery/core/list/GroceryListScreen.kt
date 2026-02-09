@@ -60,11 +60,20 @@ fun GroceryListScreen(
         data =
             PlusHeaderData.Parent(
                 title = Res.string.grocery_list.asTextData(),
-                trailingAccessory = PlusHeaderData.TrailingAccessory.Icon(
-                    icon = Icons.Default.Sync,
-                    contentDesc = Res.string.grocery_sync_all.asTextData(),
-                    onClick = bloc::onSyncClicked,
-                ),
+                trailingAccessory = if (state.isSyncing) {
+                    PlusHeaderData.TrailingAccessory.Custom {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp,
+                        )
+                    }
+                } else {
+                    PlusHeaderData.TrailingAccessory.Icon(
+                        icon = Icons.Default.Sync,
+                        contentDesc = Res.string.grocery_sync_all.asTextData(),
+                        onClick = bloc::onSyncClicked,
+                    )
+                },
             ),
         scrollEnabled = false,
         content = {

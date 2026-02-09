@@ -84,6 +84,7 @@ sqldelight-primitive-adapters = { group = "app.cash.sqldelight", name = "primiti
 sqldelight-drivers-android = { group = "app.cash.sqldelight", name = "android-driver", version.ref = "sqldelight" }
 sqldelight-drivers-native = { group = "app.cash.sqldelight", name = "native-driver", version.ref = "sqldelight" }
 sqldelight-drivers-jvm = { group = "app.cash.sqldelight", name = "sqlite-driver", version.ref = "sqldelight" }
+sqldelight-dialect-sqlite335 = { group = "app.cash.sqldelight", name = "sqlite-3-35-dialect", version.ref = "sqldelight" }
 supabase-client = { module = "io.github.jan-tennert.supabase:supabase-kt", version.ref = "supabase" }
 supabase-auth = { module = "io.github.jan-tennert.supabase:auth-kt", version.ref = "supabase" }
 supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt", version.ref = "supabase" }

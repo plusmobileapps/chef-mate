@@ -35,7 +35,7 @@ class RecipeRepositoryImpl(
     override suspend fun createRecipe(recipe: Recipe): Recipe =
         withContext(ioContext) {
             db.transactionWithResult {
-                db.create(
+                val id = db.create(
                     title = recipe.title,
                     description = recipe.description,
                     ingredients = recipe.ingredients,
@@ -51,11 +51,7 @@ class RecipeRepositoryImpl(
                     isFavorite = recipe.isFavorite,
                     createdAt = dateTimeUtil.now.toString(),
                     updatedAt = dateTimeUtil.now.toString(),
-                )
-                val id =
-                    db
-                        .lastInsertRowId()
-                        .executeAsOne()
+                ).executeAsOne()
                 db.getById(id).executeAsOne().toRecipe()
             }
         }

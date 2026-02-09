@@ -6,7 +6,7 @@ CREATE TABLE Grocery (
     isChecked INTEGER AS Boolean NOT NULL DEFAULT 0,
     createdAt TEXT NOT NULL DEFAULT (datetime('now')),
     updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
-    remoteId TEXT,
+    remoteId TEXT UNIQUE,
     listRemoteId TEXT,
     clientId TEXT,
     isDirty INTEGER AS Boolean NOT NULL DEFAULT 0
@@ -16,7 +16,14 @@ create:
 INSERT INTO Grocery (name, isChecked, createdAt, updatedAt, clientId) VALUES (?, ?, ?, ?, ?);
 
 createWithRemoteId:
-INSERT INTO Grocery (name, isChecked, createdAt, updatedAt, remoteId, listRemoteId, clientId) VALUES (?, ?, ?, ?, ?, ?, ?);
+INSERT INTO Grocery (name, isChecked, createdAt, updatedAt, remoteId, listRemoteId, clientId)
+VALUES (?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(remoteId) DO UPDATE SET
+    name = excluded.name,
+    isChecked = excluded.isChecked,
+    updatedAt = excluded.updatedAt,
+    listRemoteId = excluded.listRemoteId,
+    clientId = excluded.clientId;
 
 readAll:
 SELECT * FROM Grocery ORDER BY name DESC;

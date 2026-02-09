@@ -32,6 +32,7 @@ class GroceryListBlocImpl(
         viewModel.state.mapState {
             GroceryListBloc.Model(
                 items = it.items,
+                isSyncing = it.isSyncing,
             )
         }
 

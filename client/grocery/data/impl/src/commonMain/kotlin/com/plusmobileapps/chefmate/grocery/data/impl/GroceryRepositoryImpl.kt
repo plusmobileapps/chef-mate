@@ -21,6 +21,8 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import me.tatarka.inject.annotations.Inject
 import software.amazon.lastmile.kotlin.inject.anvil.AppScope
@@ -47,6 +49,7 @@ class GroceryRepositoryImpl(
 ) : GroceryRepository {
 
     private val scope = CoroutineScope(ioContext + SupervisorJob())
+    private val syncMutex = Mutex()
     private val syncingIds = MutableStateFlow<Set<Long>>(emptySet())
 
     init {
@@ -221,7 +224,7 @@ class GroceryRepositoryImpl(
         }
     }
 
-    private suspend fun syncWithRemote(userId: String) {
+    private suspend fun syncWithRemote(userId: String) = syncMutex.withLock {
         try {
             val listId = remoteDataSource.ensureDefaultList(userId)
 

@@ -27,6 +27,7 @@ interface GroceryListBloc {
 
     data class Model(
         val items: List<GroceryItem> = emptyList(),
+        val isSyncing: Boolean = false,
     )
 
     sealed class Output {
