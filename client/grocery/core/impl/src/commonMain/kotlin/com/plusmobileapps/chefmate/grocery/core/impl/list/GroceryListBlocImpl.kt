@@ -32,6 +32,7 @@ class GroceryListBlocImpl(
         viewModel.state.mapState {
             GroceryListBloc.Model(
                 items = it.items,
+                isSyncing = it.isSyncing,
             )
         }
 
@@ -62,5 +63,9 @@ class GroceryListBlocImpl(
 
     override fun onGroceryItemClicked(item: GroceryItem) {
         output.onNext(GroceryListBloc.Output.OpenDetail(item.id))
+    }
+
+    override fun onSyncClicked() {
+        viewModel.onSyncClicked()
     }
 }

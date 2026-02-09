@@ -10,6 +10,7 @@ kotlin {
             implementation(projects.client.shared)
             implementation(libs.supabase.client)
             implementation(libs.supabase.auth)
+            implementation(libs.supabase.postgrest)
         }
         jvmMain.dependencies {
             implementation(libs.ktor.client.cio)

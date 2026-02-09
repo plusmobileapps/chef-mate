@@ -65,7 +65,19 @@ class GroceryListViewModel(
         _newGroceryItemName.value = ""
     }
 
+    fun onSyncClicked() {
+        scope.launch {
+            _state.update { it.copy(isSyncing = true) }
+            try {
+                repository.syncAllUnsynced()
+            } finally {
+                _state.update { it.copy(isSyncing = false) }
+            }
+        }
+    }
+
     data class State(
         val items: List<GroceryItem> = emptyList(),
+        val isSyncing: Boolean = false,
     )
 }

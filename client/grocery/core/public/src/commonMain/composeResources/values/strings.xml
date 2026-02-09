@@ -2,4 +2,12 @@
     <string name="grocery_list">Grocery List</string>
     <string name="grocery_detail">Grocery Detail</string>
     <string name="purchased">Purchased</string>
+    <string name="grocery_add_item">Add Item</string>
+    <string name="grocery_checked">Checked</string>
+    <string name="grocery_not_checked">Not Checked</string>
+    <string name="grocery_delete_item">Delete Item</string>
+    <string name="grocery_sync_not_synced">Not synced</string>
+    <string name="grocery_sync_syncing">Syncing</string>
+    <string name="grocery_sync_synced">Synced</string>
+    <string name="grocery_sync_all">Sync all</string>
 </resources>

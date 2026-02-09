@@ -4,19 +4,26 @@ import chefmate.client.auth.ui.impl.generated.resources.Res
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_authentication_failed
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_confirm_password_required
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_email_required
+import chefmate.client.auth.ui.impl.generated.resources.auth_error_invalid_credentials
+import chefmate.client.auth.ui.impl.generated.resources.auth_error_invalid_email
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_password_required
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_password_reset_failed
+import chefmate.client.auth.ui.impl.generated.resources.auth_error_password_reset_rate_limit
+import chefmate.client.auth.ui.impl.generated.resources.auth_error_password_reset_user_not_found
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_passwords_do_not_match
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_sign_up_failed
+import chefmate.client.auth.ui.impl.generated.resources.auth_error_user_already_exists
 import chefmate.client.auth.ui.impl.generated.resources.auth_success_password_reset_sent
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.auth.data.SignUpResult
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
+import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc.Model.Mode.SignIn
+import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc.Model.Mode.SignUp
 import com.plusmobileapps.chefmate.di.Main
-import com.plusmobileapps.chefmate.text.FixedString
-import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.text.TextData
+import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.util.EmailUtil
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -34,14 +41,15 @@ class AuthenticationViewModel(
     @Assisted initialProps: AuthenticationBloc.Props,
     @Main mainContext: CoroutineContext,
     private val authRepository: AuthenticationRepository,
+    private val emailUtil: EmailUtil,
 ) : ViewModel(mainContext) {
     private val _state =
         MutableStateFlow(
             State(
                 mode =
                     when (initialProps) {
-                        AuthenticationBloc.Props.SignIn -> AuthenticationBloc.Model.Mode.SignIn
-                        AuthenticationBloc.Props.SignUp -> AuthenticationBloc.Model.Mode.SignUp
+                        AuthenticationBloc.Props.SignIn -> SignIn
+                        AuthenticationBloc.Props.SignUp -> SignUp
                     },
             ),
         )
@@ -64,9 +72,9 @@ class AuthenticationViewModel(
 
     fun onEmailChanged(email: String) {
         _email.value = email
-        // Clear error when user starts typing
-        if (_state.value.errorMessage != null) {
-            _state.value = _state.value.copy(errorMessage = null)
+        // Clear errors when user starts typing
+        if (_state.value.errorMessage != null || _state.value.emailError != null) {
+            _state.value = _state.value.copy(errorMessage = null, emailError = null)
         }
     }
 
@@ -80,29 +88,31 @@ class AuthenticationViewModel(
 
     fun onConfirmPasswordChanged(confirmPassword: String) {
         _confirmPassword.value = confirmPassword
-        // Clear error when user starts typing
-        if (_state.value.errorMessage != null) {
-            _state.value = _state.value.copy(errorMessage = null)
+        // Clear errors when user starts typing
+        if (_state.value.errorMessage != null || _state.value.confirmPasswordError != null) {
+            _state.value = _state.value.copy(errorMessage = null, confirmPasswordError = null)
         }
     }
 
     fun onToggleMode() {
         val newMode =
             when (_state.value.mode) {
-                AuthenticationBloc.Model.Mode.SignIn -> AuthenticationBloc.Model.Mode.SignUp
-                AuthenticationBloc.Model.Mode.SignUp -> AuthenticationBloc.Model.Mode.SignIn
+                SignIn -> SignUp
+                SignUp -> SignIn
             }
         _state.value =
             _state.value.copy(
                 mode = newMode,
                 errorMessage = null,
+                emailError = null,
+                confirmPasswordError = null,
             )
     }
 
     fun onSubmitClicked() {
         when (_state.value.mode) {
-            AuthenticationBloc.Model.Mode.SignIn -> signIn()
-            AuthenticationBloc.Model.Mode.SignUp -> signUp()
+            SignIn -> signIn()
+            SignUp -> signUp()
         }
     }
 
@@ -114,19 +124,26 @@ class AuthenticationViewModel(
         if (email.isBlank()) {
             _state.value =
                 _state.value.copy(
-                    errorMessage = ResourceString(Res.string.auth_error_email_required),
+                    emailError = Res.string.auth_error_email_required.asTextData(),
+                )
+            return
+        }
+        if (!emailUtil.isValidEmail(email)) {
+            _state.value =
+                _state.value.copy(
+                    emailError = Res.string.auth_error_invalid_email.asTextData(),
                 )
             return
         }
         if (password.isBlank()) {
             _state.value =
                 _state.value.copy(
-                    errorMessage = ResourceString(Res.string.auth_error_password_required),
+                    errorMessage = Res.string.auth_error_password_required.asTextData(),
                 )
             return
         }
 
-        _state.value = _state.value.copy(isLoading = true, errorMessage = null)
+        _state.value = _state.value.copy(isLoading = true, errorMessage = null, emailError = null)
 
         scope.launch {
             val result = authRepository.signInWithEmailAndPassword(email, password)
@@ -140,9 +157,7 @@ class AuthenticationViewModel(
                     _state.value =
                         _state.value.copy(
                             isLoading = false,
-                            errorMessage =
-                                e.message?.let { FixedString(it) }
-                                    ?: ResourceString(Res.string.auth_error_authentication_failed),
+                            errorMessage = getSignInErrorMessage(e),
                         )
                 },
             )
@@ -158,45 +173,60 @@ class AuthenticationViewModel(
         if (email.isBlank()) {
             _state.value =
                 _state.value.copy(
-                    errorMessage = ResourceString(Res.string.auth_error_email_required),
+                    emailError = Res.string.auth_error_email_required.asTextData(),
+                )
+            return
+        }
+        if (!emailUtil.isValidEmail(email)) {
+            _state.value =
+                _state.value.copy(
+                    emailError = Res.string.auth_error_invalid_email.asTextData(),
                 )
             return
         }
         if (password.isBlank()) {
             _state.value =
                 _state.value.copy(
-                    errorMessage = ResourceString(Res.string.auth_error_password_required),
+                    errorMessage = Res.string.auth_error_password_required.asTextData(),
                 )
             return
         }
         if (confirmPassword.isBlank()) {
             _state.value =
                 _state.value.copy(
-                    errorMessage = ResourceString(Res.string.auth_error_confirm_password_required),
+                    confirmPasswordError = Res.string.auth_error_confirm_password_required.asTextData(),
                 )
             return
         }
         if (password != confirmPassword) {
             _state.value =
                 _state.value.copy(
-                    errorMessage = ResourceString(Res.string.auth_error_passwords_do_not_match),
+                    confirmPasswordError = Res.string.auth_error_passwords_do_not_match.asTextData(),
                 )
             return
         }
 
-        _state.value = _state.value.copy(isLoading = true, errorMessage = null)
+        _state.value = _state.value.copy(isLoading = true, errorMessage = null, emailError = null, confirmPasswordError = null)
 
         scope.launch {
             val result = authRepository.signUpWithEmailAndPassword(email, password)
             result.fold(
                 onSuccess = { signUpResult ->
-                    _state.value = _state.value.copy(isLoading = false)
                     when (signUpResult) {
                         SignUpResult.Success -> {
+                            _state.value = _state.value.copy(isLoading = false)
                             output.send(Output.AuthenticationSuccess)
                         }
                         SignUpResult.AwaitingEmailVerification -> {
+                            _state.value = _state.value.copy(isLoading = false)
                             output.send(Output.EmailVerificationRequired(email))
+                        }
+                        SignUpResult.UserAlreadyExists -> {
+                            _state.value =
+                                _state.value.copy(
+                                    isLoading = false,
+                                    errorMessage = Res.string.auth_error_user_already_exists.asTextData(),
+                                )
                         }
                     }
                 },
@@ -205,8 +235,8 @@ class AuthenticationViewModel(
                         _state.value.copy(
                             isLoading = false,
                             errorMessage =
-                                e.message?.let { FixedString(it) }
-                                    ?: ResourceString(Res.string.auth_error_sign_up_failed),
+                                e.message?.asTextData()
+                                    ?: Res.string.auth_error_sign_up_failed.asTextData(),
                         )
                 },
             )
@@ -220,12 +250,19 @@ class AuthenticationViewModel(
         if (email.isBlank()) {
             _state.value =
                 _state.value.copy(
-                    errorMessage = ResourceString(Res.string.auth_error_email_required),
+                    emailError = Res.string.auth_error_email_required.asTextData(),
+                )
+            return
+        }
+        if (!emailUtil.isValidEmail(email)) {
+            _state.value =
+                _state.value.copy(
+                    emailError = Res.string.auth_error_invalid_email.asTextData(),
                 )
             return
         }
 
-        _state.value = _state.value.copy(isLoading = true, errorMessage = null)
+        _state.value = _state.value.copy(isLoading = true, errorMessage = null, emailError = null)
 
         scope.launch {
             val result = authRepository.sendPasswordResetEmail(email)
@@ -234,16 +271,15 @@ class AuthenticationViewModel(
                     _state.value =
                         _state.value.copy(
                             isLoading = false,
-                            errorMessage = ResourceString(Res.string.auth_success_password_reset_sent),
+                            errorMessage = Res.string.auth_success_password_reset_sent.asTextData(),
                         )
                 },
                 onFailure = { e ->
+                    Napier.e("Password reset failed", e)
                     _state.value =
                         _state.value.copy(
                             isLoading = false,
-                            errorMessage =
-                                e.message?.let { FixedString(it) }
-                                    ?: ResourceString(Res.string.auth_error_password_reset_failed),
+                            errorMessage = getPasswordResetErrorMessage(e),
                         )
                 },
             )
@@ -254,10 +290,44 @@ class AuthenticationViewModel(
         _state.value = _state.value.copy(errorMessage = null)
     }
 
+    /**
+     * Determines the appropriate error message for sign-in failures.
+     * Supabase returns "Invalid login credentials" for wrong email/password combinations.
+     */
+    private fun getSignInErrorMessage(e: Throwable): TextData {
+        val message = e.message?.lowercase() ?: ""
+        return when {
+            message.contains("invalid") && message.contains("credentials") ->
+                Res.string.auth_error_invalid_credentials.asTextData()
+            message.contains("invalid login") ->
+                Res.string.auth_error_invalid_credentials.asTextData()
+            else ->
+                Res.string.auth_error_authentication_failed.asTextData()
+        }
+    }
+
+    /**
+     * Determines the appropriate error message for password reset failures.
+     * Supabase may return rate limiting errors or user not found errors.
+     */
+    private fun getPasswordResetErrorMessage(e: Throwable): TextData {
+        val message = e.message?.lowercase() ?: ""
+        return when {
+            message.contains("rate") || message.contains("too many") || message.contains("limit") ->
+                Res.string.auth_error_password_reset_rate_limit.asTextData()
+            message.contains("not found") || message.contains("no user") ->
+                Res.string.auth_error_password_reset_user_not_found.asTextData()
+            else ->
+                Res.string.auth_error_password_reset_failed.asTextData()
+        }
+    }
+
     data class State(
-        val mode: AuthenticationBloc.Model.Mode = AuthenticationBloc.Model.Mode.SignIn,
+        val mode: AuthenticationBloc.Model.Mode = SignIn,
         val isLoading: Boolean = false,
         val errorMessage: TextData? = null,
+        val emailError: TextData? = null,
+        val confirmPasswordError: TextData? = null,
     )
 
     sealed class Output {

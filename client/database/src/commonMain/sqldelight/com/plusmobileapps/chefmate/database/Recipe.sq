@@ -25,12 +25,10 @@ SELECT * FROM Recipe ORDER BY title DESC;
 getById:
 SELECT * FROM Recipe WHERE id = ?;
 
-lastInsertRowId:
-SELECT last_insert_rowid();
-
 create:
 INSERT INTO Recipe (title, description, ingredients, directions, imageUrl, sourceUrl, servings, prepTime, cookTime, totalTime, calories, starRating, isFavorite, createdAt, updatedAt)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id;
 
 update:
 UPDATE Recipe SET title = ?, description = ?, ingredients = ?, directions = ?, imageUrl = ?, sourceUrl = ?, servings = ?, prepTime = ?, cookTime = ?, totalTime = ?, calories = ?, starRating = ?, isFavorite = ?, updatedAt = ?

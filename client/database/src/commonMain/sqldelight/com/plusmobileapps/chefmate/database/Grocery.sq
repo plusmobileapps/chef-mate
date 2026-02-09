@@ -5,17 +5,31 @@ CREATE TABLE Grocery (
     name TEXT NOT NULL,
     isChecked INTEGER AS Boolean NOT NULL DEFAULT 0,
     createdAt TEXT NOT NULL DEFAULT (datetime('now')),
-    updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
+    updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
+    remoteId TEXT UNIQUE,
+    listRemoteId TEXT,
+    clientId TEXT,
+    isDirty INTEGER AS Boolean NOT NULL DEFAULT 0
 );
 
 create:
-INSERT INTO Grocery (name, isChecked, createdAt, updatedAt) VALUES (?, ?, ?, ?);
+INSERT INTO Grocery (name, isChecked, createdAt, updatedAt, clientId) VALUES (?, ?, ?, ?, ?);
+
+createWithRemoteId:
+INSERT INTO Grocery (name, isChecked, createdAt, updatedAt, remoteId, listRemoteId, clientId)
+VALUES (?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(remoteId) DO UPDATE SET
+    name = excluded.name,
+    isChecked = excluded.isChecked,
+    updatedAt = excluded.updatedAt,
+    listRemoteId = excluded.listRemoteId,
+    clientId = excluded.clientId;
 
 readAll:
 SELECT * FROM Grocery ORDER BY name DESC;
 
 updateChecked:
-UPDATE Grocery SET isChecked = ?, updatedAt = ? WHERE id = ?;
+UPDATE Grocery SET isChecked = ?, updatedAt = ?, isDirty = 1 WHERE id = ?;
 
 delete:
 DELETE FROM Grocery WHERE id = ?;
@@ -23,5 +37,26 @@ DELETE FROM Grocery WHERE id = ?;
 getGroceryById:
 SELECT * FROM Grocery WHERE id = ?;
 
+getByRemoteId:
+SELECT * FROM Grocery WHERE remoteId = ?;
+
+getByClientId:
+SELECT * FROM Grocery WHERE clientId = ?;
+
+getUnsynced:
+SELECT * FROM Grocery WHERE remoteId IS NULL;
+
+updateRemoteId:
+UPDATE Grocery SET remoteId = ?, listRemoteId = ?, isDirty = 0 WHERE id = ?;
+
+updateClientId:
+UPDATE Grocery SET clientId = ? WHERE id = ?;
+
 update:
-UPDATE Grocery SET name = ?, isChecked = ?, updatedAt = ? WHERE id = ?;
+UPDATE Grocery SET name = ?, isChecked = ?, updatedAt = ?, isDirty = 1 WHERE id = ?;
+
+getDirty:
+SELECT * FROM Grocery WHERE isDirty = 1 AND remoteId IS NOT NULL;
+
+clearDirty:
+UPDATE Grocery SET isDirty = 0 WHERE id = ?;

@@ -22,4 +22,6 @@ interface GroceryRepository {
     suspend fun getGrocery(id: Long): GroceryItem?
 
     suspend fun updateGrocery(item: GroceryItem)
+
+    suspend fun syncAllUnsynced()
 }

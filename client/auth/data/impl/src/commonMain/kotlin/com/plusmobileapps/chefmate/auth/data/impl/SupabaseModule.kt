@@ -4,6 +4,7 @@ import com.plusmobileapps.chefmate.buildconfig.BuildConfig
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.postgrest.Postgrest
 import me.tatarka.inject.annotations.Provides
 import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 import software.amazon.lastmile.kotlin.inject.anvil.ContributesTo
@@ -14,8 +15,8 @@ import software.amazon.lastmile.kotlin.inject.anvil.SingleIn
 interface SupabaseModule {
     @SingleIn(AppScope::class)
     @Provides
-    fun provideSupabaseClient(): SupabaseClient {
-        return createSupabaseClient(
+    fun provideSupabaseClient(): SupabaseClient =
+        createSupabaseClient(
             supabaseUrl = BuildConfig.SUPABASE_URL,
             supabaseKey = BuildConfig.SUPABASE_KEY,
         ) {
@@ -23,6 +24,6 @@ interface SupabaseModule {
                 scheme = "chefmate"
                 host = "auth"
             }
+            install(Postgrest)
         }
-    }
 }

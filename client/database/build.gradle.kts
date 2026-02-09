@@ -29,6 +29,7 @@ sqldelight {
     databases {
         create("Database") {
             packageName.set("com.plusmobileapps.chefmate.database")
+            dialect(libs.sqldelight.dialect.sqlite335)
         }
     }
 }
