@@ -8,4 +8,12 @@ interface GroceryRemoteDataSource {
     suspend fun deleteGroceryItem(remoteId: String)
 
     suspend fun fetchAllGroceryItems(listId: String): List<RemoteGroceryItem>
+
+    suspend fun createGroceryList(list: RemoteGroceryList): RemoteGroceryList
+
+    suspend fun fetchGroceryLists(ownerId: String): List<RemoteGroceryList>
+
+    suspend fun deleteGroceryList(remoteId: String)
+
+    suspend fun updateGroceryList(list: RemoteGroceryList): RemoteGroceryList
 }

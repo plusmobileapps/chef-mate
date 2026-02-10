@@ -66,4 +66,37 @@ class SupabaseGroceryRemoteDataSource(
                 filter { eq("list_id", listId) }
             }
             .decodeList<RemoteGroceryItem>()
+
+    override suspend fun createGroceryList(list: RemoteGroceryList): RemoteGroceryList =
+        supabaseClient
+            .from("grocery_lists")
+            .insert(list) {
+                select()
+            }
+            .decodeSingle<RemoteGroceryList>()
+
+    override suspend fun fetchGroceryLists(ownerId: String): List<RemoteGroceryList> =
+        supabaseClient
+            .from("grocery_lists")
+            .select {
+                filter { eq("owner_id", ownerId) }
+            }
+            .decodeList<RemoteGroceryList>()
+
+    override suspend fun deleteGroceryList(remoteId: String) {
+        supabaseClient
+            .from("grocery_lists")
+            .delete {
+                filter { eq("id", remoteId) }
+            }
+    }
+
+    override suspend fun updateGroceryList(list: RemoteGroceryList): RemoteGroceryList =
+        supabaseClient
+            .from("grocery_lists")
+            .update(list) {
+                select()
+                filter { eq("id", list.id!!) }
+            }
+            .decodeSingle<RemoteGroceryList>()
 }

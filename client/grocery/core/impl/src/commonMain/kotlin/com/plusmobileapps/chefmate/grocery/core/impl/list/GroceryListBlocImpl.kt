@@ -5,6 +5,7 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
+import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
 import kotlinx.coroutines.flow.StateFlow
@@ -33,6 +34,9 @@ class GroceryListBlocImpl(
             GroceryListBloc.Model(
                 items = it.items,
                 isSyncing = it.isSyncing,
+                lists = it.lists,
+                selectedList = it.selectedList,
+                showCreateListDialog = it.showCreateListDialog,
             )
         }
 
@@ -67,5 +71,25 @@ class GroceryListBlocImpl(
 
     override fun onSyncClicked() {
         viewModel.onSyncClicked()
+    }
+
+    override fun onListSelected(list: GroceryListModel) {
+        viewModel.onListSelected(list)
+    }
+
+    override fun onCreateListClicked() {
+        viewModel.onCreateListClicked()
+    }
+
+    override fun onCreateListDismissed() {
+        viewModel.onCreateListDismissed()
+    }
+
+    override fun onCreateListConfirmed(name: String) {
+        viewModel.onCreateListConfirmed(name)
+    }
+
+    override fun onDeleteListClicked(list: GroceryListModel) {
+        viewModel.onDeleteListClicked(list)
     }
 }

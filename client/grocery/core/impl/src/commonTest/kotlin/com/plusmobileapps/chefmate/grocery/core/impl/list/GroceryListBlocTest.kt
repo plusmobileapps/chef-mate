@@ -1,10 +1,12 @@
 @file:Suppress("FunctionName")
+@file:OptIn(ExperimentalCoroutinesApi::class)
 
 package com.plusmobileapps.chefmate.grocery.core.impl.list
 
 import app.cash.turbine.test
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
+import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
@@ -14,8 +16,11 @@ import dev.mokkery.everySuspend
 import dev.mokkery.mock
 import dev.mokkery.verifySuspend
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 
@@ -23,16 +28,25 @@ class GroceryListBlocTest {
     val context = TestBlocContext.Companion.create()
     val output = TestConsumer<GroceryListBloc.Output>()
     val groceries = MutableSharedFlow<List<GroceryItem>>()
+    val groceryLists = MutableSharedFlow<List<GroceryListModel>>()
     val repository: GroceryRepository =
         mock {
             every { getGroceries() } returns groceries.asSharedFlow()
+            every { getGroceries(1L) } returns groceries.asSharedFlow()
+            every { getGroceryLists() } returns groceryLists.asSharedFlow()
+            everySuspend { ensureDefaultList() } returns 1L
         }
 
     val bloc =
         GroceryListBlocImpl(
             context = context,
             output = output,
-            repository = repository,
+            viewModelFactory = {
+                GroceryListViewModel(
+                    mainContext = UnconfinedTestDispatcher(),
+                    repository = repository,
+                )
+            },
         )
 
     @Test

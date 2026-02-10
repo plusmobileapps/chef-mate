@@ -12,19 +12,28 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.outlined.CloudOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -33,9 +42,16 @@ import androidx.compose.ui.unit.dp
 import chefmate.client.grocery.core.public.generated.resources.Res
 import chefmate.client.grocery.core.public.generated.resources.grocery_add_item
 import chefmate.client.grocery.core.public.generated.resources.grocery_checked
+import chefmate.client.grocery.core.public.generated.resources.grocery_create_list_cancel
+import chefmate.client.grocery.core.public.generated.resources.grocery_create_list_confirm
+import chefmate.client.grocery.core.public.generated.resources.grocery_create_list_hint
+import chefmate.client.grocery.core.public.generated.resources.grocery_create_list_title
+import chefmate.client.grocery.core.public.generated.resources.grocery_create_new_list
 import chefmate.client.grocery.core.public.generated.resources.grocery_delete_item
+import chefmate.client.grocery.core.public.generated.resources.grocery_delete_list
 import chefmate.client.grocery.core.public.generated.resources.grocery_list
 import chefmate.client.grocery.core.public.generated.resources.grocery_not_checked
+import chefmate.client.grocery.core.public.generated.resources.grocery_select_list
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_all
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_not_synced
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_synced
@@ -77,6 +93,12 @@ fun GroceryListScreen(
             ),
         scrollEnabled = false,
         content = {
+            GroceryListSelector(
+                state = state,
+                onListSelected = bloc::onListSelected,
+                onCreateListClicked = bloc::onCreateListClicked,
+                onDeleteListClicked = bloc::onDeleteListClicked,
+            )
             LazyColumn(
                 modifier = Modifier.weight(1f),
             ) {
@@ -95,6 +117,122 @@ fun GroceryListScreen(
                 onNameChange = bloc::onNewGroceryItemNameChange,
                 onAddClick = bloc::saveGroceryItem,
             )
+        },
+    )
+
+    if (state.showCreateListDialog) {
+        CreateListDialog(
+            onDismiss = bloc::onCreateListDismissed,
+            onConfirm = bloc::onCreateListConfirmed,
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun GroceryListSelector(
+    state: GroceryListBloc.Model,
+    onListSelected: (com.plusmobileapps.chefmate.grocery.data.GroceryListModel) -> Unit,
+    onCreateListClicked: () -> Unit,
+    onDeleteListClicked: (com.plusmobileapps.chefmate.grocery.data.GroceryListModel) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (state.lists.size <= 1 && !state.lists.any { it.id != state.selectedList?.id }) {
+        // Only show selector when there are multiple lists or to allow creating new ones
+    }
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+    ) {
+        OutlinedTextField(
+            value = state.selectedList?.name ?: "",
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(stringResource(Res.string.grocery_select_list)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                .fillMaxWidth(),
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            state.lists.forEach { list ->
+                DropdownMenuItem(
+                    text = { Text(list.name) },
+                    onClick = {
+                        onListSelected(list)
+                        expanded = false
+                    },
+                    trailingIcon = if (state.lists.size > 1) {
+                        {
+                            IconButton(
+                                onClick = {
+                                    expanded = false
+                                    onDeleteListClicked(list)
+                                },
+                            ) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = stringResource(Res.string.grocery_delete_list),
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
+                        }
+                    } else {
+                        null
+                    },
+                )
+            }
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.grocery_create_new_list)) },
+                onClick = {
+                    expanded = false
+                    onCreateListClicked()
+                },
+                leadingIcon = {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun CreateListDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit,
+) {
+    var listName by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.grocery_create_list_title)) },
+        text = {
+            OutlinedTextField(
+                value = listName,
+                onValueChange = { listName = it },
+                label = { Text(stringResource(Res.string.grocery_create_list_hint)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(listName) },
+                enabled = listName.isNotBlank(),
+            ) {
+                Text(stringResource(Res.string.grocery_create_list_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(Res.string.grocery_create_list_cancel))
+            }
         },
     )
 }

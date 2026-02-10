@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.grocery.core.list
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
+import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import kotlinx.coroutines.flow.StateFlow
 
 interface GroceryListBloc {
@@ -25,9 +26,22 @@ interface GroceryListBloc {
 
     fun onSyncClicked()
 
+    fun onListSelected(list: GroceryListModel)
+
+    fun onCreateListClicked()
+
+    fun onCreateListDismissed()
+
+    fun onCreateListConfirmed(name: String)
+
+    fun onDeleteListClicked(list: GroceryListModel)
+
     data class Model(
         val items: List<GroceryItem> = emptyList(),
         val isSyncing: Boolean = false,
+        val lists: List<GroceryListModel> = emptyList(),
+        val selectedList: GroceryListModel? = null,
+        val showCreateListDialog: Boolean = false,
     )
 
     sealed class Output {
