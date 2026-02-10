@@ -1,0 +1,48 @@
+import kotlin.Boolean;
+
+CREATE TABLE GroceryList (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+    updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
+    remoteId TEXT UNIQUE,
+    clientId TEXT,
+    isDirty INTEGER AS Boolean NOT NULL DEFAULT 0
+);
+
+getAll:
+SELECT * FROM GroceryList ORDER BY createdAt ASC;
+
+getById:
+SELECT * FROM GroceryList WHERE id = ?;
+
+getByRemoteId:
+SELECT * FROM GroceryList WHERE remoteId = ?;
+
+getByClientId:
+SELECT * FROM GroceryList WHERE clientId = ?;
+
+create:
+INSERT INTO GroceryList (name, clientId) VALUES (?, ?)
+RETURNING id;
+
+update:
+UPDATE GroceryList SET name = ?, updatedAt = ?, isDirty = 1 WHERE id = ?;
+
+delete:
+DELETE FROM GroceryList WHERE id = ?;
+
+getUnsynced:
+SELECT * FROM GroceryList WHERE remoteId IS NULL;
+
+getDirty:
+SELECT * FROM GroceryList WHERE isDirty = 1 AND remoteId IS NOT NULL;
+
+updateRemoteId:
+UPDATE GroceryList SET remoteId = ?, isDirty = 0 WHERE id = ?;
+
+clearDirty:
+UPDATE GroceryList SET isDirty = 0 WHERE id = ?;
+
+updateClientId:
+UPDATE GroceryList SET clientId = ? WHERE id = ?;

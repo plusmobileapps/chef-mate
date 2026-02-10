@@ -3,7 +3,9 @@
     "allow": [
       "Bash(xargs:*)",
       "Bash(./gradlew:*)",
-      "Bash(unzip:*)"
+      "Bash(unzip:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add client/database/src/commonMain/sqldelight/com/plusmobileapps/chefmate/database/GroceryList.sq client/database/src/commonMain/sqldelight/migrations/5.sqm client/grocery/data/public/src/commonMain/kotlin/com/plusmobileapps/chefmate/grocery/data/GroceryListModel.kt client/database/src/commonMain/kotlin/com/plusmobileapps/chefmate/client/database/di/DatabaseComponent.kt client/database/src/commonMain/sqldelight/com/plusmobileapps/chefmate/database/Grocery.sq client/grocery/core/impl/src/commonMain/kotlin/com/plusmobileapps/chefmate/grocery/core/impl/list/GroceryListBlocImpl.kt client/grocery/core/impl/src/commonMain/kotlin/com/plusmobileapps/chefmate/grocery/core/impl/list/GroceryListViewModel.kt client/grocery/core/impl/src/commonTest/kotlin/com/plusmobileapps/chefmate/grocery/core/impl/list/GroceryListBlocTest.kt client/grocery/core/public/src/commonMain/composeResources/values/strings.xml client/grocery/core/public/src/commonMain/kotlin/com/plusmobileapps/chefmate/grocery/core/list/GroceryListBloc.kt client/grocery/core/public/src/commonMain/kotlin/com/plusmobileapps/chefmate/grocery/core/list/GroceryListScreen.kt client/grocery/data/impl/src/commonMain/kotlin/com/plusmobileapps/chefmate/grocery/data/impl/GroceryRepositoryImpl.kt client/grocery/data/impl/src/commonMain/kotlin/com/plusmobileapps/chefmate/grocery/data/impl/remote/GroceryRemoteDataSource.kt client/grocery/data/impl/src/commonMain/kotlin/com/plusmobileapps/chefmate/grocery/data/impl/remote/SupabaseGroceryRemoteDataSource.kt client/grocery/data/public/src/commonMain/kotlin/com/plusmobileapps/chefmate/grocery/data/GroceryRepository.kt client/grocery/data/testing/src/commonMain/kotlin/com/plusmobileapps/chefmate/grocery/data/testing/FakeGroceryRepository.kt)"
     ]
   }
 }
