@@ -1,0 +1,15 @@
+CREATE TABLE GroceryList (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+    updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
+    remoteId TEXT UNIQUE,
+    clientId TEXT,
+    isDirty INTEGER NOT NULL DEFAULT 0
+);
+
+INSERT INTO GroceryList (name) VALUES ('My Grocery List');
+
+ALTER TABLE Grocery ADD COLUMN listId INTEGER;
+
+UPDATE Grocery SET listId = (SELECT id FROM GroceryList LIMIT 1);
