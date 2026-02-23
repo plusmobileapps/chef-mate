@@ -9,6 +9,8 @@ kotlin {
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
             implementation(projects.client.auth.data.public)
+            implementation(projects.client.grocery.data.public)
+            implementation(projects.client.recipe.data.public)
         }
     }
 }

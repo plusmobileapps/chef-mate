@@ -4,6 +4,8 @@ import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.di.Main
+import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
+import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +19,8 @@ import kotlin.coroutines.CoroutineContext
 class SettingsViewModel(
     @Main mainContext: CoroutineContext,
     private val authenticationRepository: AuthenticationRepository,
+    private val groceryRepository: GroceryRepository,
+    private val recipeRepository: RecipeRepository,
 ) : ViewModel(mainContext) {
     private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state.asStateFlow()
@@ -64,6 +68,8 @@ class SettingsViewModel(
     fun signOut() {
         scope.launch {
             authenticationRepository.signOut()
+            groceryRepository.clearLocalData()
+            recipeRepository.clearLocalData()
         }
     }
 

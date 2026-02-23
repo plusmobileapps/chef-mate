@@ -38,4 +38,6 @@ interface GroceryRepository {
     suspend fun renameGroceryList(id: Long, name: String)
 
     suspend fun ensureDefaultList(): Long
+
+    suspend fun clearLocalData()
 }

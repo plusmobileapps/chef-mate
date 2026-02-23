@@ -32,6 +32,9 @@ UPDATE GroceryList SET name = ?, updatedAt = ?, isDirty = 1 WHERE id = ?;
 delete:
 DELETE FROM GroceryList WHERE id = ?;
 
+deleteAll:
+DELETE FROM GroceryList;
+
 getUnsynced:
 SELECT * FROM GroceryList WHERE remoteId IS NULL;
 

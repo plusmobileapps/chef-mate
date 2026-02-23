@@ -36,3 +36,6 @@ WHERE id = ?;
 
 delete:
 DELETE FROM Recipe WHERE id = ?;
+
+deleteAll:
+DELETE FROM Recipe;

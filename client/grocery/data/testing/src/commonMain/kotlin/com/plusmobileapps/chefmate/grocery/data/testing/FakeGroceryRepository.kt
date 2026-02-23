@@ -106,4 +106,10 @@ class FakeGroceryRepository : GroceryRepository {
         _lists.update { it + GroceryListModel(id = id, name = "My Grocery List") }
         return id
     }
+
+    override suspend fun clearLocalData() {
+        _groceries.value = emptyList()
+        _lists.value = emptyList()
+        itemListMap.clear()
+    }
 }

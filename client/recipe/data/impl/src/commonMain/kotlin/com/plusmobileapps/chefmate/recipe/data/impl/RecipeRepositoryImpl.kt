@@ -95,6 +95,12 @@ class RecipeRepositoryImpl(
         }
     }
 
+    override suspend fun clearLocalData() {
+        withContext(ioContext) {
+            db.deleteAll()
+        }
+    }
+
     private fun DbRecipe.toRecipe(): Recipe =
         Recipe(
             id = id,

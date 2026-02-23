@@ -39,6 +39,9 @@ UPDATE Grocery SET isChecked = ?, updatedAt = ?, isDirty = 1 WHERE id = ?;
 delete:
 DELETE FROM Grocery WHERE id = ?;
 
+deleteAll:
+DELETE FROM Grocery;
+
 getGroceryById:
 SELECT * FROM Grocery WHERE id = ?;
 

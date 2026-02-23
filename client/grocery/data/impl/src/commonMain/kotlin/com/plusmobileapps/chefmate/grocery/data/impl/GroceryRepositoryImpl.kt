@@ -249,6 +249,13 @@ class GroceryRepositoryImpl(
         pushListUpdateToRemote(id)
     }
 
+    override suspend fun clearLocalData() {
+        withContext(ioContext) {
+            queries.deleteAll()
+            listQueries.deleteAll()
+        }
+    }
+
     override suspend fun ensureDefaultList(): Long =
         withContext(ioContext) {
             val existing = listQueries.getAll().executeAsList()
