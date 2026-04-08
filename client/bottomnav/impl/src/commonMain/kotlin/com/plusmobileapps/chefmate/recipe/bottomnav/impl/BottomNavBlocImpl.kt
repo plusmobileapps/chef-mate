@@ -11,6 +11,7 @@ import com.arkivanov.essenty.lifecycle.doOnPause
 import com.arkivanov.essenty.lifecycle.doOnResume
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.mapState
@@ -23,24 +24,31 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenSig
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenSignUp
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.settings.SettingsBloc
-import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.Provides
+import dev.zacsweers.metro.Provider
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
-import me.tatarka.inject.annotations.Assisted
-import me.tatarka.inject.annotations.Inject
-import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 
-@Inject
-@ContributesAssistedFactory(AppScope::class, assistedFactory = BottomNavBloc.Factory::class)
+@AssistedInject
 class BottomNavBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<BottomNavBloc.Output>,
-    viewModelFactory: () -> BottomNavViewModel,
+    viewModelFactory: Provider<BottomNavViewModel>,
     private val groceryList: GroceryListBloc.Factory,
     private val recipeList: RecipeListBloc.Factory,
     private val settings: SettingsBloc.Factory,
 ) : BottomNavBloc,
     BlocContext by context {
+
+    @AssistedFactory
+    fun interface ManagedFactory {
+        fun create(context: BlocContext, output: Consumer<BottomNavBloc.Output>): BottomNavBlocImpl
+    }
+
     private val scope = createScope()
 
     private val viewModel: BottomNavViewModel = instanceKeeper.getViewModel { viewModelFactory() }
@@ -178,4 +186,11 @@ class BottomNavBlocImpl(
         @Serializable
         data object Settings : Configuration()
     }
+}
+
+@ContributesTo(AppScope::class)
+interface BottomNavBlocBindingModule {
+    @Provides
+    fun provideBottomNavBlocFactory(factory: BottomNavBlocImpl.ManagedFactory): BottomNavBloc.Factory =
+        BottomNavBloc.Factory { context, output -> factory.create(context, output) }
 }

@@ -2,27 +2,32 @@ package com.plusmobileapps.chefmate.grocery.core.impl.list
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.mapState
-import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.Provides
+import dev.zacsweers.metro.Provider
 import kotlinx.coroutines.flow.StateFlow
-import me.tatarka.inject.annotations.Assisted
-import me.tatarka.inject.annotations.Inject
-import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 
-@Inject
-@ContributesAssistedFactory(
-    scope = AppScope::class,
-    assistedFactory = GroceryListBloc.Factory::class,
-)
+@AssistedInject
 class GroceryListBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<GroceryListBloc.Output>,
-    viewModelFactory: () -> GroceryListViewModel,
+    viewModelFactory: Provider<GroceryListViewModel>,
 ) : GroceryListBloc,
     BlocContext by context {
+
+    @AssistedFactory
+    fun interface ManagedFactory {
+        fun create(context: BlocContext, output: Consumer<GroceryListBloc.Output>): GroceryListBlocImpl
+    }
+
     private val viewModel =
         instanceKeeper.getViewModel {
             viewModelFactory()
@@ -68,4 +73,11 @@ class GroceryListBlocImpl(
     override fun onSyncClicked() {
         viewModel.onSyncClicked()
     }
+}
+
+@ContributesTo(AppScope::class)
+interface GroceryListBlocBindingModule {
+    @Provides
+    fun provideGroceryListBlocFactory(factory: GroceryListBlocImpl.ManagedFactory): GroceryListBloc.Factory =
+        GroceryListBloc.Factory { context, output -> factory.create(context, output) }
 }

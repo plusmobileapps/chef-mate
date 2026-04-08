@@ -15,11 +15,12 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import me.tatarka.inject.annotations.Assisted
-import me.tatarka.inject.annotations.Inject
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.AssistedFactory
 import kotlin.coroutines.CoroutineContext
 
-@Inject
+@AssistedInject
 class AddRecipeToGroceryListViewModel(
     @Assisted private val recipeId: Long,
     @Main mainContext: CoroutineContext,
@@ -109,5 +110,10 @@ class AddRecipeToGroceryListViewModel(
 
     sealed class Output {
         data object Finished : Output()
+    }
+
+    @AssistedFactory
+    fun interface Factory {
+        fun create(recipeId: Long): AddRecipeToGroceryListViewModel
     }
 }

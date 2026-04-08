@@ -1,13 +1,13 @@
 package com.plusmobileapps.chefmate.util.impl
 
 import com.plusmobileapps.chefmate.util.EmailUtil
-import me.tatarka.inject.annotations.Inject
-import software.amazon.lastmile.kotlin.inject.anvil.AppScope
-import software.amazon.lastmile.kotlin.inject.anvil.ContributesBinding
-import software.amazon.lastmile.kotlin.inject.anvil.SingleIn
+import com.plusmobileapps.chefmate.di.AppScope
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 
 @Inject
-@ContributesBinding(AppScope::class, boundType = EmailUtil::class)
+@ContributesBinding(AppScope::class)
 @SingleIn(AppScope::class)
 class EmailUtilImpl : EmailUtil {
     private val emailAddressRegex =

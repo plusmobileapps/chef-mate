@@ -5,35 +5,43 @@ import chefmate.client.recipe.core.impl.generated.resources.create_recipe
 import chefmate.client.recipe.core.impl.generated.resources.edit_recipe
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc.Output
 import com.plusmobileapps.chefmate.text.ResourceString
-import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import me.tatarka.inject.annotations.Assisted
-import me.tatarka.inject.annotations.Inject
-import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 
-@Inject
-@ContributesAssistedFactory(
-    scope = AppScope::class,
-    assistedFactory = EditRecipeBloc.Factory::class,
-)
+@AssistedInject
 class EditRecipeBlocImpl(
     @Assisted context: BlocContext,
     @Assisted recipeId: Long?,
     @Assisted private val output: Consumer<Output>,
-    private val viewModelFactory: (Long?) -> EditRecipeViewModel,
+    private val viewModelFactory: EditRecipeViewModel.Factory,
 ) : EditRecipeBloc,
     BlocContext by context {
+
+    @AssistedFactory
+    fun interface ManagedFactory {
+        fun create(
+            context: BlocContext,
+            recipeId: Long?,
+            output: Consumer<Output>,
+        ): EditRecipeBlocImpl
+    }
+
     private val scope = createScope()
 
     private val viewModel: EditRecipeViewModel =
         instanceKeeper.getViewModel {
-            viewModelFactory(recipeId)
+            viewModelFactory.create(recipeId)
         }
 
     override val state: StateFlow<EditRecipeBloc.Model> =
@@ -142,4 +150,11 @@ class EditRecipeBlocImpl(
     override fun onBackClicked() {
         viewModel.tryToClose()
     }
+}
+
+@ContributesTo(AppScope::class)
+interface EditRecipeBlocBindingModule {
+    @Provides
+    fun provideEditRecipeBlocFactory(factory: EditRecipeBlocImpl.ManagedFactory): EditRecipeBloc.Factory =
+        EditRecipeBloc.Factory { context, recipeId, output -> factory.create(context, recipeId, output) }
 }

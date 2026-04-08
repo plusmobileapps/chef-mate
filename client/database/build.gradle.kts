@@ -8,6 +8,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(libs.sqldelight.coroutines)
+            implementation(projects.client.shared)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

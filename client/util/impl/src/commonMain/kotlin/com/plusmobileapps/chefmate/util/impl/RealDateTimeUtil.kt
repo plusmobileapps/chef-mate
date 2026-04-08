@@ -3,14 +3,14 @@ package com.plusmobileapps.chefmate.util.impl
 import com.plusmobileapps.chefmate.util.DateTimeFormatterUtil
 import com.plusmobileapps.chefmate.util.DateTimeUtil
 import kotlinx.datetime.TimeZone
-import me.tatarka.inject.annotations.Inject
-import software.amazon.lastmile.kotlin.inject.anvil.AppScope
-import software.amazon.lastmile.kotlin.inject.anvil.ContributesBinding
+import com.plusmobileapps.chefmate.di.AppScope
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import kotlin.time.Clock
 import kotlin.time.Instant
 
 @Inject
-@ContributesBinding(AppScope::class, boundType = DateTimeUtil::class)
+@ContributesBinding(AppScope::class)
 class RealDateTimeUtil(
     private val dateTimeFormatter: DateTimeFormatterUtil,
 ) : DateTimeUtil {

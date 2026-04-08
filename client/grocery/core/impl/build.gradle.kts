@@ -7,6 +7,7 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.client.grocery.data.public)
             implementation(projects.client.grocery.core.public)
+            implementation(projects.client.shared)
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.database)
         }

@@ -11,6 +11,7 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
+import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
@@ -18,17 +19,14 @@ import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc.Props.Detail
 import com.plusmobileapps.chefmate.root.RootBloc.Child.BottomNavigation
 import com.plusmobileapps.chefmate.root.RootBlocImpl.Configuration.GroceryDetail
 import com.plusmobileapps.chefmate.root.RootBlocImpl.Configuration.RecipeRoot
-import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.Provides
 import kotlinx.serialization.Serializable
-import me.tatarka.inject.annotations.Assisted
-import me.tatarka.inject.annotations.Inject
-import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 
-@Inject
-@ContributesAssistedFactory(
-    scope = AppScope::class,
-    assistedFactory = RootBloc.Factory::class,
-)
+@AssistedInject
 class RootBlocImpl(
     @Assisted context: BlocContext,
     private val bottomNav: BottomNavBloc.Factory,
@@ -37,6 +35,12 @@ class RootBlocImpl(
     private val authentication: AuthenticationBloc.Factory,
 ) : RootBloc,
     BlocContext by context {
+
+    @AssistedFactory
+    fun interface ManagedFactory {
+        fun create(context: BlocContext): RootBlocImpl
+    }
+
     private val navigation = StackNavigation<Configuration>()
 
     private val stack =
@@ -175,4 +179,11 @@ class RootBlocImpl(
             val props: AuthenticationBloc.Props,
         ) : Configuration()
     }
+}
+
+@ContributesTo(AppScope::class)
+interface RootBlocBindingModule {
+    @Provides
+    fun provideRootBlocFactory(factory: RootBlocImpl.ManagedFactory): RootBloc.Factory =
+        RootBloc.Factory { context -> factory.create(context) }
 }

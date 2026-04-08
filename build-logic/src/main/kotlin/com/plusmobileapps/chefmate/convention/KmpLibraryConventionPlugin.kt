@@ -20,7 +20,7 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
             // Add afterEvaluate hook to catch property changes
             afterEvaluate {
                 if (plusLibraryExtension.enableDi) {
-                    applyKotlinInject()
+                    applyMetro()
                 }
 
                 if (plusLibraryExtension.enableTesting) {

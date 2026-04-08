@@ -9,20 +9,18 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
-import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.Provides
 import kotlinx.serialization.Serializable
-import me.tatarka.inject.annotations.Assisted
-import me.tatarka.inject.annotations.Inject
-import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 
-@Inject
-@ContributesAssistedFactory(
-    scope = AppScope::class,
-    assistedFactory = RecipeRootBloc.Factory::class,
-)
+@AssistedInject
 class RecipeRootBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val props: RecipeRootBloc.Props,
@@ -31,6 +29,16 @@ class RecipeRootBlocImpl(
     private val editBloc: EditRecipeBloc.Factory,
 ) : RecipeRootBloc,
     BlocContext by context {
+
+    @AssistedFactory
+    fun interface ManagedFactory {
+        fun create(
+            context: BlocContext,
+            props: RecipeRootBloc.Props,
+            output: Consumer<RecipeRootBloc.Output>,
+        ): RecipeRootBlocImpl
+    }
+
     private val navigation = StackNavigation<Configuration>()
     private val stack =
         childStack(
@@ -124,4 +132,11 @@ class RecipeRootBlocImpl(
             val recipeId: Long?,
         ) : Configuration()
     }
+}
+
+@ContributesTo(AppScope::class)
+interface RecipeRootBlocBindingModule {
+    @Provides
+    fun provideRecipeRootBlocFactory(factory: RecipeRootBlocImpl.ManagedFactory): RecipeRootBloc.Factory =
+        RecipeRootBloc.Factory { context, props, output -> factory.create(context, props, output) }
 }

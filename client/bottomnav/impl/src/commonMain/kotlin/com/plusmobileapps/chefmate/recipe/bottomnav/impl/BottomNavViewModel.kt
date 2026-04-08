@@ -9,7 +9,7 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.SETTINGS
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import me.tatarka.inject.annotations.Inject
+import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
 
 @Inject

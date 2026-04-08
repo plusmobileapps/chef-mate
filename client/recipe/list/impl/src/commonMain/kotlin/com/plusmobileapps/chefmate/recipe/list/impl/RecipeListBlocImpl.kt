@@ -2,29 +2,34 @@ package com.plusmobileapps.chefmate.recipe.list.impl
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc.Output
 import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
-import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.Provides
+import dev.zacsweers.metro.Provider
 import kotlinx.coroutines.flow.StateFlow
-import me.tatarka.inject.annotations.Assisted
-import me.tatarka.inject.annotations.Inject
-import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 
-@Inject
-@ContributesAssistedFactory(
-    scope = AppScope::class,
-    assistedFactory = RecipeListBloc.Factory::class,
-)
+@AssistedInject
 class RecipeListBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<Output>,
-    private val viewModelFactory: () -> RecipeListViewModel,
+    private val viewModelFactory: Provider<RecipeListViewModel>,
 ) : RecipeListBloc,
     BlocContext by context {
+
+    @AssistedFactory
+    fun interface ManagedFactory {
+        fun create(context: BlocContext, output: Consumer<Output>): RecipeListBlocImpl
+    }
+
     private val viewModel: RecipeListViewModel =
         instanceKeeper.getViewModel {
             viewModelFactory()
@@ -62,4 +67,14 @@ class RecipeListBlocImpl(
             imageUrl = imageUrl,
             starRating = starRating,
         )
+}
+
+@ContributesTo(AppScope::class)
+interface RecipeListBlocBindingModule {
+    @Provides
+    fun provideRecipeListBlocFactory(factory: RecipeListBlocImpl.ManagedFactory): RecipeListBloc.Factory =
+        object : RecipeListBloc.Factory {
+            override fun create(context: BlocContext, output: Consumer<Output>): RecipeListBloc =
+                factory.create(context, output)
+        }
 }

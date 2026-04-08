@@ -5,7 +5,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinSerialization)
-    alias(libs.plugins.kotlinInject)
+    alias(libs.plugins.metro)
     alias(libs.plugins.compose)
     alias(libs.plugins.plusKtlint)
 }

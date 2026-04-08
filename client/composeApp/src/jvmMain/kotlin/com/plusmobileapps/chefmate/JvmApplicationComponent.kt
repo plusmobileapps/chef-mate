@@ -1,15 +1,15 @@
 package com.plusmobileapps.chefmate
 
 import com.plusmobileapps.chefmate.client.database.DriverFactory
+import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.util.DateTimeFormatterUtil
 import com.plusmobileapps.chefmate.util.DateTimeFormatterUtilImpl
-import me.tatarka.inject.annotations.Provides
-import software.amazon.lastmile.kotlin.inject.anvil.AppScope
-import software.amazon.lastmile.kotlin.inject.anvil.MergeComponent
-import software.amazon.lastmile.kotlin.inject.anvil.SingleIn
+import dev.zacsweers.metro.DependencyGraph
+import dev.zacsweers.metro.Provides
+import dev.zacsweers.metro.SingleIn
 
 @SingleIn(AppScope::class)
-@MergeComponent(AppScope::class)
+@DependencyGraph(AppScope::class)
 abstract class JvmApplicationComponent : ApplicationComponent {
     @Provides
     fun providesDriverFactory(): DriverFactory = DriverFactory()

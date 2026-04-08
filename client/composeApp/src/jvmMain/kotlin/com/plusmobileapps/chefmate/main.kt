@@ -31,7 +31,7 @@ fun main(args: Array<String>) {
     // Only initialize the lifecycle outside the application block
     val lifecycle = LifecycleRegistry()
     val backDispatcher = BackDispatcher()
-    val appComponent = JvmApplicationComponent::class.create()
+    val appComponent = dev.zacsweers.metro.createGraph<JvmApplicationComponent>()
     val supabaseClient = appComponent.supabaseClient
     val scope = CoroutineScope(Dispatchers.Main)
 

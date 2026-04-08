@@ -8,6 +8,7 @@ import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc
@@ -15,33 +16,40 @@ import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc.Output
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.util.DateTimeUtil
-import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-import me.tatarka.inject.annotations.Assisted
-import me.tatarka.inject.annotations.Inject
-import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 
-@Inject
-@ContributesAssistedFactory(
-    scope = AppScope::class,
-    assistedFactory = RecipeDetailBloc.Factory::class,
-)
+@AssistedInject
 class RecipeDetailBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val recipeId: Long,
     @Assisted private val output: Consumer<Output>,
-    private val viewModelFactory: (Long) -> RecipeDetailViewModel,
+    private val viewModelFactory: RecipeDetailViewModel.Factory,
     private val dateTimeUtil: DateTimeUtil,
     private val addToGroceryList: AddRecipeToGroceryListBloc.Factory,
 ) : RecipeDetailBloc,
     BlocContext by context {
+
+    @AssistedFactory
+    fun interface ManagedFactory {
+        fun create(
+            context: BlocContext,
+            recipeId: Long,
+            output: Consumer<Output>,
+        ): RecipeDetailBlocImpl
+    }
+
     private val scope = createScope()
 
     private val viewModel: RecipeDetailViewModel =
         instanceKeeper.getViewModel {
-            viewModelFactory(recipeId)
+            viewModelFactory.create(recipeId)
         }
 
     init {
@@ -141,4 +149,14 @@ class RecipeDetailBlocImpl(
             val recipeId: Long,
         ) : SheetConfig()
     }
+}
+
+@ContributesTo(AppScope::class)
+interface RecipeDetailBlocBindingModule {
+    @Provides
+    fun provideRecipeDetailBlocFactory(factory: RecipeDetailBlocImpl.ManagedFactory): RecipeDetailBloc.Factory =
+        object : RecipeDetailBloc.Factory {
+            override fun create(context: BlocContext, recipeId: Long, output: Consumer<Output>): RecipeDetailBloc =
+                factory.create(context, recipeId, output)
+        }
 }
