@@ -56,13 +56,11 @@ in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and r
 * [SqlDelight](https://sqldelight.github.io/sqldelight/2.1.0/) - sqlite database
 * [Essenty](https://github.com/arkivanov/Essenty) - lifecycle, instance keeper, back handler, state keeper
 * [Decompose](https://github.com/arkivanov/Decompose) - navigation
-* [kotlin-inject](https://github.com/evant/kotlin-inject) - dependency injection
-* [kotlin-inject-anvil](https://github.com/amzn/kotlin-inject-anvil) - dependency injection extensions
-* [kotlin-inject-anvil-extensions](https://github.com/plusmobileapps/kotlin-inject-anvil-extensions) - assisted factory dependency injection
+* [metro](https://zacsweers.github.io/metro/) - dependency injection
 
 ### Server
 
-* [Ktor](https://github.com/ktorio/ktor) - backend framework
+* [Supabase]()
 
 ### Testing
 
