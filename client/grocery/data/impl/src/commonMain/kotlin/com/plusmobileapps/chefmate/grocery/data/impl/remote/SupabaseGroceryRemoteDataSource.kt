@@ -2,17 +2,14 @@ package com.plusmobileapps.chefmate.grocery.data.impl.remote
 
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
-import me.tatarka.inject.annotations.Inject
-import software.amazon.lastmile.kotlin.inject.anvil.AppScope
-import software.amazon.lastmile.kotlin.inject.anvil.ContributesBinding
-import software.amazon.lastmile.kotlin.inject.anvil.SingleIn
+import com.plusmobileapps.chefmate.di.AppScope
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 
 @Inject
 @SingleIn(AppScope::class)
-@ContributesBinding(
-    scope = AppScope::class,
-    boundType = GroceryRemoteDataSource::class,
-)
+@ContributesBinding(AppScope::class)
 class SupabaseGroceryRemoteDataSource(
     private val supabaseClient: SupabaseClient,
 ) : GroceryRemoteDataSource {

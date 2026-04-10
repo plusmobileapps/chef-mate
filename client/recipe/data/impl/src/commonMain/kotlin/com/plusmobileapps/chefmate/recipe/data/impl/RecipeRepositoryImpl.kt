@@ -10,15 +10,15 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import me.tatarka.inject.annotations.Inject
-import software.amazon.lastmile.kotlin.inject.anvil.AppScope
-import software.amazon.lastmile.kotlin.inject.anvil.ContributesBinding
+import com.plusmobileapps.chefmate.di.AppScope
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Instant
 import com.plusmobileapps.chefmate.database.Recipe as DbRecipe
 
 @Inject
-@ContributesBinding(scope = AppScope::class, boundType = RecipeRepository::class)
+@ContributesBinding(AppScope::class)
 class RecipeRepositoryImpl(
     private val db: RecipeQueries,
     @IO private val ioContext: CoroutineContext,

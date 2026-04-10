@@ -2,8 +2,8 @@ package com.plusmobileapps.chefmate
 
 import android.app.Application
 import com.plusmobileapps.chefmate.di.AndroidApplicationComponent
-import com.plusmobileapps.chefmate.di.create
 import com.russhwolf.settings.BuildConfig
+import dev.zacsweers.metro.createGraphFactory
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.LogLevel
 import io.github.aakira.napier.Napier
@@ -27,6 +27,6 @@ class MyApplication : Application() {
                 }
             },
         )
-        appComponent = AndroidApplicationComponent::class.create(this)
+        appComponent = createGraphFactory<AndroidApplicationComponent.Factory>().create(this)
     }
 }

@@ -2,8 +2,8 @@ package com.plusmobileapps.chefmate
 
 import com.arkivanov.decompose.ComponentContext
 import com.plusmobileapps.chefmate.di.IosApplicationComponent
-import com.plusmobileapps.chefmate.di.createIosAppComponent
 import com.plusmobileapps.chefmate.root.RootBloc
+import dev.zacsweers.metro.createGraphFactory
 import platform.UIKit.UIApplication
 
 object RootBlocProvider {
@@ -11,7 +11,7 @@ object RootBlocProvider {
         componentContext: ComponentContext,
         application: UIApplication,
     ): RootBloc {
-        val applicationComponent = IosApplicationComponent::class.createIosAppComponent(application)
+        val applicationComponent = createGraphFactory<IosApplicationComponent.Factory>().create(application)
         return applicationComponent.rootBlocFactory.create(
             DefaultBlocContext(
                 componentContext = componentContext,

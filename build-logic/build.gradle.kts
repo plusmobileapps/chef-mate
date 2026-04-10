@@ -7,9 +7,9 @@ group = "com.plusmobileapps.chefmate.buildlogic"
 // Add this block to expose your plugin to the main build
 gradlePlugin {
     plugins {
-        create("kotlinInject") {
-            id = "com.plusmobileapps.chefmate.kotlin-inject"
-            implementationClass = "com.plusmobileapps.chefmate.convention.KotlinInjectConventionPlugin"
+        create("metro") {
+            id = "com.plusmobileapps.chefmate.metro"
+            implementationClass = "com.plusmobileapps.chefmate.convention.MetroConventionPlugin"
         }
         create("kmpLibrary") {
             id = "com.plusmobileapps.chefmate.kmp-library"
@@ -46,5 +46,7 @@ dependencies {
     compileOnly(libs.ktlint.gradle.plugin)
 
     implementation("com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:${libs.versions.ksp.get()}")
+    // Metro Gradle plugin for DI - loaded at runtime, not compiled against
+    runtimeOnly("dev.zacsweers.metro:gradle-plugin:${libs.versions.metro.get()}")
     implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
 }

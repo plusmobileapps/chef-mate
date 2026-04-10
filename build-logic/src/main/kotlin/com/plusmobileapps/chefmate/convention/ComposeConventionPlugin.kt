@@ -26,36 +26,38 @@ class ComposeConventionPlugin : Plugin<Project> {
                 // Configuration if needed
             }
 
-            kotlin.sourceSets.apply {
-                val commonMain = getByName("commonMain")
-                val androidMain = getByName("androidMain")
-                val jvmMain = getByName("jvmMain")
-                val compose = ComposePlugin.Dependencies(project)
+            afterEvaluate {
+                kotlin.sourceSets.apply {
+                    val commonMain = getByName("commonMain")
+                    val androidMain = findByName("androidMain")
+                    val jvmMain = findByName("jvmMain")
+                    val compose = ComposePlugin.Dependencies(project)
 
-                commonMain.dependencies {
-                    implementation(compose.runtime)
-                    implementation(compose.foundation)
-                    implementation(compose.materialIconsExtended)
-                    implementation(compose.ui)
-                    implementation(compose.components.resources)
-                    implementation(compose.components.uiToolingPreview)
-                    implementation(libs.compose.material.expressive)
+                    commonMain.dependencies {
+                        implementation(libs.compose.runtime)
+                        implementation(libs.compose.foundation)
+                        implementation(libs.compose.material.icons.extended)
+                        implementation(libs.compose.ui)
+                        implementation(libs.compose.components.resources)
+                        implementation(libs.compose.ui.tooling.preview)
+                        implementation(libs.compose.material.expressive)
+                    }
+
+                    androidMain?.dependencies {
+                        implementation(libs.compose.ui.tooling.preview)
+                        implementation(libs.androidx.activity.compose)
+                    }
+                    jvmMain?.dependencies {
+                        implementation(compose.desktop.currentOs)
+                        implementation(libs.kotlinx.coroutinesSwing)
+                    }
                 }
 
-                androidMain.dependencies {
-                    implementation(compose.preview)
-                    implementation(libs.androidx.activity.compose)
+                // Add debug-specific dependencies
+                dependencies {
+                    val compose = ComposePlugin.Dependencies(project)
+                    "debugImplementation"(compose.uiTooling)
                 }
-                jvmMain.dependencies {
-                    implementation(compose.desktop.currentOs)
-                    implementation(libs.kotlinx.coroutinesSwing)
-                }
-            }
-
-            // Add debug-specific dependencies
-            dependencies {
-                val compose = ComposePlugin.Dependencies(project)
-                "debugImplementation"(compose.uiTooling)
             }
         }
     }

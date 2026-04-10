@@ -15,15 +15,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import me.tatarka.inject.annotations.Inject
-import software.amazon.lastmile.kotlin.inject.anvil.AppScope
-import software.amazon.lastmile.kotlin.inject.anvil.ContributesBinding
-import software.amazon.lastmile.kotlin.inject.anvil.SingleIn
+import com.plusmobileapps.chefmate.di.AppScope
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlin.coroutines.CoroutineContext
 
 @Inject
 @SingleIn(AppScope::class)
-@ContributesBinding(AppScope::class, boundType = AuthenticationRepository::class)
+@ContributesBinding(AppScope::class)
 class SupabaseAuthenticationRepository(
     private val supabaseClient: SupabaseClient,
     @Main private val mainContext: CoroutineContext,

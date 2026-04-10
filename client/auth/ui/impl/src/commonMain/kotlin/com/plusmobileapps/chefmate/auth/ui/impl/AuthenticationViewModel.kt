@@ -32,11 +32,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import me.tatarka.inject.annotations.Assisted
-import me.tatarka.inject.annotations.Inject
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.AssistedFactory
 import kotlin.coroutines.CoroutineContext
 
-@Inject
+@AssistedInject
 class AuthenticationViewModel(
     @Assisted initialProps: AuthenticationBloc.Props,
     @Main mainContext: CoroutineContext,
@@ -336,5 +337,10 @@ class AuthenticationViewModel(
         data class EmailVerificationRequired(
             val email: String,
         ) : Output()
+    }
+
+    @AssistedFactory
+    fun interface Factory {
+        fun create(initialProps: AuthenticationBloc.Props): AuthenticationViewModel
     }
 }

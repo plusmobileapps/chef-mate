@@ -1,12 +1,11 @@
 package com.plusmobileapps.chefmate.di
 
+import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.Provides
+import dev.zacsweers.metro.Qualifier
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import me.tatarka.inject.annotations.Provides
-import me.tatarka.inject.annotations.Qualifier
-import software.amazon.lastmile.kotlin.inject.anvil.AppScope
-import software.amazon.lastmile.kotlin.inject.anvil.ContributesTo
-import software.amazon.lastmile.kotlin.inject.anvil.SingleIn
 import kotlin.coroutines.CoroutineContext
 
 @Qualifier
@@ -50,17 +49,21 @@ annotation class Unconfined
 interface CoroutinesComponent {
     @Provides
     @SingleIn(AppScope::class)
-    fun io(): @IO CoroutineContext = Dispatchers.IO
+    @IO
+    fun io(): CoroutineContext = Dispatchers.IO
 
     @Provides
     @SingleIn(AppScope::class)
-    fun main(): @Main CoroutineContext = Dispatchers.Main
+    @Main
+    fun main(): CoroutineContext = Dispatchers.Main
 
     @Provides
     @SingleIn(AppScope::class)
-    fun default(): @CPU CoroutineContext = Dispatchers.Default
+    @CPU
+    fun default(): CoroutineContext = Dispatchers.Default
 
     @Provides
     @SingleIn(AppScope::class)
-    fun unconfined(): @Unconfined CoroutineContext = Dispatchers.Unconfined
+    @Unconfined
+    fun unconfined(): CoroutineContext = Dispatchers.Unconfined
 }

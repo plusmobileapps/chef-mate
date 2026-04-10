@@ -6,6 +6,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(projects.client.util.public)
+            implementation(projects.client.shared)
         }
     }
 }

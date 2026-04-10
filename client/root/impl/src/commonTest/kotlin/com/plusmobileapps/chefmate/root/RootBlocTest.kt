@@ -38,6 +38,9 @@ class RootBlocTest {
                 detailOutput = output
                 mock()
             },
+            authentication = { context, props, output ->
+                mock()
+            }
         )
 
     fun RootBloc.instance(): RootBloc.Child = state.value.active.instance

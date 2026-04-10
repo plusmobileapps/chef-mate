@@ -15,13 +15,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import me.tatarka.inject.annotations.Assisted
-import me.tatarka.inject.annotations.Inject
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.AssistedFactory
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
-@Inject
+@AssistedInject
 class EditRecipeViewModel(
     @Assisted private val recipeId: Long?,
     @Main mainContext: CoroutineContext,
@@ -253,5 +254,10 @@ class EditRecipeViewModel(
         data class Finished(
             val recipeId: Long,
         ) : Output()
+    }
+
+    @AssistedFactory
+    fun interface Factory {
+        fun create(recipeId: Long?): EditRecipeViewModel
     }
 }

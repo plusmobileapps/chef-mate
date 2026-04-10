@@ -32,7 +32,12 @@ class GroceryListBlocTest {
         GroceryListBlocImpl(
             context = context,
             output = output,
-            repository = repository,
+            viewModelFactory = {
+                GroceryListViewModel(
+                    mainContext = context.mainContext,
+                    repository = repository
+                )
+            },
         )
 
     @Test

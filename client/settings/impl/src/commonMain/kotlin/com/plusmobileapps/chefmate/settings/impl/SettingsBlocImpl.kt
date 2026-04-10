@@ -2,29 +2,34 @@ package com.plusmobileapps.chefmate.settings.impl
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.settings.SettingsBloc
 import com.plusmobileapps.chefmate.settings.SettingsBloc.Output
 import com.plusmobileapps.chefmate.settings.createEmailVerificationMessage
 import com.plusmobileapps.chefmate.settings.createGreeting
-import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.Provides
+import dev.zacsweers.metro.Provider
 import kotlinx.coroutines.flow.StateFlow
-import me.tatarka.inject.annotations.Assisted
-import me.tatarka.inject.annotations.Inject
-import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 
-@Inject
-@ContributesAssistedFactory(
-    scope = AppScope::class,
-    assistedFactory = SettingsBloc.Factory::class,
-)
+    @AssistedInject
 class SettingsBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<Output>,
-    viewModelFactory: () -> SettingsViewModel,
+    viewModelFactory: Provider<SettingsViewModel>,
 ) : SettingsBloc,
     BlocContext by context {
+
+    @AssistedFactory
+    fun interface ManagedFactory {
+        fun create(context: BlocContext, output: Consumer<Output>): SettingsBlocImpl
+    }
+
     private val viewModel =
         instanceKeeper.getViewModel {
             viewModelFactory()
@@ -53,4 +58,11 @@ class SettingsBlocImpl(
     override fun onSignOutClicked() {
         viewModel.signOut()
     }
+}
+
+@ContributesTo(AppScope::class)
+interface SettingsBlocBindingModule {
+    @Provides
+    fun provideSettingsBlocFactory(factory: SettingsBlocImpl.ManagedFactory): SettingsBloc.Factory =
+        SettingsBloc.Factory { context, output -> factory.create(context, output) }
 }

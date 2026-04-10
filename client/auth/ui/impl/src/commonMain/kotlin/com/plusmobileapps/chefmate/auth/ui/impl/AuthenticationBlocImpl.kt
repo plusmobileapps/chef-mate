@@ -4,32 +4,40 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc.Output
+import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
-import com.plusmobileapps.kotlin.inject.anvil.extensions.assistedfactory.runtime.ContributesAssistedFactory
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import me.tatarka.inject.annotations.Assisted
-import me.tatarka.inject.annotations.Inject
-import software.amazon.lastmile.kotlin.inject.anvil.AppScope
 
-@Inject
-@ContributesAssistedFactory(
-    scope = AppScope::class,
-    assistedFactory = AuthenticationBloc.Factory::class,
-)
+@AssistedInject
 class AuthenticationBlocImpl(
     @Assisted context: BlocContext,
     @Assisted props: AuthenticationBloc.Props,
     @Assisted private val output: Consumer<Output>,
-    private val viewModelFactory: (AuthenticationBloc.Props) -> AuthenticationViewModel,
+    private val viewModelFactory: AuthenticationViewModel.Factory,
 ) : AuthenticationBloc,
     BlocContext by context {
+
+    @AssistedFactory
+    fun interface ManagedFactory {
+        fun create(
+            context: BlocContext,
+            props: AuthenticationBloc.Props,
+            output: Consumer<Output>,
+        ): AuthenticationBlocImpl
+    }
+
     private val scope = createScope()
 
     private val viewModel: AuthenticationViewModel =
         instanceKeeper.getViewModel {
-            viewModelFactory(props)
+            viewModelFactory.create(props)
         }
 
     override val models: StateFlow<AuthenticationBloc.Model> =
@@ -91,4 +99,11 @@ class AuthenticationBlocImpl(
     override fun onDismissError() {
         viewModel.onDismissError()
     }
+}
+
+@ContributesTo(AppScope::class)
+interface AuthenticationBlocBindingModule {
+    @Provides
+    fun provideAuthenticationBlocFactory(factory: AuthenticationBlocImpl.ManagedFactory): AuthenticationBloc.Factory =
+        AuthenticationBloc.Factory { context, props, output -> factory.create(context, props, output) }
 }

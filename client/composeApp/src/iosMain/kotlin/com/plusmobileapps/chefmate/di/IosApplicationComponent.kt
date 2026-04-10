@@ -4,18 +4,20 @@ import com.plusmobileapps.chefmate.ApplicationComponent
 import com.plusmobileapps.chefmate.client.database.DriverFactory
 import com.plusmobileapps.chefmate.util.DateTimeFormatterUtil
 import com.plusmobileapps.chefmate.util.DateTimeFormatterUtilImpl
-import me.tatarka.inject.annotations.Provides
+import dev.zacsweers.metro.DependencyGraph
+import dev.zacsweers.metro.Provides
+import dev.zacsweers.metro.SingleIn
 import platform.UIKit.UIApplication
-import software.amazon.lastmile.kotlin.inject.anvil.AppScope
-import software.amazon.lastmile.kotlin.inject.anvil.MergeComponent
-import software.amazon.lastmile.kotlin.inject.anvil.SingleIn
-import kotlin.reflect.KClass
 
 @SingleIn(AppScope::class)
-@MergeComponent(AppScope::class)
-abstract class IosApplicationComponent(
-    @get:Provides val application: UIApplication,
-) : ApplicationComponent {
+@DependencyGraph(AppScope::class)
+abstract class IosApplicationComponent : ApplicationComponent {
+
+    @DependencyGraph.Factory
+    fun interface Factory {
+        fun create(@Provides application: UIApplication): IosApplicationComponent
+    }
+
     @Provides
     fun driverFactory(): DriverFactory = DriverFactory()
 
@@ -23,10 +25,3 @@ abstract class IosApplicationComponent(
     @SingleIn(AppScope::class)
     fun provideDateTimeFormatterUtil(): DateTimeFormatterUtil = DateTimeFormatterUtilImpl()
 }
-
-/**
- * The `actual fun` will be generated for each iOS specific target. See [MergeComponent] for
- * more details.
- */
-@MergeComponent.CreateComponent
-expect fun KClass<IosApplicationComponent>.createIosAppComponent(application: UIApplication): IosApplicationComponent
