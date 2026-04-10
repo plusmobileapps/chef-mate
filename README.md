@@ -60,7 +60,7 @@ in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and r
 
 ### Server
 
-* [Supabase]()
+* [Supabase](https://supabase.com/)
 
 ### Testing
 
