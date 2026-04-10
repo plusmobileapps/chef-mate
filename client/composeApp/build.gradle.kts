@@ -29,6 +29,7 @@ kotlin {
             export(libs.essenty.lifecycle)
             export(libs.essenty.backhandler)
             export(projects.client.root.public)
+            export(projects.client.shared)
         }
     }
 

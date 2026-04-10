@@ -10,7 +10,7 @@ class MyApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        initBugsnag(BuildConfig.BUGSNAG_API_KEY)
+        BugsnagInitializer(this).initialize(BuildConfig.BUGSNAG_API_KEY)
         appComponent = createGraphFactory<AndroidApplicationComponent.Factory>().create(this)
     }
 }

@@ -27,7 +27,7 @@ import kotlin.time.ExperimentalTime
 @OptIn(ExperimentalTime::class)
 fun main(args: Array<String>) {
     // Initialize Bugsnag + Kermit logging for JVM
-    initBugsnag(BuildConfig.BUGSNAG_API_KEY)
+    BugsnagInitializer().initialize(BuildConfig.BUGSNAG_API_KEY)
     // Only initialize the lifecycle outside the application block
     val lifecycle = LifecycleRegistry()
     val backDispatcher = BackDispatcher()

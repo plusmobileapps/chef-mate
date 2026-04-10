@@ -15,7 +15,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
     override init() {
         super.init()
-        BugsnagStartup_iosKt.initBugsnag(apiKey: BuildConfig.shared.BUGSNAG_API_KEY)
+        BugsnagStartup_iosKt.initializeBugsnag()
     }
 
     lazy var root: RootBloc = RootBlocProvider.shared.buildRootBloc(

@@ -57,6 +57,8 @@ in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and r
 * [Essenty](https://github.com/arkivanov/Essenty) - lifecycle, instance keeper, back handler, state keeper
 * [Decompose](https://github.com/arkivanov/Decompose) - navigation
 * [metro](https://zacsweers.github.io/metro/) - dependency injection
+* [kermit](https://github.com/touchlab/Kermit) - logging
+* [Bugsnag](https://github.com/bugsnag/bugsnag-kotlin-multiplatform) - error logging
 
 ### Server
 

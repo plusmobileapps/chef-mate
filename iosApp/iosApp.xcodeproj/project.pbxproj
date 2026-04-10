@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		853E04942F8986CD00955A73 /* Bugsnag in Frameworks */ = {isa = PBXBuildFile; productRef = 853E04932F8986CD00955A73 /* Bugsnag */; };
+		853E04962F8986CD00955A73 /* BugsnagNetworkRequestPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = 853E04952F8986CD00955A73 /* BugsnagNetworkRequestPlugin */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		A54AB85DFC2E74BAA712FE7C /* Chef Mate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Chef Mate.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -41,6 +46,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				853E04962F8986CD00955A73 /* BugsnagNetworkRequestPlugin in Frameworks */,
+				853E04942F8986CD00955A73 /* Bugsnag in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -85,6 +92,8 @@
 			);
 			name = iosApp;
 			packageProductDependencies = (
+				853E04932F8986CD00955A73 /* Bugsnag */,
+				853E04952F8986CD00955A73 /* BugsnagNetworkRequestPlugin */,
 			);
 			productName = iosApp;
 			productReference = A54AB85DFC2E74BAA712FE7C /* Chef Mate.app */;
@@ -114,6 +123,9 @@
 			);
 			mainGroup = 8A97501C530724768F32B6F3;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				853E04922F8986CD00955A73 /* XCRemoteSwiftPackageReference "bugsnag-cocoa" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2CB41F1E2ADF003F3F88F01A /* Products */;
 			projectDirPath = "";
@@ -370,6 +382,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		853E04922F8986CD00955A73 /* XCRemoteSwiftPackageReference "bugsnag-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/bugsnag/bugsnag-cocoa";
+			requirement = {
+				kind = exactVersion;
+				version = 6.36.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		853E04932F8986CD00955A73 /* Bugsnag */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 853E04922F8986CD00955A73 /* XCRemoteSwiftPackageReference "bugsnag-cocoa" */;
+			productName = Bugsnag;
+		};
+		853E04952F8986CD00955A73 /* BugsnagNetworkRequestPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 853E04922F8986CD00955A73 /* XCRemoteSwiftPackageReference "bugsnag-cocoa" */;
+			productName = BugsnagNetworkRequestPlugin;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = CDB0B4ADAA143F5F0B669BBA /* Project object */;
 }

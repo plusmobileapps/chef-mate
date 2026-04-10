@@ -1,12 +1,14 @@
 package com.plusmobileapps.chefmate
 
 /**
- * Platform-specific Bugsnag initialization.
+ * Platform-specific Bugsnag initializer.
  *
- * Each platform should start the Bugsnag SDK and configure Kermit's Logger
- * with the appropriate log writers (including the Bugsnag log writer for
- * crash reporting).
+ * Follows the same expect/actual class pattern as [DriverFactory] to allow
+ * platform-specific constructor parameters (e.g. Android requires a [Context]).
  *
- * @param apiKey The Bugsnag API key from BuildKonfig.
+ * Each platform's actual class starts the Bugsnag SDK and configures Kermit's
+ * Logger with the appropriate log writers for crash reporting.
  */
-expect fun initBugsnag(apiKey: String)
+expect class BugsnagInitializer {
+    fun initialize(apiKey: String)
+}
