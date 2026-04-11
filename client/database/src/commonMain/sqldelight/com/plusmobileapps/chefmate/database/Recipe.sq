@@ -27,8 +27,10 @@ SELECT * FROM Recipe WHERE id = ?;
 
 create:
 INSERT INTO Recipe (title, description, ingredients, directions, imageUrl, sourceUrl, servings, prepTime, cookTime, totalTime, calories, starRating, isFavorite, createdAt, updatedAt)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id;
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+lastInsertId:
+SELECT MAX(id) FROM Recipe;
 
 update:
 UPDATE Recipe SET title = ?, description = ?, ingredients = ?, directions = ?, imageUrl = ?, sourceUrl = ?, servings = ?, prepTime = ?, cookTime = ?, totalTime = ?, calories = ?, starRating = ?, isFavorite = ?, updatedAt = ?

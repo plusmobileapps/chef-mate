@@ -1,6 +1,7 @@
 package com.plusmobileapps.chefmate.recipe.data.impl
 
 import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
 import com.plusmobileapps.chefmate.database.RecipeQueries
 import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.recipe.data.Recipe
@@ -13,10 +14,12 @@ import kotlinx.coroutines.withContext
 import com.plusmobileapps.chefmate.di.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Instant
 import com.plusmobileapps.chefmate.database.Recipe as DbRecipe
 
+@SingleIn(AppScope::class)
 @Inject
 @ContributesBinding(AppScope::class)
 class RecipeRepositoryImpl(
@@ -28,14 +31,14 @@ class RecipeRepositoryImpl(
         db
             .getAll()
             .asFlow()
-            .map { it.executeAsList() }
+            .mapToList(ioContext)
             .map { it.map { item -> item.toRecipe() } }
             .flowOn(ioContext)
 
     override suspend fun createRecipe(recipe: Recipe): Recipe =
         withContext(ioContext) {
             db.transactionWithResult {
-                val id = db.create(
+                db.create(
                     title = recipe.title,
                     description = recipe.description,
                     ingredients = recipe.ingredients,
@@ -51,7 +54,9 @@ class RecipeRepositoryImpl(
                     isFavorite = recipe.isFavorite,
                     createdAt = dateTimeUtil.now.toString(),
                     updatedAt = dateTimeUtil.now.toString(),
-                ).executeAsOne()
+                )
+                val id = db.lastInsertId().executeAsOne().MAX
+                    ?: error("Failed to get last insert id")
                 db.getById(id).executeAsOne().toRecipe()
             }
         }
