@@ -11,8 +11,8 @@ import androidx.compose.ui.window.application
 import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.backhandler.BackDispatcher
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
-import io.github.aakira.napier.DebugAntilog
-import io.github.aakira.napier.Napier
+import co.touchlab.kermit.Logger
+import com.plusmobileapps.chefmate.buildconfig.BuildConfig
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.parseSessionFromUrl
@@ -26,8 +26,8 @@ import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 fun main(args: Array<String>) {
-    // Initialize Napier logging for JVM
-    Napier.base(DebugAntilog())
+    // Initialize Bugsnag + Kermit logging for JVM
+    BugsnagInitializer().initialize(BuildConfig.BUGSNAG_API_KEY)
     // Only initialize the lifecycle outside the application block
     val lifecycle = LifecycleRegistry()
     val backDispatcher = BackDispatcher()
@@ -66,7 +66,7 @@ fun main(args: Array<String>) {
                 }
             }
         } catch (e: Exception) {
-            Napier.e("Failed to set up macOS URI handler", e)
+            Logger.e("Failed to set up macOS URI handler", e)
         }
     }
 

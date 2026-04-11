@@ -24,7 +24,7 @@ import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.util.EmailUtil
-import io.github.aakira.napier.Napier
+import co.touchlab.kermit.Logger
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -154,7 +154,7 @@ class AuthenticationViewModel(
                     output.send(Output.AuthenticationSuccess)
                 },
                 onFailure = { e ->
-                    Napier.e("Authentication failed", e)
+                    Logger.e("Authentication failed", e)
                     _state.value =
                         _state.value.copy(
                             isLoading = false,
@@ -276,7 +276,7 @@ class AuthenticationViewModel(
                         )
                 },
                 onFailure = { e ->
-                    Napier.e("Password reset failed", e)
+                    Logger.e("Password reset failed", e)
                     _state.value =
                         _state.value.copy(
                             isLoading = false,

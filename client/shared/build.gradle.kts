@@ -11,6 +11,7 @@ kotlin {
         commonMain.dependencies {
             api(libs.arkivanov.decompose.core)
             api(libs.kotlin.coroutines.core)
+            api(libs.kermit)
             implementation(libs.essenty.lifecycle.coroutines)
         }
         commonTest.dependencies {
@@ -44,6 +45,11 @@ val supabaseKey =
         ?: System.getenv("SUPABASE_KEY")
         ?: "your-anon-public-key"
 
+val bugsnagApiKey =
+    localProperties.getProperty("bugsnag.apiKey")
+        ?: System.getenv("BUGSNAG_API_KEY")
+        ?: ""
+
 buildkonfig {
     packageName = "com.plusmobileapps.chefmate.buildconfig"
     objectName = "BuildConfig"
@@ -52,5 +58,6 @@ buildkonfig {
     defaultConfigs {
         buildConfigField(STRING, "SUPABASE_URL", supabaseUrl)
         buildConfigField(STRING, "SUPABASE_KEY", supabaseKey)
+        buildConfigField(STRING, "BUGSNAG_API_KEY", bugsnagApiKey)
     }
 }

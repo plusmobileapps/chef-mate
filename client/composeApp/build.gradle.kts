@@ -29,6 +29,7 @@ kotlin {
             export(libs.essenty.lifecycle)
             export(libs.essenty.backhandler)
             export(projects.client.root.public)
+            export(projects.client.shared)
         }
     }
 
@@ -59,19 +60,24 @@ kotlin {
             api(projects.client.recipe.core.impl)
             api(projects.client.util.impl)
             api(projects.client.settings.impl)
-            api(libs.napier)
+            api(libs.kermit)
             implementation(libs.supabase.client)
             implementation(libs.supabase.auth)
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.cio)
+            implementation(libs.bugsnag.kmp)
+            implementation(libs.kermit.bugsnag)
         }
         jvmMain.dependencies {
             implementation(libs.ktor.client.cio)
             implementation(libs.logback)
+            implementation(libs.bugsnag.java)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+            implementation(libs.bugsnag.kmp)
+            implementation(libs.kermit.bugsnag)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

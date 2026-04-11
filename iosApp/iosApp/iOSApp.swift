@@ -13,6 +13,11 @@ struct iOSApp: App {
 class AppDelegate: NSObject, UIApplicationDelegate {
     var backDispatcher: BackDispatcher = BackDispatcherKt.BackDispatcher()
 
+    override init() {
+        super.init()
+        BugsnagStartup_iosKt.initializeBugsnag()
+    }
+
     lazy var root: RootBloc = RootBlocProvider.shared.buildRootBloc(
         componentContext: DefaultComponentContext(
             lifecycle: ApplicationLifecycle(),

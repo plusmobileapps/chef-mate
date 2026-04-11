@@ -12,6 +12,7 @@ This project uses [BuildKonfig](https://github.com/yshrsmz/BuildKonfig) to secur
 ```properties
 supabase.url=https://your-project-id.supabase.co
 supabase.key=your-anon-public-key
+bugsnag.apiKey=your-bugsnag-api-key
 ```
 
 ### Option 2: Using Environment Variables (Recommended for CI/CD)
@@ -21,6 +22,7 @@ Set the following environment variables:
 ```bash
 export SUPABASE_URL=https://your-project-id.supabase.co
 export SUPABASE_KEY=your-anon-public-key
+export BUGSNAG_API_KEY=your-bugsnag-api-key
 ```
 
 ### Priority
@@ -48,6 +50,7 @@ import com.plusmobileapps.chefmate.buildconfig.BuildConfig
 
 val supabaseUrl = BuildConfig.SUPABASE_URL
 val supabaseKey = BuildConfig.SUPABASE_KEY
+val bugsnagApiKey = BuildConfig.BUGSNAG_API_KEY
 ```
 
 ## Adding New Configuration Values

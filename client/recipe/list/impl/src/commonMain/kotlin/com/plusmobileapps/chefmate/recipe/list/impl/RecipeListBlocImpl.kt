@@ -1,5 +1,6 @@
 package com.plusmobileapps.chefmate.recipe.list.impl
 
+import co.touchlab.kermit.Logger
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
