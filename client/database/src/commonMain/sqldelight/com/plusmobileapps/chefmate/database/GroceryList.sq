@@ -23,8 +23,10 @@ getByClientId:
 SELECT * FROM GroceryList WHERE clientId = ?;
 
 create:
-INSERT INTO GroceryList (name, clientId) VALUES (?, ?)
-RETURNING id;
+INSERT INTO GroceryList (name, clientId) VALUES (?, ?);
+
+lastId:
+SELECT MAX(id) FROM GroceryList;
 
 update:
 UPDATE GroceryList SET name = ?, updatedAt = ?, isDirty = 1 WHERE id = ?;

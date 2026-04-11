@@ -1,6 +1,7 @@
 package com.plusmobileapps.chefmate.grocery.data.impl
 
 import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.database.Grocery
@@ -89,8 +90,9 @@ class GroceryRepositoryImpl(
         listQueries
             .getAll()
             .asFlow()
+            .mapToList(ioContext)
             .map { query ->
-                query.executeAsList().map { entity ->
+                query.map { entity ->
                     GroceryListModel(
                         id = entity.id,
                         name = entity.name,
@@ -217,7 +219,10 @@ class GroceryRepositoryImpl(
     override suspend fun createGroceryList(name: String): Long =
         withContext(ioContext) {
             val clientId = Uuid.random().toString()
-            val id = listQueries.create(name = name, clientId = clientId).executeAsOne()
+            val id = listQueries.transactionWithResult {
+                listQueries.create(name = name, clientId = clientId)
+                listQueries.lastId().executeAsOne().MAX!!
+            }
             pushListToRemote(id)
             id
         }
@@ -262,7 +267,10 @@ class GroceryRepositoryImpl(
             if (existing.isNotEmpty()) {
                 existing.first().id
             } else {
-                listQueries.create(name = "My Grocery List", clientId = Uuid.random().toString()).executeAsOne()
+                listQueries.transactionWithResult {
+                    listQueries.create(name = "My Grocery List", clientId = Uuid.random().toString())
+                    listQueries.lastId().executeAsOne().MAX!!
+                }
             }
         }
 
@@ -444,11 +452,13 @@ class GroceryRepositoryImpl(
                             id = matchedByClientId.id,
                         )
                     } else {
-                        listQueries.create(
-                            name = remoteList.name,
-                            clientId = null,
-                        )
-                        val newId = listQueries.getAll().executeAsList().last().id
+                        val newId = listQueries.transactionWithResult {
+                            listQueries.create(
+                                name = remoteList.name,
+                                clientId = null,
+                            )
+                            listQueries.lastId().executeAsOne().MAX!!
+                        }
                         listQueries.updateRemoteId(
                             remoteId = remoteId,
                             id = newId,

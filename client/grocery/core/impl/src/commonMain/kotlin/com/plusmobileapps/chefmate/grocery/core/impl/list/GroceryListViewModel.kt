@@ -42,12 +42,9 @@ class GroceryListViewModel(
         scope.launch {
             repository.getGroceryLists().collect { lists ->
                 _state.update { currentState ->
-                    val selected = currentState.selectedList
-                    val updatedSelected = if (selected != null) {
-                        lists.firstOrNull { it.id == selected.id } ?: lists.firstOrNull()
-                    } else {
-                        lists.firstOrNull()
-                    }
+                    val currentSelectedId = selectedListId.value
+                    val updatedSelected = lists.firstOrNull { it.id == currentSelectedId }
+                        ?: lists.firstOrNull()
                     if (updatedSelected != null && selectedListId.value != updatedSelected.id) {
                         selectedListId.value = updatedSelected.id
                     }
