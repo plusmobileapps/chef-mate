@@ -70,6 +70,7 @@ class SettingsViewModel(
             authenticationRepository.signOut()
             groceryRepository.clearLocalData()
             recipeRepository.clearLocalData()
+            groceryRepository.ensureDefaultList()
         }
     }
 
