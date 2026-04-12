@@ -33,8 +33,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -189,14 +193,28 @@ private fun RecipeDetailSheet(
     sheetState: androidx.compose.material3.SheetState,
 ) {
     val slot = bloc.childSlot.subscribeAsState()
-    val child = slot.value.child?.instance
+    val child = slot.value.child?.instance as? RecipeDetailBloc.Sheet.AddToGroceryList
 
-    if (child is RecipeDetailBloc.Sheet.AddToGroceryList) {
+    // Remember the last active child so the sheet stays in composition during dismiss animation
+    var sheetChild by remember { mutableStateOf(child) }
+    if (child != null) {
+        sheetChild = child
+    }
+
+    // When the bloc dismisses programmatically, animate the sheet hide before removing it
+    LaunchedEffect(child) {
+        if (child == null && sheetChild != null) {
+            sheetState.hide()
+            sheetChild = null
+        }
+    }
+
+    if (sheetChild != null) {
         ModalBottomSheet(
-            onDismissRequest = { child.bloc.onBackClicked() },
+            onDismissRequest = { sheetChild?.bloc?.onBackClicked() },
             sheetState = sheetState,
         ) {
-            AddRecipeToGroceryListScreen(child.bloc)
+            sheetChild?.let { AddRecipeToGroceryListScreen(it.bloc) }
         }
     }
 }
