@@ -12,6 +12,8 @@ kotlin {
             api(libs.arkivanov.decompose.core)
             api(libs.kotlin.coroutines.core)
             api(libs.kermit)
+            api(libs.multiplatform.settings)
+            implementation(libs.multiplatform.settings.noarg)
             implementation(libs.essenty.lifecycle.coroutines)
         }
         commonTest.dependencies {

@@ -159,6 +159,25 @@ class GroceryRepositoryImpl(
         names.forEach { pushAddToRemote(it) }
     }
 
+    override suspend fun addGroceries(listId: Long, names: List<String>) {
+        withContext(ioContext) {
+            val now = dateTimeUtil.now.toString()
+            queries.transaction {
+                names.forEach { name ->
+                    queries.create(
+                        name = name,
+                        isChecked = false,
+                        createdAt = now,
+                        updatedAt = now,
+                        clientId = Uuid.random().toString(),
+                        listId = listId,
+                    )
+                }
+            }
+        }
+        names.forEach { pushAddToRemote(it) }
+    }
+
     override suspend fun updateChecked(
         item: GroceryItem,
         isChecked: Boolean,

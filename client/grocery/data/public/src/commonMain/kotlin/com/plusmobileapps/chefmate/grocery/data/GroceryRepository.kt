@@ -18,6 +18,8 @@ interface GroceryRepository {
 
     suspend fun addGroceries(names: List<String>)
 
+    suspend fun addGroceries(listId: Long, names: List<String>)
+
     suspend fun updateChecked(
         item: GroceryItem,
         isChecked: Boolean,

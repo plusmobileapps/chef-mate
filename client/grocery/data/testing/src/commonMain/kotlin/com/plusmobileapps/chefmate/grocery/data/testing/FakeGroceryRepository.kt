@@ -42,9 +42,13 @@ class FakeGroceryRepository : GroceryRepository {
 
     override suspend fun addGroceries(names: List<String>) {
         val defaultListId = _lists.value.firstOrNull()?.id ?: 1L
+        addGroceries(defaultListId, names)
+    }
+
+    override suspend fun addGroceries(listId: Long, names: List<String>) {
         val newItems = names.map { name ->
             val item = GroceryItem(id = nextId++, name = name, isChecked = false)
-            itemListMap[item.id] = defaultListId
+            itemListMap[item.id] = listId
             item
         }
         _groceries.update { it + newItems }
