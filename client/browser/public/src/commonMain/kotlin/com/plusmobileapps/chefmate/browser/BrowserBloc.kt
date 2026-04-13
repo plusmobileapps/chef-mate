@@ -1,5 +1,6 @@
 package com.plusmobileapps.chefmate.browser
 
+import com.arkivanov.essenty.instancekeeper.InstanceKeeper
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.text.TextData
@@ -7,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface BrowserBloc {
     val state: StateFlow<Model>
+
+    val instanceKeeper: InstanceKeeper
 
     fun onUrlChanged(url: String)
 
@@ -26,7 +29,9 @@ interface BrowserBloc {
     )
 
     sealed class Output {
-        data class RecipeExtracted(val recipeId: Long) : Output()
+        data class RecipeExtracted(
+            val recipeId: Long,
+        ) : Output()
     }
 
     fun interface Factory {

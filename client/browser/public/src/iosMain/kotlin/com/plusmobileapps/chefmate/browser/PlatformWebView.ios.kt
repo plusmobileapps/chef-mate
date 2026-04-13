@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.browser
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import com.arkivanov.essenty.instancekeeper.InstanceKeeper
 import com.multiplatform.webview.web.WebView
 import com.multiplatform.webview.web.rememberWebViewNavigator
 import com.multiplatform.webview.web.rememberWebViewState
@@ -11,6 +12,7 @@ import com.multiplatform.webview.web.rememberWebViewState
 actual fun PlatformWebView(
     url: String,
     onUrlLoaded: (String) -> Unit,
+    instanceKeeper: InstanceKeeper,
     modifier: Modifier,
 ) {
     val webViewState = rememberWebViewState(url = url)

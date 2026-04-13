@@ -6,6 +6,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
+import com.arkivanov.essenty.instancekeeper.InstanceKeeper
+import com.arkivanov.essenty.instancekeeper.getOrCreate
 import javafx.application.Platform
 import javafx.concurrent.Worker
 import javafx.embed.swing.JFXPanel
@@ -18,51 +20,22 @@ import javax.swing.JPanel
 actual fun PlatformWebView(
     url: String,
     onUrlLoaded: (String) -> Unit,
+    instanceKeeper: InstanceKeeper,
     modifier: Modifier,
 ) {
-    val jfxPanel =
-        remember {
-            JFXPanel().also {
-                Platform.setImplicitExit(false)
-            }
-        }
-    val webViewRef = remember { WebViewRef() }
+    val holder = remember { instanceKeeper.getOrCreate { WebViewHolder() } }
 
     DisposableEffect(Unit) {
-        Platform.runLater {
-            val webView = WebView()
-            webViewRef.webView = webView
-
-            webView.engine.loadWorker.stateProperty().addListener { _, _, newState ->
-                if (newState == Worker.State.SUCCEEDED) {
-                    val loadedUrl = webView.engine.location
-                    if (loadedUrl != null) {
-                        onUrlLoaded(loadedUrl)
-                    }
-                }
-            }
-
-            jfxPanel.scene = Scene(webView)
-
-            if (url.isNotBlank()) {
-                webView.engine.load(url)
-            }
-        }
-
-        onDispose {
-            Platform.runLater {
-                webViewRef.webView?.engine?.load("about:blank")
-                webViewRef.webView = null
-            }
-        }
+        holder.ensureInitialized(onUrlLoaded, url)
+        onDispose { }
     }
 
     LaunchedEffect(url) {
         if (url.isNotBlank()) {
             Platform.runLater {
-                val currentLocation = webViewRef.webView?.engine?.location
+                val currentLocation = holder.webView?.engine?.location
                 if (currentLocation != url) {
-                    webViewRef.webView?.engine?.load(url)
+                    holder.webView?.engine?.load(url)
                 }
             }
         }
@@ -72,13 +45,53 @@ actual fun PlatformWebView(
         modifier = modifier,
         factory = {
             JPanel(BorderLayout()).apply {
-                add(jfxPanel, BorderLayout.CENTER)
+                add(holder.jfxPanel, BorderLayout.CENTER)
             }
         },
     )
 }
 
-private class WebViewRef {
+private class WebViewHolder : InstanceKeeper.Instance {
+    val jfxPanel: JFXPanel =
+        JFXPanel().also {
+            Platform.setImplicitExit(false)
+        }
+
     @Volatile
     var webView: WebView? = null
+        private set
+
+    private var initialized = false
+
+    fun ensureInitialized(
+        onUrlLoaded: (String) -> Unit,
+        initialUrl: String,
+    ) {
+        if (initialized) return
+        initialized = true
+
+        Platform.runLater {
+            val wv = WebView()
+            webView = wv
+
+            wv.engine.loadWorker.stateProperty().addListener { _, _, newState ->
+                if (newState == Worker.State.SUCCEEDED) {
+                    wv.engine.location?.let(onUrlLoaded)
+                }
+            }
+
+            jfxPanel.scene = Scene(wv)
+
+            if (initialUrl.isNotBlank()) {
+                wv.engine.load(initialUrl)
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        Platform.runLater {
+            webView?.engine?.load("about:blank")
+            webView = null
+        }
+    }
 }

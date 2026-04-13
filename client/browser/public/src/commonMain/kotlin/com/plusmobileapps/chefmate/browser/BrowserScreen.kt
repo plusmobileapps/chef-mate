@@ -55,9 +55,10 @@ fun BrowserScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
         ) {
             AddressBar(
                 url = viewState.addressBarText,
@@ -70,9 +71,11 @@ fun BrowserScreen(
             PlatformWebView(
                 url = viewState.currentUrl,
                 onUrlLoaded = bloc::onUrlLoadedInWebView,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
+                instanceKeeper = bloc.instanceKeeper,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
             )
         }
     }
@@ -89,9 +92,10 @@ private fun AddressBar(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         OutlinedTextField(
@@ -100,13 +104,15 @@ private fun AddressBar(
             modifier = Modifier.weight(1f),
             placeholder = { Text(stringResource(Res.string.browser_address_hint)) },
             singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Uri,
-                imeAction = ImeAction.Go,
-            ),
-            keyboardActions = KeyboardActions(
-                onGo = { onNavigate() },
-            ),
+            keyboardOptions =
+                KeyboardOptions(
+                    keyboardType = KeyboardType.Uri,
+                    imeAction = ImeAction.Go,
+                ),
+            keyboardActions =
+                KeyboardActions(
+                    onGo = { onNavigate() },
+                ),
         )
         IconButton(onClick = onNavigate) {
             Icon(
