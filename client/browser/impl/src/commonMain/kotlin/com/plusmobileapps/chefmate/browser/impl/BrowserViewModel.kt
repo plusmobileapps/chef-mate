@@ -1,5 +1,6 @@
 package com.plusmobileapps.chefmate.browser.impl
 
+import co.touchlab.kermit.Logger
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.browser.BrowserBloc
@@ -44,13 +45,13 @@ class BrowserViewModel(
 
     fun onUrlLoadedInWebView(url: String) {
         _state.value = _state.value.copy(
-            currentUrl = url,
+            webViewReportedUrl = url,
             addressBarText = url,
         )
     }
 
     fun extractRecipe() {
-        val url = _state.value.currentUrl
+        val url = _state.value.webViewReportedUrl.ifBlank { _state.value.currentUrl }
         if (url.isBlank() || _state.value.isExtracting) return
 
         _state.value = _state.value.copy(isExtracting = true, extractionMessage = null)
@@ -84,6 +85,7 @@ class BrowserViewModel(
                 )
                 output?.onNext(BrowserBloc.Output.RecipeExtracted(recipe.id))
             } catch (e: Exception) {
+                Logger.d(e) { "Failed to extract recipe from $url"}
                 _state.value = _state.value.copy(
                     isExtracting = false,
                     extractionMessage = ExtractMessage.FAILURE,
@@ -106,6 +108,7 @@ class BrowserViewModel(
     data class State(
         val currentUrl: String = DEFAULT_URL,
         val addressBarText: String = DEFAULT_URL,
+        val webViewReportedUrl: String = "",
         val isExtracting: Boolean = false,
         val extractionMessage: ExtractMessage? = null,
     )

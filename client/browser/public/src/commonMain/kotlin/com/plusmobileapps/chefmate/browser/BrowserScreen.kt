@@ -1,6 +1,5 @@
 package com.plusmobileapps.chefmate.browser
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,7 +13,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -31,6 +29,10 @@ import androidx.compose.ui.unit.dp
 import chefmate.client.browser.public.generated.resources.Res
 import chefmate.client.browser.public.generated.resources.browser_address_hint
 import chefmate.client.browser.public.generated.resources.browser_extract_recipe
+import chefmate.client.browser.public.generated.resources.tab_browser
+import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
+import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -50,16 +52,12 @@ fun BrowserScreen(
         }
     }
 
-    Scaffold(
+    PlusNavContainer(
         modifier = modifier.fillMaxSize(),
+        data = PlusHeaderData.Parent(title = Res.string.tab_browser.asTextData()),
+        scrollEnabled = false,
         snackbarHost = { SnackbarHost(snackbarHostState) },
-    ) { paddingValues ->
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-        ) {
+        content = {
             AddressBar(
                 url = viewState.addressBarText,
                 onUrlChanged = bloc::onUrlChanged,
@@ -69,7 +67,7 @@ fun BrowserScreen(
                 onExtractRecipe = bloc::onExtractRecipe,
             )
             PlatformWebView(
-                url = viewState.currentUrl,
+                url = viewState.navigateUrl,
                 onUrlLoaded = bloc::onUrlLoadedInWebView,
                 instanceKeeper = bloc.instanceKeeper,
                 modifier =
@@ -78,7 +76,7 @@ fun BrowserScreen(
                         .weight(1f),
             )
         }
-    }
+    )
 }
 
 @Composable

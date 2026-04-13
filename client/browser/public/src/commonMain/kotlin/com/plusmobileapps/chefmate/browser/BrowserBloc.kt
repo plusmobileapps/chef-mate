@@ -23,6 +23,7 @@ interface BrowserBloc {
 
     data class Model(
         val currentUrl: String = "",
+        val navigateUrl: String = "",
         val addressBarText: String = "",
         val isExtracting: Boolean = false,
         val extractionMessage: TextData? = null,

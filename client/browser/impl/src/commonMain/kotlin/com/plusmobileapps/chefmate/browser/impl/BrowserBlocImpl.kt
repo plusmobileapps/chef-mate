@@ -37,7 +37,8 @@ class BrowserBlocImpl(
     override val state: StateFlow<BrowserBloc.Model> =
         viewModel.state.mapState {
             BrowserBloc.Model(
-                currentUrl = it.currentUrl,
+                currentUrl = it.webViewReportedUrl.ifBlank { it.currentUrl },
+                navigateUrl = it.currentUrl,
                 addressBarText = it.addressBarText,
                 isExtracting = it.isExtracting,
                 extractionMessage = it.extractionMessage?.let { msg ->
