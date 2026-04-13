@@ -46,6 +46,8 @@ class AddRecipeToGroceryListBlocImpl(
                 isLoading = it.isLoading,
                 isAdding = it.isAdding,
                 ingredients = it.ingredients,
+                groceryLists = it.groceryLists,
+                selectedGroceryList = it.selectedGroceryList,
             )
         }
 
@@ -63,6 +65,10 @@ class AddRecipeToGroceryListBlocImpl(
 
     override fun onIngredientToggled(ingredient: Int) {
         viewModel.toggleIngredient(ingredient)
+    }
+
+    override fun onGroceryListSelected(listId: Long) {
+        viewModel.onGroceryListSelected(listId)
     }
 
     override fun onSaveClicked() {

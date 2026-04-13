@@ -10,4 +10,11 @@
     <string name="grocery_sync_syncing">Syncing</string>
     <string name="grocery_sync_synced">Synced</string>
     <string name="grocery_sync_all">Sync all</string>
+    <string name="grocery_select_list">Select list</string>
+    <string name="grocery_create_new_list">Create new list…</string>
+    <string name="grocery_create_list_title">New Grocery List</string>
+    <string name="grocery_create_list_hint">List name</string>
+    <string name="grocery_create_list_confirm">Create</string>
+    <string name="grocery_create_list_cancel">Cancel</string>
+    <string name="grocery_delete_list">Delete list</string>
 </resources>

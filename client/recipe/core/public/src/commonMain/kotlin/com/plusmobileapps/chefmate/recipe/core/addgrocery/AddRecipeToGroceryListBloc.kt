@@ -10,12 +10,21 @@ interface AddRecipeToGroceryListBloc : BackClickBloc {
 
     fun onIngredientToggled(ingredient: Int)
 
+    fun onGroceryListSelected(listId: Long)
+
     fun onSaveClicked()
+
+    data class GroceryListItem(
+        val id: Long,
+        val name: String,
+    )
 
     data class Model(
         val isLoading: Boolean,
         val isAdding: Boolean,
         val ingredients: List<ListItem>,
+        val groceryLists: List<GroceryListItem> = emptyList(),
+        val selectedGroceryList: GroceryListItem? = null,
     ) {
         data class ListItem(
             val id: Int,

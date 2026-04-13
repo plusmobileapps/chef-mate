@@ -59,6 +59,7 @@ in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and r
 * [metro](https://zacsweers.github.io/metro/) - dependency injection
 * [kermit](https://github.com/touchlab/Kermit) - logging
 * [Bugsnag](https://github.com/bugsnag/bugsnag-kotlin-multiplatform) - error logging
+* [multiplatform-settings](https://github.com/russhwolf/multiplatform-settings) - key value storage
 
 ### Server
 

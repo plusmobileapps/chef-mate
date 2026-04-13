@@ -3,9 +3,11 @@ package com.plusmobileapps.chefmate.recipe.core.impl.addgrocery
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
+import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc.GroceryListItem
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc.Model.ListItem
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
+import com.russhwolf.settings.Settings
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +28,7 @@ class AddRecipeToGroceryListViewModel(
     @Main mainContext: CoroutineContext,
     private val recipeRepository: RecipeRepository,
     private val groceryRepository: GroceryRepository,
+    private val settings: Settings,
 ) : ViewModel(mainContext) {
     private val _output = Channel<Output>(Channel.BUFFERED)
     val output: Flow<Output> = _output.receiveAsFlow()
@@ -33,6 +36,7 @@ class AddRecipeToGroceryListViewModel(
     val state: StateFlow<State> = _state.asStateFlow()
 
     init {
+        loadGroceryLists()
         loadRecipe()
     }
 
@@ -56,17 +60,46 @@ class AddRecipeToGroceryListViewModel(
         }
     }
 
+    fun onGroceryListSelected(listId: Long) {
+        val list = _state.value.groceryLists.firstOrNull { it.id == listId } ?: return
+        _state.update { it.copy(selectedGroceryList = list) }
+        settings.putLong(KEY_LAST_GROCERY_LIST_ID, listId)
+    }
+
     fun save() {
         val ingredients =
             state.value.ingredients
                 .filter { it.isSelected }
                 .map { it.name }
+        val selectedListId = state.value.selectedGroceryList?.id
         _state.update { it.copy(isAdding = true) }
         scope.launch {
             if (ingredients.isNotEmpty()) {
-                groceryRepository.addGroceries(ingredients)
+                if (selectedListId != null) {
+                    groceryRepository.addGroceries(selectedListId, ingredients)
+                } else {
+                    groceryRepository.addGroceries(ingredients)
+                }
             }
             _output.send(Output.Finished)
+        }
+    }
+
+    private fun loadGroceryLists() {
+        scope.launch {
+            groceryRepository.ensureDefaultList()
+            groceryRepository.getGroceryLists().collect { lists ->
+                val groceryListItems = lists.map { GroceryListItem(id = it.id, name = it.name) }
+                val lastSelectedId = settings.getLongOrNull(KEY_LAST_GROCERY_LIST_ID)
+                val selected = groceryListItems.firstOrNull { it.id == lastSelectedId }
+                    ?: groceryListItems.firstOrNull()
+                _state.update {
+                    it.copy(
+                        groceryLists = groceryListItems,
+                        selectedGroceryList = it.selectedGroceryList ?: selected,
+                    )
+                }
+            }
         }
     }
 
@@ -80,7 +113,7 @@ class AddRecipeToGroceryListViewModel(
             val ingredients =
                 recipe.ingredients
                     .split("\n")
-                    .mapIndexedNotNull { index, ingredient ->
+                    .mapIndexedNotNull { _, ingredient ->
                         if (ingredient.isBlank()) {
                             null
                         } else {
@@ -106,6 +139,8 @@ class AddRecipeToGroceryListViewModel(
         val isAdding: Boolean = false,
         val recipe: Recipe = Recipe.Empty,
         val ingredients: List<ListItem> = emptyList(),
+        val groceryLists: List<GroceryListItem> = emptyList(),
+        val selectedGroceryList: GroceryListItem? = null,
     )
 
     sealed class Output {
@@ -115,5 +150,9 @@ class AddRecipeToGroceryListViewModel(
     @AssistedFactory
     fun interface Factory {
         fun create(recipeId: Long): AddRecipeToGroceryListViewModel
+    }
+
+    companion object {
+        private const val KEY_LAST_GROCERY_LIST_ID = "last_grocery_list_id"
     }
 }

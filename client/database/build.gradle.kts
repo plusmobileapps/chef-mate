@@ -31,6 +31,8 @@ sqldelight {
         create("Database") {
             packageName.set("com.plusmobileapps.chefmate.database")
             dialect(libs.sqldelight.dialect.sqlite335)
+            schemaOutputDirectory.set(file("src/commonMain/sqldelight/schema"))
+            verifyMigrations.set(true)
         }
     }
 }

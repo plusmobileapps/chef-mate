@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(xargs:*)",
-      "Bash(./gradlew:*)",
-      "Bash(unzip:*)"
-    ]
-  }
-}

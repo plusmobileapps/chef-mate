@@ -1,2 +1,41 @@
-ALTER TABLE Grocery ADD COLUMN remoteId TEXT;
-ALTER TABLE Grocery ADD COLUMN listRemoteId TEXT;
+CREATE TABLE Grocery (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    isChecked INTEGER NOT NULL DEFAULT 0,
+    createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+    updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
+    remoteId TEXT UNIQUE,
+    listRemoteId TEXT,
+    clientId TEXT,
+    isDirty INTEGER NOT NULL DEFAULT 0,
+    listId INTEGER
+);
+
+CREATE TABLE Recipe (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT,
+    ingredients TEXT,
+    directions TEXT,
+    imageUrl TEXT,
+    sourceUrl TEXT,
+    servings INTEGER,
+    prepTime INTEGER,
+    cookTime INTEGER,
+    totalTime INTEGER,
+    calories INTEGER,
+    starRating INTEGER,
+    isFavorite INTEGER NOT NULL DEFAULT 0,
+    createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+    updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE GroceryList (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+    updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
+    remoteId TEXT UNIQUE,
+    clientId TEXT,
+    isDirty INTEGER NOT NULL DEFAULT 0
+);

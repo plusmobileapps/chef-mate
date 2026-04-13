@@ -28,4 +28,8 @@ class FakeRecipeRepository(
     override suspend fun deleteRecipe(id: Long) {
         recipes.value = recipes.value.filterNot { it.id == id }
     }
+
+    override suspend fun clearLocalData() {
+        recipes.value = emptyList()
+    }
 }

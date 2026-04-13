@@ -12,4 +12,6 @@ interface RecipeRepository {
     suspend fun getRecipe(id: Long): Flow<Recipe?>
 
     suspend fun deleteRecipe(id: Long)
+
+    suspend fun clearLocalData()
 }
