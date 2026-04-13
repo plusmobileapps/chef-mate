@@ -13,9 +13,11 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
+import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
+import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.Browser
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.GroceryList
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.RecipeList
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.Settings
@@ -38,6 +40,7 @@ class BottomNavBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<BottomNavBloc.Output>,
     viewModelFactory: Provider<BottomNavViewModel>,
+    private val browser: BrowserBloc.Factory,
     private val groceryList: GroceryListBloc.Factory,
     private val recipeList: RecipeListBloc.Factory,
     private val settings: SettingsBloc.Factory,
@@ -90,6 +93,7 @@ class BottomNavBlocImpl(
             when (tab) {
                 BottomNavBloc.Tab.RECIPES -> Configuration.Recipe
                 BottomNavBloc.Tab.GROCERIES -> Configuration.Grocery
+                BottomNavBloc.Tab.BROWSER -> Configuration.Browser
                 BottomNavBloc.Tab.SETTINGS -> Configuration.Settings
             }
         navigation.bringToFront(configuration)
@@ -108,6 +112,15 @@ class BottomNavBlocImpl(
                         output = ::handleRecipeListOutput,
                     ),
                 )
+            }
+
+            Configuration.Browser -> {
+                val bloc =
+                    browser.create(
+                        context = context,
+                        output = ::handleBrowserOutput,
+                    )
+                Browser(bloc)
             }
 
             Configuration.Grocery -> {
@@ -140,6 +153,14 @@ class BottomNavBlocImpl(
         }
     }
 
+    private fun handleBrowserOutput(output: BrowserBloc.Output) {
+        when (output) {
+            is BrowserBloc.Output.RecipeExtracted -> {
+                this.output.onNext(BottomNavBloc.Output.OpenRecipe(output.recipeId))
+            }
+        }
+    }
+
     private fun handleGroceryListOutput(output: GroceryListBloc.Output) {
         when (output) {
             is GroceryListBloc.Output.OpenDetail -> {
@@ -163,6 +184,7 @@ class BottomNavBlocImpl(
             cancellation =
                 stack.subscribe { value ->
                     when (value.active.instance) {
+                        is Browser -> BottomNavBloc.Tab.BROWSER
                         is BottomNavBloc.Child.GroceryList -> BottomNavBloc.Tab.GROCERIES
                         is BottomNavBloc.Child.RecipeList -> BottomNavBloc.Tab.RECIPES
                         is Settings -> BottomNavBloc.Tab.SETTINGS
@@ -182,6 +204,9 @@ class BottomNavBlocImpl(
 
         @Serializable
         data object Grocery : Configuration()
+
+        @Serializable
+        data object Browser : Configuration()
 
         @Serializable
         data object Settings : Configuration()

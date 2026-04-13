@@ -6,6 +6,7 @@ import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.settings.SettingsBloc
@@ -28,6 +29,7 @@ interface BottomNavBloc :
     enum class Tab {
         RECIPES,
         GROCERIES,
+        BROWSER,
         SETTINGS,
     }
 
@@ -38,6 +40,10 @@ interface BottomNavBloc :
 
         data class GroceryList(
             val bloc: GroceryListBloc,
+        ) : Child()
+
+        data class Browser(
+            val bloc: BrowserBloc,
         ) : Child()
 
         data class Settings(

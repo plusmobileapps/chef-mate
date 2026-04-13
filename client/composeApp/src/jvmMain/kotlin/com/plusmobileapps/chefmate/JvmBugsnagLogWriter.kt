@@ -17,14 +17,12 @@ class JvmBugsnagLogWriter(
     private val bugsnagClient: Bugsnag,
     private val minCrashSeverity: Severity = Severity.Warn,
 ) : LogWriter() {
-
     override fun log(
         severity: Severity,
         message: String,
         tag: String,
         throwable: Throwable?,
     ) {
-
         // TODO: Add breadcrumb with throwable if available
 
         if (throwable != null && severity >= minCrashSeverity) {

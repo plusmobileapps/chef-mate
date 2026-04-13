@@ -12,10 +12,11 @@ import platform.UIKit.UIApplication
 @SingleIn(AppScope::class)
 @DependencyGraph(AppScope::class)
 abstract class IosApplicationComponent : ApplicationComponent {
-
     @DependencyGraph.Factory
     fun interface Factory {
-        fun create(@Provides application: UIApplication): IosApplicationComponent
+        fun create(
+            @Provides application: UIApplication,
+        ): IosApplicationComponent
     }
 
     @Provides
