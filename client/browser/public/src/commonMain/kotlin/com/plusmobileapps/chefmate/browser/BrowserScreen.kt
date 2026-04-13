@@ -11,7 +11,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -54,22 +53,6 @@ fun BrowserScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        floatingActionButton = {
-            if (viewState.currentUrl.isNotBlank()) {
-                FloatingActionButton(
-                    onClick = bloc::onExtractRecipe,
-                ) {
-                    if (viewState.isExtracting) {
-                        CircularProgressIndicator()
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Download,
-                            contentDescription = stringResource(Res.string.browser_extract_recipe),
-                        )
-                    }
-                }
-            }
-        },
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -80,6 +63,9 @@ fun BrowserScreen(
                 url = viewState.addressBarText,
                 onUrlChanged = bloc::onUrlChanged,
                 onNavigate = bloc::onNavigate,
+                showExtract = viewState.currentUrl.isNotBlank(),
+                isExtracting = viewState.isExtracting,
+                onExtractRecipe = bloc::onExtractRecipe,
             )
             PlatformWebView(
                 url = viewState.currentUrl,
@@ -97,6 +83,9 @@ private fun AddressBar(
     url: String,
     onUrlChanged: (String) -> Unit,
     onNavigate: () -> Unit,
+    showExtract: Boolean,
+    isExtracting: Boolean,
+    onExtractRecipe: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -124,6 +113,18 @@ private fun AddressBar(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = stringResource(Res.string.browser_extract_recipe),
             )
+        }
+        if (showExtract) {
+            IconButton(onClick = onExtractRecipe) {
+                if (isExtracting) {
+                    CircularProgressIndicator()
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Download,
+                        contentDescription = stringResource(Res.string.browser_extract_recipe),
+                    )
+                }
+            }
         }
     }
 }

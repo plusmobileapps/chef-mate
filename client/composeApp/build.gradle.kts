@@ -1,6 +1,21 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
+fun osClassifier(): String {
+    val osName = System.getProperty("os.name").lowercase()
+    val osArch = System.getProperty("os.arch")
+    return when {
+        osName.contains("mac") || osName.contains("darwin") -> {
+            if (osArch == "aarch64") "mac-aarch64" else "mac"
+        }
+        osName.contains("win") -> "win"
+        osName.contains("linux") -> {
+            if (osArch == "aarch64") "linux-aarch64" else "linux"
+        }
+        else -> error("Unsupported OS: $osName")
+    }
+}
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
@@ -74,6 +89,14 @@ kotlin {
             implementation(libs.ktor.client.cio)
             implementation(libs.logback)
             implementation(libs.bugsnag.java)
+            val fxClassifier = osClassifier()
+            val fxVersion = libs.versions.openjfx.get()
+            implementation("org.openjfx:javafx-base:$fxVersion:$fxClassifier")
+            implementation("org.openjfx:javafx-controls:$fxVersion:$fxClassifier")
+            implementation("org.openjfx:javafx-graphics:$fxVersion:$fxClassifier")
+            implementation("org.openjfx:javafx-media:$fxVersion:$fxClassifier")
+            implementation("org.openjfx:javafx-swing:$fxVersion:$fxClassifier")
+            implementation("org.openjfx:javafx-web:$fxVersion:$fxClassifier")
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
@@ -136,7 +159,15 @@ compose.desktop {
             description = "Chef Mate - Your AI Cooking Assistant"
             vendor = "Plus Mobile Apps"
 
-            modules("java.sql", "java.naming")
+            modules(
+                "java.sql",
+                "java.naming",
+                "javafx.base",
+                "javafx.graphics",
+                "javafx.swing",
+                "javafx.web",
+                "jdk.jsobject",
+            )
 
             // macOS configuration
             macOS {

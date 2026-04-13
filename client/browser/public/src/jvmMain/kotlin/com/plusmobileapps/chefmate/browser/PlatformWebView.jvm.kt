@@ -1,23 +1,18 @@
 package com.plusmobileapps.chefmate.browser
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import java.awt.Desktop
-import java.net.URI
+import androidx.compose.ui.awt.SwingPanel
+import javafx.application.Platform
+import javafx.concurrent.Worker
+import javafx.embed.swing.JFXPanel
+import javafx.scene.Scene
+import javafx.scene.web.WebView
+import java.awt.BorderLayout
+import javax.swing.JPanel
 
 @Composable
 actual fun PlatformWebView(
@@ -25,33 +20,65 @@ actual fun PlatformWebView(
     onUrlLoaded: (String) -> Unit,
     modifier: Modifier,
 ) {
-    Column(
-        modifier = modifier.fillMaxSize().padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Icon(
-            imageVector = Icons.Default.Language,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(16.dp))
-        Text(
-            text = "Enter a recipe URL above and tap extract to save it.",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        if (url.isNotBlank()) {
-            Spacer(Modifier.height(16.dp))
-            OutlinedButton(onClick = {
-                try {
-                    Desktop.getDesktop().browse(URI(url))
-                } catch (_: Exception) {
-                    // ignore
+    val jfxPanel =
+        remember {
+            JFXPanel().also {
+                Platform.setImplicitExit(false)
+            }
+        }
+    val webViewRef = remember { WebViewRef() }
+
+    DisposableEffect(Unit) {
+        Platform.runLater {
+            val webView = WebView()
+            webViewRef.webView = webView
+
+            webView.engine.loadWorker.stateProperty().addListener { _, _, newState ->
+                if (newState == Worker.State.SUCCEEDED) {
+                    val loadedUrl = webView.engine.location
+                    if (loadedUrl != null) {
+                        onUrlLoaded(loadedUrl)
+                    }
                 }
-            }) {
-                Text("Open in System Browser")
+            }
+
+            jfxPanel.scene = Scene(webView)
+
+            if (url.isNotBlank()) {
+                webView.engine.load(url)
+            }
+        }
+
+        onDispose {
+            Platform.runLater {
+                webViewRef.webView?.engine?.load("about:blank")
+                webViewRef.webView = null
             }
         }
     }
+
+    LaunchedEffect(url) {
+        if (url.isNotBlank()) {
+            Platform.runLater {
+                val currentLocation = webViewRef.webView?.engine?.location
+                if (currentLocation != url) {
+                    webViewRef.webView?.engine?.load(url)
+                }
+            }
+        }
+    }
+
+    SwingPanel(
+        modifier = modifier,
+        factory = {
+            JPanel(BorderLayout()).apply {
+                add(jfxPanel, BorderLayout.CENTER)
+            }
+        },
+    )
+}
+
+private class WebViewRef {
+    @Volatile
+    var webView: WebView? = null
 }
