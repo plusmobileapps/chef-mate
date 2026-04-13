@@ -14,10 +14,11 @@ import dev.zacsweers.metro.SingleIn
 @DependencyGraph(AppScope::class)
 @SingleIn(AppScope::class)
 abstract class AndroidApplicationComponent : ApplicationComponent {
-
     @DependencyGraph.Factory
     fun interface Factory {
-        fun create(@Provides context: Context): AndroidApplicationComponent
+        fun create(
+            @Provides context: Context,
+        ): AndroidApplicationComponent
     }
 
     @Provides

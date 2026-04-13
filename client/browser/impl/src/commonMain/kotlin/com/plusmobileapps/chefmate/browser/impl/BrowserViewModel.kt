@@ -104,11 +104,15 @@ class BrowserViewModel(
         }
 
     data class State(
-        val currentUrl: String = "",
-        val addressBarText: String = "",
+        val currentUrl: String = DEFAULT_URL,
+        val addressBarText: String = DEFAULT_URL,
         val isExtracting: Boolean = false,
         val extractionMessage: ExtractMessage? = null,
     )
+
+    companion object {
+        private const val DEFAULT_URL = "https://www.google.com"
+    }
 
     enum class ExtractMessage {
         SUCCESS,

@@ -32,9 +32,6 @@ import androidx.compose.ui.unit.dp
 import chefmate.client.browser.public.generated.resources.Res
 import chefmate.client.browser.public.generated.resources.browser_address_hint
 import chefmate.client.browser.public.generated.resources.browser_extract_recipe
-import com.multiplatform.webview.web.WebView
-import com.multiplatform.webview.web.rememberWebViewNavigator
-import com.multiplatform.webview.web.rememberWebViewState
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -44,14 +41,6 @@ fun BrowserScreen(
 ) {
     val viewState by bloc.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val webViewState = rememberWebViewState(url = viewState.currentUrl)
-    val webViewNavigator = rememberWebViewNavigator()
-
-    LaunchedEffect(webViewState.lastLoadedUrl) {
-        webViewState.lastLoadedUrl?.let { url ->
-            bloc.onUrlLoadedInWebView(url)
-        }
-    }
 
     val message = viewState.extractionMessage
     val messageText = message?.localized()
@@ -90,17 +79,14 @@ fun BrowserScreen(
             AddressBar(
                 url = viewState.addressBarText,
                 onUrlChanged = bloc::onUrlChanged,
-                onNavigate = {
-                    bloc.onNavigate()
-                    webViewNavigator.loadUrl(viewState.addressBarText.ensureHttps())
-                },
+                onNavigate = bloc::onNavigate,
             )
-            WebView(
-                state = webViewState,
+            PlatformWebView(
+                url = viewState.currentUrl,
+                onUrlLoaded = bloc::onUrlLoadedInWebView,
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
                     .weight(1f),
-                navigator = webViewNavigator,
             )
         }
     }
@@ -141,10 +127,3 @@ private fun AddressBar(
         }
     }
 }
-
-private fun String.ensureHttps(): String =
-    if (!startsWith("http://") && !startsWith("https://")) {
-        "https://$this"
-    } else {
-        this
-    }
