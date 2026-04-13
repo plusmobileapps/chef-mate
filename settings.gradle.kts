@@ -26,6 +26,7 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
+        maven("https://jogamp.org/deployment/maven")
     }
 }
 
@@ -38,6 +39,8 @@ include(":client:auth:data:public")
 include(":client:auth:data:testing")
 include(":client:auth:ui:impl")
 include(":client:auth:ui:public")
+include(":client:browser:impl")
+include(":client:browser:public")
 include(":client:bottomnav:impl")
 include(":client:bottomnav:public")
 include(":client:composeApp")

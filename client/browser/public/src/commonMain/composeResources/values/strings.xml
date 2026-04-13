@@ -1,0 +1,8 @@
+<resources>
+    <string name="tab_browser">Browser</string>
+    <string name="browser_address_hint">Enter URL</string>
+    <string name="browser_extract_recipe">Extract Recipe</string>
+    <string name="browser_extracting">Extracting recipe…</string>
+    <string name="browser_extraction_failed">Failed to extract recipe from this page</string>
+    <string name="browser_recipe_saved">Recipe saved!</string>
+</resources>

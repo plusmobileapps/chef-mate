@@ -6,6 +6,7 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
+            api(projects.client.browser.public)
             api(projects.client.grocery.core.public)
             api(projects.client.recipe.list.public)
             api(projects.client.settings.public)

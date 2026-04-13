@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.recipe.bottomnav.impl
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
+import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.BROWSER
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.GROCERIES
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.RECIPES
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.SETTINGS
@@ -25,6 +26,6 @@ class BottomNavViewModel(
 
     data class State(
         val selectedTab: BottomNavBloc.Tab = RECIPES,
-        val tabs: List<BottomNavBloc.Tab> = listOf(RECIPES, GROCERIES, SETTINGS),
+        val tabs: List<BottomNavBloc.Tab> = listOf(RECIPES, GROCERIES, BROWSER, SETTINGS),
     )
 }
