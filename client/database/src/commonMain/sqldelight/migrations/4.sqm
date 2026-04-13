@@ -1,1 +1,0 @@
-CREATE UNIQUE INDEX idx_grocery_remote_id ON Grocery(remoteId);
