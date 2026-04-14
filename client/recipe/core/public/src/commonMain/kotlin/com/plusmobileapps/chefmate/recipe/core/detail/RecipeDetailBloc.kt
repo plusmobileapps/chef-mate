@@ -5,6 +5,7 @@ import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.TextData
@@ -27,6 +28,10 @@ interface RecipeDetailBloc : BackClickBloc {
 
     fun onAddToGroceryListClicked()
 
+    fun onSourceUrlClicked(url: String)
+
+    fun onDismissSheet()
+
     data class Model(
         val isLoading: Boolean,
         val isDeleting: Boolean,
@@ -47,6 +52,10 @@ interface RecipeDetailBloc : BackClickBloc {
     sealed class Sheet {
         data class AddToGroceryList(
             val bloc: AddRecipeToGroceryListBloc,
+        ) : Sheet()
+
+        data class BrowserLauncher(
+            val bloc: BrowserBloc,
         ) : Sheet()
     }
 

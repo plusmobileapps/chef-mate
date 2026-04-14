@@ -8,6 +8,7 @@ import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
@@ -17,8 +18,8 @@ import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc.Output
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.util.DateTimeUtil
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
@@ -33,9 +34,9 @@ class RecipeDetailBlocImpl(
     private val viewModelFactory: RecipeDetailViewModel.Factory,
     private val dateTimeUtil: DateTimeUtil,
     private val addToGroceryList: AddRecipeToGroceryListBloc.Factory,
+    private val browserBlocFactory: BrowserBloc.Factory,
 ) : RecipeDetailBloc,
     BlocContext by context {
-
     @AssistedFactory
     fun interface ManagedFactory {
         fun create(
@@ -119,6 +120,14 @@ class RecipeDetailBlocImpl(
         sheetNavigation.activate(SheetConfig.AddToGroceryList(recipeId))
     }
 
+    override fun onSourceUrlClicked(url: String) {
+        sheetNavigation.activate(SheetConfig.BrowserLauncher(url))
+    }
+
+    override fun onDismissSheet() {
+        sheetNavigation.dismiss()
+    }
+
     override fun onBackClicked() {
         output.onNext(Output.Finished)
     }
@@ -141,12 +150,32 @@ class RecipeDetailBlocImpl(
                             },
                         ),
                 )
+            is SheetConfig.BrowserLauncher ->
+                RecipeDetailBloc.Sheet.BrowserLauncher(
+                    bloc =
+                        browserBlocFactory
+                            .create(
+                                context = context,
+                                output = { browserOutput ->
+                                    when (browserOutput) {
+                                        is BrowserBloc.Output.RecipeExtracted -> sheetNavigation.dismiss()
+                                    }
+                                },
+                            ).also { bloc ->
+                                bloc.onUrlChanged(config.url)
+                                bloc.onNavigate()
+                            },
+                )
         }
 
     @Serializable
     sealed class SheetConfig {
         data class AddToGroceryList(
             val recipeId: Long,
+        ) : SheetConfig()
+
+        data class BrowserLauncher(
+            val url: String,
         ) : SheetConfig()
     }
 }
@@ -156,7 +185,10 @@ interface RecipeDetailBlocBindingModule {
     @Provides
     fun provideRecipeDetailBlocFactory(factory: RecipeDetailBlocImpl.ManagedFactory): RecipeDetailBloc.Factory =
         object : RecipeDetailBloc.Factory {
-            override fun create(context: BlocContext, recipeId: Long, output: Consumer<Output>): RecipeDetailBloc =
-                factory.create(context, recipeId, output)
+            override fun create(
+                context: BlocContext,
+                recipeId: Long,
+                output: Consumer<Output>,
+            ): RecipeDetailBloc = factory.create(context, recipeId, output)
         }
 }

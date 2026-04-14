@@ -8,8 +8,8 @@ import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc.Output
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +23,6 @@ class AddRecipeToGroceryListBlocImpl(
     private val viewModelFactory: AddRecipeToGroceryListViewModel.Factory,
 ) : AddRecipeToGroceryListBloc,
     BlocContext by context {
-
     @AssistedFactory
     fun interface ManagedFactory {
         fun create(

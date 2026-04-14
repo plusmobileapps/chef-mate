@@ -69,7 +69,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -104,6 +103,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
+import com.plusmobileapps.chefmate.browser.BrowserScreen
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListScreen
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.FixedString
@@ -225,6 +225,7 @@ fun RecipeDetailScreen(
                     recipe = state.recipe,
                     createdAt = state.createdAt,
                     updatedAt = state.updatedAt,
+                    onSourceUrlClicked = bloc::onSourceUrlClicked,
                     modifier = Modifier.weight(1f),
                 )
             } else {
@@ -232,6 +233,7 @@ fun RecipeDetailScreen(
                     recipe = state.recipe,
                     createdAt = state.createdAt,
                     updatedAt = state.updatedAt,
+                    onSourceUrlClicked = bloc::onSourceUrlClicked,
                     metadataCollapsed = metadataCollapsed,
                     onMetadataCollapsedChange = { metadataCollapsed = it },
                 )
@@ -247,7 +249,7 @@ private fun RecipeDetailSheet(
     sheetState: androidx.compose.material3.SheetState,
 ) {
     val slot = bloc.childSlot.subscribeAsState()
-    val child = slot.value.child?.instance as? RecipeDetailBloc.Sheet.AddToGroceryList
+    val child = slot.value.child?.instance
 
     // Remember the last active child so the sheet stays in composition during dismiss animation
     var sheetChild by remember { mutableStateOf(child) }
@@ -265,10 +267,22 @@ private fun RecipeDetailSheet(
 
     if (sheetChild != null) {
         ModalBottomSheet(
-            onDismissRequest = { sheetChild?.bloc?.onBackClicked() },
+            onDismissRequest = {
+                when (val current = sheetChild) {
+                    is RecipeDetailBloc.Sheet.AddToGroceryList -> current.bloc.onBackClicked()
+                    is RecipeDetailBloc.Sheet.BrowserLauncher -> bloc.onDismissSheet()
+                    null -> {}
+                }
+            },
             sheetState = sheetState,
         ) {
-            sheetChild?.let { AddRecipeToGroceryListScreen(it.bloc) }
+            when (val current = sheetChild) {
+                is RecipeDetailBloc.Sheet.AddToGroceryList ->
+                    AddRecipeToGroceryListScreen(current.bloc)
+                is RecipeDetailBloc.Sheet.BrowserLauncher ->
+                    BrowserScreen(current.bloc)
+                null -> {}
+            }
         }
     }
 }
@@ -282,6 +296,7 @@ private fun RecipeDetailCompactContent(
     recipe: Recipe,
     createdAt: TextData,
     updatedAt: TextData,
+    onSourceUrlClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val pagerState = rememberPagerState(pageCount = { 2 })
@@ -303,6 +318,7 @@ private fun RecipeDetailCompactContent(
                 recipe = recipe,
                 createdAt = createdAt,
                 updatedAt = updatedAt,
+                onSourceUrlClicked = onSourceUrlClicked,
                 modifier = Modifier.padding(horizontal = padding),
             )
         }
@@ -373,6 +389,7 @@ private fun ColumnScope.RecipeDetailExpandedContent(
     recipe: Recipe,
     createdAt: TextData,
     updatedAt: TextData,
+    onSourceUrlClicked: (String) -> Unit,
     metadataCollapsed: Boolean,
     onMetadataCollapsedChange: (Boolean) -> Unit,
 ) {
@@ -455,7 +472,7 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                 }
                 item { DetailsCard(recipe = recipe) }
                 recipe.sourceUrl?.let { sourceUrl ->
-                    item { SourceUrlCard(sourceUrl = sourceUrl) }
+                    item { SourceUrlCard(sourceUrl = sourceUrl, onSourceUrlClicked = onSourceUrlClicked) }
                 }
                 item { TimestampsCard(createdAt = createdAt, updatedAt = updatedAt) }
             }
@@ -685,9 +702,9 @@ private fun DetailsCard(
 @Composable
 private fun SourceUrlCard(
     sourceUrl: String,
+    onSourceUrlClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val uriHandler = LocalUriHandler.current
     Card(
         modifier = modifier.fillMaxWidth(),
     ) {
@@ -701,7 +718,7 @@ private fun SourceUrlCard(
             )
             Text(
                 text = sourceUrl,
-                modifier = Modifier.clickable { uriHandler.openUri(sourceUrl) },
+                modifier = Modifier.clickable { onSourceUrlClicked(sourceUrl) },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary,
                 textDecoration = TextDecoration.Underline,
@@ -718,6 +735,7 @@ private fun RecipeHeroSection(
     recipe: Recipe,
     createdAt: TextData,
     updatedAt: TextData,
+    onSourceUrlClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -795,10 +813,9 @@ private fun RecipeHeroSection(
 
             // Source URL
             recipe.sourceUrl?.let { sourceUrl ->
-                val uriHandler = LocalUriHandler.current
                 Text(
                     text = sourceUrl,
-                    modifier = Modifier.clickable { uriHandler.openUri(sourceUrl) },
+                    modifier = Modifier.clickable { onSourceUrlClicked(sourceUrl) },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary,
                     textDecoration = TextDecoration.Underline,
@@ -1074,6 +1091,14 @@ private val previewBloc =
         }
 
         override fun onAddToGroceryListClicked() {
+            TODO("Not yet implemented")
+        }
+
+        override fun onSourceUrlClicked(url: String) {
+            TODO("Not yet implemented")
+        }
+
+        override fun onDismissSheet() {
             TODO("Not yet implemented")
         }
 
