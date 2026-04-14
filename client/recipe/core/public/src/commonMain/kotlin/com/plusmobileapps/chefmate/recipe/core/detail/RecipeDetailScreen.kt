@@ -281,6 +281,7 @@ private fun RecipeDetailCompactContent(
                 recipe = recipe,
                 createdAt = createdAt,
                 updatedAt = updatedAt,
+                modifier = Modifier.padding(horizontal = padding),
             )
         }
 
@@ -291,6 +292,7 @@ private fun RecipeDetailCompactContent(
                     text = description,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = padding),
                 )
             }
         }
