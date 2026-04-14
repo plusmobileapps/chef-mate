@@ -10,6 +10,8 @@ kotlin {
             api(libs.arkivanov.decompose.core)
             api(libs.arkivanov.decompose.compose.extensions)
             api(libs.compose.material.expressive)
+            api(libs.coil.compose)
+            api(libs.coil.network.ktor3)
             implementation(compose.components.resources)
         }
     }
