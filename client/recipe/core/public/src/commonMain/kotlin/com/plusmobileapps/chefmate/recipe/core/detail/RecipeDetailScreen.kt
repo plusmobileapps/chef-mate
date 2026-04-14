@@ -275,47 +275,24 @@ private fun RecipeDetailCompactContent(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = spacedBy(padding),
     ) {
-        // Recipe Image
+        // Hero section: image + key details side by side
         item {
-            RecipeImage(
-                imageUrl = recipe.imageUrl,
-                contentDescription = recipe.title,
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .height(240.dp),
+            RecipeHeroSection(
+                recipe = recipe,
+                createdAt = createdAt,
+                updatedAt = updatedAt,
             )
         }
 
-        // Star Rating
-        recipe.starRating?.let { rating ->
-            item {
-                StarRating(rating = rating)
-            }
-        }
-
-        // Description
+        // Description below hero
         recipe.description?.let { description ->
             item {
-                DescriptionCard(description = description)
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
-        }
-
-        // Details
-        item {
-            DetailsCard(recipe = recipe)
-        }
-
-        // Source URL
-        recipe.sourceUrl?.let { sourceUrl ->
-            item {
-                SourceUrlCard(sourceUrl = sourceUrl)
-            }
-        }
-
-        // Timestamps
-        item {
-            TimestampsCard(createdAt = createdAt, updatedAt = updatedAt)
         }
 
         // Sticky TabRow
@@ -557,6 +534,122 @@ private fun SourceUrlCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary,
                 textDecoration = TextDecoration.Underline,
+            )
+        }
+    }
+}
+
+/**
+ * Compact hero: image on the left, key details stacked on the right.
+ */
+@Composable
+private fun RecipeHeroSection(
+    recipe: Recipe,
+    createdAt: TextData,
+    updatedAt: TextData,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        RecipeImage(
+            imageUrl = recipe.imageUrl,
+            contentDescription = recipe.title,
+            modifier =
+                Modifier
+                    .width(140.dp)
+                    .height(140.dp),
+        )
+        Column(
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            // Star Rating
+            recipe.starRating?.let { rating ->
+                StarRating(rating = rating)
+            }
+
+            // Key details inline
+            recipe.servings?.let { servings ->
+                DetailRow(
+                    icon = Icons.Default.Restaurant,
+                    label = stringResource(Res.string.recipe_detail_servings),
+                    value = "$servings",
+                )
+            }
+            recipe.prepTime?.let { prepTime ->
+                DetailRow(
+                    icon = Icons.Default.Timer,
+                    label = stringResource(Res.string.recipe_detail_prep_time),
+                    value =
+                        PhraseModel(
+                            Res.string.recipe_detail_minutes,
+                            "minutes" to FixedString(prepTime.toString()),
+                        ).localized(),
+                )
+            }
+            recipe.cookTime?.let { cookTime ->
+                DetailRow(
+                    icon = Icons.Default.Timer,
+                    label = stringResource(Res.string.recipe_detail_cook_time),
+                    value =
+                        PhraseModel(
+                            Res.string.recipe_detail_minutes,
+                            "minutes" to FixedString(cookTime.toString()),
+                        ).localized(),
+                )
+            }
+            recipe.totalTime?.let { totalTime ->
+                DetailRow(
+                    icon = Icons.Default.Timer,
+                    label = stringResource(Res.string.recipe_detail_total_time),
+                    value =
+                        PhraseModel(
+                            Res.string.recipe_detail_minutes,
+                            "minutes" to FixedString(totalTime.toString()),
+                        ).localized(),
+                )
+            }
+            recipe.calories?.let { calories ->
+                DetailRow(
+                    icon = Icons.Default.LocalFireDepartment,
+                    label = stringResource(Res.string.recipe_detail_calories),
+                    value =
+                        PhraseModel(
+                            Res.string.recipe_detail_kcal,
+                            "calories" to FixedString(calories.toString()),
+                        ).localized(),
+                )
+            }
+
+            // Source URL
+            recipe.sourceUrl?.let { sourceUrl ->
+                val uriHandler = LocalUriHandler.current
+                Text(
+                    text = sourceUrl,
+                    modifier = Modifier.clickable { uriHandler.openUri(sourceUrl) },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    textDecoration = TextDecoration.Underline,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                )
+            }
+
+            // Timestamps inline
+            Text(
+                text =
+                    stringResource(Res.string.recipe_detail_created) +
+                        " " + createdAt.localized(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text =
+                    stringResource(Res.string.recipe_detail_updated) +
+                        " " + updatedAt.localized(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
