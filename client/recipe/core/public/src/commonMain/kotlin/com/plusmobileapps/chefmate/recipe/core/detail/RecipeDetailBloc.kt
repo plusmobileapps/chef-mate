@@ -39,6 +39,9 @@ interface RecipeDetailBloc : BackClickBloc {
         val recipe: Recipe,
         val createdAt: TextData,
         val updatedAt: TextData,
+        val formattedPrepTime: TextData? = null,
+        val formattedCookTime: TextData? = null,
+        val formattedTotalTime: TextData? = null,
     )
 
     sealed class Output {

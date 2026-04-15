@@ -1,0 +1,6 @@
+<resources>
+    <!-- Time formatting -->
+    <string name="time_format_minutes">{minutes} min</string>
+    <string name="time_format_hours">{hours} hr</string>
+    <string name="time_format_hours_minutes">{hours} hr {minutes} min</string>
+</resources>

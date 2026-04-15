@@ -11,6 +11,7 @@ import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc.Output
 import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
+import com.plusmobileapps.chefmate.util.TimeFormatterUtil
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -24,6 +25,7 @@ class RecipeListBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: Provider<RecipeListViewModel>,
+    private val timeFormatterUtil: TimeFormatterUtil,
 ) : RecipeListBloc,
     BlocContext by context {
     @AssistedFactory
@@ -46,6 +48,7 @@ class RecipeListBlocImpl(
                 recipes = it.displayRecipes.map { recipe -> recipe.toRecipeListItem() },
                 currentSort = it.currentSort,
                 activeFilters = it.activeFilters,
+                isGridView = it.isGridView,
             )
         }
 
@@ -73,6 +76,10 @@ class RecipeListBlocImpl(
         viewModel.toggleFilter(filter)
     }
 
+    override fun onToggleViewMode() {
+        viewModel.toggleViewMode()
+    }
+
     private fun Recipe.toRecipeListItem(): RecipeListItem =
         RecipeListItem(
             id = id,
@@ -80,6 +87,11 @@ class RecipeListBlocImpl(
             description = description,
             imageUrl = imageUrl,
             starRating = starRating,
+            totalTime = totalTime,
+            formattedTotalTime = totalTime?.let { timeFormatterUtil.formatMinutes(it) },
+            servings = servings,
+            calories = calories,
+            isFavorite = isFavorite,
         )
 }
 

@@ -11,6 +11,14 @@
     <string name="recipe_list_sort_z_to_a">Z to A</string>
     <string name="recipe_list_sort_top_rated">Top Rated</string>
 
+    <!-- View Mode -->
+    <string name="recipe_list_view_grid">Grid view</string>
+    <string name="recipe_list_view_list">List view</string>
+
+    <!-- Recipe Info -->
+    <string name="recipe_list_item_servings">{servings} servings</string>
+    <string name="recipe_list_item_calories">{calories} cal</string>
+
     <!-- Filter -->
     <string name="recipe_list_filter">Filter</string>
     <string name="recipe_list_filter_favorites">Favorites</string>

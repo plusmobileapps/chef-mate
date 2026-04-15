@@ -19,11 +19,14 @@ interface RecipeListBloc {
 
     fun onFilterToggled(filter: RecipeFilterOption)
 
+    fun onToggleViewMode()
+
     data class Model(
         val recipes: List<RecipeListItem> = emptyList(),
         val isLoading: Boolean = false,
         val currentSort: RecipeSortOption = RecipeSortOption.RECENTLY_ADDED,
         val activeFilters: Set<RecipeFilterOption> = emptySet(),
+        val isGridView: Boolean = false,
     )
 
     sealed class Output {

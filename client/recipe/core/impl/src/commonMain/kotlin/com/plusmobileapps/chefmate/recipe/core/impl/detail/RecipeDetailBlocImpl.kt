@@ -17,6 +17,7 @@ import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc.Output
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.util.DateTimeUtil
+import com.plusmobileapps.chefmate.util.TimeFormatterUtil
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -33,6 +34,7 @@ class RecipeDetailBlocImpl(
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: RecipeDetailViewModel.Factory,
     private val dateTimeUtil: DateTimeUtil,
+    private val timeFormatterUtil: TimeFormatterUtil,
     private val addToGroceryList: AddRecipeToGroceryListBloc.Factory,
     private val browserBlocFactory: BrowserBloc.Factory,
 ) : RecipeDetailBloc,
@@ -93,6 +95,9 @@ class RecipeDetailBlocImpl(
                             instant = it.recipe.updatedAt,
                         ),
                     ),
+                formattedPrepTime = it.recipe.prepTime?.let { time -> timeFormatterUtil.formatMinutes(time) },
+                formattedCookTime = it.recipe.cookTime?.let { time -> timeFormatterUtil.formatMinutes(time) },
+                formattedTotalTime = it.recipe.totalTime?.let { time -> timeFormatterUtil.formatMinutes(time) },
             )
         }
 
