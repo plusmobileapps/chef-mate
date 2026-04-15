@@ -19,6 +19,4 @@ kotlin {
     }
 }
 
-plusLibrary {
-    namespace = "com.plusmobileapps.chefmate.recipe.bottomnav"
-}
+plusLibrary { namespace = "com.plusmobileapps.chefmate.recipe.bottomnav" }

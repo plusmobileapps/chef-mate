@@ -14,20 +14,12 @@ import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import dev.mokkery.verifySuspend
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
+import kotlinx.coroutines.test.runTest
 
 class GroceryDetailBlocTest {
-    val groceryItem =
-        GroceryItem(
-            id = 1L,
-            name = "Milk",
-            isChecked = false,
-        )
-    val repository: GroceryRepository =
-        mock {
-            everySuspend { getGrocery(1L) } returns groceryItem
-        }
+    val groceryItem = GroceryItem(id = 1L, name = "Milk", isChecked = false)
+    val repository: GroceryRepository = mock { everySuspend { getGrocery(1L) } returns groceryItem }
     val testConsumer = TestConsumer<GroceryDetailBloc.Output>()
 
     val bloc =
@@ -42,10 +34,7 @@ class GroceryDetailBlocTest {
     fun WHEN_grocery_loaded_THEN_update_state_with_grocery_details() {
         runTest {
             bloc.models.test {
-                awaitItem() shouldBe
-                    GroceryDetailBloc.Model.Loaded(
-                        item = groceryItem,
-                    )
+                awaitItem() shouldBe GroceryDetailBloc.Model.Loaded(item = groceryItem)
             }
         }
     }
@@ -56,9 +45,7 @@ class GroceryDetailBlocTest {
             bloc.onGroceryNameChanged("Bread")
             bloc.models.test {
                 awaitItem() shouldBe
-                    GroceryDetailBloc.Model.Loaded(
-                        item = groceryItem.copy(name = "Bread"),
-                    )
+                    GroceryDetailBloc.Model.Loaded(item = groceryItem.copy(name = "Bread"))
             }
         }
     }
@@ -69,9 +56,7 @@ class GroceryDetailBlocTest {
             bloc.onGroceryCheckedChanged(true)
             bloc.models.test {
                 awaitItem() shouldBe
-                    GroceryDetailBloc.Model.Loaded(
-                        item = groceryItem.copy(isChecked = true),
-                    )
+                    GroceryDetailBloc.Model.Loaded(item = groceryItem.copy(isChecked = true))
             }
         }
     }
@@ -88,11 +73,7 @@ class GroceryDetailBlocTest {
             bloc.models.test {
                 awaitItem() shouldBe
                     GroceryDetailBloc.Model.Loaded(
-                        GroceryItem(
-                            id = 1L,
-                            name = "Bread",
-                            isChecked = true,
-                        ),
+                        GroceryItem(id = 1L, name = "Bread", isChecked = true)
                     )
                 testConsumer.lastValue shouldBe GroceryDetailBloc.Output.Finished
             }

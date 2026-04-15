@@ -71,18 +71,12 @@ interface EditRecipeBloc : BackClickBloc {
     )
 
     sealed class Output {
-        data class Finished(
-            val recipeId: Long,
-        ) : Output()
+        data class Finished(val recipeId: Long) : Output()
 
         data object Cancelled : Output()
     }
 
     fun interface Factory {
-        fun create(
-            context: BlocContext,
-            recipeId: Long?,
-            output: Consumer<Output>,
-        ): EditRecipeBloc
+        fun create(context: BlocContext, recipeId: Long?, output: Consumer<Output>): EditRecipeBloc
     }
 }

@@ -30,15 +30,10 @@ interface BrowserBloc {
     )
 
     sealed class Output {
-        data class RecipeExtracted(
-            val recipeId: Long,
-        ) : Output()
+        data class RecipeExtracted(val recipeId: Long) : Output()
     }
 
     fun interface Factory {
-        fun create(
-            context: BlocContext,
-            output: Consumer<Output>,
-        ): BrowserBloc
+        fun create(context: BlocContext, output: Consumer<Output>): BrowserBloc
     }
 }

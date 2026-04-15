@@ -15,6 +15,4 @@ kotlin {
     }
 }
 
-plusLibrary {
-    namespace = "com.plusmobileapps.chefmate.recipe.list"
-}
+plusLibrary { namespace = "com.plusmobileapps.chefmate.recipe.list" }

@@ -15,9 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-/**
- * A container to embed with a [PlusNavContainer].
- */
+/** A container to embed with a [PlusNavContainer]. */
 @Composable
 fun PlusNavContainer(
     data: PlusHeaderData,
@@ -27,38 +25,21 @@ fun PlusNavContainer(
     content: @Composable ColumnScope.() -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier.fillMaxSize(),
-    ) {
-        PlusHeader(
-            data = data,
-            windowInsets = WindowInsets(),
-        )
+    Column(modifier = modifier.fillMaxSize()) {
+        PlusHeader(data = data, windowInsets = WindowInsets())
 
         val contentModifier =
             if (scrollEnabled) {
-                Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
+                Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             } else {
                 Modifier.fillMaxSize()
             }
 
-        Box(
-            modifier = Modifier.weight(1f).fillMaxWidth(),
-        ) {
-            Column(
-                modifier = contentModifier,
-                verticalArrangement = verticalArrangement,
-            ) {
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            Column(modifier = contentModifier, verticalArrangement = verticalArrangement) {
                 content()
             }
-            Box(
-                modifier =
-                    Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 8.dp),
-            ) {
+            Box(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp)) {
                 snackbarHost()
             }
         }

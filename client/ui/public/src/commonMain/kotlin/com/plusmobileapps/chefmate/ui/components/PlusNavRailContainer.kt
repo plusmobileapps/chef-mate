@@ -48,9 +48,7 @@ fun PlusNavRailHeaderContainer(
     val density = LocalDensity.current
 
     PlusResponsiveContainer(modifier = modifier.fillMaxSize()) { windowSize ->
-        Row(
-            modifier = modifier.fillMaxSize(),
-        ) {
+        Row(modifier = modifier.fillMaxSize()) {
             NavigationRail(
                 modifier = Modifier.fillMaxHeight(),
                 windowInsets =
@@ -63,8 +61,7 @@ fun PlusNavRailHeaderContainer(
                 content = {
                     when (windowSize) {
                         WindowSizeClass.COMPACT,
-                        WindowSizeClass.MEDIUM,
-                        -> {
+                        WindowSizeClass.MEDIUM -> {
                             navRail.forEach { item ->
                                 NavigationRailItem(
                                     selected = item.selected,
@@ -91,18 +88,14 @@ fun PlusNavRailHeaderContainer(
                 contentColor = ChefMateTheme.colorScheme.onSurface,
             )
 
-            Box(
-                modifier = Modifier.weight(1f),
-            ) {
+            Box(modifier = Modifier.weight(1f)) {
                 val paddingValues: PaddingValues =
                     with(density) {
                         PaddingValues.Absolute(
                             right =
                                 WindowInsets.displayCutout
-                                    .getRight(
-                                        density,
-                                        LayoutDirection.Ltr,
-                                    ).toDp(),
+                                    .getRight(density, LayoutDirection.Ltr)
+                                    .toDp(),
                             top = WindowInsets.statusBars.getTop(density).toDp(),
                             bottom = WindowInsets.navigationBars.getBottom(density).toDp(),
                         )

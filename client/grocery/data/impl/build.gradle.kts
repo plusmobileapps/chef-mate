@@ -15,15 +15,9 @@ kotlin {
             implementation(libs.supabase.postgrest)
             implementation(libs.kotlinx.serialization.json)
         }
-        jvmMain.dependencies {
-            implementation(libs.ktor.client.cio)
-        }
-        androidMain.dependencies {
-            implementation(libs.ktor.client.cio)
-        }
-        iosMain.dependencies {
-            implementation(libs.ktor.client.darwin)
-        }
+        jvmMain.dependencies { implementation(libs.ktor.client.cio) }
+        androidMain.dependencies { implementation(libs.ktor.client.cio) }
+        iosMain.dependencies { implementation(libs.ktor.client.darwin) }
     }
 }
 

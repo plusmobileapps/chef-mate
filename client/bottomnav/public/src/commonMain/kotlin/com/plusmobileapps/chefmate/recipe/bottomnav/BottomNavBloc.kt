@@ -12,19 +12,14 @@ import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.settings.SettingsBloc
 import kotlinx.coroutines.flow.StateFlow
 
-interface BottomNavBloc :
-    BackHandlerOwner,
-    BackClickBloc {
+interface BottomNavBloc : BackHandlerOwner, BackClickBloc {
     val state: StateFlow<Model>
 
     val content: Value<ChildStack<*, Child>>
 
     fun onTabSelected(tab: Tab)
 
-    data class Model(
-        val selectedTab: Tab = Tab.RECIPES,
-        val tabs: List<Tab> = Tab.entries,
-    )
+    data class Model(val selectedTab: Tab = Tab.RECIPES, val tabs: List<Tab> = Tab.entries)
 
     enum class Tab {
         RECIPES,
@@ -34,33 +29,21 @@ interface BottomNavBloc :
     }
 
     sealed class Child {
-        data class RecipeList(
-            val bloc: RecipeListBloc,
-        ) : Child()
+        data class RecipeList(val bloc: RecipeListBloc) : Child()
 
-        data class GroceryList(
-            val bloc: GroceryListBloc,
-        ) : Child()
+        data class GroceryList(val bloc: GroceryListBloc) : Child()
 
-        data class Browser(
-            val bloc: BrowserBloc,
-        ) : Child()
+        data class Browser(val bloc: BrowserBloc) : Child()
 
-        data class Settings(
-            val bloc: SettingsBloc,
-        ) : Child()
+        data class Settings(val bloc: SettingsBloc) : Child()
     }
 
     sealed class Output {
-        data class OpenRecipe(
-            val recipeId: Long,
-        ) : Output()
+        data class OpenRecipe(val recipeId: Long) : Output()
 
         object AddNewRecipe : Output()
 
-        data class OpenGrocery(
-            val groceryId: Long,
-        ) : Output()
+        data class OpenGrocery(val groceryId: Long) : Output()
 
         data object OpenSignIn : Output()
 
@@ -68,9 +51,6 @@ interface BottomNavBloc :
     }
 
     fun interface Factory {
-        fun create(
-            context: BlocContext,
-            output: Consumer<Output>,
-        ): BottomNavBloc
+        fun create(context: BlocContext, output: Consumer<Output>): BottomNavBloc
     }
 }

@@ -26,10 +26,7 @@ class RealTimeFormatterUtil : TimeFormatterUtil {
                     "minutes" to FixedString(minutes.toString()),
                 )
             hours > 0 ->
-                PhraseModel(
-                    Res.string.time_format_hours,
-                    "hours" to FixedString(hours.toString()),
-                )
+                PhraseModel(Res.string.time_format_hours, "hours" to FixedString(hours.toString()))
             else ->
                 PhraseModel(
                     Res.string.time_format_minutes,

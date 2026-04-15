@@ -36,10 +36,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun BrowserScreen(
-    bloc: BrowserBloc,
-    modifier: Modifier = Modifier,
-) {
+fun BrowserScreen(bloc: BrowserBloc, modifier: Modifier = Modifier) {
     val viewState by bloc.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -70,12 +67,9 @@ fun BrowserScreen(
                 url = viewState.navigateUrl,
                 onUrlLoaded = bloc::onUrlLoadedInWebView,
                 instanceKeeper = bloc.instanceKeeper,
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
+                modifier = Modifier.fillMaxWidth().weight(1f),
             )
-        }
+        },
     )
 }
 
@@ -90,10 +84,7 @@ private fun AddressBar(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         OutlinedTextField(
@@ -103,14 +94,8 @@ private fun AddressBar(
             placeholder = { Text(stringResource(Res.string.browser_address_hint)) },
             singleLine = true,
             keyboardOptions =
-                KeyboardOptions(
-                    keyboardType = KeyboardType.Uri,
-                    imeAction = ImeAction.Go,
-                ),
-            keyboardActions =
-                KeyboardActions(
-                    onGo = { onNavigate() },
-                ),
+                KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Go),
+            keyboardActions = KeyboardActions(onGo = { onNavigate() }),
         )
         IconButton(onClick = onNavigate) {
             Icon(

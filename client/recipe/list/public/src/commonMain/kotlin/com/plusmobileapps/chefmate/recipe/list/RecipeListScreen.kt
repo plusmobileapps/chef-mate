@@ -74,10 +74,7 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun RecipeListScreen(
-    bloc: RecipeListBloc,
-    modifier: Modifier = Modifier,
-) {
+fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
     var showSortMenu by remember { mutableStateOf(false) }
     var showFilterMenu by remember { mutableStateOf(false) }
@@ -92,14 +89,15 @@ fun RecipeListScreen(
                         IconButton(onClick = bloc::onToggleViewMode) {
                             Icon(
                                 imageVector =
-                                    if (state.isGridView) Icons.AutoMirrored.Filled.ViewList else Icons.Default.GridView,
+                                    if (state.isGridView) Icons.AutoMirrored.Filled.ViewList
+                                    else Icons.Default.GridView,
                                 contentDescription =
                                     stringResource(
                                         if (state.isGridView) {
                                             Res.string.recipe_list_view_list
                                         } else {
                                             Res.string.recipe_list_view_grid
-                                        },
+                                        }
                                     ),
                             )
                         }
@@ -140,7 +138,8 @@ fun RecipeListScreen(
                             IconButton(onClick = { showFilterMenu = true }) {
                                 Icon(
                                     imageVector = Icons.Default.FilterList,
-                                    contentDescription = stringResource(Res.string.recipe_list_filter),
+                                    contentDescription =
+                                        stringResource(Res.string.recipe_list_filter),
                                     tint =
                                         if (state.activeFilters.isNotEmpty()) {
                                             MaterialTheme.colorScheme.primary
@@ -176,7 +175,8 @@ fun RecipeListScreen(
                         IconButton(onClick = bloc::onAddRecipeClicked) {
                             Icon(
                                 imageVector = Icons.Default.Add,
-                                contentDescription = stringResource(Res.string.recipe_list_add_recipe),
+                                contentDescription =
+                                    stringResource(Res.string.recipe_list_add_recipe),
                             )
                         }
                     },
@@ -233,10 +233,7 @@ private fun RecipeGrid(
     ) {
         items(recipes.size, key = { recipes[it].id }) { index ->
             val recipe = recipes[index]
-            RecipeGridItem(
-                recipe = recipe,
-                onClick = { onRecipeClicked(recipe) },
-            )
+            RecipeGridItem(recipe = recipe, onClick = { onRecipeClicked(recipe) })
         }
     }
 }
@@ -251,9 +248,7 @@ private fun RecipeGridItem(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         colors =
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            ),
+            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
     ) {
         RecipeImage(
             imageUrl = recipe.imageUrl,
@@ -286,15 +281,10 @@ private fun RecipeList(
     onRecipeClicked: (RecipeListItem) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    LazyColumn(
-        modifier = modifier.fillMaxWidth(),
-    ) {
+    LazyColumn(modifier = modifier.fillMaxWidth()) {
         items(recipes.size, key = { recipes[it].id }) { index ->
             val recipe = recipes[index]
-            RecipeListItemContent(
-                recipe = recipe,
-                onClick = { onRecipeClicked(recipe) },
-            )
+            RecipeListItemContent(recipe = recipe, onClick = { onRecipeClicked(recipe) })
         }
     }
 }
@@ -307,11 +297,7 @@ private fun RecipeListItemContent(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .clickable(onClick = onClick)
-                .padding(16.dp),
+        modifier = modifier.fillMaxWidth().clickable(onClick = onClick).padding(16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -320,10 +306,7 @@ private fun RecipeListItemContent(
             contentDescription = recipe.title,
             modifier = Modifier.size(80.dp),
         )
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -370,9 +353,10 @@ private fun RecipeListItemContent(
                         icon = Icons.Outlined.Restaurant,
                         label =
                             PhraseModel(
-                                Res.string.recipe_list_item_servings,
-                                "servings" to FixedString(servings.toString()),
-                            ).localized(),
+                                    Res.string.recipe_list_item_servings,
+                                    "servings" to FixedString(servings.toString()),
+                                )
+                                .localized(),
                     )
                 }
                 recipe.calories?.let { calories ->
@@ -380,9 +364,10 @@ private fun RecipeListItemContent(
                         icon = Icons.Outlined.LocalFireDepartment,
                         label =
                             PhraseModel(
-                                Res.string.recipe_list_item_calories,
-                                "calories" to FixedString(calories.toString()),
-                            ).localized(),
+                                    Res.string.recipe_list_item_calories,
+                                    "calories" to FixedString(calories.toString()),
+                                )
+                                .localized(),
                     )
                 }
             }

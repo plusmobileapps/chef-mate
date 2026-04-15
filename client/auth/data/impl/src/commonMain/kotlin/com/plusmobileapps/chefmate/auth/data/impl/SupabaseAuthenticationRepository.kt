@@ -4,22 +4,22 @@ import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.auth.data.ChefMateUser
 import com.plusmobileapps.chefmate.auth.data.SignUpResult
+import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.Main
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.auth.user.UserInfo
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import com.plusmobileapps.chefmate.di.AppScope
-import dev.zacsweers.metro.ContributesBinding
-import dev.zacsweers.metro.Inject
-import dev.zacsweers.metro.SingleIn
-import kotlin.coroutines.CoroutineContext
 
 @Inject
 @SingleIn(AppScope::class)
@@ -40,16 +40,13 @@ class SupabaseAuthenticationRepository(
                 when (sessionStatus) {
                     is SessionStatus.Authenticated -> {
                         val user = sessionStatus.session.user
-                        user?.let {
-                            _state.value = AuthState.Authenticated(it.toChefMateUser())
-                        }
+                        user?.let { _state.value = AuthState.Authenticated(it.toChefMateUser()) }
                     }
                     is SessionStatus.NotAuthenticated -> {
                         _state.value = AuthState.Unauthenticated
                     }
                     is SessionStatus.Initializing,
-                    is SessionStatus.RefreshFailure,
-                    -> {
+                    is SessionStatus.RefreshFailure -> {
                         // Keep current state during initialization or refresh failures
                     }
                 }
@@ -57,10 +54,7 @@ class SupabaseAuthenticationRepository(
         }
     }
 
-    override suspend fun signInWithEmailAndPassword(
-        email: String,
-        password: String,
-    ): Result<Unit> =
+    override suspend fun signInWithEmailAndPassword(email: String, password: String): Result<Unit> =
         try {
             supabaseClient.auth.signInWith(Email) {
                 this.email = email

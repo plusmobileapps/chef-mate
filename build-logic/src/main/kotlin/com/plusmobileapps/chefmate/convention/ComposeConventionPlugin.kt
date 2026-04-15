@@ -3,12 +3,12 @@ package com.plusmobileapps.chefmate.convention
 import com.plusmobileapps.chefmate.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.getByType
-import org.gradle.kotlin.dsl.configure
-import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.compose.ComposeExtension
 import org.jetbrains.compose.ComposePlugin
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 class ComposeConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {

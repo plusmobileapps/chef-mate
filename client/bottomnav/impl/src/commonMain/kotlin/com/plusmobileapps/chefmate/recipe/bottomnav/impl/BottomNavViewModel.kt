@@ -7,16 +7,14 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.BROWSER
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.GROCERIES
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.RECIPES
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.SETTINGS
+import dev.zacsweers.metro.Inject
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import dev.zacsweers.metro.Inject
-import kotlin.coroutines.CoroutineContext
 
 @Inject
-class BottomNavViewModel(
-    @Main mainContext: CoroutineContext,
-) : ViewModel(mainContext) {
+class BottomNavViewModel(@Main mainContext: CoroutineContext) : ViewModel(mainContext) {
     private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state.asStateFlow()
 

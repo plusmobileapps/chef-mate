@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.grocery.core.impl.detail
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,7 +11,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import kotlin.coroutines.CoroutineContext
 
 class GroceryDetailViewModel(
     id: Long,
@@ -34,17 +34,12 @@ class GroceryDetailViewModel(
     }
 
     fun onGroceryNameChanged(name: String) {
-        _state.value =
-            _state.value.copy(
-                groceryItem = _state.value.groceryItem.copy(name = name),
-            )
+        _state.value = _state.value.copy(groceryItem = _state.value.groceryItem.copy(name = name))
     }
 
     fun onGroceryCheckedChanged(isChecked: Boolean) {
         _state.value =
-            _state.value.copy(
-                groceryItem = _state.value.groceryItem.copy(isChecked = isChecked),
-            )
+            _state.value.copy(groceryItem = _state.value.groceryItem.copy(isChecked = isChecked))
     }
 
     fun save() {

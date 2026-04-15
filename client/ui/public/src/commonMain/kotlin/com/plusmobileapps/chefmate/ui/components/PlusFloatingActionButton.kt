@@ -26,10 +26,7 @@ fun PlusFloatingActionButton(
         Text(text = text)
         if (icon != null) {
             Spacer(Modifier.width(ChefMateTheme.dimens.paddingNormal))
-            Icon(
-                painter = icon,
-                contentDescription = null,
-            )
+            Icon(painter = icon, contentDescription = null)
         }
     }
 }
@@ -49,10 +46,7 @@ fun PlusFloatingActionButton(
         text?.let { Text(text = text) }
         if (icon != null) {
             Spacer(Modifier.width(ChefMateTheme.dimens.paddingNormal))
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-            )
+            Icon(imageVector = icon, contentDescription = null)
         }
     }
 }

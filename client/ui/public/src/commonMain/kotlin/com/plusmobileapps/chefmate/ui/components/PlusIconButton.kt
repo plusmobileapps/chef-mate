@@ -36,11 +36,7 @@ fun PlusIconButton(
 
     Box(
         modifier =
-            modifier
-                .size(size)
-                .clip(CircleShape)
-                .background(bgColor)
-                .clickable(onClick = onClick),
+            modifier.size(size).clip(CircleShape).background(bgColor).clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Icon(

@@ -11,9 +11,9 @@ import com.arkivanov.essenty.lifecycle.doOnPause
 import com.arkivanov.essenty.lifecycle.doOnResume
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
-import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
@@ -27,11 +27,11 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenSig
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.settings.SettingsBloc
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.Provider
+import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 
@@ -44,8 +44,7 @@ class BottomNavBlocImpl(
     private val groceryList: GroceryListBloc.Factory,
     private val recipeList: RecipeListBloc.Factory,
     private val settings: SettingsBloc.Factory,
-) : BottomNavBloc,
-    BlocContext by context {
+) : BottomNavBloc, BlocContext by context {
 
     @AssistedFactory
     fun interface ManagedFactory {
@@ -62,9 +61,7 @@ class BottomNavBlocImpl(
         childStack(
             source = navigation,
             serializer = Configuration.serializer(),
-            initialStack = {
-                listOf(Configuration.Recipe)
-            },
+            initialStack = { listOf(Configuration.Recipe) },
             handleBackButton = true,
             key = "BottomNavRouter",
             childFactory = ::createChild,
@@ -76,10 +73,7 @@ class BottomNavBlocImpl(
 
     override val state: StateFlow<BottomNavBloc.Model> =
         viewModel.state.mapState {
-            BottomNavBloc.Model(
-                selectedTab = it.selectedTab,
-                tabs = it.tabs,
-            )
+            BottomNavBloc.Model(selectedTab = it.selectedTab, tabs = it.tabs)
         }
 
     override val content: Value<ChildStack<*, BottomNavBloc.Child>> = stack
@@ -106,38 +100,21 @@ class BottomNavBlocImpl(
     ): BottomNavBloc.Child =
         when (configuration) {
             Configuration.Recipe -> {
-                RecipeList(
-                    recipeList.create(
-                        context = context,
-                        output = ::handleRecipeListOutput,
-                    ),
-                )
+                RecipeList(recipeList.create(context = context, output = ::handleRecipeListOutput))
             }
 
             Configuration.Browser -> {
-                val bloc =
-                    browser.create(
-                        context = context,
-                        output = ::handleBrowserOutput,
-                    )
+                val bloc = browser.create(context = context, output = ::handleBrowserOutput)
                 Browser(bloc)
             }
 
             Configuration.Grocery -> {
-                val bloc =
-                    groceryList.create(
-                        context = context,
-                        output = ::handleGroceryListOutput,
-                    )
+                val bloc = groceryList.create(context = context, output = ::handleGroceryListOutput)
                 GroceryList(bloc)
             }
 
             Configuration.Settings -> {
-                val bloc =
-                    settings.create(
-                        context = context,
-                        output = ::handleSettingsOutput,
-                    )
+                val bloc = settings.create(context = context, output = ::handleSettingsOutput)
                 Settings(bloc)
             }
         }
@@ -173,23 +150,20 @@ class BottomNavBlocImpl(
         when (output) {
             SettingsBloc.Output.OpenSignIn -> OpenSignIn
             SettingsBloc.Output.OpenSignUp -> OpenSignUp
-        }.let {
-            this.output.onNext(it)
-        }
+        }.let { this.output.onNext(it) }
     }
 
     private fun observeRouter() {
         var cancellation: Cancellation? = null
         lifecycle.doOnResume {
-            cancellation =
-                stack.subscribe { value ->
-                    when (value.active.instance) {
-                        is Browser -> BottomNavBloc.Tab.BROWSER
-                        is BottomNavBloc.Child.GroceryList -> BottomNavBloc.Tab.GROCERIES
-                        is BottomNavBloc.Child.RecipeList -> BottomNavBloc.Tab.RECIPES
-                        is Settings -> BottomNavBloc.Tab.SETTINGS
-                    }.let(viewModel::selectTab)
-                }
+            cancellation = stack.subscribe { value ->
+                when (value.active.instance) {
+                    is Browser -> BottomNavBloc.Tab.BROWSER
+                    is BottomNavBloc.Child.GroceryList -> BottomNavBloc.Tab.GROCERIES
+                    is BottomNavBloc.Child.RecipeList -> BottomNavBloc.Tab.RECIPES
+                    is Settings -> BottomNavBloc.Tab.SETTINGS
+                }.let(viewModel::selectTab)
+            }
         }
         lifecycle.doOnPause {
             cancellation?.cancel()
@@ -199,23 +173,22 @@ class BottomNavBlocImpl(
 
     @Serializable
     private sealed class Configuration {
-        @Serializable
-        data object Recipe : Configuration()
+        @Serializable data object Recipe : Configuration()
 
-        @Serializable
-        data object Grocery : Configuration()
+        @Serializable data object Grocery : Configuration()
 
-        @Serializable
-        data object Browser : Configuration()
+        @Serializable data object Browser : Configuration()
 
-        @Serializable
-        data object Settings : Configuration()
+        @Serializable data object Settings : Configuration()
     }
 }
 
 @ContributesTo(AppScope::class)
 interface BottomNavBlocBindingModule {
     @Provides
-    fun provideBottomNavBlocFactory(factory: BottomNavBlocImpl.ManagedFactory): BottomNavBloc.Factory =
-        BottomNavBloc.Factory { context, output -> factory.create(context, output) }
+    fun provideBottomNavBlocFactory(
+        factory: BottomNavBlocImpl.ManagedFactory
+    ): BottomNavBloc.Factory = BottomNavBloc.Factory { context, output ->
+        factory.create(context, output)
+    }
 }

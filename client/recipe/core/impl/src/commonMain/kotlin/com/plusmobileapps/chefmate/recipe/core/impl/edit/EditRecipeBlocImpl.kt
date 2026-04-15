@@ -25,8 +25,7 @@ class EditRecipeBlocImpl(
     @Assisted recipeId: Long?,
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: EditRecipeViewModel.Factory,
-) : EditRecipeBloc,
-    BlocContext by context {
+) : EditRecipeBloc, BlocContext by context {
     @AssistedFactory
     fun interface ManagedFactory {
         fun create(
@@ -38,10 +37,9 @@ class EditRecipeBlocImpl(
 
     private val scope = createScope()
 
-    private val viewModel: EditRecipeViewModel =
-        instanceKeeper.getViewModel {
-            viewModelFactory.create(recipeId)
-        }
+    private val viewModel: EditRecipeViewModel = instanceKeeper.getViewModel {
+        viewModelFactory.create(recipeId)
+    }
 
     override val state: StateFlow<EditRecipeBloc.Model> =
         viewModel.state.mapState {
@@ -154,6 +152,9 @@ class EditRecipeBlocImpl(
 @ContributesTo(AppScope::class)
 interface EditRecipeBlocBindingModule {
     @Provides
-    fun provideEditRecipeBlocFactory(factory: EditRecipeBlocImpl.ManagedFactory): EditRecipeBloc.Factory =
-        EditRecipeBloc.Factory { context, recipeId, output -> factory.create(context, recipeId, output) }
+    fun provideEditRecipeBlocFactory(
+        factory: EditRecipeBlocImpl.ManagedFactory
+    ): EditRecipeBloc.Factory = EditRecipeBloc.Factory { context, recipeId, output ->
+        factory.create(context, recipeId, output)
+    }
 }

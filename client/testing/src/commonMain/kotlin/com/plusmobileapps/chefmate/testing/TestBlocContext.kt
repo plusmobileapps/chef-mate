@@ -13,11 +13,11 @@ import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import com.arkivanov.essenty.lifecycle.resume
 import com.arkivanov.essenty.statekeeper.StateKeeperOwner
 import com.plusmobileapps.chefmate.BlocContext
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlin.coroutines.CoroutineContext
 
 class TestBlocContext(
     componentContext: ComponentContext,
@@ -25,28 +25,30 @@ class TestBlocContext(
     override val defaultContext: CoroutineContext = UnconfinedTestDispatcher(),
     override val mainContext: CoroutineContext = UnconfinedTestDispatcher(),
     override val unconfinedContext: CoroutineContext = UnconfinedTestDispatcher(),
-) : BlocContext,
+) :
+    BlocContext,
     LifecycleOwner by componentContext,
     StateKeeperOwner by componentContext,
     InstanceKeeperOwner by componentContext,
     BackHandlerOwner by componentContext {
     override val componentContextFactory: ComponentContextFactory<BlocContext> =
         ComponentContextFactory { lifecycle, stateKeeper, instanceKeeper, backHandler ->
-            val ctx = componentContext.componentContextFactory(lifecycle, stateKeeper, instanceKeeper, backHandler)
-            TestBlocContext(
-                componentContext = ctx,
-            )
+            val ctx =
+                componentContext.componentContextFactory(
+                    lifecycle,
+                    stateKeeper,
+                    instanceKeeper,
+                    backHandler,
+                )
+            TestBlocContext(componentContext = ctx)
         }
 
     override fun createScope(): CoroutineScope = coroutineScope(mainContext + SupervisorJob())
 
     companion object {
-        fun create(lifecycle: LifecycleRegistry = LifecycleRegistry().apply { resume() }): TestBlocContext =
-            TestBlocContext(
-                componentContext =
-                    DefaultComponentContext(
-                        lifecycle = lifecycle,
-                    ),
-            )
+        fun create(
+            lifecycle: LifecycleRegistry = LifecycleRegistry().apply { resume() }
+        ): TestBlocContext =
+            TestBlocContext(componentContext = DefaultComponentContext(lifecycle = lifecycle))
     }
 }

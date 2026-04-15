@@ -25,7 +25,7 @@ fun Modifier.scaffoldContentInsetPadding(): Modifier {
                 PaddingValues.Absolute(
                     left = windowInsets.getLeft(density, LayoutDirection.Ltr).toDp(),
                     right = windowInsets.getRight(density, LayoutDirection.Ltr).toDp(),
-                ),
+                )
         )
     }
 }
@@ -33,24 +33,16 @@ fun Modifier.scaffoldContentInsetPadding(): Modifier {
 @Composable
 fun Modifier.floatingToolbarPadding(): Modifier {
     val density = LocalDensity.current
-    val statusBarHeight =
-        with(density) {
-            WindowInsets.navigationBars.getBottom(density).toDp()
-        }
+    val statusBarHeight = with(density) { WindowInsets.navigationBars.getBottom(density).toDp() }
     return this.padding(bottom = statusBarHeight)
 }
 
-/**
- * To be used in a [Scaffold] content window insets that is a child in bottom navigation.
- */
+/** To be used in a [Scaffold] content window insets that is a child in bottom navigation. */
 @Composable
 fun ScaffoldContentWindowInsets(): WindowInsets {
     val density = LocalDensity.current
     return WindowInsets(
-        top =
-            with(density) {
-                WindowInsets.statusBars.getTop(density).toDp()
-            },
+        top = with(density) { WindowInsets.statusBars.getTop(density).toDp() },
         bottom = 0.dp,
         right =
             with(density) {

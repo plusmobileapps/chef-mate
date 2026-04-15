@@ -10,17 +10,16 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsText
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlin.coroutines.CoroutineContext
 
 data class ExtractedRecipe(
     val title: String,
@@ -43,9 +42,8 @@ interface RecipeExtractorService {
 @SingleIn(AppScope::class)
 @Inject
 @ContributesBinding(AppScope::class)
-class RecipeExtractorServiceImpl(
-    @IO private val ioContext: CoroutineContext,
-) : RecipeExtractorService {
+class RecipeExtractorServiceImpl(@IO private val ioContext: CoroutineContext) :
+    RecipeExtractorService {
 
     private val httpClient = HttpClient()
 
@@ -53,9 +51,10 @@ class RecipeExtractorServiceImpl(
 
     override suspend fun extractRecipe(url: String): ExtractedRecipe =
         withContext(ioContext) {
-            val html = httpClient.get(url) {
-                header("User-Agent", "Mozilla/5.0 (compatible; ChefMate/1.0)")
-            }.bodyAsText()
+            val html =
+                httpClient
+                    .get(url) { header("User-Agent", "Mozilla/5.0 (compatible; ChefMate/1.0)") }
+                    .bodyAsText()
 
             val document = Ksoup.parse(html)
             val jsonLdScripts = document.select("script[type=application/ld+json]")
@@ -78,13 +77,12 @@ class RecipeExtractorServiceImpl(
         return when (element) {
             is JsonObject -> {
                 val type = element["@type"]
-                val isRecipe = when {
-                    type == null -> false
-                    type is JsonArray -> type.any {
-                        it.jsonPrimitive.contentOrNull == "Recipe"
+                val isRecipe =
+                    when {
+                        type == null -> false
+                        type is JsonArray -> type.any { it.jsonPrimitive.contentOrNull == "Recipe" }
+                        else -> type.jsonPrimitive.contentOrNull == "Recipe"
                     }
-                    else -> type.jsonPrimitive.contentOrNull == "Recipe"
-                }
                 if (isRecipe) {
                     element
                 } else {
@@ -106,17 +104,18 @@ class RecipeExtractorServiceImpl(
         val title = obj["name"]?.jsonPrimitive?.contentOrNull ?: ""
         val description = obj["description"]?.jsonPrimitive?.contentOrNull
 
-        val ingredients = obj["recipeIngredient"]?.jsonArray
-            ?.mapNotNull { it.jsonPrimitive.contentOrNull }
-            ?: emptyList()
+        val ingredients =
+            obj["recipeIngredient"]?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull }
+                ?: emptyList()
 
         val directions = parseDirections(obj)
 
-        val imageUrl = when (val img = obj["image"]) {
-            is JsonArray -> img.firstOrNull()?.let { extractImageUrl(it) }
-            is JsonObject -> extractImageUrl(img)
-            else -> img?.jsonPrimitive?.contentOrNull
-        }
+        val imageUrl =
+            when (val img = obj["image"]) {
+                is JsonArray -> img.firstOrNull()?.let { extractImageUrl(it) }
+                is JsonObject -> extractImageUrl(img)
+                else -> img?.jsonPrimitive?.contentOrNull
+            }
 
         val servings = parseServings(obj)
         val prepTime = parseDuration(obj["prepTime"]?.jsonPrimitive?.contentOrNull)
@@ -142,19 +141,23 @@ class RecipeExtractorServiceImpl(
     private fun parseDirections(obj: JsonObject): List<String> {
         val instructions = obj["recipeInstructions"] ?: return emptyList()
         return when (instructions) {
-            is JsonArray -> instructions.flatMap { element ->
-                when {
-                    element is JsonObject && element["@type"]?.jsonPrimitive?.contentOrNull == "HowToStep" ->
-                        listOfNotNull(element["text"]?.jsonPrimitive?.contentOrNull)
-                    element is JsonObject && element["@type"]?.jsonPrimitive?.contentOrNull == "HowToSection" -> {
-                        val items = element["itemListElement"]?.jsonArray ?: return@flatMap emptyList()
-                        items.mapNotNull { item ->
-                            item.jsonObject["text"]?.jsonPrimitive?.contentOrNull
+            is JsonArray ->
+                instructions.flatMap { element ->
+                    when {
+                        element is JsonObject &&
+                            element["@type"]?.jsonPrimitive?.contentOrNull == "HowToStep" ->
+                            listOfNotNull(element["text"]?.jsonPrimitive?.contentOrNull)
+                        element is JsonObject &&
+                            element["@type"]?.jsonPrimitive?.contentOrNull == "HowToSection" -> {
+                            val items =
+                                element["itemListElement"]?.jsonArray ?: return@flatMap emptyList()
+                            items.mapNotNull { item ->
+                                item.jsonObject["text"]?.jsonPrimitive?.contentOrNull
+                            }
                         }
+                        else -> listOfNotNull(element.jsonPrimitive.contentOrNull)
                     }
-                    else -> listOfNotNull(element.jsonPrimitive.contentOrNull)
                 }
-            }
             else -> listOfNotNull(instructions.jsonPrimitive.contentOrNull)
         }
     }
@@ -168,17 +171,24 @@ class RecipeExtractorServiceImpl(
     private fun parseServings(obj: JsonObject): Int? {
         val yield = obj["recipeYield"] ?: return null
         return when (yield) {
-            is JsonArray -> yield.firstOrNull()?.jsonPrimitive?.contentOrNull
-                ?.filter { it.isDigit() }?.toIntOrNull()
-            else -> yield.jsonPrimitive.contentOrNull
-                ?.filter { it.isDigit() }?.toIntOrNull()
+            is JsonArray ->
+                yield
+                    .firstOrNull()
+                    ?.jsonPrimitive
+                    ?.contentOrNull
+                    ?.filter { it.isDigit() }
+                    ?.toIntOrNull()
+            else -> yield.jsonPrimitive.contentOrNull?.filter { it.isDigit() }?.toIntOrNull()
         }
     }
 
     private fun parseCalories(obj: JsonObject): Int? {
         val nutrition = obj["nutrition"]?.jsonObject ?: return null
-        return nutrition["calories"]?.jsonPrimitive?.contentOrNull
-            ?.filter { it.isDigit() }?.toIntOrNull()
+        return nutrition["calories"]
+            ?.jsonPrimitive
+            ?.contentOrNull
+            ?.filter { it.isDigit() }
+            ?.toIntOrNull()
     }
 
     companion object {

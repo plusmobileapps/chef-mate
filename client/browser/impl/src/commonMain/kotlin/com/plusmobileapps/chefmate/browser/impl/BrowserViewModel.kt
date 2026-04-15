@@ -8,12 +8,12 @@ import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import dev.zacsweers.metro.Inject
+import kotlin.coroutines.CoroutineContext
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlin.coroutines.CoroutineContext
-import kotlin.time.Instant
 
 @Inject
 class BrowserViewModel(
@@ -37,17 +37,11 @@ class BrowserViewModel(
 
     fun onNavigate() {
         val url = _state.value.addressBarText.ensureHttps()
-        _state.value = _state.value.copy(
-            currentUrl = url,
-            addressBarText = url,
-        )
+        _state.value = _state.value.copy(currentUrl = url, addressBarText = url)
     }
 
     fun onUrlLoadedInWebView(url: String) {
-        _state.value = _state.value.copy(
-            webViewReportedUrl = url,
-            addressBarText = url,
-        )
+        _state.value = _state.value.copy(webViewReportedUrl = url, addressBarText = url)
     }
 
     fun extractRecipe() {
@@ -59,37 +53,40 @@ class BrowserViewModel(
         scope.launch {
             try {
                 val extracted = recipeExtractorService.extractRecipe(url)
-                val recipe = recipeRepository.createRecipe(
-                    Recipe(
-                        id = -1,
-                        title = extracted.title,
-                        description = extracted.description,
-                        ingredients = extracted.ingredients.joinToString("\n"),
-                        directions = extracted.directions.joinToString("\n"),
-                        imageUrl = extracted.imageUrl,
-                        sourceUrl = extracted.sourceUrl,
-                        servings = extracted.servings,
-                        prepTime = extracted.prepTime,
-                        cookTime = extracted.cookTime,
-                        totalTime = extracted.totalTime,
-                        calories = extracted.calories,
-                        starRating = null,
-                        isFavorite = false,
-                        createdAt = Instant.DISTANT_PAST,
-                        updatedAt = Instant.DISTANT_PAST,
-                    ),
-                )
-                _state.value = _state.value.copy(
-                    isExtracting = false,
-                    extractionMessage = ExtractMessage.SUCCESS,
-                )
+                val recipe =
+                    recipeRepository.createRecipe(
+                        Recipe(
+                            id = -1,
+                            title = extracted.title,
+                            description = extracted.description,
+                            ingredients = extracted.ingredients.joinToString("\n"),
+                            directions = extracted.directions.joinToString("\n"),
+                            imageUrl = extracted.imageUrl,
+                            sourceUrl = extracted.sourceUrl,
+                            servings = extracted.servings,
+                            prepTime = extracted.prepTime,
+                            cookTime = extracted.cookTime,
+                            totalTime = extracted.totalTime,
+                            calories = extracted.calories,
+                            starRating = null,
+                            isFavorite = false,
+                            createdAt = Instant.DISTANT_PAST,
+                            updatedAt = Instant.DISTANT_PAST,
+                        )
+                    )
+                _state.value =
+                    _state.value.copy(
+                        isExtracting = false,
+                        extractionMessage = ExtractMessage.SUCCESS,
+                    )
                 output?.onNext(BrowserBloc.Output.RecipeExtracted(recipe.id))
             } catch (e: Exception) {
-                Logger.d(e) { "Failed to extract recipe from $url"}
-                _state.value = _state.value.copy(
-                    isExtracting = false,
-                    extractionMessage = ExtractMessage.FAILURE,
-                )
+                Logger.d(e) { "Failed to extract recipe from $url" }
+                _state.value =
+                    _state.value.copy(
+                        isExtracting = false,
+                        extractionMessage = ExtractMessage.FAILURE,
+                    )
             }
         }
     }

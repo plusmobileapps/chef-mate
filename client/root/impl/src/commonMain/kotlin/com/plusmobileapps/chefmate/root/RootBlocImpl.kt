@@ -20,8 +20,8 @@ import com.plusmobileapps.chefmate.root.RootBloc.Child.BottomNavigation
 import com.plusmobileapps.chefmate.root.RootBlocImpl.Configuration.GroceryDetail
 import com.plusmobileapps.chefmate.root.RootBlocImpl.Configuration.RecipeRoot
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import kotlinx.serialization.Serializable
@@ -33,8 +33,7 @@ class RootBlocImpl(
     private val groceryDetail: GroceryDetailBloc.Factory,
     private val recipeRoot: RecipeRootBloc.Factory,
     private val authentication: AuthenticationBloc.Factory,
-) : RootBloc,
-    BlocContext by context {
+) : RootBloc, BlocContext by context {
 
     @AssistedFactory
     fun interface ManagedFactory {
@@ -47,9 +46,7 @@ class RootBlocImpl(
         childStack(
             source = navigation,
             serializer = Configuration.serializer(),
-            initialStack = {
-                listOf(Configuration.BottomNavigation)
-            },
+            initialStack = { listOf(Configuration.BottomNavigation) },
             handleBackButton = true,
             key = "RootRouter",
             childFactory = ::createChild,
@@ -61,17 +58,11 @@ class RootBlocImpl(
         navigation.pop()
     }
 
-    private fun createChild(
-        config: Configuration,
-        context: BlocContext,
-    ): RootBloc.Child =
+    private fun createChild(config: Configuration, context: BlocContext): RootBloc.Child =
         when (config) {
             Configuration.BottomNavigation ->
                 BottomNavigation(
-                    bottomNav.create(
-                        context = context,
-                        output = ::handleBottomNavOutput,
-                    ),
+                    bottomNav.create(context = context, output = ::handleBottomNavOutput)
                 )
 
             is Configuration.GroceryDetail ->
@@ -81,7 +72,7 @@ class RootBlocImpl(
                             context = context,
                             id = config.itemId,
                             output = ::onDetailOutput,
-                        ),
+                        )
                 )
 
             is Configuration.RecipeRoot ->
@@ -91,7 +82,7 @@ class RootBlocImpl(
                             context = context,
                             props = config.props,
                             output = ::handleRecipeRootOutput,
-                        ),
+                        )
                 )
 
             is Configuration.Authentication ->
@@ -101,16 +92,14 @@ class RootBlocImpl(
                             context = context,
                             props = config.props,
                             output = ::handleAuthenticationOutput,
-                        ),
+                        )
                 )
         }
 
     private fun handleBottomNavOutput(output: BottomNavBloc.Output) {
         when (output) {
             BottomNavBloc.Output.AddNewRecipe -> {
-                navigation.bringToFront(
-                    RecipeRoot(RecipeRootBloc.Props.Create),
-                )
+                navigation.bringToFront(RecipeRoot(RecipeRootBloc.Props.Create))
             }
 
             is BottomNavBloc.Output.OpenGrocery -> {
@@ -118,19 +107,19 @@ class RootBlocImpl(
             }
 
             is BottomNavBloc.Output.OpenRecipe -> {
-                navigation.bringToFront(
-                    RecipeRoot(
-                        Detail(output.recipeId),
-                    ),
-                )
+                navigation.bringToFront(RecipeRoot(Detail(output.recipeId)))
             }
 
             BottomNavBloc.Output.OpenSignIn -> {
-                navigation.bringToFront(Configuration.Authentication(AuthenticationBloc.Props.SignIn))
+                navigation.bringToFront(
+                    Configuration.Authentication(AuthenticationBloc.Props.SignIn)
+                )
             }
 
             BottomNavBloc.Output.OpenSignUp -> {
-                navigation.bringToFront(Configuration.Authentication(AuthenticationBloc.Props.SignUp))
+                navigation.bringToFront(
+                    Configuration.Authentication(AuthenticationBloc.Props.SignUp)
+                )
             }
         }
     }
@@ -161,23 +150,14 @@ class RootBlocImpl(
 
     @Serializable
     private sealed class Configuration {
-        @Serializable
-        data object BottomNavigation : Configuration()
+        @Serializable data object BottomNavigation : Configuration()
+
+        @Serializable data class GroceryDetail(val itemId: Long) : Configuration()
+
+        @Serializable data class RecipeRoot(val props: RecipeRootBloc.Props) : Configuration()
 
         @Serializable
-        data class GroceryDetail(
-            val itemId: Long,
-        ) : Configuration()
-
-        @Serializable
-        data class RecipeRoot(
-            val props: RecipeRootBloc.Props,
-        ) : Configuration()
-
-        @Serializable
-        data class Authentication(
-            val props: AuthenticationBloc.Props,
-        ) : Configuration()
+        data class Authentication(val props: AuthenticationBloc.Props) : Configuration()
     }
 }
 
@@ -185,5 +165,7 @@ class RootBlocImpl(
 interface RootBlocBindingModule {
     @Provides
     fun provideRootBlocFactory(factory: RootBlocImpl.ManagedFactory): RootBloc.Factory =
-        RootBloc.Factory { context -> factory.create(context) }
+        RootBloc.Factory { context ->
+            factory.create(context)
+        }
 }

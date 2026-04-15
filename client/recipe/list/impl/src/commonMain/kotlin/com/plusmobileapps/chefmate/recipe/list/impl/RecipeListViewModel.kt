@@ -9,13 +9,13 @@ import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.boolean
 import dev.zacsweers.metro.Inject
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.coroutines.CoroutineContext
 
 @Inject
 class RecipeListViewModel(
@@ -34,19 +34,12 @@ class RecipeListViewModel(
 
     private suspend fun observeRecipes() {
         repository.getRecipes().collect { recipes ->
-            _state.update {
-                it.copy(
-                    isLoading = false,
-                    recipes = recipes,
-                )
-            }
+            _state.update { it.copy(isLoading = false, recipes = recipes) }
         }
     }
 
     fun deleteRecipe(recipeId: Long) {
-        scope.launch {
-            repository.deleteRecipe(recipeId)
-        }
+        scope.launch { repository.deleteRecipe(recipeId) }
     }
 
     fun toggleFavorite(recipeId: Long) {
@@ -86,18 +79,13 @@ class RecipeListViewModel(
     ) {
         val displayRecipes: List<Recipe>
             get() =
-                recipes
-                    .let { applyFilters(it, activeFilters) }
-                    .let { applySort(it, currentSort) }
+                recipes.let { applyFilters(it, activeFilters) }.let { applySort(it, currentSort) }
     }
 }
 
 private const val KEY_IS_GRID_VIEW = "recipe_list_is_grid_view"
 
-private fun applyFilters(
-    recipes: List<Recipe>,
-    filters: Set<RecipeFilterOption>,
-): List<Recipe> {
+private fun applyFilters(recipes: List<Recipe>, filters: Set<RecipeFilterOption>): List<Recipe> {
     if (filters.isEmpty()) return recipes
     return recipes.filter { recipe ->
         filters.all { filter ->
@@ -110,17 +98,12 @@ private fun applyFilters(
     }
 }
 
-private fun applySort(
-    recipes: List<Recipe>,
-    sort: RecipeSortOption,
-): List<Recipe> =
+private fun applySort(recipes: List<Recipe>, sort: RecipeSortOption): List<Recipe> =
     when (sort) {
         RecipeSortOption.RECENTLY_ADDED -> recipes.sortedByDescending { it.createdAt }
         RecipeSortOption.OLDEST_FIRST -> recipes.sortedBy { it.createdAt }
         RecipeSortOption.ALPHABETICAL_ASC -> recipes.sortedBy { it.title.lowercase() }
         RecipeSortOption.ALPHABETICAL_DESC -> recipes.sortedByDescending { it.title.lowercase() }
         RecipeSortOption.TOP_RATED ->
-            recipes.sortedWith(
-                compareByDescending<Recipe, Int?>(nullsLast()) { it.starRating },
-            )
+            recipes.sortedWith(compareByDescending<Recipe, Int?>(nullsLast()) { it.starRating })
     }

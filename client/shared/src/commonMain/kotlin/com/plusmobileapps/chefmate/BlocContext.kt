@@ -8,11 +8,11 @@ import com.arkivanov.essenty.instancekeeper.InstanceKeeperOwner
 import com.arkivanov.essenty.lifecycle.LifecycleOwner
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import com.arkivanov.essenty.statekeeper.StateKeeperOwner
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.SupervisorJob
-import kotlin.coroutines.CoroutineContext
 
 interface BlocContext : GenericComponentContext<BlocContext> {
     val mainContext: CoroutineContext
@@ -32,7 +32,8 @@ class DefaultBlocContext(
     override val ioContext: CoroutineContext = Dispatchers.IO,
     override val defaultContext: CoroutineContext = Dispatchers.Default,
     override val unconfinedContext: CoroutineContext = Dispatchers.Unconfined,
-) : BlocContext,
+) :
+    BlocContext,
     LifecycleOwner by componentContext,
     StateKeeperOwner by componentContext,
     InstanceKeeperOwner by componentContext,

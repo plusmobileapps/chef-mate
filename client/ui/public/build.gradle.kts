@@ -17,12 +17,6 @@ kotlin {
     }
 }
 
-compose {
-    resources {
-        publicResClass = true
-    }
-}
+compose { resources { publicResClass = true } }
 
-plusLibrary {
-    namespace = "com.plusmobileapps.chefmate.ui"
-}
+plusLibrary { namespace = "com.plusmobileapps.chefmate.ui" }

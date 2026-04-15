@@ -66,17 +66,12 @@ fun PlusHeaderContainer(
     val density = LocalDensity.current
 
     Column(
-        modifier =
-            modifier
-                .fillMaxSize()
-                .background(ChefMateTheme.colorScheme.background),
+        modifier = modifier.fillMaxSize().background(ChefMateTheme.colorScheme.background),
         verticalArrangement = verticalArrangement,
         horizontalAlignment = horizontalAlignment,
     ) {
         if (data !is PlusHeaderData.None) {
-            PlusHeader(
-                data = data,
-            )
+            PlusHeader(data = data)
         }
 
         Surface(
@@ -84,10 +79,7 @@ fun PlusHeaderContainer(
             color = ChefMateTheme.colorScheme.background,
             contentColor = ChefMateTheme.colorScheme.onBackground,
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 ScrollingContent(
                     scrollEnabled = scrollEnabled,
                     scrollState = scrollState,
@@ -101,14 +93,7 @@ fun PlusHeaderContainer(
                 )
 
                 floatingToolbar?.let {
-                    Box(
-                        modifier =
-                            Modifier
-                                .align(BottomCenter)
-                                .floatingToolbarPadding(),
-                    ) {
-                        it()
-                    }
+                    Box(modifier = Modifier.align(BottomCenter).floatingToolbarPadding()) { it() }
                 }
             }
         }
@@ -128,27 +113,18 @@ private fun BottomBarBox(
                 Modifier.padding(
                     end =
                         with(density) {
-                            WindowInsets.displayCutout
-                                .getRight(
-                                    density,
-                                    LayoutDirection.Ltr,
-                                ).toDp()
-                        },
-                ),
+                            WindowInsets.displayCutout.getRight(density, LayoutDirection.Ltr).toDp()
+                        }
+                )
         ) {
             Spacer(modifier = Modifier.weight(1f))
-            Box(
-                modifier = Modifier.padding(end = ChefMateTheme.dimens.paddingNormal),
-            ) {
+            Box(modifier = Modifier.padding(end = ChefMateTheme.dimens.paddingNormal)) {
                 floatingActionButton()
             }
         }
 
         Box(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(top = ChefMateTheme.dimens.paddingNormal),
+            modifier = Modifier.fillMaxWidth().padding(top = ChefMateTheme.dimens.paddingNormal),
             contentAlignment = Alignment.Center,
         ) {
             snackbarHost()
@@ -167,17 +143,15 @@ private fun ScrollingContent(
     Column(
         modifier =
             if (scrollEnabled) {
-                Modifier
-                    .fillMaxHeight()
+                Modifier.fillMaxHeight()
                     .widthIn(max = maxContentWidth)
                     .scaffoldContentInsetPadding()
                     .verticalScroll(scrollState)
             } else {
-                Modifier
-                    .fillMaxHeight()
+                Modifier.fillMaxHeight()
                     .widthIn(max = maxContentWidth)
                     .scaffoldContentInsetPadding()
-            },
+            }
     ) {
         content()
         Spacer(modifier = Modifier.padding(WindowInsets.systemGestures.asPaddingValues()))
@@ -194,17 +168,15 @@ fun PlusHeader(
     TopAppBar(
         modifier = modifier,
         windowInsets =
-            windowInsets ?: WindowInsets(
-                left = WindowInsets.displayCutout.getLeft(density, LayoutDirection.Ltr),
-                right = WindowInsets.displayCutout.getRight(density, LayoutDirection.Ltr),
-                top = WindowInsets.statusBars.getTop(density),
-                bottom = WindowInsets.statusBars.getBottom(density),
-            ),
+            windowInsets
+                ?: WindowInsets(
+                    left = WindowInsets.displayCutout.getLeft(density, LayoutDirection.Ltr),
+                    right = WindowInsets.displayCutout.getRight(density, LayoutDirection.Ltr),
+                    top = WindowInsets.statusBars.getTop(density),
+                    bottom = WindowInsets.statusBars.getBottom(density),
+                ),
         title = {
-            Text(
-                text = data.title.localized(),
-                color = ChefMateTheme.colorScheme.onBackground,
-            )
+            Text(text = data.title.localized(), color = ChefMateTheme.colorScheme.onBackground)
         },
         navigationIcon =
             when (data) {
@@ -230,28 +202,23 @@ fun PlusHeader(
                 }
 
                 is PlusHeaderData.Parent -> {
-                    { }
+                    {}
                 }
                 PlusHeaderData.None -> {
-                    { }
+                    {}
                 }
             },
         actions = {
             when (val trailingAccessory = data.trailingAccessory) {
                 is PlusHeaderData.TrailingAccessory.Button -> {
-                    PlusButton(
-                        text = trailingAccessory.text,
-                        onClick = trailingAccessory.onClick,
-                    )
+                    PlusButton(text = trailingAccessory.text, onClick = trailingAccessory.onClick)
                 }
 
                 is PlusHeaderData.TrailingAccessory.Custom -> trailingAccessory.content(this)
                 null -> Unit
                 is PlusHeaderData.TrailingAccessory.Icon -> {
                     if (trailingAccessory.onClick != null) {
-                        IconButton(
-                            onClick = trailingAccessory.onClick,
-                        ) {
+                        IconButton(onClick = trailingAccessory.onClick) {
                             Icon(
                                 trailingAccessory.icon,
                                 contentDescription = trailingAccessory.contentDesc.localized(),

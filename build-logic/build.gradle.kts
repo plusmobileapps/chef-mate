@@ -1,6 +1,4 @@
-plugins {
-    `kotlin-dsl`
-}
+plugins { `kotlin-dsl` }
 
 group = "com.plusmobileapps.chefmate.buildlogic"
 
@@ -13,7 +11,8 @@ gradlePlugin {
         }
         create("kmpLibrary") {
             id = "com.plusmobileapps.chefmate.kmp-library"
-            implementationClass = "com.plusmobileapps.chefmate.convention.KmpLibraryConventionPlugin"
+            implementationClass =
+                "com.plusmobileapps.chefmate.convention.KmpLibraryConventionPlugin"
         }
         create("compose") {
             id = "com.plusmobileapps.chefmate.compose"
@@ -45,7 +44,9 @@ dependencies {
     compileOnly(libs.compose.multiplatform.gradle.plugin)
     compileOnly(libs.ktfmt.gradle.plugin)
 
-    implementation("com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:${libs.versions.ksp.get()}")
+    implementation(
+        "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:${libs.versions.ksp.get()}"
+    )
     // Metro Gradle plugin for DI - loaded at runtime, not compiled against
     runtimeOnly("dev.zacsweers.metro:gradle-plugin:${libs.versions.metro.get()}")
     implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))

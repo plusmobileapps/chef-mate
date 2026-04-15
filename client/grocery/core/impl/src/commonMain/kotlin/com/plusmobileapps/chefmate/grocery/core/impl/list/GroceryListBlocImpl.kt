@@ -9,11 +9,11 @@ import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.mapState
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.Provider
+import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
 
 @AssistedInject
@@ -21,18 +21,17 @@ class GroceryListBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<GroceryListBloc.Output>,
     viewModelFactory: Provider<GroceryListViewModel>,
-) : GroceryListBloc,
-    BlocContext by context {
+) : GroceryListBloc, BlocContext by context {
 
     @AssistedFactory
     fun interface ManagedFactory {
-        fun create(context: BlocContext, output: Consumer<GroceryListBloc.Output>): GroceryListBlocImpl
+        fun create(
+            context: BlocContext,
+            output: Consumer<GroceryListBloc.Output>,
+        ): GroceryListBlocImpl
     }
 
-    private val viewModel =
-        instanceKeeper.getViewModel {
-            viewModelFactory()
-        }
+    private val viewModel = instanceKeeper.getViewModel { viewModelFactory() }
 
     override val state: StateFlow<GroceryListBloc.Model> =
         viewModel.state.mapState {
@@ -47,10 +46,7 @@ class GroceryListBlocImpl(
 
     override val newGroceryItemName: StateFlow<String> = viewModel.newGroceryItemName
 
-    override fun onGroceryItemCheckedChange(
-        item: GroceryItem,
-        isChecked: Boolean,
-    ) {
+    override fun onGroceryItemCheckedChange(item: GroceryItem, isChecked: Boolean) {
         viewModel.onGroceryItemCheckedChange(item, isChecked)
     }
 
@@ -102,6 +98,9 @@ class GroceryListBlocImpl(
 @ContributesTo(AppScope::class)
 interface GroceryListBlocBindingModule {
     @Provides
-    fun provideGroceryListBlocFactory(factory: GroceryListBlocImpl.ManagedFactory): GroceryListBloc.Factory =
-        GroceryListBloc.Factory { context, output -> factory.create(context, output) }
+    fun provideGroceryListBlocFactory(
+        factory: GroceryListBlocImpl.ManagedFactory
+    ): GroceryListBloc.Factory = GroceryListBloc.Factory { context, output ->
+        factory.create(context, output)
+    }
 }

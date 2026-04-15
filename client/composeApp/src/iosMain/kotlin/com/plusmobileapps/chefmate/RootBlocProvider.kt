@@ -7,15 +7,11 @@ import dev.zacsweers.metro.createGraphFactory
 import platform.UIKit.UIApplication
 
 object RootBlocProvider {
-    fun buildRootBloc(
-        componentContext: ComponentContext,
-        application: UIApplication,
-    ): RootBloc {
-        val applicationComponent = createGraphFactory<IosApplicationComponent.Factory>().create(application)
+    fun buildRootBloc(componentContext: ComponentContext, application: UIApplication): RootBloc {
+        val applicationComponent =
+            createGraphFactory<IosApplicationComponent.Factory>().create(application)
         return applicationComponent.rootBlocFactory.create(
-            DefaultBlocContext(
-                componentContext = componentContext,
-            ),
+            DefaultBlocContext(componentContext = componentContext)
         )
     }
 }

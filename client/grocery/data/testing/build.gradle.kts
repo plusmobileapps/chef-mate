@@ -1,6 +1,4 @@
-plugins {
-    alias(libs.plugins.kmpLibrary)
-}
+plugins { alias(libs.plugins.kmpLibrary) }
 
 kotlin {
     sourceSets {
@@ -11,6 +9,4 @@ kotlin {
     }
 }
 
-plusLibrary {
-    namespace = "com.plusmobileapps.chefmate.grocery.data.testing"
-}
+plusLibrary { namespace = "com.plusmobileapps.chefmate.grocery.data.testing" }

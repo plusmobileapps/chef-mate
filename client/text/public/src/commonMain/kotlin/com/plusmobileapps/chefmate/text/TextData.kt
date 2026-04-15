@@ -1,41 +1,29 @@
 package com.plusmobileapps.chefmate.text
 
 import androidx.compose.runtime.Composable
-import com.plusmobileapps.chefmate.text.PhraseModel
+import kotlin.collections.component1
+import kotlin.collections.component2
 import org.jetbrains.compose.resources.PluralStringResource
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
-import kotlin.collections.component1
-import kotlin.collections.component2
 
-/**
- * Represents a generic text to be evaluated with a [Context] in the UI layer.
- */
+/** Represents a generic text to be evaluated with a [Context] in the UI layer. */
 sealed class TextData {
-    @Composable
-    abstract fun localized(): String
+    @Composable abstract fun localized(): String
+}
+
+/** A text data model that represents a fixed string. */
+data class FixedString(val value: String) : TextData() {
+    @Composable override fun localized(): String = value
 }
 
 /**
- * A text data model that represents a fixed string.
+ * A text data model that represents a string resource that does not require any formatting or
+ * placeholders.
  */
-data class FixedString(
-    val value: String,
-) : TextData() {
-    @Composable
-    override fun localized(): String = value
-}
-
-/**
- * A text data model that represents a string resource that does not require any
- * formatting or placeholders.
- */
-data class ResourceString(
-    val resource: StringResource,
-) : TextData() {
-    @Composable
-    override fun localized(): String = stringResource(resource)
+data class ResourceString(val resource: StringResource) : TextData() {
+    @Composable override fun localized(): String = stringResource(resource)
 }
 
 /**
@@ -53,17 +41,12 @@ data class ResourceString(
  * )
  * ```
  */
-data class PhraseModel(
-    val resource: StringResource,
-    val args: Map<String, TextData> = emptyMap(),
-) : TextData() {
+data class PhraseModel(val resource: StringResource, val args: Map<String, TextData> = emptyMap()) :
+    TextData() {
     constructor(
         resource: StringResource,
         vararg args: Pair<String, TextData>,
-    ) : this(
-        resource = resource,
-        args = args.toMap(),
-    )
+    ) : this(resource = resource, args = args.toMap())
 
     @Composable
     override fun localized(): String {
@@ -88,10 +71,8 @@ data class PhraseModel(
  *
  * Usage example:
  *
- * <plurals name="new_message">
- *  <item quantity="one">{quantity} new message from {name}</item>
- *  <item quantity="other">{quantity} new messages from {name}</item>
- * </plurals>
+ * <plurals name="new_message"> <item quantity="one">{quantity} new message from {name}</item> <item
+ * quantity="other">{quantity} new messages from {name}</item> </plurals>
  *
  * ```kotlin
  * PluralPhraseModel(
@@ -111,11 +92,7 @@ data class PluralResourceString(
         resource: PluralStringResource,
         quantity: Int,
         vararg args: Pair<String, TextData>,
-    ) : this(
-        resource = resource,
-        quantity = quantity,
-        args = args.toMap(),
-    )
+    ) : this(resource = resource, quantity = quantity, args = args.toMap())
 
     @Composable
     override fun localized(): String {

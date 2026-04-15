@@ -14,13 +14,10 @@ import platform.UIKit.UIApplication
 abstract class IosApplicationComponent : ApplicationComponent {
     @DependencyGraph.Factory
     fun interface Factory {
-        fun create(
-            @Provides application: UIApplication,
-        ): IosApplicationComponent
+        fun create(@Provides application: UIApplication): IosApplicationComponent
     }
 
-    @Provides
-    fun driverFactory(): DriverFactory = DriverFactory()
+    @Provides fun driverFactory(): DriverFactory = DriverFactory()
 
     @Provides
     @SingleIn(AppScope::class)

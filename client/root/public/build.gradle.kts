@@ -15,12 +15,8 @@ kotlin {
             implementation(projects.client.ui.public)
             implementation(libs.arkivanov.decompose.compose.extensions)
         }
-        commonTest.dependencies {
-            implementation(libs.kotlin.test)
-        }
+        commonTest.dependencies { implementation(libs.kotlin.test) }
     }
 }
 
-plusLibrary {
-    namespace = "com.plusmobileapps.chefmate.root"
-}
+plusLibrary { namespace = "com.plusmobileapps.chefmate.root" }

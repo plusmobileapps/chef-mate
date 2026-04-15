@@ -16,13 +16,10 @@ import dev.zacsweers.metro.SingleIn
 abstract class AndroidApplicationComponent : ApplicationComponent {
     @DependencyGraph.Factory
     fun interface Factory {
-        fun create(
-            @Provides context: Context,
-        ): AndroidApplicationComponent
+        fun create(@Provides context: Context): AndroidApplicationComponent
     }
 
-    @Provides
-    fun driverFactory(context: Context): DriverFactory = DriverFactory(context = context)
+    @Provides fun driverFactory(context: Context): DriverFactory = DriverFactory(context = context)
 
     @RequiresApi(Build.VERSION_CODES.O)
     @Provides

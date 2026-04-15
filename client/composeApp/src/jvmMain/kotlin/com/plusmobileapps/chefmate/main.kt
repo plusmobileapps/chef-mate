@@ -17,12 +17,12 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.parseSessionFromUrl
 import io.github.jan.supabase.auth.user.UserSession
+import java.awt.Desktop
+import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.awt.Desktop
-import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 fun main(args: Array<String>) {
@@ -36,13 +36,12 @@ fun main(args: Array<String>) {
     val scope = CoroutineScope(Dispatchers.Main)
 
     /**
-     * Handle a deep link URI by parsing tokens from the fragment and importing the session.
-     * The URI format is: chefmate://auth/callback#access_token=...&refresh_token=...&expires_in=...&token_type=bearer
+     * Handle a deep link URI by parsing tokens from the fragment and importing the session. The URI
+     * format is:
+     * chefmate://auth/callback#access_token=...&refresh_token=...&expires_in=...&token_type=bearer
      */
     fun handleDeepLinkUri(uriString: String) {
-        scope.launch {
-            supabaseClient.handleDeeplinks(uriString)
-        }
+        scope.launch { supabaseClient.handleDeeplinks(uriString) }
     }
 
     // Handle deep link from command line args (Linux/Windows)
@@ -72,19 +71,14 @@ fun main(args: Array<String>) {
 
     application {
         // Set up DeepLinkHandler listener to forward URIs to our handler
-        DeepLinkHandler.listener = { uri ->
-            handleDeepLinkUri(uri)
-        }
+        DeepLinkHandler.listener = { uri -> handleDeepLinkUri(uri) }
 
         // Initialize the DefaultComponentContext inside the application block
         // to ensure it runs on the main thread
         val rootBloc =
             buildRoot(
                 componentContext =
-                    DefaultComponentContext(
-                        lifecycle = lifecycle,
-                        backHandler = backDispatcher,
-                    ),
+                    DefaultComponentContext(lifecycle = lifecycle, backHandler = backDispatcher),
                 applicationComponent = appComponent,
             )
 
@@ -109,14 +103,15 @@ suspend fun SupabaseClient.handleDeeplinks(
     url: String,
     onSessionSuccess: (UserSession) -> Unit = {},
     onError: (Throwable) -> Unit = {},
-) = withContext(Dispatchers.IO) {
-    try {
-        val session: UserSession = auth.parseSessionFromUrl(url)
-        val user = auth.retrieveUser(session.accessToken)
-        val updatedSession = session.copy(user = user)
-        auth.importSession(updatedSession)
-        onSessionSuccess(updatedSession)
-    } catch (e: Exception) {
-        onError(e)
+) =
+    withContext(Dispatchers.IO) {
+        try {
+            val session: UserSession = auth.parseSessionFromUrl(url)
+            val user = auth.retrieveUser(session.accessToken)
+            val updatedSession = session.copy(user = user)
+            auth.importSession(updatedSession)
+            onSessionSuccess(updatedSession)
+        } catch (e: Exception) {
+            onError(e)
+        }
     }
-}

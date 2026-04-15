@@ -14,10 +14,7 @@ import com.arkivanov.essenty.backhandler.BackDispatcher
 import com.plusmobileapps.chefmate.root.RootBloc
 
 object MainViewController {
-    fun create(
-        rootBloc: RootBloc,
-        backDispatcher: BackDispatcher,
-    ) = ComposeUIViewController {
+    fun create(rootBloc: RootBloc, backDispatcher: BackDispatcher) = ComposeUIViewController {
         PredictiveBackGestureOverlay(
             backDispatcher = backDispatcher,
             backIcon = { progress, _ ->
@@ -28,10 +25,7 @@ object MainViewController {
             },
             modifier = Modifier.fillMaxSize(),
         ) {
-            App(
-                rootBloc = rootBloc,
-                modifier = Modifier.fillMaxSize(),
-            )
+            App(rootBloc = rootBloc, modifier = Modifier.fillMaxSize())
         }
     }
 }

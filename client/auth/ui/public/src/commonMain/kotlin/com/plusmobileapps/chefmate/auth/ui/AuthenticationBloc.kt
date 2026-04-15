@@ -45,9 +45,7 @@ interface AuthenticationBloc : BackClickBloc {
 
         data object AuthenticationSuccess : Output()
 
-        data class EmailVerificationRequired(
-            val email: String,
-        ) : Output()
+        data class EmailVerificationRequired(val email: String) : Output()
     }
 
     @Serializable
@@ -57,10 +55,6 @@ interface AuthenticationBloc : BackClickBloc {
     }
 
     fun interface Factory {
-        fun create(
-            context: BlocContext,
-            props: Props,
-            output: Consumer<Output>,
-        ): AuthenticationBloc
+        fun create(context: BlocContext, props: Props, output: Consumer<Output>): AuthenticationBloc
     }
 }

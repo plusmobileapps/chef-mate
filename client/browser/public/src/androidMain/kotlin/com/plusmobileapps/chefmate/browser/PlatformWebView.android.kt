@@ -24,13 +24,7 @@ actual fun PlatformWebView(
         }
     }
 
-    LaunchedEffect(webViewState.lastLoadedUrl) {
-        webViewState.lastLoadedUrl?.let(onUrlLoaded)
-    }
+    LaunchedEffect(webViewState.lastLoadedUrl) { webViewState.lastLoadedUrl?.let(onUrlLoaded) }
 
-    WebView(
-        state = webViewState,
-        modifier = modifier,
-        navigator = webViewNavigator,
-    )
+    WebView(state = webViewState, modifier = modifier, navigator = webViewNavigator)
 }

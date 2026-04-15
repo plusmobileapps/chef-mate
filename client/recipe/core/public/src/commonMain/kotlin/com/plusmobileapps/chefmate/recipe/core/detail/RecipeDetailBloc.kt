@@ -47,26 +47,16 @@ interface RecipeDetailBloc : BackClickBloc {
     sealed class Output {
         data object Finished : Output()
 
-        data class EditRecipe(
-            val recipeId: Long,
-        ) : Output()
+        data class EditRecipe(val recipeId: Long) : Output()
     }
 
     sealed class Sheet {
-        data class AddToGroceryList(
-            val bloc: AddRecipeToGroceryListBloc,
-        ) : Sheet()
+        data class AddToGroceryList(val bloc: AddRecipeToGroceryListBloc) : Sheet()
 
-        data class BrowserLauncher(
-            val bloc: BrowserBloc,
-        ) : Sheet()
+        data class BrowserLauncher(val bloc: BrowserBloc) : Sheet()
     }
 
     interface Factory {
-        fun create(
-            context: BlocContext,
-            recipeId: Long,
-            output: Consumer<Output>,
-        ): RecipeDetailBloc
+        fun create(context: BlocContext, recipeId: Long, output: Consumer<Output>): RecipeDetailBloc
     }
 }

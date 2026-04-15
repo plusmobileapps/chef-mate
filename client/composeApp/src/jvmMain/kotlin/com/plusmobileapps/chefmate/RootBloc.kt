@@ -8,7 +8,5 @@ fun buildRoot(
     applicationComponent: ApplicationComponent,
 ): RootBloc =
     applicationComponent.rootBlocFactory.create(
-        DefaultBlocContext(
-            componentContext = componentContext,
-        ),
+        DefaultBlocContext(componentContext = componentContext)
     )

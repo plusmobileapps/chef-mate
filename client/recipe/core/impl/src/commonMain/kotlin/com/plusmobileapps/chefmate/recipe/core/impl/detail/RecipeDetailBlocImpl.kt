@@ -37,8 +37,7 @@ class RecipeDetailBlocImpl(
     private val timeFormatterUtil: TimeFormatterUtil,
     private val addToGroceryList: AddRecipeToGroceryListBloc.Factory,
     private val browserBlocFactory: BrowserBloc.Factory,
-) : RecipeDetailBloc,
-    BlocContext by context {
+) : RecipeDetailBloc, BlocContext by context {
     @AssistedFactory
     fun interface ManagedFactory {
         fun create(
@@ -50,10 +49,9 @@ class RecipeDetailBlocImpl(
 
     private val scope = createScope()
 
-    private val viewModel: RecipeDetailViewModel =
-        instanceKeeper.getViewModel {
-            viewModelFactory.create(recipeId)
-        }
+    private val viewModel: RecipeDetailViewModel = instanceKeeper.getViewModel {
+        viewModelFactory.create(recipeId)
+    }
 
     init {
         scope.launch {
@@ -83,21 +81,14 @@ class RecipeDetailBlocImpl(
                 isDeleting = it.isDeleting,
                 showDeleteConfirmationDialog = it.showDeleteConfirmationDialog,
                 recipe = it.recipe,
-                createdAt =
-                    FixedString(
-                        dateTimeUtil.formatDateTime(
-                            instant = it.recipe.createdAt,
-                        ),
-                    ),
-                updatedAt =
-                    FixedString(
-                        dateTimeUtil.formatDateTime(
-                            instant = it.recipe.updatedAt,
-                        ),
-                    ),
-                formattedPrepTime = it.recipe.prepTime?.let { time -> timeFormatterUtil.formatMinutes(time) },
-                formattedCookTime = it.recipe.cookTime?.let { time -> timeFormatterUtil.formatMinutes(time) },
-                formattedTotalTime = it.recipe.totalTime?.let { time -> timeFormatterUtil.formatMinutes(time) },
+                createdAt = FixedString(dateTimeUtil.formatDateTime(instant = it.recipe.createdAt)),
+                updatedAt = FixedString(dateTimeUtil.formatDateTime(instant = it.recipe.updatedAt)),
+                formattedPrepTime =
+                    it.recipe.prepTime?.let { time -> timeFormatterUtil.formatMinutes(time) },
+                formattedCookTime =
+                    it.recipe.cookTime?.let { time -> timeFormatterUtil.formatMinutes(time) },
+                formattedTotalTime =
+                    it.recipe.totalTime?.let { time -> timeFormatterUtil.formatMinutes(time) },
             )
         }
 
@@ -137,10 +128,7 @@ class RecipeDetailBlocImpl(
         output.onNext(Output.Finished)
     }
 
-    private fun createSheet(
-        config: SheetConfig,
-        context: BlocContext,
-    ): RecipeDetailBloc.Sheet =
+    private fun createSheet(config: SheetConfig, context: BlocContext): RecipeDetailBloc.Sheet =
         when (config) {
             is SheetConfig.AddToGroceryList ->
                 RecipeDetailBloc.Sheet.AddToGroceryList(
@@ -150,10 +138,11 @@ class RecipeDetailBlocImpl(
                             recipeId = config.recipeId,
                             output = { output ->
                                 when (output) {
-                                    AddRecipeToGroceryListBloc.Output.Finished -> sheetNavigation.dismiss()
+                                    AddRecipeToGroceryListBloc.Output.Finished ->
+                                        sheetNavigation.dismiss()
                                 }
                             },
-                        ),
+                        )
                 )
             is SheetConfig.BrowserLauncher ->
                 RecipeDetailBloc.Sheet.BrowserLauncher(
@@ -163,32 +152,32 @@ class RecipeDetailBlocImpl(
                                 context = context,
                                 output = { browserOutput ->
                                     when (browserOutput) {
-                                        is BrowserBloc.Output.RecipeExtracted -> sheetNavigation.dismiss()
+                                        is BrowserBloc.Output.RecipeExtracted ->
+                                            sheetNavigation.dismiss()
                                     }
                                 },
-                            ).also { bloc ->
+                            )
+                            .also { bloc ->
                                 bloc.onUrlChanged(config.url)
                                 bloc.onNavigate()
-                            },
+                            }
                 )
         }
 
     @Serializable
     sealed class SheetConfig {
-        data class AddToGroceryList(
-            val recipeId: Long,
-        ) : SheetConfig()
+        data class AddToGroceryList(val recipeId: Long) : SheetConfig()
 
-        data class BrowserLauncher(
-            val url: String,
-        ) : SheetConfig()
+        data class BrowserLauncher(val url: String) : SheetConfig()
     }
 }
 
 @ContributesTo(AppScope::class)
 interface RecipeDetailBlocBindingModule {
     @Provides
-    fun provideRecipeDetailBlocFactory(factory: RecipeDetailBlocImpl.ManagedFactory): RecipeDetailBloc.Factory =
+    fun provideRecipeDetailBlocFactory(
+        factory: RecipeDetailBlocImpl.ManagedFactory
+    ): RecipeDetailBloc.Factory =
         object : RecipeDetailBloc.Factory {
             override fun create(
                 context: BlocContext,

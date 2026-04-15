@@ -7,6 +7,8 @@ import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
+import dev.zacsweers.metro.Inject
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,8 +17,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import dev.zacsweers.metro.Inject
-import kotlin.coroutines.CoroutineContext
 
 @Inject
 class GroceryListViewModel(
@@ -43,15 +43,12 @@ class GroceryListViewModel(
             repository.getGroceryLists().collect { lists ->
                 _state.update { currentState ->
                     val currentSelectedId = selectedListId.value
-                    val updatedSelected = lists.firstOrNull { it.id == currentSelectedId }
-                        ?: lists.firstOrNull()
+                    val updatedSelected =
+                        lists.firstOrNull { it.id == currentSelectedId } ?: lists.firstOrNull()
                     if (updatedSelected != null && selectedListId.value != updatedSelected.id) {
                         selectedListId.value = updatedSelected.id
                     }
-                    currentState.copy(
-                        lists = lists,
-                        selectedList = updatedSelected,
-                    )
+                    currentState.copy(lists = lists, selectedList = updatedSelected)
                 }
             }
         }
@@ -65,25 +62,16 @@ class GroceryListViewModel(
                         flowOf(emptyList())
                     }
                 }
-                .collect { items ->
-                    _state.update { it.copy(items = items) }
-                }
+                .collect { items -> _state.update { it.copy(items = items) } }
         }
     }
 
-    fun onGroceryItemCheckedChange(
-        item: GroceryItem,
-        isChecked: Boolean,
-    ) {
-        scope.launch {
-            repository.updateChecked(item, isChecked)
-        }
+    fun onGroceryItemCheckedChange(item: GroceryItem, isChecked: Boolean) {
+        scope.launch { repository.updateChecked(item, isChecked) }
     }
 
     fun onGroceryItemDelete(item: GroceryItem) {
-        scope.launch {
-            repository.deleteGrocery(item)
-        }
+        scope.launch { repository.deleteGrocery(item) }
     }
 
     fun onNewGroceryItemNameChange(name: String) {
@@ -94,9 +82,7 @@ class GroceryListViewModel(
         val name = newGroceryItemName.value
         if (name.isBlank()) return
         val listId = selectedListId.value ?: return
-        scope.launch {
-            repository.addGrocery(listId, name)
-        }
+        scope.launch { repository.addGrocery(listId, name) }
         _newGroceryItemName.value = ""
     }
 

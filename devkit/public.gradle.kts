@@ -12,6 +12,4 @@ kotlin {
     }
 }
 
-plusLibrary {
-    namespace = "$namespace"
-}
+plusLibrary { namespace = "$namespace" }

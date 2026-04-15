@@ -3,8 +3,8 @@ package com.plusmobileapps.chefmate
 /**
  * Singleton for handling deep link URIs across platforms.
  *
- * This handler caches URIs that arrive before a listener is set up,
- * then delivers them once the listener is registered.
+ * This handler caches URIs that arrive before a listener is set up, then delivers them once the
+ * listener is registered.
  *
  * Usage:
  * 1. Platform-specific code calls [onNewUri] when a deep link is received
@@ -14,17 +14,12 @@ package com.plusmobileapps.chefmate
 object DeepLinkHandler {
     private var cached: String? = null
 
-    /**
-     * Listener for incoming deep link URIs.
-     * When set, any cached URI is immediately delivered.
-     */
+    /** Listener for incoming deep link URIs. When set, any cached URI is immediately delivered. */
     var listener: ((uri: String) -> Unit)? = null
         set(value) {
             field = value
             if (value != null) {
-                cached?.let { uri ->
-                    value.invoke(uri)
-                }
+                cached?.let { uri -> value.invoke(uri) }
                 cached = null
             }
         }
@@ -42,9 +37,7 @@ object DeepLinkHandler {
         }
     }
 
-    /**
-     * Clears any cached URI without delivering it.
-     */
+    /** Clears any cached URI without delivering it. */
     fun clearCache() {
         cached = null
     }

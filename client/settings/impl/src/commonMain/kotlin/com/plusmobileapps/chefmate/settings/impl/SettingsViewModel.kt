@@ -6,14 +6,14 @@ import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
+import dev.zacsweers.metro.Inject
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import dev.zacsweers.metro.Inject
-import kotlin.coroutines.CoroutineContext
 
 @Inject
 class SettingsViewModel(
@@ -35,9 +35,7 @@ class SettingsViewModel(
                 when (authState) {
                     is AuthState.Authenticated -> {
                         val displayName =
-                            authState.user.userName.ifBlank {
-                                authState.user.userEmail
-                            }
+                            authState.user.userName.ifBlank { authState.user.userEmail }
                         _state.value =
                             State(
                                 isAuthenticated = true,
@@ -62,7 +60,8 @@ class SettingsViewModel(
                             )
                     }
                 }
-            }.launchIn(scope)
+            }
+            .launchIn(scope)
     }
 
     fun signOut() {
