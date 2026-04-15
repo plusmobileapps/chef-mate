@@ -6,6 +6,8 @@ import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
+import com.russhwolf.settings.Settings
+import com.russhwolf.settings.boolean
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,8 +21,11 @@ import kotlin.coroutines.CoroutineContext
 class RecipeListViewModel(
     @Main mainContext: CoroutineContext,
     private val repository: RecipeRepository,
+    settings: Settings,
 ) : ViewModel(mainContext) {
-    private val _state = MutableStateFlow(State())
+    private var isGridViewPref by settings.boolean(KEY_IS_GRID_VIEW, false)
+
+    private val _state = MutableStateFlow(State(isGridView = isGridViewPref))
     val state: StateFlow<State> = _state.asStateFlow()
 
     init {
@@ -67,11 +72,17 @@ class RecipeListViewModel(
         }
     }
 
+    fun toggleViewMode() {
+        _state.update { it.copy(isGridView = !it.isGridView) }
+        isGridViewPref = _state.value.isGridView
+    }
+
     data class State(
         val isLoading: Boolean = true,
         val recipes: List<Recipe> = emptyList(),
         val currentSort: RecipeSortOption = RecipeSortOption.RECENTLY_ADDED,
         val activeFilters: Set<RecipeFilterOption> = emptySet(),
+        val isGridView: Boolean = false,
     ) {
         val displayRecipes: List<Recipe>
             get() =
@@ -80,6 +91,8 @@ class RecipeListViewModel(
                     .let { applySort(it, currentSort) }
     }
 }
+
+private const val KEY_IS_GRID_VIEW = "recipe_list_is_grid_view"
 
 private fun applyFilters(
     recipes: List<Recipe>,

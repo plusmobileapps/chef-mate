@@ -6,4 +6,8 @@ data class RecipeListItem(
     val description: String?,
     val imageUrl: String?,
     val starRating: Int?,
+    val totalTime: Int?,
+    val servings: Int?,
+    val calories: Int?,
+    val isFavorite: Boolean,
 )

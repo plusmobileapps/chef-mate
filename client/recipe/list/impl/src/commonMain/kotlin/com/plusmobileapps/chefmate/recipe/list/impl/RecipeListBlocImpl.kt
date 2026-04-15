@@ -46,6 +46,7 @@ class RecipeListBlocImpl(
                 recipes = it.displayRecipes.map { recipe -> recipe.toRecipeListItem() },
                 currentSort = it.currentSort,
                 activeFilters = it.activeFilters,
+                isGridView = it.isGridView,
             )
         }
 
@@ -73,6 +74,10 @@ class RecipeListBlocImpl(
         viewModel.toggleFilter(filter)
     }
 
+    override fun onToggleViewMode() {
+        viewModel.toggleViewMode()
+    }
+
     private fun Recipe.toRecipeListItem(): RecipeListItem =
         RecipeListItem(
             id = id,
@@ -80,6 +85,10 @@ class RecipeListBlocImpl(
             description = description,
             imageUrl = imageUrl,
             starRating = starRating,
+            totalTime = totalTime,
+            servings = servings,
+            calories = calories,
+            isFavorite = isFavorite,
         )
 }
 
