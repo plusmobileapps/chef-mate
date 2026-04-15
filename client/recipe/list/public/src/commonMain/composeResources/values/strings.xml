@@ -16,9 +16,8 @@
     <string name="recipe_list_view_list">List view</string>
 
     <!-- Recipe Info -->
-    <string name="recipe_list_item_time">%1$s min</string>
-    <string name="recipe_list_item_servings">%1$s servings</string>
-    <string name="recipe_list_item_calories">%1$s cal</string>
+    <string name="recipe_list_item_servings">{servings} servings</string>
+    <string name="recipe_list_item_calories">{calories} cal</string>
 
     <!-- Filter -->
     <string name="recipe_list_filter">Filter</string>

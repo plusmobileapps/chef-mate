@@ -14,6 +14,7 @@ kotlin {
             implementation(projects.client.browser.public)
             implementation(projects.client.shared)
             implementation(projects.client.ui.public)
+            implementation(projects.client.util.public)
             implementation(libs.arkivanov.decompose.compose.extensions)
             implementation(libs.arkivanov.decompose.core)
             implementation(compose.components.resources)

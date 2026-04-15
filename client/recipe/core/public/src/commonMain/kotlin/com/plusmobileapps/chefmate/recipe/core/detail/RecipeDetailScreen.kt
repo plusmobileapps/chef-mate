@@ -93,7 +93,6 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_dire
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_edit
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_ingredients
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_kcal
-import chefmate.client.recipe.core.public.generated.resources.recipe_detail_minutes
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_prep_time
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_remove_favorite
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_servings
@@ -112,6 +111,7 @@ import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.util.TimeFormatterUtilImpl
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
@@ -672,11 +672,7 @@ private fun DetailsCard(
                 DetailRow(
                     icon = Icons.Default.Timer,
                     label = stringResource(Res.string.recipe_detail_prep_time),
-                    value =
-                        PhraseModel(
-                            Res.string.recipe_detail_minutes,
-                            "minutes" to FixedString(prepTime.toString()),
-                        ).localized(),
+                    value = TimeFormatterUtilImpl.formatMinutes(prepTime).localized(),
                 )
             }
 
@@ -684,11 +680,7 @@ private fun DetailsCard(
                 DetailRow(
                     icon = Icons.Default.Timer,
                     label = stringResource(Res.string.recipe_detail_cook_time),
-                    value =
-                        PhraseModel(
-                            Res.string.recipe_detail_minutes,
-                            "minutes" to FixedString(cookTime.toString()),
-                        ).localized(),
+                    value = TimeFormatterUtilImpl.formatMinutes(cookTime).localized(),
                 )
             }
 
@@ -696,11 +688,7 @@ private fun DetailsCard(
                 DetailRow(
                     icon = Icons.Default.Timer,
                     label = stringResource(Res.string.recipe_detail_total_time),
-                    value =
-                        PhraseModel(
-                            Res.string.recipe_detail_minutes,
-                            "minutes" to FixedString(totalTime.toString()),
-                        ).localized(),
+                    value = TimeFormatterUtilImpl.formatMinutes(totalTime).localized(),
                 )
             }
 
@@ -790,33 +778,21 @@ private fun RecipeHeroSection(
                 DetailRow(
                     icon = Icons.Default.Timer,
                     label = stringResource(Res.string.recipe_detail_prep_time),
-                    value =
-                        PhraseModel(
-                            Res.string.recipe_detail_minutes,
-                            "minutes" to FixedString(prepTime.toString()),
-                        ).localized(),
+                    value = TimeFormatterUtilImpl.formatMinutes(prepTime).localized(),
                 )
             }
             recipe.cookTime?.let { cookTime ->
                 DetailRow(
                     icon = Icons.Default.Timer,
                     label = stringResource(Res.string.recipe_detail_cook_time),
-                    value =
-                        PhraseModel(
-                            Res.string.recipe_detail_minutes,
-                            "minutes" to FixedString(cookTime.toString()),
-                        ).localized(),
+                    value = TimeFormatterUtilImpl.formatMinutes(cookTime).localized(),
                 )
             }
             recipe.totalTime?.let { totalTime ->
                 DetailRow(
                     icon = Icons.Default.Timer,
                     label = stringResource(Res.string.recipe_detail_total_time),
-                    value =
-                        PhraseModel(
-                            Res.string.recipe_detail_minutes,
-                            "minutes" to FixedString(totalTime.toString()),
-                        ).localized(),
+                    value = TimeFormatterUtilImpl.formatMinutes(totalTime).localized(),
                 )
             }
             recipe.calories?.let { calories ->

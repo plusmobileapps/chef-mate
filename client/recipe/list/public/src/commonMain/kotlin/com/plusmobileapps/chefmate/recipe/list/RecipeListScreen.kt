@@ -55,7 +55,6 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_rated
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_item_calories
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_item_servings
-import chefmate.client.recipe.list.public.generated.resources.recipe_list_item_time
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort_a_to_z
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort_oldest_first
@@ -65,7 +64,10 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort_z
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_title
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_view_grid
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_view_list
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.util.TimeFormatterUtilImpl
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
@@ -361,19 +363,27 @@ private fun RecipeListItemContent(
                 recipe.totalTime?.let { time ->
                     RecipeInfoChip(
                         icon = Icons.Outlined.AccessTime,
-                        label = stringResource(Res.string.recipe_list_item_time, time),
+                        label = TimeFormatterUtilImpl.formatMinutes(time).localized(),
                     )
                 }
                 recipe.servings?.let { servings ->
                     RecipeInfoChip(
                         icon = Icons.Outlined.Restaurant,
-                        label = stringResource(Res.string.recipe_list_item_servings, servings),
+                        label =
+                            PhraseModel(
+                                Res.string.recipe_list_item_servings,
+                                "servings" to FixedString(servings.toString()),
+                            ).localized(),
                     )
                 }
                 recipe.calories?.let { calories ->
                     RecipeInfoChip(
                         icon = Icons.Outlined.LocalFireDepartment,
-                        label = stringResource(Res.string.recipe_list_item_calories, calories),
+                        label =
+                            PhraseModel(
+                                Res.string.recipe_list_item_calories,
+                                "calories" to FixedString(calories.toString()),
+                            ).localized(),
                     )
                 }
             }

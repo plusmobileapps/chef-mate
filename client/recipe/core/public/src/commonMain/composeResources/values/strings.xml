@@ -20,7 +20,6 @@
     <string name="recipe_detail_cook_time">Cook Time</string>
     <string name="recipe_detail_total_time">Total Time</string>
     <string name="recipe_detail_calories">Calories</string>
-    <string name="recipe_detail_minutes">{minutes} minutes</string>
     <string name="recipe_detail_kcal">{calories} kcal</string>
     <string name="recipe_detail_source">Source</string>
     <string name="recipe_detail_ingredients">Ingredients</string>
