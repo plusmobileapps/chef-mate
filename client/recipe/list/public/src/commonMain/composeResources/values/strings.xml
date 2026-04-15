@@ -2,5 +2,19 @@
     <!-- Recipe List Screen -->
     <string name="recipe_list_title">Recipes</string>
     <string name="recipe_list_add_recipe">Add recipe</string>
+
+    <!-- Sort -->
+    <string name="recipe_list_sort">Sort</string>
+    <string name="recipe_list_sort_recently_added">Recently Added</string>
+    <string name="recipe_list_sort_oldest_first">Oldest First</string>
+    <string name="recipe_list_sort_a_to_z">A to Z</string>
+    <string name="recipe_list_sort_z_to_a">Z to A</string>
+    <string name="recipe_list_sort_top_rated">Top Rated</string>
+
+    <!-- Filter -->
+    <string name="recipe_list_filter">Filter</string>
+    <string name="recipe_list_filter_favorites">Favorites</string>
+    <string name="recipe_list_filter_rated">Rated</string>
+    <string name="recipe_list_filter_quick_recipes">Quick (under 30 min)</string>
 </resources>
 

@@ -15,9 +15,15 @@ interface RecipeListBloc {
 
     fun onToggleFavorite(recipe: RecipeListItem)
 
+    fun onSortOptionSelected(option: RecipeSortOption)
+
+    fun onFilterToggled(filter: RecipeFilterOption)
+
     data class Model(
         val recipes: List<RecipeListItem> = emptyList(),
         val isLoading: Boolean = false,
+        val currentSort: RecipeSortOption = RecipeSortOption.RECENTLY_ADDED,
+        val activeFilters: Set<RecipeFilterOption> = emptySet(),
     )
 
     sealed class Output {

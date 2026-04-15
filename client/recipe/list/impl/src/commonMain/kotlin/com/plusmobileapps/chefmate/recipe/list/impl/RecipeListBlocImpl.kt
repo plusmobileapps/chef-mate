@@ -1,21 +1,22 @@
 package com.plusmobileapps.chefmate.recipe.list.impl
 
-import co.touchlab.kermit.Logger
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc.Output
 import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
+import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.Provider
+import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
 
 @AssistedInject
@@ -25,10 +26,12 @@ class RecipeListBlocImpl(
     private val viewModelFactory: Provider<RecipeListViewModel>,
 ) : RecipeListBloc,
     BlocContext by context {
-
     @AssistedFactory
     fun interface ManagedFactory {
-        fun create(context: BlocContext, output: Consumer<Output>): RecipeListBlocImpl
+        fun create(
+            context: BlocContext,
+            output: Consumer<Output>,
+        ): RecipeListBlocImpl
     }
 
     private val viewModel: RecipeListViewModel =
@@ -40,7 +43,9 @@ class RecipeListBlocImpl(
         viewModel.state.mapState {
             RecipeListBloc.Model(
                 isLoading = it.isLoading,
-                recipes = it.recipes.map { recipe -> recipe.toRecipeListItem() },
+                recipes = it.displayRecipes.map { recipe -> recipe.toRecipeListItem() },
+                currentSort = it.currentSort,
+                activeFilters = it.activeFilters,
             )
         }
 
@@ -60,6 +65,14 @@ class RecipeListBlocImpl(
         viewModel.toggleFavorite(recipe.id)
     }
 
+    override fun onSortOptionSelected(option: RecipeSortOption) {
+        viewModel.updateSort(option)
+    }
+
+    override fun onFilterToggled(filter: RecipeFilterOption) {
+        viewModel.toggleFilter(filter)
+    }
+
     private fun Recipe.toRecipeListItem(): RecipeListItem =
         RecipeListItem(
             id = id,
@@ -75,7 +88,9 @@ interface RecipeListBlocBindingModule {
     @Provides
     fun provideRecipeListBlocFactory(factory: RecipeListBlocImpl.ManagedFactory): RecipeListBloc.Factory =
         object : RecipeListBloc.Factory {
-            override fun create(context: BlocContext, output: Consumer<Output>): RecipeListBloc =
-                factory.create(context, output)
+            override fun create(
+                context: BlocContext,
+                output: Consumer<Output>,
+            ): RecipeListBloc = factory.create(context, output)
         }
 }
