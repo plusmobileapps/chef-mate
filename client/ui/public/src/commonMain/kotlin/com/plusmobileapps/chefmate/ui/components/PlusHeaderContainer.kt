@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import chefmate.client.ui.public.generated.resources.Res
@@ -55,6 +56,7 @@ fun PlusHeaderContainer(
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     scrollEnabled: Boolean = true,
+    maxContentWidth: Dp = 600.dp,
     snackbarHost: @Composable () -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
     floatingToolbar: (@Composable () -> Unit)? = null,
@@ -89,6 +91,7 @@ fun PlusHeaderContainer(
                 ScrollingContent(
                     scrollEnabled = scrollEnabled,
                     scrollState = scrollState,
+                    maxContentWidth = maxContentWidth,
                     content = content,
                 )
                 BottomBarBox(
@@ -158,6 +161,7 @@ private fun BottomBarBox(
 private fun ScrollingContent(
     scrollEnabled: Boolean,
     scrollState: ScrollState,
+    maxContentWidth: Dp,
     content: @Composable (ColumnScope.() -> Unit),
 ) {
     Column(
@@ -165,13 +169,13 @@ private fun ScrollingContent(
             if (scrollEnabled) {
                 Modifier
                     .fillMaxHeight()
-                    .widthIn(max = 600.dp)
+                    .widthIn(max = maxContentWidth)
                     .scaffoldContentInsetPadding()
                     .verticalScroll(scrollState)
             } else {
                 Modifier
                     .fillMaxHeight()
-                    .widthIn(max = 600.dp)
+                    .widthIn(max = maxContentWidth)
                     .scaffoldContentInsetPadding()
             },
     ) {

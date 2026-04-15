@@ -14,8 +14,8 @@ import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import kotlinx.serialization.Serializable
@@ -29,7 +29,6 @@ class RecipeRootBlocImpl(
     private val editBloc: EditRecipeBloc.Factory,
 ) : RecipeRootBloc,
     BlocContext by context {
-
     @AssistedFactory
     fun interface ManagedFactory {
         fun create(

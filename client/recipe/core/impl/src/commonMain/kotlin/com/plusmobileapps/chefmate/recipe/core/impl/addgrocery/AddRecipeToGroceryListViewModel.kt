@@ -8,6 +8,9 @@ import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryList
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import com.russhwolf.settings.Settings
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,9 +20,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.AssistedFactory
 import kotlin.coroutines.CoroutineContext
 
 @AssistedInject
@@ -91,8 +91,9 @@ class AddRecipeToGroceryListViewModel(
             groceryRepository.getGroceryLists().collect { lists ->
                 val groceryListItems = lists.map { GroceryListItem(id = it.id, name = it.name) }
                 val lastSelectedId = settings.getLongOrNull(KEY_LAST_GROCERY_LIST_ID)
-                val selected = groceryListItems.firstOrNull { it.id == lastSelectedId }
-                    ?: groceryListItems.firstOrNull()
+                val selected =
+                    groceryListItems.firstOrNull { it.id == lastSelectedId }
+                        ?: groceryListItems.firstOrNull()
                 _state.update {
                     it.copy(
                         groceryLists = groceryListItems,

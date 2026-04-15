@@ -2,22 +2,43 @@
 
 package com.plusmobileapps.chefmate.recipe.core.detail
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Arrangement.Absolute.spacedBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuOpen
 import androidx.compose.material.icons.filled.AddShoppingCart
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,6 +50,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -36,12 +60,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.core.public.generated.resources.Res
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_favorite
@@ -59,13 +91,10 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_desc
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_details
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_directions
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_edit
-import chefmate.client.recipe.core.public.generated.resources.recipe_detail_image
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_ingredients
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_kcal
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_minutes
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_prep_time
-import chefmate.client.recipe.core.public.generated.resources.recipe_detail_rating_label
-import chefmate.client.recipe.core.public.generated.resources.recipe_detail_rating_value
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_remove_favorite
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_servings
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_source
@@ -76,6 +105,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
+import com.plusmobileapps.chefmate.browser.BrowserScreen
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListScreen
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.FixedString
@@ -85,9 +115,13 @@ import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
+import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
+import com.plusmobileapps.chefmate.ui.components.RecipeImage
+import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -118,70 +152,94 @@ fun RecipeDetailScreen(
     // Add to Grocery List Bottom Sheet
     RecipeDetailSheet(bloc = bloc, sheetState = sheetState)
 
-    PlusHeaderContainer(
-        modifier = modifier.fillMaxSize(),
-        data =
-            PlusHeaderData.Child(
-                title = state.recipe.title.asTextData(),
-                onBackClick = bloc::onBackClicked,
-            ),
-        verticalArrangement = spacedBy(ChefMateTheme.dimens.paddingNormal),
-        floatingToolbar = {
-            HorizontalFloatingToolbar(
-                expanded = true,
-                floatingActionButton = {
-                    FloatingActionButton(
-                        onClick = bloc::onAddToGroceryListClicked,
-                        shape = ChefMateTheme.shapes.large,
-                    ) {
-                        Icon(Icons.Default.AddShoppingCart, null)
+    var metadataCollapsed by rememberSaveable { mutableStateOf(false) }
+
+    PlusResponsiveContainer(modifier = modifier.fillMaxSize()) { windowSizeClass ->
+        val isCompact = windowSizeClass == WindowSizeClass.COMPACT
+        val showToolbar = isCompact || !metadataCollapsed
+        PlusHeaderContainer(
+            modifier = Modifier.fillMaxSize(),
+            data =
+                PlusHeaderData.Child(
+                    title = state.recipe.title.asTextData(),
+                    onBackClick = bloc::onBackClicked,
+                ),
+            verticalArrangement = spacedBy(ChefMateTheme.dimens.paddingNormal),
+            scrollEnabled = false,
+            maxContentWidth = if (isCompact) 600.dp else Dp.Unspecified,
+            floatingToolbar =
+                if (showToolbar) {
+                    {
+                        HorizontalFloatingToolbar(
+                            expanded = true,
+                            floatingActionButton = {
+                                FloatingActionButton(
+                                    onClick = bloc::onAddToGroceryListClicked,
+                                    shape = ChefMateTheme.shapes.large,
+                                ) {
+                                    Icon(Icons.Default.AddShoppingCart, null)
+                                }
+                            },
+                        ) {
+                            IconButton(onClick = { bloc.onFavoriteToggled() }) {
+                                Icon(
+                                    imageVector =
+                                        if (state.recipe.isFavorite) {
+                                            Icons.Default.Favorite
+                                        } else {
+                                            Icons.Default.FavoriteBorder
+                                        },
+                                    contentDescription =
+                                        if (state.recipe.isFavorite) {
+                                            stringResource(Res.string.recipe_detail_remove_favorite)
+                                        } else {
+                                            stringResource(Res.string.recipe_detail_add_favorite)
+                                        },
+                                )
+                            }
+                            IconButton(onClick = { bloc.onEditClicked() }) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = stringResource(Res.string.recipe_detail_edit),
+                                )
+                            }
+                            IconButton(onClick = { bloc.onDeleteClicked() }) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = stringResource(Res.string.recipe_detail_delete),
+                                )
+                            }
+                        }
                     }
+                } else {
+                    null
                 },
-            ) {
-                IconButton(onClick = { bloc.onFavoriteToggled() }) {
-                    Icon(
-                        imageVector =
-                            if (state.recipe.isFavorite) {
-                                Icons.Default.Favorite
-                            } else {
-                                Icons.Default.FavoriteBorder
-                            },
-                        contentDescription =
-                            if (state.recipe.isFavorite) {
-                                stringResource(Res.string.recipe_detail_remove_favorite)
-                            } else {
-                                stringResource(Res.string.recipe_detail_add_favorite)
-                            },
-                    )
+        ) {
+            if (state.isLoading) {
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    PlusLoadingIndicator()
                 }
-                IconButton(onClick = { bloc.onEditClicked() }) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = stringResource(Res.string.recipe_detail_edit),
-                    )
-                }
-                IconButton(onClick = { bloc.onDeleteClicked() }) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = stringResource(Res.string.recipe_detail_delete),
-                    )
-                }
+            } else if (isCompact) {
+                RecipeDetailCompactContent(
+                    recipe = state.recipe,
+                    createdAt = state.createdAt,
+                    updatedAt = state.updatedAt,
+                    onSourceUrlClicked = bloc::onSourceUrlClicked,
+                    modifier = Modifier.weight(1f),
+                )
+            } else {
+                RecipeDetailExpandedContent(
+                    recipe = state.recipe,
+                    createdAt = state.createdAt,
+                    updatedAt = state.updatedAt,
+                    onSourceUrlClicked = bloc::onSourceUrlClicked,
+                    metadataCollapsed = metadataCollapsed,
+                    onMetadataCollapsedChange = { metadataCollapsed = it },
+                )
             }
-        },
-    ) {
-        if (state.isLoading) {
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.Center,
-            ) {
-                PlusLoadingIndicator()
-            }
-        } else {
-            RecipeDetailContent(
-                recipe = state.recipe,
-                createdAt = state.createdAt,
-                updatedAt = state.updatedAt,
-            )
         }
     }
 }
@@ -193,7 +251,7 @@ private fun RecipeDetailSheet(
     sheetState: androidx.compose.material3.SheetState,
 ) {
     val slot = bloc.childSlot.subscribeAsState()
-    val child = slot.value.child?.instance as? RecipeDetailBloc.Sheet.AddToGroceryList
+    val child = slot.value.child?.instance
 
     // Remember the last active child so the sheet stays in composition during dismiss animation
     var sheetChild by remember { mutableStateOf(child) }
@@ -211,90 +269,387 @@ private fun RecipeDetailSheet(
 
     if (sheetChild != null) {
         ModalBottomSheet(
-            onDismissRequest = { sheetChild?.bloc?.onBackClicked() },
+            onDismissRequest = {
+                when (val current = sheetChild) {
+                    is RecipeDetailBloc.Sheet.AddToGroceryList -> current.bloc.onBackClicked()
+                    is RecipeDetailBloc.Sheet.BrowserLauncher -> bloc.onDismissSheet()
+                    null -> {}
+                }
+            },
             sheetState = sheetState,
         ) {
-            sheetChild?.let { AddRecipeToGroceryListScreen(it.bloc) }
+            when (val current = sheetChild) {
+                is RecipeDetailBloc.Sheet.AddToGroceryList ->
+                    AddRecipeToGroceryListScreen(current.bloc)
+                is RecipeDetailBloc.Sheet.BrowserLauncher ->
+                    BrowserScreen(current.bloc)
+                null -> {}
+            }
+        }
+    }
+}
+
+/**
+ * Compact layout: LazyColumn with metadata items that scroll away,
+ * a sticky TabRow, and a HorizontalPager that fills remaining space.
+ */
+@Composable
+private fun RecipeDetailCompactContent(
+    recipe: Recipe,
+    createdAt: TextData,
+    updatedAt: TextData,
+    onSourceUrlClicked: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val pagerState = rememberPagerState(pageCount = { 2 })
+    val tabs =
+        listOf(
+            stringResource(Res.string.recipe_detail_ingredients),
+            stringResource(Res.string.recipe_detail_directions),
+        )
+    val scope = rememberCoroutineScope()
+    val padding = ChefMateTheme.dimens.paddingNormal
+
+    LazyColumn(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = spacedBy(padding),
+    ) {
+        // Hero section: image + key details side by side
+        item(key = "hero") {
+            RecipeHeroSection(
+                recipe = recipe,
+                createdAt = createdAt,
+                updatedAt = updatedAt,
+                onSourceUrlClicked = onSourceUrlClicked,
+                modifier = Modifier.padding(horizontal = padding),
+            )
+        }
+
+        // Description below hero
+        recipe.description?.let { description ->
+            item(key = "description") {
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = padding),
+                )
+            }
+        }
+
+        // Sticky TabRow
+        stickyHeader(key = "tab_row") {
+            TabRow(selectedTabIndex = pagerState.currentPage) {
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = pagerState.currentPage == index,
+                        onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+                        text = { Text(title) },
+                    )
+                }
+            }
+        }
+
+        // Pager content fills remaining space
+        item(key = "pager") {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillParentMaxHeight(),
+                verticalAlignment = Alignment.Top,
+            ) { page ->
+                when (page) {
+                    0 ->
+                        IngredientsContent(
+                            ingredients = recipe.ingredients,
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .verticalScroll(rememberScrollState()),
+                        )
+                    1 ->
+                        DirectionsContent(
+                            directions = recipe.directions,
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .verticalScroll(rememberScrollState()),
+                        )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Tablet layout: 3-column layout with a collapsible/resizable metadata column on the left,
+ * ingredients in the middle, and directions on the right.
+ * All columns scroll independently with sticky headers on ingredients/directions.
+ * The divider between ingredients and directions is also draggable to resize.
+ */
+@Composable
+private fun ColumnScope.RecipeDetailExpandedContent(
+    recipe: Recipe,
+    createdAt: TextData,
+    updatedAt: TextData,
+    onSourceUrlClicked: (String) -> Unit,
+    metadataCollapsed: Boolean,
+    onMetadataCollapsedChange: (Boolean) -> Unit,
+) {
+    val padding = ChefMateTheme.dimens.paddingNormal
+    val density = LocalDensity.current
+    val toolbarClearance = 80.dp
+
+    var metadataWidthDp by remember { mutableStateOf(240.dp) }
+    val minMetadataWidth = 160.dp
+    val maxMetadataWidth = 400.dp
+
+    // Ratio for ingredients vs directions (0.0 = all directions, 1.0 = all ingredients)
+    var ingredientsWeight by remember { mutableStateOf(0.5f) }
+
+    val ingredientLines = remember(recipe.ingredients) { splitLines(recipe.ingredients) }
+    val ingredientCrossedOut =
+        remember(recipe.ingredients) {
+            mutableStateListOf(*BooleanArray(ingredientLines.size) { false }.toTypedArray())
+        }
+    val directionParagraphs = remember(recipe.directions) { splitLines(recipe.directions) }
+    var directionHighlightedIndex by remember(recipe.directions) { mutableStateOf(-1) }
+
+    Row(
+        modifier =
+            Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(horizontal = padding),
+    ) {
+        if (metadataCollapsed) {
+            // Collapsed: narrow strip with expand button
+            Column(
+                modifier =
+                    Modifier
+                        .width(48.dp)
+                        .fillMaxHeight(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                IconButton(onClick = { onMetadataCollapsedChange(false) }) {
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = null,
+                    )
+                }
+            }
+        } else {
+            // Column 1: Metadata (resizable)
+            LazyColumn(
+                modifier = Modifier.width(metadataWidthDp),
+                verticalArrangement = spacedBy(padding),
+            ) {
+                item(key = "collapse_button") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                    ) {
+                        IconButton(onClick = { onMetadataCollapsedChange(true) }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.MenuOpen,
+                                contentDescription = null,
+                            )
+                        }
+                    }
+                }
+                item(key = "image") {
+                    RecipeImage(
+                        imageUrl = recipe.imageUrl,
+                        contentDescription = recipe.title,
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(180.dp),
+                    )
+                }
+                recipe.starRating?.let { rating ->
+                    item(key = "star_rating") { StarRating(rating = rating) }
+                }
+                recipe.description?.let { description ->
+                    item(key = "metadata_description") {
+                        Text(
+                            text = description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                item(key = "details_card") { DetailsCard(recipe = recipe) }
+                recipe.sourceUrl?.let { sourceUrl ->
+                    item(key = "source_url") { SourceUrlCard(sourceUrl = sourceUrl, onSourceUrlClicked = onSourceUrlClicked) }
+                }
+                item(key = "timestamps") { TimestampsCard(createdAt = createdAt, updatedAt = updatedAt) }
+                if (!metadataCollapsed) {
+                    item(key = "metadata_spacer") { Spacer(modifier = Modifier.height(toolbarClearance)) }
+                }
+            }
+
+            // Drag handle between metadata and ingredients
+            DragHandle(
+                onDrag = { dragAmountX ->
+                    val deltaDp = with(density) { dragAmountX.toDp() }
+                    metadataWidthDp =
+                        (metadataWidthDp + deltaDp).coerceIn(
+                            minMetadataWidth,
+                            maxMetadataWidth,
+                        )
+                },
+            )
+        }
+
+        // Column 2: Ingredients
+        LazyColumn(
+            modifier = Modifier.weight(ingredientsWeight),
+            verticalArrangement = spacedBy(padding),
+        ) {
+            stickyHeader(key = "ingredients_header") {
+                StickyColumnHeader(
+                    title = stringResource(Res.string.recipe_detail_ingredients),
+                )
+            }
+            itemsIndexed(ingredientLines, key = { index, _ -> "ingredient_$index" }) { index, line ->
+                IngredientLineItem(
+                    text = line,
+                    crossedOut = ingredientCrossedOut[index],
+                    onClick = { ingredientCrossedOut[index] = !ingredientCrossedOut[index] },
+                    modifier = Modifier.padding(horizontal = padding),
+                )
+            }
+            if (!metadataCollapsed) {
+                item(key = "ingredients_spacer") { Spacer(modifier = Modifier.height(toolbarClearance)) }
+            }
+        }
+
+        // Drag handle between ingredients and directions
+        DragHandle(
+            onDrag = { dragAmountX ->
+                val delta = dragAmountX * 0.001f
+                ingredientsWeight = (ingredientsWeight + delta).coerceIn(0.2f, 0.8f)
+            },
+        )
+
+        // Column 3: Directions
+        LazyColumn(
+            modifier = Modifier.weight(1f - ingredientsWeight),
+            verticalArrangement = spacedBy(padding),
+        ) {
+            stickyHeader(key = "directions_header") {
+                StickyColumnHeader(
+                    title = stringResource(Res.string.recipe_detail_directions),
+                )
+            }
+            itemsIndexed(directionParagraphs, key = { index, _ -> "direction_$index" }) { index, paragraph ->
+                DirectionLineItem(
+                    text = paragraph,
+                    highlighted = directionHighlightedIndex == index,
+                    onClick = {
+                        directionHighlightedIndex =
+                            if (directionHighlightedIndex == index) -1 else index
+                    },
+                    modifier = Modifier.padding(horizontal = padding),
+                )
+            }
+            if (!metadataCollapsed) {
+                item(key = "directions_spacer") { Spacer(modifier = Modifier.height(toolbarClearance)) }
+            }
         }
     }
 }
 
 @Composable
-private fun ColumnScope.RecipeDetailContent(
-    recipe: Recipe,
-    createdAt: TextData,
-    updatedAt: TextData,
+private fun DragHandle(
+    onDrag: (Float) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    // Recipe Image
-    recipe.imageUrl?.let { imageUrl ->
-        Card(
+    Box(
+        modifier =
+            modifier
+                .width(16.dp)
+                .fillMaxHeight()
+                .pointerInput(Unit) {
+                    detectDragGestures { change, dragAmount ->
+                        change.consume()
+                        onDrag(dragAmount.x)
+                    }
+                },
+        contentAlignment = Alignment.Center,
+    ) {
+        // Vertical pill indicator
+        Box(
             modifier =
                 Modifier
-                    .fillMaxWidth()
-                    .height(240.dp),
-        ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text =
-                        PhraseModel(
-                            Res.string.recipe_detail_image,
-                            "url" to FixedString(imageUrl),
-                        ).localized(),
-                    style = ChefMateTheme.typography.bodySmall,
-                    color = ChefMateTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
+                    .width(4.dp)
+                    .height(32.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                        shape = MaterialTheme.shapes.small,
+                    ),
+        )
     }
+}
 
-    // Star Rating
-    recipe.starRating?.let { rating ->
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(Res.string.recipe_detail_rating_label),
-                style = ChefMateTheme.typography.titleMedium,
-            )
-            Text(
-                text =
-                    PhraseModel(
-                        Res.string.recipe_detail_rating_value,
-                        "star_rating" to FixedString(rating.toString()),
-                    ).localized(),
-                style = ChefMateTheme.typography.bodyLarge,
+@Composable
+private fun StarRating(
+    rating: Int,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        repeat(5) { index ->
+            Icon(
+                imageVector =
+                    if (index < rating) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint =
+                    if (index < rating) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    },
             )
         }
     }
+}
 
-    // Description
-    recipe.description?.let { description ->
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Text(
-                    text = stringResource(Res.string.recipe_detail_description),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
-        }
-    }
-
-    // Servings and Times
+@Composable
+private fun DescriptionCard(
+    description: String,
+    modifier: Modifier = Modifier,
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = stringResource(Res.string.recipe_detail_description),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+    }
+}
+
+@Composable
+private fun DetailsCard(
+    recipe: Recipe,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -307,6 +662,7 @@ private fun ColumnScope.RecipeDetailContent(
 
             recipe.servings?.let { servings ->
                 DetailRow(
+                    icon = Icons.Default.Restaurant,
                     label = stringResource(Res.string.recipe_detail_servings),
                     value = "$servings",
                 )
@@ -314,6 +670,7 @@ private fun ColumnScope.RecipeDetailContent(
 
             recipe.prepTime?.let { prepTime ->
                 DetailRow(
+                    icon = Icons.Default.Timer,
                     label = stringResource(Res.string.recipe_detail_prep_time),
                     value =
                         PhraseModel(
@@ -325,6 +682,7 @@ private fun ColumnScope.RecipeDetailContent(
 
             recipe.cookTime?.let { cookTime ->
                 DetailRow(
+                    icon = Icons.Default.Timer,
                     label = stringResource(Res.string.recipe_detail_cook_time),
                     value =
                         PhraseModel(
@@ -336,6 +694,7 @@ private fun ColumnScope.RecipeDetailContent(
 
             recipe.totalTime?.let { totalTime ->
                 DetailRow(
+                    icon = Icons.Default.Timer,
                     label = stringResource(Res.string.recipe_detail_total_time),
                     value =
                         PhraseModel(
@@ -347,6 +706,7 @@ private fun ColumnScope.RecipeDetailContent(
 
             recipe.calories?.let { calories ->
                 DetailRow(
+                    icon = Icons.Default.LocalFireDepartment,
                     label = stringResource(Res.string.recipe_detail_calories),
                     value =
                         PhraseModel(
@@ -357,74 +717,160 @@ private fun ColumnScope.RecipeDetailContent(
             }
         }
     }
+}
 
-    // Source URL
-    recipe.sourceUrl?.let { sourceUrl ->
-        Card(
-            modifier = Modifier.fillMaxWidth(),
+@Composable
+private fun SourceUrlCard(
+    sourceUrl: String,
+    onSourceUrlClicked: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Text(
-                    text = stringResource(Res.string.recipe_detail_source),
-                    style = MaterialTheme.typography.titleMedium,
+            Text(
+                text = stringResource(Res.string.recipe_detail_source),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = sourceUrl,
+                modifier = Modifier.clickable { onSourceUrlClicked(sourceUrl) },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                textDecoration = TextDecoration.Underline,
+            )
+        }
+    }
+}
+
+/**
+ * Compact hero: image on the left, key details stacked on the right.
+ */
+@Composable
+private fun RecipeHeroSection(
+    recipe: Recipe,
+    createdAt: TextData,
+    updatedAt: TextData,
+    onSourceUrlClicked: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        RecipeImage(
+            imageUrl = recipe.imageUrl,
+            contentDescription = recipe.title,
+            modifier =
+                Modifier
+                    .width(140.dp)
+                    .height(140.dp),
+        )
+        Column(
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            // Star Rating
+            recipe.starRating?.let { rating ->
+                StarRating(rating = rating)
+            }
+
+            // Key details inline
+            recipe.servings?.let { servings ->
+                DetailRow(
+                    icon = Icons.Default.Restaurant,
+                    label = stringResource(Res.string.recipe_detail_servings),
+                    value = "$servings",
                 )
+            }
+            recipe.prepTime?.let { prepTime ->
+                DetailRow(
+                    icon = Icons.Default.Timer,
+                    label = stringResource(Res.string.recipe_detail_prep_time),
+                    value =
+                        PhraseModel(
+                            Res.string.recipe_detail_minutes,
+                            "minutes" to FixedString(prepTime.toString()),
+                        ).localized(),
+                )
+            }
+            recipe.cookTime?.let { cookTime ->
+                DetailRow(
+                    icon = Icons.Default.Timer,
+                    label = stringResource(Res.string.recipe_detail_cook_time),
+                    value =
+                        PhraseModel(
+                            Res.string.recipe_detail_minutes,
+                            "minutes" to FixedString(cookTime.toString()),
+                        ).localized(),
+                )
+            }
+            recipe.totalTime?.let { totalTime ->
+                DetailRow(
+                    icon = Icons.Default.Timer,
+                    label = stringResource(Res.string.recipe_detail_total_time),
+                    value =
+                        PhraseModel(
+                            Res.string.recipe_detail_minutes,
+                            "minutes" to FixedString(totalTime.toString()),
+                        ).localized(),
+                )
+            }
+            recipe.calories?.let { calories ->
+                DetailRow(
+                    icon = Icons.Default.LocalFireDepartment,
+                    label = stringResource(Res.string.recipe_detail_calories),
+                    value =
+                        PhraseModel(
+                            Res.string.recipe_detail_kcal,
+                            "calories" to FixedString(calories.toString()),
+                        ).localized(),
+                )
+            }
+
+            // Source URL
+            recipe.sourceUrl?.let { sourceUrl ->
                 Text(
                     text = sourceUrl,
-                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.clickable { onSourceUrlClicked(sourceUrl) },
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary,
+                    textDecoration = TextDecoration.Underline,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                 )
             }
+
+            // Timestamps inline
+            Text(
+                text =
+                    stringResource(Res.string.recipe_detail_created) +
+                        " " + createdAt.localized(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text =
+                    stringResource(Res.string.recipe_detail_updated) +
+                        " " + updatedAt.localized(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
+}
 
-    // Ingredients
-    if (recipe.ingredients.isNotBlank()) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Text(
-                    text = stringResource(Res.string.recipe_detail_ingredients),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Text(
-                    text = recipe.ingredients,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
-        }
-    }
-
-    // Directions
-    if (recipe.directions.isNotBlank()) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Text(
-                    text = stringResource(Res.string.recipe_detail_directions),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Text(
-                    text = recipe.directions,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
-        }
-    }
-
-    // Timestamps
+@Composable
+private fun TimestampsCard(
+    createdAt: TextData,
+    updatedAt: TextData,
+    modifier: Modifier = Modifier,
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -451,19 +897,169 @@ private fun DetailRow(
     label: String,
     value: String,
     modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
+        )
+    }
+}
+
+private fun splitLines(text: String): List<String> = text.split("\n").filter { it.isNotBlank() }
+
+@Composable
+private fun IngredientLineItem(
+    text: String,
+    crossedOut: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        textDecoration = if (crossedOut) TextDecoration.LineThrough else TextDecoration.None,
+        color =
+            if (crossedOut) {
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            },
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(vertical = ChefMateTheme.dimens.paddingExtraSmall),
+    )
+}
+
+@Composable
+private fun DirectionLineItem(
+    text: String,
+    highlighted: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val dimens = ChefMateTheme.dimens
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .then(
+                    if (highlighted) {
+                        Modifier.background(
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            shape = RoundedCornerShape(dimens.paddingSmall),
+                        )
+                    } else {
+                        Modifier
+                    },
+                ).padding(
+                    vertical = dimens.paddingExtraSmall,
+                    horizontal = dimens.paddingExtraSmall,
+                ),
+    )
+}
+
+@Composable
+private fun IngredientsContent(
+    ingredients: String,
+    modifier: Modifier = Modifier,
+) {
+    val lines = remember(ingredients) { splitLines(ingredients) }
+    val crossedOut =
+        remember(ingredients) {
+            mutableStateListOf(*BooleanArray(lines.size) { false }.toTypedArray())
+        }
+
+    val dimens = ChefMateTheme.dimens
+    Column(
+        modifier = modifier.padding(dimens.paddingNormal),
+        verticalArrangement = Arrangement.spacedBy(dimens.paddingExtraSmall),
+    ) {
+        Text(
+            text = stringResource(Res.string.recipe_detail_ingredients),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        lines.forEachIndexed { index, line ->
+            IngredientLineItem(
+                text = line,
+                crossedOut = crossedOut[index],
+                onClick = { crossedOut[index] = !crossedOut[index] },
+            )
+        }
+    }
+}
+
+@Composable
+private fun DirectionsContent(
+    directions: String,
+    modifier: Modifier = Modifier,
+) {
+    val paragraphs = remember(directions) { splitLines(directions) }
+    var highlightedIndex by remember(directions) { mutableStateOf(-1) }
+
+    val dimens = ChefMateTheme.dimens
+    Column(
+        modifier = modifier.padding(dimens.paddingNormal),
+        verticalArrangement = Arrangement.spacedBy(dimens.paddingSmall),
+    ) {
+        Text(
+            text = stringResource(Res.string.recipe_detail_directions),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        paragraphs.forEachIndexed { index, paragraph ->
+            DirectionLineItem(
+                text = paragraph,
+                highlighted = highlightedIndex == index,
+                onClick = {
+                    highlightedIndex = if (highlightedIndex == index) -1 else index
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun StickyColumnHeader(
+    title: String,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 2.dp,
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(16.dp),
         )
     }
 }
@@ -592,6 +1188,14 @@ private val previewBloc =
         }
 
         override fun onAddToGroceryListClicked() {
+            TODO("Not yet implemented")
+        }
+
+        override fun onSourceUrlClicked(url: String) {
+            TODO("Not yet implemented")
+        }
+
+        override fun onDismissSheet() {
             TODO("Not yet implemented")
         }
 

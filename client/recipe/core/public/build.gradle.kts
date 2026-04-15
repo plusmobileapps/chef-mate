@@ -11,6 +11,7 @@ kotlin {
             api(projects.client.text.public)
             api(libs.kotlinx.serialization.json)
 
+            implementation(projects.client.browser.public)
             implementation(projects.client.shared)
             implementation(projects.client.ui.public)
             implementation(libs.arkivanov.decompose.compose.extensions)
