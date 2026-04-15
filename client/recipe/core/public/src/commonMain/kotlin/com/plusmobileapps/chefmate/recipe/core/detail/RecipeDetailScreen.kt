@@ -315,7 +315,7 @@ private fun RecipeDetailCompactContent(
         verticalArrangement = spacedBy(padding),
     ) {
         // Hero section: image + key details side by side
-        item {
+        item(key = "hero") {
             RecipeHeroSection(
                 recipe = recipe,
                 createdAt = createdAt,
@@ -327,7 +327,7 @@ private fun RecipeDetailCompactContent(
 
         // Description below hero
         recipe.description?.let { description ->
-            item {
+            item(key = "description") {
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodyMedium,
@@ -338,7 +338,7 @@ private fun RecipeDetailCompactContent(
         }
 
         // Sticky TabRow
-        stickyHeader {
+        stickyHeader(key = "tab_row") {
             TabRow(selectedTabIndex = pagerState.currentPage) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
@@ -351,7 +351,7 @@ private fun RecipeDetailCompactContent(
         }
 
         // Pager content fills remaining space
-        item {
+        item(key = "pager") {
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.fillParentMaxHeight(),
@@ -443,7 +443,7 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                 modifier = Modifier.width(metadataWidthDp),
                 verticalArrangement = spacedBy(padding),
             ) {
-                item {
+                item(key = "collapse_button") {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End,
@@ -456,7 +456,7 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                         }
                     }
                 }
-                item {
+                item(key = "image") {
                     RecipeImage(
                         imageUrl = recipe.imageUrl,
                         contentDescription = recipe.title,
@@ -467,10 +467,10 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                     )
                 }
                 recipe.starRating?.let { rating ->
-                    item { StarRating(rating = rating) }
+                    item(key = "star_rating") { StarRating(rating = rating) }
                 }
                 recipe.description?.let { description ->
-                    item {
+                    item(key = "metadata_description") {
                         Text(
                             text = description,
                             style = MaterialTheme.typography.bodyMedium,
@@ -478,13 +478,13 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                         )
                     }
                 }
-                item { DetailsCard(recipe = recipe) }
+                item(key = "details_card") { DetailsCard(recipe = recipe) }
                 recipe.sourceUrl?.let { sourceUrl ->
-                    item { SourceUrlCard(sourceUrl = sourceUrl, onSourceUrlClicked = onSourceUrlClicked) }
+                    item(key = "source_url") { SourceUrlCard(sourceUrl = sourceUrl, onSourceUrlClicked = onSourceUrlClicked) }
                 }
-                item { TimestampsCard(createdAt = createdAt, updatedAt = updatedAt) }
+                item(key = "timestamps") { TimestampsCard(createdAt = createdAt, updatedAt = updatedAt) }
                 if (!metadataCollapsed) {
-                    item { Spacer(modifier = Modifier.height(toolbarClearance)) }
+                    item(key = "metadata_spacer") { Spacer(modifier = Modifier.height(toolbarClearance)) }
                 }
             }
 
@@ -506,12 +506,12 @@ private fun ColumnScope.RecipeDetailExpandedContent(
             modifier = Modifier.weight(ingredientsWeight),
             verticalArrangement = spacedBy(padding),
         ) {
-            stickyHeader {
+            stickyHeader(key = "ingredients_header") {
                 StickyColumnHeader(
                     title = stringResource(Res.string.recipe_detail_ingredients),
                 )
             }
-            itemsIndexed(ingredientLines) { index, line ->
+            itemsIndexed(ingredientLines, key = { index, _ -> "ingredient_$index" }) { index, line ->
                 IngredientLineItem(
                     text = line,
                     crossedOut = ingredientCrossedOut[index],
@@ -520,7 +520,7 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                 )
             }
             if (!metadataCollapsed) {
-                item { Spacer(modifier = Modifier.height(toolbarClearance)) }
+                item(key = "ingredients_spacer") { Spacer(modifier = Modifier.height(toolbarClearance)) }
             }
         }
 
@@ -537,12 +537,12 @@ private fun ColumnScope.RecipeDetailExpandedContent(
             modifier = Modifier.weight(1f - ingredientsWeight),
             verticalArrangement = spacedBy(padding),
         ) {
-            stickyHeader {
+            stickyHeader(key = "directions_header") {
                 StickyColumnHeader(
                     title = stringResource(Res.string.recipe_detail_directions),
                 )
             }
-            itemsIndexed(directionParagraphs) { index, paragraph ->
+            itemsIndexed(directionParagraphs, key = { index, _ -> "direction_$index" }) { index, paragraph ->
                 DirectionLineItem(
                     text = paragraph,
                     highlighted = directionHighlightedIndex == index,
@@ -554,7 +554,7 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                 )
             }
             if (!metadataCollapsed) {
-                item { Spacer(modifier = Modifier.height(toolbarClearance)) }
+                item(key = "directions_spacer") { Spacer(modifier = Modifier.height(toolbarClearance)) }
             }
         }
     }
