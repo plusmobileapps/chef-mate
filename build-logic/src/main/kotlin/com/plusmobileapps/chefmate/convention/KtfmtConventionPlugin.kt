@@ -18,6 +18,14 @@ fun Project.applyKtfmt() {
 
     configure<KtfmtExtension> {
         kotlinLangStyle()
-        srcSetPathExclusionPattern.set(Regex(".*generated.*"))
+        srcSetPathExclusionPattern.set(Regex(".*(?:generated|buildkonfig).*"))
+    }
+
+    // Ensure ktfmt tasks run after any code-generation tasks (e.g. BuildKonfig)
+    // to avoid implicit dependency validation errors.
+    tasks.configureEach {
+        if (name.startsWith("ktfmtCheck") || name.startsWith("ktfmtFormat")) {
+            dependsOn(tasks.matching { it.name == "generateBuildKonfig" })
+        }
     }
 }

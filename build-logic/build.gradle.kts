@@ -37,6 +37,19 @@ repositories {
     gradlePluginPortal()
 }
 
+// Force kotlin-stdlib to match the Kotlin version embedded in Gradle so that
+// plugin dependencies (which may transitively pull in a newer stdlib) don't
+// cause "incompatible metadata version" errors during build-logic compilation.
+configurations.configureEach {
+    resolutionStrategy.eachDependency {
+        if (
+            requested.group == "org.jetbrains.kotlin" && requested.name.startsWith("kotlin-stdlib")
+        ) {
+            useVersion(embeddedKotlinVersion)
+        }
+    }
+}
+
 dependencies {
     compileOnly(libs.kotlin.gradle.plugin)
     compileOnly(libs.android.gradle.plugin)

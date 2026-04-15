@@ -47,7 +47,15 @@ interface DateTimeFormatterUtil {
     }
 }
 
-expect class DateTimeFormatterUtilImpl : DateTimeFormatterUtil
+expect class DateTimeFormatterUtilImpl : DateTimeFormatterUtil {
+    override fun shortDate(instant: Instant, timeZone: TimeZone): String
+
+    override fun longDate(instant: Instant, timeZone: TimeZone): String
+
+    override fun formatTime(instant: Instant, timeZone: TimeZone): String
+
+    override fun formatDateTime(instant: Instant, timeZone: TimeZone): String
+}
 
 fun LocalDate.atStartOfDayIn(): LocalDateTime {
     // Assuming start of day is at 00:00, adjust if necessary for your use case
