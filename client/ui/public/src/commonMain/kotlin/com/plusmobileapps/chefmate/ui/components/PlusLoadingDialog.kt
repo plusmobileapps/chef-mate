@@ -22,11 +22,8 @@ fun PlusLoadingDialog(message: TextData) {
                 verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingNormal),
             ) {
                 CircularProgressIndicator()
-                Text(
-                    text = message.localized(),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
+                Text(text = message.localized(), style = MaterialTheme.typography.bodyLarge)
             }
-        },
+        }
     )
 }

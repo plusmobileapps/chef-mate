@@ -16,9 +16,7 @@ fun PlusResponsiveContainer(
     modifier: Modifier = Modifier,
     content: @Composable (WindowSizeClass) -> Unit,
 ) {
-    BoxWithConstraints(
-        modifier = modifier,
-    ) {
+    BoxWithConstraints(modifier = modifier) {
         val windowSizeClass =
             when {
                 maxWidth < 600.dp -> WindowSizeClass.COMPACT

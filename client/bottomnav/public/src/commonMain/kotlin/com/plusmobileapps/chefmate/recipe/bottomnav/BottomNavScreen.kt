@@ -55,26 +55,16 @@ fun BottomNavigationScreen(bloc: BottomNavBloc) {
     PlusResponsiveContainer { windowSize ->
         when (windowSize) {
             WindowSizeClass.COMPACT ->
-                MobileBottomNavContent(
-                    modifier = Modifier.imePadding(),
-                    bloc = bloc,
-                )
+                MobileBottomNavContent(modifier = Modifier.imePadding(), bloc = bloc)
             WindowSizeClass.MEDIUM,
-            WindowSizeClass.EXPANDED,
-            ->
-                TabletNavRailContent(
-                    modifier = Modifier.imePadding(),
-                    bloc = bloc,
-                )
+            WindowSizeClass.EXPANDED ->
+                TabletNavRailContent(modifier = Modifier.imePadding(), bloc = bloc)
         }
     }
 }
 
 @Composable
-private fun TabletNavRailContent(
-    bloc: BottomNavBloc,
-    modifier: Modifier = Modifier,
-) {
+private fun TabletNavRailContent(bloc: BottomNavBloc, modifier: Modifier = Modifier) {
     val state = bloc.state.collectAsState()
 
     val navRailItems =
@@ -93,42 +83,23 @@ private fun TabletNavRailContent(
     PlusNavRailHeaderContainer(
         modifier = modifier.fillMaxSize(),
         navRail = navRailItems,
-        content = {
-            BottomNavContentContainer(
-                modifier = Modifier.padding(it),
-                bloc = bloc,
-            )
-        },
+        content = { BottomNavContentContainer(modifier = Modifier.padding(it), bloc = bloc) },
     )
 }
 
 @Composable
-private fun MobileBottomNavContent(
-    bloc: BottomNavBloc,
-    modifier: Modifier = Modifier,
-) {
+private fun MobileBottomNavContent(bloc: BottomNavBloc, modifier: Modifier = Modifier) {
     val state = bloc.state.collectAsState()
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        bottomBar = {
-            PlusBottomBar(
-                state = state.value,
-                onClick = bloc::onTabSelected,
-            )
-        },
+        bottomBar = { PlusBottomBar(state = state.value, onClick = bloc::onTabSelected) },
     ) { paddingValues ->
-        BottomNavContentContainer(
-            modifier = Modifier.padding(paddingValues),
-            bloc = bloc,
-        )
+        BottomNavContentContainer(modifier = Modifier.padding(paddingValues), bloc = bloc)
     }
 }
 
 @Composable
-private fun BottomNavContentContainer(
-    bloc: BottomNavBloc,
-    modifier: Modifier = Modifier,
-) {
+private fun BottomNavContentContainer(bloc: BottomNavBloc, modifier: Modifier = Modifier) {
     Children(
         modifier = modifier.fillMaxSize(),
         stack = bloc.content,
@@ -138,9 +109,7 @@ private fun BottomNavContentContainer(
                 fallbackAnimation = stackAnimation(fade() + scale()),
                 onBack = bloc::onBackClicked,
                 selector = { backEvent, _, _ ->
-                    fadeScalePredictiveBackAnimatable(
-                        initialEvent = backEvent,
-                    )
+                    fadeScalePredictiveBackAnimatable(initialEvent = backEvent)
                 },
             ),
     ) { created ->
@@ -154,13 +123,8 @@ private fun BottomNavContentContainer(
 }
 
 @Composable
-private fun PlusBottomBar(
-    state: BottomNavBloc.Model,
-    onClick: (BottomNavBloc.Tab) -> Unit,
-) {
-    BottomAppBar(
-        modifier = Modifier.fillMaxWidth(),
-    ) {
+private fun PlusBottomBar(state: BottomNavBloc.Model, onClick: (BottomNavBloc.Tab) -> Unit) {
+    BottomAppBar(modifier = Modifier.fillMaxWidth()) {
         state.tabs.forEach { tab ->
             NavigationBarItem(
                 selected = tab == state.selectedTab,
@@ -171,12 +135,7 @@ private fun PlusBottomBar(
                         color = ChefMateTheme.colorScheme.onSurface,
                     )
                 },
-                icon = {
-                    Icon(
-                        imageVector = tab.getIcon(),
-                        contentDescription = null,
-                    )
-                },
+                icon = { Icon(imageVector = tab.getIcon(), contentDescription = null) },
             )
         }
     }

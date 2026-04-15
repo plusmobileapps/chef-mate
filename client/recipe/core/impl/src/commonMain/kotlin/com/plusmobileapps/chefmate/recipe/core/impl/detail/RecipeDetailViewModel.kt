@@ -7,6 +7,7 @@ import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +17,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.coroutines.CoroutineContext
 
 @AssistedInject
 class RecipeDetailViewModel(
@@ -36,12 +36,7 @@ class RecipeDetailViewModel(
 
     private suspend fun observeRecipe() {
         repository.getRecipe(recipeId).collect { recipe ->
-            _state.update {
-                it.copy(
-                    isLoading = false,
-                    recipe = recipe ?: Recipe.Empty,
-                )
-            }
+            _state.update { it.copy(isLoading = false, recipe = recipe ?: Recipe.Empty) }
         }
     }
 

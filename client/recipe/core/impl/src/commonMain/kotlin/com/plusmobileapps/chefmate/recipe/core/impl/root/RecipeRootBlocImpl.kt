@@ -27,8 +27,7 @@ class RecipeRootBlocImpl(
     @Assisted private val output: Consumer<RecipeRootBloc.Output>,
     private val detailBloc: RecipeDetailBloc.Factory,
     private val editBloc: EditRecipeBloc.Factory,
-) : RecipeRootBloc,
-    BlocContext by context {
+) : RecipeRootBloc, BlocContext by context {
     @AssistedFactory
     fun interface ManagedFactory {
         fun create(
@@ -46,13 +45,8 @@ class RecipeRootBlocImpl(
             initialStack = {
                 when (props) {
                     is RecipeRootBloc.Props.Detail ->
-                        listOf(
-                            Configuration.Detail(recipeId = props.recipeId),
-                        )
-                    is RecipeRootBloc.Props.Create ->
-                        listOf(
-                            Configuration.Edit(recipeId = null),
-                        )
+                        listOf(Configuration.Detail(recipeId = props.recipeId))
+                    is RecipeRootBloc.Props.Create -> listOf(Configuration.Edit(recipeId = null))
                 }
             },
             handleBackButton = true,
@@ -66,10 +60,7 @@ class RecipeRootBlocImpl(
         navigation.pop()
     }
 
-    private fun createChild(
-        config: Configuration,
-        context: BlocContext,
-    ): RecipeRootBloc.Child =
+    private fun createChild(config: Configuration, context: BlocContext): RecipeRootBloc.Child =
         when (config) {
             is Configuration.Detail ->
                 RecipeRootBloc.Child.Detail(
@@ -78,7 +69,7 @@ class RecipeRootBlocImpl(
                             context = context,
                             recipeId = config.recipeId,
                             output = ::handleDetailOutput,
-                        ),
+                        )
                 )
             is Configuration.Edit ->
                 RecipeRootBloc.Child.Edit(
@@ -87,7 +78,7 @@ class RecipeRootBlocImpl(
                             context = context,
                             recipeId = config.recipeId,
                             output = ::handleEditOutput,
-                        ),
+                        )
                 )
         }
 
@@ -101,9 +92,7 @@ class RecipeRootBlocImpl(
                 }
             }
             is EditRecipeBloc.Output.Finished -> {
-                navigation.navigate {
-                    listOf(Configuration.Detail(output.recipeId))
-                }
+                navigation.navigate { listOf(Configuration.Detail(output.recipeId)) }
             }
         }
     }
@@ -114,28 +103,25 @@ class RecipeRootBlocImpl(
                 this.output.onNext(RecipeRootBloc.Output.Finished)
             }
             is RecipeDetailBloc.Output.EditRecipe -> {
-                navigation.bringToFront(
-                    Configuration.Edit(recipeId = output.recipeId),
-                )
+                navigation.bringToFront(Configuration.Edit(recipeId = output.recipeId))
             }
         }
     }
 
     @Serializable
     sealed class Configuration {
-        data class Detail(
-            val recipeId: Long,
-        ) : Configuration()
+        data class Detail(val recipeId: Long) : Configuration()
 
-        data class Edit(
-            val recipeId: Long?,
-        ) : Configuration()
+        data class Edit(val recipeId: Long?) : Configuration()
     }
 }
 
 @ContributesTo(AppScope::class)
 interface RecipeRootBlocBindingModule {
     @Provides
-    fun provideRecipeRootBlocFactory(factory: RecipeRootBlocImpl.ManagedFactory): RecipeRootBloc.Factory =
-        RecipeRootBloc.Factory { context, props, output -> factory.create(context, props, output) }
+    fun provideRecipeRootBlocFactory(
+        factory: RecipeRootBlocImpl.ManagedFactory
+    ): RecipeRootBloc.Factory = RecipeRootBloc.Factory { context, props, output ->
+        factory.create(context, props, output)
+    }
 }

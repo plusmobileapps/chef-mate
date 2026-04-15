@@ -23,9 +23,7 @@ class MainActivity : ComponentActivity() {
                 componentContext = defaultComponentContext(),
                 applicationComponent = appComponent,
             )
-        setContent {
-            App(rootBloc)
-        }
+        setContent { App(rootBloc) }
 
         supabaseClient.handleDeeplinks(intent)
     }

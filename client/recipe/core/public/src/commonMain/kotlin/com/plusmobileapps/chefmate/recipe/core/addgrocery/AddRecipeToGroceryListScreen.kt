@@ -42,10 +42,7 @@ import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddRecipeToGroceryListScreen(
-    bloc: AddRecipeToGroceryListBloc,
-    modifier: Modifier = Modifier,
-) {
+fun AddRecipeToGroceryListScreen(bloc: AddRecipeToGroceryListBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
 
     PlusHeaderContainer(
@@ -58,12 +55,10 @@ fun AddRecipeToGroceryListScreen(
         scrollEnabled = false,
         floatingActionButton = {
             if (!state.isLoading && state.ingredients.any { it.isSelected }) {
-                ExtendedFloatingActionButton(
-                    onClick = bloc::onSaveClicked,
-                ) {
+                ExtendedFloatingActionButton(onClick = bloc::onSaveClicked) {
                     if (state.isAdding) {
                         PlusLoadingIndicator(
-                            modifier = Modifier.padding(end = ChefMateTheme.dimens.paddingSmall),
+                            modifier = Modifier.padding(end = ChefMateTheme.dimens.paddingSmall)
                         )
                     }
                     Text(stringResource(Res.string.recipe_add_to_grocery_list_add))
@@ -73,18 +68,12 @@ fun AddRecipeToGroceryListScreen(
     ) {
         when {
             state.isLoading -> {
-                Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.Center,
-                ) {
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     PlusLoadingIndicator()
                 }
             }
             state.ingredients.isEmpty() -> {
-                Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.Center,
-                ) {
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     Text(
                         text = stringResource(Res.string.recipe_add_to_grocery_list_no_ingredients),
                         style = MaterialTheme.typography.bodyLarge,
@@ -121,10 +110,7 @@ private fun GroceryListSelector(
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = it },
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
     ) {
         OutlinedTextField(
             value = selectedList?.name ?: "",
@@ -133,14 +119,9 @@ private fun GroceryListSelector(
             label = { Text(stringResource(Res.string.recipe_add_to_grocery_list_select_list)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier =
-                Modifier
-                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
-                    .fillMaxWidth(),
+                Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
         )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-        ) {
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             groceryLists.forEach { list ->
                 DropdownMenuItem(
                     text = { Text(list.name) },
@@ -160,9 +141,7 @@ private fun IngredientsList(
     onIngredientToggled: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-    ) {
+    LazyColumn(modifier = modifier.fillMaxSize()) {
         items(ingredients.size, key = { it }) { index ->
             val ingredient = ingredients[index]
             IngredientListItem(
@@ -193,10 +172,7 @@ private fun IngredientListItem(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Checkbox(
-            checked = ingredient.isSelected,
-            onCheckedChange = { onToggle() },
-        )
+        Checkbox(checked = ingredient.isSelected, onCheckedChange = { onToggle() })
         Text(
             text = ingredient.name,
             style = MaterialTheme.typography.bodyLarge,

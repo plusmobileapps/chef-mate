@@ -15,6 +15,4 @@ kotlin {
     }
 }
 
-plusLibrary {
-    namespace = "com.plusmobileapps.chefmate.auth.ui"
-}
+plusLibrary { namespace = "com.plusmobileapps.chefmate.auth.ui" }

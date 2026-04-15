@@ -41,17 +41,11 @@ import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
 @Composable
-fun SettingsScreen(
-    bloc: SettingsBloc,
-    modifier: Modifier = Modifier,
-) {
+fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
     val viewState by bloc.state.collectAsState()
 
     PlusNavContainer(
-        data =
-            PlusHeaderData.Parent(
-                title = Res.string.settings.asTextData(),
-            ),
+        data = PlusHeaderData.Parent(title = Res.string.settings.asTextData()),
         content = {
             if (viewState.isAuthenticated) {
                 // Show greeting and sign out button when authenticated
@@ -70,39 +64,22 @@ fun SettingsScreen(
                     HorizontalDivider()
                 }
                 // Show sign in/sign up buttons when not authenticated
-                SettingsRow(
-                    name = Res.string.sign_in.asTextData(),
-                    onClick = bloc::onSignInClicked,
-                )
+                SettingsRow(name = Res.string.sign_in.asTextData(), onClick = bloc::onSignInClicked)
                 HorizontalDivider()
-                SettingsRow(
-                    name = Res.string.sign_up.asTextData(),
-                    onClick = bloc::onSignUpClicked,
-                )
+                SettingsRow(name = Res.string.sign_up.asTextData(), onClick = bloc::onSignUpClicked)
             }
         },
     )
-    Column(
-        modifier = modifier.fillMaxSize(),
-    ) {
+    Column(modifier = modifier.fillMaxSize()) {
         TopAppBar(
-            title = {
-                Text(
-                    Res.string.settings
-                        .asTextData()
-                        .localized(),
-                )
-            },
+            title = { Text(Res.string.settings.asTextData().localized()) },
             windowInsets = WindowInsets(),
         )
     }
 }
 
 @Composable
-private fun GreetingSection(
-    greeting: TextData,
-    modifier: Modifier = Modifier,
-) {
+private fun GreetingSection(greeting: TextData, modifier: Modifier = Modifier) {
     Row(
         modifier =
             modifier
@@ -111,24 +88,18 @@ private fun GreetingSection(
                 .padding(horizontal = ChefMateTheme.dimens.paddingNormal),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            greeting.localized(),
-            style = ChefMateTheme.typography.headlineSmall,
-        )
+        Text(greeting.localized(), style = ChefMateTheme.typography.headlineSmall)
     }
 }
 
 @Composable
-private fun EmailVerificationMessage(
-    message: TextData,
-    modifier: Modifier = Modifier,
-) {
+private fun EmailVerificationMessage(message: TextData, modifier: Modifier = Modifier) {
     Column(
         modifier =
             modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.secondaryContainer)
-                .padding(ChefMateTheme.dimens.paddingNormal),
+                .padding(ChefMateTheme.dimens.paddingNormal)
     ) {
         Text(
             message.localized(),
@@ -139,11 +110,7 @@ private fun EmailVerificationMessage(
 }
 
 @Composable
-private fun SettingsRow(
-    name: TextData,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun SettingsRow(name: TextData, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val contentDescription = name.localized()
     Row(
         modifier =
@@ -152,16 +119,11 @@ private fun SettingsRow(
                 .height(ChefMateTheme.dimens.rowHeight)
                 .clickable { onClick() }
                 .padding(horizontal = ChefMateTheme.dimens.paddingNormal)
-                .semantics {
-                    this.contentDescription = contentDescription
-                },
+                .semantics { this.contentDescription = contentDescription },
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            name.localized(),
-            style = ChefMateTheme.typography.titleMedium,
-        )
+        Text(name.localized(), style = ChefMateTheme.typography.titleMedium)
         Icon(Icons.Default.ChevronRight, contentDescription = null)
     }
 }
@@ -170,10 +132,7 @@ private val previewBlocUnauthenticated =
     object : SettingsBloc {
         override val state =
             kotlinx.coroutines.flow.MutableStateFlow(
-                SettingsBloc.Model(
-                    isAuthenticated = false,
-                    greeting = null,
-                ),
+                SettingsBloc.Model(isAuthenticated = false, greeting = null)
             )
 
         override fun onSignInClicked() = Unit
@@ -192,11 +151,9 @@ private val previewBlocAuthenticated =
                     greeting =
                         com.plusmobileapps.chefmate.text.PhraseModel(
                             resource = Res.string.greeting_authenticated,
-                            "name" to
-                                com.plusmobileapps.chefmate.text
-                                    .FixedString("John Doe"),
+                            "name" to com.plusmobileapps.chefmate.text.FixedString("John Doe"),
                         ),
-                ),
+                )
             )
 
         override fun onSignInClicked() = Unit
@@ -209,23 +166,17 @@ private val previewBlocAuthenticated =
 @Preview(showBackground = true)
 @Composable
 internal fun SettingsScreenUnauthenticatedPreview() {
-    ChefMateTheme {
-        SettingsScreen(bloc = previewBlocUnauthenticated)
-    }
+    ChefMateTheme { SettingsScreen(bloc = previewBlocUnauthenticated) }
 }
 
 @Preview(showBackground = true)
 @Composable
 internal fun SettingsScreenAuthenticatedPreview() {
-    ChefMateTheme {
-        SettingsScreen(bloc = previewBlocAuthenticated)
-    }
+    ChefMateTheme { SettingsScreen(bloc = previewBlocAuthenticated) }
 }
 
 @Preview(showBackground = true)
 @Composable
 internal fun SettingsScreenDarkPreview() {
-    ChefMateTheme(darkTheme = true) {
-        SettingsScreen(bloc = previewBlocUnauthenticated)
-    }
+    ChefMateTheme(darkTheme = true) { SettingsScreen(bloc = previewBlocUnauthenticated) }
 }

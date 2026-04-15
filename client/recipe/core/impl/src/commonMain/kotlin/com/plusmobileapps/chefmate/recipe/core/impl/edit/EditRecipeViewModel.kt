@@ -9,6 +9,9 @@ import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
+import kotlin.coroutines.CoroutineContext
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,9 +21,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.coroutines.CoroutineContext
-import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 
 @AssistedInject
 class EditRecipeViewModel(
@@ -72,9 +72,7 @@ class EditRecipeViewModel(
     init {
         if (recipeId != null) {
             _state.update { it.copy(isLoading = false) }
-            scope.launch {
-                loadRecipe(recipeId)
-            }
+            scope.launch { loadRecipe(recipeId) }
         }
     }
 
@@ -134,9 +132,7 @@ class EditRecipeViewModel(
                 _state.update { it.copy(showDiscardChangesDialog = true) }
             }
             else -> {
-                scope.launch {
-                    _output.send(Output.Cancelled)
-                }
+                scope.launch { _output.send(Output.Cancelled) }
             }
         }
     }
@@ -251,9 +247,7 @@ class EditRecipeViewModel(
     sealed class Output {
         data object Cancelled : Output()
 
-        data class Finished(
-            val recipeId: Long,
-        ) : Output()
+        data class Finished(val recipeId: Long) : Output()
     }
 
     @AssistedFactory

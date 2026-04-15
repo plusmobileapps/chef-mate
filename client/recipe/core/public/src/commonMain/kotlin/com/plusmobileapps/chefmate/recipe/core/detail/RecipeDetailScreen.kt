@@ -118,19 +118,16 @@ import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
-import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecipeDetailScreen(
-    bloc: RecipeDetailBloc,
-    modifier: Modifier = Modifier,
-) {
+fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -199,13 +196,15 @@ fun RecipeDetailScreen(
                             IconButton(onClick = { bloc.onEditClicked() }) {
                                 Icon(
                                     imageVector = Icons.Default.Edit,
-                                    contentDescription = stringResource(Res.string.recipe_detail_edit),
+                                    contentDescription =
+                                        stringResource(Res.string.recipe_detail_edit),
                                 )
                             }
                             IconButton(onClick = { bloc.onDeleteClicked() }) {
                                 Icon(
                                     imageVector = Icons.Default.Delete,
-                                    contentDescription = stringResource(Res.string.recipe_detail_delete),
+                                    contentDescription =
+                                        stringResource(Res.string.recipe_detail_delete),
                                 )
                             }
                         }
@@ -215,10 +214,7 @@ fun RecipeDetailScreen(
                 },
         ) {
             if (state.isLoading) {
-                Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.Center,
-                ) {
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     PlusLoadingIndicator()
                 }
             } else if (isCompact) {
@@ -286,8 +282,7 @@ private fun RecipeDetailSheet(
             when (val current = sheetChild) {
                 is RecipeDetailBloc.Sheet.AddToGroceryList ->
                     AddRecipeToGroceryListScreen(current.bloc)
-                is RecipeDetailBloc.Sheet.BrowserLauncher ->
-                    BrowserScreen(current.bloc)
+                is RecipeDetailBloc.Sheet.BrowserLauncher -> BrowserScreen(current.bloc)
                 null -> {}
             }
         }
@@ -295,8 +290,8 @@ private fun RecipeDetailSheet(
 }
 
 /**
- * Compact layout: LazyColumn with metadata items that scroll away,
- * a sticky TabRow, and a HorizontalPager that fills remaining space.
+ * Compact layout: LazyColumn with metadata items that scroll away, a sticky TabRow, and a
+ * HorizontalPager that fills remaining space.
  */
 @Composable
 private fun RecipeDetailCompactContent(
@@ -318,10 +313,7 @@ private fun RecipeDetailCompactContent(
     val scope = rememberCoroutineScope()
     val padding = ChefMateTheme.dimens.paddingNormal
 
-    LazyColumn(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = spacedBy(padding),
-    ) {
+    LazyColumn(modifier = modifier.fillMaxWidth(), verticalArrangement = spacedBy(padding)) {
         // Hero section: image + key details side by side
         item(key = "hero") {
             RecipeHeroSection(
@@ -372,18 +364,12 @@ private fun RecipeDetailCompactContent(
                     0 ->
                         IngredientsContent(
                             ingredients = recipe.ingredients,
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .verticalScroll(rememberScrollState()),
+                            modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
                         )
                     1 ->
                         DirectionsContent(
                             directions = recipe.directions,
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .verticalScroll(rememberScrollState()),
+                            modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
                         )
                 }
             }
@@ -393,9 +379,9 @@ private fun RecipeDetailCompactContent(
 
 /**
  * Tablet layout: 3-column layout with a collapsible/resizable metadata column on the left,
- * ingredients in the middle, and directions on the right.
- * All columns scroll independently with sticky headers on ingredients/directions.
- * The divider between ingredients and directions is also draggable to resize.
+ * ingredients in the middle, and directions on the right. All columns scroll independently with
+ * sticky headers on ingredients/directions. The divider between ingredients and directions is also
+ * draggable to resize.
  */
 @Composable
 private fun ColumnScope.RecipeDetailExpandedContent(
@@ -428,27 +414,15 @@ private fun ColumnScope.RecipeDetailExpandedContent(
     val directionParagraphs = remember(recipe.directions) { splitLines(recipe.directions) }
     var directionHighlightedIndex by remember(recipe.directions) { mutableStateOf(-1) }
 
-    Row(
-        modifier =
-            Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(horizontal = padding),
-    ) {
+    Row(modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = padding)) {
         if (metadataCollapsed) {
             // Collapsed: narrow strip with expand button
             Column(
-                modifier =
-                    Modifier
-                        .width(48.dp)
-                        .fillMaxHeight(),
+                modifier = Modifier.width(48.dp).fillMaxHeight(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 IconButton(onClick = { onMetadataCollapsedChange(false) }) {
-                    Icon(
-                        imageVector = Icons.Default.Menu,
-                        contentDescription = null,
-                    )
+                    Icon(imageVector = Icons.Default.Menu, contentDescription = null)
                 }
             }
         } else {
@@ -474,10 +448,7 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                     RecipeImage(
                         imageUrl = recipe.imageUrl,
                         contentDescription = recipe.title,
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .height(180.dp),
+                        modifier = Modifier.fillMaxWidth().height(180.dp),
                     )
                 }
                 recipe.starRating?.let { rating ->
@@ -501,11 +472,20 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                     )
                 }
                 recipe.sourceUrl?.let { sourceUrl ->
-                    item(key = "source_url") { SourceUrlCard(sourceUrl = sourceUrl, onSourceUrlClicked = onSourceUrlClicked) }
+                    item(key = "source_url") {
+                        SourceUrlCard(
+                            sourceUrl = sourceUrl,
+                            onSourceUrlClicked = onSourceUrlClicked,
+                        )
+                    }
                 }
-                item(key = "timestamps") { TimestampsCard(createdAt = createdAt, updatedAt = updatedAt) }
+                item(key = "timestamps") {
+                    TimestampsCard(createdAt = createdAt, updatedAt = updatedAt)
+                }
                 if (!metadataCollapsed) {
-                    item(key = "metadata_spacer") { Spacer(modifier = Modifier.height(toolbarClearance)) }
+                    item(key = "metadata_spacer") {
+                        Spacer(modifier = Modifier.height(toolbarClearance))
+                    }
                 }
             }
 
@@ -514,11 +494,8 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                 onDrag = { dragAmountX ->
                     val deltaDp = with(density) { dragAmountX.toDp() }
                     metadataWidthDp =
-                        (metadataWidthDp + deltaDp).coerceIn(
-                            minMetadataWidth,
-                            maxMetadataWidth,
-                        )
-                },
+                        (metadataWidthDp + deltaDp).coerceIn(minMetadataWidth, maxMetadataWidth)
+                }
             )
         }
 
@@ -528,11 +505,10 @@ private fun ColumnScope.RecipeDetailExpandedContent(
             verticalArrangement = spacedBy(padding),
         ) {
             stickyHeader(key = "ingredients_header") {
-                StickyColumnHeader(
-                    title = stringResource(Res.string.recipe_detail_ingredients),
-                )
+                StickyColumnHeader(title = stringResource(Res.string.recipe_detail_ingredients))
             }
-            itemsIndexed(ingredientLines, key = { index, _ -> "ingredient_$index" }) { index, line ->
+            itemsIndexed(ingredientLines, key = { index, _ -> "ingredient_$index" }) { index, line
+                ->
                 IngredientLineItem(
                     text = line,
                     crossedOut = ingredientCrossedOut[index],
@@ -541,7 +517,9 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                 )
             }
             if (!metadataCollapsed) {
-                item(key = "ingredients_spacer") { Spacer(modifier = Modifier.height(toolbarClearance)) }
+                item(key = "ingredients_spacer") {
+                    Spacer(modifier = Modifier.height(toolbarClearance))
+                }
             }
         }
 
@@ -550,7 +528,7 @@ private fun ColumnScope.RecipeDetailExpandedContent(
             onDrag = { dragAmountX ->
                 val delta = dragAmountX * 0.001f
                 ingredientsWeight = (ingredientsWeight + delta).coerceIn(0.2f, 0.8f)
-            },
+            }
         )
 
         // Column 3: Directions
@@ -559,11 +537,11 @@ private fun ColumnScope.RecipeDetailExpandedContent(
             verticalArrangement = spacedBy(padding),
         ) {
             stickyHeader(key = "directions_header") {
-                StickyColumnHeader(
-                    title = stringResource(Res.string.recipe_detail_directions),
-                )
+                StickyColumnHeader(title = stringResource(Res.string.recipe_detail_directions))
             }
-            itemsIndexed(directionParagraphs, key = { index, _ -> "direction_$index" }) { index, paragraph ->
+            itemsIndexed(directionParagraphs, key = { index, _ -> "direction_$index" }) {
+                index,
+                paragraph ->
                 DirectionLineItem(
                     text = paragraph,
                     highlighted = directionHighlightedIndex == index,
@@ -575,49 +553,41 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                 )
             }
             if (!metadataCollapsed) {
-                item(key = "directions_spacer") { Spacer(modifier = Modifier.height(toolbarClearance)) }
+                item(key = "directions_spacer") {
+                    Spacer(modifier = Modifier.height(toolbarClearance))
+                }
             }
         }
     }
 }
 
 @Composable
-private fun DragHandle(
-    onDrag: (Float) -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun DragHandle(onDrag: (Float) -> Unit, modifier: Modifier = Modifier) {
     Box(
         modifier =
-            modifier
-                .width(16.dp)
-                .fillMaxHeight()
-                .pointerInput(Unit) {
-                    detectDragGestures { change, dragAmount ->
-                        change.consume()
-                        onDrag(dragAmount.x)
-                    }
-                },
+            modifier.width(16.dp).fillMaxHeight().pointerInput(Unit) {
+                detectDragGestures { change, dragAmount ->
+                    change.consume()
+                    onDrag(dragAmount.x)
+                }
+            },
         contentAlignment = Alignment.Center,
     ) {
         // Vertical pill indicator
         Box(
             modifier =
-                Modifier
-                    .width(4.dp)
+                Modifier.width(4.dp)
                     .height(32.dp)
                     .background(
                         color = MaterialTheme.colorScheme.outlineVariant,
                         shape = MaterialTheme.shapes.small,
-                    ),
+                    )
         )
     }
 }
 
 @Composable
-private fun StarRating(
-    rating: Int,
-    modifier: Modifier = Modifier,
-) {
+private fun StarRating(rating: Int, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -625,8 +595,7 @@ private fun StarRating(
     ) {
         repeat(5) { index ->
             Icon(
-                imageVector =
-                    if (index < rating) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                imageVector = if (index < rating) Icons.Filled.Star else Icons.Outlined.StarOutline,
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
                 tint =
@@ -641,13 +610,8 @@ private fun StarRating(
 }
 
 @Composable
-private fun DescriptionCard(
-    description: String,
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-    ) {
+private fun DescriptionCard(description: String, modifier: Modifier = Modifier) {
+    Card(modifier = modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -656,10 +620,7 @@ private fun DescriptionCard(
                 text = stringResource(Res.string.recipe_detail_description),
                 style = MaterialTheme.typography.titleMedium,
             )
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodyMedium,
-            )
+            Text(text = description, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
@@ -672,9 +633,7 @@ private fun DetailsCard(
     formattedTotalTime: TextData?,
     modifier: Modifier = Modifier,
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-    ) {
+    Card(modifier = modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -722,9 +681,10 @@ private fun DetailsCard(
                     label = stringResource(Res.string.recipe_detail_calories),
                     value =
                         PhraseModel(
-                            Res.string.recipe_detail_kcal,
-                            "calories" to FixedString(calories.toString()),
-                        ).localized(),
+                                Res.string.recipe_detail_kcal,
+                                "calories" to FixedString(calories.toString()),
+                            )
+                            .localized(),
                 )
             }
         }
@@ -737,9 +697,7 @@ private fun SourceUrlCard(
     onSourceUrlClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-    ) {
+    Card(modifier = modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -759,9 +717,7 @@ private fun SourceUrlCard(
     }
 }
 
-/**
- * Compact hero: image on the left, key details stacked on the right.
- */
+/** Compact hero: image on the left, key details stacked on the right. */
 @Composable
 private fun RecipeHeroSection(
     recipe: Recipe,
@@ -773,25 +729,15 @@ private fun RecipeHeroSection(
     onSourceUrlClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
+    Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         RecipeImage(
             imageUrl = recipe.imageUrl,
             contentDescription = recipe.title,
-            modifier =
-                Modifier
-                    .width(140.dp)
-                    .height(140.dp),
+            modifier = Modifier.width(140.dp).height(140.dp),
         )
-        Column(
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             // Star Rating
-            recipe.starRating?.let { rating ->
-                StarRating(rating = rating)
-            }
+            recipe.starRating?.let { rating -> StarRating(rating = rating) }
 
             // Key details inline
             recipe.servings?.let { servings ->
@@ -828,9 +774,10 @@ private fun RecipeHeroSection(
                     label = stringResource(Res.string.recipe_detail_calories),
                     value =
                         PhraseModel(
-                            Res.string.recipe_detail_kcal,
-                            "calories" to FixedString(calories.toString()),
-                        ).localized(),
+                                Res.string.recipe_detail_kcal,
+                                "calories" to FixedString(calories.toString()),
+                            )
+                            .localized(),
                 )
             }
 
@@ -850,15 +797,13 @@ private fun RecipeHeroSection(
             // Timestamps inline
             Text(
                 text =
-                    stringResource(Res.string.recipe_detail_created) +
-                        " " + createdAt.localized(),
+                    stringResource(Res.string.recipe_detail_created) + " " + createdAt.localized(),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
                 text =
-                    stringResource(Res.string.recipe_detail_updated) +
-                        " " + updatedAt.localized(),
+                    stringResource(Res.string.recipe_detail_updated) + " " + updatedAt.localized(),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -872,9 +817,7 @@ private fun TimestampsCard(
     updatedAt: TextData,
     modifier: Modifier = Modifier,
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-    ) {
+    Card(modifier = modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -907,9 +850,7 @@ private fun DetailRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             if (icon != null) {
                 Icon(
                     imageVector = icon,
@@ -925,10 +866,7 @@ private fun DetailRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-        )
+        Text(text = value, style = MaterialTheme.typography.bodyMedium)
     }
 }
 
@@ -982,19 +920,14 @@ private fun DirectionLineItem(
                         )
                     } else {
                         Modifier
-                    },
-                ).padding(
-                    vertical = dimens.paddingExtraSmall,
-                    horizontal = dimens.paddingExtraSmall,
-                ),
+                    }
+                )
+                .padding(vertical = dimens.paddingExtraSmall, horizontal = dimens.paddingExtraSmall),
     )
 }
 
 @Composable
-private fun IngredientsContent(
-    ingredients: String,
-    modifier: Modifier = Modifier,
-) {
+private fun IngredientsContent(ingredients: String, modifier: Modifier = Modifier) {
     val lines = remember(ingredients) { splitLines(ingredients) }
     val crossedOut =
         remember(ingredients) {
@@ -1021,10 +954,7 @@ private fun IngredientsContent(
 }
 
 @Composable
-private fun DirectionsContent(
-    directions: String,
-    modifier: Modifier = Modifier,
-) {
+private fun DirectionsContent(directions: String, modifier: Modifier = Modifier) {
     val paragraphs = remember(directions) { splitLines(directions) }
     var highlightedIndex by remember(directions) { mutableStateOf(-1) }
 
@@ -1041,19 +971,14 @@ private fun DirectionsContent(
             DirectionLineItem(
                 text = paragraph,
                 highlighted = highlightedIndex == index,
-                onClick = {
-                    highlightedIndex = if (highlightedIndex == index) -1 else index
-                },
+                onClick = { highlightedIndex = if (highlightedIndex == index) -1 else index },
             )
         }
     }
 }
 
 @Composable
-private fun StickyColumnHeader(
-    title: String,
-    modifier: Modifier = Modifier,
-) {
+private fun StickyColumnHeader(title: String, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
@@ -1080,9 +1005,10 @@ private fun DeleteConfirmationDialog(
         text = {
             Text(
                 PhraseModel(
-                    Res.string.recipe_detail_delete_message,
-                    "recipe_name" to FixedString(recipeName),
-                ).localized(),
+                        Res.string.recipe_detail_delete_message,
+                        "recipe_name" to FixedString(recipeName),
+                    )
+                    .localized()
             )
         },
         confirmButton = {
@@ -1113,7 +1039,7 @@ private fun DeletingDialog(modifier: Modifier = Modifier) {
                 Text(stringResource(Res.string.recipe_detail_deleting_message))
             }
         },
-        confirmButton = { },
+        confirmButton = {},
         modifier = modifier,
     )
 }
@@ -1146,7 +1072,8 @@ private val previewBloc =
                                 - 400g minced beef
                                 - 800g canned tomatoes
                                 - Salt and pepper to taste
-                                """.trimIndent(),
+                                """
+                                    .trimIndent(),
                             directions =
                                 """
                                 1. Cook the spaghetti according to the package instructions.
@@ -1155,7 +1082,8 @@ private val previewBloc =
                                 4. Stir in the canned tomatoes and simmer for 45 minutes.
                                 5. Season with salt and pepper.
                                 6. Serve the sauce over the cooked spaghetti.
-                                """.trimIndent(),
+                                """
+                                    .trimIndent(),
                             createdAt = Instant.parse("2023-01-01T12:00:00Z"),
                             updatedAt = Instant.parse("2023-02-01T12:00:00Z"),
                         ),
@@ -1163,12 +1091,10 @@ private val previewBloc =
                     updatedAt = FixedString("February 1, 2023"),
                     isDeleting = false,
                     showDeleteConfirmationDialog = false,
-                ),
+                )
             )
         override val childSlot: Value<ChildSlot<*, RecipeDetailBloc.Sheet>> =
-            MutableValue(
-                ChildSlot<Any, RecipeDetailBloc.Sheet>(null),
-            )
+            MutableValue(ChildSlot<Any, RecipeDetailBloc.Sheet>(null))
 
         override fun onEditClicked() {
             TODO("Not yet implemented")
@@ -1210,19 +1136,11 @@ private val previewBloc =
 @Preview(heightDp = 1100)
 @Composable
 private fun RecipeDetailContentPreview() {
-    ChefMateTheme {
-        RecipeDetailScreen(
-            bloc = previewBloc,
-        )
-    }
+    ChefMateTheme { RecipeDetailScreen(bloc = previewBloc) }
 }
 
 @Preview(heightDp = 1100)
 @Composable
 private fun RecipeDetailContentDarkPreview() {
-    ChefMateTheme(darkTheme = true) {
-        RecipeDetailScreen(
-            bloc = previewBloc,
-        )
-    }
+    ChefMateTheme(darkTheme = true) { RecipeDetailScreen(bloc = previewBloc) }
 }

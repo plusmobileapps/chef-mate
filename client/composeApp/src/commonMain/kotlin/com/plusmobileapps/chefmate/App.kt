@@ -9,16 +9,9 @@ import com.plusmobileapps.chefmate.root.RootBloc
 import com.plusmobileapps.chefmate.root.RootScreen
 
 @Composable
-fun App(
-    rootBloc: RootBloc,
-    modifier: Modifier = Modifier,
-) {
+fun App(rootBloc: RootBloc, modifier: Modifier = Modifier) {
     setSingletonImageLoaderFactory { context ->
-        ImageLoader
-            .Builder(context)
-            .components {
-                add(KtorNetworkFetcherFactory())
-            }.build()
+        ImageLoader.Builder(context).components { add(KtorNetworkFetcherFactory()) }.build()
     }
     RootScreen(rootBloc, modifier)
 }

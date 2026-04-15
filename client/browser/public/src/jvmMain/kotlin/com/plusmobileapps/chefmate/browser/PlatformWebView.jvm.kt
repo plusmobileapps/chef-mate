@@ -8,12 +8,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
 import com.arkivanov.essenty.instancekeeper.InstanceKeeper
 import com.arkivanov.essenty.instancekeeper.getOrCreate
+import java.awt.BorderLayout
 import javafx.application.Platform
 import javafx.concurrent.Worker
 import javafx.embed.swing.JFXPanel
 import javafx.scene.Scene
 import javafx.scene.web.WebView
-import java.awt.BorderLayout
 import javax.swing.JPanel
 
 @Composable
@@ -27,7 +27,7 @@ actual fun PlatformWebView(
 
     DisposableEffect(Unit) {
         holder.ensureInitialized(onUrlLoaded, url)
-        onDispose { }
+        onDispose {}
     }
 
     LaunchedEffect(url) {
@@ -43,19 +43,12 @@ actual fun PlatformWebView(
 
     SwingPanel(
         modifier = modifier,
-        factory = {
-            JPanel(BorderLayout()).apply {
-                add(holder.jfxPanel, BorderLayout.CENTER)
-            }
-        },
+        factory = { JPanel(BorderLayout()).apply { add(holder.jfxPanel, BorderLayout.CENTER) } },
     )
 }
 
 private class WebViewHolder : InstanceKeeper.Instance {
-    val jfxPanel: JFXPanel =
-        JFXPanel().also {
-            Platform.setImplicitExit(false)
-        }
+    val jfxPanel: JFXPanel = JFXPanel().also { Platform.setImplicitExit(false) }
 
     @Volatile
     var webView: WebView? = null
@@ -63,10 +56,7 @@ private class WebViewHolder : InstanceKeeper.Instance {
 
     private var initialized = false
 
-    fun ensureInitialized(
-        onUrlLoaded: (String) -> Unit,
-        initialUrl: String,
-    ) {
+    fun ensureInitialized(onUrlLoaded: (String) -> Unit, initialUrl: String) {
         if (initialized) return
         initialized = true
 

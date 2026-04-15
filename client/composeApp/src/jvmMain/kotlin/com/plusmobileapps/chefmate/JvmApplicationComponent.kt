@@ -11,8 +11,7 @@ import dev.zacsweers.metro.SingleIn
 @SingleIn(AppScope::class)
 @DependencyGraph(AppScope::class)
 abstract class JvmApplicationComponent : ApplicationComponent {
-    @Provides
-    fun providesDriverFactory(): DriverFactory = DriverFactory()
+    @Provides fun providesDriverFactory(): DriverFactory = DriverFactory()
 
     @Provides
     @SingleIn(AppScope::class)

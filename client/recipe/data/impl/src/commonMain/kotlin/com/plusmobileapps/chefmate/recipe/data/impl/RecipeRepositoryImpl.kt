@@ -2,22 +2,22 @@ package com.plusmobileapps.chefmate.recipe.data.impl
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import com.plusmobileapps.chefmate.database.Recipe as DbRecipe
 import com.plusmobileapps.chefmate.database.RecipeQueries
+import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import com.plusmobileapps.chefmate.util.DateTimeUtil
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
-import com.plusmobileapps.chefmate.di.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Instant
-import com.plusmobileapps.chefmate.database.Recipe as DbRecipe
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 
 @SingleIn(AppScope::class)
 @Inject
@@ -28,8 +28,7 @@ class RecipeRepositoryImpl(
     private val dateTimeUtil: DateTimeUtil,
 ) : RecipeRepository {
     override fun getRecipes(): Flow<List<Recipe>> =
-        db
-            .getAll()
+        db.getAll()
             .asFlow()
             .mapToList(ioContext)
             .map { it.map { item -> item.toRecipe() } }
@@ -55,8 +54,8 @@ class RecipeRepositoryImpl(
                     createdAt = dateTimeUtil.now.toString(),
                     updatedAt = dateTimeUtil.now.toString(),
                 )
-                val id = db.lastInsertId().executeAsOne().MAX
-                    ?: error("Failed to get last insert id")
+                val id =
+                    db.lastInsertId().executeAsOne().MAX ?: error("Failed to get last insert id")
                 db.getById(id).executeAsOne().toRecipe()
             }
         }
@@ -87,23 +86,18 @@ class RecipeRepositoryImpl(
         }
 
     override suspend fun getRecipe(id: Long): Flow<Recipe?> =
-        db
-            .getById(id)
+        db.getById(id)
             .asFlow()
             .map { it.executeAsOneOrNull() }
             .map { it?.toRecipe() }
             .flowOn(ioContext)
 
     override suspend fun deleteRecipe(id: Long) {
-        withContext(ioContext) {
-            db.delete(id)
-        }
+        withContext(ioContext) { db.delete(id) }
     }
 
     override suspend fun clearLocalData() {
-        withContext(ioContext) {
-            db.deleteAll()
-        }
+        withContext(ioContext) { db.deleteAll() }
     }
 
     private fun DbRecipe.toRecipe(): Recipe =

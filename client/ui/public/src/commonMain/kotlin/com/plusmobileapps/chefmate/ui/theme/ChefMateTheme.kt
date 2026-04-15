@@ -17,22 +17,19 @@ import androidx.compose.runtime.CompositionLocalProvider
 private val DarkColorPalette =
     darkColorScheme(
         primary = purple200,
-//    secondary = purple700,
+        //    secondary = purple700,
         secondary = teal200,
     )
 
 private val LightColorPalette =
     lightColorScheme(
         primary = purple500,
-//    secondary = purple700,
+        //    secondary = purple700,
         secondary = teal200,
     )
 
 @Composable
-fun ChefMateTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit,
-) {
+fun ChefMateTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     val dimensions = AppDimensions()
     val colors =
         if (darkTheme) {
@@ -41,9 +38,7 @@ fun ChefMateTheme(
             LightColorPalette
         }
 
-    CompositionLocalProvider(
-        LocalDimensions provides dimensions,
-    ) {
+    CompositionLocalProvider(LocalDimensions provides dimensions) {
         MaterialExpressiveTheme(
             colorScheme = colors,
             typography = chefMateTypography,
@@ -55,18 +50,14 @@ fun ChefMateTheme(
 
 object ChefMateTheme {
     val colorScheme: ColorScheme
-        @Composable
-        get() = MaterialTheme.colorScheme
+        @Composable get() = MaterialTheme.colorScheme
 
     val dimens: AppDimensions
-        @Composable
-        get() = LocalDimensions.current
+        @Composable get() = LocalDimensions.current
 
     val shapes: Shapes
-        @Composable
-        get() = chefMateShapes
+        @Composable get() = chefMateShapes
 
     val typography: Typography
-        @Composable
-        get() = chefMateTypography
+        @Composable get() = chefMateTypography
 }

@@ -10,14 +10,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 
 @Composable
-fun PlusLoadingIndicator(
-    contentDescription: String? = null,
-    modifier: Modifier = Modifier,
-) {
+fun PlusLoadingIndicator(contentDescription: String? = null, modifier: Modifier = Modifier) {
     CircularWavyProgressIndicator(
-        modifier =
-            modifier.semantics {
-                this.contentDescription = contentDescription.orEmpty()
-            },
+        modifier = modifier.semantics { this.contentDescription = contentDescription.orEmpty() }
     )
 }

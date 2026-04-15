@@ -1,6 +1,4 @@
-plugins {
-    alias(libs.plugins.kmpLibrary)
-}
+plugins { alias(libs.plugins.kmpLibrary) }
 
 kotlin {
     sourceSets {
@@ -12,15 +10,9 @@ kotlin {
             implementation(libs.supabase.auth)
             implementation(libs.supabase.postgrest)
         }
-        jvmMain.dependencies {
-            implementation(libs.ktor.client.cio)
-        }
-        androidMain.dependencies {
-            implementation(libs.ktor.client.cio)
-        }
-        iosMain.dependencies {
-            implementation(libs.ktor.client.darwin)
-        }
+        jvmMain.dependencies { implementation(libs.ktor.client.cio) }
+        androidMain.dependencies { implementation(libs.ktor.client.cio) }
+        iosMain.dependencies { implementation(libs.ktor.client.darwin) }
     }
 }
 

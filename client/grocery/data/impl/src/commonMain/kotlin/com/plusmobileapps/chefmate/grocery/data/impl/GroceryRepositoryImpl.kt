@@ -7,6 +7,7 @@ import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.database.Grocery
 import com.plusmobileapps.chefmate.database.GroceryListQueries
 import com.plusmobileapps.chefmate.database.GroceryQueries
+import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
@@ -16,6 +17,13 @@ import com.plusmobileapps.chefmate.grocery.data.impl.remote.GroceryRemoteDataSou
 import com.plusmobileapps.chefmate.grocery.data.impl.remote.RemoteGroceryItem
 import com.plusmobileapps.chefmate.grocery.data.impl.remote.RemoteGroceryList
 import com.plusmobileapps.chefmate.util.DateTimeUtil
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
+import kotlin.collections.map
+import kotlin.coroutines.CoroutineContext
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
@@ -28,14 +36,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import com.plusmobileapps.chefmate.di.AppScope
-import dev.zacsweers.metro.ContributesBinding
-import dev.zacsweers.metro.Inject
-import dev.zacsweers.metro.SingleIn
-import kotlin.collections.map
-import kotlin.coroutines.CoroutineContext
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalUuidApi::class)
 @Inject
@@ -65,26 +65,19 @@ class GroceryRepositoryImpl(
     }
 
     override fun getGroceries(): Flow<List<GroceryItem>> =
-        combine(
-            queries
-                .readAll()
-                .asFlow()
-                .map { it.executeAsList() },
-            syncingIds,
-        ) { items, syncing ->
-            items.map { fromEntity(it, syncing) }
-        }.flowOn(ioContext)
+        combine(queries.readAll().asFlow().map { it.executeAsList() }, syncingIds) { items, syncing
+                ->
+                items.map { fromEntity(it, syncing) }
+            }
+            .flowOn(ioContext)
 
     override fun getGroceries(listId: Long): Flow<List<GroceryItem>> =
-        combine(
-            queries
-                .readByListId(listId)
-                .asFlow()
-                .map { it.executeAsList() },
-            syncingIds,
-        ) { items, syncing ->
-            items.map { fromEntity(it, syncing) }
-        }.flowOn(ioContext)
+        combine(queries.readByListId(listId).asFlow().map { it.executeAsList() }, syncingIds) {
+                items,
+                syncing ->
+                items.map { fromEntity(it, syncing) }
+            }
+            .flowOn(ioContext)
 
     override fun getGroceryLists(): Flow<List<GroceryListModel>> =
         listQueries
@@ -96,11 +89,12 @@ class GroceryRepositoryImpl(
                     GroceryListModel(
                         id = entity.id,
                         name = entity.name,
-                        syncStatus = when {
-                            entity.isDirty -> SyncStatus.NOT_SYNCED
-                            entity.remoteId != null -> SyncStatus.SYNCED
-                            else -> SyncStatus.NOT_SYNCED
-                        },
+                        syncStatus =
+                            when {
+                                entity.isDirty -> SyncStatus.NOT_SYNCED
+                                entity.remoteId != null -> SyncStatus.SYNCED
+                                else -> SyncStatus.NOT_SYNCED
+                            },
                     )
                 }
             }
@@ -178,10 +172,7 @@ class GroceryRepositoryImpl(
         names.forEach { pushAddToRemote(it) }
     }
 
-    override suspend fun updateChecked(
-        item: GroceryItem,
-        isChecked: Boolean,
-    ) {
+    override suspend fun updateChecked(item: GroceryItem, isChecked: Boolean) {
         withContext(ioContext) {
             queries.updateChecked(
                 isChecked = isChecked,
@@ -193,27 +184,26 @@ class GroceryRepositoryImpl(
     }
 
     override suspend fun deleteGrocery(item: GroceryItem) {
-        val entity = withContext(ioContext) {
-            val entity = queries.getGroceryById(item.id).executeAsOneOrNull()
-            queries.delete(item.id)
-            entity
-        }
+        val entity =
+            withContext(ioContext) {
+                val entity = queries.getGroceryById(item.id).executeAsOneOrNull()
+                queries.delete(item.id)
+                entity
+            }
         entity?.remoteId?.let { remoteId ->
             scope.launch {
                 try {
                     remoteDataSource.deleteGroceryItem(remoteId)
-                } catch (_: Exception) {
-                }
+                } catch (_: Exception) {}
             }
         }
     }
 
     override suspend fun getGrocery(id: Long): GroceryItem? =
         withContext(ioContext) {
-            queries
-                .getGroceryById(id)
-                .executeAsOneOrNull()
-                ?.let { fromEntity(it, syncingIds.value) }
+            queries.getGroceryById(id).executeAsOneOrNull()?.let {
+                fromEntity(it, syncingIds.value)
+            }
         }
 
     override suspend fun updateGrocery(item: GroceryItem) {
@@ -247,28 +237,24 @@ class GroceryRepositoryImpl(
         }
 
     override suspend fun deleteGroceryList(id: Long) {
-        val entity = withContext(ioContext) {
-            val entity = listQueries.getById(id).executeAsOneOrNull()
-            listQueries.delete(id)
-            entity
-        }
+        val entity =
+            withContext(ioContext) {
+                val entity = listQueries.getById(id).executeAsOneOrNull()
+                listQueries.delete(id)
+                entity
+            }
         entity?.remoteId?.let { remoteId ->
             scope.launch {
                 try {
                     remoteDataSource.deleteGroceryList(remoteId)
-                } catch (_: Exception) {
-                }
+                } catch (_: Exception) {}
             }
         }
     }
 
     override suspend fun renameGroceryList(id: Long, name: String) {
         withContext(ioContext) {
-            listQueries.update(
-                name = name,
-                updatedAt = dateTimeUtil.now.toString(),
-                id = id,
-            )
+            listQueries.update(name = name, updatedAt = dateTimeUtil.now.toString(), id = id)
         }
         pushListUpdateToRemote(id)
     }
@@ -287,7 +273,10 @@ class GroceryRepositoryImpl(
                 existing.first().id
             } else {
                 listQueries.transactionWithResult {
-                    listQueries.create(name = "My Grocery List", clientId = Uuid.random().toString())
+                    listQueries.create(
+                        name = "My Grocery List",
+                        clientId = Uuid.random().toString(),
+                    )
                     listQueries.lastId().executeAsOne().MAX!!
                 }
             }
@@ -299,18 +288,12 @@ class GroceryRepositoryImpl(
         scope.launch {
             try {
                 val entity = listQueries.getById(localId).executeAsOneOrNull() ?: return@launch
-                val remoteList = remoteDataSource.createGroceryList(
-                    RemoteGroceryList(
-                        name = entity.name,
-                        ownerId = authState.user.userId,
-                    ),
-                )
-                listQueries.updateRemoteId(
-                    remoteId = remoteList.id!!,
-                    id = localId,
-                )
-            } catch (_: Exception) {
-            }
+                val remoteList =
+                    remoteDataSource.createGroceryList(
+                        RemoteGroceryList(name = entity.name, ownerId = authState.user.userId)
+                    )
+                listQueries.updateRemoteId(remoteId = remoteList.id!!, id = localId)
+            } catch (_: Exception) {}
         }
     }
 
@@ -326,11 +309,10 @@ class GroceryRepositoryImpl(
                         id = remoteId,
                         name = entity.name,
                         ownerId = authState.user.userId,
-                    ),
+                    )
                 )
                 listQueries.clearDirty(localId)
-            } catch (_: Exception) {
-            }
+            } catch (_: Exception) {}
         }
     }
 
@@ -342,26 +324,30 @@ class GroceryRepositoryImpl(
                 val unsyncedItems = queries.getUnsynced().executeAsList()
                 val match = unsyncedItems.firstOrNull { it.name == name }
                 if (match != null) {
-                    val clientId = match.clientId ?: Uuid.random().toString().also { newId ->
-                        queries.updateClientId(clientId = newId, id = match.id)
-                    }
+                    val clientId =
+                        match.clientId
+                            ?: Uuid.random().toString().also { newId ->
+                                queries.updateClientId(clientId = newId, id = match.id)
+                            }
                     // Resolve the list's remoteId
-                    val listRemoteId = match.listId?.let { localListId ->
-                        listQueries.getById(localListId).executeAsOneOrNull()?.remoteId
-                    } ?: remoteDataSource.ensureDefaultList(authState.user.userId)
+                    val listRemoteId =
+                        match.listId?.let { localListId ->
+                            listQueries.getById(localListId).executeAsOneOrNull()?.remoteId
+                        } ?: remoteDataSource.ensureDefaultList(authState.user.userId)
 
                     syncingIds.update { it + match.id }
                     try {
-                        val remoteItem = remoteDataSource.upsertGroceryItem(
-                            RemoteGroceryItem(
-                                listId = listRemoteId,
-                                name = match.name,
-                                isChecked = match.isChecked,
-                                createdAt = match.createdAt,
-                                updatedAt = match.updatedAt,
-                                clientId = clientId,
-                            ),
-                        )
+                        val remoteItem =
+                            remoteDataSource.upsertGroceryItem(
+                                RemoteGroceryItem(
+                                    listId = listRemoteId,
+                                    name = match.name,
+                                    isChecked = match.isChecked,
+                                    createdAt = match.createdAt,
+                                    updatedAt = match.updatedAt,
+                                    clientId = clientId,
+                                )
+                            )
                         queries.updateRemoteId(
                             remoteId = remoteItem.id,
                             listRemoteId = listRemoteId,
@@ -371,8 +357,7 @@ class GroceryRepositoryImpl(
                         syncingIds.update { it - match.id }
                     }
                 }
-            } catch (_: Exception) {
-            }
+            } catch (_: Exception) {}
         }
     }
 
@@ -394,14 +379,13 @@ class GroceryRepositoryImpl(
                             isChecked = entity.isChecked,
                             updatedAt = entity.updatedAt,
                             clientId = entity.clientId,
-                        ),
+                        )
                     )
                     queries.clearDirty(localId)
                 } finally {
                     syncingIds.update { it - localId }
                 }
-            } catch (_: Exception) {
-            }
+            } catch (_: Exception) {}
         }
     }
 
@@ -410,46 +394,29 @@ class GroceryRepositoryImpl(
             // --- Sync lists first ---
 
             // Push unsynced lists
-            val unsyncedLists = withContext(ioContext) {
-                listQueries.getUnsynced().executeAsList()
-            }
+            val unsyncedLists = withContext(ioContext) { listQueries.getUnsynced().executeAsList() }
             for (list in unsyncedLists) {
                 try {
-                    val remoteList = remoteDataSource.createGroceryList(
-                        RemoteGroceryList(
-                            name = list.name,
-                            ownerId = userId,
-                        ),
-                    )
-                    withContext(ioContext) {
-                        listQueries.updateRemoteId(
-                            remoteId = remoteList.id!!,
-                            id = list.id,
+                    val remoteList =
+                        remoteDataSource.createGroceryList(
+                            RemoteGroceryList(name = list.name, ownerId = userId)
                         )
+                    withContext(ioContext) {
+                        listQueries.updateRemoteId(remoteId = remoteList.id!!, id = list.id)
                     }
-                } catch (_: Exception) {
-                }
+                } catch (_: Exception) {}
             }
 
             // Push dirty lists
-            val dirtyLists = withContext(ioContext) {
-                listQueries.getDirty().executeAsList()
-            }
+            val dirtyLists = withContext(ioContext) { listQueries.getDirty().executeAsList() }
             for (list in dirtyLists) {
                 try {
                     val remoteId = list.remoteId ?: continue
                     remoteDataSource.updateGroceryList(
-                        RemoteGroceryList(
-                            id = remoteId,
-                            name = list.name,
-                            ownerId = userId,
-                        ),
+                        RemoteGroceryList(id = remoteId, name = list.name, ownerId = userId)
                     )
-                    withContext(ioContext) {
-                        listQueries.clearDirty(list.id)
-                    }
-                } catch (_: Exception) {
-                }
+                    withContext(ioContext) { listQueries.clearDirty(list.id) }
+                } catch (_: Exception) {}
             }
 
             // Pull remote lists
@@ -460,63 +427,61 @@ class GroceryRepositoryImpl(
                     val existing = listQueries.getByRemoteId(remoteId).executeAsOneOrNull()
                     if (existing != null) continue
 
-                    val matchedByClientId = remoteList.id.let { _ ->
-                        // Lists created locally have a clientId; check for match
-                        val localLists = listQueries.getAll().executeAsList()
-                        localLists.firstOrNull { it.clientId != null && it.remoteId == null && it.name == remoteList.name }
-                    }
+                    val matchedByClientId =
+                        remoteList.id.let { _ ->
+                            // Lists created locally have a clientId; check for match
+                            val localLists = listQueries.getAll().executeAsList()
+                            localLists.firstOrNull {
+                                it.clientId != null &&
+                                    it.remoteId == null &&
+                                    it.name == remoteList.name
+                            }
+                        }
                     if (matchedByClientId != null) {
-                        listQueries.updateRemoteId(
-                            remoteId = remoteId,
-                            id = matchedByClientId.id,
-                        )
+                        listQueries.updateRemoteId(remoteId = remoteId, id = matchedByClientId.id)
                     } else {
                         val newId = listQueries.transactionWithResult {
-                            listQueries.create(
-                                name = remoteList.name,
-                                clientId = null,
-                            )
+                            listQueries.create(name = remoteList.name, clientId = null)
                             listQueries.lastId().executeAsOne().MAX!!
                         }
-                        listQueries.updateRemoteId(
-                            remoteId = remoteId,
-                            id = newId,
-                        )
+                        listQueries.updateRemoteId(remoteId = remoteId, id = newId)
                     }
                 }
             }
 
             // --- Sync items per list ---
-            val allLists = withContext(ioContext) {
-                listQueries.getAll().executeAsList()
-            }
+            val allLists = withContext(ioContext) { listQueries.getAll().executeAsList() }
 
             for (list in allLists) {
                 val listRemoteId = list.remoteId ?: continue
 
                 // Push unsynced items for this list
-                val unsynced = withContext(ioContext) {
-                    queries.getUnsynced().executeAsList().filter { it.listId == list.id }
-                }
+                val unsynced =
+                    withContext(ioContext) {
+                        queries.getUnsynced().executeAsList().filter { it.listId == list.id }
+                    }
                 for (item in unsynced) {
                     try {
-                        val clientId = item.clientId ?: Uuid.random().toString().also { newId ->
-                            withContext(ioContext) {
-                                queries.updateClientId(clientId = newId, id = item.id)
-                            }
-                        }
+                        val clientId =
+                            item.clientId
+                                ?: Uuid.random().toString().also { newId ->
+                                    withContext(ioContext) {
+                                        queries.updateClientId(clientId = newId, id = item.id)
+                                    }
+                                }
                         syncingIds.update { it + item.id }
                         try {
-                            val remoteItem = remoteDataSource.upsertGroceryItem(
-                                RemoteGroceryItem(
-                                    listId = listRemoteId,
-                                    name = item.name,
-                                    isChecked = item.isChecked,
-                                    createdAt = item.createdAt,
-                                    updatedAt = item.updatedAt,
-                                    clientId = clientId,
-                                ),
-                            )
+                            val remoteItem =
+                                remoteDataSource.upsertGroceryItem(
+                                    RemoteGroceryItem(
+                                        listId = listRemoteId,
+                                        name = item.name,
+                                        isChecked = item.isChecked,
+                                        createdAt = item.createdAt,
+                                        updatedAt = item.updatedAt,
+                                        clientId = clientId,
+                                    )
+                                )
                             withContext(ioContext) {
                                 queries.updateRemoteId(
                                     remoteId = remoteItem.id,
@@ -527,14 +492,14 @@ class GroceryRepositoryImpl(
                         } finally {
                             syncingIds.update { it - item.id }
                         }
-                    } catch (_: Exception) {
-                    }
+                    } catch (_: Exception) {}
                 }
 
                 // Push dirty items for this list
-                val dirty = withContext(ioContext) {
-                    queries.getDirty().executeAsList().filter { it.listId == list.id }
-                }
+                val dirty =
+                    withContext(ioContext) {
+                        queries.getDirty().executeAsList().filter { it.listId == list.id }
+                    }
                 for (item in dirty) {
                     try {
                         val remoteId = item.remoteId ?: continue
@@ -549,16 +514,13 @@ class GroceryRepositoryImpl(
                                     isChecked = item.isChecked,
                                     updatedAt = item.updatedAt,
                                     clientId = item.clientId,
-                                ),
+                                )
                             )
-                            withContext(ioContext) {
-                                queries.clearDirty(item.id)
-                            }
+                            withContext(ioContext) { queries.clearDirty(item.id) }
                         } finally {
                             syncingIds.update { it - item.id }
                         }
-                    } catch (_: Exception) {
-                    }
+                    } catch (_: Exception) {}
                 }
 
                 // Pull remote items for this list
@@ -569,9 +531,10 @@ class GroceryRepositoryImpl(
                         val existing = queries.getByRemoteId(remoteId).executeAsOneOrNull()
                         if (existing != null) continue
 
-                        val matchedByClientId = remoteItem.clientId?.let { clientId ->
-                            queries.getByClientId(clientId).executeAsOneOrNull()
-                        }
+                        val matchedByClientId =
+                            remoteItem.clientId?.let { clientId ->
+                                queries.getByClientId(clientId).executeAsOneOrNull()
+                            }
                         if (matchedByClientId != null) {
                             queries.updateRemoteId(
                                 remoteId = remoteId,
@@ -593,17 +556,17 @@ class GroceryRepositoryImpl(
                     }
                 }
             }
-        } catch (_: Exception) {
-        }
+        } catch (_: Exception) {}
     }
 
     private fun fromEntity(entity: Grocery, syncing: Set<Long>): GroceryItem {
-        val syncStatus = when {
-            entity.id in syncing -> SyncStatus.SYNCING
-            entity.isDirty -> SyncStatus.NOT_SYNCED
-            entity.remoteId != null -> SyncStatus.SYNCED
-            else -> SyncStatus.NOT_SYNCED
-        }
+        val syncStatus =
+            when {
+                entity.id in syncing -> SyncStatus.SYNCING
+                entity.isDirty -> SyncStatus.NOT_SYNCED
+                entity.remoteId != null -> SyncStatus.SYNCED
+                else -> SyncStatus.NOT_SYNCED
+            }
         return GroceryItem(
             id = entity.id,
             name = entity.name,

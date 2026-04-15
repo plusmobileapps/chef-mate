@@ -69,10 +69,7 @@ import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AuthenticationScreen(
-    bloc: AuthenticationBloc,
-    modifier: Modifier = Modifier,
-) {
+fun AuthenticationScreen(bloc: AuthenticationBloc, modifier: Modifier = Modifier) {
     val model by bloc.models.collectAsState()
     val email by bloc.email.collectAsState()
     val password by bloc.password.collectAsState()
@@ -87,11 +84,7 @@ fun AuthenticationScreen(
 
     PlusHeaderContainer(
         modifier = modifier.imePadding(),
-        data =
-            PlusHeaderData.Child(
-                title = title,
-                onBackClick = bloc::onBackClicked,
-            ),
+        data = PlusHeaderData.Child(title = title, onBackClick = bloc::onBackClicked),
         scrollEnabled = false,
         content = {
             Box(modifier = Modifier.fillMaxSize()) {
@@ -115,7 +108,7 @@ fun AuthenticationScreen(
                                 ResourceString(Res.string.auth_loading_signing_in)
                             } else {
                                 ResourceString(Res.string.auth_loading_creating_account)
-                            },
+                            }
                     )
                 }
             }
@@ -129,7 +122,7 @@ fun AuthenticationScreen(
                             stringResource(Res.string.auth_button_sign_in)
                         } else {
                             stringResource(Res.string.auth_button_sign_up)
-                        },
+                        }
                     )
                 },
                 icon = { Icon(Icons.Default.Check, contentDescription = null) },
@@ -190,9 +183,7 @@ private fun AuthenticationBody(
             email = email,
             error = model.emailError,
             onEmailChanged = onEmailChanged,
-            onImeAction = {
-                passwordFocusRequester.requestFocus()
-            },
+            onImeAction = { passwordFocusRequester.requestFocus() },
         )
 
         Spacer(modifier = Modifier.height(ChefMateTheme.dimens.paddingLarge))
@@ -243,25 +234,16 @@ private fun AuthenticationBody(
             }
         }
 
-        AuthenticationSwitcher(
-            isSignIn = isSignIn,
-            onToggleMode = onToggleMode,
-        )
+        AuthenticationSwitcher(isSignIn = isSignIn, onToggleMode = onToggleMode)
 
         Spacer(modifier = Modifier.height(120.dp))
     }
 }
 
 @Composable
-fun AuthenticationSwitcher(
-    isSignIn: Boolean,
-    onToggleMode: () -> Unit,
-) {
+fun AuthenticationSwitcher(isSignIn: Boolean, onToggleMode: () -> Unit) {
     val keyboardController = LocalSoftwareKeyboardController.current
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
+    Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         HorizontalDivider()
         Spacer(modifier = Modifier.height(ChefMateTheme.dimens.paddingNormal))
         Text(
@@ -278,7 +260,7 @@ fun AuthenticationSwitcher(
             onClick = {
                 keyboardController?.hide()
                 onToggleMode()
-            },
+            }
         ) {
             Text(
                 text =
@@ -286,7 +268,7 @@ fun AuthenticationSwitcher(
                         stringResource(Res.string.auth_button_sign_up)
                     } else {
                         stringResource(Res.string.auth_button_sign_in)
-                    },
+                    }
             )
         }
     }
@@ -308,14 +290,8 @@ fun EmailField(
         error = error,
         singleLine = true,
         keyboardOptions =
-            KeyboardOptions(
-                keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Next,
-            ),
-        keyboardActions =
-            KeyboardActions(
-                onNext = { onImeAction() },
-            ),
+            KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+        keyboardActions = KeyboardActions(onNext = { onImeAction() }),
     )
 }
 
@@ -340,24 +316,13 @@ fun PasswordField(
         visualTransformation =
             if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
         keyboardOptions =
-            KeyboardOptions(
-                keyboardType = KeyboardType.Password,
-                imeAction = imeAction,
-            ),
-        keyboardActions =
-            KeyboardActions(
-                onNext = { onImeAction() },
-                onDone = { onImeAction() },
-            ),
+            KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = imeAction),
+        keyboardActions = KeyboardActions(onNext = { onImeAction() }, onDone = { onImeAction() }),
         trailingIcon = {
             val image =
                 if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
 
-            IconButton(
-                onClick = {
-                    passwordVisible = !passwordVisible
-                },
-            ) {
+            IconButton(onClick = { passwordVisible = !passwordVisible }) {
                 Icon(
                     imageVector = image,
                     contentDescription = stringResource(Res.string.auth_password_toggle),

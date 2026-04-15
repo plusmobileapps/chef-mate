@@ -27,9 +27,6 @@ interface SettingsBloc {
     }
 
     fun interface Factory {
-        fun create(
-            context: BlocContext,
-            output: Consumer<Output>,
-        ): SettingsBloc
+        fun create(context: BlocContext, output: Consumer<Output>): SettingsBloc
     }
 }

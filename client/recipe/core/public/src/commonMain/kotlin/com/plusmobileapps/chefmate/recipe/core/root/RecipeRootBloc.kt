@@ -10,19 +10,13 @@ import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
 import kotlinx.serialization.Serializable
 
-interface RecipeRootBloc :
-    BackHandlerOwner,
-    BackClickBloc {
+interface RecipeRootBloc : BackHandlerOwner, BackClickBloc {
     val routerState: Value<ChildStack<*, Child>>
 
     sealed class Child {
-        data class Detail(
-            val bloc: RecipeDetailBloc,
-        ) : Child()
+        data class Detail(val bloc: RecipeDetailBloc) : Child()
 
-        data class Edit(
-            val bloc: EditRecipeBloc,
-        ) : Child()
+        data class Edit(val bloc: EditRecipeBloc) : Child()
     }
 
     sealed class Output {
@@ -31,18 +25,12 @@ interface RecipeRootBloc :
 
     @Serializable
     sealed class Props {
-        data class Detail(
-            val recipeId: Long,
-        ) : Props()
+        data class Detail(val recipeId: Long) : Props()
 
         data object Create : Props()
     }
 
     fun interface Factory {
-        fun create(
-            context: BlocContext,
-            props: Props,
-            output: Consumer<Output>,
-        ): RecipeRootBloc
+        fun create(context: BlocContext, props: Props, output: Consumer<Output>): RecipeRootBloc
     }
 }

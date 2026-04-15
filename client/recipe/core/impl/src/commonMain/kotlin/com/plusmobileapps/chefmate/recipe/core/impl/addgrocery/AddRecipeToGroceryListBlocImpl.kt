@@ -21,8 +21,7 @@ class AddRecipeToGroceryListBlocImpl(
     @Assisted private val recipeId: Long,
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: AddRecipeToGroceryListViewModel.Factory,
-) : AddRecipeToGroceryListBloc,
-    BlocContext by context {
+) : AddRecipeToGroceryListBloc, BlocContext by context {
     @AssistedFactory
     fun interface ManagedFactory {
         fun create(
@@ -34,10 +33,7 @@ class AddRecipeToGroceryListBlocImpl(
 
     private val scope = createScope()
 
-    private val viewModel =
-        instanceKeeper.getViewModel {
-            viewModelFactory.create(recipeId)
-        }
+    private val viewModel = instanceKeeper.getViewModel { viewModelFactory.create(recipeId) }
 
     override val state: StateFlow<AddRecipeToGroceryListBloc.Model> =
         viewModel.state.mapState {
@@ -83,7 +79,9 @@ class AddRecipeToGroceryListBlocImpl(
 interface AddRecipeToGroceryListBlocBindingModule {
     @Provides
     fun provideAddRecipeToGroceryListBlocFactory(
-        factory: AddRecipeToGroceryListBlocImpl.ManagedFactory,
+        factory: AddRecipeToGroceryListBlocImpl.ManagedFactory
     ): AddRecipeToGroceryListBloc.Factory =
-        AddRecipeToGroceryListBloc.Factory { context, recipeId, output -> factory.create(context, recipeId, output) }
+        AddRecipeToGroceryListBloc.Factory { context, recipeId, output ->
+            factory.create(context, recipeId, output)
+        }
 }

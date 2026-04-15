@@ -15,15 +15,9 @@ kotlin {
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.json)
         }
-        getByName("androidMain").dependencies {
-            implementation(libs.ktor.client.cio)
-        }
-        getByName("jvmMain").dependencies {
-            implementation(libs.ktor.client.cio)
-        }
-        getByName("iosMain").dependencies {
-            implementation(libs.ktor.client.darwin)
-        }
+        getByName("androidMain").dependencies { implementation(libs.ktor.client.cio) }
+        getByName("jvmMain").dependencies { implementation(libs.ktor.client.cio) }
+        getByName("iosMain").dependencies { implementation(libs.ktor.client.darwin) }
     }
 }
 

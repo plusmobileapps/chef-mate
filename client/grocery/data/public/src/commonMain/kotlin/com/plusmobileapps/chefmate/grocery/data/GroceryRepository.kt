@@ -2,8 +2,8 @@
 
 package com.plusmobileapps.chefmate.grocery.data
 
-import kotlinx.coroutines.flow.Flow
 import kotlin.time.ExperimentalTime
+import kotlinx.coroutines.flow.Flow
 
 interface GroceryRepository {
     fun getGroceries(): Flow<List<GroceryItem>>
@@ -20,10 +20,7 @@ interface GroceryRepository {
 
     suspend fun addGroceries(listId: Long, names: List<String>)
 
-    suspend fun updateChecked(
-        item: GroceryItem,
-        isChecked: Boolean,
-    )
+    suspend fun updateChecked(item: GroceryItem, isChecked: Boolean)
 
     suspend fun deleteGrocery(item: GroceryItem)
 

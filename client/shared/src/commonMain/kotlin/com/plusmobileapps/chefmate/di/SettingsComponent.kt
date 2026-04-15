@@ -8,7 +8,5 @@ import dev.zacsweers.metro.SingleIn
 @ContributesTo(AppScope::class)
 @SingleIn(AppScope::class)
 interface SettingsComponent {
-    @Provides
-    @SingleIn(AppScope::class)
-    fun settings(): Settings = Settings()
+    @Provides @SingleIn(AppScope::class) fun settings(): Settings = Settings()
 }

@@ -22,25 +22,17 @@ fun FloatingActionButtonBottomSpacer(modifier: Modifier = Modifier) {
 }
 
 fun LazyListScope.lastItemWindowInsetSpacer(modifier: Modifier = Modifier) {
-    item("lastItemWindowInsetSpacer") {
-        LastItemWindowInsetSpacer(modifier = modifier)
-    }
+    item("lastItemWindowInsetSpacer") { LastItemWindowInsetSpacer(modifier = modifier) }
 }
 
 fun LazyListScope.lastItemFloatingActionButtonSpacer(modifier: Modifier = Modifier) {
-    item("lastItemFloatingActionButtonSpacer") {
-        Spacer(modifier = modifier.height(100.dp))
-    }
+    item("lastItemFloatingActionButtonSpacer") { Spacer(modifier = modifier.height(100.dp)) }
 }
 
 fun LazyGridScope.lastItemWindowInsetSpacer(modifier: Modifier = Modifier) {
-    item("lastItemWindowInsetSpacer") {
-        LastItemWindowInsetSpacer(modifier = modifier)
-    }
+    item("lastItemWindowInsetSpacer") { LastItemWindowInsetSpacer(modifier = modifier) }
 }
 
 fun LazyGridScope.lastItemFloatingActionButtonSpacer(modifier: Modifier = Modifier) {
-    item("lastItemFloatingActionButtonSpacer") {
-        Spacer(modifier = modifier.height(100.dp))
-    }
+    item("lastItemFloatingActionButtonSpacer") { Spacer(modifier = modifier.height(100.dp)) }
 }

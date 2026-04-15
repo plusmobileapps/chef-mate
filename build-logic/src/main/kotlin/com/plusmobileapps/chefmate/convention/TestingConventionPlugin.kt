@@ -5,7 +5,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.configure
-import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
@@ -14,6 +13,7 @@ class TestingConventionPlugin : Plugin<Project> {
         target.applyTesting()
     }
 }
+
 fun Project.applyTesting() {
     pluginManager.apply(libs.plugins.ksp.get().pluginId)
     pluginManager.apply(libs.plugins.mokkery.get().pluginId)
@@ -34,8 +34,6 @@ fun Project.applyTesting() {
             }
         }
 
-        tasks.withType<Test>().configureEach {
-            useJUnitPlatform()
-        }
+        tasks.withType<Test>().configureEach { useJUnitPlatform() }
     }
 }

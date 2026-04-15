@@ -13,18 +13,10 @@ kotlin {
             implementation(compose.components.resources)
         }
 
-        androidMain.dependencies {
-            implementation(libs.androidx.annotation)
-        }
+        androidMain.dependencies { implementation(libs.androidx.annotation) }
     }
 }
 
-compose {
-    resources {
-        publicResClass = true
-    }
-}
+compose { resources { publicResClass = true } }
 
-plusLibrary {
-    namespace = "com.plusmobileapps.chefmate.util"
-}
+plusLibrary { namespace = "com.plusmobileapps.chefmate.util" }

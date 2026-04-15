@@ -26,20 +26,13 @@ class RecipeListBlocImpl(
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: Provider<RecipeListViewModel>,
     private val timeFormatterUtil: TimeFormatterUtil,
-) : RecipeListBloc,
-    BlocContext by context {
+) : RecipeListBloc, BlocContext by context {
     @AssistedFactory
     fun interface ManagedFactory {
-        fun create(
-            context: BlocContext,
-            output: Consumer<Output>,
-        ): RecipeListBlocImpl
+        fun create(context: BlocContext, output: Consumer<Output>): RecipeListBlocImpl
     }
 
-    private val viewModel: RecipeListViewModel =
-        instanceKeeper.getViewModel {
-            viewModelFactory()
-        }
+    private val viewModel: RecipeListViewModel = instanceKeeper.getViewModel { viewModelFactory() }
 
     override val state: StateFlow<RecipeListBloc.Model> =
         viewModel.state.mapState {
@@ -98,11 +91,11 @@ class RecipeListBlocImpl(
 @ContributesTo(AppScope::class)
 interface RecipeListBlocBindingModule {
     @Provides
-    fun provideRecipeListBlocFactory(factory: RecipeListBlocImpl.ManagedFactory): RecipeListBloc.Factory =
+    fun provideRecipeListBlocFactory(
+        factory: RecipeListBlocImpl.ManagedFactory
+    ): RecipeListBloc.Factory =
         object : RecipeListBloc.Factory {
-            override fun create(
-                context: BlocContext,
-                output: Consumer<Output>,
-            ): RecipeListBloc = factory.create(context, output)
+            override fun create(context: BlocContext, output: Consumer<Output>): RecipeListBloc =
+                factory.create(context, output)
         }
 }

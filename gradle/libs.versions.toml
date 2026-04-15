@@ -35,7 +35,7 @@ multiplatform-webview = "2.0.3"
 openjfx = "21.0.7"
 ksoup = "0.2.6"
 ktor = "3.2.3"
-ktlint = "13.1.0"
+ktfmt = "0.26.0"
 ksp = "2.3.6"
 logback = "1.5.18"
 sqldelight = "2.1.0"
@@ -83,7 +83,7 @@ kotlin-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coro
 kotlin-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 
-ktlint-gradle-plugin = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlint" }
+ktfmt-gradle-plugin = { module = "com.ncorti.ktfmt.gradle:plugin", version.ref = "ktfmt" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 multiplatform-webview = { module = "io.github.kevinnzou:compose-webview-multiplatform", version.ref = "multiplatform-webview" }
 multiplatform-settings = { module = "com.russhwolf:multiplatform-settings", version.ref = "multiplatform-settings" }
@@ -121,12 +121,12 @@ ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
 mokkery = { id = "dev.mokkery",  version.ref = "mokkery" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 metro = { id = "dev.zacsweers.metro", version.ref = "metro" }
 metroDi = { id = "com.plusmobileapps.chefmate.metro" }
 kmpLibrary = { id = "com.plusmobileapps.chefmate.kmp-library" }
 compose = { id = "com.plusmobileapps.chefmate.compose" }
-plusKtlint = { id = "com.plusmobileapps.chefmate.ktlint" }
+plusKtfmt = { id = "com.plusmobileapps.chefmate.ktfmt" }
 plusTesting = { id = "com.plusmobileapps.chefmate.testing" }

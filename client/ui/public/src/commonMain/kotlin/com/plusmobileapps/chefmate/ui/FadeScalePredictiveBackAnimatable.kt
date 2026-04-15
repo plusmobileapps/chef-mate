@@ -13,11 +13,10 @@ import com.arkivanov.essenty.backhandler.BackEvent
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
-fun fadeScalePredictiveBackAnimatable(initialEvent: BackEvent): PredictiveBackAnimatable = FadeScaleAnimation(initialEvent)
+fun fadeScalePredictiveBackAnimatable(initialEvent: BackEvent): PredictiveBackAnimatable =
+    FadeScaleAnimation(initialEvent)
 
-class FadeScaleAnimation(
-    initialEvent: BackEvent,
-) : PredictiveBackAnimatable {
+class FadeScaleAnimation(initialEvent: BackEvent) : PredictiveBackAnimatable {
     private val exitProgressAnimatable = Animatable(initialValue = initialEvent.progress)
     private val enterProgressAnimatable = Animatable(initialValue = initialEvent.progress)
     private val finishProgressAnimatable = Animatable(initialValue = 0F)
@@ -26,20 +25,18 @@ class FadeScaleAnimation(
     private val finishProgress: Float by derivedStateOf { finishProgressAnimatable.value }
 
     override val exitModifier: Modifier
-        get() =
-            Modifier.graphicsLayer {
-                alpha = 1F - exitProgress
-                scaleX = 1F - exitProgress * 0.1F
-                scaleY = scaleX
-            }
+        get() = Modifier.graphicsLayer {
+            alpha = 1F - exitProgress
+            scaleX = 1F - exitProgress * 0.1F
+            scaleY = scaleX
+        }
 
     override val enterModifier: Modifier
-        get() =
-            Modifier.graphicsLayer {
-                alpha = enterProgress
-                scaleX = 0.9F + enterProgress * 0.1F
-                scaleY = scaleX
-            }
+        get() = Modifier.graphicsLayer {
+            alpha = enterProgress
+            scaleX = 0.9F + enterProgress * 0.1F
+            scaleY = scaleX
+        }
 
     override suspend fun animate(event: BackEvent) {
         coroutineScope {

@@ -9,10 +9,7 @@ import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeScreen
 import com.plusmobileapps.chefmate.ui.backAnimation
 
 @Composable
-fun RecipeRootScreen(
-    recipeRootBloc: RecipeRootBloc,
-    modifier: Modifier = Modifier,
-) {
+fun RecipeRootScreen(recipeRootBloc: RecipeRootBloc, modifier: Modifier = Modifier) {
     Children(
         modifier = modifier.fillMaxSize(),
         stack = recipeRootBloc.routerState,

@@ -48,7 +48,7 @@ in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and r
 * [Coroutines](https://github.com/Kotlin/kotlinx.coroutines) - asynchronous programming framework
 * [kotlinx.serialization](https://github.com/Kotlin/kotlinx.serialization) - multiplatform serialization library
 * [kotlinx-datetime](https://github.com/Kotlin/kotlinx-datetime) - multiplatform date time library
-* [Ktlint](https://github.com/JLLeitschuh/ktlint-gradle) - kotlin code formatting and linter
+* [ktfmt](https://github.com/facebook/ktfmt) - kotlin code formatting and linter
 
 ### Client
 

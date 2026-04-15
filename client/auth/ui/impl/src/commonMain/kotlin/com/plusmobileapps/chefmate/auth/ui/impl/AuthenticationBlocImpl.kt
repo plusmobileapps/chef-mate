@@ -8,8 +8,8 @@ import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
@@ -21,8 +21,7 @@ class AuthenticationBlocImpl(
     @Assisted props: AuthenticationBloc.Props,
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: AuthenticationViewModel.Factory,
-) : AuthenticationBloc,
-    BlocContext by context {
+) : AuthenticationBloc, BlocContext by context {
 
     @AssistedFactory
     fun interface ManagedFactory {
@@ -35,10 +34,9 @@ class AuthenticationBlocImpl(
 
     private val scope = createScope()
 
-    private val viewModel: AuthenticationViewModel =
-        instanceKeeper.getViewModel {
-            viewModelFactory.create(props)
-        }
+    private val viewModel: AuthenticationViewModel = instanceKeeper.getViewModel {
+        viewModelFactory.create(props)
+    }
 
     override val models: StateFlow<AuthenticationBloc.Model> =
         viewModel.state.mapState {
@@ -104,6 +102,9 @@ class AuthenticationBlocImpl(
 @ContributesTo(AppScope::class)
 interface AuthenticationBlocBindingModule {
     @Provides
-    fun provideAuthenticationBlocFactory(factory: AuthenticationBlocImpl.ManagedFactory): AuthenticationBloc.Factory =
-        AuthenticationBloc.Factory { context, props, output -> factory.create(context, props, output) }
+    fun provideAuthenticationBlocFactory(
+        factory: AuthenticationBlocImpl.ManagedFactory
+    ): AuthenticationBloc.Factory = AuthenticationBloc.Factory { context, props, output ->
+        factory.create(context, props, output)
+    }
 }

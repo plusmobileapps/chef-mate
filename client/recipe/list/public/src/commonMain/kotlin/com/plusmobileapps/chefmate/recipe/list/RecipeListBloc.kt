@@ -30,17 +30,12 @@ interface RecipeListBloc {
     )
 
     sealed class Output {
-        data class OpenRecipe(
-            val recipeId: Long,
-        ) : Output()
+        data class OpenRecipe(val recipeId: Long) : Output()
 
         object AddNewRecipe : Output()
     }
 
     interface Factory {
-        fun create(
-            context: BlocContext,
-            output: Consumer<Output>,
-        ): RecipeListBloc
+        fun create(context: BlocContext, output: Consumer<Output>): RecipeListBloc
     }
 }

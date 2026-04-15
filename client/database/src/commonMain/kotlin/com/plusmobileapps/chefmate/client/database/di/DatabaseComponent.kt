@@ -15,7 +15,8 @@ import dev.zacsweers.metro.SingleIn
 interface DatabaseComponent {
     @SingleIn(AppScope::class)
     @Provides
-    fun database(driverFactory: DriverFactory): Database = Database.Companion.invoke(driverFactory.createDriver())
+    fun database(driverFactory: DriverFactory): Database =
+        Database.Companion.invoke(driverFactory.createDriver())
 
     @SingleIn(AppScope::class)
     @Provides
@@ -23,7 +24,8 @@ interface DatabaseComponent {
 
     @SingleIn(AppScope::class)
     @Provides
-    fun providesGroceryListQueries(database: Database): GroceryListQueries = database.groceryListQueries
+    fun providesGroceryListQueries(database: Database): GroceryListQueries =
+        database.groceryListQueries
 
     @SingleIn(AppScope::class)
     @Provides

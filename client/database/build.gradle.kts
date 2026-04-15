@@ -4,7 +4,6 @@ plugins {
 }
 
 kotlin {
-
     sourceSets {
         commonMain.dependencies {
             api(libs.sqldelight.coroutines)
@@ -14,15 +13,9 @@ kotlin {
             implementation(libs.kotlin.test)
             implementation(libs.kotlin.coroutines.test)
         }
-        androidMain.dependencies {
-            implementation(libs.sqldelight.drivers.android)
-        }
-        iosMain.dependencies {
-            implementation(libs.sqldelight.drivers.native)
-        }
-        jvmMain.dependencies {
-            implementation(libs.sqldelight.drivers.jvm)
-        }
+        androidMain.dependencies { implementation(libs.sqldelight.drivers.android) }
+        iosMain.dependencies { implementation(libs.sqldelight.drivers.native) }
+        jvmMain.dependencies { implementation(libs.sqldelight.drivers.jvm) }
     }
 }
 

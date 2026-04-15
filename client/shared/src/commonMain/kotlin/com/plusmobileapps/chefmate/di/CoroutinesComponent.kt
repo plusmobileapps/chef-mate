@@ -4,9 +4,9 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.Qualifier
 import dev.zacsweers.metro.SingleIn
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlin.coroutines.CoroutineContext
 
 @Qualifier
 @Target(
@@ -47,20 +47,11 @@ annotation class Unconfined
 @ContributesTo(AppScope::class)
 @SingleIn(AppScope::class)
 interface CoroutinesComponent {
-    @Provides
-    @SingleIn(AppScope::class)
-    @IO
-    fun io(): CoroutineContext = Dispatchers.IO
+    @Provides @SingleIn(AppScope::class) @IO fun io(): CoroutineContext = Dispatchers.IO
 
-    @Provides
-    @SingleIn(AppScope::class)
-    @Main
-    fun main(): CoroutineContext = Dispatchers.Main
+    @Provides @SingleIn(AppScope::class) @Main fun main(): CoroutineContext = Dispatchers.Main
 
-    @Provides
-    @SingleIn(AppScope::class)
-    @CPU
-    fun default(): CoroutineContext = Dispatchers.Default
+    @Provides @SingleIn(AppScope::class) @CPU fun default(): CoroutineContext = Dispatchers.Default
 
     @Provides
     @SingleIn(AppScope::class)

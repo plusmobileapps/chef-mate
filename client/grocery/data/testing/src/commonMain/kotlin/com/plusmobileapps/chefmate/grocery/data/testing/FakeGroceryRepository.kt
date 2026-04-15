@@ -11,19 +11,17 @@ import kotlinx.coroutines.flow.update
 
 class FakeGroceryRepository : GroceryRepository {
     private val _groceries = MutableStateFlow<List<GroceryItem>>(emptyList())
-    private val _lists = MutableStateFlow(
-        listOf(GroceryListModel(id = 1L, name = "My Grocery List")),
-    )
+    private val _lists =
+        MutableStateFlow(listOf(GroceryListModel(id = 1L, name = "My Grocery List")))
     private var nextId = 1L
     private var nextListId = 2L
     private val itemListMap = mutableMapOf<Long, Long>()
 
     override fun getGroceries(): Flow<List<GroceryItem>> = _groceries.asStateFlow()
 
-    override fun getGroceries(listId: Long): Flow<List<GroceryItem>> =
-        _groceries.map { items ->
-            items.filter { itemListMap[it.id] == listId }
-        }
+    override fun getGroceries(listId: Long): Flow<List<GroceryItem>> = _groceries.map { items ->
+        items.filter { itemListMap[it.id] == listId }
+    }
 
     override fun getGroceryLists(): Flow<List<GroceryListModel>> = _lists.asStateFlow()
 
@@ -54,22 +52,15 @@ class FakeGroceryRepository : GroceryRepository {
         _groceries.update { it + newItems }
     }
 
-    override suspend fun updateChecked(
-        item: GroceryItem,
-        isChecked: Boolean,
-    ) {
+    override suspend fun updateChecked(item: GroceryItem, isChecked: Boolean) {
         _groceries.update { items ->
-            items.map {
-                if (it.id == item.id) it.copy(isChecked = isChecked) else it
-            }
+            items.map { if (it.id == item.id) it.copy(isChecked = isChecked) else it }
         }
     }
 
     override suspend fun deleteGrocery(item: GroceryItem) {
         itemListMap.remove(item.id)
-        _groceries.update { items ->
-            items.filter { it.id != item.id }
-        }
+        _groceries.update { items -> items.filter { it.id != item.id } }
     }
 
     override suspend fun getGrocery(id: Long): GroceryItem? = _groceries.value.find { it.id == id }
@@ -77,11 +68,7 @@ class FakeGroceryRepository : GroceryRepository {
     override suspend fun syncAllUnsynced() {}
 
     override suspend fun updateGrocery(item: GroceryItem) {
-        _groceries.update { items ->
-            items.map {
-                if (it.id == item.id) item else it
-            }
-        }
+        _groceries.update { items -> items.map { if (it.id == item.id) item else it } }
     }
 
     override suspend fun createGroceryList(name: String): Long {
@@ -98,9 +85,7 @@ class FakeGroceryRepository : GroceryRepository {
     }
 
     override suspend fun renameGroceryList(id: Long, name: String) {
-        _lists.update { lists ->
-            lists.map { if (it.id == id) it.copy(name = name) else it }
-        }
+        _lists.update { lists -> lists.map { if (it.id == id) it.copy(name = name) else it } }
     }
 
     override suspend fun ensureDefaultList(): Long {

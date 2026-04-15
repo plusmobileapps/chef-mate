@@ -16,9 +16,7 @@ kotlin {
             implementation(libs.multiplatform.settings.noarg)
             implementation(libs.essenty.lifecycle.coroutines)
         }
-        commonTest.dependencies {
-            implementation(libs.kotlin.test)
-        }
+        commonTest.dependencies { implementation(libs.kotlin.test) }
     }
 }
 
@@ -48,9 +46,7 @@ val supabaseKey =
         ?: "your-anon-public-key"
 
 val bugsnagApiKey =
-    localProperties.getProperty("bugsnag.apiKey")
-        ?: System.getenv("BUGSNAG_API_KEY")
-        ?: ""
+    localProperties.getProperty("bugsnag.apiKey") ?: System.getenv("BUGSNAG_API_KEY") ?: ""
 
 buildkonfig {
     packageName = "com.plusmobileapps.chefmate.buildconfig"

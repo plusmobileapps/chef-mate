@@ -10,27 +10,17 @@ import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 
-interface RootBloc :
-    BackHandlerOwner,
-    BackClickBloc {
+interface RootBloc : BackHandlerOwner, BackClickBloc {
     val state: Value<ChildStack<*, Child>>
 
     sealed class Child {
-        data class BottomNavigation(
-            val bloc: BottomNavBloc,
-        ) : Child()
+        data class BottomNavigation(val bloc: BottomNavBloc) : Child()
 
-        data class GroceryDetail(
-            val bloc: GroceryDetailBloc,
-        ) : Child()
+        data class GroceryDetail(val bloc: GroceryDetailBloc) : Child()
 
-        data class RecipeRoot(
-            val bloc: RecipeRootBloc,
-        ) : Child()
+        data class RecipeRoot(val bloc: RecipeRootBloc) : Child()
 
-        data class Authentication(
-            val bloc: AuthenticationBloc,
-        ) : Child()
+        data class Authentication(val bloc: AuthenticationBloc) : Child()
     }
 
     fun interface Factory {

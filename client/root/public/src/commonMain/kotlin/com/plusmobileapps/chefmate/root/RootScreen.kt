@@ -13,20 +13,14 @@ import com.plusmobileapps.chefmate.ui.backAnimation
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
 @Composable
-fun RootScreen(
-    rootBloc: RootBloc,
-    modifier: Modifier = Modifier,
-) {
+fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
     val state = rootBloc.state.subscribeAsState()
     ChefMateTheme {
         Children(
             modifier = modifier.fillMaxSize(),
             stack = state.value,
             animation =
-                backAnimation(
-                    backHandler = rootBloc.backHandler,
-                    onBack = rootBloc::onBackClicked,
-                ),
+                backAnimation(backHandler = rootBloc.backHandler, onBack = rootBloc::onBackClicked),
             content = {
                 when (val child = it.instance) {
                     is RootBloc.Child.BottomNavigation -> BottomNavigationScreen(child.bloc)

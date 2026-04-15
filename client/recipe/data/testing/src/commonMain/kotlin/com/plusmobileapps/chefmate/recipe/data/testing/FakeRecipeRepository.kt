@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class FakeRecipeRepository(
-    private val recipes: MutableStateFlow<List<Recipe>> = MutableStateFlow(emptyList()),
+    private val recipes: MutableStateFlow<List<Recipe>> = MutableStateFlow(emptyList())
 ) : RecipeRepository {
     override fun getRecipes(): Flow<List<Recipe>> = recipes.asStateFlow()
 

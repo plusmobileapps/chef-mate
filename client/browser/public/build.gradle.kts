@@ -27,12 +27,8 @@ kotlin {
             implementation(projects.client.ui.public)
             implementation(compose.components.resources)
         }
-        getByName("androidMain").dependencies {
-            implementation(libs.multiplatform.webview)
-        }
-        getByName("iosMain").dependencies {
-            implementation(libs.multiplatform.webview)
-        }
+        getByName("androidMain").dependencies { implementation(libs.multiplatform.webview) }
+        getByName("iosMain").dependencies { implementation(libs.multiplatform.webview) }
         getByName("jvmMain").dependencies {
             val fxClassifier = osClassifier()
             val fxVersion = libs.versions.openjfx.get()
@@ -46,6 +42,4 @@ kotlin {
     }
 }
 
-plusLibrary {
-    namespace = "com.plusmobileapps.chefmate.browser"
-}
+plusLibrary { namespace = "com.plusmobileapps.chefmate.browser" }

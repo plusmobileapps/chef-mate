@@ -18,9 +18,7 @@ interface GroceryDetailBloc : BackClickBloc {
     sealed class Model {
         object Loading : Model()
 
-        data class Loaded(
-            val item: GroceryItem,
-        ) : Model()
+        data class Loaded(val item: GroceryItem) : Model()
     }
 
     sealed class Output {
@@ -28,10 +26,6 @@ interface GroceryDetailBloc : BackClickBloc {
     }
 
     fun interface Factory {
-        fun create(
-            context: BlocContext,
-            id: Long,
-            output: Consumer<Output>,
-        ): GroceryDetailBloc
+        fun create(context: BlocContext, id: Long, output: Consumer<Output>): GroceryDetailBloc
     }
 }

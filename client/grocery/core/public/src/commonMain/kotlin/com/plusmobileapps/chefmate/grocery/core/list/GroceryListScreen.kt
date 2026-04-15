@@ -66,30 +66,28 @@ import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GroceryListScreen(
-    bloc: GroceryListBloc,
-    modifier: Modifier = Modifier,
-) {
+fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
     PlusNavContainer(
         modifier = modifier.fillMaxSize(),
         data =
             PlusHeaderData.Parent(
                 title = Res.string.grocery_list.asTextData(),
-                trailingAccessory = if (state.isSyncing) {
-                    PlusHeaderData.TrailingAccessory.Custom {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.dp,
+                trailingAccessory =
+                    if (state.isSyncing) {
+                        PlusHeaderData.TrailingAccessory.Custom {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp,
+                            )
+                        }
+                    } else {
+                        PlusHeaderData.TrailingAccessory.Icon(
+                            icon = Icons.Default.Sync,
+                            contentDesc = Res.string.grocery_sync_all.asTextData(),
+                            onClick = bloc::onSyncClicked,
                         )
-                    }
-                } else {
-                    PlusHeaderData.TrailingAccessory.Icon(
-                        icon = Icons.Default.Sync,
-                        contentDesc = Res.string.grocery_sync_all.asTextData(),
-                        onClick = bloc::onSyncClicked,
-                    )
-                },
+                    },
             ),
         scrollEnabled = false,
         content = {
@@ -99,9 +97,7 @@ fun GroceryListScreen(
                 onCreateListClicked = bloc::onCreateListClicked,
                 onDeleteListClicked = bloc::onDeleteListClicked,
             )
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-            ) {
+            LazyColumn(modifier = Modifier.weight(1f)) {
                 items(state.items.size, key = { state.items[it].id }) { index ->
                     val item = state.items[index]
                     GroceryListItem(
@@ -144,9 +140,7 @@ private fun GroceryListSelector(
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = it },
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
     ) {
         OutlinedTextField(
             value = state.selectedList?.name ?: "",
@@ -154,14 +148,9 @@ private fun GroceryListSelector(
             readOnly = true,
             label = { Text(stringResource(Res.string.grocery_select_list)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier
-                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                .fillMaxWidth(),
+            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
         )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-        ) {
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             state.lists.forEach { list ->
                 DropdownMenuItem(
                     text = { Text(list.name) },
@@ -169,24 +158,26 @@ private fun GroceryListSelector(
                         onListSelected(list)
                         expanded = false
                     },
-                    trailingIcon = if (state.lists.size > 1) {
-                        {
-                            IconButton(
-                                onClick = {
-                                    expanded = false
-                                    onDeleteListClicked(list)
-                                },
-                            ) {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription = stringResource(Res.string.grocery_delete_list),
-                                    modifier = Modifier.size(18.dp),
-                                )
+                    trailingIcon =
+                        if (state.lists.size > 1) {
+                            {
+                                IconButton(
+                                    onClick = {
+                                        expanded = false
+                                        onDeleteListClicked(list)
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription =
+                                            stringResource(Res.string.grocery_delete_list),
+                                        modifier = Modifier.size(18.dp),
+                                    )
+                                }
                             }
-                        }
-                    } else {
-                        null
-                    },
+                        } else {
+                            null
+                        },
                 )
             }
             DropdownMenuItem(
@@ -196,7 +187,11 @@ private fun GroceryListSelector(
                     onCreateListClicked()
                 },
                 leadingIcon = {
-                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
                 },
             )
         }
@@ -204,10 +199,7 @@ private fun GroceryListSelector(
 }
 
 @Composable
-private fun CreateListDialog(
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit,
-) {
+private fun CreateListDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
     var listName by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -222,10 +214,7 @@ private fun CreateListDialog(
             )
         },
         confirmButton = {
-            TextButton(
-                onClick = { onConfirm(listName) },
-                enabled = listName.isNotBlank(),
-            ) {
+            TextButton(onClick = { onConfirm(listName) }, enabled = listName.isNotBlank()) {
                 Text(stringResource(Res.string.grocery_create_list_confirm))
             }
         },
@@ -250,11 +239,11 @@ private fun GroceryListInput(
         onValueChange = onNameChange,
         modifier = modifier.fillMaxWidth(),
         trailingIcon = {
-            IconButton(
-                onClick = onAddClick,
-                enabled = state.value.isNotBlank(),
-            ) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(Res.string.grocery_add_item))
+            IconButton(onClick = onAddClick, enabled = state.value.isNotBlank()) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = stringResource(Res.string.grocery_add_item),
+                )
             }
         },
     )
@@ -269,56 +258,49 @@ private fun GroceryListItem(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .clickable {
-                    onGroceryClick(item)
-                },
+        modifier = modifier.fillMaxWidth().clickable { onGroceryClick(item) },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(
-            onClick = { onCheckedChange(item, !item.isChecked) },
-        ) {
+        IconButton(onClick = { onCheckedChange(item, !item.isChecked) }) {
             if (item.isChecked) {
-                Icon(Icons.Default.CheckBox, contentDescription = stringResource(Res.string.grocery_checked))
+                Icon(
+                    Icons.Default.CheckBox,
+                    contentDescription = stringResource(Res.string.grocery_checked),
+                )
             } else {
-                Icon(Icons.Default.CheckBoxOutlineBlank, contentDescription = stringResource(Res.string.grocery_not_checked))
+                Icon(
+                    Icons.Default.CheckBoxOutlineBlank,
+                    contentDescription = stringResource(Res.string.grocery_not_checked),
+                )
             }
         }
-        Text(
-            text = item.name,
-            modifier =
-                Modifier
-                    .weight(1f)
-                    .padding(start = 8.dp),
-        )
+        Text(text = item.name, modifier = Modifier.weight(1f).padding(start = 8.dp))
 
         val syncingDescription = stringResource(Res.string.grocery_sync_syncing)
         when (item.syncStatus) {
-            SyncStatus.NOT_SYNCED -> Icon(
-                imageVector = Icons.Outlined.CloudOff,
-                contentDescription = stringResource(Res.string.grocery_sync_not_synced),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp),
-            )
-            SyncStatus.SYNCING -> CircularProgressIndicator(
-                modifier = Modifier
-                    .size(16.dp)
-                    .semantics { contentDescription = syncingDescription },
-                strokeWidth = 2.dp,
-            )
-            SyncStatus.SYNCED -> Icon(
-                imageVector = Icons.Outlined.CloudDone,
-                contentDescription = stringResource(Res.string.grocery_sync_synced),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp),
-            )
+            SyncStatus.NOT_SYNCED ->
+                Icon(
+                    imageVector = Icons.Outlined.CloudOff,
+                    contentDescription = stringResource(Res.string.grocery_sync_not_synced),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp),
+                )
+            SyncStatus.SYNCING ->
+                CircularProgressIndicator(
+                    modifier =
+                        Modifier.size(16.dp).semantics { contentDescription = syncingDescription },
+                    strokeWidth = 2.dp,
+                )
+            SyncStatus.SYNCED ->
+                Icon(
+                    imageVector = Icons.Outlined.CloudDone,
+                    contentDescription = stringResource(Res.string.grocery_sync_synced),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp),
+                )
         }
 
-        IconButton(
-            onClick = { onDeleteClick(item) },
-        ) {
+        IconButton(onClick = { onDeleteClick(item) }) {
             Icon(Icons.Default.Delete, stringResource(Res.string.grocery_delete_item))
         }
     }

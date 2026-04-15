@@ -11,6 +11,7 @@ import com.russhwolf.settings.Settings
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +21,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.coroutines.CoroutineContext
 
 @AssistedInject
 class AddRecipeToGroceryListViewModel(
@@ -55,7 +55,7 @@ class AddRecipeToGroceryListViewModel(
                         } else {
                             ingredient
                         }
-                    },
+                    }
             )
         }
     }
@@ -67,10 +67,7 @@ class AddRecipeToGroceryListViewModel(
     }
 
     fun save() {
-        val ingredients =
-            state.value.ingredients
-                .filter { it.isSelected }
-                .map { it.name }
+        val ingredients = state.value.ingredients.filter { it.isSelected }.map { it.name }
         val selectedListId = state.value.selectedGroceryList?.id
         _state.update { it.copy(isAdding = true) }
         scope.launch {
@@ -107,31 +104,20 @@ class AddRecipeToGroceryListViewModel(
     private fun loadRecipe() {
         scope.launch {
             val recipe =
-                recipeRepository.getRecipe(recipeId).first() ?: run {
-                    _output.send(Output.Finished)
-                    return@launch
-                }
-            val ingredients =
-                recipe.ingredients
-                    .split("\n")
-                    .mapIndexedNotNull { _, ingredient ->
-                        if (ingredient.isBlank()) {
-                            null
-                        } else {
-                            ListItem(
-                                id = ingredient.hashCode(),
-                                name = ingredient,
-                                isSelected = true,
-                            )
-                        }
+                recipeRepository.getRecipe(recipeId).first()
+                    ?: run {
+                        _output.send(Output.Finished)
+                        return@launch
                     }
-            _state.update {
-                it.copy(
-                    isLoading = false,
-                    recipe = recipe,
-                    ingredients = ingredients,
-                )
-            }
+            val ingredients =
+                recipe.ingredients.split("\n").mapIndexedNotNull { _, ingredient ->
+                    if (ingredient.isBlank()) {
+                        null
+                    } else {
+                        ListItem(id = ingredient.hashCode(), name = ingredient, isSelected = true)
+                    }
+                }
+            _state.update { it.copy(isLoading = false, recipe = recipe, ingredients = ingredients) }
         }
     }
 

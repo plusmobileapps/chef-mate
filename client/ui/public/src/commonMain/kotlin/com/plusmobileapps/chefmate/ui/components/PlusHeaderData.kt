@@ -39,13 +39,8 @@ sealed class PlusHeaderData {
             val onClick: (() -> Unit)? = null,
         ) : TrailingAccessory()
 
-        data class Button(
-            val text: TextData,
-            val onClick: () -> Unit,
-        ) : TrailingAccessory()
+        data class Button(val text: TextData, val onClick: () -> Unit) : TrailingAccessory()
 
-        data class Custom(
-            val content: @Composable RowScope.() -> Unit,
-        ) : TrailingAccessory()
+        data class Custom(val content: @Composable RowScope.() -> Unit) : TrailingAccessory()
     }
 }

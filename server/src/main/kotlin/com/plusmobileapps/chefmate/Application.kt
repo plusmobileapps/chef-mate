@@ -12,9 +12,5 @@ fun main() {
 }
 
 fun Application.module() {
-    routing {
-        get("/") {
-            call.respondText("Ktor: Hello, World!")
-        }
-    }
+    routing { get("/") { call.respondText("Ktor: Hello, World!") } }
 }

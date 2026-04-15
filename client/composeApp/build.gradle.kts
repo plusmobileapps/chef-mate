@@ -22,20 +22,13 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.metro)
     alias(libs.plugins.compose)
-    alias(libs.plugins.plusKtlint)
+    alias(libs.plugins.plusKtfmt)
 }
 
 kotlin {
-    androidTarget {
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
-        }
-    }
+    androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
 
-    listOf(
-        iosArm64(),
-        iosSimulatorArm64(),
-    ).forEach { iosTarget ->
+    listOf(iosArm64(), iosSimulatorArm64()).forEach { iosTarget ->
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
@@ -103,42 +96,23 @@ kotlin {
             implementation(libs.bugsnag.kmp)
             implementation(libs.kermit.bugsnag)
         }
-        commonTest.dependencies {
-            implementation(libs.kotlin.test)
-        }
+        commonTest.dependencies { implementation(libs.kotlin.test) }
     }
 }
 
 android {
     namespace = "com.plusmobileapps.chefmate"
-    compileSdk =
-        libs.versions.android.compileSdk
-            .get()
-            .toInt()
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "com.plusmobileapps.chefmate"
-        minSdk =
-            libs.versions.android.minSdk
-                .get()
-                .toInt()
-        targetSdk =
-            libs.versions.android.targetSdk
-                .get()
-                .toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
     }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-    }
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-        }
-    }
+    packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
+    buildTypes { getByName("release") { isMinifyEnabled = false } }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -174,9 +148,7 @@ compose.desktop {
                 bundleID = "com.plusmobileapps.chefmate"
                 dockName = "Chef Mate"
 
-                infoPlist {
-                    extraKeysRawXml = macExtraPlistKeys
-                }
+                infoPlist { extraKeysRawXml = macExtraPlistKeys }
             }
 
             // Linux configuration
@@ -206,7 +178,8 @@ compose.desktop {
 }
 
 val macExtraPlistKeys: String
-    get() = """
+    get() =
+        """
       <key>CFBundleURLTypes</key>
       <array>
         <dict>

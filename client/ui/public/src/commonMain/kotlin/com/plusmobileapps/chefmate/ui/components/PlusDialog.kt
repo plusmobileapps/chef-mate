@@ -37,19 +37,10 @@ fun PlusDialog(
 ) {
     PlusDialogScaffold(
         onDismissRequest = onDismissRequest,
-        header = {
-            Text(title.localized())
-        },
-        content =
-            message?.let {
-                {
-                    Text(it.localized())
-                }
-            },
+        header = { Text(title.localized()) },
+        content = message?.let { { Text(it.localized()) } },
         footer = {
-            Row(
-                horizontalArrangement = spacedBy(ChefMateTheme.dimens.paddingNormal),
-            ) {
+            Row(horizontalArrangement = spacedBy(ChefMateTheme.dimens.paddingNormal)) {
                 if (dismissButtonText != null) {
                     PlusButton(
                         text = dismissButtonText,
@@ -57,10 +48,7 @@ fun PlusDialog(
                         onClick = onDismissRequest,
                     )
                 }
-                PlusButton(
-                    text = confirmButtonText,
-                    onClick = onConfirmClick,
-                )
+                PlusButton(text = confirmButtonText, onClick = onConfirmClick)
             }
         },
     )

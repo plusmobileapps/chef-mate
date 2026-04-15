@@ -14,11 +14,7 @@ import androidx.compose.ui.layout.ContentScale
 import coil3.compose.AsyncImage
 
 @Composable
-fun RecipeImage(
-    imageUrl: String?,
-    contentDescription: String?,
-    modifier: Modifier = Modifier,
-) {
+fun RecipeImage(imageUrl: String?, contentDescription: String?, modifier: Modifier = Modifier) {
     if (imageUrl != null) {
         AsyncImage(
             model = imageUrl,

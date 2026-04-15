@@ -8,13 +8,7 @@ import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.TextData
 
 fun createGreeting(userName: String): TextData =
-    PhraseModel(
-        resource = Res.string.greeting_authenticated,
-        "name" to FixedString(userName),
-    )
+    PhraseModel(resource = Res.string.greeting_authenticated, "name" to FixedString(userName))
 
 fun createEmailVerificationMessage(email: String): TextData =
-    PhraseModel(
-        resource = Res.string.email_verification_required,
-        "email" to FixedString(email),
-    )
+    PhraseModel(resource = Res.string.email_verification_required, "email" to FixedString(email))

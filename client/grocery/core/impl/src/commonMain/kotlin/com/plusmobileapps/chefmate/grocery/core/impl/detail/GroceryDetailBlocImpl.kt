@@ -9,8 +9,8 @@ import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc.Output
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.mapState
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
@@ -22,28 +22,18 @@ class GroceryDetailBlocImpl(
     @Assisted id: Long,
     @Assisted private val output: Consumer<Output>,
     repository: GroceryRepository,
-) : GroceryDetailBloc,
-    BlocContext by context {
+) : GroceryDetailBloc, BlocContext by context {
 
     @AssistedFactory
     fun interface ManagedFactory {
-        fun create(
-            context: BlocContext,
-            id: Long,
-            output: Consumer<Output>,
-        ): GroceryDetailBlocImpl
+        fun create(context: BlocContext, id: Long, output: Consumer<Output>): GroceryDetailBlocImpl
     }
 
     private val scope = createScope()
 
-    private val viewModel =
-        instanceKeeper.getViewModel {
-            GroceryDetailViewModel(
-                id = id,
-                mainContext = mainContext,
-                repository = repository,
-            )
-        }
+    private val viewModel = instanceKeeper.getViewModel {
+        GroceryDetailViewModel(id = id, mainContext = mainContext, repository = repository)
+    }
 
     override val models: StateFlow<GroceryDetailBloc.Model> =
         viewModel.state.mapState {
@@ -84,6 +74,9 @@ class GroceryDetailBlocImpl(
 @ContributesTo(AppScope::class)
 interface GroceryDetailBlocBindingModule {
     @Provides
-    fun provideGroceryDetailBlocFactory(factory: GroceryDetailBlocImpl.ManagedFactory): GroceryDetailBloc.Factory =
-        GroceryDetailBloc.Factory { context, id, output -> factory.create(context, id, output) }
+    fun provideGroceryDetailBlocFactory(
+        factory: GroceryDetailBlocImpl.ManagedFactory
+    ): GroceryDetailBloc.Factory = GroceryDetailBloc.Factory { context, id, output ->
+        factory.create(context, id, output)
+    }
 }
