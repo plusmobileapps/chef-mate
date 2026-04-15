@@ -9,6 +9,7 @@ kotlin {
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
             implementation(projects.client.recipe.data.public)
+            implementation(projects.client.util.public)
             implementation(libs.multiplatform.settings)
         }
     }

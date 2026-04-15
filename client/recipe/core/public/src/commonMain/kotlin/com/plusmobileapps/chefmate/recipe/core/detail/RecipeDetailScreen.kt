@@ -111,7 +111,6 @@ import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
-import com.plusmobileapps.chefmate.util.TimeFormatterUtilImpl
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
@@ -227,6 +226,9 @@ fun RecipeDetailScreen(
                     recipe = state.recipe,
                     createdAt = state.createdAt,
                     updatedAt = state.updatedAt,
+                    formattedPrepTime = state.formattedPrepTime,
+                    formattedCookTime = state.formattedCookTime,
+                    formattedTotalTime = state.formattedTotalTime,
                     onSourceUrlClicked = bloc::onSourceUrlClicked,
                     modifier = Modifier.weight(1f),
                 )
@@ -235,6 +237,9 @@ fun RecipeDetailScreen(
                     recipe = state.recipe,
                     createdAt = state.createdAt,
                     updatedAt = state.updatedAt,
+                    formattedPrepTime = state.formattedPrepTime,
+                    formattedCookTime = state.formattedCookTime,
+                    formattedTotalTime = state.formattedTotalTime,
                     onSourceUrlClicked = bloc::onSourceUrlClicked,
                     metadataCollapsed = metadataCollapsed,
                     onMetadataCollapsedChange = { metadataCollapsed = it },
@@ -298,6 +303,9 @@ private fun RecipeDetailCompactContent(
     recipe: Recipe,
     createdAt: TextData,
     updatedAt: TextData,
+    formattedPrepTime: TextData?,
+    formattedCookTime: TextData?,
+    formattedTotalTime: TextData?,
     onSourceUrlClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -320,6 +328,9 @@ private fun RecipeDetailCompactContent(
                 recipe = recipe,
                 createdAt = createdAt,
                 updatedAt = updatedAt,
+                formattedPrepTime = formattedPrepTime,
+                formattedCookTime = formattedCookTime,
+                formattedTotalTime = formattedTotalTime,
                 onSourceUrlClicked = onSourceUrlClicked,
                 modifier = Modifier.padding(horizontal = padding),
             )
@@ -391,6 +402,9 @@ private fun ColumnScope.RecipeDetailExpandedContent(
     recipe: Recipe,
     createdAt: TextData,
     updatedAt: TextData,
+    formattedPrepTime: TextData?,
+    formattedCookTime: TextData?,
+    formattedTotalTime: TextData?,
     onSourceUrlClicked: (String) -> Unit,
     metadataCollapsed: Boolean,
     onMetadataCollapsedChange: (Boolean) -> Unit,
@@ -478,7 +492,14 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                         )
                     }
                 }
-                item(key = "details_card") { DetailsCard(recipe = recipe) }
+                item(key = "details_card") {
+                    DetailsCard(
+                        recipe = recipe,
+                        formattedPrepTime = formattedPrepTime,
+                        formattedCookTime = formattedCookTime,
+                        formattedTotalTime = formattedTotalTime,
+                    )
+                }
                 recipe.sourceUrl?.let { sourceUrl ->
                     item(key = "source_url") { SourceUrlCard(sourceUrl = sourceUrl, onSourceUrlClicked = onSourceUrlClicked) }
                 }
@@ -646,6 +667,9 @@ private fun DescriptionCard(
 @Composable
 private fun DetailsCard(
     recipe: Recipe,
+    formattedPrepTime: TextData?,
+    formattedCookTime: TextData?,
+    formattedTotalTime: TextData?,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -668,27 +692,27 @@ private fun DetailsCard(
                 )
             }
 
-            recipe.prepTime?.let { prepTime ->
+            formattedPrepTime?.let {
                 DetailRow(
                     icon = Icons.Default.Timer,
                     label = stringResource(Res.string.recipe_detail_prep_time),
-                    value = TimeFormatterUtilImpl.formatMinutes(prepTime).localized(),
+                    value = it.localized(),
                 )
             }
 
-            recipe.cookTime?.let { cookTime ->
+            formattedCookTime?.let {
                 DetailRow(
                     icon = Icons.Default.Timer,
                     label = stringResource(Res.string.recipe_detail_cook_time),
-                    value = TimeFormatterUtilImpl.formatMinutes(cookTime).localized(),
+                    value = it.localized(),
                 )
             }
 
-            recipe.totalTime?.let { totalTime ->
+            formattedTotalTime?.let {
                 DetailRow(
                     icon = Icons.Default.Timer,
                     label = stringResource(Res.string.recipe_detail_total_time),
-                    value = TimeFormatterUtilImpl.formatMinutes(totalTime).localized(),
+                    value = it.localized(),
                 )
             }
 
@@ -743,6 +767,9 @@ private fun RecipeHeroSection(
     recipe: Recipe,
     createdAt: TextData,
     updatedAt: TextData,
+    formattedPrepTime: TextData?,
+    formattedCookTime: TextData?,
+    formattedTotalTime: TextData?,
     onSourceUrlClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -774,25 +801,25 @@ private fun RecipeHeroSection(
                     value = "$servings",
                 )
             }
-            recipe.prepTime?.let { prepTime ->
+            formattedPrepTime?.let {
                 DetailRow(
                     icon = Icons.Default.Timer,
                     label = stringResource(Res.string.recipe_detail_prep_time),
-                    value = TimeFormatterUtilImpl.formatMinutes(prepTime).localized(),
+                    value = it.localized(),
                 )
             }
-            recipe.cookTime?.let { cookTime ->
+            formattedCookTime?.let {
                 DetailRow(
                     icon = Icons.Default.Timer,
                     label = stringResource(Res.string.recipe_detail_cook_time),
-                    value = TimeFormatterUtilImpl.formatMinutes(cookTime).localized(),
+                    value = it.localized(),
                 )
             }
-            recipe.totalTime?.let { totalTime ->
+            formattedTotalTime?.let {
                 DetailRow(
                     icon = Icons.Default.Timer,
                     label = stringResource(Res.string.recipe_detail_total_time),
-                    value = TimeFormatterUtilImpl.formatMinutes(totalTime).localized(),
+                    value = it.localized(),
                 )
             }
             recipe.calories?.let { calories ->

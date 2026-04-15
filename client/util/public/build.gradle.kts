@@ -19,6 +19,12 @@ kotlin {
     }
 }
 
+compose {
+    resources {
+        publicResClass = true
+    }
+}
+
 plusLibrary {
     namespace = "com.plusmobileapps.chefmate.util"
 }

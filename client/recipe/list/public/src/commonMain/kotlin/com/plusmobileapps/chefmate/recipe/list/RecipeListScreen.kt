@@ -67,7 +67,6 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_view_l
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.asTextData
-import com.plusmobileapps.chefmate.util.TimeFormatterUtilImpl
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
@@ -360,10 +359,10 @@ private fun RecipeListItemContent(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                recipe.totalTime?.let { time ->
+                recipe.formattedTotalTime?.let { formattedTime ->
                     RecipeInfoChip(
                         icon = Icons.Outlined.AccessTime,
-                        label = TimeFormatterUtilImpl.formatMinutes(time).localized(),
+                        label = formattedTime.localized(),
                     )
                 }
                 recipe.servings?.let { servings ->

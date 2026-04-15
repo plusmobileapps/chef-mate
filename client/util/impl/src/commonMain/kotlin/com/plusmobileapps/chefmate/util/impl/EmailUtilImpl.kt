@@ -1,7 +1,7 @@
 package com.plusmobileapps.chefmate.util.impl
 
-import com.plusmobileapps.chefmate.util.EmailUtil
 import com.plusmobileapps.chefmate.di.AppScope
+import com.plusmobileapps.chefmate.util.EmailUtil
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn

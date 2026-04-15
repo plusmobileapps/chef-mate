@@ -11,7 +11,6 @@ kotlin {
             api(projects.client.shared)
             implementation(compose.components.resources)
             implementation(projects.client.ui.public)
-            implementation(projects.client.util.public)
         }
     }
 }
