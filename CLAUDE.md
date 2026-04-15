@@ -15,8 +15,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ./gradlew :server:run
 
 # Lint / format
-./gradlew ktlintFormat   # auto-format
-./gradlew ktlintCheck    # check only
+./gradlew ktfmtFormat   # auto-format
+./gradlew ktfmtCheck    # check only
 
 # Tests (all)
 ./gradlew test

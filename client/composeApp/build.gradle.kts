@@ -22,7 +22,7 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.metro)
     alias(libs.plugins.compose)
-    alias(libs.plugins.plusKtlint)
+    alias(libs.plugins.plusKtfmt)
 }
 
 kotlin {
