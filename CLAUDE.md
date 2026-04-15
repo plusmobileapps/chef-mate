@@ -5,6 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
+# First-time setup (installs ktfmt + pre-commit hook)
+./scripts/setup-hooks.sh
+
 # Android
 ./gradlew :client:composeApp:installDebug
 
