@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Arrangement.Absolute.spacedBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -21,9 +20,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuOpen
@@ -59,6 +60,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -395,8 +397,7 @@ private fun ColumnScope.RecipeDetailExpandedContent(
 ) {
     val padding = ChefMateTheme.dimens.paddingNormal
     val density = LocalDensity.current
-    val bottomPadding =
-        if (metadataCollapsed) PaddingValues() else PaddingValues(bottom = 80.dp)
+    val toolbarClearance = 80.dp
 
     var metadataWidthDp by remember { mutableStateOf(240.dp) }
     val minMetadataWidth = 160.dp
@@ -404,6 +405,14 @@ private fun ColumnScope.RecipeDetailExpandedContent(
 
     // Ratio for ingredients vs directions (0.0 = all directions, 1.0 = all ingredients)
     var ingredientsWeight by remember { mutableStateOf(0.5f) }
+
+    val ingredientLines = remember(recipe.ingredients) { splitLines(recipe.ingredients) }
+    val ingredientCrossedOut =
+        remember(recipe.ingredients) {
+            mutableStateListOf(*BooleanArray(ingredientLines.size) { false }.toTypedArray())
+        }
+    val directionParagraphs = remember(recipe.directions) { splitLines(recipe.directions) }
+    var directionHighlightedIndex by remember(recipe.directions) { mutableStateOf(-1) }
 
     Row(
         modifier =
@@ -433,7 +442,6 @@ private fun ColumnScope.RecipeDetailExpandedContent(
             LazyColumn(
                 modifier = Modifier.width(metadataWidthDp),
                 verticalArrangement = spacedBy(padding),
-                contentPadding = bottomPadding,
             ) {
                 item {
                     Row(
@@ -475,6 +483,9 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                     item { SourceUrlCard(sourceUrl = sourceUrl, onSourceUrlClicked = onSourceUrlClicked) }
                 }
                 item { TimestampsCard(createdAt = createdAt, updatedAt = updatedAt) }
+                if (!metadataCollapsed) {
+                    item { Spacer(modifier = Modifier.height(toolbarClearance)) }
+                }
             }
 
             // Drag handle between metadata and ingredients
@@ -494,19 +505,22 @@ private fun ColumnScope.RecipeDetailExpandedContent(
         LazyColumn(
             modifier = Modifier.weight(ingredientsWeight),
             verticalArrangement = spacedBy(padding),
-            contentPadding = bottomPadding,
         ) {
             stickyHeader {
                 StickyColumnHeader(
                     title = stringResource(Res.string.recipe_detail_ingredients),
                 )
             }
-            item {
-                Text(
-                    text = recipe.ingredients,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(horizontal = 16.dp),
+            itemsIndexed(ingredientLines) { index, line ->
+                IngredientLineItem(
+                    text = line,
+                    crossedOut = ingredientCrossedOut[index],
+                    onClick = { ingredientCrossedOut[index] = !ingredientCrossedOut[index] },
+                    modifier = Modifier.padding(horizontal = padding),
                 )
+            }
+            if (!metadataCollapsed) {
+                item { Spacer(modifier = Modifier.height(toolbarClearance)) }
             }
         }
 
@@ -522,19 +536,25 @@ private fun ColumnScope.RecipeDetailExpandedContent(
         LazyColumn(
             modifier = Modifier.weight(1f - ingredientsWeight),
             verticalArrangement = spacedBy(padding),
-            contentPadding = bottomPadding,
         ) {
             stickyHeader {
                 StickyColumnHeader(
                     title = stringResource(Res.string.recipe_detail_directions),
                 )
             }
-            item {
-                Text(
-                    text = recipe.directions,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(horizontal = 16.dp),
+            itemsIndexed(directionParagraphs) { index, paragraph ->
+                DirectionLineItem(
+                    text = paragraph,
+                    highlighted = directionHighlightedIndex == index,
+                    onClick = {
+                        directionHighlightedIndex =
+                            if (directionHighlightedIndex == index) -1 else index
+                    },
+                    modifier = Modifier.padding(horizontal = padding),
                 )
+            }
+            if (!metadataCollapsed) {
+                item { Spacer(modifier = Modifier.height(toolbarClearance)) }
             }
         }
     }
@@ -909,23 +929,91 @@ private fun DetailRow(
     }
 }
 
+private fun splitLines(text: String): List<String> = text.split("\n").filter { it.isNotBlank() }
+
+@Composable
+private fun IngredientLineItem(
+    text: String,
+    crossedOut: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        textDecoration = if (crossedOut) TextDecoration.LineThrough else TextDecoration.None,
+        color =
+            if (crossedOut) {
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            },
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(vertical = ChefMateTheme.dimens.paddingExtraSmall),
+    )
+}
+
+@Composable
+private fun DirectionLineItem(
+    text: String,
+    highlighted: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val dimens = ChefMateTheme.dimens
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .then(
+                    if (highlighted) {
+                        Modifier.background(
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            shape = RoundedCornerShape(dimens.paddingSmall),
+                        )
+                    } else {
+                        Modifier
+                    },
+                ).padding(
+                    vertical = dimens.paddingExtraSmall,
+                    horizontal = dimens.paddingExtraSmall,
+                ),
+    )
+}
+
 @Composable
 private fun IngredientsContent(
     ingredients: String,
     modifier: Modifier = Modifier,
 ) {
+    val lines = remember(ingredients) { splitLines(ingredients) }
+    val crossedOut =
+        remember(ingredients) {
+            mutableStateListOf(*BooleanArray(lines.size) { false }.toTypedArray())
+        }
+
+    val dimens = ChefMateTheme.dimens
     Column(
-        modifier = modifier.padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier.padding(dimens.paddingNormal),
+        verticalArrangement = Arrangement.spacedBy(dimens.paddingExtraSmall),
     ) {
         Text(
             text = stringResource(Res.string.recipe_detail_ingredients),
             style = MaterialTheme.typography.titleMedium,
         )
-        Text(
-            text = ingredients,
-            style = MaterialTheme.typography.bodyMedium,
-        )
+        lines.forEachIndexed { index, line ->
+            IngredientLineItem(
+                text = line,
+                crossedOut = crossedOut[index],
+                onClick = { crossedOut[index] = !crossedOut[index] },
+            )
+        }
     }
 }
 
@@ -934,18 +1022,27 @@ private fun DirectionsContent(
     directions: String,
     modifier: Modifier = Modifier,
 ) {
+    val paragraphs = remember(directions) { splitLines(directions) }
+    var highlightedIndex by remember(directions) { mutableStateOf(-1) }
+
+    val dimens = ChefMateTheme.dimens
     Column(
-        modifier = modifier.padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier.padding(dimens.paddingNormal),
+        verticalArrangement = Arrangement.spacedBy(dimens.paddingSmall),
     ) {
         Text(
             text = stringResource(Res.string.recipe_detail_directions),
             style = MaterialTheme.typography.titleMedium,
         )
-        Text(
-            text = directions,
-            style = MaterialTheme.typography.bodyMedium,
-        )
+        paragraphs.forEachIndexed { index, paragraph ->
+            DirectionLineItem(
+                text = paragraph,
+                highlighted = highlightedIndex == index,
+                onClick = {
+                    highlightedIndex = if (highlightedIndex == index) -1 else index
+                },
+            )
+        }
     }
 }
 
