@@ -1,7 +1,6 @@
 package com.plusmobileapps.chefmate.recipe.data.impl
 
 import app.cash.sqldelight.coroutines.asFlow
-import app.cash.sqldelight.coroutines.mapToList
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.database.Recipe as DbRecipe
@@ -10,6 +9,7 @@ import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
+import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.recipe.data.impl.remote.RecipeRemoteDataSource
 import com.plusmobileapps.chefmate.recipe.data.impl.remote.RemoteRecipe
 import com.plusmobileapps.chefmate.util.DateTimeUtil
@@ -23,8 +23,11 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -44,6 +47,7 @@ class RecipeRepositoryImpl(
 
     private val scope = CoroutineScope(ioContext + SupervisorJob())
     private val syncMutex = Mutex()
+    private val syncingIds = MutableStateFlow<Set<Long>>(emptySet())
 
     init {
         scope.launch {
@@ -56,10 +60,9 @@ class RecipeRepositoryImpl(
     }
 
     override fun getRecipes(): Flow<List<Recipe>> =
-        db.getAll()
-            .asFlow()
-            .mapToList(ioContext)
-            .map { it.map { item -> item.toRecipe() } }
+        combine(db.getAll().asFlow().map { it.executeAsList() }, syncingIds) { items, syncing ->
+                items.map { it.toRecipe(syncing) }
+            }
             .flowOn(ioContext)
 
     override suspend fun createRecipe(recipe: Recipe): Recipe {
@@ -170,9 +173,50 @@ class RecipeRepositoryImpl(
                         ?: Uuid.random().toString().also { newId ->
                             db.updateClientId(clientId = newId, id = localId)
                         }
-                val remoteRecipe =
+                syncingIds.update { it + localId }
+                try {
+                    val remoteRecipe =
+                        remoteDataSource.upsertRecipe(
+                            RemoteRecipe(
+                                ownerId = authState.user.userId,
+                                title = entity.title,
+                                description = entity.description,
+                                ingredients = entity.ingredients,
+                                directions = entity.directions,
+                                imageUrl = entity.imageUrl,
+                                sourceUrl = entity.sourceUrl,
+                                servings = entity.servings?.toInt(),
+                                prepTime = entity.prepTime?.toInt(),
+                                cookTime = entity.cookTime?.toInt(),
+                                totalTime = entity.totalTime?.toInt(),
+                                calories = entity.calories?.toInt(),
+                                starRating = entity.starRating?.toInt(),
+                                isFavorite = entity.isFavorite,
+                                createdAt = entity.createdAt,
+                                updatedAt = entity.updatedAt,
+                                clientId = clientId,
+                            )
+                        )
+                    db.updateRemoteId(remoteId = remoteRecipe.id, id = localId)
+                } finally {
+                    syncingIds.update { it - localId }
+                }
+            } catch (_: Exception) {}
+        }
+    }
+
+    private fun pushUpdateToRemote(localId: Long) {
+        val authState = authRepository.state.value
+        if (authState !is AuthState.Authenticated) return
+        scope.launch {
+            try {
+                val entity = db.getById(localId).executeAsOneOrNull() ?: return@launch
+                val remoteId = entity.remoteId ?: return@launch
+                syncingIds.update { it + localId }
+                try {
                     remoteDataSource.upsertRecipe(
                         RemoteRecipe(
+                            id = remoteId,
                             ownerId = authState.user.userId,
                             title = entity.title,
                             description = entity.description,
@@ -187,45 +231,14 @@ class RecipeRepositoryImpl(
                             calories = entity.calories?.toInt(),
                             starRating = entity.starRating?.toInt(),
                             isFavorite = entity.isFavorite,
-                            createdAt = entity.createdAt,
                             updatedAt = entity.updatedAt,
-                            clientId = clientId,
+                            clientId = entity.clientId,
                         )
                     )
-                db.updateRemoteId(remoteId = remoteRecipe.id, id = localId)
-            } catch (_: Exception) {}
-        }
-    }
-
-    private fun pushUpdateToRemote(localId: Long) {
-        val authState = authRepository.state.value
-        if (authState !is AuthState.Authenticated) return
-        scope.launch {
-            try {
-                val entity = db.getById(localId).executeAsOneOrNull() ?: return@launch
-                val remoteId = entity.remoteId ?: return@launch
-                remoteDataSource.upsertRecipe(
-                    RemoteRecipe(
-                        id = remoteId,
-                        ownerId = authState.user.userId,
-                        title = entity.title,
-                        description = entity.description,
-                        ingredients = entity.ingredients,
-                        directions = entity.directions,
-                        imageUrl = entity.imageUrl,
-                        sourceUrl = entity.sourceUrl,
-                        servings = entity.servings?.toInt(),
-                        prepTime = entity.prepTime?.toInt(),
-                        cookTime = entity.cookTime?.toInt(),
-                        totalTime = entity.totalTime?.toInt(),
-                        calories = entity.calories?.toInt(),
-                        starRating = entity.starRating?.toInt(),
-                        isFavorite = entity.isFavorite,
-                        updatedAt = entity.updatedAt,
-                        clientId = entity.clientId,
-                    )
-                )
-                db.clearDirty(localId)
+                    db.clearDirty(localId)
+                } finally {
+                    syncingIds.update { it - localId }
+                }
             } catch (_: Exception) {}
         }
     }
@@ -342,8 +355,15 @@ class RecipeRepositoryImpl(
         } catch (_: Exception) {}
     }
 
-    private fun DbRecipe.toRecipe(): Recipe =
-        Recipe(
+    private fun DbRecipe.toRecipe(syncing: Set<Long> = emptySet()): Recipe {
+        val syncStatus =
+            when {
+                id in syncing -> SyncStatus.SYNCING
+                isDirty -> SyncStatus.NOT_SYNCED
+                remoteId != null -> SyncStatus.SYNCED
+                else -> SyncStatus.NOT_SYNCED
+            }
+        return Recipe(
             id = id,
             title = title,
             description = description,
@@ -358,7 +378,9 @@ class RecipeRepositoryImpl(
             calories = calories?.toInt(),
             starRating = starRating?.toInt(),
             isFavorite = isFavorite,
+            syncStatus = syncStatus,
             createdAt = Instant.parse(createdAt),
             updatedAt = Instant.parse(updatedAt),
         )
+    }
 }
