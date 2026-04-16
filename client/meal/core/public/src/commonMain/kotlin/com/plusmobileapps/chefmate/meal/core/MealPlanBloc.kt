@@ -18,12 +18,17 @@ interface MealPlanBloc {
 
     fun onDeleteMealClicked(item: MealPlanItem)
 
+    fun onDeleteMealConfirmed()
+
+    fun onDeleteMealDismissed()
+
     data class Model(
         val isLoading: Boolean = true,
         val viewMode: ViewMode = ViewMode.DAY,
         val dateLabel: String = "",
         val dayMeals: DayMeals? = null,
         val weekMeals: List<DayGroup>? = null,
+        val mealToDelete: MealPlanItem? = null,
     )
 
     data class DayMeals(

@@ -48,6 +48,7 @@ class MealPlanBlocImpl(
                     } else {
                         null
                     },
+                mealToDelete = it.mealToDelete,
             )
         }
 
@@ -68,7 +69,15 @@ class MealPlanBlocImpl(
     }
 
     override fun onDeleteMealClicked(item: MealPlanItem) {
-        viewModel.removeMeal(item.id)
+        viewModel.requestRemoveMeal(item)
+    }
+
+    override fun onDeleteMealConfirmed() {
+        viewModel.confirmRemoveMeal()
+    }
+
+    override fun onDeleteMealDismissed() {
+        viewModel.dismissRemoveMeal()
     }
 }
 

@@ -8,4 +8,8 @@
     <string name="meal_plan_snacks">Snacks</string>
     <string name="meal_plan_no_meals">No meals planned</string>
     <string name="meal_plan_delete">Remove from meal plan</string>
+    <string name="meal_plan_delete_title">Remove Meal</string>
+    <string name="meal_plan_delete_message">Are you sure you want to remove this meal from your plan?</string>
+    <string name="meal_plan_delete_confirm">Remove</string>
+    <string name="meal_plan_delete_cancel">Cancel</string>
 </resources>

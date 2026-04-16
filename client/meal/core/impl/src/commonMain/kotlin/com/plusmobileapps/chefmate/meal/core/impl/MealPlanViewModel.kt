@@ -74,8 +74,18 @@ class MealPlanViewModel(
         observeMeals()
     }
 
-    fun removeMeal(id: Long) {
-        scope.launch { repository.removeMeal(id) }
+    fun requestRemoveMeal(item: MealPlanItem) {
+        _state.update { it.copy(mealToDelete = item) }
+    }
+
+    fun confirmRemoveMeal() {
+        val item = _state.value.mealToDelete ?: return
+        _state.update { it.copy(mealToDelete = null) }
+        scope.launch { repository.removeMeal(item.id) }
+    }
+
+    fun dismissRemoveMeal() {
+        _state.update { it.copy(mealToDelete = null) }
     }
 
     fun getDateLabel(): String {
@@ -169,5 +179,6 @@ class MealPlanViewModel(
         val viewMode: MealPlanBloc.ViewMode = MealPlanBloc.ViewMode.DAY,
         val currentDate: LocalDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
         val meals: List<MealPlanItem> = emptyList(),
+        val mealToDelete: MealPlanItem? = null,
     )
 }

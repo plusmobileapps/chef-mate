@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CalendarViewDay
 import androidx.compose.material.icons.filled.CalendarViewWeek
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,6 +33,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import chefmate.client.meal.core.public.generated.resources.Res
 import chefmate.client.meal.core.public.generated.resources.meal_plan_breakfast
+import chefmate.client.meal.core.public.generated.resources.meal_plan_delete
+import chefmate.client.meal.core.public.generated.resources.meal_plan_delete_cancel
+import chefmate.client.meal.core.public.generated.resources.meal_plan_delete_confirm
+import chefmate.client.meal.core.public.generated.resources.meal_plan_delete_message
+import chefmate.client.meal.core.public.generated.resources.meal_plan_delete_title
 import chefmate.client.meal.core.public.generated.resources.meal_plan_dinner
 import chefmate.client.meal.core.public.generated.resources.meal_plan_lunch
 import chefmate.client.meal.core.public.generated.resources.meal_plan_no_meals
@@ -39,7 +45,9 @@ import chefmate.client.meal.core.public.generated.resources.meal_plan_snacks
 import chefmate.client.meal.core.public.generated.resources.meal_plan_title
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
 import com.plusmobileapps.chefmate.meal.data.MealType
+import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
@@ -49,6 +57,17 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
+
+    state.mealToDelete?.let {
+        PlusDialog(
+            title = ResourceString(Res.string.meal_plan_delete_title),
+            message = ResourceString(Res.string.meal_plan_delete_message),
+            confirmButtonText = ResourceString(Res.string.meal_plan_delete_confirm),
+            dismissButtonText = ResourceString(Res.string.meal_plan_delete_cancel),
+            onConfirmClick = bloc::onDeleteMealConfirmed,
+            onDismissRequest = bloc::onDeleteMealDismissed,
+        )
+    }
 
     PlusNavContainer(
         data =
@@ -87,12 +106,14 @@ fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
                             DayView(
                                 dayMeals = state.dayMeals,
                                 onMealClicked = bloc::onMealClicked,
+                                onDeleteClicked = bloc::onDeleteMealClicked,
                                 modifier = Modifier.weight(1f),
                             )
                         MealPlanBloc.ViewMode.WEEK ->
                             WeekView(
                                 weekMeals = state.weekMeals.orEmpty(),
                                 onMealClicked = bloc::onMealClicked,
+                                onDeleteClicked = bloc::onDeleteMealClicked,
                                 modifier = Modifier.weight(1f),
                             )
                     }
@@ -129,6 +150,7 @@ private fun DateNavigationRow(
 private fun DayView(
     dayMeals: MealPlanBloc.DayMeals?,
     onMealClicked: (MealPlanItem) -> Unit,
+    onDeleteClicked: (MealPlanItem) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (dayMeals == null) {
@@ -154,25 +176,41 @@ private fun DayView(
         if (dayMeals.breakfast.isNotEmpty()) {
             stickyHeader { MealSectionHeader(stringResource(Res.string.meal_plan_breakfast)) }
             items(dayMeals.breakfast, key = { it.id }) { meal ->
-                MealItemCard(meal = meal, onClick = { onMealClicked(meal) })
+                MealItemCard(
+                    meal = meal,
+                    onClick = { onMealClicked(meal) },
+                    onDeleteClick = { onDeleteClicked(meal) },
+                )
             }
         }
         if (dayMeals.lunch.isNotEmpty()) {
             stickyHeader { MealSectionHeader(stringResource(Res.string.meal_plan_lunch)) }
             items(dayMeals.lunch, key = { it.id }) { meal ->
-                MealItemCard(meal = meal, onClick = { onMealClicked(meal) })
+                MealItemCard(
+                    meal = meal,
+                    onClick = { onMealClicked(meal) },
+                    onDeleteClick = { onDeleteClicked(meal) },
+                )
             }
         }
         if (dayMeals.dinner.isNotEmpty()) {
             stickyHeader { MealSectionHeader(stringResource(Res.string.meal_plan_dinner)) }
             items(dayMeals.dinner, key = { it.id }) { meal ->
-                MealItemCard(meal = meal, onClick = { onMealClicked(meal) })
+                MealItemCard(
+                    meal = meal,
+                    onClick = { onMealClicked(meal) },
+                    onDeleteClick = { onDeleteClicked(meal) },
+                )
             }
         }
         if (dayMeals.snacks.isNotEmpty()) {
             stickyHeader { MealSectionHeader(stringResource(Res.string.meal_plan_snacks)) }
             items(dayMeals.snacks, key = { it.id }) { meal ->
-                MealItemCard(meal = meal, onClick = { onMealClicked(meal) })
+                MealItemCard(
+                    meal = meal,
+                    onClick = { onMealClicked(meal) },
+                    onDeleteClick = { onDeleteClicked(meal) },
+                )
             }
         }
     }
@@ -182,6 +220,7 @@ private fun DayView(
 private fun WeekView(
     weekMeals: List<MealPlanBloc.DayGroup>,
     onMealClicked: (MealPlanItem) -> Unit,
+    onDeleteClicked: (MealPlanItem) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (weekMeals.isEmpty() || weekMeals.all { it.meals.isEmpty() }) {
@@ -197,7 +236,11 @@ private fun WeekView(
             if (dayGroup.meals.isNotEmpty()) {
                 stickyHeader { MealSectionHeader(dayGroup.dateLabel) }
                 items(dayGroup.meals, key = { it.id }) { meal ->
-                    WeekMealItem(meal = meal, onClick = { onMealClicked(meal) })
+                    WeekMealItem(
+                        meal = meal,
+                        onClick = { onMealClicked(meal) },
+                        onDeleteClick = { onDeleteClicked(meal) },
+                    )
                 }
             }
         }
@@ -222,7 +265,12 @@ private fun MealSectionHeader(title: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun MealItemCard(meal: MealPlanItem, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun MealItemCard(
+    meal: MealPlanItem,
+    onClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Card(
         modifier =
             modifier
@@ -231,16 +279,32 @@ private fun MealItemCard(meal: MealPlanItem, onClick: () -> Unit, modifier: Modi
                 .clickable(onClick = onClick)
     ) {
         Row(
-            modifier = Modifier.padding(ChefMateTheme.dimens.paddingNormal),
+            modifier = Modifier.fillMaxWidth().padding(start = ChefMateTheme.dimens.paddingNormal),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(text = meal.recipeTitle, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = meal.recipeTitle,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f),
+            )
+            IconButton(onClick = onDeleteClick) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = stringResource(Res.string.meal_plan_delete),
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun WeekMealItem(meal: MealPlanItem, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun WeekMealItem(
+    meal: MealPlanItem,
+    onClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Card(
         modifier =
             modifier
@@ -249,7 +313,7 @@ private fun WeekMealItem(meal: MealPlanItem, onClick: () -> Unit, modifier: Modi
                 .clickable(onClick = onClick)
     ) {
         Row(
-            modifier = Modifier.padding(ChefMateTheme.dimens.paddingNormal),
+            modifier = Modifier.fillMaxWidth().padding(start = ChefMateTheme.dimens.paddingNormal),
             horizontalArrangement = spacedBy(ChefMateTheme.dimens.paddingNormal),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -258,7 +322,18 @@ private fun WeekMealItem(meal: MealPlanItem, onClick: () -> Unit, modifier: Modi
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary,
             )
-            Text(text = meal.recipeTitle, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = meal.recipeTitle,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f),
+            )
+            IconButton(onClick = onDeleteClick) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = stringResource(Res.string.meal_plan_delete),
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            }
         }
     }
 }
