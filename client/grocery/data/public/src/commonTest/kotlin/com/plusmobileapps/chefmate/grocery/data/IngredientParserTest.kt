@@ -170,4 +170,20 @@ class IngredientParserTest {
         assertEquals("1 can", result.quantity)
         assertEquals(GroceryCategory.CANNED_GOODS, result.category)
     }
+
+    @Test
+    fun parse_chicken_broth_categorized_as_canned_goods() {
+        val result = IngredientParser.parse("2 cups chicken broth")
+        assertEquals("chicken broth", result.name)
+        assertEquals("2 cups", result.quantity)
+        assertEquals(GroceryCategory.CANNED_GOODS, result.category)
+    }
+
+    @Test
+    fun parse_beef_stock_categorized_as_canned_goods() {
+        val result = IngredientParser.parse("1 qt beef stock")
+        assertEquals("beef stock", result.name)
+        assertEquals("1 qt", result.quantity)
+        assertEquals(GroceryCategory.CANNED_GOODS, result.category)
+    }
 }
