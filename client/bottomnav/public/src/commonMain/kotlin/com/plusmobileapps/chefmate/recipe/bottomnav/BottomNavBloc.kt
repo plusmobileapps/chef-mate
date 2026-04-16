@@ -8,6 +8,7 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
+import com.plusmobileapps.chefmate.meal.core.MealPlanBloc
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.settings.SettingsBloc
 import kotlinx.coroutines.flow.StateFlow
@@ -24,6 +25,7 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc {
     enum class Tab {
         RECIPES,
         GROCERIES,
+        MEALS,
         BROWSER,
         SETTINGS,
     }
@@ -32,6 +34,8 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc {
         data class RecipeList(val bloc: RecipeListBloc) : Child()
 
         data class GroceryList(val bloc: GroceryListBloc) : Child()
+
+        data class Meals(val bloc: MealPlanBloc) : Child()
 
         data class Browser(val bloc: BrowserBloc) : Child()
 

@@ -1,6 +1,7 @@
 <resources>
     <string name="tab_browser">Browser</string>
     <string name="tab_grocery">Grocery</string>
+    <string name="tab_meals">Meals</string>
     <string name="tab_recipes">Recipes</string>
     <string name="tab_settings">Settings</string>
 </resources>

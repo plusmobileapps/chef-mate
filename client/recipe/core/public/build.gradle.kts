@@ -11,6 +11,8 @@ kotlin {
             api(projects.client.text.public)
             api(libs.kotlinx.serialization.json)
 
+            api(projects.client.meal.data.public)
+            implementation(libs.kotlinx.datetime)
             implementation(projects.client.browser.public)
             implementation(projects.client.shared)
             implementation(projects.client.ui.public)

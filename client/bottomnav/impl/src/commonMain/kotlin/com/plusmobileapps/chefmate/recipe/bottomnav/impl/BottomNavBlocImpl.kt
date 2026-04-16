@@ -16,9 +16,11 @@ import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.mapState
+import com.plusmobileapps.chefmate.meal.core.MealPlanBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.Browser
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.GroceryList
+import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.Meals
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.RecipeList
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.Settings
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenGrocery
@@ -42,6 +44,7 @@ class BottomNavBlocImpl(
     viewModelFactory: Provider<BottomNavViewModel>,
     private val browser: BrowserBloc.Factory,
     private val groceryList: GroceryListBloc.Factory,
+    private val mealPlan: MealPlanBloc.Factory,
     private val recipeList: RecipeListBloc.Factory,
     private val settings: SettingsBloc.Factory,
 ) : BottomNavBloc, BlocContext by context {
@@ -87,6 +90,7 @@ class BottomNavBlocImpl(
             when (tab) {
                 BottomNavBloc.Tab.RECIPES -> Configuration.Recipe
                 BottomNavBloc.Tab.GROCERIES -> Configuration.Grocery
+                BottomNavBloc.Tab.MEALS -> Configuration.Meals
                 BottomNavBloc.Tab.BROWSER -> Configuration.Browser
                 BottomNavBloc.Tab.SETTINGS -> Configuration.Settings
             }
@@ -111,6 +115,11 @@ class BottomNavBlocImpl(
             Configuration.Grocery -> {
                 val bloc = groceryList.create(context = context, output = ::handleGroceryListOutput)
                 GroceryList(bloc)
+            }
+
+            Configuration.Meals -> {
+                val bloc = mealPlan.create(context = context, output = ::handleMealPlanOutput)
+                Meals(bloc)
             }
 
             Configuration.Settings -> {
@@ -146,6 +155,13 @@ class BottomNavBlocImpl(
         }
     }
 
+    private fun handleMealPlanOutput(output: MealPlanBloc.Output) {
+        when (output) {
+            is MealPlanBloc.Output.OpenRecipe ->
+                this.output.onNext(BottomNavBloc.Output.OpenRecipe(output.recipeId))
+        }
+    }
+
     private fun handleSettingsOutput(output: SettingsBloc.Output) {
         when (output) {
             SettingsBloc.Output.OpenSignIn -> OpenSignIn
@@ -160,6 +176,7 @@ class BottomNavBlocImpl(
                 when (value.active.instance) {
                     is Browser -> BottomNavBloc.Tab.BROWSER
                     is BottomNavBloc.Child.GroceryList -> BottomNavBloc.Tab.GROCERIES
+                    is Meals -> BottomNavBloc.Tab.MEALS
                     is BottomNavBloc.Child.RecipeList -> BottomNavBloc.Tab.RECIPES
                     is Settings -> BottomNavBloc.Tab.SETTINGS
                 }.let(viewModel::selectTab)
@@ -176,6 +193,8 @@ class BottomNavBlocImpl(
         @Serializable data object Recipe : Configuration()
 
         @Serializable data object Grocery : Configuration()
+
+        @Serializable data object Meals : Configuration()
 
         @Serializable data object Browser : Configuration()
 

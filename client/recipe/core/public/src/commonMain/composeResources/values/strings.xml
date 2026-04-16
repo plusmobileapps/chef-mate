@@ -34,6 +34,17 @@
     <string name="recipe_detail_deleting_title">Deleting Recipe</string>
     <string name="recipe_detail_deleting_message">Please wait...</string>
 
+    <!-- Add to Meal Plan -->
+    <string name="recipe_detail_add_to_meal_plan">Add to meal plan</string>
+    <string name="add_meal_plan_title">Add to Meal Plan</string>
+    <string name="add_meal_plan_select_date">Select Date</string>
+    <string name="add_meal_plan_select_meal">Select Meal</string>
+    <string name="add_meal_plan_save">Save</string>
+    <string name="add_meal_plan_breakfast">Breakfast</string>
+    <string name="add_meal_plan_lunch">Lunch</string>
+    <string name="add_meal_plan_dinner">Dinner</string>
+    <string name="add_meal_plan_snacks">Snacks</string>
+
     <!-- Edit Recipe Screen -->
     <string name="edit_recipe_title">Edit Recipe</string>
     <string name="edit_recipe_back">Back</string>

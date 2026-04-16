@@ -7,6 +7,7 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc
+import com.plusmobileapps.chefmate.recipe.core.addmeal.AddToMealPlanBloc
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.TextData
 import kotlinx.coroutines.flow.StateFlow
@@ -27,6 +28,8 @@ interface RecipeDetailBloc : BackClickBloc {
     fun onFavoriteToggled()
 
     fun onAddToGroceryListClicked()
+
+    fun onAddToMealPlanClicked()
 
     fun onSourceUrlClicked(url: String)
 
@@ -54,6 +57,8 @@ interface RecipeDetailBloc : BackClickBloc {
         data class AddToGroceryList(val bloc: AddRecipeToGroceryListBloc) : Sheet()
 
         data class BrowserLauncher(val bloc: BrowserBloc) : Sheet()
+
+        data class AddToMealPlan(val bloc: AddToMealPlanBloc) : Sheet()
     }
 
     interface Factory {
