@@ -20,6 +20,7 @@ data class Recipe(
     val calories: Int?,
     val starRating: Int?,
     val isFavorite: Boolean = false,
+    val syncStatus: SyncStatus = SyncStatus.NOT_SYNCED,
     val createdAt: Instant,
     val updatedAt: Instant,
 ) {
@@ -44,4 +45,10 @@ data class Recipe(
                 updatedAt = Instant.DISTANT_PAST,
             )
     }
+}
+
+enum class SyncStatus {
+    NOT_SYNCED,
+    SYNCING,
+    SYNCED,
 }

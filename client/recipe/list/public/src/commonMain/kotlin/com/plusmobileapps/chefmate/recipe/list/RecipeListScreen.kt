@@ -26,11 +26,14 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.AccessTime
+import androidx.compose.material.icons.outlined.CloudDone
+import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -45,6 +48,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.list.public.generated.resources.Res
@@ -64,6 +69,10 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort_z
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_title
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_view_grid
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_view_list
+import chefmate.client.recipe.list.public.generated.resources.recipe_sync_not_synced
+import chefmate.client.recipe.list.public.generated.resources.recipe_sync_synced
+import chefmate.client.recipe.list.public.generated.resources.recipe_sync_syncing
+import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.asTextData
@@ -266,7 +275,14 @@ private fun RecipeGridItem(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            StarRating(rating = recipe.starRating, starSize = 14.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                StarRating(rating = recipe.starRating, starSize = 14.dp)
+                SyncStatusIcon(syncStatus = recipe.syncStatus)
+            }
         }
     }
 }
@@ -309,7 +325,7 @@ private fun RecipeListItemContent(
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
@@ -319,6 +335,7 @@ private fun RecipeListItemContent(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
                 )
+                SyncStatusIcon(syncStatus = recipe.syncStatus)
                 if (recipe.isFavorite) {
                     Icon(
                         imageVector = Icons.Default.Favorite,
@@ -378,6 +395,33 @@ private fun RecipeListItemContent(
 // endregion
 
 // region Shared Components
+
+@Composable
+private fun SyncStatusIcon(syncStatus: SyncStatus, modifier: Modifier = Modifier) {
+    val syncingDescription = stringResource(Res.string.recipe_sync_syncing)
+    when (syncStatus) {
+        SyncStatus.NOT_SYNCED ->
+            Icon(
+                imageVector = Icons.Outlined.CloudOff,
+                contentDescription = stringResource(Res.string.recipe_sync_not_synced),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = modifier.size(16.dp),
+            )
+        SyncStatus.SYNCING ->
+            CircularProgressIndicator(
+                modifier =
+                    modifier.size(14.dp).semantics { contentDescription = syncingDescription },
+                strokeWidth = 2.dp,
+            )
+        SyncStatus.SYNCED ->
+            Icon(
+                imageVector = Icons.Outlined.CloudDone,
+                contentDescription = stringResource(Res.string.recipe_sync_synced),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = modifier.size(16.dp),
+            )
+    }
+}
 
 @Composable
 private fun StarRating(

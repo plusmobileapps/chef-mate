@@ -85,6 +85,7 @@ class RecipeListBlocImpl(
             servings = servings,
             calories = calories,
             isFavorite = isFavorite,
+            syncStatus = syncStatus,
         )
 }
 

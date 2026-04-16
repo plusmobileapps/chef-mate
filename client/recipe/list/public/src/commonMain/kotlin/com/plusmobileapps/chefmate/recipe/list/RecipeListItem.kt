@@ -1,5 +1,6 @@
 package com.plusmobileapps.chefmate.recipe.list
 
+import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.text.TextData
 
 data class RecipeListItem(
@@ -13,4 +14,5 @@ data class RecipeListItem(
     val servings: Int?,
     val calories: Int?,
     val isFavorite: Boolean,
+    val syncStatus: SyncStatus = SyncStatus.NOT_SYNCED,
 )

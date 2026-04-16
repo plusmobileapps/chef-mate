@@ -24,5 +24,10 @@
     <string name="recipe_list_filter_favorites">Favorites</string>
     <string name="recipe_list_filter_rated">Rated</string>
     <string name="recipe_list_filter_quick_recipes">Quick (under 30 min)</string>
+
+    <!-- Sync -->
+    <string name="recipe_sync_not_synced">Not synced</string>
+    <string name="recipe_sync_syncing">Syncing</string>
+    <string name="recipe_sync_synced">Synced</string>
 </resources>
 
