@@ -135,4 +135,39 @@ class IngredientParserTest {
         assertEquals("2 cups", result.quantity)
         assertEquals(GroceryCategory.BAKING, result.category)
     }
+
+    @Test
+    fun parse_sage_with_parenthetical_teaspoons() {
+        val result =
+            IngredientParser.parse(
+                "1/4 cup minced fresh sage leaves (or 2 teaspoons dried sage leaves)"
+            )
+        assertEquals("minced fresh sage leaves (or 2 teaspoons dried sage leaves)", result.name)
+        assertEquals("1/4 cup", result.quantity)
+        assertEquals(GroceryCategory.SPICES, result.category)
+    }
+
+    @Test
+    fun parse_black_pepper_categorized_as_spice() {
+        val result = IngredientParser.parse("1 tsp black pepper")
+        assertEquals("black pepper", result.name)
+        assertEquals("1 tsp", result.quantity)
+        assertEquals(GroceryCategory.SPICES, result.category)
+    }
+
+    @Test
+    fun parse_tomato_sauce_categorized_as_canned_goods() {
+        val result = IngredientParser.parse("1 can tomato sauce")
+        assertEquals("tomato sauce", result.name)
+        assertEquals("1 can", result.quantity)
+        assertEquals(GroceryCategory.CANNED_GOODS, result.category)
+    }
+
+    @Test
+    fun parse_coconut_milk_categorized_as_canned_goods() {
+        val result = IngredientParser.parse("1 can coconut milk")
+        assertEquals("coconut milk", result.name)
+        assertEquals("1 can", result.quantity)
+        assertEquals(GroceryCategory.CANNED_GOODS, result.category)
+    }
 }
