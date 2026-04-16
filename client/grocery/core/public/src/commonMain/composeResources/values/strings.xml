@@ -27,4 +27,17 @@
     <string name="grocery_delete_purchased">Delete Purchased</string>
     <string name="grocery_delete_all">Delete All</string>
     <string name="grocery_cancel">Cancel</string>
+    <string name="grocery_category_produce">Produce</string>
+    <string name="grocery_category_dairy">Dairy</string>
+    <string name="grocery_category_meat">Meat &amp; Seafood</string>
+    <string name="grocery_category_bakery">Bakery</string>
+    <string name="grocery_category_frozen">Frozen</string>
+    <string name="grocery_category_canned_goods">Canned Goods</string>
+    <string name="grocery_category_condiments">Condiments &amp; Sauces</string>
+    <string name="grocery_category_snacks">Snacks</string>
+    <string name="grocery_category_beverages">Beverages</string>
+    <string name="grocery_category_grains">Grains &amp; Pasta</string>
+    <string name="grocery_category_baking">Baking</string>
+    <string name="grocery_category_spices">Spices &amp; Seasonings</string>
+    <string name="grocery_category_other">Other</string>
 </resources>
