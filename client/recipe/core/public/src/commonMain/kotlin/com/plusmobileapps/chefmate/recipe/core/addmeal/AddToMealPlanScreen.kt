@@ -49,9 +49,7 @@ fun AddToMealPlanScreen(bloc: AddToMealPlanBloc, modifier: Modifier = Modifier) 
 
     val initialMillis =
         if (state.selectedDate.isNotEmpty()) {
-            LocalDate.parse(state.selectedDate)
-                .atStartOfDayIn(TimeZone.currentSystemDefault())
-                .toEpochMilliseconds()
+            LocalDate.parse(state.selectedDate).atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
         } else {
             null
         }
@@ -61,7 +59,7 @@ fun AddToMealPlanScreen(bloc: AddToMealPlanBloc, modifier: Modifier = Modifier) 
     LaunchedEffect(datePickerState.selectedDateMillis) {
         datePickerState.selectedDateMillis?.let { millis ->
             val instant = Instant.fromEpochMilliseconds(millis)
-            val localDate = instant.toLocalDateTime(TimeZone.currentSystemDefault()).date
+            val localDate = instant.toLocalDateTime(TimeZone.UTC).date
             bloc.onDateSelected(localDate.toString())
         }
     }
