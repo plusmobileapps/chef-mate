@@ -4,6 +4,8 @@ package com.plusmobileapps.chefmate.grocery.core.impl.list
 
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.di.Main
+import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryFilter
+import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryGroup
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
@@ -13,6 +15,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
@@ -26,6 +29,7 @@ class GroceryListViewModel(
     private val _state = MutableStateFlow(State())
     private val _newGroceryItemName = MutableStateFlow("")
     private val selectedListId = MutableStateFlow<Long?>(null)
+    private val _filter = MutableStateFlow(GroceryFilter.ALL)
 
     val state: StateFlow<State> = _state.asStateFlow()
 
@@ -54,15 +58,33 @@ class GroceryListViewModel(
         }
 
         scope.launch {
-            selectedListId
-                .flatMapLatest { listId ->
-                    if (listId != null) {
-                        repository.getGroceries(listId)
-                    } else {
-                        flowOf(emptyList())
-                    }
+            combine(
+                    selectedListId.flatMapLatest { listId ->
+                        if (listId != null) {
+                            repository.getGroceries(listId)
+                        } else {
+                            flowOf(emptyList())
+                        }
+                    },
+                    _filter,
+                ) { items, filter ->
+                    val filtered =
+                        when (filter) {
+                            GroceryFilter.ALL -> items
+                            GroceryFilter.UNPURCHASED -> items.filter { !it.isChecked }
+                            GroceryFilter.PURCHASED -> items.filter { it.isChecked }
+                        }
+                    val grouped =
+                        filtered
+                            .groupBy { it.category }
+                            .entries
+                            .sortedBy { it.key.ordinal }
+                            .map { (category, categoryItems) ->
+                                GroceryGroup(category = category, items = categoryItems)
+                            }
+                    grouped
                 }
-                .collect { items -> _state.update { it.copy(items = items) } }
+                .collect { grouped -> _state.update { it.copy(groupedItems = grouped) } }
         }
     }
 
@@ -131,11 +153,38 @@ class GroceryListViewModel(
         }
     }
 
+    fun onFilterChanged(filter: GroceryFilter) {
+        _filter.value = filter
+        _state.update { it.copy(filter = filter) }
+    }
+
+    fun onDeleteClicked() {
+        _state.update { it.copy(showDeleteDialog = true) }
+    }
+
+    fun onDeleteDismissed() {
+        _state.update { it.copy(showDeleteDialog = false) }
+    }
+
+    fun onDeletePurchasedConfirmed() {
+        val listId = selectedListId.value ?: return
+        _state.update { it.copy(showDeleteDialog = false) }
+        scope.launch { repository.deletePurchasedGroceries(listId) }
+    }
+
+    fun onDeleteAllConfirmed() {
+        val listId = selectedListId.value ?: return
+        _state.update { it.copy(showDeleteDialog = false) }
+        scope.launch { repository.deleteAllGroceries(listId) }
+    }
+
     data class State(
-        val items: List<GroceryItem> = emptyList(),
+        val groupedItems: List<GroceryGroup> = emptyList(),
+        val filter: GroceryFilter = GroceryFilter.ALL,
         val isSyncing: Boolean = false,
         val lists: List<GroceryListModel> = emptyList(),
         val selectedList: GroceryListModel? = null,
         val showCreateListDialog: Boolean = false,
+        val showDeleteDialog: Boolean = false,
     )
 }

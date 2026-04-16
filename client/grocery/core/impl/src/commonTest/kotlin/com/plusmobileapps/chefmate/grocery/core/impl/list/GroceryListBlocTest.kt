@@ -5,6 +5,8 @@ package com.plusmobileapps.chefmate.grocery.core.impl.list
 
 import app.cash.turbine.test
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
+import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryGroup
+import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
@@ -46,16 +48,34 @@ class GroceryListBlocTest {
     @Test
     fun When_items_loaded_Then_state_is_updated() = runTest {
         bloc.state.test {
-            awaitItem() shouldBe GroceryListBloc.Model(items = emptyList())
-            val items = listOf(GroceryItem(1, "Apples", false), GroceryItem(2, "Bananas", true))
+            awaitItem() shouldBe GroceryListBloc.Model()
+            val items =
+                listOf(
+                    GroceryItem(
+                        id = 1,
+                        name = "Apples",
+                        category = GroceryCategory.PRODUCE,
+                        isChecked = false,
+                    ),
+                    GroceryItem(
+                        id = 2,
+                        name = "Bananas",
+                        category = GroceryCategory.PRODUCE,
+                        isChecked = true,
+                    ),
+                )
             groceries.emit(items)
-            awaitItem() shouldBe GroceryListBloc.Model(items = items)
+            awaitItem() shouldBe
+                GroceryListBloc.Model(
+                    groupedItems =
+                        listOf(GroceryGroup(category = GroceryCategory.PRODUCE, items = items))
+                )
         }
     }
 
     @Test
     fun When_grocery_item_checked_change_Then_repository_is_updated() = runTest {
-        val item = GroceryItem(1, "Apples", false)
+        val item = GroceryItem(id = 1, name = "Apples", isChecked = false)
         everySuspend { repository.updateChecked(item, true) } returns Unit
         bloc.onGroceryItemCheckedChange(item, true)
         verifySuspend { repository.updateChecked(item, true) }
@@ -63,7 +83,7 @@ class GroceryListBlocTest {
 
     @Test
     fun When_grocery_item_deleted_Then_repository_is_updated() = runTest {
-        val item = GroceryItem(1, "Apples", false)
+        val item = GroceryItem(id = 1, name = "Apples", isChecked = false)
         everySuspend { repository.deleteGrocery(item) } returns Unit
         bloc.onGroceryItemDelete(item)
         verifySuspend { repository.deleteGrocery(item) }

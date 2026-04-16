@@ -12,6 +12,7 @@ import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
+import com.plusmobileapps.chefmate.grocery.data.IngredientParser
 import com.plusmobileapps.chefmate.grocery.data.SyncStatus
 import com.plusmobileapps.chefmate.grocery.data.impl.remote.GroceryRemoteDataSource
 import com.plusmobileapps.chefmate.grocery.data.impl.remote.RemoteGroceryItem
@@ -559,6 +560,14 @@ class GroceryRepositoryImpl(
         } catch (_: Exception) {}
     }
 
+    override suspend fun deleteAllGroceries(listId: Long) {
+        withContext(ioContext) { queries.deleteByListId(listId) }
+    }
+
+    override suspend fun deletePurchasedGroceries(listId: Long) {
+        withContext(ioContext) { queries.deleteCheckedByListId(listId) }
+    }
+
     private fun fromEntity(entity: Grocery, syncing: Set<Long>): GroceryItem {
         val syncStatus =
             when {
@@ -567,9 +576,13 @@ class GroceryRepositoryImpl(
                 entity.remoteId != null -> SyncStatus.SYNCED
                 else -> SyncStatus.NOT_SYNCED
             }
+        val parsed = IngredientParser.parse(entity.name)
         return GroceryItem(
             id = entity.id,
             name = entity.name,
+            displayName = parsed.name,
+            quantity = parsed.quantity,
+            category = parsed.category,
             isChecked = entity.isChecked,
             syncStatus = syncStatus,
         )

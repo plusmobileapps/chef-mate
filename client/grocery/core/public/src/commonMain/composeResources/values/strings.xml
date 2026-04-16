@@ -17,4 +17,14 @@
     <string name="grocery_create_list_confirm">Create</string>
     <string name="grocery_create_list_cancel">Cancel</string>
     <string name="grocery_delete_list">Delete list</string>
+    <string name="grocery_filter">Filter</string>
+    <string name="grocery_filter_all">All</string>
+    <string name="grocery_filter_unpurchased">Unpurchased</string>
+    <string name="grocery_filter_purchased">Purchased</string>
+    <string name="grocery_delete_items">Delete items</string>
+    <string name="grocery_delete_items_title">Delete Items</string>
+    <string name="grocery_delete_items_message">Which items would you like to delete?</string>
+    <string name="grocery_delete_purchased">Delete Purchased</string>
+    <string name="grocery_delete_all">Delete All</string>
+    <string name="grocery_cancel">Cancel</string>
 </resources>

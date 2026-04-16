@@ -1,6 +1,8 @@
 package com.plusmobileapps.chefmate.grocery.core.list
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,11 +14,14 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -26,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -41,14 +47,24 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import chefmate.client.grocery.core.public.generated.resources.Res
 import chefmate.client.grocery.core.public.generated.resources.grocery_add_item
+import chefmate.client.grocery.core.public.generated.resources.grocery_cancel
 import chefmate.client.grocery.core.public.generated.resources.grocery_checked
 import chefmate.client.grocery.core.public.generated.resources.grocery_create_list_cancel
 import chefmate.client.grocery.core.public.generated.resources.grocery_create_list_confirm
 import chefmate.client.grocery.core.public.generated.resources.grocery_create_list_hint
 import chefmate.client.grocery.core.public.generated.resources.grocery_create_list_title
 import chefmate.client.grocery.core.public.generated.resources.grocery_create_new_list
+import chefmate.client.grocery.core.public.generated.resources.grocery_delete_all
 import chefmate.client.grocery.core.public.generated.resources.grocery_delete_item
+import chefmate.client.grocery.core.public.generated.resources.grocery_delete_items
+import chefmate.client.grocery.core.public.generated.resources.grocery_delete_items_message
+import chefmate.client.grocery.core.public.generated.resources.grocery_delete_items_title
 import chefmate.client.grocery.core.public.generated.resources.grocery_delete_list
+import chefmate.client.grocery.core.public.generated.resources.grocery_delete_purchased
+import chefmate.client.grocery.core.public.generated.resources.grocery_filter
+import chefmate.client.grocery.core.public.generated.resources.grocery_filter_all
+import chefmate.client.grocery.core.public.generated.resources.grocery_filter_purchased
+import chefmate.client.grocery.core.public.generated.resources.grocery_filter_unpurchased
 import chefmate.client.grocery.core.public.generated.resources.grocery_list
 import chefmate.client.grocery.core.public.generated.resources.grocery_not_checked
 import chefmate.client.grocery.core.public.generated.resources.grocery_select_list
@@ -56,6 +72,7 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_sync_all
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_not_synced
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_synced
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_syncing
+import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.SyncStatus
 import com.plusmobileapps.chefmate.text.asTextData
@@ -64,7 +81,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import kotlinx.coroutines.flow.StateFlow
 import org.jetbrains.compose.resources.stringResource
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
@@ -97,15 +114,25 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
                 onCreateListClicked = bloc::onCreateListClicked,
                 onDeleteListClicked = bloc::onDeleteListClicked,
             )
+            GroceryListToolbar(
+                filter = state.filter,
+                onFilterChanged = bloc::onFilterChanged,
+                onDeleteClicked = bloc::onDeleteClicked,
+            )
             LazyColumn(modifier = Modifier.weight(1f)) {
-                items(state.items.size, key = { state.items[it].id }) { index ->
-                    val item = state.items[index]
-                    GroceryListItem(
-                        item = item,
-                        onCheckedChange = bloc::onGroceryItemCheckedChange,
-                        onDeleteClick = bloc::onGroceryItemDelete,
-                        onGroceryClick = bloc::onGroceryItemClicked,
-                    )
+                state.groupedItems.forEach { group ->
+                    stickyHeader(key = "header_${group.category.name}") {
+                        CategoryHeader(category = group.category)
+                    }
+                    items(group.items.size, key = { group.items[it].id }) { index ->
+                        val item = group.items[index]
+                        GroceryListItem(
+                            item = item,
+                            onCheckedChange = bloc::onGroceryItemCheckedChange,
+                            onDeleteClick = bloc::onGroceryItemDelete,
+                            onGroceryClick = bloc::onGroceryItemClicked,
+                        )
+                    }
                 }
             }
             GroceryListInput(
@@ -121,6 +148,97 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
             onDismiss = bloc::onCreateListDismissed,
             onConfirm = bloc::onCreateListConfirmed,
         )
+    }
+
+    if (state.showDeleteDialog) {
+        DeleteItemsDialog(
+            onDismiss = bloc::onDeleteDismissed,
+            onDeletePurchased = bloc::onDeletePurchasedConfirmed,
+            onDeleteAll = bloc::onDeleteAllConfirmed,
+        )
+    }
+}
+
+@Composable
+private fun CategoryHeader(category: GroceryCategory, modifier: Modifier = Modifier) {
+    Surface(color = MaterialTheme.colorScheme.surfaceVariant, modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = category.displayName,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        )
+    }
+}
+
+@Composable
+private fun GroceryListToolbar(
+    filter: GroceryListBloc.GroceryFilter,
+    onFilterChanged: (GroceryListBloc.GroceryFilter) -> Unit,
+    onDeleteClicked: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        var filterExpanded by remember { mutableStateOf(false) }
+        IconButton(onClick = { filterExpanded = true }) {
+            Icon(
+                Icons.Default.FilterList,
+                contentDescription = stringResource(Res.string.grocery_filter),
+            )
+        }
+        DropdownMenu(expanded = filterExpanded, onDismissRequest = { filterExpanded = false }) {
+            GroceryListBloc.GroceryFilter.entries.forEach { filterOption ->
+                val label =
+                    when (filterOption) {
+                        GroceryListBloc.GroceryFilter.ALL ->
+                            stringResource(Res.string.grocery_filter_all)
+                        GroceryListBloc.GroceryFilter.UNPURCHASED ->
+                            stringResource(Res.string.grocery_filter_unpurchased)
+                        GroceryListBloc.GroceryFilter.PURCHASED ->
+                            stringResource(Res.string.grocery_filter_purchased)
+                    }
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = label,
+                            color =
+                                if (filter == filterOption) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                },
+                        )
+                    },
+                    onClick = {
+                        onFilterChanged(filterOption)
+                        filterExpanded = false
+                    },
+                )
+            }
+        }
+        Text(
+            text =
+                when (filter) {
+                    GroceryListBloc.GroceryFilter.ALL ->
+                        stringResource(Res.string.grocery_filter_all)
+                    GroceryListBloc.GroceryFilter.UNPURCHASED ->
+                        stringResource(Res.string.grocery_filter_unpurchased)
+                    GroceryListBloc.GroceryFilter.PURCHASED ->
+                        stringResource(Res.string.grocery_filter_purchased)
+                },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+        )
+        IconButton(onClick = onDeleteClicked) {
+            Icon(
+                Icons.Default.DeleteSweep,
+                contentDescription = stringResource(Res.string.grocery_delete_items),
+            )
+        }
     }
 }
 
@@ -227,6 +345,32 @@ private fun CreateListDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit)
 }
 
 @Composable
+private fun DeleteItemsDialog(
+    onDismiss: () -> Unit,
+    onDeletePurchased: () -> Unit,
+    onDeleteAll: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.grocery_delete_items_title)) },
+        text = { Text(stringResource(Res.string.grocery_delete_items_message)) },
+        confirmButton = {
+            TextButton(onClick = onDeleteAll) {
+                Text(stringResource(Res.string.grocery_delete_all))
+            }
+        },
+        dismissButton = {
+            Row {
+                TextButton(onClick = onDismiss) { Text(stringResource(Res.string.grocery_cancel)) }
+                TextButton(onClick = onDeletePurchased) {
+                    Text(stringResource(Res.string.grocery_delete_purchased))
+                }
+            }
+        },
+    )
+}
+
+@Composable
 private fun GroceryListInput(
     name: StateFlow<String>,
     onNameChange: (String) -> Unit,
@@ -274,7 +418,17 @@ private fun GroceryListItem(
                 )
             }
         }
-        Text(text = item.name, modifier = Modifier.weight(1f).padding(start = 8.dp))
+        Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
+            Text(text = item.displayName, style = MaterialTheme.typography.bodyLarge)
+            val quantity = item.quantity
+            if (quantity != null) {
+                Text(
+                    text = quantity,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
 
         val syncingDescription = stringResource(Res.string.grocery_sync_syncing)
         when (item.syncStatus) {
