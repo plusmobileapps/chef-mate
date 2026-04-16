@@ -16,7 +16,11 @@ CREATE TABLE Recipe (
     starRating INTEGER,
     isFavorite INTEGER AS Boolean NOT NULL DEFAULT 0,
     createdAt TEXT NOT NULL DEFAULT (datetime('now')),
-    updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
+    updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
+    remoteId TEXT UNIQUE,
+    clientId TEXT,
+    isDirty INTEGER AS Boolean NOT NULL DEFAULT 0,
+    ownerId TEXT
 );
 
 getAll:
@@ -26,14 +30,35 @@ getById:
 SELECT * FROM Recipe WHERE id = ?;
 
 create:
-INSERT INTO Recipe (title, description, ingredients, directions, imageUrl, sourceUrl, servings, prepTime, cookTime, totalTime, calories, starRating, isFavorite, createdAt, updatedAt)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO Recipe (title, description, ingredients, directions, imageUrl, sourceUrl, servings, prepTime, cookTime, totalTime, calories, starRating, isFavorite, createdAt, updatedAt, clientId, ownerId)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+createWithRemoteId:
+INSERT INTO Recipe (title, description, ingredients, directions, imageUrl, sourceUrl, servings, prepTime, cookTime, totalTime, calories, starRating, isFavorite, createdAt, updatedAt, remoteId, clientId, ownerId)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(remoteId) DO UPDATE SET
+    title = excluded.title,
+    description = excluded.description,
+    ingredients = excluded.ingredients,
+    directions = excluded.directions,
+    imageUrl = excluded.imageUrl,
+    sourceUrl = excluded.sourceUrl,
+    servings = excluded.servings,
+    prepTime = excluded.prepTime,
+    cookTime = excluded.cookTime,
+    totalTime = excluded.totalTime,
+    calories = excluded.calories,
+    starRating = excluded.starRating,
+    isFavorite = excluded.isFavorite,
+    updatedAt = excluded.updatedAt,
+    clientId = excluded.clientId,
+    ownerId = excluded.ownerId;
 
 lastInsertId:
 SELECT MAX(id) FROM Recipe;
 
 update:
-UPDATE Recipe SET title = ?, description = ?, ingredients = ?, directions = ?, imageUrl = ?, sourceUrl = ?, servings = ?, prepTime = ?, cookTime = ?, totalTime = ?, calories = ?, starRating = ?, isFavorite = ?, updatedAt = ?
+UPDATE Recipe SET title = ?, description = ?, ingredients = ?, directions = ?, imageUrl = ?, sourceUrl = ?, servings = ?, prepTime = ?, cookTime = ?, totalTime = ?, calories = ?, starRating = ?, isFavorite = ?, updatedAt = ?, isDirty = 1
 WHERE id = ?;
 
 delete:
@@ -41,3 +66,24 @@ DELETE FROM Recipe WHERE id = ?;
 
 deleteAll:
 DELETE FROM Recipe;
+
+getByRemoteId:
+SELECT * FROM Recipe WHERE remoteId = ?;
+
+getByClientId:
+SELECT * FROM Recipe WHERE clientId = ?;
+
+getUnsynced:
+SELECT * FROM Recipe WHERE remoteId IS NULL;
+
+getDirty:
+SELECT * FROM Recipe WHERE isDirty = 1 AND remoteId IS NOT NULL;
+
+updateRemoteId:
+UPDATE Recipe SET remoteId = ?, isDirty = 0 WHERE id = ?;
+
+updateClientId:
+UPDATE Recipe SET clientId = ? WHERE id = ?;
+
+clearDirty:
+UPDATE Recipe SET isDirty = 0 WHERE id = ?;

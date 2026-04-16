@@ -14,4 +14,6 @@ interface RecipeRepository {
     suspend fun deleteRecipe(id: Long)
 
     suspend fun clearLocalData()
+
+    suspend fun syncAllUnsynced()
 }

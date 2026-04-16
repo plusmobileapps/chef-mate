@@ -27,7 +27,11 @@ CREATE TABLE Recipe (
     starRating INTEGER,
     isFavorite INTEGER NOT NULL DEFAULT 0,
     createdAt TEXT NOT NULL DEFAULT (datetime('now')),
-    updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
+    updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
+    remoteId TEXT UNIQUE,
+    clientId TEXT,
+    isDirty INTEGER NOT NULL DEFAULT 0,
+    ownerId TEXT
 );
 
 CREATE TABLE GroceryList (

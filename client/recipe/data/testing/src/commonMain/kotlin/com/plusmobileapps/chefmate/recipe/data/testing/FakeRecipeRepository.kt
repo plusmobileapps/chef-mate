@@ -32,4 +32,6 @@ class FakeRecipeRepository(
     override suspend fun clearLocalData() {
         recipes.value = emptyList()
     }
+
+    override suspend fun syncAllUnsynced() {}
 }
