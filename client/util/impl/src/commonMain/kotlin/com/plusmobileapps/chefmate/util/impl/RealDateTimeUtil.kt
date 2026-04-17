@@ -7,7 +7,9 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 
 @Inject
 @ContributesBinding(AppScope::class)
@@ -17,6 +19,8 @@ class RealDateTimeUtil(private val dateTimeFormatter: DateTimeFormatterUtil) : D
 
     override val currentTimezone: TimeZone
         get() = TimeZone.currentSystemDefault()
+
+    override fun today(): LocalDate = Clock.System.todayIn(currentTimezone)
 
     override fun shortDate(instant: Instant, timeZone: TimeZone): String =
         dateTimeFormatter.shortDate(instant, timeZone)

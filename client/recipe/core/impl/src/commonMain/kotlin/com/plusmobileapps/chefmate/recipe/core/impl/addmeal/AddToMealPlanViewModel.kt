@@ -5,11 +5,11 @@ import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.meal.data.MealPlanRepository
 import com.plusmobileapps.chefmate.meal.data.MealType
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
+import com.plusmobileapps.chefmate.util.DateTimeUtil
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import kotlin.coroutines.CoroutineContext
-import kotlin.time.Clock
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,8 +19,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.todayIn
 
 @AssistedInject
 class AddToMealPlanViewModel(
@@ -28,6 +26,7 @@ class AddToMealPlanViewModel(
     @Main mainContext: CoroutineContext,
     private val recipeRepository: RecipeRepository,
     private val mealPlanRepository: MealPlanRepository,
+    private val dateTimeUtil: DateTimeUtil,
 ) : ViewModel(mainContext) {
 
     @AssistedFactory
@@ -42,7 +41,7 @@ class AddToMealPlanViewModel(
     val state: StateFlow<State> = _state.asStateFlow()
 
     init {
-        val today = Clock.System.todayIn(TimeZone.currentSystemDefault()).toString()
+        val today = dateTimeUtil.today().toString()
         _state.update { it.copy(selectedDate = today) }
         loadRecipe()
     }

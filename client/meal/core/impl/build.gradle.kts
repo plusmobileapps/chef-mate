@@ -7,8 +7,10 @@ kotlin {
             implementation(projects.client.meal.data.public)
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
+            implementation(projects.client.text.public)
             implementation(projects.client.util.public)
         }
+        commonTest.dependencies { implementation(projects.client.util.testing) }
     }
 }
 

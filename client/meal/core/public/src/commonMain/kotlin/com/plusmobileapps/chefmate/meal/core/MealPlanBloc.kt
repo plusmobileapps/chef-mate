@@ -3,6 +3,8 @@ package com.plusmobileapps.chefmate.meal.core
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.TextData
 import kotlinx.coroutines.flow.StateFlow
 
 interface MealPlanBloc {
@@ -25,7 +27,7 @@ interface MealPlanBloc {
     data class Model(
         val isLoading: Boolean = true,
         val viewMode: ViewMode = ViewMode.DAY,
-        val dateLabel: String = "",
+        val dateLabel: TextData = FixedString(""),
         val dayMeals: DayMeals? = null,
         val weekMeals: List<DayGroup>? = null,
         val mealToDelete: MealPlanItem? = null,
@@ -38,7 +40,7 @@ interface MealPlanBloc {
         val snacks: List<MealPlanItem> = emptyList(),
     )
 
-    data class DayGroup(val dateLabel: String, val meals: List<MealPlanItem>)
+    data class DayGroup(val dateLabel: TextData, val meals: List<MealPlanItem>)
 
     enum class ViewMode {
         DAY,

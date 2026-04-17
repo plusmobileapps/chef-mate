@@ -1,6 +1,7 @@
 package com.plusmobileapps.chefmate.util
 
 import kotlin.time.Instant
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 
@@ -8,6 +9,8 @@ interface DateTimeUtil {
     val now: Instant
 
     val currentTimezone: TimeZone
+
+    fun today(): LocalDate
 
     /**
      * Formats the given [Instant] into a short date string.
@@ -41,4 +44,27 @@ interface DateTimeUtil {
         val startOfDay = date.toInstantAtStartOfDay(timeZone)
         return longDate(startOfDay, timeZone)
     }
+
+    /**
+     * Formats the given [LocalDate] into a short day-of-week and date string.
+     *
+     * @sample "Sun, Apr 12"
+     */
+    fun formatShortDayDate(date: LocalDate, timeZone: TimeZone = currentTimezone): String {
+        val startOfDay = date.toInstantAtStartOfDay(timeZone)
+        val dayPrefix = date.dayOfWeek.shortName()
+        return "$dayPrefix, ${shortDate(startOfDay, timeZone)}"
+    }
 }
+
+private fun DayOfWeek.shortName(): String =
+    when (this) {
+        DayOfWeek.SUNDAY -> "Sun"
+        DayOfWeek.MONDAY -> "Mon"
+        DayOfWeek.TUESDAY -> "Tue"
+        DayOfWeek.WEDNESDAY -> "Wed"
+        DayOfWeek.THURSDAY -> "Thu"
+        DayOfWeek.FRIDAY -> "Fri"
+        DayOfWeek.SATURDAY -> "Sat"
+        else -> ""
+    }

@@ -91,7 +91,7 @@ fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
         content = {
             Column(modifier = Modifier.fillMaxSize()) {
                 DateNavigationRow(
-                    dateLabel = state.dateLabel,
+                    dateLabel = state.dateLabel.localized(),
                     onPrevious = bloc::onPreviousClicked,
                     onNext = bloc::onNextClicked,
                 )
@@ -174,7 +174,9 @@ private fun DayView(
         verticalArrangement = spacedBy(ChefMateTheme.dimens.paddingSmall),
     ) {
         if (dayMeals.breakfast.isNotEmpty()) {
-            stickyHeader { MealSectionHeader(stringResource(Res.string.meal_plan_breakfast)) }
+            stickyHeader(key = "breakfast") {
+                MealSectionHeader(stringResource(Res.string.meal_plan_breakfast))
+            }
             items(dayMeals.breakfast, key = { it.id }) { meal ->
                 MealItemCard(
                     meal = meal,
@@ -184,7 +186,9 @@ private fun DayView(
             }
         }
         if (dayMeals.lunch.isNotEmpty()) {
-            stickyHeader { MealSectionHeader(stringResource(Res.string.meal_plan_lunch)) }
+            stickyHeader(key = "lunch") {
+                MealSectionHeader(stringResource(Res.string.meal_plan_lunch))
+            }
             items(dayMeals.lunch, key = { it.id }) { meal ->
                 MealItemCard(
                     meal = meal,
@@ -194,7 +198,9 @@ private fun DayView(
             }
         }
         if (dayMeals.dinner.isNotEmpty()) {
-            stickyHeader { MealSectionHeader(stringResource(Res.string.meal_plan_dinner)) }
+            stickyHeader(key = "dinner") {
+                MealSectionHeader(stringResource(Res.string.meal_plan_dinner))
+            }
             items(dayMeals.dinner, key = { it.id }) { meal ->
                 MealItemCard(
                     meal = meal,
@@ -204,7 +210,9 @@ private fun DayView(
             }
         }
         if (dayMeals.snacks.isNotEmpty()) {
-            stickyHeader { MealSectionHeader(stringResource(Res.string.meal_plan_snacks)) }
+            stickyHeader(key = "snacks") {
+                MealSectionHeader(stringResource(Res.string.meal_plan_snacks))
+            }
             items(dayMeals.snacks, key = { it.id }) { meal ->
                 MealItemCard(
                     meal = meal,
@@ -234,7 +242,9 @@ private fun WeekView(
     ) {
         weekMeals.forEach { dayGroup ->
             if (dayGroup.meals.isNotEmpty()) {
-                stickyHeader { MealSectionHeader(dayGroup.dateLabel) }
+                stickyHeader(key = "week_${dayGroup.dateLabel}") {
+                    MealSectionHeader(dayGroup.dateLabel.localized())
+                }
                 items(dayGroup.meals, key = { it.id }) { meal ->
                     WeekMealItem(
                         meal = meal,

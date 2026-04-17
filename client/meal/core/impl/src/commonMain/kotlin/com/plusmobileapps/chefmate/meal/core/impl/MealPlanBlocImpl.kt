@@ -8,6 +8,7 @@ import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.meal.core.MealPlanBloc
 import com.plusmobileapps.chefmate.meal.core.MealPlanBloc.Output
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
+import com.plusmobileapps.chefmate.text.FixedString
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -35,7 +36,7 @@ class MealPlanBlocImpl(
             MealPlanBloc.Model(
                 isLoading = it.isLoading,
                 viewMode = it.viewMode,
-                dateLabel = viewModel.getDateLabel(),
+                dateLabel = FixedString(viewModel.getDateLabel()),
                 dayMeals =
                     if (it.viewMode == MealPlanBloc.ViewMode.DAY) {
                         viewModel.buildDayMeals(it.meals)

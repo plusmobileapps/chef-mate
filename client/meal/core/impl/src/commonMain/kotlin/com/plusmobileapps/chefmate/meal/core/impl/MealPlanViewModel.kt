@@ -6,10 +6,10 @@ import com.plusmobileapps.chefmate.meal.core.MealPlanBloc
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
 import com.plusmobileapps.chefmate.meal.data.MealPlanRepository
 import com.plusmobileapps.chefmate.meal.data.MealType
+import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.util.DateTimeUtil
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
-import kotlin.time.Clock
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,12 +17,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
-import kotlinx.datetime.todayIn
 
 @Inject
 class MealPlanViewModel(
@@ -37,8 +34,7 @@ class MealPlanViewModel(
     private var observeJob: Job? = null
 
     init {
-        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-        _state.update { it.copy(currentDate = today) }
+        _state.update { it.copy(currentDate = dateTimeUtil.today()) }
         observeMeals()
     }
 
@@ -115,7 +111,10 @@ class MealPlanViewModel(
             val date = start.plus(dayOffset, DateTimeUnit.DAY)
             val dateStr = date.toString()
             val dayMeals = meals.filter { it.date == dateStr }
-            MealPlanBloc.DayGroup(dateLabel = formatShortDayDate(date), meals = dayMeals)
+            MealPlanBloc.DayGroup(
+                dateLabel = FixedString(dateTimeUtil.formatShortDayDate(date)),
+                meals = dayMeals,
+            )
         }
     }
 
@@ -143,41 +142,10 @@ class MealPlanViewModel(
         return start to end
     }
 
-    private fun formatShortDayDate(date: LocalDate): String {
-        val dayName =
-            when (date.dayOfWeek) {
-                DayOfWeek.SUNDAY -> "Sun"
-                DayOfWeek.MONDAY -> "Mon"
-                DayOfWeek.TUESDAY -> "Tue"
-                DayOfWeek.WEDNESDAY -> "Wed"
-                DayOfWeek.THURSDAY -> "Thu"
-                DayOfWeek.FRIDAY -> "Fri"
-                DayOfWeek.SATURDAY -> "Sat"
-                else -> ""
-            }
-        val monthName =
-            when (date.monthNumber) {
-                1 -> "Jan"
-                2 -> "Feb"
-                3 -> "Mar"
-                4 -> "Apr"
-                5 -> "May"
-                6 -> "Jun"
-                7 -> "Jul"
-                8 -> "Aug"
-                9 -> "Sep"
-                10 -> "Oct"
-                11 -> "Nov"
-                12 -> "Dec"
-                else -> ""
-            }
-        return "$dayName, $monthName ${date.dayOfMonth}"
-    }
-
     data class State(
         val isLoading: Boolean = true,
         val viewMode: MealPlanBloc.ViewMode = MealPlanBloc.ViewMode.DAY,
-        val currentDate: LocalDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+        val currentDate: LocalDate = LocalDate(2000, 1, 1),
         val meals: List<MealPlanItem> = emptyList(),
         val mealToDelete: MealPlanItem? = null,
     )
