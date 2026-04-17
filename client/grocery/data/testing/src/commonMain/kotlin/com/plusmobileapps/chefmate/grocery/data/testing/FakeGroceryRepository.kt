@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.grocery.data.testing
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
+import com.plusmobileapps.chefmate.grocery.data.IngredientParser
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,13 +28,20 @@ class FakeGroceryRepository : GroceryRepository {
 
     override suspend fun addGrocery(name: String) {
         val defaultListId = _lists.value.firstOrNull()?.id ?: 1L
-        val newItem = GroceryItem(id = nextId++, name = name, isChecked = false)
-        itemListMap[newItem.id] = defaultListId
-        _groceries.update { it + newItem }
+        addGrocery(defaultListId, name)
     }
 
     override suspend fun addGrocery(listId: Long, name: String) {
-        val newItem = GroceryItem(id = nextId++, name = name, isChecked = false)
+        val parsed = IngredientParser.parse(name)
+        val newItem =
+            GroceryItem(
+                id = nextId++,
+                name = name,
+                displayName = parsed.name,
+                quantity = parsed.quantity,
+                category = parsed.category,
+                isChecked = false,
+            )
         itemListMap[newItem.id] = listId
         _groceries.update { it + newItem }
     }
@@ -45,7 +53,16 @@ class FakeGroceryRepository : GroceryRepository {
 
     override suspend fun addGroceries(listId: Long, names: List<String>) {
         val newItems = names.map { name ->
-            val item = GroceryItem(id = nextId++, name = name, isChecked = false)
+            val parsed = IngredientParser.parse(name)
+            val item =
+                GroceryItem(
+                    id = nextId++,
+                    name = name,
+                    displayName = parsed.name,
+                    quantity = parsed.quantity,
+                    category = parsed.category,
+                    isChecked = false,
+                )
             itemListMap[item.id] = listId
             item
         }
@@ -94,6 +111,23 @@ class FakeGroceryRepository : GroceryRepository {
         val id = nextListId++
         _lists.update { it + GroceryListModel(id = id, name = "My Grocery List") }
         return id
+    }
+
+    override suspend fun deleteAllGroceries(listId: Long) {
+        val itemIds = itemListMap.filter { it.value == listId }.keys
+        itemListMap.keys.removeAll(itemIds)
+        _groceries.update { items -> items.filter { it.id !in itemIds } }
+    }
+
+    override suspend fun deletePurchasedGroceries(listId: Long) {
+        val itemIds =
+            itemListMap
+                .filter { it.value == listId }
+                .keys
+                .filter { id -> _groceries.value.any { it.id == id && it.isChecked } }
+                .toSet()
+        itemListMap.keys.removeAll(itemIds)
+        _groceries.update { items -> items.filter { it.id !in itemIds } }
     }
 
     override suspend fun clearLocalData() {

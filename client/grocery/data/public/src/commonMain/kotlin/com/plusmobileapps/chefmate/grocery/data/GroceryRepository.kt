@@ -38,5 +38,9 @@ interface GroceryRepository {
 
     suspend fun ensureDefaultList(): Long
 
+    suspend fun deleteAllGroceries(listId: Long)
+
+    suspend fun deletePurchasedGroceries(listId: Long)
+
     suspend fun clearLocalData()
 }

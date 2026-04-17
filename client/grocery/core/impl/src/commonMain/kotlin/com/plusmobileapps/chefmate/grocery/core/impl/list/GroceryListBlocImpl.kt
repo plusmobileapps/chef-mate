@@ -5,6 +5,7 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
+import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryFilter
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.mapState
@@ -36,11 +37,13 @@ class GroceryListBlocImpl(
     override val state: StateFlow<GroceryListBloc.Model> =
         viewModel.state.mapState {
             GroceryListBloc.Model(
-                items = it.items,
+                groupedItems = it.groupedItems,
+                filter = it.filter,
                 isSyncing = it.isSyncing,
                 lists = it.lists,
                 selectedList = it.selectedList,
                 showCreateListDialog = it.showCreateListDialog,
+                showDeleteDialog = it.showDeleteDialog,
             )
         }
 
@@ -92,6 +95,26 @@ class GroceryListBlocImpl(
 
     override fun onDeleteListClicked(list: GroceryListModel) {
         viewModel.onDeleteListClicked(list)
+    }
+
+    override fun onFilterChanged(filter: GroceryFilter) {
+        viewModel.onFilterChanged(filter)
+    }
+
+    override fun onDeleteClicked() {
+        viewModel.onDeleteClicked()
+    }
+
+    override fun onDeleteDismissed() {
+        viewModel.onDeleteDismissed()
+    }
+
+    override fun onDeletePurchasedConfirmed() {
+        viewModel.onDeletePurchasedConfirmed()
+    }
+
+    override fun onDeleteAllConfirmed() {
+        viewModel.onDeleteAllConfirmed()
     }
 }
 
