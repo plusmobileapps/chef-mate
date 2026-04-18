@@ -220,6 +220,55 @@ class RecipeListViewModelTest {
     }
 
     @Test
+    fun When_search_query_set_Then_recipes_filtered_by_title() {
+        recipes.value =
+            listOf(
+                recipe(1, title = "Chicken Parmesan"),
+                recipe(2, title = "Beef Stew"),
+                recipe(3, title = "Chicken Alfredo"),
+            )
+        viewModel.updateSearchQuery("chicken")
+        viewModel.state.value.displayRecipes.map { it.id }.toSet() shouldBe setOf(1L, 3L)
+    }
+
+    @Test
+    fun When_search_query_cleared_Then_all_recipes_shown() {
+        recipes.value = listOf(recipe(1, title = "Chicken"), recipe(2, title = "Beef"))
+        viewModel.updateSearchQuery("chicken")
+        viewModel.state.value.displayRecipes.size shouldBe 1
+        viewModel.updateSearchQuery("")
+        viewModel.state.value.displayRecipes.size shouldBe 2
+    }
+
+    @Test
+    fun When_search_query_matches_no_recipes_Then_empty_list() {
+        recipes.value = listOf(recipe(1, title = "Chicken"), recipe(2, title = "Beef"))
+        viewModel.updateSearchQuery("pizza")
+        viewModel.state.value.displayRecipes shouldBe emptyList()
+        viewModel.state.value.isSearchActive shouldBe true
+    }
+
+    @Test
+    fun When_search_is_case_insensitive_Then_matches_regardless_of_case() {
+        recipes.value = listOf(recipe(1, title = "Chicken Parmesan"))
+        viewModel.updateSearchQuery("CHICKEN")
+        viewModel.state.value.displayRecipes.size shouldBe 1
+    }
+
+    @Test
+    fun When_search_and_filter_combined_Then_both_applied() {
+        recipes.value =
+            listOf(
+                recipe(1, title = "Chicken Parmesan", isFavorite = true),
+                recipe(2, title = "Chicken Alfredo", isFavorite = false),
+                recipe(3, title = "Beef Stew", isFavorite = true),
+            )
+        viewModel.updateSearchQuery("chicken")
+        viewModel.toggleFilter(RecipeFilterOption.FAVORITES)
+        viewModel.state.value.displayRecipes.map { it.id } shouldBe listOf(1L)
+    }
+
+    @Test
     fun When_filter_and_sort_combined_Then_both_applied() {
         recipes.value =
             listOf(

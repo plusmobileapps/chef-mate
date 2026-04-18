@@ -21,12 +21,16 @@ interface RecipeListBloc {
 
     fun onToggleViewMode()
 
+    fun onSearchQueryChanged(query: String)
+
     data class Model(
         val recipes: List<RecipeListItem> = emptyList(),
         val isLoading: Boolean = false,
         val currentSort: RecipeSortOption = RecipeSortOption.RECENTLY_ADDED,
         val activeFilters: Set<RecipeFilterOption> = emptySet(),
         val isGridView: Boolean = false,
+        val searchQuery: String = "",
+        val isSearchActive: Boolean = false,
     )
 
     sealed class Output {

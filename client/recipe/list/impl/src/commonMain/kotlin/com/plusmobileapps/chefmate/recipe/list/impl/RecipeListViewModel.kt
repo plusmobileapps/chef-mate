@@ -70,20 +70,40 @@ class RecipeListViewModel(
         isGridViewPref = _state.value.isGridView
     }
 
+    fun updateSearchQuery(query: String) {
+        _state.update { it.copy(searchQuery = query) }
+    }
+
     data class State(
         val isLoading: Boolean = true,
         val recipes: List<Recipe> = emptyList(),
         val currentSort: RecipeSortOption = RecipeSortOption.RECENTLY_ADDED,
         val activeFilters: Set<RecipeFilterOption> = emptySet(),
         val isGridView: Boolean = false,
+        val searchQuery: String = "",
     ) {
+        val isSearchActive: Boolean
+            get() = searchQuery.isNotBlank()
+
         val displayRecipes: List<Recipe>
             get() =
-                recipes.let { applyFilters(it, activeFilters) }.let { applySort(it, currentSort) }
+                recipes
+                    .let { applySearch(it, searchQuery) }
+                    .let { applyFilters(it, activeFilters) }
+                    .let { applySort(it, currentSort) }
     }
 }
 
 private const val KEY_IS_GRID_VIEW = "recipe_list_is_grid_view"
+
+private fun applySearch(recipes: List<Recipe>, query: String): List<Recipe> {
+    if (query.isBlank()) return recipes
+    val lowerQuery = query.lowercase()
+    return recipes.filter { recipe ->
+        recipe.title.lowercase().contains(lowerQuery) ||
+            recipe.description?.lowercase()?.contains(lowerQuery) == true
+    }
+}
 
 private fun applyFilters(recipes: List<Recipe>, filters: Set<RecipeFilterOption>): List<Recipe> {
     if (filters.isEmpty()) return recipes
