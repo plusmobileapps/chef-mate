@@ -1,6 +1,7 @@
 package com.plusmobileapps.chefmate.browser.impl
 
 import com.fleeksoft.ksoup.Ksoup
+import com.fleeksoft.ksoup.parser.Parser
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.IO
 import dev.zacsweers.metro.ContributesBinding
@@ -100,13 +101,16 @@ class RecipeExtractorServiceImpl(@IO private val ioContext: CoroutineContext) :
         }
     }
 
+    private fun String.decodeHtmlEntities(): String = Parser.unescapeEntities(this, false)
+
     private fun parseRecipeFromJson(obj: JsonObject, sourceUrl: String): ExtractedRecipe {
-        val title = obj["name"]?.jsonPrimitive?.contentOrNull ?: ""
-        val description = obj["description"]?.jsonPrimitive?.contentOrNull
+        val title = obj["name"]?.jsonPrimitive?.contentOrNull?.decodeHtmlEntities() ?: ""
+        val description = obj["description"]?.jsonPrimitive?.contentOrNull?.decodeHtmlEntities()
 
         val ingredients =
-            obj["recipeIngredient"]?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull }
-                ?: emptyList()
+            obj["recipeIngredient"]?.jsonArray?.mapNotNull {
+                it.jsonPrimitive.contentOrNull?.decodeHtmlEntities()
+            } ?: emptyList()
 
         val directions = parseDirections(obj)
 
@@ -146,19 +150,25 @@ class RecipeExtractorServiceImpl(@IO private val ioContext: CoroutineContext) :
                     when {
                         element is JsonObject &&
                             element["@type"]?.jsonPrimitive?.contentOrNull == "HowToStep" ->
-                            listOfNotNull(element["text"]?.jsonPrimitive?.contentOrNull)
+                            listOfNotNull(
+                                element["text"]?.jsonPrimitive?.contentOrNull?.decodeHtmlEntities()
+                            )
                         element is JsonObject &&
                             element["@type"]?.jsonPrimitive?.contentOrNull == "HowToSection" -> {
                             val items =
                                 element["itemListElement"]?.jsonArray ?: return@flatMap emptyList()
                             items.mapNotNull { item ->
-                                item.jsonObject["text"]?.jsonPrimitive?.contentOrNull
+                                item.jsonObject["text"]
+                                    ?.jsonPrimitive
+                                    ?.contentOrNull
+                                    ?.decodeHtmlEntities()
                             }
                         }
-                        else -> listOfNotNull(element.jsonPrimitive.contentOrNull)
+                        else ->
+                            listOfNotNull(element.jsonPrimitive.contentOrNull?.decodeHtmlEntities())
                     }
                 }
-            else -> listOfNotNull(instructions.jsonPrimitive.contentOrNull)
+            else -> listOfNotNull(instructions.jsonPrimitive.contentOrNull?.decodeHtmlEntities())
         }
     }
 
