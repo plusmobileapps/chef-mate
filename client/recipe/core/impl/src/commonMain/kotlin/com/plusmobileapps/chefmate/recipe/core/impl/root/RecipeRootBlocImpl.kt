@@ -46,7 +46,10 @@ class RecipeRootBlocImpl(
                 when (props) {
                     is RecipeRootBloc.Props.Detail ->
                         listOf(Configuration.Detail(recipeId = props.recipeId))
-                    is RecipeRootBloc.Props.Create -> listOf(Configuration.Edit(recipeId = null))
+                    is RecipeRootBloc.Props.Create ->
+                        listOf(Configuration.Edit(recipeId = null, sourceUrl = null))
+                    is RecipeRootBloc.Props.ImportFromUrl ->
+                        listOf(Configuration.Edit(recipeId = null, sourceUrl = props.url))
                 }
             },
             handleBackButton = true,
@@ -77,6 +80,7 @@ class RecipeRootBlocImpl(
                         editBloc.create(
                             context = context,
                             recipeId = config.recipeId,
+                            initialSourceUrl = config.sourceUrl,
                             output = ::handleEditOutput,
                         )
                 )
@@ -85,7 +89,10 @@ class RecipeRootBlocImpl(
     private fun handleEditOutput(output: EditRecipeBloc.Output) {
         when (output) {
             EditRecipeBloc.Output.Cancelled -> {
-                if (props is RecipeRootBloc.Props.Create) {
+                if (
+                    props is RecipeRootBloc.Props.Create ||
+                        props is RecipeRootBloc.Props.ImportFromUrl
+                ) {
                     this.output.onNext(RecipeRootBloc.Output.Finished)
                 } else {
                     navigation.pop()
@@ -112,7 +119,7 @@ class RecipeRootBlocImpl(
     sealed class Configuration {
         data class Detail(val recipeId: Long) : Configuration()
 
-        data class Edit(val recipeId: Long?) : Configuration()
+        data class Edit(val recipeId: Long?, val sourceUrl: String? = null) : Configuration()
     }
 }
 

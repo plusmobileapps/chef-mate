@@ -58,6 +58,10 @@ class RootBlocImpl(
         navigation.pop()
     }
 
+    override fun handleSharedUrl(url: String) {
+        navigation.bringToFront(RecipeRoot(RecipeRootBloc.Props.ImportFromUrl(url)))
+    }
+
     private fun createChild(config: Configuration, context: BlocContext): RootBloc.Child =
         when (config) {
             Configuration.BottomNavigation ->

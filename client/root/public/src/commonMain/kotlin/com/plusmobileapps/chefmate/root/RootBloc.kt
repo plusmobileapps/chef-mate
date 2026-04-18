@@ -13,6 +13,8 @@ import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 interface RootBloc : BackHandlerOwner, BackClickBloc {
     val state: Value<ChildStack<*, Child>>
 
+    fun handleSharedUrl(url: String)
+
     sealed class Child {
         data class BottomNavigation(val bloc: BottomNavBloc) : Child()
 
