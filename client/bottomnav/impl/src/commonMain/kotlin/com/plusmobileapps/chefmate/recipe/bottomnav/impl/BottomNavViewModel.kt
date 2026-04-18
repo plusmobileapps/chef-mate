@@ -5,6 +5,7 @@ import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.BROWSER
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.GROCERIES
+import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.MEALS
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.RECIPES
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.SETTINGS
 import dev.zacsweers.metro.Inject
@@ -24,6 +25,6 @@ class BottomNavViewModel(@Main mainContext: CoroutineContext) : ViewModel(mainCo
 
     data class State(
         val selectedTab: BottomNavBloc.Tab = RECIPES,
-        val tabs: List<BottomNavBloc.Tab> = listOf(RECIPES, GROCERIES, BROWSER, SETTINGS),
+        val tabs: List<BottomNavBloc.Tab> = listOf(RECIPES, GROCERIES, MEALS, BROWSER, SETTINGS),
     )
 }

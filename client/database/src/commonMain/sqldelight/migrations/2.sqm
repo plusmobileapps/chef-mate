@@ -1,0 +1,12 @@
+CREATE TABLE MealPlan (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    recipeId INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    mealType TEXT NOT NULL,
+    createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+    updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (recipeId) REFERENCES Recipe(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_mealplan_date ON MealPlan(date);
+CREATE INDEX idx_mealplan_recipe ON MealPlan(recipeId);

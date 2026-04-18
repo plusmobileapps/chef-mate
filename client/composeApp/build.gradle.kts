@@ -58,6 +58,8 @@ kotlin {
             api(projects.client.grocery.data.impl)
             api(projects.client.grocery.core.impl)
             api(projects.client.grocery.core.public)
+            api(projects.client.meal.data.impl)
+            api(projects.client.meal.core.impl)
             implementation(libs.kotlinx.serialization.json)
             api(projects.client.database)
             api(projects.client.root.public)

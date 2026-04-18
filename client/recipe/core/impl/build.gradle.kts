@@ -15,8 +15,10 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(projects.client.text.public)
             implementation(projects.client.grocery.data.public)
+            implementation(projects.client.meal.data.public)
             implementation(projects.client.util.public)
         }
+        commonTest.dependencies { implementation(projects.client.util.testing) }
     }
 }
 

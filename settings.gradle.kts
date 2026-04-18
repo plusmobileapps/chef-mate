@@ -64,6 +64,16 @@ include(":client:grocery:data:public")
 
 include(":client:grocery:data:testing")
 
+include(":client:meal:core:impl")
+
+include(":client:meal:core:public")
+
+include(":client:meal:data:impl")
+
+include(":client:meal:data:public")
+
+include(":client:meal:data:testing")
+
 include(":client:recipe:core:impl")
 
 include(":client:recipe:core:public")

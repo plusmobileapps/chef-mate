@@ -29,6 +29,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuOpen
 import androidx.compose.material.icons.filled.AddShoppingCart
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
@@ -77,6 +78,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.core.public.generated.resources.Res
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_favorite
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_to_meal_plan
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_calories
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_cook_time
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_created
@@ -106,6 +108,7 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.browser.BrowserScreen
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListScreen
+import com.plusmobileapps.chefmate.recipe.core.addmeal.AddToMealPlanScreen
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
@@ -193,6 +196,13 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
                                         },
                                 )
                             }
+                            IconButton(onClick = { bloc.onAddToMealPlanClicked() }) {
+                                Icon(
+                                    imageVector = Icons.Default.CalendarMonth,
+                                    contentDescription =
+                                        stringResource(Res.string.recipe_detail_add_to_meal_plan),
+                                )
+                            }
                             IconButton(onClick = { bloc.onEditClicked() }) {
                                 Icon(
                                     imageVector = Icons.Default.Edit,
@@ -273,6 +283,7 @@ private fun RecipeDetailSheet(
             onDismissRequest = {
                 when (val current = sheetChild) {
                     is RecipeDetailBloc.Sheet.AddToGroceryList -> current.bloc.onBackClicked()
+                    is RecipeDetailBloc.Sheet.AddToMealPlan -> current.bloc.onBackClicked()
                     is RecipeDetailBloc.Sheet.BrowserLauncher -> bloc.onDismissSheet()
                     null -> {}
                 }
@@ -282,6 +293,7 @@ private fun RecipeDetailSheet(
             when (val current = sheetChild) {
                 is RecipeDetailBloc.Sheet.AddToGroceryList ->
                     AddRecipeToGroceryListScreen(current.bloc)
+                is RecipeDetailBloc.Sheet.AddToMealPlan -> AddToMealPlanScreen(current.bloc)
                 is RecipeDetailBloc.Sheet.BrowserLauncher -> BrowserScreen(current.bloc)
                 null -> {}
             }
@@ -1117,6 +1129,10 @@ private val previewBloc =
         }
 
         override fun onAddToGroceryListClicked() {
+            TODO("Not yet implemented")
+        }
+
+        override fun onAddToMealPlanClicked() {
             TODO("Not yet implemented")
         }
 
