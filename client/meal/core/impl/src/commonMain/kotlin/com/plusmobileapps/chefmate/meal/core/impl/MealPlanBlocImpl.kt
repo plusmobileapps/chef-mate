@@ -16,6 +16,7 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provider
 import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.datetime.LocalDate
 
 @AssistedInject
 class MealPlanBlocImpl(
@@ -49,12 +50,22 @@ class MealPlanBlocImpl(
                     } else {
                         null
                     },
+                monthModel =
+                    if (it.viewMode == MealPlanBloc.ViewMode.MONTH) {
+                        viewModel.buildMonthModel(it.meals, it.selectedMonthDay)
+                    } else {
+                        null
+                    },
                 mealToDelete = it.mealToDelete,
             )
         }
 
-    override fun onViewModeToggled() {
-        viewModel.toggleViewMode()
+    override fun onViewModeSelected(mode: MealPlanBloc.ViewMode) {
+        viewModel.selectViewMode(mode)
+    }
+
+    override fun onMonthDaySelected(date: LocalDate) {
+        viewModel.onMonthDaySelected(date)
     }
 
     override fun onPreviousClicked() {
