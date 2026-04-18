@@ -135,15 +135,7 @@ compose.desktop {
             description = "Chef Mate - Your AI Cooking Assistant"
             vendor = "Plus Mobile Apps"
 
-            modules(
-                "java.sql",
-                "java.naming",
-                "javafx.base",
-                "javafx.graphics",
-                "javafx.swing",
-                "javafx.web",
-                "jdk.jsobject",
-            )
+            modules("java.sql", "java.naming", "jdk.jsobject")
 
             // macOS configuration
             macOS {
@@ -151,6 +143,7 @@ compose.desktop {
                 dockName = "Chef Mate"
 
                 infoPlist { extraKeysRawXml = macExtraPlistKeys }
+                iconFile.set(project.file("src/jvmMain/resources/app-icon.icns"))
             }
 
             // Linux configuration
@@ -163,6 +156,7 @@ compose.desktop {
 
                 // The .desktop file will be generated with MimeType for URL scheme
                 // Custom .desktop file is placed in resources and will be used
+                iconFile.set(project.file("src/jvmMain/resources/app-icon.png"))
             }
 
             // Windows configuration
