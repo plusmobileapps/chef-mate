@@ -38,12 +38,15 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
@@ -99,6 +102,9 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_kcal
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_prep_time
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_remove_favorite
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_servings
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_text
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_url
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_source
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_timestamps
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_total_time
@@ -121,6 +127,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import com.plusmobileapps.chefmate.util.rememberShareLauncher
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -133,6 +140,7 @@ import org.jetbrains.compose.resources.stringResource
 fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val shareLauncher = rememberShareLauncher()
 
     // Delete confirmation dialog
     if (state.showDeleteConfirmationDialog) {
@@ -151,6 +159,7 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
     // Add to Grocery List Bottom Sheet
     RecipeDetailSheet(bloc = bloc, sheetState = sheetState)
 
+    var showShareMenu by remember { mutableStateOf(false) }
     var metadataCollapsed by rememberSaveable { mutableStateOf(false) }
 
     PlusResponsiveContainer(modifier = modifier.fillMaxSize()) { windowSizeClass ->
@@ -209,6 +218,46 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
                                     contentDescription =
                                         stringResource(Res.string.recipe_detail_edit),
                                 )
+                            }
+                            Box {
+                                IconButton(onClick = { showShareMenu = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Share,
+                                        contentDescription =
+                                            stringResource(Res.string.recipe_detail_share),
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = showShareMenu,
+                                    onDismissRequest = { showShareMenu = false },
+                                ) {
+                                    state.recipe.sourceUrl?.let { url ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    stringResource(
+                                                        Res.string.recipe_detail_share_url
+                                                    )
+                                                )
+                                            },
+                                            onClick = {
+                                                showShareMenu = false
+                                                shareLauncher(url)
+                                            },
+                                        )
+                                    }
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                stringResource(Res.string.recipe_detail_share_text)
+                                            )
+                                        },
+                                        onClick = {
+                                            showShareMenu = false
+                                            shareLauncher(formatRecipeAsText(state.recipe))
+                                        },
+                                    )
+                                }
                             }
                             IconButton(onClick = { bloc.onDeleteClicked() }) {
                                 Icon(
@@ -882,6 +931,24 @@ private fun DetailRow(
 }
 
 private fun splitLines(text: String): List<String> = text.split("\n").filter { it.isNotBlank() }
+
+private fun formatRecipeAsText(recipe: Recipe): String = buildString {
+    appendLine(recipe.title)
+    recipe.description?.let {
+        appendLine()
+        appendLine(it)
+    }
+    appendLine()
+    appendLine("Ingredients:")
+    appendLine(recipe.ingredients)
+    appendLine()
+    appendLine("Directions:")
+    appendLine(recipe.directions)
+    recipe.sourceUrl?.let {
+        appendLine()
+        append("Source: $it")
+    }
+}
 
 @Composable
 private fun IngredientLineItem(
