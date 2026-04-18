@@ -18,7 +18,7 @@ struct ComposeView: UIViewControllerRepresentable {
 struct ContentView: View {
     @UIApplicationDelegateAdaptor(AppDelegate.self)
     var appDelegate: AppDelegate
-    
+
     var body: some View {
         ComposeView(
             rootBloc: appDelegate.root,
@@ -26,6 +26,13 @@ struct ContentView: View {
         )
         .ignoresSafeArea(.all)
         .ignoresSafeArea(.keyboard)
+        .onOpenURL { url in
+            guard url.scheme == "chefmate", url.host == "import",
+                  let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+                  let sharedUrl = components.queryItems?.first(where: { $0.name == "url" })?.value
+            else { return }
+            appDelegate.root.handleSharedUrl(url: sharedUrl)
+        }
     }
 }
 
