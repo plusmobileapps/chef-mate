@@ -3,6 +3,12 @@
     <string name="recipe_list_title">Recipes</string>
     <string name="recipe_list_add_recipe">Add recipe</string>
 
+    <!-- Search -->
+    <string name="recipe_list_search">Search</string>
+    <string name="recipe_list_search_placeholder">Search recipes…</string>
+    <string name="recipe_list_search_clear">Clear search</string>
+    <string name="recipe_list_search_empty">No recipes match your search</string>
+
     <!-- Sort -->
     <string name="recipe_list_sort">Sort</string>
     <string name="recipe_list_sort_recently_added">Recently Added</string>

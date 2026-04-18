@@ -1,5 +1,8 @@
 package com.plusmobileapps.chefmate.recipe.list
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,15 +24,18 @@ import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.Restaurant
+import androidx.compose.material.icons.outlined.SearchOff
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -39,8 +45,10 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,6 +56,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -60,6 +70,10 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_rated
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_item_calories
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_item_servings
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_search
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_clear
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_empty
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_placeholder
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort_a_to_z
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort_oldest_first
@@ -87,6 +101,7 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
     var showSortMenu by remember { mutableStateOf(false) }
     var showFilterMenu by remember { mutableStateOf(false) }
+    var showSearchBar by remember { mutableStateOf(false) }
 
     PlusNavContainer(
         modifier = modifier.fillMaxSize(),
@@ -95,6 +110,12 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                 title = Res.string.recipe_list_title.asTextData(),
                 trailingAccessory =
                     PlusHeaderData.TrailingAccessory.Custom {
+                        IconButton(onClick = { showSearchBar = !showSearchBar }) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = stringResource(Res.string.recipe_list_search),
+                            )
+                        }
                         IconButton(onClick = bloc::onToggleViewMode) {
                             Icon(
                                 imageVector =
@@ -192,7 +213,23 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
             ),
         scrollEnabled = false,
         content = {
-            if (state.isGridView) {
+            AnimatedVisibility(
+                visible = showSearchBar,
+                enter = expandVertically(),
+                exit = shrinkVertically(),
+            ) {
+                SearchBar(
+                    query = state.searchQuery,
+                    onQueryChanged = bloc::onSearchQueryChanged,
+                    onClear = {
+                        bloc.onSearchQueryChanged("")
+                        showSearchBar = false
+                    },
+                )
+            }
+            if (state.recipes.isEmpty() && state.isSearchActive) {
+                SearchEmptyState(modifier = Modifier.weight(1f))
+            } else if (state.isGridView) {
                 RecipeGrid(
                     modifier = Modifier.weight(1f),
                     recipes = state.recipes,
@@ -224,6 +261,64 @@ private fun RecipeFilterOption.labelRes(): StringResource =
         RecipeFilterOption.RATED -> Res.string.recipe_list_filter_rated
         RecipeFilterOption.QUICK_RECIPES -> Res.string.recipe_list_filter_quick_recipes
     }
+
+// region Search
+
+@Composable
+private fun SearchBar(
+    query: String,
+    onQueryChanged: (String) -> Unit,
+    onClear: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChanged,
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .focusRequester(focusRequester),
+        placeholder = { Text(stringResource(Res.string.recipe_list_search_placeholder)) },
+        leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) },
+        trailingIcon = {
+            IconButton(onClick = onClear) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = stringResource(Res.string.recipe_list_search_clear),
+                )
+            }
+        },
+        singleLine = true,
+    )
+}
+
+@Composable
+private fun SearchEmptyState(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.SearchOff,
+            contentDescription = null,
+            modifier = Modifier.size(48.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = stringResource(Res.string.recipe_list_search_empty),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 16.dp),
+        )
+    }
+}
+
+// endregion
 
 // region Grid View
 

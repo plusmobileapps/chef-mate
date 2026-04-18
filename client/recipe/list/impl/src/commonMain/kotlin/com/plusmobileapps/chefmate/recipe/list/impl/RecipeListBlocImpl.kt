@@ -42,6 +42,8 @@ class RecipeListBlocImpl(
                 currentSort = it.currentSort,
                 activeFilters = it.activeFilters,
                 isGridView = it.isGridView,
+                searchQuery = it.searchQuery,
+                isSearchActive = it.isSearchActive,
             )
         }
 
@@ -71,6 +73,10 @@ class RecipeListBlocImpl(
 
     override fun onToggleViewMode() {
         viewModel.toggleViewMode()
+    }
+
+    override fun onSearchQueryChanged(query: String) {
+        viewModel.updateSearchQuery(query)
     }
 
     private fun Recipe.toRecipeListItem(): RecipeListItem =
