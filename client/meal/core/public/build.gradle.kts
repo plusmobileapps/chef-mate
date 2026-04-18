@@ -8,6 +8,7 @@ kotlin {
         commonMain.dependencies {
             api(libs.kotlin.coroutines.core)
             api(libs.arkivanov.decompose.core)
+            api(libs.kotlinx.datetime)
             api(projects.client.shared)
             implementation(compose.components.resources)
             implementation(projects.client.meal.data.public)

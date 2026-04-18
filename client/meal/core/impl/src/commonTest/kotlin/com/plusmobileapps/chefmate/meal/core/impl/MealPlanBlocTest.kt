@@ -153,13 +153,21 @@ class MealPlanBlocTest {
     }
 
     @Test
-    fun WHEN_view_mode_toggled_THEN_mode_switches_to_week() = runTest {
-        // Toggling to WEEK triggers getMealsByDateRange for the current week
+    fun WHEN_week_mode_selected_THEN_mode_switches_to_week() = runTest {
         every { repository.getMealsByDateRange("2026-04-12", "2026-04-18") } returns mealsFlow
 
-        bloc.onViewModeToggled()
+        bloc.onViewModeSelected(MealPlanBloc.ViewMode.WEEK)
 
         bloc.state.test { awaitItem().viewMode shouldBe MealPlanBloc.ViewMode.WEEK }
+    }
+
+    @Test
+    fun WHEN_month_mode_selected_THEN_mode_switches_to_month() = runTest {
+        every { repository.getMealsByDateRange("2026-04-01", "2026-04-30") } returns mealsFlow
+
+        bloc.onViewModeSelected(MealPlanBloc.ViewMode.MONTH)
+
+        bloc.state.test { awaitItem().viewMode shouldBe MealPlanBloc.ViewMode.MONTH }
     }
 
     @Test

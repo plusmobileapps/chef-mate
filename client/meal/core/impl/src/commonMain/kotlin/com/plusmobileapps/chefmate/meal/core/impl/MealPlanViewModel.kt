@@ -34,17 +34,13 @@ class MealPlanViewModel(
     private var observeJob: Job? = null
 
     init {
-        _state.update { it.copy(currentDate = dateTimeUtil.today()) }
+        val today = dateTimeUtil.today()
+        _state.update { it.copy(currentDate = today, selectedMonthDay = today) }
         observeMeals()
     }
 
-    fun toggleViewMode() {
-        val newMode =
-            when (_state.value.viewMode) {
-                MealPlanBloc.ViewMode.DAY -> MealPlanBloc.ViewMode.WEEK
-                MealPlanBloc.ViewMode.WEEK -> MealPlanBloc.ViewMode.DAY
-            }
-        _state.update { it.copy(viewMode = newMode) }
+    fun selectViewMode(mode: MealPlanBloc.ViewMode) {
+        _state.update { it.copy(viewMode = mode) }
         observeMeals()
     }
 
@@ -54,8 +50,16 @@ class MealPlanViewModel(
             when (current.viewMode) {
                 MealPlanBloc.ViewMode.DAY -> current.currentDate.plus(1, DateTimeUnit.DAY)
                 MealPlanBloc.ViewMode.WEEK -> current.currentDate.plus(7, DateTimeUnit.DAY)
+                MealPlanBloc.ViewMode.MONTH -> {
+                    val firstOfMonth =
+                        LocalDate(current.currentDate.year, current.currentDate.month, 1)
+                    firstOfMonth.plus(1, DateTimeUnit.MONTH)
+                }
             }
-        _state.update { it.copy(currentDate = newDate) }
+        val newSelectedMonthDay =
+            if (current.viewMode == MealPlanBloc.ViewMode.MONTH) newDate
+            else current.selectedMonthDay
+        _state.update { it.copy(currentDate = newDate, selectedMonthDay = newSelectedMonthDay) }
         observeMeals()
     }
 
@@ -65,9 +69,21 @@ class MealPlanViewModel(
             when (current.viewMode) {
                 MealPlanBloc.ViewMode.DAY -> current.currentDate.minus(1, DateTimeUnit.DAY)
                 MealPlanBloc.ViewMode.WEEK -> current.currentDate.minus(7, DateTimeUnit.DAY)
+                MealPlanBloc.ViewMode.MONTH -> {
+                    val firstOfMonth =
+                        LocalDate(current.currentDate.year, current.currentDate.month, 1)
+                    firstOfMonth.minus(1, DateTimeUnit.MONTH)
+                }
             }
-        _state.update { it.copy(currentDate = newDate) }
+        val newSelectedMonthDay =
+            if (current.viewMode == MealPlanBloc.ViewMode.MONTH) newDate
+            else current.selectedMonthDay
+        _state.update { it.copy(currentDate = newDate, selectedMonthDay = newSelectedMonthDay) }
         observeMeals()
+    }
+
+    fun onMonthDaySelected(date: LocalDate) {
+        _state.update { it.copy(selectedMonthDay = date) }
     }
 
     fun requestRemoveMeal(item: MealPlanItem) {
@@ -94,6 +110,11 @@ class MealPlanViewModel(
                 val endStr = dateTimeUtil.formatLocalDate(end)
                 "$startStr - $endStr"
             }
+            MealPlanBloc.ViewMode.MONTH -> {
+                val monthName =
+                    current.currentDate.month.name.lowercase().replaceFirstChar { it.uppercase() }
+                "$monthName ${current.currentDate.year}"
+            }
         }
     }
 
@@ -118,6 +139,22 @@ class MealPlanViewModel(
         }
     }
 
+    fun buildMonthModel(
+        meals: List<MealPlanItem>,
+        selectedDay: LocalDate,
+    ): MealPlanBloc.MonthModel {
+        val current = _state.value
+        val firstDayOfMonth = LocalDate(current.currentDate.year, current.currentDate.month, 1)
+        val daysWithMeals = meals.map { it.date }.toSet()
+        val selectedDayMeals = meals.filter { it.date == selectedDay.toString() }
+        return MealPlanBloc.MonthModel(
+            firstDayOfMonth = firstDayOfMonth,
+            selectedDay = selectedDay,
+            daysWithMeals = daysWithMeals,
+            selectedDayMeals = buildDayMeals(selectedDayMeals),
+        )
+    }
+
     private fun observeMeals() {
         observeJob?.cancel()
         observeJob = scope.launch {
@@ -128,6 +165,10 @@ class MealPlanViewModel(
                         repository.getMealsByDate(current.currentDate.toString())
                     MealPlanBloc.ViewMode.WEEK -> {
                         val (start, end) = getWeekRange(current.currentDate)
+                        repository.getMealsByDateRange(start.toString(), end.toString())
+                    }
+                    MealPlanBloc.ViewMode.MONTH -> {
+                        val (start, end) = getMonthRange(current.currentDate)
                         repository.getMealsByDateRange(start.toString(), end.toString())
                     }
                 }
@@ -142,10 +183,17 @@ class MealPlanViewModel(
         return start to end
     }
 
+    private fun getMonthRange(date: LocalDate): Pair<LocalDate, LocalDate> {
+        val start = LocalDate(date.year, date.month, 1)
+        val end = start.plus(1, DateTimeUnit.MONTH).minus(1, DateTimeUnit.DAY)
+        return start to end
+    }
+
     data class State(
         val isLoading: Boolean = true,
         val viewMode: MealPlanBloc.ViewMode = MealPlanBloc.ViewMode.DAY,
         val currentDate: LocalDate = LocalDate(2000, 1, 1),
+        val selectedMonthDay: LocalDate = LocalDate(2000, 1, 1),
         val meals: List<MealPlanItem> = emptyList(),
         val mealToDelete: MealPlanItem? = null,
     )
