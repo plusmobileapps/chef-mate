@@ -561,11 +561,34 @@ class GroceryRepositoryImpl(
     }
 
     override suspend fun deleteAllGroceries(listId: Long) {
-        withContext(ioContext) { queries.deleteByListId(listId) }
+        val remoteIds =
+            withContext(ioContext) {
+                val items = queries.readByListId(listId).executeAsList()
+                queries.deleteByListId(listId)
+                items.mapNotNull { it.remoteId }
+            }
+        deleteRemoteItems(remoteIds)
     }
 
     override suspend fun deletePurchasedGroceries(listId: Long) {
-        withContext(ioContext) { queries.deleteCheckedByListId(listId) }
+        val remoteIds =
+            withContext(ioContext) {
+                val items = queries.readCheckedByListId(listId).executeAsList()
+                queries.deleteCheckedByListId(listId)
+                items.mapNotNull { it.remoteId }
+            }
+        deleteRemoteItems(remoteIds)
+    }
+
+    private fun deleteRemoteItems(remoteIds: List<String>) {
+        if (remoteIds.isEmpty()) return
+        scope.launch {
+            for (remoteId in remoteIds) {
+                try {
+                    remoteDataSource.deleteGroceryItem(remoteId)
+                } catch (_: Exception) {}
+            }
+        }
     }
 
     private fun fromEntity(entity: Grocery, syncing: Set<Long>): GroceryItem {

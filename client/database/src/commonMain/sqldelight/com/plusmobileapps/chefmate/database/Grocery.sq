@@ -45,6 +45,9 @@ DELETE FROM Grocery;
 deleteByListId:
 DELETE FROM Grocery WHERE listId = ?;
 
+readCheckedByListId:
+SELECT * FROM Grocery WHERE listId = ? AND isChecked = 1;
+
 deleteCheckedByListId:
 DELETE FROM Grocery WHERE listId = ? AND isChecked = 1;
 
