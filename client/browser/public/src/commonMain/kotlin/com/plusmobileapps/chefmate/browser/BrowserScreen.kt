@@ -59,7 +59,7 @@ fun BrowserScreen(bloc: BrowserBloc, modifier: Modifier = Modifier) {
                 url = viewState.addressBarText,
                 onUrlChanged = bloc::onUrlChanged,
                 onNavigate = bloc::onNavigate,
-                showExtract = viewState.currentUrl.isNotBlank(),
+                showExtract = viewState.showDownload && viewState.currentUrl.isNotBlank(),
                 isExtracting = viewState.isExtracting,
                 onExtractRecipe = bloc::onExtractRecipe,
             )
