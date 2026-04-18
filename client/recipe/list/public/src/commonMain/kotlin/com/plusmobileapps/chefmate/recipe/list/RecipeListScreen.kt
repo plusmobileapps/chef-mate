@@ -101,7 +101,7 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
     var showSortMenu by remember { mutableStateOf(false) }
     var showFilterMenu by remember { mutableStateOf(false) }
-    var showSearchBar by remember { mutableStateOf(false) }
+    var showSearchBar by remember { mutableStateOf(state.isSearchActive) }
 
     PlusNavContainer(
         modifier = modifier.fillMaxSize(),
@@ -110,7 +110,12 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                 title = Res.string.recipe_list_title.asTextData(),
                 trailingAccessory =
                     PlusHeaderData.TrailingAccessory.Custom {
-                        IconButton(onClick = { showSearchBar = !showSearchBar }) {
+                        IconButton(
+                            onClick = {
+                                showSearchBar = !showSearchBar
+                                if (!showSearchBar) bloc.onSearchQueryChanged("")
+                            }
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.Search,
                                 contentDescription = stringResource(Res.string.recipe_list_search),
