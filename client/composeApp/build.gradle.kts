@@ -1,3 +1,4 @@
+import java.util.Properties
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -106,12 +107,34 @@ android {
     namespace = "com.plusmobileapps.chefmate"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
+    val keystorePropertiesFile = rootProject.file("keystore.properties")
+    val keystoreProperties =
+        Properties().also { props ->
+            if (keystorePropertiesFile.exists()) {
+                keystorePropertiesFile.reader().use { props.load(it) }
+            }
+        }
+
     signingConfigs {
         create("release") {
-            storeFile = file(System.getenv("ANDROID_KEYSTORE_FILE") ?: "release.keystore")
-            storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: ""
-            keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: ""
-            keyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?: ""
+            storeFile =
+                file(
+                    System.getenv("ANDROID_KEYSTORE_FILE")
+                        ?: keystoreProperties.getProperty("releaseKeyStore")
+                        ?: "release.keystore"
+                )
+            storePassword =
+                System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                    ?: keystoreProperties.getProperty("releaseStorePassword")
+                    ?: ""
+            keyAlias =
+                System.getenv("ANDROID_KEY_ALIAS")
+                    ?: keystoreProperties.getProperty("releaseKeyAlias")
+                    ?: ""
+            keyPassword =
+                System.getenv("ANDROID_KEY_PASSWORD")
+                    ?: keystoreProperties.getProperty("releaseKeyPassword")
+                    ?: ""
         }
     }
 
@@ -120,7 +143,7 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
-        versionName = "1.0"
+        versionName = "0.1"
     }
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
     buildTypes {

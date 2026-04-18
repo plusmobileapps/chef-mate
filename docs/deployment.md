@@ -95,14 +95,23 @@ These are read by BuildKonfig at build time. See [buildconfig-setup.md](buildcon
 
 **Fastlane lane:** `bundle exec fastlane android release`
 
-**Signing configuration:** The `signingConfigs` block in `client/composeApp/build.gradle.kts` reads credentials from environment variables:
+**Signing configuration:** The `signingConfigs` block in `client/composeApp/build.gradle.kts` reads credentials from environment variables first (used in CI), then falls back to a `keystore.properties` file at the project root (for local builds):
 
-- `ANDROID_KEYSTORE_FILE` — path to the keystore file
-- `ANDROID_KEYSTORE_PASSWORD` — keystore password
-- `ANDROID_KEY_ALIAS` — key alias
-- `ANDROID_KEY_PASSWORD` — key password
+| Environment Variable | keystore.properties Key | Description |
+|---------------------|------------------------|-------------|
+| `ANDROID_KEYSTORE_FILE` | `releaseKeyStore` | Path to the keystore file (defaults to `release.keystore`) |
+| `ANDROID_KEYSTORE_PASSWORD` | `releaseStorePassword` | Password for the keystore |
+| `ANDROID_KEY_ALIAS` | `releaseKeyAlias` | Alias of the signing key |
+| `ANDROID_KEY_PASSWORD` | `releaseKeyPassword` | Password for the signing key |
 
-If environment variables are not set, it falls back to a `release.keystore` file in the project directory (for local release builds).
+For local builds, create a `keystore.properties` file in the project root (this file is gitignored):
+
+```properties
+releaseKeyAlias=upload
+releaseKeyPassword=YOUR_KEY_PASSWORD
+releaseKeyStore=path/to/your/keystore
+releaseStorePassword=YOUR_STORE_PASSWORD
+```
 
 **Promoting releases:** Builds are uploaded to the `internal` track. Promote to higher tracks (alpha, beta, production) through the [Google Play Console](https://play.google.com/console).
 
@@ -215,10 +224,12 @@ base64 -i AuthKey_XXXXXXXXXX.p8 | pbcopy
 
 ## Local Testing
 
-You can run the Fastlane lanes locally to test the build steps (uploading will require valid credentials):
+You can run the Fastlane lanes locally to test the build steps (uploading will require valid credentials).
+
+If you have a `keystore.properties` file at the project root, no environment variables are needed for Android builds:
 
 ```bash
-# Android — build the AAB locally
+# Android — build the AAB locally (uses keystore.properties)
 ./gradlew :client:composeApp:bundleRelease
 
 # iOS — run the full lane (requires match setup and Xcode)
