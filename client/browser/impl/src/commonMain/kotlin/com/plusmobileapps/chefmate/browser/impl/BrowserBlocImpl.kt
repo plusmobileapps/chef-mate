@@ -20,12 +20,17 @@ import kotlinx.coroutines.flow.StateFlow
 class BrowserBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<BrowserBloc.Output>,
+    @Assisted private val showDownload: Boolean,
     viewModelFactory: Provider<BrowserViewModel>,
 ) : BrowserBloc, BlocContext by context {
 
     @AssistedFactory
     fun interface ManagedFactory {
-        fun create(context: BlocContext, output: Consumer<BrowserBloc.Output>): BrowserBlocImpl
+        fun create(
+            context: BlocContext,
+            output: Consumer<BrowserBloc.Output>,
+            showDownload: Boolean,
+        ): BrowserBlocImpl
     }
 
     private val viewModel = instanceKeeper.getViewModel {
@@ -47,6 +52,7 @@ class BrowserBlocImpl(
                                 createExtractionFailedMessage()
                         }
                     },
+                showDownload = showDownload,
             )
         }
 
@@ -75,7 +81,11 @@ class BrowserBlocImpl(
 interface BrowserBlocBindingModule {
     @Provides
     fun provideBrowserBlocFactory(factory: BrowserBlocImpl.ManagedFactory): BrowserBloc.Factory =
-        BrowserBloc.Factory { context, output ->
-            factory.create(context, output)
+        object : BrowserBloc.Factory {
+            override fun create(
+                context: BlocContext,
+                output: Consumer<BrowserBloc.Output>,
+                showDownload: Boolean,
+            ): BrowserBloc = factory.create(context, output, showDownload)
         }
 }

@@ -175,6 +175,7 @@ class RecipeDetailBlocImpl(
                                             sheetNavigation.dismiss()
                                     }
                                 },
+                                showDownload = false,
                             )
                             .also { bloc ->
                                 bloc.onUrlChanged(config.url)
