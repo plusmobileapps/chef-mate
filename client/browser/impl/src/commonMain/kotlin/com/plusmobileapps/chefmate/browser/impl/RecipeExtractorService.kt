@@ -101,6 +101,11 @@ class RecipeExtractorServiceImpl(@IO private val ioContext: CoroutineContext) :
         }
     }
 
+    internal fun parseRecipeJsonText(jsonText: String, sourceUrl: String): ExtractedRecipe? {
+        val recipeJson = findRecipeJson(jsonText) ?: return null
+        return parseRecipeFromJson(recipeJson, sourceUrl)
+    }
+
     private fun String.decodeHtmlEntities(): String = Parser.unescapeEntities(this, false)
 
     private fun parseRecipeFromJson(obj: JsonObject, sourceUrl: String): ExtractedRecipe {
