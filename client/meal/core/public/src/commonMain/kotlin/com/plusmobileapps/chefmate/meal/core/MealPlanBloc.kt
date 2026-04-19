@@ -6,11 +6,12 @@ import com.plusmobileapps.chefmate.meal.data.MealPlanItem
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.TextData
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.datetime.LocalDate
 
 interface MealPlanBloc {
     val state: StateFlow<Model>
 
-    fun onViewModeToggled()
+    fun onViewModeSelected(mode: ViewMode)
 
     fun onPreviousClicked()
 
@@ -24,12 +25,15 @@ interface MealPlanBloc {
 
     fun onDeleteMealDismissed()
 
+    fun onMonthDaySelected(date: LocalDate)
+
     data class Model(
         val isLoading: Boolean = true,
         val viewMode: ViewMode = ViewMode.DAY,
         val dateLabel: TextData = FixedString(""),
         val dayMeals: DayMeals? = null,
         val weekMeals: List<DayGroup>? = null,
+        val monthModel: MonthModel? = null,
         val mealToDelete: MealPlanItem? = null,
     )
 
@@ -42,9 +46,17 @@ interface MealPlanBloc {
 
     data class DayGroup(val dateLabel: TextData, val meals: List<MealPlanItem>)
 
+    data class MonthModel(
+        val firstDayOfMonth: LocalDate,
+        val selectedDay: LocalDate,
+        val daysWithMeals: Set<String>,
+        val selectedDayMeals: DayMeals,
+    )
+
     enum class ViewMode {
         DAY,
         WEEK,
+        MONTH,
     }
 
     sealed class Output {

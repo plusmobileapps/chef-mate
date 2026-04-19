@@ -2,6 +2,7 @@
     <string name="meal_plan_title">Meals</string>
     <string name="meal_plan_day">Day</string>
     <string name="meal_plan_week">Week</string>
+    <string name="meal_plan_month">Month</string>
     <string name="meal_plan_week_range">{start} - {end}</string>
     <string name="meal_plan_short_day_date">{day}, {date}</string>
     <string name="meal_plan_breakfast">Breakfast</string>
