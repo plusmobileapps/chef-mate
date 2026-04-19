@@ -109,9 +109,11 @@ For local builds, create a `keystore.properties` file in the project root (this 
 ```properties
 releaseKeyAlias=upload
 releaseKeyPassword=YOUR_KEY_PASSWORD
-releaseKeyStore=path/to/your/keystore
+releaseKeyStore=/absolute/path/to/your/keystore
 releaseStorePassword=YOUR_STORE_PASSWORD
 ```
+
+**Note:** `releaseKeyStore` must be an absolute path. Relative paths are resolved from the `client/composeApp/` module directory, not the project root.
 
 **Promoting releases:** Builds are uploaded to the `internal` track. Promote to higher tracks (alpha, beta, production) through the [Google Play Console](https://play.google.com/console).
 
@@ -151,6 +153,40 @@ releaseStorePassword=YOUR_STORE_PASSWORD
 
 ## First-Time Setup
 
+### Android Setup Checklist
+
+Follow these steps in order to go from zero to automated Play Store deployments:
+
+1. **Generate a release keystore** (see [below](#generating-the-android-keystore)), or use an existing one.
+
+2. **Create a `keystore.properties`** file in the project root with your keystore details (see the [signing configuration](#android) section above for the format). Use an absolute path for `releaseKeyStore`.
+
+3. **Create your app on Google Play Console** — set up the app listing with the required store details (title, description, etc.).
+
+4. **Upload the first AAB manually** — the Play Store API cannot create a new app, only upload to an existing one:
+   ```bash
+   ./gradlew :client:composeApp:bundleRelease
+   ```
+   Then upload `client/composeApp/build/outputs/bundle/release/composeApp-release.aab` through the Play Console.
+
+5. **Create a Google Play service account** (see [below](#play-store-service-account)) and grant it access in the Play Console.
+
+6. **Test Fastlane locally** to verify the service account works:
+   ```bash
+   export SUPPLY_JSON_KEY_DATA=$(cat /path/to/service-account-key.json)
+   bundle exec fastlane android release
+   ```
+
+7. **Configure GitHub secrets** — add all required secrets listed in the [GitHub Secrets](#github-secrets) section above.
+
+8. **Trigger a release** — commit your changes, create a tag, and push:
+   ```bash
+   git tag v0.1.0
+   git push origin v0.1.0
+   ```
+
+9. **After first publish** — once the app is live on any track, update `release_status` in `fastlane/Fastfile` from `"draft"` to `"completed"` so future uploads go live automatically.
+
 ### Generating the Android Keystore
 
 If you don't already have a release keystore:
@@ -185,6 +221,8 @@ Store the output as the `ANDROID_KEYSTORE_BASE64` secret.
 5. Paste the entire JSON key content as the `PLAY_STORE_SERVICE_ACCOUNT_JSON` secret
 
 **Important:** The first AAB must be uploaded manually through the Play Console to create the app listing. Fastlane `supply` can only upload to an existing app.
+
+**Draft apps:** If your app has not yet been published on any track, the Play Store API requires uploads to have `release_status: "draft"`. This is configured in `fastlane/Fastfile`. Once the app is published for the first time (even to the internal track), you can change this to `"completed"` so releases go live automatically.
 
 ### Fastlane Match (iOS Certificates)
 

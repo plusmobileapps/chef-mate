@@ -4,12 +4,13 @@ platform :android do
   desc "Build release AAB and upload to Play Store internal track"
   lane :release do
     gradle(
-      task: "bundle",
+      task: ":client:composeApp:bundle",
       build_type: "Release",
-      project_dir: "client/composeApp",
     )
     supply(
+      package_name: "com.plusmobileapps.chefmate",
       track: "internal",
+      release_status: "draft",
       aab: "client/composeApp/build/outputs/bundle/release/composeApp-release.aab",
       json_key_data: ENV["SUPPLY_JSON_KEY_DATA"],
       skip_upload_metadata: true,

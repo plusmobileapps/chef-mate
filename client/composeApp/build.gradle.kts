@@ -142,7 +142,7 @@ android {
         applicationId = "com.plusmobileapps.chefmate"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
+        versionCode = 3
         versionName = "0.1"
     }
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
