@@ -23,8 +23,16 @@ jobs:
           ruby-version: "3.2"
           bundler-cache: true
 
+      - name: Build Kotlin framework
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          BUGSNAG_API_KEY: ${{ secrets.BUGSNAG_API_KEY }}
+        run: ./gradlew :client:composeApp:linkReleaseFrameworkIosArm64
+
       - name: Build and upload to App Store Connect
         env:
+          OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED: "YES"
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           BUGSNAG_API_KEY: ${{ secrets.BUGSNAG_API_KEY }}

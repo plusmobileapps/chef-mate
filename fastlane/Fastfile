@@ -31,6 +31,8 @@ platform :ios do
       is_key_content_base64: true,
     )
 
+    setup_ci
+
     match(
       type: "appstore",
       readonly: true,
@@ -42,7 +44,6 @@ platform :ios do
       scheme: "iosApp",
       export_method: "app-store",
       output_directory: "build/ios",
-      xcodebuild_formatter: '',
       xcargs: "TEAM_ID=#{ENV['TEAM_ID']} DEVELOPMENT_TEAM=#{ENV['TEAM_ID']}",
       export_options: {
         provisioningProfiles: {
