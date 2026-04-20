@@ -281,18 +281,41 @@ bundle exec fastlane ios release
 
 ## Version Management
 
-Versions are currently hardcoded in three places:
+Versions are defined in two files across three platforms:
 
-| Platform | File | Field |
-|----------|------|-------|
+| Platform | File | Fields |
+|----------|------|--------|
 | Android | `client/composeApp/build.gradle.kts` | `versionCode` / `versionName` |
 | iOS | `iosApp/Configuration/Config.xcconfig` | `CURRENT_PROJECT_VERSION` / `MARKETING_VERSION` |
-| Desktop | `client/composeApp/build.gradle.kts` | `packageVersion` (in `nativeDistributions`) |
+| Desktop | `client/composeApp/build.gradle.kts` | `packageVersion` (generic + macOS) |
 
-Update all three before tagging a new release.
+### Bump Script
+
+Use `scripts/bump-version.sh` to update all version fields at once. Run it with no arguments for interactive mode:
+
+```bash
+./scripts/bump-version.sh
+```
+
+This displays the current versions and presents four options:
+
+1. **Increment build number only** — keeps the current version, bumps the build code
+2. **Bump patch** — increments the patch version (e.g. `0.1.18` → `0.1.19`) and build number
+3. **Custom version** — prompts for a version (`X.Y.Z`), auto-increments build number
+4. **Custom version and build number** — prompts for both values
+
+CLI flags are also available for non-interactive use:
+
+```bash
+./scripts/bump-version.sh --build                          # build number only
+./scripts/bump-version.sh --version 0.2.0                  # set version, auto-increment build
+./scripts/bump-version.sh --version 1.0.0 --build-number 1 # set both
+```
+
+Run the script before tagging a new release.
 
 ## Known Limitations
 
 - **macOS DMG is unsigned** — Apple requires notarization for DMGs distributed outside the Mac App Store. Users may see a Gatekeeper warning. Adding notarization requires `compose.desktop` signing config and `xcrun notarytool`.
 - **R8/ProGuard is disabled** — Android release builds are not minified. Enabling R8 requires ProGuard rules for KMP libraries (Ktor, Supabase, kotlinx.serialization, Decompose).
-- **No automatic version bumping** — versions must be updated manually before tagging.
+- **No CI version bumping** — versions are bumped locally via `scripts/bump-version.sh` before tagging; there is no automatic version increment in CI.
