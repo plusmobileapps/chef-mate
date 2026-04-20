@@ -1,0 +1,65 @@
+default_platform(:android)
+
+platform :android do
+  desc "Build release AAB and upload to Play Store internal track"
+  lane :release do
+    gradle(
+      task: ":client:composeApp:bundle",
+      build_type: "Release",
+    )
+    supply(
+      package_name: "com.plusmobileapps.chefmate",
+      track: "internal",
+      release_status: "draft",
+      aab: "client/composeApp/build/outputs/bundle/release/composeApp-release.aab",
+      json_key_data: ENV["SUPPLY_JSON_KEY_DATA"],
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+    )
+  end
+end
+
+platform :ios do
+  desc "Build release IPA and upload to App Store Connect"
+  lane :release do
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY"],
+      is_key_content_base64: true,
+    )
+
+    setup_ci
+
+    match(
+      type: "appstore",
+      readonly: true,
+      api_key: api_key,
+    )
+
+    build_app(
+      project: "iosApp/iosApp.xcodeproj",
+      scheme: "iosApp",
+      export_method: "app-store",
+      output_directory: "build/ios",
+      xcargs: "TEAM_ID=#{ENV['TEAM_ID']} DEVELOPMENT_TEAM=#{ENV['TEAM_ID']}",
+      export_options: {
+        provisioningProfiles: {
+          "com.plusmobileapps.chefmate.ChefMate" => "match AppStore com.plusmobileapps.chefmate.ChefMate",
+        },
+      },
+    )
+
+    upload_to_app_store(
+      api_key: api_key,
+      app_identifier: "com.plusmobileapps.chefmate.ChefMate",
+      skip_metadata: true,
+      skip_screenshots: true,
+      submit_for_review: false,
+      precheck_include_in_app_purchases: false,
+      force: true,
+    )
+  end
+end

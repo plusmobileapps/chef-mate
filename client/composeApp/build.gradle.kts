@@ -1,3 +1,4 @@
+import java.util.Properties
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -106,15 +107,51 @@ android {
     namespace = "com.plusmobileapps.chefmate"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
+    val keystorePropertiesFile = rootProject.file("keystore.properties")
+    val keystoreProperties =
+        Properties().also { props ->
+            if (keystorePropertiesFile.exists()) {
+                keystorePropertiesFile.reader().use { props.load(it) }
+            }
+        }
+
+    signingConfigs {
+        create("release") {
+            storeFile =
+                file(
+                    System.getenv("ANDROID_KEYSTORE_FILE")
+                        ?: keystoreProperties.getProperty("releaseKeyStore")
+                        ?: "release.keystore"
+                )
+            storePassword =
+                System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                    ?: keystoreProperties.getProperty("releaseStorePassword")
+                    ?: ""
+            keyAlias =
+                System.getenv("ANDROID_KEY_ALIAS")
+                    ?: keystoreProperties.getProperty("releaseKeyAlias")
+                    ?: ""
+            keyPassword =
+                System.getenv("ANDROID_KEY_PASSWORD")
+                    ?: keystoreProperties.getProperty("releaseKeyPassword")
+                    ?: ""
+        }
+    }
+
     defaultConfig {
         applicationId = "com.plusmobileapps.chefmate"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 20
+        versionName = "0.1.20"
     }
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
-    buildTypes { getByName("release") { isMinifyEnabled = false } }
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -131,7 +168,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Chef Mate"
-            packageVersion = "1.0.0"
+            packageVersion = "0.1.20"
             description = "Chef Mate - Your AI Cooking Assistant"
             vendor = "Plus Mobile Apps"
 
@@ -139,6 +176,8 @@ compose.desktop {
 
             // macOS configuration
             macOS {
+                // macOS DMG packaging requires MAJOR > 0; map 0.x.y → 1.x.y
+                packageVersion = "0.1.20"
                 bundleID = "com.plusmobileapps.chefmate"
                 dockName = "Chef Mate"
 
