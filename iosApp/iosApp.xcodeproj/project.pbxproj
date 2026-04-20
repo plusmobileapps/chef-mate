@@ -164,7 +164,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\ncd \"$SRCROOT/..\"\nif [ -z \"$JAVA_HOME\" ]; then\n  export JAVA_HOME=\"$HOME/.sdkman/candidates/java/current\"\nfi\n./gradlew :client:composeApp:embedAndSignAppleFrameworkForXcode\nGRADLE_EXIT=$?\n./gradlew --stop 2>/dev/null || true\nexit $GRADLE_EXIT\n";
+			shellScript = "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\ncd \"$SRCROOT/..\"\nif [ -z \"$JAVA_HOME\" ]; then\n  export JAVA_HOME=\"$HOME/.sdkman/candidates/java/current\"\nfi\n./gradlew :client:composeApp:embedAndSignAppleFrameworkForXcode\nGRADLE_EXIT=$?\n# Kill all JVM processes to prevent xcodebuild/tee hang\nkillall -9 java 2>/dev/null || true\nexit $GRADLE_EXIT\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
