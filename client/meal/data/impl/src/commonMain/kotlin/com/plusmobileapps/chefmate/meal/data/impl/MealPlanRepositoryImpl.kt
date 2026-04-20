@@ -10,6 +10,7 @@ import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
 import com.plusmobileapps.chefmate.meal.data.MealPlanRepository
 import com.plusmobileapps.chefmate.meal.data.MealType
+import com.plusmobileapps.chefmate.meal.data.SyncStatus
 import com.plusmobileapps.chefmate.meal.data.impl.remote.MealPlanRemoteDataSource
 import com.plusmobileapps.chefmate.meal.data.impl.remote.RemoteMealPlan
 import com.plusmobileapps.chefmate.util.DateTimeUtil
@@ -205,6 +206,7 @@ private fun com.plusmobileapps.chefmate.database.GetByDate.toMealPlanItem(): Mea
         recipeImageUrl = recipeImageUrl,
         date = date,
         mealType = MealType.valueOf(mealType),
+        syncStatus = if (remoteId != null) SyncStatus.SYNCED else SyncStatus.NOT_SYNCED,
     )
 
 private fun com.plusmobileapps.chefmate.database.GetByDateRange.toMealPlanItem(): MealPlanItem =
@@ -215,4 +217,5 @@ private fun com.plusmobileapps.chefmate.database.GetByDateRange.toMealPlanItem()
         recipeImageUrl = recipeImageUrl,
         date = date,
         mealType = MealType.valueOf(mealType),
+        syncStatus = if (remoteId != null) SyncStatus.SYNCED else SyncStatus.NOT_SYNCED,
     )

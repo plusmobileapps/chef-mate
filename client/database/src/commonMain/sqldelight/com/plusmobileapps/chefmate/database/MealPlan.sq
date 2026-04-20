@@ -19,7 +19,7 @@ CREATE INDEX idx_mealplan_recipe ON MealPlan(recipeId);
 
 getByDate:
 SELECT MealPlan.id, MealPlan.recipeId, MealPlan.date, MealPlan.mealType,
-       MealPlan.createdAt, MealPlan.updatedAt,
+       MealPlan.createdAt, MealPlan.updatedAt, MealPlan.remoteId,
        Recipe.title AS recipeTitle, Recipe.imageUrl AS recipeImageUrl
 FROM MealPlan
 INNER JOIN Recipe ON MealPlan.recipeId = Recipe.id
@@ -28,7 +28,7 @@ ORDER BY MealPlan.mealType ASC;
 
 getByDateRange:
 SELECT MealPlan.id, MealPlan.recipeId, MealPlan.date, MealPlan.mealType,
-       MealPlan.createdAt, MealPlan.updatedAt,
+       MealPlan.createdAt, MealPlan.updatedAt, MealPlan.remoteId,
        Recipe.title AS recipeTitle, Recipe.imageUrl AS recipeImageUrl
 FROM MealPlan
 INNER JOIN Recipe ON MealPlan.recipeId = Recipe.id

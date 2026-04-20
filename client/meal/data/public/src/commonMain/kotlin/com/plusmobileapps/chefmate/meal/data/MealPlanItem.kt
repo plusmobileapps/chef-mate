@@ -7,4 +7,11 @@ data class MealPlanItem(
     val recipeImageUrl: String?,
     val date: String,
     val mealType: MealType,
+    val syncStatus: SyncStatus = SyncStatus.NOT_SYNCED,
 )
+
+enum class SyncStatus {
+    NOT_SYNCED,
+    SYNCING,
+    SYNCED,
+}
