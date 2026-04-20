@@ -142,8 +142,8 @@ android {
         applicationId = "com.plusmobileapps.chefmate"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 4
-        versionName = "0.1"
+        versionCode = 17
+        versionName = "0.1.17"
     }
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
     buildTypes {
@@ -168,7 +168,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Chef Mate"
-            packageVersion = "1.0.0"
+            packageVersion = "0.1.17"
             description = "Chef Mate - Your AI Cooking Assistant"
             vendor = "Plus Mobile Apps"
 
