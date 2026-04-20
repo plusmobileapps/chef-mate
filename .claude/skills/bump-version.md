@@ -31,6 +31,20 @@ All three platforms are updated together. One file holds Android + JVM; a second
 - `versionCode` (Android) and `CURRENT_PROJECT_VERSION` (iOS) are kept in sync and equal to the patch component of the semantic version. For a `build`-only bump they increment independently.
 - `versionName`, `packageVersion`, and `MARKETING_VERSION` all carry the same `{major}.{minor}.{patch}` string.
 
+### macOS DMG packaging constraint
+
+macOS DMG packaging (`packageReleaseDmg`) requires `MAJOR > 0` in the version string. When the semver major is 0 (i.e. `0.x.y`), the top-level `packageVersion` will be rejected by jpackage for DMG only. **Always** set a macOS-specific override inside the `macOS { }` block of `nativeDistributions`:
+
+```kotlin
+macOS {
+    // macOS DMG packaging requires MAJOR > 0; map 0.x.y → 1.x.y
+    packageVersion = "1.{minor}.{patch}"
+    ...
+}
+```
+
+This override applies to DMG only; Linux (`.deb`) and Windows (`.msi`) continue to use the top-level `packageVersion = "0.x.y"`. Once the project's major version reaches 1, this override can be removed.
+
 ## Instructions
 
 ### Step 1: Determine current version
@@ -81,17 +95,25 @@ grep 'versionCode' client/composeApp/build.gradle.kts
 
 Locate the `android { defaultConfig { ... } }` block and the `nativeDistributions { ... }` block.
 
-For a **semantic version bump**, update all three lines:
+For a **semantic version bump**, update all four values:
 ```kotlin
 // android defaultConfig
 versionCode = {new_build}
 versionName = "{new_version}"
 
-// compose.desktop nativeDistributions
+// compose.desktop nativeDistributions (top-level — Linux + Windows)
 packageVersion = "{new_version}"
+
+// macOS override inside macOS { } block — DMG requires MAJOR > 0
+// When major == 0, map 0.minor.patch → 1.minor.patch
+macOS {
+    packageVersion = "1.{minor}.{patch}"   // e.g. "0.1.17" → "1.1.17"
+}
 ```
 
-For a **build-only bump**, update only `versionCode`:
+If `major >= 1`, the macOS override is not needed (remove it or keep it matching the top-level version).
+
+For a **build-only bump**, update only `versionCode` (the macOS `packageVersion` does not change):
 ```kotlin
 versionCode = {new_build}
 ```
@@ -119,6 +141,12 @@ grep -n 'CURRENT_PROJECT_VERSION\|MARKETING_VERSION' iosApp/Configuration/Config
 ```
 
 All semantic version strings must match. Build numbers on Android and iOS must match (except during a build-only bump initiated from a state where they were already out of sync — flag that to the user).
+
+Confirm the macOS override is present when `major == 0`:
+```sh
+grep -n 'macOS.*packageVersion\|packageVersion.*macOS' client/composeApp/build.gradle.kts
+# Should show the 1.minor.patch override, e.g. "1.1.17"
+```
 
 ### Step 6: Commit
 
