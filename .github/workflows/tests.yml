@@ -9,6 +9,10 @@ concurrency:
   group: tests-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  checks: write
+  contents: read
+
 jobs:
   jvm-android-tests:
     name: JVM + Android tests
@@ -21,6 +25,14 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
       - run: ./gradlew jvmTest testDebugUnitTest --continue
+      - name: Publish test report
+        uses: dorny/test-reporter@v2
+        if: always()
+        with:
+          name: JVM + Android test results
+          path: '**/build/test-results/**/TEST-*.xml'
+          reporter: java-junit
+          fail-on-error: false
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -38,6 +50,14 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
       - run: ./gradlew iosSimulatorArm64Test --continue
+      - name: Publish test report
+        uses: dorny/test-reporter@v2
+        if: always()
+        with:
+          name: iOS test results
+          path: '**/build/test-results/**/TEST-*.xml'
+          reporter: java-junit
+          fail-on-error: false
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
