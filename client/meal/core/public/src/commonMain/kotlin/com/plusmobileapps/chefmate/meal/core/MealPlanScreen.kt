@@ -23,7 +23,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.CloudDone
+import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,6 +40,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -53,10 +58,14 @@ import chefmate.client.meal.core.public.generated.resources.meal_plan_lunch
 import chefmate.client.meal.core.public.generated.resources.meal_plan_month
 import chefmate.client.meal.core.public.generated.resources.meal_plan_no_meals
 import chefmate.client.meal.core.public.generated.resources.meal_plan_snacks
+import chefmate.client.meal.core.public.generated.resources.meal_plan_sync_not_synced
+import chefmate.client.meal.core.public.generated.resources.meal_plan_sync_synced
+import chefmate.client.meal.core.public.generated.resources.meal_plan_sync_syncing
 import chefmate.client.meal.core.public.generated.resources.meal_plan_title
 import chefmate.client.meal.core.public.generated.resources.meal_plan_week
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
 import com.plusmobileapps.chefmate.meal.data.MealType
+import com.plusmobileapps.chefmate.meal.data.SyncStatus
 import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusDialog
@@ -476,6 +485,7 @@ private fun MealItemCard(
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.weight(1f),
             )
+            SyncStatusIcon(meal.syncStatus)
             IconButton(onClick = onDeleteClick) {
                 Icon(
                     imageVector = Icons.Default.Delete,
@@ -516,6 +526,7 @@ private fun WeekMealItem(
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.weight(1f),
             )
+            SyncStatusIcon(meal.syncStatus)
             IconButton(onClick = onDeleteClick) {
                 Icon(
                     imageVector = Icons.Default.Delete,
@@ -535,6 +546,33 @@ private fun EmptyMealsMessage(modifier: Modifier = Modifier) {
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+    }
+}
+
+@Composable
+private fun SyncStatusIcon(syncStatus: SyncStatus, modifier: Modifier = Modifier) {
+    val syncingDescription = stringResource(Res.string.meal_plan_sync_syncing)
+    when (syncStatus) {
+        SyncStatus.NOT_SYNCED ->
+            Icon(
+                imageVector = Icons.Outlined.CloudOff,
+                contentDescription = stringResource(Res.string.meal_plan_sync_not_synced),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = modifier.size(20.dp),
+            )
+        SyncStatus.SYNCING ->
+            CircularProgressIndicator(
+                modifier =
+                    modifier.size(16.dp).semantics { contentDescription = syncingDescription },
+                strokeWidth = 2.dp,
+            )
+        SyncStatus.SYNCED ->
+            Icon(
+                imageVector = Icons.Outlined.CloudDone,
+                contentDescription = stringResource(Res.string.meal_plan_sync_synced),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = modifier.size(20.dp),
+            )
     }
 }
 

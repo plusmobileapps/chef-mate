@@ -1,3 +1,5 @@
+import kotlin.Boolean;
+
 CREATE TABLE MealPlan (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     recipeId INTEGER NOT NULL,
@@ -5,6 +7,10 @@ CREATE TABLE MealPlan (
     mealType TEXT NOT NULL,
     createdAt TEXT NOT NULL DEFAULT (datetime('now')),
     updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
+    remoteId TEXT UNIQUE,
+    clientId TEXT,
+    isDirty INTEGER AS Boolean NOT NULL DEFAULT 0,
+    ownerId TEXT,
     FOREIGN KEY (recipeId) REFERENCES Recipe(id) ON DELETE CASCADE
 );
 
@@ -13,7 +19,7 @@ CREATE INDEX idx_mealplan_recipe ON MealPlan(recipeId);
 
 getByDate:
 SELECT MealPlan.id, MealPlan.recipeId, MealPlan.date, MealPlan.mealType,
-       MealPlan.createdAt, MealPlan.updatedAt,
+       MealPlan.createdAt, MealPlan.updatedAt, MealPlan.remoteId,
        Recipe.title AS recipeTitle, Recipe.imageUrl AS recipeImageUrl
 FROM MealPlan
 INNER JOIN Recipe ON MealPlan.recipeId = Recipe.id
@@ -22,7 +28,7 @@ ORDER BY MealPlan.mealType ASC;
 
 getByDateRange:
 SELECT MealPlan.id, MealPlan.recipeId, MealPlan.date, MealPlan.mealType,
-       MealPlan.createdAt, MealPlan.updatedAt,
+       MealPlan.createdAt, MealPlan.updatedAt, MealPlan.remoteId,
        Recipe.title AS recipeTitle, Recipe.imageUrl AS recipeImageUrl
 FROM MealPlan
 INNER JOIN Recipe ON MealPlan.recipeId = Recipe.id
@@ -33,11 +39,43 @@ getById:
 SELECT * FROM MealPlan WHERE id = ?;
 
 insert:
-INSERT INTO MealPlan (recipeId, date, mealType)
-VALUES (?, ?, ?);
+INSERT INTO MealPlan (recipeId, date, mealType, clientId, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?);
+
+insertWithRemoteId:
+INSERT INTO MealPlan (recipeId, date, mealType, clientId, createdAt, updatedAt, remoteId, ownerId)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(remoteId) DO UPDATE SET
+    recipeId = excluded.recipeId,
+    date = excluded.date,
+    mealType = excluded.mealType,
+    updatedAt = excluded.updatedAt,
+    clientId = excluded.clientId,
+    ownerId = excluded.ownerId;
 
 delete:
 DELETE FROM MealPlan WHERE id = ?;
 
 deleteByRecipeId:
 DELETE FROM MealPlan WHERE recipeId = ?;
+
+deleteAll:
+DELETE FROM MealPlan;
+
+lastInsertId:
+SELECT MAX(id) FROM MealPlan;
+
+getByRemoteId:
+SELECT * FROM MealPlan WHERE remoteId = ?;
+
+getByClientId:
+SELECT * FROM MealPlan WHERE clientId = ?;
+
+getUnsynced:
+SELECT * FROM MealPlan WHERE remoteId IS NULL;
+
+updateRemoteId:
+UPDATE MealPlan SET remoteId = ?, isDirty = 0 WHERE id = ?;
+
+updateClientId:
+UPDATE MealPlan SET clientId = ? WHERE id = ?;
