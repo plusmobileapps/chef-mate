@@ -6,32 +6,32 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.meal.data.MealType
 import kotlinx.coroutines.flow.StateFlow
 
-interface AddToMealPlanBloc : BackClickBloc {
+interface ChooseMealTypeBloc : BackClickBloc {
     val state: StateFlow<Model>
-
-    fun onDateSelected(date: String)
 
     fun onMealTypeSelected(mealType: MealType)
 
     fun onSaveClicked()
 
     data class Model(
-        val isLoading: Boolean = false,
-        val isSaving: Boolean = false,
-        val selectedDate: String = "",
         val selectedMealType: MealType = MealType.DINNER,
+        val isSaving: Boolean = false,
         val recipeTitle: String = "",
+        val selectedDate: String = "",
     )
 
     sealed class Output {
         data object Finished : Output()
+
+        data object Back : Output()
     }
 
     fun interface Factory {
         fun create(
             context: BlocContext,
             recipeId: Long,
+            date: String,
             output: Consumer<Output>,
-        ): AddToMealPlanBloc
+        ): ChooseMealTypeBloc
     }
 }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -73,10 +74,10 @@ import chefmate.client.meal.core.public.generated.resources.meal_plan_sync_synci
 import chefmate.client.meal.core.public.generated.resources.meal_plan_title
 import chefmate.client.meal.core.public.generated.resources.meal_plan_week
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.plusmobileapps.chefmate.meal.core.addmealsheet.AddMealSheetScreen
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
 import com.plusmobileapps.chefmate.meal.data.MealType
 import com.plusmobileapps.chefmate.meal.data.SyncStatus
+import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootScreen
 import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusDialog
@@ -198,9 +199,10 @@ private fun MealPlanSheet(bloc: MealPlanBloc, sheetState: androidx.compose.mater
                 }
             },
             sheetState = sheetState,
+            contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
         ) {
             when (val current = sheetChild) {
-                is MealPlanBloc.Sheet.AddMeal -> AddMealSheetScreen(current.bloc)
+                is MealPlanBloc.Sheet.AddMeal -> MealPlannerRootScreen(current.bloc)
                 null -> {}
             }
         }

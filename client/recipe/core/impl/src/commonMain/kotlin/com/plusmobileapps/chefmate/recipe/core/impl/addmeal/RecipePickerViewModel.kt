@@ -1,8 +1,8 @@
-package com.plusmobileapps.chefmate.meal.core.impl.recipepicker
+package com.plusmobileapps.chefmate.recipe.core.impl.addmeal
 
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.di.Main
-import com.plusmobileapps.chefmate.meal.core.recipepicker.RecipePickerBloc
+import com.plusmobileapps.chefmate.recipe.core.addmeal.RecipePickerBloc
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext

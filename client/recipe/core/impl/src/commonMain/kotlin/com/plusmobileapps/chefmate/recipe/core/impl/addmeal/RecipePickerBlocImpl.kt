@@ -1,12 +1,12 @@
-package com.plusmobileapps.chefmate.meal.core.impl.recipepicker
+package com.plusmobileapps.chefmate.recipe.core.impl.addmeal
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
-import com.plusmobileapps.chefmate.meal.core.recipepicker.RecipePickerBloc
-import com.plusmobileapps.chefmate.meal.core.recipepicker.RecipePickerBloc.Output
+import com.plusmobileapps.chefmate.recipe.core.addmeal.RecipePickerBloc
+import com.plusmobileapps.chefmate.recipe.core.addmeal.RecipePickerBloc.Output
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject

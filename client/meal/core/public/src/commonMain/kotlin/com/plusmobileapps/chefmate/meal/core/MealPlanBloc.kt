@@ -4,8 +4,8 @@ import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
-import com.plusmobileapps.chefmate.meal.core.addmealsheet.AddMealSheetBloc
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
+import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.TextData
 import kotlinx.coroutines.flow.StateFlow
@@ -69,7 +69,7 @@ interface MealPlanBloc {
     }
 
     sealed class Sheet {
-        data class AddMeal(val bloc: AddMealSheetBloc) : Sheet()
+        data class AddMeal(val bloc: MealPlannerRootBloc) : Sheet()
     }
 
     sealed class Output {

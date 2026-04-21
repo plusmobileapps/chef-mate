@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.meal.core.recipepicker
+package com.plusmobileapps.chefmate.recipe.core.addmeal
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer

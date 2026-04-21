@@ -13,7 +13,7 @@ import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc
-import com.plusmobileapps.chefmate.recipe.core.addmeal.AddToMealPlanBloc
+import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc.Output
 import com.plusmobileapps.chefmate.text.FixedString
@@ -37,7 +37,7 @@ class RecipeDetailBlocImpl(
     private val dateTimeUtil: DateTimeUtil,
     private val timeFormatterUtil: TimeFormatterUtil,
     private val addToGroceryList: AddRecipeToGroceryListBloc.Factory,
-    private val addToMealPlan: AddToMealPlanBloc.Factory,
+    private val mealPlannerRootFactory: MealPlannerRootBloc.Factory,
     private val browserBlocFactory: BrowserBloc.Factory,
 ) : RecipeDetailBloc, BlocContext by context {
     @AssistedFactory
@@ -153,12 +153,12 @@ class RecipeDetailBlocImpl(
             is SheetConfig.AddToMealPlan ->
                 RecipeDetailBloc.Sheet.AddToMealPlan(
                     bloc =
-                        addToMealPlan.create(
+                        mealPlannerRootFactory.create(
                             context = context,
-                            recipeId = config.recipeId,
+                            props = MealPlannerRootBloc.Props.FromRecipeDetail(config.recipeId),
                             output = { output ->
                                 when (output) {
-                                    AddToMealPlanBloc.Output.Finished -> sheetNavigation.dismiss()
+                                    MealPlannerRootBloc.Output.Finished -> sheetNavigation.dismiss()
                                 }
                             },
                         )

@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.meal.core.recipepicker
+package com.plusmobileapps.chefmate.recipe.core.addmeal
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement.spacedBy
@@ -21,9 +21,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import chefmate.client.meal.core.public.generated.resources.Res
-import chefmate.client.meal.core.public.generated.resources.meal_plan_search_recipes
-import chefmate.client.meal.core.public.generated.resources.meal_plan_select_recipe
+import chefmate.client.recipe.core.public.generated.resources.Res
+import chefmate.client.recipe.core.public.generated.resources.add_meal_plan_search_recipes
+import chefmate.client.recipe.core.public.generated.resources.add_meal_plan_select_recipe
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
@@ -33,22 +33,26 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun RecipePickerScreen(bloc: RecipePickerBloc, modifier: Modifier = Modifier) {
+fun RecipePickerScreen(
+    bloc: RecipePickerBloc,
+    onCloseClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val state by bloc.state.collectAsState()
 
     PlusHeaderContainer(
         modifier = modifier.fillMaxSize(),
         data =
             PlusHeaderData.Modal(
-                title = stringResource(Res.string.meal_plan_select_recipe).asTextData(),
-                onCloseClick = {},
+                title = stringResource(Res.string.add_meal_plan_select_recipe).asTextData(),
+                onCloseClick = onCloseClick,
             ),
         scrollEnabled = false,
     ) {
         OutlinedTextField(
             value = state.searchQuery,
             onValueChange = bloc::onSearchQueryChanged,
-            placeholder = { Text(stringResource(Res.string.meal_plan_search_recipes)) },
+            placeholder = { Text(stringResource(Res.string.add_meal_plan_search_recipes)) },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
             singleLine = true,
             modifier =

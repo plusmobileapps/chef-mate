@@ -13,8 +13,8 @@ import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.meal.core.MealPlanBloc
 import com.plusmobileapps.chefmate.meal.core.MealPlanBloc.Output
-import com.plusmobileapps.chefmate.meal.core.addmealsheet.AddMealSheetBloc
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
+import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.text.FixedString
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -31,7 +31,7 @@ class MealPlanBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: Provider<MealPlanViewModel>,
-    private val addMealSheetFactory: AddMealSheetBloc.Factory,
+    private val mealPlannerRootFactory: MealPlannerRootBloc.Factory,
 ) : MealPlanBloc, BlocContext by context {
 
     @AssistedFactory
@@ -125,11 +125,12 @@ class MealPlanBlocImpl(
             SheetConfig.AddMeal ->
                 MealPlanBloc.Sheet.AddMeal(
                     bloc =
-                        addMealSheetFactory.create(
+                        mealPlannerRootFactory.create(
                             context = context,
-                            output = { sheetOutput ->
-                                when (sheetOutput) {
-                                    AddMealSheetBloc.Output.Finished -> sheetNavigation.dismiss()
+                            props = MealPlannerRootBloc.Props.FromMealPlanner,
+                            output = { rootOutput ->
+                                when (rootOutput) {
+                                    MealPlannerRootBloc.Output.Finished -> sheetNavigation.dismiss()
                                 }
                             },
                         )
