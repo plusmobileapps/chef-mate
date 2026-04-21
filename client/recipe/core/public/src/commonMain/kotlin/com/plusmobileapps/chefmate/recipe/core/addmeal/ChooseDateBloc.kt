@@ -18,11 +18,14 @@ interface ChooseDateBloc : BackClickBloc {
 
     fun onNextMonth()
 
+    fun onTodayClicked()
+
     data class Model(
         val firstDayOfMonth: LocalDate = LocalDate(2000, 1, 1),
         val daysWithMeals: Set<String> = emptySet(),
         val monthLabel: String = "",
         val selectedDate: LocalDate? = null,
+        val formattedSelectedDate: String = "",
         val selectedDayMeals: List<MealPlanItem> = emptyList(),
     )
 

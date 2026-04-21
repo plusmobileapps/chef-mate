@@ -27,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -44,6 +45,7 @@ import chefmate.client.recipe.core.public.generated.resources.add_meal_plan_lunc
 import chefmate.client.recipe.core.public.generated.resources.add_meal_plan_next
 import chefmate.client.recipe.core.public.generated.resources.add_meal_plan_no_meals
 import chefmate.client.recipe.core.public.generated.resources.add_meal_plan_snacks
+import chefmate.client.recipe.core.public.generated.resources.add_meal_plan_today
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
 import com.plusmobileapps.chefmate.meal.data.MealType
 import com.plusmobileapps.chefmate.text.asTextData
@@ -98,6 +100,26 @@ fun ChooseDateScreen(bloc: ChooseDateBloc, showAsChild: Boolean, modifier: Modif
             Text(text = state.monthLabel, style = MaterialTheme.typography.titleMedium)
             IconButton(onClick = bloc::onNextMonth) {
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+            }
+        }
+
+        if (state.selectedDate != null) {
+            Row(
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(horizontal = ChefMateTheme.dimens.paddingNormal),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = state.formattedSelectedDate,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                TextButton(onClick = bloc::onTodayClicked) {
+                    Text(stringResource(Res.string.add_meal_plan_today))
+                }
             }
         }
 

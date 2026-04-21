@@ -37,6 +37,7 @@ class ChooseDateBlocImpl(
                 daysWithMeals = it.daysWithMeals,
                 monthLabel = it.monthLabel,
                 selectedDate = it.selectedDate,
+                formattedSelectedDate = it.formattedSelectedDate,
                 selectedDayMeals = it.selectedDayMeals,
             )
         }
@@ -56,6 +57,10 @@ class ChooseDateBlocImpl(
 
     override fun onNextMonth() {
         viewModel.onNextMonth()
+    }
+
+    override fun onTodayClicked() {
+        viewModel.onTodayClicked()
     }
 
     override fun onBackClicked() {

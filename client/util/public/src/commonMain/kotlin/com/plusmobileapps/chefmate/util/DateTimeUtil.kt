@@ -46,6 +46,13 @@ interface DateTimeUtil {
     }
 
     /**
+     * Formats the given [LocalDate] into a medium date string.
+     *
+     * @sample "Jan 5, 2026"
+     */
+    fun formatMediumDate(date: LocalDate, timeZone: TimeZone = currentTimezone): String
+
+    /**
      * Formats the given [LocalDate] into a short day-of-week and date string.
      *
      * @sample "Sun, Apr 12"

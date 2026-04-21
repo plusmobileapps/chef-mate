@@ -42,4 +42,9 @@ class FakeDateTimeUtil(
 
     override fun formatDateTime(instant: Instant, timeZone: TimeZone): String =
         "${shortDate(instant, timeZone)} ${formatTime(instant, timeZone)}"
+
+    override fun formatMediumDate(date: LocalDate, timeZone: TimeZone): String {
+        val monthName = date.month.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
+        return "$monthName ${date.dayOfMonth}, ${date.year}"
+    }
 }

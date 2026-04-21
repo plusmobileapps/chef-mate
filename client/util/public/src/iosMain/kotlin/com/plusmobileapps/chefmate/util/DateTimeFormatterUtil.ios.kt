@@ -17,6 +17,8 @@ actual class DateTimeFormatterUtilImpl : DateTimeFormatterUtil {
 
     private val longDateFormatter = NSDateFormatter().apply { dateFormat = "MMMM dd, yyyy" }
 
+    private val mediumDateFormatter = NSDateFormatter().apply { dateFormat = "MMM d, yyyy" }
+
     private val timeFormatter = NSDateFormatter().apply { dateFormat = "hh:mm a" }
 
     override fun shortDate(instant: Instant, timeZone: TimeZone): String {
@@ -29,6 +31,12 @@ actual class DateTimeFormatterUtilImpl : DateTimeFormatterUtil {
         val nsDate = NSDate.dateWithTimeIntervalSince1970(instant.epochSeconds.toDouble())
         longDateFormatter.timeZone = NSTimeZone.timeZoneWithName(timeZone.id)!!
         return longDateFormatter.stringFromDate(nsDate)
+    }
+
+    override fun mediumDate(instant: Instant, timeZone: TimeZone): String {
+        val nsDate = NSDate.dateWithTimeIntervalSince1970(instant.epochSeconds.toDouble())
+        mediumDateFormatter.timeZone = NSTimeZone.timeZoneWithName(timeZone.id)!!
+        return mediumDateFormatter.stringFromDate(nsDate)
     }
 
     override fun formatTime(instant: Instant, timeZone: TimeZone): String {

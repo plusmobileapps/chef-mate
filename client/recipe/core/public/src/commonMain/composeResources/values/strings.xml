@@ -47,6 +47,7 @@
     <string name="add_meal_plan_search_recipes">Search recipes</string>
     <string name="add_meal_plan_next">Next</string>
     <string name="add_meal_plan_no_meals">No meals planned</string>
+    <string name="add_meal_plan_today">Today</string>
 
     <!-- Edit Recipe Screen -->
     <string name="edit_recipe_title">Edit Recipe</string>
