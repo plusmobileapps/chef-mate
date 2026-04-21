@@ -26,6 +26,7 @@ mokkery = "3.3.0"
 napier = "2.7.1"
 kotest = "6.1.11"
 kotlin = "2.3.20"
+kover = "0.9.8"
 kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.7.1"
 kotlinx-serialization = "1.9.0"
@@ -121,6 +122,7 @@ ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
 mokkery = { id = "dev.mokkery",  version.ref = "mokkery" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
