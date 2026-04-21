@@ -198,7 +198,7 @@ private fun MealSectionHeader(title: String, modifier: Modifier = Modifier) {
         modifier =
             modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(vertical = ChefMateTheme.dimens.paddingSmall),
     )
 }
