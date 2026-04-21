@@ -325,7 +325,7 @@ private fun RecipeDetailCompactContent(
     val scope = rememberCoroutineScope()
     val padding = ChefMateTheme.dimens.paddingNormal
 
-    LazyColumn(modifier = modifier.fillMaxWidth(), verticalArrangement = spacedBy(padding)) {
+    LazyColumn(modifier = modifier.fillMaxSize(), verticalArrangement = spacedBy(padding)) {
         // Hero section: image + key details side by side
         item(key = "hero") {
             RecipeHeroSection(
@@ -962,6 +962,7 @@ private fun IngredientsContent(ingredients: String, modifier: Modifier = Modifie
                 onClick = { crossedOut[index] = !crossedOut[index] },
             )
         }
+        Spacer(modifier = Modifier.height(80.dp))
     }
 }
 
@@ -986,6 +987,7 @@ private fun DirectionsContent(directions: String, modifier: Modifier = Modifier)
                 onClick = { highlightedIndex = if (highlightedIndex == index) -1 else index },
             )
         }
+        Spacer(modifier = Modifier.height(80.dp))
     }
 }
 

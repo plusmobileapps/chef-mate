@@ -75,7 +75,7 @@ fun PlusHeaderContainer(
         }
 
         Surface(
-            modifier = modifier.weight(1f),
+            modifier = Modifier.weight(1f),
             color = ChefMateTheme.colorScheme.background,
             contentColor = ChefMateTheme.colorScheme.onBackground,
         ) {
@@ -135,6 +135,7 @@ private fun BottomBarBox(
 
 @Composable
 private fun ScrollingContent(
+    modifier: Modifier = Modifier,
     scrollEnabled: Boolean,
     scrollState: ScrollState,
     maxContentWidth: Dp,
@@ -143,18 +144,22 @@ private fun ScrollingContent(
     Column(
         modifier =
             if (scrollEnabled) {
-                Modifier.fillMaxHeight()
+                modifier
+                    .fillMaxHeight()
                     .widthIn(max = maxContentWidth)
                     .scaffoldContentInsetPadding()
                     .verticalScroll(scrollState)
             } else {
-                Modifier.fillMaxHeight()
+                modifier
+                    .fillMaxHeight()
                     .widthIn(max = maxContentWidth)
                     .scaffoldContentInsetPadding()
             }
     ) {
         content()
-        Spacer(modifier = Modifier.padding(WindowInsets.systemGestures.asPaddingValues()))
+        if (scrollEnabled) {
+            Spacer(modifier = Modifier.padding(WindowInsets.systemGestures.asPaddingValues()))
+        }
     }
 }
 

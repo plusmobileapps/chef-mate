@@ -177,7 +177,7 @@ compose.desktop {
             // macOS configuration
             macOS {
                 // macOS DMG packaging requires MAJOR > 0; map 0.x.y → 1.x.y
-                packageVersion = "0.1.20"
+                packageVersion = "1.1.20"
                 bundleID = "com.plusmobileapps.chefmate"
                 dockName = "Chef Mate"
 
