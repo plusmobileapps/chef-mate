@@ -272,20 +272,90 @@ private fun MonthView(
         return
     }
 
-    Column(modifier = modifier.fillMaxSize()) {
-        MonthCalendar(
-            firstDayOfMonth = monthModel.firstDayOfMonth,
-            selectedDay = monthModel.selectedDay,
-            daysWithMeals = monthModel.daysWithMeals,
-            onDaySelected = onDaySelected,
-            modifier = Modifier.fillMaxWidth().padding(ChefMateTheme.dimens.paddingNormal),
-        )
-        DayView(
-            dayMeals = monthModel.selectedDayMeals,
-            onMealClicked = onMealClicked,
-            onDeleteClicked = onDeleteClicked,
-            modifier = Modifier.weight(1f),
-        )
+    val dayMeals = monthModel.selectedDayMeals
+    val allEmpty =
+        dayMeals == null ||
+            (dayMeals.breakfast.isEmpty() &&
+                dayMeals.lunch.isEmpty() &&
+                dayMeals.dinner.isEmpty() &&
+                dayMeals.snacks.isEmpty())
+
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = spacedBy(ChefMateTheme.dimens.paddingSmall),
+    ) {
+        item(key = "month_calendar") {
+            MonthCalendar(
+                firstDayOfMonth = monthModel.firstDayOfMonth,
+                selectedDay = monthModel.selectedDay,
+                daysWithMeals = monthModel.daysWithMeals,
+                onDaySelected = onDaySelected,
+                modifier = Modifier.fillMaxWidth().padding(ChefMateTheme.dimens.paddingNormal),
+            )
+        }
+        if (allEmpty) {
+            item(key = "month_empty") {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(120.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = stringResource(Res.string.meal_plan_no_meals),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        } else if (dayMeals != null) {
+            if (dayMeals.breakfast.isNotEmpty()) {
+                stickyHeader(key = "month_breakfast") {
+                    MealSectionHeader(stringResource(Res.string.meal_plan_breakfast))
+                }
+                items(dayMeals.breakfast, key = { it.id }) { meal ->
+                    MealItemCard(
+                        meal = meal,
+                        onClick = { onMealClicked(meal) },
+                        onDeleteClick = { onDeleteClicked(meal) },
+                    )
+                }
+            }
+            if (dayMeals.lunch.isNotEmpty()) {
+                stickyHeader(key = "month_lunch") {
+                    MealSectionHeader(stringResource(Res.string.meal_plan_lunch))
+                }
+                items(dayMeals.lunch, key = { it.id }) { meal ->
+                    MealItemCard(
+                        meal = meal,
+                        onClick = { onMealClicked(meal) },
+                        onDeleteClick = { onDeleteClicked(meal) },
+                    )
+                }
+            }
+            if (dayMeals.dinner.isNotEmpty()) {
+                stickyHeader(key = "month_dinner") {
+                    MealSectionHeader(stringResource(Res.string.meal_plan_dinner))
+                }
+                items(dayMeals.dinner, key = { it.id }) { meal ->
+                    MealItemCard(
+                        meal = meal,
+                        onClick = { onMealClicked(meal) },
+                        onDeleteClick = { onDeleteClicked(meal) },
+                    )
+                }
+            }
+            if (dayMeals.snacks.isNotEmpty()) {
+                stickyHeader(key = "month_snacks") {
+                    MealSectionHeader(stringResource(Res.string.meal_plan_snacks))
+                }
+                items(dayMeals.snacks, key = { it.id }) { meal ->
+                    MealItemCard(
+                        meal = meal,
+                        onClick = { onMealClicked(meal) },
+                        onDeleteClick = { onDeleteClicked(meal) },
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -517,6 +587,7 @@ private fun MealSectionHeader(title: String, modifier: Modifier = Modifier) {
         modifier =
             modifier
                 .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.background)
                 .padding(
                     horizontal = ChefMateTheme.dimens.paddingNormal,
                     vertical = ChefMateTheme.dimens.paddingSmall,
