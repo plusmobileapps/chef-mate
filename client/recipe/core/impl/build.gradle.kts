@@ -18,7 +18,10 @@ kotlin {
             implementation(projects.client.meal.data.public)
             implementation(projects.client.util.public)
         }
-        commonTest.dependencies { implementation(projects.client.util.testing) }
+        commonTest.dependencies {
+            implementation(projects.client.util.testing)
+            implementation(libs.multiplatform.settings.test)
+        }
     }
 }
 

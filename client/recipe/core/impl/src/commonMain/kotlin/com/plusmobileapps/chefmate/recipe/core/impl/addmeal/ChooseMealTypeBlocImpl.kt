@@ -6,8 +6,8 @@ import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.meal.data.MealType
-import com.plusmobileapps.chefmate.recipe.core.addmeal.AddToMealPlanBloc
-import com.plusmobileapps.chefmate.recipe.core.addmeal.AddToMealPlanBloc.Output
+import com.plusmobileapps.chefmate.recipe.core.addmeal.ChooseMealTypeBloc
+import com.plusmobileapps.chefmate.recipe.core.addmeal.ChooseMealTypeBloc.Output
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -17,34 +17,37 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 @AssistedInject
-class AddToMealPlanBlocImpl(
+class ChooseMealTypeBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val recipeId: Long,
+    @Assisted private val date: String,
     @Assisted private val output: Consumer<Output>,
-    private val viewModelFactory: AddToMealPlanViewModel.Factory,
-) : AddToMealPlanBloc, BlocContext by context {
+    private val viewModelFactory: ChooseMealTypeViewModel.Factory,
+) : ChooseMealTypeBloc, BlocContext by context {
 
     @AssistedFactory
     fun interface ManagedFactory {
         fun create(
             context: BlocContext,
             recipeId: Long,
+            date: String,
             output: Consumer<Output>,
-        ): AddToMealPlanBlocImpl
+        ): ChooseMealTypeBlocImpl
     }
 
     private val scope = createScope()
 
-    private val viewModel = instanceKeeper.getViewModel { viewModelFactory.create(recipeId) }
+    private val viewModel: ChooseMealTypeViewModel = instanceKeeper.getViewModel {
+        viewModelFactory.create(recipeId, date)
+    }
 
-    override val state: StateFlow<AddToMealPlanBloc.Model> =
+    override val state: StateFlow<ChooseMealTypeBloc.Model> =
         viewModel.state.mapState {
-            AddToMealPlanBloc.Model(
-                isLoading = it.isLoading,
-                isSaving = it.isSaving,
-                selectedDate = it.selectedDate,
+            ChooseMealTypeBloc.Model(
                 selectedMealType = it.selectedMealType,
+                isSaving = it.isSaving,
                 recipeTitle = it.recipeTitle,
+                selectedDate = it.selectedDate,
             )
         }
 
@@ -52,16 +55,10 @@ class AddToMealPlanBlocImpl(
         scope.launch {
             viewModel.output.collect {
                 when (it) {
-                    AddToMealPlanViewModel.Output.Finished -> {
-                        output.onNext(Output.Finished)
-                    }
+                    ChooseMealTypeViewModel.Output.Finished -> output.onNext(Output.Finished)
                 }
             }
         }
-    }
-
-    override fun onDateSelected(date: String) {
-        viewModel.onDateSelected(date)
     }
 
     override fun onMealTypeSelected(mealType: MealType) {
@@ -73,16 +70,16 @@ class AddToMealPlanBlocImpl(
     }
 
     override fun onBackClicked() {
-        output.onNext(Output.Finished)
+        output.onNext(Output.Back)
     }
 }
 
 @ContributesTo(AppScope::class)
-interface AddToMealPlanBlocBindingModule {
+interface ChooseMealTypeBlocBindingModule {
     @Provides
-    fun provideAddToMealPlanBlocFactory(
-        factory: AddToMealPlanBlocImpl.ManagedFactory
-    ): AddToMealPlanBloc.Factory = AddToMealPlanBloc.Factory { context, recipeId, output ->
-        factory.create(context, recipeId, output)
+    fun provideChooseMealTypeBlocFactory(
+        factory: ChooseMealTypeBlocImpl.ManagedFactory
+    ): ChooseMealTypeBloc.Factory = ChooseMealTypeBloc.Factory { context, recipeId, date, output ->
+        factory.create(context, recipeId, date, output)
     }
 }

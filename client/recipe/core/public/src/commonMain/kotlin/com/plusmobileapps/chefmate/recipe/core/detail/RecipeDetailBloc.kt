@@ -7,7 +7,7 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc
-import com.plusmobileapps.chefmate.recipe.core.addmeal.AddToMealPlanBloc
+import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.TextData
 import kotlinx.coroutines.flow.StateFlow
@@ -58,7 +58,7 @@ interface RecipeDetailBloc : BackClickBloc {
 
         data class BrowserLauncher(val bloc: BrowserBloc) : Sheet()
 
-        data class AddToMealPlan(val bloc: AddToMealPlanBloc) : Sheet()
+        data class AddToMealPlan(val bloc: MealPlannerRootBloc) : Sheet()
     }
 
     interface Factory {

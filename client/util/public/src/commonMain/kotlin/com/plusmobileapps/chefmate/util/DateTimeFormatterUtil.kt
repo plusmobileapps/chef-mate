@@ -38,6 +38,13 @@ interface DateTimeFormatterUtil {
         timeZone: TimeZone = TimeZone.currentSystemDefault(),
     ): String
 
+    /**
+     * Formats the given [Instant] into a medium date string.
+     *
+     * @sample "Jan 5, 2026"
+     */
+    fun mediumDate(instant: Instant, timeZone: TimeZone = TimeZone.currentSystemDefault()): String
+
     fun formatLocalDate(
         date: LocalDate,
         timeZone: TimeZone = TimeZone.currentSystemDefault(),

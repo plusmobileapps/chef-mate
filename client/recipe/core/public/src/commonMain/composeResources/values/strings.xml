@@ -36,14 +36,18 @@
 
     <!-- Add to Meal Plan -->
     <string name="recipe_detail_add_to_meal_plan">Add to meal plan</string>
-    <string name="add_meal_plan_title">Add to Meal Plan</string>
-    <string name="add_meal_plan_select_date">Select Date</string>
-    <string name="add_meal_plan_select_meal">Select Meal</string>
+    <string name="add_meal_plan_choose_date">Choose Date</string>
+    <string name="add_meal_plan_choose_meal_type">Choose Meal Type</string>
     <string name="add_meal_plan_save">Save</string>
     <string name="add_meal_plan_breakfast">Breakfast</string>
     <string name="add_meal_plan_lunch">Lunch</string>
     <string name="add_meal_plan_dinner">Dinner</string>
     <string name="add_meal_plan_snacks">Snacks</string>
+    <string name="add_meal_plan_select_recipe">Select a Recipe</string>
+    <string name="add_meal_plan_search_recipes">Search recipes</string>
+    <string name="add_meal_plan_next">Next</string>
+    <string name="add_meal_plan_no_meals">No meals planned</string>
+    <string name="add_meal_plan_today">Today</string>
 
     <!-- Edit Recipe Screen -->
     <string name="edit_recipe_title">Edit Recipe</string>

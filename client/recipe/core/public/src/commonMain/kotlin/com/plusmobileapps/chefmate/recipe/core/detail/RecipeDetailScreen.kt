@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -108,7 +109,7 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.browser.BrowserScreen
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListScreen
-import com.plusmobileapps.chefmate.recipe.core.addmeal.AddToMealPlanScreen
+import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootScreen
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
@@ -283,17 +284,18 @@ private fun RecipeDetailSheet(
             onDismissRequest = {
                 when (val current = sheetChild) {
                     is RecipeDetailBloc.Sheet.AddToGroceryList -> current.bloc.onBackClicked()
-                    is RecipeDetailBloc.Sheet.AddToMealPlan -> current.bloc.onBackClicked()
+                    is RecipeDetailBloc.Sheet.AddToMealPlan -> bloc.onDismissSheet()
                     is RecipeDetailBloc.Sheet.BrowserLauncher -> bloc.onDismissSheet()
                     null -> {}
                 }
             },
             sheetState = sheetState,
+            contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
         ) {
             when (val current = sheetChild) {
                 is RecipeDetailBloc.Sheet.AddToGroceryList ->
                     AddRecipeToGroceryListScreen(current.bloc)
-                is RecipeDetailBloc.Sheet.AddToMealPlan -> AddToMealPlanScreen(current.bloc)
+                is RecipeDetailBloc.Sheet.AddToMealPlan -> MealPlannerRootScreen(current.bloc)
                 is RecipeDetailBloc.Sheet.BrowserLauncher -> BrowserScreen(current.bloc)
                 null -> {}
             }

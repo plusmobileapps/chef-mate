@@ -17,6 +17,7 @@ actual class DateTimeFormatterUtilImpl(locale: Locale = Locale.getDefault()) :
     private val timeFormatter = DateTimeFormatter.ofPattern("hh:mm a", locale)
     private val shortDateFormatter = DateTimeFormatter.ofPattern("MMM dd", locale)
     private val longDateFormatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy", locale)
+    private val mediumDateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy", locale)
     private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss a", locale)
 
     override fun shortDate(instant: Instant, timeZone: TimeZone): String =
@@ -24,6 +25,9 @@ actual class DateTimeFormatterUtilImpl(locale: Locale = Locale.getDefault()) :
 
     override fun longDate(instant: Instant, timeZone: TimeZone): String =
         instant.toJavaDateTime(timeZone).format(longDateFormatter)
+
+    override fun mediumDate(instant: Instant, timeZone: TimeZone): String =
+        instant.toJavaDateTime(timeZone).format(mediumDateFormatter)
 
     override fun formatTime(instant: Instant, timeZone: TimeZone): String =
         instant.toJavaDateTime(timeZone).format(timeFormatter)

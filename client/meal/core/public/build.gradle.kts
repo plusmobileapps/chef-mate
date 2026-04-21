@@ -12,8 +12,10 @@ kotlin {
             api(projects.client.shared)
             implementation(compose.components.resources)
             implementation(projects.client.meal.data.public)
+            implementation(projects.client.recipe.core.public)
             implementation(projects.client.ui.public)
             implementation(projects.client.text.public)
+            implementation(libs.arkivanov.decompose.compose.extensions)
         }
     }
 }

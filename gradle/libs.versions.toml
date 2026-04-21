@@ -89,6 +89,7 @@ logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 multiplatform-webview = { module = "io.github.kevinnzou:compose-webview-multiplatform", version.ref = "multiplatform-webview" }
 multiplatform-settings = { module = "com.russhwolf:multiplatform-settings", version.ref = "multiplatform-settings" }
 multiplatform-settings-noarg = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "multiplatform-settings" }
+multiplatform-settings-test = { module = "com.russhwolf:multiplatform-settings-test", version.ref = "multiplatform-settings" }
 napier = { module = "io.github.aakira:napier", version.ref = "napier" }
 ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }

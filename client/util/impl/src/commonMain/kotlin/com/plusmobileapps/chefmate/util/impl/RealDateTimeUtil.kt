@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.util.impl
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.util.DateTimeFormatterUtil
 import com.plusmobileapps.chefmate.util.DateTimeUtil
+import com.plusmobileapps.chefmate.util.toInstantAtStartOfDay
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import kotlin.time.Clock
@@ -33,4 +34,9 @@ class RealDateTimeUtil(private val dateTimeFormatter: DateTimeFormatterUtil) : D
 
     override fun formatDateTime(instant: Instant, timeZone: TimeZone): String =
         dateTimeFormatter.formatDateTime(instant, timeZone)
+
+    override fun formatMediumDate(date: LocalDate, timeZone: TimeZone): String {
+        val startOfDay = date.toInstantAtStartOfDay(timeZone)
+        return dateTimeFormatter.mediumDate(startOfDay, timeZone)
+    }
 }
