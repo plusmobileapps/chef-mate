@@ -22,22 +22,30 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -46,6 +54,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import chefmate.client.meal.core.public.generated.resources.Res
+import chefmate.client.meal.core.public.generated.resources.meal_plan_add_meal
 import chefmate.client.meal.core.public.generated.resources.meal_plan_breakfast
 import chefmate.client.meal.core.public.generated.resources.meal_plan_day
 import chefmate.client.meal.core.public.generated.resources.meal_plan_delete
@@ -63,6 +72,8 @@ import chefmate.client.meal.core.public.generated.resources.meal_plan_sync_synce
 import chefmate.client.meal.core.public.generated.resources.meal_plan_sync_syncing
 import chefmate.client.meal.core.public.generated.resources.meal_plan_title
 import chefmate.client.meal.core.public.generated.resources.meal_plan_week
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.plusmobileapps.chefmate.meal.core.addmealsheet.AddMealSheetScreen
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
 import com.plusmobileapps.chefmate.meal.data.MealType
 import com.plusmobileapps.chefmate.meal.data.SyncStatus
@@ -72,6 +83,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
+import com.plusmobileapps.chefmate.ui.components.RecipeImage
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
@@ -82,6 +94,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     state.mealToDelete?.let {
         PlusDialog(
@@ -94,57 +107,104 @@ fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
         )
     }
 
-    PlusNavContainer(
-        data = PlusHeaderData.Parent(title = Res.string.meal_plan_title.asTextData()),
-        scrollEnabled = false,
-        content = {
-            Column(modifier = Modifier.fillMaxSize()) {
-                ViewModeSegmentedControl(
-                    selectedMode = state.viewMode,
-                    onModeSelected = bloc::onViewModeSelected,
-                    modifier = Modifier.padding(horizontal = ChefMateTheme.dimens.paddingNormal),
-                )
+    MealPlanSheet(bloc = bloc, sheetState = sheetState)
 
-                DateNavigationRow(
-                    dateLabel = state.dateLabel.localized(),
-                    onPrevious = bloc::onPreviousClicked,
-                    onNext = bloc::onNextClicked,
-                )
+    Box(modifier = modifier.fillMaxSize()) {
+        PlusNavContainer(
+            data = PlusHeaderData.Parent(title = Res.string.meal_plan_title.asTextData()),
+            scrollEnabled = false,
+            content = {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    ViewModeSegmentedControl(
+                        selectedMode = state.viewMode,
+                        onModeSelected = bloc::onViewModeSelected,
+                        modifier = Modifier.padding(horizontal = ChefMateTheme.dimens.paddingNormal),
+                    )
 
-                if (state.isLoading) {
-                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                        PlusLoadingIndicator()
-                    }
-                } else {
-                    when (state.viewMode) {
-                        MealPlanBloc.ViewMode.DAY ->
-                            DayView(
-                                dayMeals = state.dayMeals,
-                                onMealClicked = bloc::onMealClicked,
-                                onDeleteClicked = bloc::onDeleteMealClicked,
-                                modifier = Modifier.weight(1f),
-                            )
-                        MealPlanBloc.ViewMode.WEEK ->
-                            WeekView(
-                                weekMeals = state.weekMeals.orEmpty(),
-                                onMealClicked = bloc::onMealClicked,
-                                onDeleteClicked = bloc::onDeleteMealClicked,
-                                modifier = Modifier.weight(1f),
-                            )
-                        MealPlanBloc.ViewMode.MONTH ->
-                            MonthView(
-                                monthModel = state.monthModel,
-                                onDaySelected = bloc::onMonthDaySelected,
-                                onMealClicked = bloc::onMealClicked,
-                                onDeleteClicked = bloc::onDeleteMealClicked,
-                                modifier = Modifier.weight(1f),
-                            )
+                    DateNavigationRow(
+                        dateLabel = state.dateLabel.localized(),
+                        onPrevious = bloc::onPreviousClicked,
+                        onNext = bloc::onNextClicked,
+                    )
+
+                    if (state.isLoading) {
+                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            PlusLoadingIndicator()
+                        }
+                    } else {
+                        when (state.viewMode) {
+                            MealPlanBloc.ViewMode.DAY ->
+                                DayView(
+                                    dayMeals = state.dayMeals,
+                                    onMealClicked = bloc::onMealClicked,
+                                    onDeleteClicked = bloc::onDeleteMealClicked,
+                                    modifier = Modifier.weight(1f),
+                                )
+                            MealPlanBloc.ViewMode.WEEK ->
+                                WeekView(
+                                    weekMeals = state.weekMeals.orEmpty(),
+                                    onMealClicked = bloc::onMealClicked,
+                                    onDeleteClicked = bloc::onDeleteMealClicked,
+                                    modifier = Modifier.weight(1f),
+                                )
+                            MealPlanBloc.ViewMode.MONTH ->
+                                MonthView(
+                                    monthModel = state.monthModel,
+                                    onDaySelected = bloc::onMonthDaySelected,
+                                    onMealClicked = bloc::onMealClicked,
+                                    onDeleteClicked = bloc::onDeleteMealClicked,
+                                    modifier = Modifier.weight(1f),
+                                )
+                        }
                     }
                 }
+            },
+        )
+
+        ExtendedFloatingActionButton(
+            onClick = bloc::onAddMealClicked,
+            modifier =
+                Modifier.align(Alignment.BottomEnd).padding(ChefMateTheme.dimens.paddingNormal),
+        ) {
+            Icon(Icons.Default.Add, contentDescription = null)
+            Text(stringResource(Res.string.meal_plan_add_meal))
+        }
+    }
+}
+
+@Composable
+private fun MealPlanSheet(bloc: MealPlanBloc, sheetState: androidx.compose.material3.SheetState) {
+    val slot = bloc.childSlot.subscribeAsState()
+    val child = slot.value.child?.instance
+
+    var sheetChild by remember { mutableStateOf(child) }
+    if (child != null) {
+        sheetChild = child
+    }
+
+    LaunchedEffect(child) {
+        if (child == null && sheetChild != null) {
+            sheetState.hide()
+            sheetChild = null
+        }
+    }
+
+    if (sheetChild != null) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                when (sheetChild) {
+                    is MealPlanBloc.Sheet.AddMeal -> bloc.onDismissSheet()
+                    null -> {}
+                }
+            },
+            sheetState = sheetState,
+        ) {
+            when (val current = sheetChild) {
+                is MealPlanBloc.Sheet.AddMeal -> AddMealSheetScreen(current.bloc)
+                null -> {}
             }
-        },
-        modifier = modifier.fillMaxSize(),
-    )
+        }
+    }
 }
 
 @Composable
@@ -478,8 +538,14 @@ private fun MealItemCard(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(start = ChefMateTheme.dimens.paddingNormal),
+            horizontalArrangement = spacedBy(ChefMateTheme.dimens.paddingNormal),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            RecipeImage(
+                imageUrl = meal.recipeImageUrl,
+                contentDescription = meal.recipeTitle,
+                modifier = Modifier.size(48.dp),
+            )
             Text(
                 text = meal.recipeTitle,
                 style = MaterialTheme.typography.bodyLarge,
@@ -516,6 +582,11 @@ private fun WeekMealItem(
             horizontalArrangement = spacedBy(ChefMateTheme.dimens.paddingNormal),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            RecipeImage(
+                imageUrl = meal.recipeImageUrl,
+                contentDescription = meal.recipeTitle,
+                modifier = Modifier.size(40.dp),
+            )
             Text(
                 text = meal.mealType.displayName(),
                 style = MaterialTheme.typography.labelMedium,

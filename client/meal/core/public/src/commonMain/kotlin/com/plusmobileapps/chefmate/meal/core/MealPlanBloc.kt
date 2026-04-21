@@ -1,7 +1,10 @@
 package com.plusmobileapps.chefmate.meal.core
 
+import com.arkivanov.decompose.router.slot.ChildSlot
+import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.meal.core.addmealsheet.AddMealSheetBloc
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.TextData
@@ -10,6 +13,8 @@ import kotlinx.datetime.LocalDate
 
 interface MealPlanBloc {
     val state: StateFlow<Model>
+
+    val childSlot: Value<ChildSlot<*, Sheet>>
 
     fun onViewModeSelected(mode: ViewMode)
 
@@ -26,6 +31,10 @@ interface MealPlanBloc {
     fun onDeleteMealDismissed()
 
     fun onMonthDaySelected(date: LocalDate)
+
+    fun onAddMealClicked()
+
+    fun onDismissSheet()
 
     data class Model(
         val isLoading: Boolean = true,
@@ -57,6 +66,10 @@ interface MealPlanBloc {
         DAY,
         WEEK,
         MONTH,
+    }
+
+    sealed class Sheet {
+        data class AddMeal(val bloc: AddMealSheetBloc) : Sheet()
     }
 
     sealed class Output {

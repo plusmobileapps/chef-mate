@@ -15,6 +15,9 @@
     <string name="meal_plan_delete_message">Are you sure you want to remove this meal from your plan?</string>
     <string name="meal_plan_delete_confirm">Remove</string>
     <string name="meal_plan_delete_cancel">Cancel</string>
+    <string name="meal_plan_add_meal">Add Meal</string>
+    <string name="meal_plan_select_recipe">Select a Recipe</string>
+    <string name="meal_plan_search_recipes">Search recipes</string>
     <string name="meal_plan_sync_not_synced">Not synced</string>
     <string name="meal_plan_sync_syncing">Syncing</string>
     <string name="meal_plan_sync_synced">Synced</string>
