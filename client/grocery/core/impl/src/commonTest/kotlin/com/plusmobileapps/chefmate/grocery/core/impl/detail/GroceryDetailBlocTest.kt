@@ -73,7 +73,7 @@ class GroceryDetailBlocTest {
             bloc.models.test {
                 awaitItem() shouldBe
                     GroceryDetailBloc.Model.Loaded(
-                        GroceryItem(id = 1L, name = "Bread", isChecked = true)
+                        groceryItem.copy(name = "Bread", isChecked = true)
                     )
                 testConsumer.lastValue shouldBe GroceryDetailBloc.Output.Finished
             }
