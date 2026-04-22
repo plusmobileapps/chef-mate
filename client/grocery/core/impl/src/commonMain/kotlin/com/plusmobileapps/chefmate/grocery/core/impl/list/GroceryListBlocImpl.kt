@@ -44,6 +44,7 @@ class GroceryListBlocImpl(
                 selectedList = it.selectedList,
                 showCreateListDialog = it.showCreateListDialog,
                 showDeleteDialog = it.showDeleteDialog,
+                showListSelector = it.showListSelector,
             )
         }
 
@@ -115,6 +116,14 @@ class GroceryListBlocImpl(
 
     override fun onDeleteAllConfirmed() {
         viewModel.onDeleteAllConfirmed()
+    }
+
+    override fun onListSelectorClicked() {
+        viewModel.onListSelectorClicked()
+    }
+
+    override fun onListSelectorDismissed() {
+        viewModel.onListSelectorDismissed()
     }
 }
 

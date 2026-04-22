@@ -26,7 +26,9 @@ fun PlusNavContainer(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
-        PlusHeader(data = data, windowInsets = WindowInsets())
+        if (data !is PlusHeaderData.None) {
+            PlusHeader(data = data, windowInsets = WindowInsets())
+        }
 
         val contentModifier =
             if (scrollEnabled) {

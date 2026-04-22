@@ -44,6 +44,10 @@ interface GroceryListBloc {
 
     fun onDeleteAllConfirmed()
 
+    fun onListSelectorClicked()
+
+    fun onListSelectorDismissed()
+
     data class GroceryGroup(val category: GroceryCategory, val items: List<GroceryItem>)
 
     enum class GroceryFilter {
@@ -60,6 +64,7 @@ interface GroceryListBloc {
         val selectedList: GroceryListModel? = null,
         val showCreateListDialog: Boolean = false,
         val showDeleteDialog: Boolean = false,
+        val showListSelector: Boolean = false,
     )
 
     sealed class Output {

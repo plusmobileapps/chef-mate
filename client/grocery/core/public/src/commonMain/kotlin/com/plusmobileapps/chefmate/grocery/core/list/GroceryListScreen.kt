@@ -4,8 +4,10 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,16 +26,19 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -76,7 +81,6 @@ import com.plusmobileapps.chefmate.grocery.core.displayName
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.SyncStatus
-import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import kotlinx.coroutines.flow.StateFlow
@@ -88,37 +92,44 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
     PlusNavContainer(
         modifier = modifier.fillMaxSize(),
-        data =
-            PlusHeaderData.Parent(
-                title = Res.string.grocery_list.asTextData(),
-                trailingAccessory =
-                    if (state.isSyncing) {
-                        PlusHeaderData.TrailingAccessory.Custom {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                strokeWidth = 2.dp,
-                            )
-                        }
-                    } else {
-                        PlusHeaderData.TrailingAccessory.Icon(
-                            icon = Icons.Default.Sync,
-                            contentDesc = Res.string.grocery_sync_all.asTextData(),
-                            onClick = bloc::onSyncClicked,
-                        )
-                    },
-            ),
+        data = PlusHeaderData.None,
         scrollEnabled = false,
         content = {
-            GroceryListSelector(
-                state = state,
-                onListSelected = bloc::onListSelected,
-                onCreateListClicked = bloc::onCreateListClicked,
-                onDeleteListClicked = bloc::onDeleteListClicked,
-            )
-            GroceryListToolbar(
-                filter = state.filter,
-                onFilterChanged = bloc::onFilterChanged,
-                onDeleteClicked = bloc::onDeleteClicked,
+            TopAppBar(
+                title = {
+                    Row(
+                        modifier = Modifier.clickable(onClick = bloc::onListSelectorClicked),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text =
+                                state.selectedList?.name ?: stringResource(Res.string.grocery_list)
+                        )
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = state.showListSelector)
+                    }
+                },
+                actions = {
+                    FilterButton(filter = state.filter, onFilterChanged = bloc::onFilterChanged)
+                    IconButton(onClick = bloc::onDeleteClicked) {
+                        Icon(
+                            Icons.Default.DeleteSweep,
+                            contentDescription = stringResource(Res.string.grocery_delete_items),
+                        )
+                    }
+                    if (state.isSyncing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp).padding(end = 4.dp),
+                            strokeWidth = 2.dp,
+                        )
+                    } else {
+                        IconButton(onClick = bloc::onSyncClicked) {
+                            Icon(
+                                Icons.Default.Sync,
+                                contentDescription = stringResource(Res.string.grocery_sync_all),
+                            )
+                        }
+                    }
+                },
             )
             LazyColumn(modifier = Modifier.weight(1f)) {
                 state.groupedItems.forEach { group ->
@@ -143,6 +154,16 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
             )
         },
     )
+
+    if (state.showListSelector) {
+        GroceryListSelectorSheet(
+            state = state,
+            onDismiss = bloc::onListSelectorDismissed,
+            onListSelected = bloc::onListSelected,
+            onCreateListClicked = bloc::onCreateListClicked,
+            onDeleteListClicked = bloc::onDeleteListClicked,
+        )
+    }
 
     if (state.showCreateListDialog) {
         CreateListDialog(
@@ -173,71 +194,44 @@ private fun CategoryHeader(category: GroceryCategory, modifier: Modifier = Modif
 }
 
 @Composable
-private fun GroceryListToolbar(
+private fun FilterButton(
     filter: GroceryListBloc.GroceryFilter,
     onFilterChanged: (GroceryListBloc.GroceryFilter) -> Unit,
-    onDeleteClicked: () -> Unit,
-    modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        var filterExpanded by remember { mutableStateOf(false) }
-        IconButton(onClick = { filterExpanded = true }) {
-            Icon(
-                Icons.Default.FilterList,
-                contentDescription = stringResource(Res.string.grocery_filter),
-            )
-        }
-        DropdownMenu(expanded = filterExpanded, onDismissRequest = { filterExpanded = false }) {
-            GroceryListBloc.GroceryFilter.entries.forEach { filterOption ->
-                val label =
-                    when (filterOption) {
-                        GroceryListBloc.GroceryFilter.ALL ->
-                            stringResource(Res.string.grocery_filter_all)
-                        GroceryListBloc.GroceryFilter.UNPURCHASED ->
-                            stringResource(Res.string.grocery_filter_unpurchased)
-                        GroceryListBloc.GroceryFilter.PURCHASED ->
-                            stringResource(Res.string.grocery_filter_purchased)
-                    }
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = label,
-                            color =
-                                if (filter == filterOption) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurface
-                                },
-                        )
-                    },
-                    onClick = {
-                        onFilterChanged(filterOption)
-                        filterExpanded = false
-                    },
-                )
-            }
-        }
-        Text(
-            text =
-                when (filter) {
+    var filterExpanded by remember { mutableStateOf(false) }
+    IconButton(onClick = { filterExpanded = true }) {
+        Icon(
+            Icons.Default.FilterList,
+            contentDescription = stringResource(Res.string.grocery_filter),
+        )
+    }
+    DropdownMenu(expanded = filterExpanded, onDismissRequest = { filterExpanded = false }) {
+        GroceryListBloc.GroceryFilter.entries.forEach { filterOption ->
+            val label =
+                when (filterOption) {
                     GroceryListBloc.GroceryFilter.ALL ->
                         stringResource(Res.string.grocery_filter_all)
                     GroceryListBloc.GroceryFilter.UNPURCHASED ->
                         stringResource(Res.string.grocery_filter_unpurchased)
                     GroceryListBloc.GroceryFilter.PURCHASED ->
                         stringResource(Res.string.grocery_filter_purchased)
+                }
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        text = label,
+                        color =
+                            if (filter == filterOption) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            },
+                    )
                 },
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f),
-        )
-        IconButton(onClick = onDeleteClicked) {
-            Icon(
-                Icons.Default.DeleteSweep,
-                contentDescription = stringResource(Res.string.grocery_delete_items),
+                onClick = {
+                    onFilterChanged(filterOption)
+                    filterExpanded = false
+                },
             )
         }
     }
@@ -245,75 +239,64 @@ private fun GroceryListToolbar(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun GroceryListSelector(
+private fun GroceryListSelectorSheet(
     state: GroceryListBloc.Model,
+    onDismiss: () -> Unit,
     onListSelected: (com.plusmobileapps.chefmate.grocery.data.GroceryListModel) -> Unit,
     onCreateListClicked: () -> Unit,
     onDeleteListClicked: (com.plusmobileapps.chefmate.grocery.data.GroceryListModel) -> Unit,
-    modifier: Modifier = Modifier,
 ) {
-    if (state.lists.size <= 1 && !state.lists.any { it.id != state.selectedList?.id }) {
-        // Only show selector when there are multiple lists or to allow creating new ones
-    }
-    var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = it },
-        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-    ) {
-        OutlinedTextField(
-            value = state.selectedList?.name ?: "",
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(stringResource(Res.string.grocery_select_list)) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+    val sheetState = rememberModalBottomSheetState()
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        Text(
+            text = stringResource(Res.string.grocery_select_list),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            state.lists.forEach { list ->
-                DropdownMenuItem(
-                    text = { Text(list.name) },
-                    onClick = {
-                        onListSelected(list)
-                        expanded = false
-                    },
-                    trailingIcon =
-                        if (state.lists.size > 1) {
-                            {
-                                IconButton(
-                                    onClick = {
-                                        expanded = false
-                                        onDeleteListClicked(list)
-                                    }
-                                ) {
-                                    Icon(
-                                        Icons.Default.Delete,
-                                        contentDescription =
-                                            stringResource(Res.string.grocery_delete_list),
-                                        modifier = Modifier.size(18.dp),
-                                    )
-                                }
-                            }
-                        } else {
-                            null
-                        },
-                )
-            }
-            DropdownMenuItem(
-                text = { Text(stringResource(Res.string.grocery_create_new_list)) },
-                onClick = {
-                    expanded = false
-                    onCreateListClicked()
-                },
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
+        state.lists.forEach { list ->
+            ListItem(
+                headlineContent = {
+                    Text(
+                        text = list.name,
+                        color =
+                            if (list.id == state.selectedList?.id) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            },
                     )
                 },
+                modifier = Modifier.clickable { onListSelected(list) },
+                trailingContent =
+                    if (state.lists.size > 1) {
+                        {
+                            IconButton(onClick = { onDeleteListClicked(list) }) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription =
+                                        stringResource(Res.string.grocery_delete_list),
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
+                        }
+                    } else {
+                        null
+                    },
             )
         }
+        HorizontalDivider()
+        ListItem(
+            headlineContent = { Text(stringResource(Res.string.grocery_create_new_list)) },
+            modifier =
+                Modifier.clickable {
+                    onDismiss()
+                    onCreateListClicked()
+                },
+            leadingContent = {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+            },
+        )
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
