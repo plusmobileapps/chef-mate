@@ -121,7 +121,7 @@ class GroceryListViewModel(
 
     fun onListSelected(list: GroceryListModel) {
         selectedListId.value = list.id
-        _state.update { it.copy(selectedList = list) }
+        _state.update { it.copy(selectedList = list, showListSelector = false) }
     }
 
     fun onCreateListClicked() {
@@ -172,6 +172,14 @@ class GroceryListViewModel(
         scope.launch { repository.deletePurchasedGroceries(listId) }
     }
 
+    fun onListSelectorClicked() {
+        _state.update { it.copy(showListSelector = true) }
+    }
+
+    fun onListSelectorDismissed() {
+        _state.update { it.copy(showListSelector = false) }
+    }
+
     fun onDeleteAllConfirmed() {
         val listId = selectedListId.value ?: return
         _state.update { it.copy(showDeleteDialog = false) }
@@ -186,5 +194,6 @@ class GroceryListViewModel(
         val selectedList: GroceryListModel? = null,
         val showCreateListDialog: Boolean = false,
         val showDeleteDialog: Boolean = false,
+        val showListSelector: Boolean = false,
     )
 }
