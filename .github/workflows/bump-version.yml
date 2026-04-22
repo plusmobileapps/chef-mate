@@ -1,0 +1,181 @@
+name: Bump Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Version bump type'
+        required: true
+        default: patch
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+          - custom
+      custom_version:
+        description: 'Custom version (X.Y.Z) — only used when bump_type is "custom"'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read current versions
+        id: current
+        run: |
+          GRADLE_FILE="client/composeApp/build.gradle.kts"
+          CURRENT_VERSION=$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' "$GRADLE_FILE")
+          CURRENT_BUILD=$(sed -n 's/.*versionCode = \([0-9]*\).*/\1/p' "$GRADLE_FILE")
+          echo "version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "build=$CURRENT_BUILD" >> "$GITHUB_OUTPUT"
+
+      - name: Compute new version
+        id: new
+        run: |
+          set -euo pipefail
+          CURRENT="${{ steps.current.outputs.version }}"
+          CURRENT_BUILD="${{ steps.current.outputs.build }}"
+          BUMP_TYPE="${{ inputs.bump_type }}"
+          CUSTOM_VERSION="${{ inputs.custom_version }}"
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+
+          case "$BUMP_TYPE" in
+            major)  NEW_VERSION="$((MAJOR + 1)).0.0" ;;
+            minor)  NEW_VERSION="${MAJOR}.$((MINOR + 1)).0" ;;
+            patch)  NEW_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))" ;;
+            custom)
+              if [[ -z "$CUSTOM_VERSION" ]]; then
+                echo "::error::custom_version is required when bump_type is 'custom'"
+                exit 1
+              fi
+              if [[ ! "$CUSTOM_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                echo "::error::'$CUSTOM_VERSION' is not a valid semver (expected X.Y.Z)"
+                exit 1
+              fi
+              NEW_VERSION="$CUSTOM_VERSION"
+              ;;
+          esac
+
+          NEW_BUILD="$((CURRENT_BUILD + 1))"
+
+          # macOS DMG packaging requires MAJOR > 0; map 0.x.y → 1.x.y
+          # See the comment in client/composeApp/build.gradle.kts macOS block.
+          IFS='.' read -r V_MAJOR V_MINOR V_PATCH <<< "$NEW_VERSION"
+          if [[ "$V_MAJOR" == "0" ]]; then
+            MAC_VERSION="1.${V_MINOR}.${V_PATCH}"
+          else
+            MAC_VERSION="$NEW_VERSION"
+          fi
+
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "build=$NEW_BUILD" >> "$GITHUB_OUTPUT"
+          echo "mac_version=$MAC_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Apply version bump
+        run: |
+          set -euo pipefail
+          GRADLE_FILE="client/composeApp/build.gradle.kts"
+          XCCONFIG_FILE="iosApp/Configuration/Config.xcconfig"
+          NEW_VERSION="${{ steps.new.outputs.version }}"
+          NEW_BUILD="${{ steps.new.outputs.build }}"
+          MAC_VERSION="${{ steps.new.outputs.mac_version }}"
+
+          # Android versionCode
+          sed -i "s/versionCode = [0-9]*/versionCode = ${NEW_BUILD}/" "$GRADLE_FILE"
+
+          # Android versionName
+          sed -i "s/versionName = \"[^\"]*\"/versionName = \"${NEW_VERSION}\"/" "$GRADLE_FILE"
+
+          # Desktop packageVersion — first occurrence (generic/JVM)
+          awk -v new="$NEW_VERSION" '
+            /packageVersion[[:space:]]*=/ && !done {
+              sub(/packageVersion = "[^"]*"/, "packageVersion = \"" new "\"")
+              done=1
+            }
+            1' "$GRADLE_FILE" > "$GRADLE_FILE.tmp" && mv "$GRADLE_FILE.tmp" "$GRADLE_FILE"
+
+          # Desktop macOS packageVersion — second (last) occurrence.
+          # Uses tac (Linux equivalent of macOS tail -r) to reverse, replace from
+          # the "top" (which is the bottom of the original file), then reverse back.
+          tac "$GRADLE_FILE" | awk -v new="$MAC_VERSION" '
+            /packageVersion[[:space:]]*=/ && !done {
+              sub(/packageVersion = "[^"]*"/, "packageVersion = \"" new "\"")
+              done=1
+            }
+            1' | tac > "$GRADLE_FILE.tmp" && mv "$GRADLE_FILE.tmp" "$GRADLE_FILE"
+
+          # iOS build number and marketing version
+          sed -i "s/CURRENT_PROJECT_VERSION=.*/CURRENT_PROJECT_VERSION=${NEW_BUILD}/" "$XCCONFIG_FILE"
+          sed -i "s/MARKETING_VERSION=.*/MARKETING_VERSION=${NEW_VERSION}/" "$XCCONFIG_FILE"
+
+      - name: Commit and push branch
+        id: push
+        run: |
+          set -euo pipefail
+          NEW_VERSION="${{ steps.new.outputs.version }}"
+          NEW_BUILD="${{ steps.new.outputs.build }}"
+          BRANCH="chore/bump-version-${NEW_VERSION}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add client/composeApp/build.gradle.kts iosApp/Configuration/Config.xcconfig
+          git commit -m "chore: bump version to ${NEW_VERSION} (build ${NEW_BUILD})"
+          git push origin "$BRANCH"
+
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+      - name: Open pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          OLD_VERSION="${{ steps.current.outputs.version }}"
+          NEW_VERSION="${{ steps.new.outputs.version }}"
+          OLD_BUILD="${{ steps.current.outputs.build }}"
+          NEW_BUILD="${{ steps.new.outputs.build }}"
+          MAC_VERSION="${{ steps.new.outputs.mac_version }}"
+          BRANCH="${{ steps.push.outputs.branch }}"
+
+          # Build the PR body using grouped echo to /tmp — avoids heredoc indentation
+          # issues with YAML block scalars and backtick escaping in double-quoted strings.
+          {
+            echo "## Version bump"
+            echo ""
+            echo "| Platform | Field | Old | New |"
+            echo "|---|---|---|---|"
+            echo "| Android | \`versionName\` | \`${OLD_VERSION}\` | \`${NEW_VERSION}\` |"
+            echo "| Android | \`versionCode\` | \`${OLD_BUILD}\` | \`${NEW_BUILD}\` |"
+            echo "| iOS | \`MARKETING_VERSION\` | \`${OLD_VERSION}\` | \`${NEW_VERSION}\` |"
+            echo "| iOS | \`CURRENT_PROJECT_VERSION\` | \`${OLD_BUILD}\` | \`${NEW_BUILD}\` |"
+            echo "| Desktop (JVM) | \`packageVersion\` | \`${OLD_VERSION}\` | \`${NEW_VERSION}\` |"
+            echo "| Desktop (macOS) | \`packageVersion\` | — | \`${MAC_VERSION}\` |"
+            echo ""
+            echo "After merging this PR (**squash merge recommended**), the \`build-release\` workflow"
+            echo "will detect the bump commit on \`main\`, create a \`v${NEW_VERSION}\` git tag, build the"
+            echo "release APK, and publish a GitHub release."
+            echo ""
+            echo "> [!NOTE]"
+            echo "> The \`android-release\`, \`desktop-release\`, and \`ios-release\` workflows are only"
+            echo "> triggered by the tag push if \`RELEASE_TOKEN\` (a PAT with \`contents: write\`) is"
+            echo "> configured as a repository secret. See \`docs/ci/VERSION_BUMP_SETUP.md\`."
+          } > /tmp/pr-body.md
+
+          gh pr create \
+            --repo "${{ github.repository }}" \
+            --title "chore: bump version to ${NEW_VERSION} (build ${NEW_BUILD})" \
+            --body-file /tmp/pr-body.md \
+            --base main \
+            --head "$BRANCH"
