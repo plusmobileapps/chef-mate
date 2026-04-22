@@ -142,8 +142,8 @@ android {
         applicationId = "com.plusmobileapps.chefmate"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 20
-        versionName = "0.1.20"
+        versionCode = 21
+        versionName = "0.1.21"
     }
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
     buildTypes {
@@ -168,7 +168,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Chef Mate"
-            packageVersion = "0.1.20"
+            packageVersion = "0.1.21"
             description = "Chef Mate - Your AI Cooking Assistant"
             vendor = "Plus Mobile Apps"
 
@@ -177,7 +177,7 @@ compose.desktop {
             // macOS configuration
             macOS {
                 // macOS DMG packaging requires MAJOR > 0; map 0.x.y → 1.x.y
-                packageVersion = "1.1.20"
+                packageVersion = "1.1.21"
                 bundleID = "com.plusmobileapps.chefmate"
                 dockName = "Chef Mate"
 
