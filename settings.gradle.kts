@@ -58,6 +58,8 @@ include(":client:grocery:core:impl")
 
 include(":client:grocery:core:public")
 
+include(":client:grocery:core:snapshots")
+
 include(":client:grocery:data:impl")
 
 include(":client:grocery:data:public")

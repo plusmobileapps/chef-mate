@@ -41,6 +41,7 @@ ksp = "2.3.6"
 logback = "1.5.18"
 sqldelight = "2.1.0"
 supabase = "3.2.6"
+paparazzi = "2.0.0-alpha04"
 turbine = "1.2.1"
 
 [libraries]
@@ -126,6 +127,7 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
 mokkery = { id = "dev.mokkery",  version.ref = "mokkery" }
+paparazzi = { id = "app.cash.paparazzi", version.ref = "paparazzi" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 metro = { id = "dev.zacsweers.metro", version.ref = "metro" }
 metroDi = { id = "com.plusmobileapps.chefmate.metro" }

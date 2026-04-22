@@ -13,6 +13,7 @@ plugins {
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.ktfmt) apply false
     alias(libs.plugins.mokkery) apply false
+    alias(libs.plugins.paparazzi) apply false
     alias(libs.plugins.kover)
 }
 
