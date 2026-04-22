@@ -176,6 +176,7 @@ compose.desktop {
 
             // macOS configuration
             macOS {
+                packageVersion = "1.0.2"
                 bundleID = "com.plusmobileapps.chefmate"
                 dockName = "Chef Mate"
 
