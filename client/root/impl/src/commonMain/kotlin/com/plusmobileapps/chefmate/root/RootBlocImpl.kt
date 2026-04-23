@@ -11,6 +11,7 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
+import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
@@ -30,6 +31,7 @@ import kotlinx.serialization.Serializable
 class RootBlocImpl(
     @Assisted context: BlocContext,
     private val bottomNav: BottomNavBloc.Factory,
+    private val browserBlocFactory: BrowserBloc.Factory,
     private val groceryDetail: GroceryDetailBloc.Factory,
     private val recipeRoot: RecipeRootBloc.Factory,
     private val authentication: AuthenticationBloc.Factory,
@@ -94,6 +96,21 @@ class RootBlocImpl(
                             output = ::handleAuthenticationOutput,
                         )
                 )
+
+            is Configuration.Browser ->
+                RootBloc.Child.Browser(
+                    bloc =
+                        browserBlocFactory
+                            .create(
+                                context = context,
+                                output = { navigation.pop() },
+                                showControls = false,
+                            )
+                            .also { bloc ->
+                                bloc.onUrlChanged(config.url)
+                                bloc.onNavigate()
+                            }
+                )
         }
 
     private fun handleBottomNavOutput(output: BottomNavBloc.Output) {
@@ -121,6 +138,10 @@ class RootBlocImpl(
                     Configuration.Authentication(AuthenticationBloc.Props.SignUp)
                 )
             }
+
+            is BottomNavBloc.Output.OpenUrl -> {
+                navigation.bringToFront(Configuration.Browser(output.url))
+            }
         }
     }
 
@@ -141,8 +162,6 @@ class RootBlocImpl(
             AuthenticationBloc.Output.Finished -> navigation.pop()
             AuthenticationBloc.Output.AuthenticationSuccess -> navigation.pop()
             is AuthenticationBloc.Output.EmailVerificationRequired -> {
-                // User signed up successfully but needs to verify email
-                // Pop back to settings where they'll see the verification message
                 navigation.pop()
             }
         }
@@ -158,6 +177,8 @@ class RootBlocImpl(
 
         @Serializable
         data class Authentication(val props: AuthenticationBloc.Props) : Configuration()
+
+        @Serializable data class Browser(val url: String) : Configuration()
     }
 }
 

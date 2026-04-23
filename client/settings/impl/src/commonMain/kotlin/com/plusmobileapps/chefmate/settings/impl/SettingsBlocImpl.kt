@@ -54,6 +54,10 @@ class SettingsBlocImpl(
     override fun onSignOutClicked() {
         viewModel.signOut()
     }
+
+    override fun onUrlClicked(url: String) {
+        output.onNext(Output.OpenUrl(url))
+    }
 }
 
 @ContributesTo(AppScope::class)

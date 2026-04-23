@@ -14,6 +14,8 @@ interface SettingsBloc {
 
     fun onSignOutClicked()
 
+    fun onUrlClicked(url: String)
+
     data class Model(
         val isAuthenticated: Boolean = false,
         val greeting: TextData? = null,
@@ -24,6 +26,8 @@ interface SettingsBloc {
         data object OpenSignUp : Output()
 
         data object OpenSignIn : Output()
+
+        data class OpenUrl(val url: String) : Output()
     }
 
     fun interface Factory {

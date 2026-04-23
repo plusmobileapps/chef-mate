@@ -25,7 +25,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
@@ -47,13 +46,11 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 @Composable
 fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
     val viewState by bloc.state.collectAsState()
-    val uriHandler = LocalUriHandler.current
 
     PlusNavContainer(
         data = PlusHeaderData.Parent(title = Res.string.more.asTextData()),
         content = {
             if (viewState.isAuthenticated) {
-                // Show greeting and sign out button when authenticated
                 viewState.greeting?.let { greeting ->
                     GreetingSection(greeting = greeting)
                     HorizontalDivider()
@@ -63,12 +60,10 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
                     onClick = bloc::onSignOutClicked,
                 )
             } else {
-                // Show email verification message if present
                 viewState.verificationMessage?.let { message ->
                     EmailVerificationMessage(message = message)
                     HorizontalDivider()
                 }
-                // Show sign in/sign up buttons when not authenticated
                 SettingsRow(name = Res.string.sign_in.asTextData(), onClick = bloc::onSignInClicked)
                 HorizontalDivider()
                 SettingsRow(name = Res.string.sign_up.asTextData(), onClick = bloc::onSignUpClicked)
@@ -77,20 +72,18 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
             SettingsRow(
                 name = Res.string.privacy_policy.asTextData(),
                 onClick = {
-                    uriHandler.openUri("https://chefmate.plusmobileapps.com/privacy-policy/")
+                    bloc.onUrlClicked("https://chefmate.plusmobileapps.com/privacy-policy/")
                 },
             )
             HorizontalDivider()
             SettingsRow(
                 name = Res.string.terms_of_use.asTextData(),
-                onClick = {
-                    uriHandler.openUri("https://chefmate.plusmobileapps.com/terms-of-use/")
-                },
+                onClick = { bloc.onUrlClicked("https://chefmate.plusmobileapps.com/terms-of-use/") },
             )
             HorizontalDivider()
             SettingsRow(
                 name = Res.string.about.asTextData(),
-                onClick = { uriHandler.openUri("https://chefmate.plusmobileapps.com/") },
+                onClick = { bloc.onUrlClicked("https://chefmate.plusmobileapps.com/") },
             )
         },
     )
@@ -164,6 +157,8 @@ private val previewBlocUnauthenticated =
         override fun onSignUpClicked() = Unit
 
         override fun onSignOutClicked() = Unit
+
+        override fun onUrlClicked(url: String) = Unit
     }
 
 private val previewBlocAuthenticated =
@@ -185,6 +180,8 @@ private val previewBlocAuthenticated =
         override fun onSignUpClicked() = Unit
 
         override fun onSignOutClicked() = Unit
+
+        override fun onUrlClicked(url: String) = Unit
     }
 
 @Preview(showBackground = true)

@@ -2,7 +2,9 @@
 
 package com.plusmobileapps.chefmate.root
 
+import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
@@ -28,6 +30,14 @@ class RootBlocTest {
                 bottomNavOutput = output
                 mock()
             },
+            browserBlocFactory =
+                object : BrowserBloc.Factory {
+                    override fun create(
+                        context: BlocContext,
+                        output: Consumer<BrowserBloc.Output>,
+                        showControls: Boolean,
+                    ): BrowserBloc = mock()
+                },
             recipeRoot = { context, props, output ->
                 recipeOutput = output
                 recipeProps = props

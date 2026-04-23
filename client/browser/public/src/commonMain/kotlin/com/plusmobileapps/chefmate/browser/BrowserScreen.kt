@@ -51,18 +51,23 @@ fun BrowserScreen(bloc: BrowserBloc, modifier: Modifier = Modifier) {
 
     PlusNavContainer(
         modifier = modifier.fillMaxSize(),
-        data = PlusHeaderData.Parent(title = Res.string.tab_browser.asTextData()),
+        data =
+            if (viewState.showControls)
+                PlusHeaderData.Parent(title = Res.string.tab_browser.asTextData())
+            else PlusHeaderData.None,
         scrollEnabled = false,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         content = {
-            AddressBar(
-                url = viewState.addressBarText,
-                onUrlChanged = bloc::onUrlChanged,
-                onNavigate = bloc::onNavigate,
-                showExtract = viewState.currentUrl.isNotBlank(),
-                isExtracting = viewState.isExtracting,
-                onExtractRecipe = bloc::onExtractRecipe,
-            )
+            if (viewState.showControls) {
+                AddressBar(
+                    url = viewState.addressBarText,
+                    onUrlChanged = bloc::onUrlChanged,
+                    onNavigate = bloc::onNavigate,
+                    showExtract = viewState.currentUrl.isNotBlank(),
+                    isExtracting = viewState.isExtracting,
+                    onExtractRecipe = bloc::onExtractRecipe,
+                )
+            }
             PlatformWebView(
                 url = viewState.navigateUrl,
                 onUrlLoaded = bloc::onUrlLoadedInWebView,
