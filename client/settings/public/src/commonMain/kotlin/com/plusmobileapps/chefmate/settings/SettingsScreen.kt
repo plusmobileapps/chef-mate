@@ -25,15 +25,19 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import chefmate.client.settings.public.generated.resources.Res
+import chefmate.client.settings.public.generated.resources.about
 import chefmate.client.settings.public.generated.resources.greeting_authenticated
-import chefmate.client.settings.public.generated.resources.settings
+import chefmate.client.settings.public.generated.resources.more
+import chefmate.client.settings.public.generated.resources.privacy_policy
 import chefmate.client.settings.public.generated.resources.sign_in
 import chefmate.client.settings.public.generated.resources.sign_out
 import chefmate.client.settings.public.generated.resources.sign_up
+import chefmate.client.settings.public.generated.resources.terms_of_use
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
@@ -43,9 +47,10 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 @Composable
 fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
     val viewState by bloc.state.collectAsState()
+    val uriHandler = LocalUriHandler.current
 
     PlusNavContainer(
-        data = PlusHeaderData.Parent(title = Res.string.settings.asTextData()),
+        data = PlusHeaderData.Parent(title = Res.string.more.asTextData()),
         content = {
             if (viewState.isAuthenticated) {
                 // Show greeting and sign out button when authenticated
@@ -68,11 +73,30 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
                 HorizontalDivider()
                 SettingsRow(name = Res.string.sign_up.asTextData(), onClick = bloc::onSignUpClicked)
             }
+            HorizontalDivider()
+            SettingsRow(
+                name = Res.string.privacy_policy.asTextData(),
+                onClick = {
+                    uriHandler.openUri("https://chefmate.plusmobileapps.com/privacy-policy/")
+                },
+            )
+            HorizontalDivider()
+            SettingsRow(
+                name = Res.string.terms_of_use.asTextData(),
+                onClick = {
+                    uriHandler.openUri("https://chefmate.plusmobileapps.com/terms-of-use/")
+                },
+            )
+            HorizontalDivider()
+            SettingsRow(
+                name = Res.string.about.asTextData(),
+                onClick = { uriHandler.openUri("https://chefmate.plusmobileapps.com/") },
+            )
         },
     )
     Column(modifier = modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text(Res.string.settings.asTextData().localized()) },
+            title = { Text(Res.string.more.asTextData().localized()) },
             windowInsets = WindowInsets(),
         )
     }
