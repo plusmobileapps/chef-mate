@@ -134,7 +134,7 @@ jobs:
           git checkout -b "$BRANCH"
           git add client/composeApp/build.gradle.kts iosApp/Configuration/Config.xcconfig
           git commit -m "chore: bump version to ${NEW_VERSION} (build ${NEW_BUILD})"
-          git push --force-with-lease origin "$BRANCH"
+          git push --force-with-lease origin HEAD:"$BRANCH"
 
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
 
@@ -179,4 +179,5 @@ jobs:
             --title "chore: bump version to ${NEW_VERSION} (build ${NEW_BUILD})" \
             --body-file /tmp/pr-body.md \
             --base main \
-            --head "$BRANCH"
+            --head "$BRANCH" \
+          || gh pr view --head "$BRANCH" --json url -q '.url'
