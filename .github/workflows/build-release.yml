@@ -1,0 +1,93 @@
+name: Build & Release
+
+# Triggered when a version-bump PR is merged to main. Detects the squash-merge
+# commit message, creates a git tag, builds a signed release APK, and publishes
+# a GitHub release with the APK attached.
+#
+# The tag push (using RELEASE_TOKEN) will also trigger:
+#   - android-release.yml  → uploads AAB to Play Store via Fastlane
+#   - desktop-release.yml  → builds DMG / MSI / Deb packages
+#   - ios-release.yml      → iOS release via Fastlane
+#
+# See docs/ci/VERSION_BUMP_SETUP.md for required secrets and configuration.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  tag-and-release:
+    # Only run when a version-bump PR is merged (commit message set by bump-version workflow)
+    if: "startsWith(github.event.head_commit.message, 'chore: bump version')"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # RELEASE_TOKEN is a PAT with contents:write. When set, the tag push will
+          # trigger android-release, desktop-release, and ios-release. Without it
+          # those workflows will NOT run (GITHUB_TOKEN cannot trigger other workflows).
+          token: ${{ secrets.RELEASE_TOKEN || github.token }}
+          fetch-depth: 0
+
+      - name: Read version from build file
+        id: version
+        run: |
+          set -euo pipefail
+          VERSION=$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' client/composeApp/build.gradle.kts)
+          BUILD=$(sed -n 's/.*versionCode = \([0-9]*\).*/\1/p' client/composeApp/build.gradle.kts)
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "build=${BUILD}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Create and push release tag
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.version.outputs.tag }}"
+          BUILD="${{ steps.version.outputs.build }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Release ${TAG} (build ${BUILD})"
+          git push origin "$TAG"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Decode keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
+
+      - name: Build release APK
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          BUGSNAG_API_KEY: ${{ secrets.BUGSNAG_API_KEY }}
+          ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/keystore.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew :client:composeApp:assembleRelease
+
+      - name: Locate APK
+        id: apk
+        run: |
+          APK=$(find client/composeApp/build/outputs/apk/release -name '*.apk' | head -1)
+          if [[ -z "$APK" ]]; then
+            echo "::error::No APK found under client/composeApp/build/outputs/apk/release/"
+            exit 1
+          fi
+          echo "path=$APK" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          generate_release_notes: true
+          files: ${{ steps.apk.outputs.path }}
