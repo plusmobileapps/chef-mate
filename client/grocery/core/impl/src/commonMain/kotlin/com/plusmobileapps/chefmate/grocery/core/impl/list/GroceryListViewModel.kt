@@ -3,6 +3,8 @@
 package com.plusmobileapps.chefmate.grocery.core.impl.list
 
 import com.plusmobileapps.chefmate.ViewModel
+import com.plusmobileapps.chefmate.auth.data.AuthState
+import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryFilter
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryGroup
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
@@ -25,11 +28,14 @@ import kotlinx.coroutines.launch
 class GroceryListViewModel(
     @Main mainContext: CoroutineContext,
     private val repository: GroceryRepository,
+    private val authRepository: AuthenticationRepository,
 ) : ViewModel(mainContext) {
     private val _state = MutableStateFlow(State())
     private val _newGroceryItemName = MutableStateFlow("")
     private val selectedListId = MutableStateFlow<Long?>(null)
     private val _filter = MutableStateFlow(GroceryFilter.ALL)
+    // Set to true when the user signs in during this VM's lifetime; cleared once lists arrive.
+    private val _showListSelectorAfterSignIn = MutableStateFlow(false)
 
     val state: StateFlow<State> = _state.asStateFlow()
 
@@ -37,9 +43,20 @@ class GroceryListViewModel(
 
     init {
         scope.launch {
-            val defaultListId = repository.ensureDefaultList()
-            if (selectedListId.value == null) {
-                selectedListId.value = defaultListId
+            // When not yet authenticated on start, ensure a default list exists immediately.
+            // Authenticated users get their lists from the remote sync triggered by the repository.
+            if (authRepository.state.value !is AuthState.Authenticated) {
+                val defaultListId = repository.ensureDefaultList()
+                if (selectedListId.value == null) {
+                    selectedListId.value = defaultListId
+                }
+            }
+
+            // Watch for subsequent sign-in transitions (skip the initial emission).
+            authRepository.state.drop(1).collect { state ->
+                if (state is AuthState.Authenticated) {
+                    _showListSelectorAfterSignIn.value = true
+                }
             }
         }
 
@@ -52,7 +69,17 @@ class GroceryListViewModel(
                     if (updatedSelected != null && selectedListId.value != updatedSelected.id) {
                         selectedListId.value = updatedSelected.id
                     }
-                    currentState.copy(lists = lists, selectedList = updatedSelected)
+                    // After sign-in, show the list selector once lists arrive from sync so the
+                    // user can pick which list to use rather than a new default being
+                    // auto-selected.
+                    val shouldShowSelector =
+                        _showListSelectorAfterSignIn.value && lists.isNotEmpty()
+                    if (shouldShowSelector) _showListSelectorAfterSignIn.value = false
+                    currentState.copy(
+                        lists = lists,
+                        selectedList = updatedSelected,
+                        showListSelector = currentState.showListSelector || shouldShowSelector,
+                    )
                 }
             }
         }
