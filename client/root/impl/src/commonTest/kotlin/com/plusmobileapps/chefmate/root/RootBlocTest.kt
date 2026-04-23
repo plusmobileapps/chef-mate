@@ -9,6 +9,7 @@ import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 import com.plusmobileapps.chefmate.testing.TestBlocContext
+import dev.mokkery.MockMode
 import dev.mokkery.mock
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
@@ -36,7 +37,7 @@ class RootBlocTest {
                         context: BlocContext,
                         output: Consumer<BrowserBloc.Output>,
                         showControls: Boolean,
-                    ): BrowserBloc = mock()
+                    ): BrowserBloc = mock(MockMode.autoUnit)
                 },
             recipeRoot = { context, props, output ->
                 recipeOutput = output
@@ -96,5 +97,22 @@ class RootBlocTest {
 
         recipeOutput.onNext(RecipeRootBloc.Output.Finished)
         rootBloc.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
+    }
+
+    @Test
+    fun When_bottom_nav_outputs_open_url_Then_browser_is_shown() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenUrl("https://example.com"))
+        rootBloc.instance() should instanceOf<RootBloc.Child.Browser>()
+        rootBloc.state.value.backStack.size shouldBe 1
+    }
+
+    @Test
+    fun When_recipe_root_outputs_open_url_Then_browser_is_shown() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenRecipe(123L))
+        rootBloc.instance() should instanceOf<RootBloc.Child.RecipeRoot>()
+
+        recipeOutput.onNext(RecipeRootBloc.Output.OpenUrl("https://example.com/recipe"))
+        rootBloc.instance() should instanceOf<RootBloc.Child.Browser>()
+        rootBloc.state.value.backStack.size shouldBe 2
     }
 }
