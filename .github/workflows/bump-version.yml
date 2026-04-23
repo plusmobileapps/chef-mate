@@ -130,10 +130,11 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git branch -D "$BRANCH" 2>/dev/null || true
           git checkout -b "$BRANCH"
           git add client/composeApp/build.gradle.kts iosApp/Configuration/Config.xcconfig
           git commit -m "chore: bump version to ${NEW_VERSION} (build ${NEW_BUILD})"
-          git push origin "$BRANCH"
+          git push --force-with-lease origin "$BRANCH"
 
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
 
