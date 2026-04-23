@@ -24,7 +24,8 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew jvmTest testDebugUnitTest koverXmlReport koverHtmlReport --continue
+      - run: ./gradlew jvmTest testDebugUnitTest -x :client:grocery:core:snapshots:testDebugUnitTest koverXmlReport koverHtmlReport --continue
+      - run: ./gradlew :client:grocery:core:snapshots:verifyPaparazziDebug
       - name: Publish test report
         uses: dorny/test-reporter@v2
         if: always()
