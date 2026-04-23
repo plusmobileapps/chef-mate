@@ -11,6 +11,7 @@ kotlin {
             api(libs.kotlinx.datetime)
             api(projects.client.text.public)
             implementation(compose.components.resources)
+            implementation(compose.ui)
         }
 
         androidMain.dependencies { implementation(libs.androidx.annotation) }

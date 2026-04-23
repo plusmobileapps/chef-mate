@@ -34,6 +34,11 @@
     <string name="recipe_detail_deleting_title">Deleting Recipe</string>
     <string name="recipe_detail_deleting_message">Please wait...</string>
 
+    <string name="recipe_detail_share">Share recipe</string>
+<string name="recipe_detail_share_url">Share recipe URL</string>
+<string name="recipe_detail_share_text">Share recipe text</string>
+    <string name="recipe_detail_copied_to_clipboard">Copied to clipboard</string>
+
     <!-- Add to Meal Plan -->
     <string name="recipe_detail_add_to_meal_plan">Add to meal plan</string>
     <string name="add_meal_plan_choose_date">Choose Date</string>

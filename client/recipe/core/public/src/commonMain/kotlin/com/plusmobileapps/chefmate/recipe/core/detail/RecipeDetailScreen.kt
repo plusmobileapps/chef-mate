@@ -38,12 +38,15 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
@@ -52,6 +55,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -82,6 +87,7 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_to_meal_plan
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_calories
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_cook_time
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_copied_to_clipboard
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_created
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_delete
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_delete_cancel
@@ -99,6 +105,9 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_kcal
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_prep_time
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_remove_favorite
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_servings
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_text
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_url
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_source
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_timestamps
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_total_time
@@ -121,6 +130,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import com.plusmobileapps.chefmate.util.rememberShareLauncher
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -133,6 +143,10 @@ import org.jetbrains.compose.resources.stringResource
 fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val shareLauncher = rememberShareLauncher()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val copiedMessage = stringResource(Res.string.recipe_detail_copied_to_clipboard)
 
     // Delete confirmation dialog
     if (state.showDeleteConfirmationDialog) {
@@ -151,107 +165,176 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
     // Add to Grocery List Bottom Sheet
     RecipeDetailSheet(bloc = bloc, sheetState = sheetState)
 
+    var showShareMenu by remember { mutableStateOf(false) }
     var metadataCollapsed by rememberSaveable { mutableStateOf(false) }
 
-    PlusResponsiveContainer(modifier = modifier.fillMaxSize()) { windowSizeClass ->
-        val isCompact = windowSizeClass == WindowSizeClass.COMPACT
-        val showToolbar = isCompact || !metadataCollapsed
-        PlusHeaderContainer(
-            modifier = Modifier.fillMaxSize(),
-            data =
-                PlusHeaderData.Child(
-                    title = state.recipe.title.asTextData(),
-                    onBackClick = bloc::onBackClicked,
-                ),
-            verticalArrangement = spacedBy(ChefMateTheme.dimens.paddingNormal),
-            scrollEnabled = false,
-            maxContentWidth = if (isCompact) 600.dp else Dp.Unspecified,
-            floatingToolbar =
-                if (showToolbar) {
-                    {
-                        HorizontalFloatingToolbar(
-                            expanded = true,
-                            floatingActionButton = {
-                                FloatingActionButton(
-                                    onClick = bloc::onAddToGroceryListClicked,
-                                    shape = ChefMateTheme.shapes.large,
-                                ) {
-                                    Icon(Icons.Default.AddShoppingCart, null)
+    Box(modifier = modifier.fillMaxSize()) {
+        PlusResponsiveContainer(modifier = Modifier.fillMaxSize()) { windowSizeClass ->
+            val isCompact = windowSizeClass == WindowSizeClass.COMPACT
+            val showToolbar = isCompact || !metadataCollapsed
+            PlusHeaderContainer(
+                modifier = Modifier.fillMaxSize(),
+                data =
+                    PlusHeaderData.Child(
+                        title = state.recipe.title.asTextData(),
+                        onBackClick = bloc::onBackClicked,
+                    ),
+                verticalArrangement = spacedBy(ChefMateTheme.dimens.paddingNormal),
+                scrollEnabled = false,
+                maxContentWidth = if (isCompact) 600.dp else Dp.Unspecified,
+                floatingToolbar =
+                    if (showToolbar) {
+                        {
+                            HorizontalFloatingToolbar(
+                                expanded = true,
+                                floatingActionButton = {
+                                    FloatingActionButton(
+                                        onClick = bloc::onAddToGroceryListClicked,
+                                        shape = ChefMateTheme.shapes.large,
+                                    ) {
+                                        Icon(Icons.Default.AddShoppingCart, null)
+                                    }
+                                },
+                            ) {
+                                IconButton(onClick = { bloc.onFavoriteToggled() }) {
+                                    Icon(
+                                        imageVector =
+                                            if (state.recipe.isFavorite) {
+                                                Icons.Default.Favorite
+                                            } else {
+                                                Icons.Default.FavoriteBorder
+                                            },
+                                        contentDescription =
+                                            if (state.recipe.isFavorite) {
+                                                stringResource(
+                                                    Res.string.recipe_detail_remove_favorite
+                                                )
+                                            } else {
+                                                stringResource(
+                                                    Res.string.recipe_detail_add_favorite
+                                                )
+                                            },
+                                    )
                                 }
-                            },
-                        ) {
-                            IconButton(onClick = { bloc.onFavoriteToggled() }) {
-                                Icon(
-                                    imageVector =
-                                        if (state.recipe.isFavorite) {
-                                            Icons.Default.Favorite
-                                        } else {
-                                            Icons.Default.FavoriteBorder
-                                        },
-                                    contentDescription =
-                                        if (state.recipe.isFavorite) {
-                                            stringResource(Res.string.recipe_detail_remove_favorite)
-                                        } else {
-                                            stringResource(Res.string.recipe_detail_add_favorite)
-                                        },
-                                )
-                            }
-                            IconButton(onClick = { bloc.onAddToMealPlanClicked() }) {
-                                Icon(
-                                    imageVector = Icons.Default.CalendarMonth,
-                                    contentDescription =
-                                        stringResource(Res.string.recipe_detail_add_to_meal_plan),
-                                )
-                            }
-                            IconButton(onClick = { bloc.onEditClicked() }) {
-                                Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription =
-                                        stringResource(Res.string.recipe_detail_edit),
-                                )
-                            }
-                            IconButton(onClick = { bloc.onDeleteClicked() }) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription =
-                                        stringResource(Res.string.recipe_detail_delete),
-                                )
+                                IconButton(onClick = { bloc.onAddToMealPlanClicked() }) {
+                                    Icon(
+                                        imageVector = Icons.Default.CalendarMonth,
+                                        contentDescription =
+                                            stringResource(
+                                                Res.string.recipe_detail_add_to_meal_plan
+                                            ),
+                                    )
+                                }
+                                IconButton(onClick = { bloc.onEditClicked() }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription =
+                                            stringResource(Res.string.recipe_detail_edit),
+                                    )
+                                }
+                                Box {
+                                    IconButton(onClick = { showShareMenu = true }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Share,
+                                            contentDescription =
+                                                stringResource(Res.string.recipe_detail_share),
+                                        )
+                                    }
+                                    DropdownMenu(
+                                        expanded = showShareMenu,
+                                        onDismissRequest = { showShareMenu = false },
+                                    ) {
+                                        state.recipe.sourceUrl?.let { url ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(
+                                                        stringResource(
+                                                            Res.string.recipe_detail_share_url
+                                                        )
+                                                    )
+                                                },
+                                                onClick = {
+                                                    showShareMenu = false
+                                                    if (shareLauncher(url)) {
+                                                        scope.launch {
+                                                            snackbarHostState.showSnackbar(
+                                                                copiedMessage
+                                                            )
+                                                        }
+                                                    }
+                                                },
+                                            )
+                                        }
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    stringResource(
+                                                        Res.string.recipe_detail_share_text
+                                                    )
+                                                )
+                                            },
+                                            onClick = {
+                                                showShareMenu = false
+                                                if (
+                                                    shareLauncher(formatRecipeAsText(state.recipe))
+                                                ) {
+                                                    scope.launch {
+                                                        snackbarHostState.showSnackbar(
+                                                            copiedMessage
+                                                        )
+                                                    }
+                                                }
+                                            },
+                                        )
+                                    }
+                                }
+                                IconButton(onClick = { bloc.onDeleteClicked() }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription =
+                                            stringResource(Res.string.recipe_detail_delete),
+                                    )
+                                }
                             }
                         }
+                    } else {
+                        null
+                    },
+            ) {
+                if (state.isLoading) {
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        PlusLoadingIndicator()
                     }
+                } else if (isCompact) {
+                    RecipeDetailCompactContent(
+                        recipe = state.recipe,
+                        createdAt = state.createdAt,
+                        updatedAt = state.updatedAt,
+                        formattedPrepTime = state.formattedPrepTime,
+                        formattedCookTime = state.formattedCookTime,
+                        formattedTotalTime = state.formattedTotalTime,
+                        onSourceUrlClicked = bloc::onSourceUrlClicked,
+                        modifier = Modifier.weight(1f),
+                    )
                 } else {
-                    null
-                },
-        ) {
-            if (state.isLoading) {
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    PlusLoadingIndicator()
+                    RecipeDetailExpandedContent(
+                        recipe = state.recipe,
+                        createdAt = state.createdAt,
+                        updatedAt = state.updatedAt,
+                        formattedPrepTime = state.formattedPrepTime,
+                        formattedCookTime = state.formattedCookTime,
+                        formattedTotalTime = state.formattedTotalTime,
+                        onSourceUrlClicked = bloc::onSourceUrlClicked,
+                        metadataCollapsed = metadataCollapsed,
+                        onMetadataCollapsedChange = { metadataCollapsed = it },
+                    )
                 }
-            } else if (isCompact) {
-                RecipeDetailCompactContent(
-                    recipe = state.recipe,
-                    createdAt = state.createdAt,
-                    updatedAt = state.updatedAt,
-                    formattedPrepTime = state.formattedPrepTime,
-                    formattedCookTime = state.formattedCookTime,
-                    formattedTotalTime = state.formattedTotalTime,
-                    onSourceUrlClicked = bloc::onSourceUrlClicked,
-                    modifier = Modifier.weight(1f),
-                )
-            } else {
-                RecipeDetailExpandedContent(
-                    recipe = state.recipe,
-                    createdAt = state.createdAt,
-                    updatedAt = state.updatedAt,
-                    formattedPrepTime = state.formattedPrepTime,
-                    formattedCookTime = state.formattedCookTime,
-                    formattedTotalTime = state.formattedTotalTime,
-                    onSourceUrlClicked = bloc::onSourceUrlClicked,
-                    metadataCollapsed = metadataCollapsed,
-                    onMetadataCollapsedChange = { metadataCollapsed = it },
-                )
             }
         }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp),
+        )
     }
 }
 
@@ -882,6 +965,24 @@ private fun DetailRow(
 }
 
 private fun splitLines(text: String): List<String> = text.split("\n").filter { it.isNotBlank() }
+
+private fun formatRecipeAsText(recipe: Recipe): String = buildString {
+    appendLine(recipe.title)
+    recipe.description?.let {
+        appendLine()
+        appendLine(it)
+    }
+    appendLine()
+    appendLine("Ingredients:")
+    appendLine(recipe.ingredients)
+    appendLine()
+    appendLine("Directions:")
+    appendLine(recipe.directions)
+    recipe.sourceUrl?.let {
+        appendLine()
+        append("Source: $it")
+    }
+}
 
 @Composable
 private fun IngredientLineItem(
