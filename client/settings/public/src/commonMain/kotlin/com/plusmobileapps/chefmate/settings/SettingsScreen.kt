@@ -29,11 +29,14 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import chefmate.client.settings.public.generated.resources.Res
+import chefmate.client.settings.public.generated.resources.about
 import chefmate.client.settings.public.generated.resources.greeting_authenticated
-import chefmate.client.settings.public.generated.resources.settings
+import chefmate.client.settings.public.generated.resources.more
+import chefmate.client.settings.public.generated.resources.privacy_policy
 import chefmate.client.settings.public.generated.resources.sign_in
 import chefmate.client.settings.public.generated.resources.sign_out
 import chefmate.client.settings.public.generated.resources.sign_up
+import chefmate.client.settings.public.generated.resources.terms_of_use
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
@@ -45,10 +48,9 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
     val viewState by bloc.state.collectAsState()
 
     PlusNavContainer(
-        data = PlusHeaderData.Parent(title = Res.string.settings.asTextData()),
+        data = PlusHeaderData.Parent(title = Res.string.more.asTextData()),
         content = {
             if (viewState.isAuthenticated) {
-                // Show greeting and sign out button when authenticated
                 viewState.greeting?.let { greeting ->
                     GreetingSection(greeting = greeting)
                     HorizontalDivider()
@@ -58,21 +60,36 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
                     onClick = bloc::onSignOutClicked,
                 )
             } else {
-                // Show email verification message if present
                 viewState.verificationMessage?.let { message ->
                     EmailVerificationMessage(message = message)
                     HorizontalDivider()
                 }
-                // Show sign in/sign up buttons when not authenticated
                 SettingsRow(name = Res.string.sign_in.asTextData(), onClick = bloc::onSignInClicked)
                 HorizontalDivider()
                 SettingsRow(name = Res.string.sign_up.asTextData(), onClick = bloc::onSignUpClicked)
             }
+            HorizontalDivider()
+            SettingsRow(
+                name = Res.string.privacy_policy.asTextData(),
+                onClick = {
+                    bloc.onUrlClicked("https://chefmate.plusmobileapps.com/privacy-policy/")
+                },
+            )
+            HorizontalDivider()
+            SettingsRow(
+                name = Res.string.terms_of_use.asTextData(),
+                onClick = { bloc.onUrlClicked("https://chefmate.plusmobileapps.com/terms-of-use/") },
+            )
+            HorizontalDivider()
+            SettingsRow(
+                name = Res.string.about.asTextData(),
+                onClick = { bloc.onUrlClicked("https://chefmate.plusmobileapps.com/") },
+            )
         },
     )
     Column(modifier = modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text(Res.string.settings.asTextData().localized()) },
+            title = { Text(Res.string.more.asTextData().localized()) },
             windowInsets = WindowInsets(),
         )
     }
@@ -140,6 +157,8 @@ private val previewBlocUnauthenticated =
         override fun onSignUpClicked() = Unit
 
         override fun onSignOutClicked() = Unit
+
+        override fun onUrlClicked(url: String) = Unit
     }
 
 private val previewBlocAuthenticated =
@@ -161,6 +180,8 @@ private val previewBlocAuthenticated =
         override fun onSignUpClicked() = Unit
 
         override fun onSignOutClicked() = Unit
+
+        override fun onUrlClicked(url: String) = Unit
     }
 
 @Preview(showBackground = true)

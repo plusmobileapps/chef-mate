@@ -6,6 +6,7 @@ import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
+import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
@@ -21,6 +22,8 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
         data class RecipeRoot(val bloc: RecipeRootBloc) : Child()
 
         data class Authentication(val bloc: AuthenticationBloc) : Child()
+
+        data class Browser(val bloc: BrowserBloc) : Child()
     }
 
     fun interface Factory {

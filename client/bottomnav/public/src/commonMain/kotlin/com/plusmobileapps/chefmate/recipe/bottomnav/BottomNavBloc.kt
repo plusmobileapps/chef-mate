@@ -52,6 +52,8 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc {
         data object OpenSignIn : Output()
 
         data object OpenSignUp : Output()
+
+        data class OpenUrl(val url: String) : Output()
     }
 
     fun interface Factory {

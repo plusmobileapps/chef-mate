@@ -166,6 +166,7 @@ class BottomNavBlocImpl(
         when (output) {
             SettingsBloc.Output.OpenSignIn -> OpenSignIn
             SettingsBloc.Output.OpenSignUp -> OpenSignUp
+            is SettingsBloc.Output.OpenUrl -> BottomNavBloc.Output.OpenUrl(output.url)
         }.let { this.output.onNext(it) }
     }
 

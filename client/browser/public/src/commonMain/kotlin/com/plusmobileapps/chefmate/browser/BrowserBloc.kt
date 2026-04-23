@@ -27,13 +27,18 @@ interface BrowserBloc {
         val addressBarText: String = "",
         val isExtracting: Boolean = false,
         val extractionMessage: TextData? = null,
+        val showControls: Boolean = true,
     )
 
     sealed class Output {
         data class RecipeExtracted(val recipeId: Long) : Output()
     }
 
-    fun interface Factory {
-        fun create(context: BlocContext, output: Consumer<Output>): BrowserBloc
+    interface Factory {
+        fun create(
+            context: BlocContext,
+            output: Consumer<Output>,
+            showControls: Boolean = true,
+        ): BrowserBloc
     }
 }

@@ -21,6 +21,8 @@ interface RecipeRootBloc : BackHandlerOwner, BackClickBloc {
 
     sealed class Output {
         data object Finished : Output()
+
+        data class OpenUrl(val url: String) : Output()
     }
 
     @Serializable

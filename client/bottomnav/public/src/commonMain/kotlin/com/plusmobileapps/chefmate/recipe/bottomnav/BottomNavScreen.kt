@@ -12,7 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
@@ -29,8 +29,8 @@ import chefmate.client.bottomnav.public.generated.resources.Res
 import chefmate.client.bottomnav.public.generated.resources.tab_browser
 import chefmate.client.bottomnav.public.generated.resources.tab_grocery
 import chefmate.client.bottomnav.public.generated.resources.tab_meals
+import chefmate.client.bottomnav.public.generated.resources.tab_more
 import chefmate.client.bottomnav.public.generated.resources.tab_recipes
-import chefmate.client.bottomnav.public.generated.resources.tab_settings
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.fade
@@ -163,7 +163,7 @@ private fun BottomNavBloc.Tab.getLabel(): StringResource =
         GROCERIES -> Res.string.tab_grocery
         MEALS -> Res.string.tab_meals
         BROWSER -> Res.string.tab_browser
-        SETTINGS -> Res.string.tab_settings
+        SETTINGS -> Res.string.tab_more
     }
 
 private fun BottomNavBloc.Tab.getIcon() =
@@ -172,5 +172,5 @@ private fun BottomNavBloc.Tab.getIcon() =
         GROCERIES -> Icons.Default.ShoppingCart
         MEALS -> Icons.Default.CalendarMonth
         BROWSER -> Icons.Default.Language
-        SETTINGS -> Icons.Default.Settings
+        SETTINGS -> Icons.Default.Menu
     }

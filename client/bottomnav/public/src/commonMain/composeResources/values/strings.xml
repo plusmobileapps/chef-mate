@@ -3,5 +3,5 @@
     <string name="tab_grocery">Grocery</string>
     <string name="tab_meals">Meals</string>
     <string name="tab_recipes">Recipes</string>
-    <string name="tab_settings">Settings</string>
+    <string name="tab_more">More</string>
 </resources>

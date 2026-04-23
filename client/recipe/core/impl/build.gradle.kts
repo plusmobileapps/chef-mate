@@ -9,7 +9,6 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.client.recipe.data.public)
             implementation(projects.client.recipe.core.public)
-            implementation(projects.client.browser.public)
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
             implementation(libs.kotlinx.serialization.json)
