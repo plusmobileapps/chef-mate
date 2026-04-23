@@ -107,7 +107,6 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.plusmobileapps.chefmate.browser.BrowserScreen
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListScreen
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootScreen
 import com.plusmobileapps.chefmate.recipe.data.Recipe
@@ -285,7 +284,6 @@ private fun RecipeDetailSheet(
                 when (val current = sheetChild) {
                     is RecipeDetailBloc.Sheet.AddToGroceryList -> current.bloc.onBackClicked()
                     is RecipeDetailBloc.Sheet.AddToMealPlan -> bloc.onDismissSheet()
-                    is RecipeDetailBloc.Sheet.BrowserLauncher -> bloc.onDismissSheet()
                     null -> {}
                 }
             },
@@ -296,7 +294,6 @@ private fun RecipeDetailSheet(
                 is RecipeDetailBloc.Sheet.AddToGroceryList ->
                     AddRecipeToGroceryListScreen(current.bloc)
                 is RecipeDetailBloc.Sheet.AddToMealPlan -> MealPlannerRootScreen(current.bloc)
-                is RecipeDetailBloc.Sheet.BrowserLauncher -> BrowserScreen(current.bloc)
                 null -> {}
             }
         }

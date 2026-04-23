@@ -8,7 +8,6 @@ import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
-import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
@@ -38,7 +37,6 @@ class RecipeDetailBlocImpl(
     private val timeFormatterUtil: TimeFormatterUtil,
     private val addToGroceryList: AddRecipeToGroceryListBloc.Factory,
     private val mealPlannerRootFactory: MealPlannerRootBloc.Factory,
-    private val browserBlocFactory: BrowserBloc.Factory,
 ) : RecipeDetailBloc, BlocContext by context {
     @AssistedFactory
     fun interface ManagedFactory {
@@ -123,7 +121,7 @@ class RecipeDetailBlocImpl(
     }
 
     override fun onSourceUrlClicked(url: String) {
-        sheetNavigation.activate(SheetConfig.BrowserLauncher(url))
+        output.onNext(Output.OpenUrl(url))
     }
 
     override fun onDismissSheet() {
@@ -163,24 +161,6 @@ class RecipeDetailBlocImpl(
                             },
                         )
                 )
-            is SheetConfig.BrowserLauncher ->
-                RecipeDetailBloc.Sheet.BrowserLauncher(
-                    bloc =
-                        browserBlocFactory
-                            .create(
-                                context = context,
-                                output = { browserOutput ->
-                                    when (browserOutput) {
-                                        is BrowserBloc.Output.RecipeExtracted ->
-                                            sheetNavigation.dismiss()
-                                    }
-                                },
-                            )
-                            .also { bloc ->
-                                bloc.onUrlChanged(config.url)
-                                bloc.onNavigate()
-                            }
-                )
         }
 
     @Serializable
@@ -188,8 +168,6 @@ class RecipeDetailBlocImpl(
         data class AddToGroceryList(val recipeId: Long) : SheetConfig()
 
         data class AddToMealPlan(val recipeId: Long) : SheetConfig()
-
-        data class BrowserLauncher(val url: String) : SheetConfig()
     }
 }
 

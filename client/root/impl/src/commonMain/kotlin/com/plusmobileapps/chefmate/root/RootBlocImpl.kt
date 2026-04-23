@@ -154,6 +154,9 @@ class RootBlocImpl(
     private fun handleRecipeRootOutput(output: RecipeRootBloc.Output) {
         when (output) {
             RecipeRootBloc.Output.Finished -> navigation.pop()
+            is RecipeRootBloc.Output.OpenUrl -> {
+                navigation.bringToFront(Configuration.Browser(output.url))
+            }
         }
     }
 
