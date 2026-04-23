@@ -8,9 +8,12 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 
 @Composable
-actual fun rememberShareLauncher(): (text: String) -> Unit {
+actual fun rememberShareLauncher(): (text: String) -> Boolean {
     val clipboardManager = LocalClipboardManager.current
     return remember(clipboardManager) {
-        { text -> clipboardManager.setText(AnnotatedString(text)) }
+        { text ->
+            clipboardManager.setText(AnnotatedString(text))
+            true
+        }
     }
 }
