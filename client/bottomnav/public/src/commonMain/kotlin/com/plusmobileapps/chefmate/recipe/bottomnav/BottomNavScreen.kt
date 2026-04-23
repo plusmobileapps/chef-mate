@@ -2,8 +2,10 @@
 
 package com.plusmobileapps.chefmate.recipe.bottomnav
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -19,8 +21,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import chefmate.client.bottomnav.public.generated.resources.Res
 import chefmate.client.bottomnav.public.generated.resources.tab_browser
 import chefmate.client.bottomnav.public.generated.resources.tab_grocery
@@ -94,9 +98,16 @@ private fun TabletNavRailContent(bloc: BottomNavBloc, modifier: Modifier = Modif
 @Composable
 private fun MobileBottomNavContent(bloc: BottomNavBloc, modifier: Modifier = Modifier) {
     val state = bloc.state.collectAsState()
+    val density = LocalDensity.current
+    val imeBottom = WindowInsets.ime.getBottom(density)
+    val isImeVisible = imeBottom > 0
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        bottomBar = { PlusBottomBar(state = state.value, onClick = bloc::onTabSelected) },
+        bottomBar = {
+            if (!isImeVisible) {
+                PlusBottomBar(state = state.value, onClick = bloc::onTabSelected)
+            }
+        },
     ) { paddingValues ->
         BottomNavContentContainer(modifier = Modifier.padding(paddingValues), bloc = bloc)
     }
