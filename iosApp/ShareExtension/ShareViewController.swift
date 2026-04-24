@@ -10,40 +10,63 @@ class ShareViewController: UIViewController {
 
     private func handleSharedURL() {
         guard let item = extensionContext?.inputItems.first as? NSExtensionItem,
-              let provider = item.attachments?.first(where: {
-                  $0.hasItemConformingToTypeIdentifier(UTType.url.identifier)
-              })
+              let attachments = item.attachments
         else {
             close()
             return
         }
 
-        provider.loadItem(forTypeIdentifier: UTType.url.identifier) { [weak self] item, _ in
-            DispatchQueue.main.async {
-                guard let url = item as? URL,
-                      let encoded = url.absoluteString
-                          .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-                      let deepLink = URL(string: "chefmate://import?url=\(encoded)")
-                else {
-                    self?.close()
-                    return
+        // Try URL type first, then fall back to plain text (some apps share URLs as text)
+        if let provider = attachments.first(where: { $0.hasItemConformingToTypeIdentifier(UTType.url.identifier) }) {
+            provider.loadItem(forTypeIdentifier: UTType.url.identifier) { [weak self] item, _ in
+                DispatchQueue.main.async {
+                    if let url = item as? URL {
+                        self?.openInApp(url.absoluteString)
+                    } else {
+                        self?.close()
+                    }
                 }
-                self?.open(deepLink)
-                self?.close()
             }
+        } else if let provider = attachments.first(where: { $0.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) }) {
+            provider.loadItem(forTypeIdentifier: UTType.plainText.identifier) { [weak self] item, _ in
+                DispatchQueue.main.async {
+                    if let text = item as? String, text.hasPrefix("http") {
+                        self?.openInApp(text)
+                    } else {
+                        self?.close()
+                    }
+                }
+            }
+        } else {
+            close()
         }
     }
 
-    private func open(_ url: URL) {
-        // Responder chain trick — extensions can't call UIApplication.shared.open directly
-        var responder: UIResponder? = self as UIResponder
-        let selector = NSSelectorFromString("openURL:")
-        while let r = responder {
-            if r.responds(to: selector) {
-                r.perform(selector, with: url)
-                return
-            }
-            responder = r.next
+    private func openInApp(_ urlString: String) {
+        guard let encoded = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let deepLink = URL(string: "chefmate://import?url=\(encoded)")
+        else {
+            close()
+            return
+        }
+
+        // Access UIApplication.shared.open(_:options:completionHandler:) indirectly.
+        // The class exists in extensions but is marked unavailable at compile time.
+        guard let applicationClass = NSClassFromString("UIApplication") as? NSObject.Type,
+              let application = applicationClass.perform(NSSelectorFromString("sharedApplication"))?.takeUnretainedValue()
+        else {
+            close()
+            return
+        }
+
+        let selector = NSSelectorFromString("openURL:options:completionHandler:")
+        let imp = application.method(for: selector)
+        typealias OpenURLFunc = @convention(c) (AnyObject, Selector, URL, [String: Any], Any?) -> Void
+        let openURL = unsafeBitCast(imp, to: OpenURLFunc.self)
+        openURL(application, selector, deepLink, [:], nil)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            self?.close()
         }
     }
 
