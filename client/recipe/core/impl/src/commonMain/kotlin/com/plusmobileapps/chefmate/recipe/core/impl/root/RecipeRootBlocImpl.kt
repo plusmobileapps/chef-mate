@@ -103,7 +103,7 @@ class RecipeRootBlocImpl(
                 this.output.onNext(RecipeRootBloc.Output.Finished)
             }
             is RecipeDetailBloc.Output.EditRecipe -> {
-                navigation.bringToFront(Configuration.Edit(recipeId = output.recipeId))
+                navigation.bringToFront(Configuration.Edit(output.recipeId))
             }
             is RecipeDetailBloc.Output.OpenUrl -> {
                 this.output.onNext(RecipeRootBloc.Output.OpenUrl(output.url))

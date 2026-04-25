@@ -20,6 +20,8 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc {
 
     fun onTabSelected(tab: Tab)
 
+    fun handleSharedUrl(url: String)
+
     data class Model(val selectedTab: Tab = Tab.RECIPES, val tabs: List<Tab> = Tab.entries)
 
     enum class Tab {

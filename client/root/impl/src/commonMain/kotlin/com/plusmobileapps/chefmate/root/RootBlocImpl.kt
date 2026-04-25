@@ -60,6 +60,13 @@ class RootBlocImpl(
         navigation.pop()
     }
 
+    override fun handleSharedUrl(url: String) {
+        val bottomNavChild =
+            stack.value.items.map { it.instance }.filterIsInstance<BottomNavigation>().firstOrNull()
+        bottomNavChild?.bloc?.handleSharedUrl(url)
+        navigation.bringToFront(Configuration.BottomNavigation)
+    }
+
     private fun createChild(config: Configuration, context: BlocContext): RootBloc.Child =
         when (config) {
             Configuration.BottomNavigation ->

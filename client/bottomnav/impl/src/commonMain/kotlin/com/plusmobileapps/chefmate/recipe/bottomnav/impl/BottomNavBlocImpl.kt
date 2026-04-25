@@ -60,6 +60,9 @@ class BottomNavBlocImpl(
 
     private val navigation = StackNavigation<Configuration>()
 
+    private var browserBloc: BrowserBloc? = null
+    private var pendingUrl: String? = null
+
     private val stack =
         childStack(
             source = navigation,
@@ -83,6 +86,18 @@ class BottomNavBlocImpl(
 
     override fun onBackClicked() {
         navigation.pop()
+    }
+
+    override fun handleSharedUrl(url: String) {
+        val existingBloc = browserBloc
+        if (existingBloc != null) {
+            existingBloc.onUrlChanged(url)
+            existingBloc.onNavigate()
+        } else {
+            pendingUrl = url
+        }
+        navigation.bringToFront(Configuration.Browser)
+        viewModel.selectTab(BottomNavBloc.Tab.BROWSER)
     }
 
     override fun onTabSelected(tab: BottomNavBloc.Tab) {
@@ -109,6 +124,12 @@ class BottomNavBlocImpl(
 
             Configuration.Browser -> {
                 val bloc = browser.create(context = context, output = ::handleBrowserOutput)
+                browserBloc = bloc
+                pendingUrl?.let { url ->
+                    bloc.onUrlChanged(url)
+                    bloc.onNavigate()
+                    pendingUrl = null
+                }
                 Browser(bloc)
             }
 
