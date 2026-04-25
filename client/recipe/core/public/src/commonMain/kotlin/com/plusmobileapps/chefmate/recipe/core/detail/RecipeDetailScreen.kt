@@ -72,6 +72,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -407,6 +408,13 @@ private fun RecipeDetailCompactContent(
     val scope = rememberCoroutineScope()
     val padding = ChefMateTheme.dimens.paddingNormal
 
+    val ingredientLines = remember(recipe.ingredients) { splitLines(recipe.ingredients) }
+    val crossedOut =
+        remember(recipe.ingredients) {
+            mutableStateListOf(*BooleanArray(ingredientLines.size) { false }.toTypedArray())
+        }
+    var highlightedDirectionIndex by remember(recipe.directions) { mutableStateOf(-1) }
+
     LazyColumn(modifier = modifier.fillMaxSize(), verticalArrangement = spacedBy(padding)) {
         // Hero section: image + key details side by side
         item(key = "hero") {
@@ -457,12 +465,15 @@ private fun RecipeDetailCompactContent(
                 when (page) {
                     0 ->
                         IngredientsContent(
-                            ingredients = recipe.ingredients,
+                            lines = ingredientLines,
+                            crossedOut = crossedOut,
                             modifier = Modifier.fillMaxWidth(),
                         )
                     1 ->
                         DirectionsContent(
                             directions = recipe.directions,
+                            highlightedIndex = highlightedDirectionIndex,
+                            onHighlightedIndexChanged = { highlightedDirectionIndex = it },
                             modifier = Modifier.fillMaxWidth(),
                         )
                 }
@@ -1039,13 +1050,11 @@ private fun DirectionLineItem(
 }
 
 @Composable
-private fun IngredientsContent(ingredients: String, modifier: Modifier = Modifier) {
-    val lines = remember(ingredients) { splitLines(ingredients) }
-    val crossedOut =
-        remember(ingredients) {
-            mutableStateListOf(*BooleanArray(lines.size) { false }.toTypedArray())
-        }
-
+private fun IngredientsContent(
+    lines: List<String>,
+    crossedOut: SnapshotStateList<Boolean>,
+    modifier: Modifier = Modifier,
+) {
     val dimens = ChefMateTheme.dimens
     Column(
         modifier = modifier.padding(dimens.paddingNormal),
@@ -1067,9 +1076,13 @@ private fun IngredientsContent(ingredients: String, modifier: Modifier = Modifie
 }
 
 @Composable
-private fun DirectionsContent(directions: String, modifier: Modifier = Modifier) {
+private fun DirectionsContent(
+    directions: String,
+    highlightedIndex: Int,
+    onHighlightedIndexChanged: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val paragraphs = remember(directions) { splitLines(directions) }
-    var highlightedIndex by remember(directions) { mutableStateOf(-1) }
 
     val dimens = ChefMateTheme.dimens
     Column(
@@ -1084,7 +1097,9 @@ private fun DirectionsContent(directions: String, modifier: Modifier = Modifier)
             DirectionLineItem(
                 text = paragraph,
                 highlighted = highlightedIndex == index,
-                onClick = { highlightedIndex = if (highlightedIndex == index) -1 else index },
+                onClick = {
+                    onHighlightedIndexChanged(if (highlightedIndex == index) -1 else index)
+                },
             )
         }
         Spacer(modifier = Modifier.height(80.dp))
