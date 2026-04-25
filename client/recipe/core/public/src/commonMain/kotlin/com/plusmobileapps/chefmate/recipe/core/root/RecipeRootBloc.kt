@@ -30,8 +30,6 @@ interface RecipeRootBloc : BackHandlerOwner, BackClickBloc {
         data class Detail(val recipeId: Long) : Props()
 
         data object Create : Props()
-
-        data class ImportFromUrl(val url: String) : Props()
     }
 
     fun interface Factory {

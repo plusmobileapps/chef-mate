@@ -46,10 +46,7 @@ class RecipeRootBlocImpl(
                 when (props) {
                     is RecipeRootBloc.Props.Detail ->
                         listOf(Configuration.Detail(recipeId = props.recipeId))
-                    is RecipeRootBloc.Props.Create ->
-                        listOf(Configuration.Edit(recipeId = null, sourceUrl = null))
-                    is RecipeRootBloc.Props.ImportFromUrl ->
-                        listOf(Configuration.Edit(recipeId = null, sourceUrl = props.url))
+                    is RecipeRootBloc.Props.Create -> listOf(Configuration.Edit(recipeId = null))
                 }
             },
             handleBackButton = true,
@@ -80,7 +77,6 @@ class RecipeRootBlocImpl(
                         editBloc.create(
                             context = context,
                             recipeId = config.recipeId,
-                            initialSourceUrl = config.sourceUrl,
                             output = ::handleEditOutput,
                         )
                 )
@@ -89,10 +85,7 @@ class RecipeRootBlocImpl(
     private fun handleEditOutput(output: EditRecipeBloc.Output) {
         when (output) {
             EditRecipeBloc.Output.Cancelled -> {
-                if (
-                    props is RecipeRootBloc.Props.Create ||
-                        props is RecipeRootBloc.Props.ImportFromUrl
-                ) {
+                if (props is RecipeRootBloc.Props.Create) {
                     this.output.onNext(RecipeRootBloc.Output.Finished)
                 } else {
                     navigation.pop()
@@ -110,7 +103,7 @@ class RecipeRootBlocImpl(
                 this.output.onNext(RecipeRootBloc.Output.Finished)
             }
             is RecipeDetailBloc.Output.EditRecipe -> {
-                navigation.bringToFront(Configuration.Edit(recipeId = output.recipeId))
+                navigation.bringToFront(Configuration.Edit(output.recipeId))
             }
             is RecipeDetailBloc.Output.OpenUrl -> {
                 this.output.onNext(RecipeRootBloc.Output.OpenUrl(output.url))
@@ -122,7 +115,7 @@ class RecipeRootBlocImpl(
     sealed class Configuration {
         data class Detail(val recipeId: Long) : Configuration()
 
-        data class Edit(val recipeId: Long?, val sourceUrl: String? = null) : Configuration()
+        data class Edit(val recipeId: Long?) : Configuration()
     }
 }
 
