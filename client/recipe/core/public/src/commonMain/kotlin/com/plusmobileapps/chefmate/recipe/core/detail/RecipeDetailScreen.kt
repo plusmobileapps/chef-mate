@@ -123,6 +123,8 @@ import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.LocalIsActiveScreen
+import com.plusmobileapps.chefmate.ui.LocalSharedTransitionScope
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
@@ -550,10 +552,25 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                     }
                 }
                 item(key = "image") {
+                    val sharedTransitionScope = LocalSharedTransitionScope.current
+                    val isActive = LocalIsActiveScreen.current
+                    val sharedElementModifier =
+                        sharedTransitionScope?.let { sts ->
+                            with(sts) {
+                                Modifier.sharedElementWithCallerManagedVisibility(
+                                    sharedContentState =
+                                        rememberSharedContentState(
+                                            key = "recipe_image_${recipe.id}"
+                                        ),
+                                    visible = isActive,
+                                )
+                            }
+                        } ?: Modifier
                     RecipeImage(
                         imageUrl = recipe.imageUrl,
                         contentDescription = recipe.title,
-                        modifier = Modifier.fillMaxWidth().height(180.dp),
+                        modifier =
+                            Modifier.fillMaxWidth().height(180.dp).then(sharedElementModifier),
                     )
                 }
                 recipe.starRating?.let { rating ->
@@ -834,11 +851,23 @@ private fun RecipeHeroSection(
     onSourceUrlClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    val isActive = LocalIsActiveScreen.current
     Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        val sharedElementModifier =
+            sharedTransitionScope?.let { sts ->
+                with(sts) {
+                    Modifier.sharedElementWithCallerManagedVisibility(
+                        sharedContentState =
+                            rememberSharedContentState(key = "recipe_image_${recipe.id}"),
+                        visible = isActive,
+                    )
+                }
+            } ?: Modifier
         RecipeImage(
             imageUrl = recipe.imageUrl,
             contentDescription = recipe.title,
-            modifier = Modifier.width(140.dp).height(140.dp),
+            modifier = Modifier.width(140.dp).height(140.dp).then(sharedElementModifier),
         )
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             // Star Rating

@@ -90,6 +90,8 @@ import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.LocalIsActiveScreen
+import com.plusmobileapps.chefmate.ui.LocalSharedTransitionScope
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
@@ -353,16 +355,28 @@ private fun RecipeGridItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    val isActive = LocalIsActiveScreen.current
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         colors =
             CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
     ) {
+        val sharedElementModifier =
+            sharedTransitionScope?.let { sts ->
+                with(sts) {
+                    Modifier.sharedElementWithCallerManagedVisibility(
+                        sharedContentState =
+                            rememberSharedContentState(key = "recipe_image_${recipe.id}"),
+                        visible = isActive,
+                    )
+                }
+            } ?: Modifier
         RecipeImage(
             imageUrl = recipe.imageUrl,
             contentDescription = recipe.title,
-            modifier = Modifier.fillMaxWidth().aspectRatio(1.2f),
+            modifier = Modifier.fillMaxWidth().aspectRatio(1.2f).then(sharedElementModifier),
         )
         Column(
             modifier = Modifier.padding(12.dp),
@@ -412,15 +426,27 @@ private fun RecipeListItemContent(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    val isActive = LocalIsActiveScreen.current
     Row(
         modifier = modifier.fillMaxWidth().clickable(onClick = onClick).padding(16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        val sharedElementModifier =
+            sharedTransitionScope?.let { sts ->
+                with(sts) {
+                    Modifier.sharedElementWithCallerManagedVisibility(
+                        sharedContentState =
+                            rememberSharedContentState(key = "recipe_image_${recipe.id}"),
+                        visible = isActive,
+                    )
+                }
+            } ?: Modifier
         RecipeImage(
             imageUrl = recipe.imageUrl,
             contentDescription = recipe.title,
-            modifier = Modifier.size(80.dp),
+            modifier = Modifier.size(80.dp).then(sharedElementModifier),
         )
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(

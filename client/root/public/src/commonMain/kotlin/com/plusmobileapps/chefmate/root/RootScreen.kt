@@ -2,8 +2,10 @@
 
 package com.plusmobileapps.chefmate.root
 
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Dp
@@ -22,6 +24,8 @@ import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavigationScreen
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootScreen
 import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.ui.LocalIsActiveScreen
+import com.plusmobileapps.chefmate.ui.LocalSharedTransitionScope
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -30,46 +34,60 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
     val state = rootBloc.state.subscribeAsState()
     ChefMateTheme {
-        Children(
-            modifier = modifier.fillMaxSize(),
-            stack = state.value,
-            animation =
-                predictiveBackAnimation(
-                    backHandler = rootBloc.backHandler,
-                    fallbackAnimation =
-                        stackAnimation { child, otherChild, _ ->
-                            if (
-                                child.instance is RootBloc.Child.Browser ||
-                                    otherChild.instance is RootBloc.Child.Browser
-                            ) {
-                                verticalSlide()
-                            } else {
-                                slide()
+        SharedTransitionLayout {
+            CompositionLocalProvider(LocalSharedTransitionScope provides this) {
+                Children(
+                    modifier = modifier.fillMaxSize(),
+                    stack = state.value,
+                    animation =
+                        predictiveBackAnimation(
+                            backHandler = rootBloc.backHandler,
+                            fallbackAnimation =
+                                stackAnimation { child, otherChild, _ ->
+                                    if (
+                                        child.instance is RootBloc.Child.Browser ||
+                                            otherChild.instance is RootBloc.Child.Browser
+                                    ) {
+                                        verticalSlide()
+                                    } else {
+                                        slide()
+                                    }
+                                },
+                            onBack = rootBloc::onBackClicked,
+                        ),
+                    content = {
+                        CompositionLocalProvider(
+                            LocalIsActiveScreen provides (it.key == state.value.active.key)
+                        ) {
+                            when (val child = it.instance) {
+                                is RootBloc.Child.BottomNavigation ->
+                                    BottomNavigationScreen(child.bloc)
+                                is RootBloc.Child.GroceryDetail -> GroceryDetailScreen(child.bloc)
+                                is RootBloc.Child.RecipeRoot -> RecipeRootScreen(child.bloc)
+                                is RootBloc.Child.Authentication -> AuthenticationScreen(child.bloc)
+                                is RootBloc.Child.Browser ->
+                                    PlusHeaderContainer(
+                                        modifier = Modifier.fillMaxSize(),
+                                        data =
+                                            PlusHeaderData.Modal(
+                                                title = FixedString(""),
+                                                onCloseClick = rootBloc::onBackClicked,
+                                            ),
+                                        scrollEnabled = false,
+                                        maxContentWidth = Dp.Unspecified,
+                                        content = {
+                                            BrowserScreen(
+                                                child.bloc,
+                                                modifier = Modifier.weight(1f),
+                                            )
+                                        },
+                                    )
                             }
-                        },
-                    onBack = rootBloc::onBackClicked,
-                ),
-            content = {
-                when (val child = it.instance) {
-                    is RootBloc.Child.BottomNavigation -> BottomNavigationScreen(child.bloc)
-                    is RootBloc.Child.GroceryDetail -> GroceryDetailScreen(child.bloc)
-                    is RootBloc.Child.RecipeRoot -> RecipeRootScreen(child.bloc)
-                    is RootBloc.Child.Authentication -> AuthenticationScreen(child.bloc)
-                    is RootBloc.Child.Browser ->
-                        PlusHeaderContainer(
-                            modifier = Modifier.fillMaxSize(),
-                            data =
-                                PlusHeaderData.Modal(
-                                    title = FixedString(""),
-                                    onCloseClick = rootBloc::onBackClicked,
-                                ),
-                            scrollEnabled = false,
-                            maxContentWidth = Dp.Unspecified,
-                            content = { BrowserScreen(child.bloc, modifier = Modifier.weight(1f)) },
-                        )
-                }
-            },
-        )
+                        }
+                    },
+                )
+            }
+        }
     }
 }
 
