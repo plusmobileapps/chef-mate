@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.outlined.CloudOff
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -200,6 +202,12 @@ private fun MealPlanSheet(bloc: MealPlanBloc, sheetState: androidx.compose.mater
             },
             sheetState = sheetState,
             contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
+            dragHandle = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Spacer(Modifier.statusBarsPadding())
+                    BottomSheetDefaults.DragHandle()
+                }
+            },
         ) {
             when (val current = sheetChild) {
                 is MealPlanBloc.Sheet.AddMeal -> MealPlannerRootScreen(current.bloc)
