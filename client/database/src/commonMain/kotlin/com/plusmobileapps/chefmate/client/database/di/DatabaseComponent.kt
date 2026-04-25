@@ -2,6 +2,7 @@ package com.plusmobileapps.chefmate.client.database.di
 
 import com.plusmobileapps.chefmate.client.database.DriverFactory
 import com.plusmobileapps.chefmate.database.Database
+import com.plusmobileapps.chefmate.database.GroceryListMemberQueries
 import com.plusmobileapps.chefmate.database.GroceryListQueries
 import com.plusmobileapps.chefmate.database.GroceryQueries
 import com.plusmobileapps.chefmate.database.MealPlanQueries
@@ -35,4 +36,9 @@ interface DatabaseComponent {
     @SingleIn(AppScope::class)
     @Provides
     fun providesRecipeQueries(database: Database): RecipeQueries = database.recipeQueries
+
+    @SingleIn(AppScope::class)
+    @Provides
+    fun providesGroceryListMemberQueries(database: Database): GroceryListMemberQueries =
+        database.groceryListMemberQueries
 }
