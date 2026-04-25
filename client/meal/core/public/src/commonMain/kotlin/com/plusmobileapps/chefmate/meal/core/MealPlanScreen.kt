@@ -80,6 +80,8 @@ import com.plusmobileapps.chefmate.meal.data.SyncStatus
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootScreen
 import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.LocalIsActiveScreen
+import com.plusmobileapps.chefmate.ui.LocalSharedTransitionScope
 import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
@@ -602,6 +604,8 @@ private fun MealItemCard(
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    val isActive = LocalIsActiveScreen.current
     Card(
         modifier =
             modifier
@@ -614,10 +618,20 @@ private fun MealItemCard(
             horizontalArrangement = spacedBy(ChefMateTheme.dimens.paddingNormal),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            val sharedElementModifier =
+                sharedTransitionScope?.let { sts ->
+                    with(sts) {
+                        Modifier.sharedElementWithCallerManagedVisibility(
+                            sharedContentState =
+                                rememberSharedContentState(key = "recipe_image_${meal.recipeId}"),
+                            visible = isActive,
+                        )
+                    }
+                } ?: Modifier
             RecipeImage(
                 imageUrl = meal.recipeImageUrl,
                 contentDescription = meal.recipeTitle,
-                modifier = Modifier.size(48.dp),
+                modifier = Modifier.size(48.dp).then(sharedElementModifier),
             )
             Text(
                 text = meal.recipeTitle,
@@ -643,6 +657,8 @@ private fun WeekMealItem(
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    val isActive = LocalIsActiveScreen.current
     Card(
         modifier =
             modifier
@@ -655,10 +671,20 @@ private fun WeekMealItem(
             horizontalArrangement = spacedBy(ChefMateTheme.dimens.paddingNormal),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            val sharedElementModifier =
+                sharedTransitionScope?.let { sts ->
+                    with(sts) {
+                        Modifier.sharedElementWithCallerManagedVisibility(
+                            sharedContentState =
+                                rememberSharedContentState(key = "recipe_image_${meal.recipeId}"),
+                            visible = isActive,
+                        )
+                    }
+                } ?: Modifier
             RecipeImage(
                 imageUrl = meal.recipeImageUrl,
                 contentDescription = meal.recipeTitle,
-                modifier = Modifier.size(40.dp),
+                modifier = Modifier.size(40.dp).then(sharedElementModifier),
             )
             Text(
                 text = meal.mealType.displayName(),
