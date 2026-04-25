@@ -145,6 +145,7 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
                             onCheckedChange = bloc::onGroceryItemCheckedChange,
                             onDeleteClick = bloc::onGroceryItemDelete,
                             onGroceryClick = bloc::onGroceryItemClicked,
+                            modifier = Modifier.animateItem(),
                         )
                     }
                 }
