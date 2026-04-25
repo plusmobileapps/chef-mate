@@ -48,6 +48,7 @@ platform :ios do
       export_options: {
         provisioningProfiles: {
           "com.plusmobileapps.chefmate.ChefMate" => "match AppStore com.plusmobileapps.chefmate.ChefMate",
+          "com.plusmobileapps.chefmate.ChefMate.ShareExtension" => "match AppStore com.plusmobileapps.chefmate.ChefMate.ShareExtension",
         },
       },
     )
