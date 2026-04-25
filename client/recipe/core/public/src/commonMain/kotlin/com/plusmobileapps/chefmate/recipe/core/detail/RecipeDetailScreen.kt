@@ -20,13 +20,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuOpen
 import androidx.compose.material.icons.filled.AddShoppingCart
@@ -384,8 +383,9 @@ private fun RecipeDetailSheet(
 }
 
 /**
- * Compact layout: LazyColumn with metadata items that scroll away, a sticky TabRow, and a
- * HorizontalPager that fills remaining space.
+ * Compact layout: LazyColumn with metadata items that scroll away, a sticky TabRow, and
+ * ingredients/directions items laid out directly in the LazyColumn so the whole screen scrolls
+ * together — no nested scroll conflicts.
  */
 @Composable
 private fun RecipeDetailCompactContent(
@@ -447,23 +447,23 @@ private fun RecipeDetailCompactContent(
             }
         }
 
-        // Pager content fills remaining space
+        // HorizontalPager wrapping content height — no nested vertical scroll
         item(key = "pager") {
             HorizontalPager(
                 state = pagerState,
-                modifier = Modifier.fillParentMaxHeight(),
+                modifier = Modifier.fillMaxWidth().wrapContentHeight(),
                 verticalAlignment = Alignment.Top,
             ) { page ->
                 when (page) {
                     0 ->
                         IngredientsContent(
                             ingredients = recipe.ingredients,
-                            modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                            modifier = Modifier.fillMaxWidth(),
                         )
                     1 ->
                         DirectionsContent(
                             directions = recipe.directions,
-                            modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                            modifier = Modifier.fillMaxWidth(),
                         )
                 }
             }
