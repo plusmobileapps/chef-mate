@@ -23,6 +23,10 @@ data class Recipe(
     val syncStatus: SyncStatus = SyncStatus.NOT_SYNCED,
     val createdAt: Instant,
     val updatedAt: Instant,
+    val forkedFromRemoteId: String? = null,
+    val forkedFromTitle: String? = null,
+    val role: RecipeRole = RecipeRole.OWNER,
+    val isShared: Boolean = false,
 ) {
     companion object {
         val Empty =
@@ -43,6 +47,10 @@ data class Recipe(
                 isFavorite = false,
                 createdAt = Instant.DISTANT_PAST,
                 updatedAt = Instant.DISTANT_PAST,
+                forkedFromRemoteId = null,
+                forkedFromTitle = null,
+                role = RecipeRole.OWNER,
+                isShared = false,
             )
     }
 }

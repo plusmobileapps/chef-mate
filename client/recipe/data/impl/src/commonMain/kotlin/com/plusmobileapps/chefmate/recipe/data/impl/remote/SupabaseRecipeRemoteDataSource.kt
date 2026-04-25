@@ -33,4 +33,31 @@ class SupabaseRecipeRemoteDataSource(private val supabaseClient: SupabaseClient)
             .from("recipes")
             .select { filter { eq("owner_id", ownerId) } }
             .decodeList<RemoteRecipe>()
+
+    override suspend fun fetchAccessibleRecipes(): List<RemoteRecipe> =
+        supabaseClient.from("recipes").select().decodeList<RemoteRecipe>()
+
+    override suspend fun fetchRecipeShares(recipeId: String): List<RemoteRecipeShare> =
+        supabaseClient
+            .from("recipe_shares")
+            .select { filter { eq("recipe_id", recipeId) } }
+            .decodeList<RemoteRecipeShare>()
+
+    override suspend fun shareRecipe(share: RemoteRecipeShare): RemoteRecipeShare =
+        supabaseClient
+            .from("recipe_shares")
+            .insert(share) { select() }
+            .decodeSingle<RemoteRecipeShare>()
+
+    override suspend fun respondToRecipeShare(shareId: String, accept: Boolean) {
+        supabaseClient.from("recipe_shares").update(
+            mapOf("status" to if (accept) "accepted" else "rejected")
+        ) {
+            filter { eq("id", shareId) }
+        }
+    }
+
+    override suspend fun removeRecipeShare(shareId: String) {
+        supabaseClient.from("recipe_shares").delete { filter { eq("id", shareId) } }
+    }
 }

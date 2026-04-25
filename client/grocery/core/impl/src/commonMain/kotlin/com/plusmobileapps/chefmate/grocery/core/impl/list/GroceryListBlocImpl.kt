@@ -8,6 +8,8 @@ import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryFilter
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
+import com.plusmobileapps.chefmate.grocery.data.ListCollaborator
+import com.plusmobileapps.chefmate.grocery.data.ListRole
 import com.plusmobileapps.chefmate.mapState
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -45,6 +47,10 @@ class GroceryListBlocImpl(
                 showCreateListDialog = it.showCreateListDialog,
                 showDeleteDialog = it.showDeleteDialog,
                 showListSelector = it.showListSelector,
+                showShareDialog = it.showShareDialog,
+                collaborators = it.collaborators,
+                pendingInvitations = it.pendingInvitations,
+                currentUserRole = it.currentUserRole,
             )
         }
 
@@ -124,6 +130,30 @@ class GroceryListBlocImpl(
 
     override fun onListSelectorDismissed() {
         viewModel.onListSelectorDismissed()
+    }
+
+    override fun onShareListClicked() {
+        viewModel.onShareListClicked()
+    }
+
+    override fun onShareListDismissed() {
+        viewModel.onShareListDismissed()
+    }
+
+    override fun onInviteCollaborator(email: String, role: ListRole) {
+        viewModel.onInviteCollaborator(email, role)
+    }
+
+    override fun onRemoveCollaborator(collaborator: ListCollaborator) {
+        viewModel.onRemoveCollaborator(collaborator)
+    }
+
+    override fun onAcceptInvitation(list: GroceryListModel) {
+        viewModel.onAcceptInvitation(list)
+    }
+
+    override fun onRejectInvitation(list: GroceryListModel) {
+        viewModel.onRejectInvitation(list)
     }
 }
 

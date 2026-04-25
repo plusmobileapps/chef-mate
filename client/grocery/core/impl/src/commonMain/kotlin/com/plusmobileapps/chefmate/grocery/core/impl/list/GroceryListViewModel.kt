@@ -9,6 +9,8 @@ import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryGrou
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
+import com.plusmobileapps.chefmate.grocery.data.ListCollaborator
+import com.plusmobileapps.chefmate.grocery.data.ListRole
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -86,6 +88,26 @@ class GroceryListViewModel(
                 }
                 .collect { grouped -> _state.update { it.copy(groupedItems = grouped) } }
         }
+
+        scope.launch {
+            selectedListId
+                .flatMapLatest { listId ->
+                    if (listId != null) {
+                        repository.getListCollaborators(listId)
+                    } else {
+                        flowOf(emptyList())
+                    }
+                }
+                .collect { collaborators ->
+                    _state.update { it.copy(collaborators = collaborators) }
+                }
+        }
+
+        scope.launch {
+            repository.getPendingInvitations().collect { invitations ->
+                _state.update { it.copy(pendingInvitations = invitations) }
+            }
+        }
     }
 
     fun onGroceryItemCheckedChange(item: GroceryItem, isChecked: Boolean) {
@@ -121,7 +143,9 @@ class GroceryListViewModel(
 
     fun onListSelected(list: GroceryListModel) {
         selectedListId.value = list.id
-        _state.update { it.copy(selectedList = list, showListSelector = false) }
+        _state.update {
+            it.copy(selectedList = list, showListSelector = false, currentUserRole = list.role)
+        }
     }
 
     fun onCreateListClicked() {
@@ -186,6 +210,35 @@ class GroceryListViewModel(
         scope.launch { repository.deleteAllGroceries(listId) }
     }
 
+    fun onShareListClicked() {
+        _state.update { it.copy(showShareDialog = true) }
+    }
+
+    fun onShareListDismissed() {
+        _state.update { it.copy(showShareDialog = false) }
+    }
+
+    fun onInviteCollaborator(email: String, role: ListRole) {
+        val listId = selectedListId.value ?: return
+        scope.launch { repository.inviteCollaborator(listId, email, role) }
+    }
+
+    fun onRemoveCollaborator(collaborator: ListCollaborator) {
+        val listId = selectedListId.value ?: return
+        scope.launch { repository.removeCollaborator(listId, collaborator.id) }
+    }
+
+    fun onAcceptInvitation(list: GroceryListModel) {
+        scope.launch {
+            repository.acceptInvitation(list.id)
+            repository.syncAllUnsynced()
+        }
+    }
+
+    fun onRejectInvitation(list: GroceryListModel) {
+        scope.launch { repository.rejectInvitation(list.id) }
+    }
+
     data class State(
         val groupedItems: List<GroceryGroup> = emptyList(),
         val filter: GroceryFilter = GroceryFilter.ALL,
@@ -195,5 +248,9 @@ class GroceryListViewModel(
         val showCreateListDialog: Boolean = false,
         val showDeleteDialog: Boolean = false,
         val showListSelector: Boolean = false,
+        val showShareDialog: Boolean = false,
+        val collaborators: List<ListCollaborator> = emptyList(),
+        val pendingInvitations: List<GroceryListModel> = emptyList(),
+        val currentUserRole: ListRole = ListRole.OWNER,
     )
 }

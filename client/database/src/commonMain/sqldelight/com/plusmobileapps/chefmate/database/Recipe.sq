@@ -20,7 +20,11 @@ CREATE TABLE Recipe (
     remoteId TEXT UNIQUE,
     clientId TEXT,
     isDirty INTEGER AS Boolean NOT NULL DEFAULT 0,
-    ownerId TEXT
+    ownerId TEXT,
+    forkedFromRemoteId TEXT,
+    forkedFromTitle TEXT,
+    role TEXT NOT NULL DEFAULT 'owner',
+    isShared INTEGER AS Boolean NOT NULL DEFAULT 0
 );
 
 getAll:
@@ -87,3 +91,15 @@ UPDATE Recipe SET clientId = ? WHERE id = ?;
 
 clearDirty:
 UPDATE Recipe SET isDirty = 0 WHERE id = ?;
+
+updateForkedFrom:
+UPDATE Recipe SET forkedFromRemoteId = ?, forkedFromTitle = ? WHERE id = ?;
+
+updateOwnership:
+UPDATE Recipe SET role = ?, isShared = ? WHERE id = ?;
+
+getShared:
+SELECT * FROM Recipe WHERE isShared = 1 ORDER BY title ASC;
+
+getOwned:
+SELECT * FROM Recipe WHERE role = 'owner' ORDER BY title DESC;

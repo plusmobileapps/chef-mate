@@ -19,6 +19,9 @@ import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.PersonRemove
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.outlined.CloudOff
@@ -55,6 +58,7 @@ import chefmate.client.grocery.core.public.generated.resources.Res
 import chefmate.client.grocery.core.public.generated.resources.grocery_add_item
 import chefmate.client.grocery.core.public.generated.resources.grocery_cancel
 import chefmate.client.grocery.core.public.generated.resources.grocery_checked
+import chefmate.client.grocery.core.public.generated.resources.grocery_collaborators
 import chefmate.client.grocery.core.public.generated.resources.grocery_create_list_cancel
 import chefmate.client.grocery.core.public.generated.resources.grocery_create_list_confirm
 import chefmate.client.grocery.core.public.generated.resources.grocery_create_list_hint
@@ -71,16 +75,29 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_filter
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter_all
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter_purchased
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter_unpurchased
+import chefmate.client.grocery.core.public.generated.resources.grocery_invite
+import chefmate.client.grocery.core.public.generated.resources.grocery_invite_hint
 import chefmate.client.grocery.core.public.generated.resources.grocery_list
+import chefmate.client.grocery.core.public.generated.resources.grocery_my_lists
 import chefmate.client.grocery.core.public.generated.resources.grocery_not_checked
-import chefmate.client.grocery.core.public.generated.resources.grocery_select_list
+import chefmate.client.grocery.core.public.generated.resources.grocery_remove_collaborator
+import chefmate.client.grocery.core.public.generated.resources.grocery_role_editor
+import chefmate.client.grocery.core.public.generated.resources.grocery_role_owner
+import chefmate.client.grocery.core.public.generated.resources.grocery_role_viewer
+import chefmate.client.grocery.core.public.generated.resources.grocery_share_list
+import chefmate.client.grocery.core.public.generated.resources.grocery_shared_badge
+import chefmate.client.grocery.core.public.generated.resources.grocery_shared_with_you
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_all
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_not_synced
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_synced
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_syncing
 import com.plusmobileapps.chefmate.grocery.core.displayName
+import com.plusmobileapps.chefmate.grocery.data.CollaborationStatus
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
+import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
+import com.plusmobileapps.chefmate.grocery.data.ListCollaborator
+import com.plusmobileapps.chefmate.grocery.data.ListRole
 import com.plusmobileapps.chefmate.grocery.data.SyncStatus
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
@@ -111,6 +128,14 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
                     }
                 },
                 actions = {
+                    if (state.currentUserRole == ListRole.OWNER) {
+                        IconButton(onClick = bloc::onShareListClicked) {
+                            Icon(
+                                Icons.Default.Share,
+                                contentDescription = stringResource(Res.string.grocery_share_list),
+                            )
+                        }
+                    }
                     FilterButton(filter = state.filter, onFilterChanged = bloc::onFilterChanged)
                     IconButton(onClick = bloc::onDeleteClicked) {
                         Icon(
@@ -149,11 +174,13 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
                     }
                 }
             }
-            GroceryListInput(
-                name = bloc.newGroceryItemName,
-                onNameChange = bloc::onNewGroceryItemNameChange,
-                onAddClick = bloc::saveGroceryItem,
-            )
+            if (state.currentUserRole != ListRole.VIEWER) {
+                GroceryListInput(
+                    name = bloc.newGroceryItemName,
+                    onNameChange = bloc::onNewGroceryItemNameChange,
+                    onAddClick = bloc::saveGroceryItem,
+                )
+            }
         },
     )
 
@@ -179,6 +206,15 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
             onDismiss = bloc::onDeleteDismissed,
             onDeletePurchased = bloc::onDeletePurchasedConfirmed,
             onDeleteAll = bloc::onDeleteAllConfirmed,
+        )
+    }
+
+    if (state.showShareDialog) {
+        ShareListDialog(
+            collaborators = state.collaborators,
+            onDismiss = bloc::onShareListDismissed,
+            onInvite = { email, role -> bloc.onInviteCollaborator(email, role) },
+            onRemove = bloc::onRemoveCollaborator,
         )
     }
 }
@@ -249,41 +285,22 @@ private fun GroceryListSelectorSheet(
     onDeleteListClicked: (com.plusmobileapps.chefmate.grocery.data.GroceryListModel) -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState()
+    val myLists = state.lists.filter { !it.isShared }
+    val sharedLists = state.lists.filter { it.isShared }
+
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Text(
-            text = stringResource(Res.string.grocery_select_list),
+            text = stringResource(Res.string.grocery_my_lists),
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         )
-        state.lists.forEach { list ->
-            ListItem(
-                headlineContent = {
-                    Text(
-                        text = list.name,
-                        color =
-                            if (list.id == state.selectedList?.id) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
-                            },
-                    )
-                },
-                modifier = Modifier.clickable { onListSelected(list) },
-                trailingContent =
-                    if (state.lists.size > 1) {
-                        {
-                            IconButton(onClick = { onDeleteListClicked(list) }) {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription =
-                                        stringResource(Res.string.grocery_delete_list),
-                                    modifier = Modifier.size(18.dp),
-                                )
-                            }
-                        }
-                    } else {
-                        null
-                    },
+        myLists.forEach { list ->
+            GroceryListSelectorItem(
+                list = list,
+                isSelected = list.id == state.selectedList?.id,
+                canDelete = myLists.size > 1,
+                onListSelected = onListSelected,
+                onDeleteListClicked = onDeleteListClicked,
             )
         }
         HorizontalDivider()
@@ -298,6 +315,23 @@ private fun GroceryListSelectorSheet(
                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
             },
         )
+        if (sharedLists.isNotEmpty()) {
+            HorizontalDivider()
+            Text(
+                text = stringResource(Res.string.grocery_shared_with_you),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+            sharedLists.forEach { list ->
+                GroceryListSelectorItem(
+                    list = list,
+                    isSelected = list.id == state.selectedList?.id,
+                    canDelete = false,
+                    onListSelected = onListSelected,
+                    onDeleteListClicked = onDeleteListClicked,
+                )
+            }
+        }
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
@@ -443,5 +477,136 @@ private fun GroceryListItem(
         IconButton(onClick = { onDeleteClick(item) }) {
             Icon(Icons.Default.Delete, stringResource(Res.string.grocery_delete_item))
         }
+    }
+}
+
+@Composable
+private fun GroceryListSelectorItem(
+    list: GroceryListModel,
+    isSelected: Boolean,
+    canDelete: Boolean,
+    onListSelected: (GroceryListModel) -> Unit,
+    onDeleteListClicked: (GroceryListModel) -> Unit,
+) {
+    ListItem(
+        headlineContent = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = list.name,
+                    color =
+                        if (isSelected) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
+                )
+                if (list.isShared) {
+                    Text(
+                        text = stringResource(Res.string.grocery_shared_badge),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
+                }
+            }
+        },
+        modifier = Modifier.clickable { onListSelected(list) },
+        trailingContent =
+            if (canDelete && list.role == ListRole.OWNER) {
+                {
+                    IconButton(onClick = { onDeleteListClicked(list) }) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = stringResource(Res.string.grocery_delete_list),
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                }
+            } else {
+                null
+            },
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ShareListDialog(
+    collaborators: List<ListCollaborator>,
+    onDismiss: () -> Unit,
+    onInvite: (String, ListRole) -> Unit,
+    onRemove: (ListCollaborator) -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState()
+    var inviteEmail by remember { mutableStateOf("") }
+
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        Text(
+            text = stringResource(Res.string.grocery_collaborators),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        )
+
+        collaborators.forEach { collaborator ->
+            ListItem(
+                headlineContent = { Text(collaborator.displayName ?: collaborator.email) },
+                supportingContent = {
+                    val roleText =
+                        when (collaborator.role) {
+                            ListRole.OWNER -> stringResource(Res.string.grocery_role_owner)
+                            ListRole.EDITOR -> stringResource(Res.string.grocery_role_editor)
+                            ListRole.VIEWER -> stringResource(Res.string.grocery_role_viewer)
+                        }
+                    val statusText =
+                        if (collaborator.status == CollaborationStatus.PENDING) " (pending)" else ""
+                    Text("$roleText$statusText")
+                },
+                trailingContent =
+                    if (collaborator.role != ListRole.OWNER) {
+                        {
+                            IconButton(onClick = { onRemove(collaborator) }) {
+                                Icon(
+                                    Icons.Default.PersonRemove,
+                                    contentDescription =
+                                        stringResource(Res.string.grocery_remove_collaborator),
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
+                        }
+                    } else {
+                        null
+                    },
+            )
+        }
+
+        HorizontalDivider()
+
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            OutlinedTextField(
+                value = inviteEmail,
+                onValueChange = { inviteEmail = it },
+                label = { Text(stringResource(Res.string.grocery_invite_hint)) },
+                singleLine = true,
+                modifier = Modifier.weight(1f),
+            )
+            IconButton(
+                onClick = {
+                    if (inviteEmail.isNotBlank()) {
+                        onInvite(inviteEmail, ListRole.EDITOR)
+                        inviteEmail = ""
+                    }
+                },
+                enabled = inviteEmail.isNotBlank(),
+            ) {
+                Icon(
+                    Icons.Default.PersonAdd,
+                    contentDescription = stringResource(Res.string.grocery_invite),
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }

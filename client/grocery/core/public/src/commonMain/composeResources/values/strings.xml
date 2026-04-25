@@ -40,4 +40,19 @@
     <string name="grocery_category_baking">Baking</string>
     <string name="grocery_category_spices">Spices &amp; Seasonings</string>
     <string name="grocery_category_other">Other</string>
+    <string name="grocery_share_list">Share List</string>
+    <string name="grocery_collaborators">Collaborators</string>
+    <string name="grocery_invite">Invite</string>
+    <string name="grocery_invite_hint">Email address</string>
+    <string name="grocery_invitation_sent">Invitation sent</string>
+    <string name="grocery_remove_collaborator">Remove</string>
+    <string name="grocery_pending_invitations">Pending Invitations</string>
+    <string name="grocery_accept">Accept</string>
+    <string name="grocery_reject">Reject</string>
+    <string name="grocery_shared_with_you">Shared with you</string>
+    <string name="grocery_my_lists">My Lists</string>
+    <string name="grocery_role_owner">Owner</string>
+    <string name="grocery_role_editor">Editor</string>
+    <string name="grocery_role_viewer">Viewer</string>
+    <string name="grocery_shared_badge">Shared</string>
 </resources>

@@ -43,4 +43,16 @@ interface GroceryRepository {
     suspend fun deletePurchasedGroceries(listId: Long)
 
     suspend fun clearLocalData()
+
+    fun getListCollaborators(listId: Long): Flow<List<ListCollaborator>>
+
+    suspend fun inviteCollaborator(listId: Long, email: String, role: ListRole = ListRole.EDITOR)
+
+    suspend fun removeCollaborator(listId: Long, collaboratorId: Long)
+
+    suspend fun acceptInvitation(listId: Long)
+
+    suspend fun rejectInvitation(listId: Long)
+
+    fun getPendingInvitations(): Flow<List<GroceryListModel>>
 }

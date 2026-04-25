@@ -5,6 +5,8 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
+import com.plusmobileapps.chefmate.grocery.data.ListCollaborator
+import com.plusmobileapps.chefmate.grocery.data.ListRole
 import kotlinx.coroutines.flow.StateFlow
 
 interface GroceryListBloc {
@@ -48,6 +50,18 @@ interface GroceryListBloc {
 
     fun onListSelectorDismissed()
 
+    fun onShareListClicked()
+
+    fun onShareListDismissed()
+
+    fun onInviteCollaborator(email: String, role: ListRole)
+
+    fun onRemoveCollaborator(collaborator: ListCollaborator)
+
+    fun onAcceptInvitation(list: GroceryListModel)
+
+    fun onRejectInvitation(list: GroceryListModel)
+
     data class GroceryGroup(val category: GroceryCategory, val items: List<GroceryItem>)
 
     enum class GroceryFilter {
@@ -65,6 +79,10 @@ interface GroceryListBloc {
         val showCreateListDialog: Boolean = false,
         val showDeleteDialog: Boolean = false,
         val showListSelector: Boolean = false,
+        val showShareDialog: Boolean = false,
+        val collaborators: List<ListCollaborator> = emptyList(),
+        val pendingInvitations: List<GroceryListModel> = emptyList(),
+        val currentUserRole: ListRole = ListRole.OWNER,
     )
 
     sealed class Output {

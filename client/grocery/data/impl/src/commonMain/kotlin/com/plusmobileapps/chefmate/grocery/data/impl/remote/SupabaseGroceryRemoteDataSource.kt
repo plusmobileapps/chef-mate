@@ -81,4 +81,31 @@ class SupabaseGroceryRemoteDataSource(private val supabaseClient: SupabaseClient
                 filter { eq("id", list.id!!) }
             }
             .decodeSingle<RemoteGroceryList>()
+
+    override suspend fun fetchAccessibleGroceryLists(): List<RemoteGroceryList> =
+        supabaseClient.from("grocery_lists").select().decodeList<RemoteGroceryList>()
+
+    override suspend fun fetchListMembers(listId: String): List<RemoteGroceryListMember> =
+        supabaseClient
+            .from("grocery_list_members")
+            .select { filter { eq("list_id", listId) } }
+            .decodeList<RemoteGroceryListMember>()
+
+    override suspend fun inviteToList(member: RemoteGroceryListMember): RemoteGroceryListMember =
+        supabaseClient
+            .from("grocery_list_members")
+            .insert(member) { select() }
+            .decodeSingle<RemoteGroceryListMember>()
+
+    override suspend fun respondToInvitation(memberId: String, accept: Boolean) {
+        supabaseClient.from("grocery_list_members").update(
+            mapOf("status" to if (accept) "accepted" else "rejected")
+        ) {
+            filter { eq("id", memberId) }
+        }
+    }
+
+    override suspend fun removeFromList(memberId: String) {
+        supabaseClient.from("grocery_list_members").delete { filter { eq("id", memberId) } }
+    }
 }
