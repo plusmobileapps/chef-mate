@@ -20,8 +20,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuOpen
@@ -395,21 +398,14 @@ private fun RecipeDetailCompactContent(
     onSourceUrlClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var selectedTab by rememberSaveable { mutableStateOf(0) }
+    val pagerState = rememberPagerState(pageCount = { 2 })
     val tabs =
         listOf(
             stringResource(Res.string.recipe_detail_ingredients),
             stringResource(Res.string.recipe_detail_directions),
         )
+    val scope = rememberCoroutineScope()
     val padding = ChefMateTheme.dimens.paddingNormal
-
-    val ingredientLines = remember(recipe.ingredients) { splitLines(recipe.ingredients) }
-    val crossedOut =
-        remember(recipe.ingredients) {
-            mutableStateListOf(*BooleanArray(ingredientLines.size) { false }.toTypedArray())
-        }
-    val directionParagraphs = remember(recipe.directions) { splitLines(recipe.directions) }
-    var highlightedIndex by remember(recipe.directions) { mutableStateOf(-1) }
 
     LazyColumn(modifier = modifier.fillMaxSize(), verticalArrangement = spacedBy(padding)) {
         // Hero section: image + key details side by side
@@ -440,42 +436,36 @@ private fun RecipeDetailCompactContent(
 
         // Sticky TabRow
         stickyHeader(key = "tab_row") {
-            TabRow(selectedTabIndex = selectedTab) {
+            TabRow(selectedTabIndex = pagerState.currentPage) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
+                        selected = pagerState.currentPage == index,
+                        onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
                         text = { Text(title) },
                     )
                 }
             }
         }
 
-        // Content items placed directly in the LazyColumn so the hero collapses before content
-        // scrolls
-        when (selectedTab) {
-            0 -> {
-                itemsIndexed(ingredientLines, key = { i, _ -> "ingredient_$i" }) { i, line ->
-                    IngredientLineItem(
-                        text = line,
-                        crossedOut = crossedOut[i],
-                        onClick = { crossedOut[i] = !crossedOut[i] },
-                        modifier = Modifier.padding(horizontal = padding),
-                    )
+        // HorizontalPager wrapping content height — no nested vertical scroll
+        item(key = "pager") {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                verticalAlignment = Alignment.Top,
+            ) { page ->
+                when (page) {
+                    0 ->
+                        IngredientsContent(
+                            ingredients = recipe.ingredients,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    1 ->
+                        DirectionsContent(
+                            directions = recipe.directions,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
                 }
-                item(key = "ingredients_spacer") { Spacer(Modifier.height(80.dp)) }
-            }
-            1 -> {
-                itemsIndexed(directionParagraphs, key = { i, _ -> "direction_$i" }) { i, paragraph
-                    ->
-                    DirectionLineItem(
-                        text = paragraph,
-                        highlighted = highlightedIndex == i,
-                        onClick = { highlightedIndex = if (highlightedIndex == i) -1 else i },
-                        modifier = Modifier.padding(horizontal = padding),
-                    )
-                }
-                item(key = "directions_spacer") { Spacer(Modifier.height(80.dp)) }
             }
         }
     }
@@ -1046,6 +1036,59 @@ private fun DirectionLineItem(
                 )
                 .padding(vertical = dimens.paddingExtraSmall, horizontal = dimens.paddingExtraSmall),
     )
+}
+
+@Composable
+private fun IngredientsContent(ingredients: String, modifier: Modifier = Modifier) {
+    val lines = remember(ingredients) { splitLines(ingredients) }
+    val crossedOut =
+        remember(ingredients) {
+            mutableStateListOf(*BooleanArray(lines.size) { false }.toTypedArray())
+        }
+
+    val dimens = ChefMateTheme.dimens
+    Column(
+        modifier = modifier.padding(dimens.paddingNormal),
+        verticalArrangement = Arrangement.spacedBy(dimens.paddingExtraSmall),
+    ) {
+        Text(
+            text = stringResource(Res.string.recipe_detail_ingredients),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        lines.forEachIndexed { index, line ->
+            IngredientLineItem(
+                text = line,
+                crossedOut = crossedOut[index],
+                onClick = { crossedOut[index] = !crossedOut[index] },
+            )
+        }
+        Spacer(modifier = Modifier.height(80.dp))
+    }
+}
+
+@Composable
+private fun DirectionsContent(directions: String, modifier: Modifier = Modifier) {
+    val paragraphs = remember(directions) { splitLines(directions) }
+    var highlightedIndex by remember(directions) { mutableStateOf(-1) }
+
+    val dimens = ChefMateTheme.dimens
+    Column(
+        modifier = modifier.padding(dimens.paddingNormal),
+        verticalArrangement = Arrangement.spacedBy(dimens.paddingSmall),
+    ) {
+        Text(
+            text = stringResource(Res.string.recipe_detail_directions),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        paragraphs.forEachIndexed { index, paragraph ->
+            DirectionLineItem(
+                text = paragraph,
+                highlighted = highlightedIndex == index,
+                onClick = { highlightedIndex = if (highlightedIndex == index) -1 else index },
+            )
+        }
+        Spacer(modifier = Modifier.height(80.dp))
+    }
 }
 
 @Composable
