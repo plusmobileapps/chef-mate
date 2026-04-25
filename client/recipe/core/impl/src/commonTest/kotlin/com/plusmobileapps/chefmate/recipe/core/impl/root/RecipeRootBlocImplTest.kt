@@ -40,7 +40,7 @@ class RecipeRootBlocImplTest {
                     }
                 },
             editBloc =
-                EditRecipeBloc.Factory { context, _, output ->
+                EditRecipeBloc.Factory { context, _, _, output ->
                     editOutput = output
                     mock()
                 },
