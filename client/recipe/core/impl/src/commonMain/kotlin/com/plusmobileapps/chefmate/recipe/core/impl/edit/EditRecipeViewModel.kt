@@ -25,7 +25,6 @@ import kotlinx.coroutines.launch
 @AssistedInject
 class EditRecipeViewModel(
     @Assisted private val recipeId: Long?,
-    @Assisted private val initialSourceUrl: String?,
     @Main mainContext: CoroutineContext,
     private val repository: RecipeRepository,
 ) : ViewModel(mainContext) {
@@ -74,8 +73,6 @@ class EditRecipeViewModel(
         if (recipeId != null) {
             _state.update { it.copy(isLoading = false) }
             scope.launch { loadRecipe(recipeId) }
-        } else if (initialSourceUrl != null) {
-            _sourceUrl.value = initialSourceUrl
         }
     }
 
@@ -255,6 +252,6 @@ class EditRecipeViewModel(
 
     @AssistedFactory
     fun interface Factory {
-        fun create(recipeId: Long?, initialSourceUrl: String?): EditRecipeViewModel
+        fun create(recipeId: Long?): EditRecipeViewModel
     }
 }

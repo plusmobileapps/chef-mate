@@ -77,11 +77,6 @@ interface EditRecipeBloc : BackClickBloc {
     }
 
     fun interface Factory {
-        fun create(
-            context: BlocContext,
-            recipeId: Long?,
-            initialSourceUrl: String?,
-            output: Consumer<Output>,
-        ): EditRecipeBloc
+        fun create(context: BlocContext, recipeId: Long?, output: Consumer<Output>): EditRecipeBloc
     }
 }

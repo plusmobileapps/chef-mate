@@ -23,7 +23,6 @@ import kotlinx.coroutines.launch
 class EditRecipeBlocImpl(
     @Assisted context: BlocContext,
     @Assisted recipeId: Long?,
-    @Assisted private val initialSourceUrl: String?,
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: EditRecipeViewModel.Factory,
 ) : EditRecipeBloc, BlocContext by context {
@@ -32,7 +31,6 @@ class EditRecipeBlocImpl(
         fun create(
             context: BlocContext,
             recipeId: Long?,
-            initialSourceUrl: String?,
             output: Consumer<Output>,
         ): EditRecipeBlocImpl
     }
@@ -40,7 +38,7 @@ class EditRecipeBlocImpl(
     private val scope = createScope()
 
     private val viewModel: EditRecipeViewModel = instanceKeeper.getViewModel {
-        viewModelFactory.create(recipeId, initialSourceUrl)
+        viewModelFactory.create(recipeId)
     }
 
     override val state: StateFlow<EditRecipeBloc.Model> =
@@ -156,8 +154,7 @@ interface EditRecipeBlocBindingModule {
     @Provides
     fun provideEditRecipeBlocFactory(
         factory: EditRecipeBlocImpl.ManagedFactory
-    ): EditRecipeBloc.Factory =
-        EditRecipeBloc.Factory { context, recipeId, initialSourceUrl, output ->
-            factory.create(context, recipeId, initialSourceUrl, output)
-        }
+    ): EditRecipeBloc.Factory = EditRecipeBloc.Factory { context, recipeId, output ->
+        factory.create(context, recipeId, output)
+    }
 }
