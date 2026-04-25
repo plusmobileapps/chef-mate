@@ -19,4 +19,14 @@ interface RecipeRemoteDataSource {
      * remote ID. Recipes with no attachments are omitted (callers should treat absence as empty).
      */
     suspend fun fetchRecipeCategoryAttachments(ownerId: String): Map<String, Set<String>>
+
+    suspend fun fetchAccessibleRecipes(): List<RemoteRecipe>
+
+    suspend fun fetchRecipeShares(recipeId: String): List<RemoteRecipeShare>
+
+    suspend fun shareRecipe(share: RemoteRecipeShare): RemoteRecipeShare
+
+    suspend fun respondToRecipeShare(shareId: String, accept: Boolean)
+
+    suspend fun removeRecipeShare(shareId: String)
 }

@@ -387,6 +387,21 @@ class RecipeRepositoryImplTest {
         override suspend fun fetchRecipeCategoryAttachments(
             ownerId: String
         ): Map<String, Set<String>> = emptyMap()
+
+        override suspend fun fetchAccessibleRecipes(): List<RemoteRecipe> = emptyList()
+
+        override suspend fun fetchRecipeShares(
+            recipeId: String
+        ): List<com.plusmobileapps.chefmate.recipe.data.impl.remote.RemoteRecipeShare> = emptyList()
+
+        override suspend fun shareRecipe(
+            share: com.plusmobileapps.chefmate.recipe.data.impl.remote.RemoteRecipeShare
+        ): com.plusmobileapps.chefmate.recipe.data.impl.remote.RemoteRecipeShare =
+            share.copy(id = "remote-share-${share.recipeId}")
+
+        override suspend fun respondToRecipeShare(shareId: String, accept: Boolean) = Unit
+
+        override suspend fun removeRecipeShare(shareId: String) = Unit
     }
 
     private class NoopCategoryRemote : CategoryRemoteDataSource {

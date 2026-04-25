@@ -5,18 +5,23 @@ import app.cash.sqldelight.coroutines.mapToList
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.database.Grocery
+import com.plusmobileapps.chefmate.database.GroceryListMemberQueries
 import com.plusmobileapps.chefmate.database.GroceryListQueries
 import com.plusmobileapps.chefmate.database.GroceryQueries
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.IO
+import com.plusmobileapps.chefmate.grocery.data.CollaborationStatus
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.grocery.data.IngredientParser
+import com.plusmobileapps.chefmate.grocery.data.ListCollaborator
+import com.plusmobileapps.chefmate.grocery.data.ListRole
 import com.plusmobileapps.chefmate.grocery.data.SyncStatus
 import com.plusmobileapps.chefmate.grocery.data.remote.GroceryRemoteDataSource
 import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryItem
 import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryList
+import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryListMember
 import com.plusmobileapps.chefmate.util.DateTimeUtil
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -45,6 +50,7 @@ import kotlinx.coroutines.withContext
 class GroceryRepositoryImpl(
     private val queries: GroceryQueries,
     private val listQueries: GroceryListQueries,
+    private val memberQueries: GroceryListMemberQueries,
     @IO private val ioContext: CoroutineContext,
     private val dateTimeUtil: DateTimeUtil,
     private val remoteDataSource: GroceryRemoteDataSource,
@@ -96,6 +102,8 @@ class GroceryRepositoryImpl(
                                 entity.remoteId != null -> SyncStatus.SYNCED
                                 else -> SyncStatus.NOT_SYNCED
                             },
+                        role = entity.role.toListRole(),
+                        isShared = entity.isShared,
                     )
                 }
             }
@@ -420,40 +428,62 @@ class GroceryRepositoryImpl(
         try {
             // --- Sync lists first ---
 
-            // Pull remote lists BEFORE pushing to avoid creating duplicates.
-            // When signing in on a new device, a local default list may already
-            // exist. Pulling first lets us link it to the remote list instead of
-            // pushing a duplicate.
-            val remoteLists = remoteDataSource.fetchGroceryLists(userId)
+            // Pull all accessible lists FIRST (RLS handles filtering, includes shared lists).
+            // Pulling before pushing lets us link a local default list to an existing remote
+            // entry rather than pushing a duplicate when signing in on a new device.
+            val remoteLists = remoteDataSource.fetchAccessibleGroceryLists()
             withContext(ioContext) {
                 for (remoteList in remoteLists) {
                     val remoteId = remoteList.id ?: continue
-                    val existing = listQueries.getByRemoteId(remoteId).executeAsOneOrNull()
-                    if (existing != null) continue
+                    val isOwned = remoteList.ownerId == userId
+                    val role = if (isOwned) "owner" else "editor"
+                    val isShared = !isOwned
 
-                    // Try to match a local unsynced list by name
+                    val existing = listQueries.getByRemoteId(remoteId).executeAsOneOrNull()
+                    if (existing != null) {
+                        listQueries.updateOwnership(
+                            ownerId = remoteList.ownerId,
+                            role = role,
+                            isShared = isShared,
+                            id = existing.id,
+                        )
+                        continue
+                    }
+
+                    // Match a local unsynced list by name so we don't duplicate the local
+                    // default list when signing in on a new device.
                     val localLists = listQueries.getAll().executeAsList()
                     val matchedByName = localLists.firstOrNull {
                         it.remoteId == null && it.name == remoteList.name
                     }
                     if (matchedByName != null) {
-                        // Link the local list to the remote one so we don't
-                        // create a duplicate. Any local items will be synced
-                        // to the remote list below.
                         listQueries.updateRemoteId(remoteId = remoteId, id = matchedByName.id)
+                        listQueries.updateOwnership(
+                            ownerId = remoteList.ownerId,
+                            role = role,
+                            isShared = isShared,
+                            id = matchedByName.id,
+                        )
                     } else {
                         val newId = listQueries.transactionWithResult {
                             listQueries.create(name = remoteList.name, clientId = null)
                             listQueries.lastId().executeAsOne().MAX!!
                         }
                         listQueries.updateRemoteId(remoteId = remoteId, id = newId)
+                        listQueries.updateOwnership(
+                            ownerId = remoteList.ownerId,
+                            role = role,
+                            isShared = isShared,
+                            id = newId,
+                        )
                     }
                 }
             }
 
-            // Push unsynced lists (only those that weren't linked to a remote list above)
+            // Push unsynced owned lists only (those that weren't linked above)
             val unsyncedLists = withContext(ioContext) { listQueries.getUnsynced().executeAsList() }
             for (list in unsyncedLists) {
+                if (list.role != "owner") continue
                 try {
                     val remoteList =
                         remoteDataSource.createGroceryList(
@@ -465,9 +495,10 @@ class GroceryRepositoryImpl(
                 } catch (_: Exception) {}
             }
 
-            // Push dirty lists
+            // Push dirty owned lists only
             val dirtyLists = withContext(ioContext) { listQueries.getDirty().executeAsList() }
             for (list in dirtyLists) {
+                if (list.role != "owner") continue
                 try {
                     val remoteId = list.remoteId ?: continue
                     remoteDataSource.updateGroceryList(
@@ -476,6 +507,9 @@ class GroceryRepositoryImpl(
                     withContext(ioContext) { listQueries.clearDirty(list.id) }
                 } catch (_: Exception) {}
             }
+
+            // Sync members for shared lists
+            syncListMembers(userId)
 
             // --- Sync items per list ---
             val allLists = withContext(ioContext) { listQueries.getAll().executeAsList() }
@@ -620,6 +654,155 @@ class GroceryRepositoryImpl(
             }
         }
     }
+
+    override fun getListCollaborators(listId: Long): Flow<List<ListCollaborator>> =
+        memberQueries
+            .getByListId(listId)
+            .asFlow()
+            .mapToList(ioContext)
+            .map { members ->
+                members.map { member ->
+                    ListCollaborator(
+                        id = member.id,
+                        email = member.userEmail,
+                        displayName = member.displayName,
+                        role = member.role.toListRole(),
+                        status =
+                            when (member.status) {
+                                "accepted" -> CollaborationStatus.ACCEPTED
+                                "rejected" -> CollaborationStatus.REJECTED
+                                else -> CollaborationStatus.PENDING
+                            },
+                    )
+                }
+            }
+            .flowOn(ioContext)
+
+    override suspend fun inviteCollaborator(listId: Long, email: String, role: ListRole) {
+        val authState = authRepository.state.value
+        if (authState !is AuthState.Authenticated) return
+        val list =
+            withContext(ioContext) { listQueries.getById(listId).executeAsOneOrNull() } ?: return
+        val remoteListId = list.remoteId ?: return
+
+        val remoteMember =
+            remoteDataSource.inviteToList(
+                RemoteGroceryListMember(
+                    listId = remoteListId,
+                    invitedEmail = email,
+                    role = role.name.lowercase(),
+                    invitedBy = authState.user.userId,
+                )
+            )
+        withContext(ioContext) {
+            memberQueries.insert(
+                listLocalId = listId,
+                remoteId = remoteMember.id,
+                userId = remoteMember.userId,
+                userEmail = email,
+                role = role.name.lowercase(),
+                status = "pending",
+                displayName = null,
+            )
+        }
+    }
+
+    override suspend fun removeCollaborator(listId: Long, collaboratorId: Long) {
+        val member =
+            withContext(ioContext) {
+                memberQueries.getByListId(listId).executeAsList().firstOrNull {
+                    it.id == collaboratorId
+                }
+            } ?: return
+        member.remoteId?.let { remoteDataSource.removeFromList(it) }
+        withContext(ioContext) { memberQueries.deleteById(collaboratorId) }
+    }
+
+    override suspend fun acceptInvitation(listId: Long) {
+        val authState = authRepository.state.value
+        if (authState !is AuthState.Authenticated) return
+        val list =
+            withContext(ioContext) { listQueries.getById(listId).executeAsOneOrNull() } ?: return
+        val remoteListId = list.remoteId ?: return
+
+        val members = remoteDataSource.fetchListMembers(remoteListId)
+        val myMember = members.firstOrNull { it.userId == authState.user.userId }
+        myMember?.id?.let { remoteDataSource.respondToInvitation(it, accept = true) }
+    }
+
+    override suspend fun rejectInvitation(listId: Long) {
+        val authState = authRepository.state.value
+        if (authState !is AuthState.Authenticated) return
+        val list =
+            withContext(ioContext) { listQueries.getById(listId).executeAsOneOrNull() } ?: return
+        val remoteListId = list.remoteId ?: return
+
+        val members = remoteDataSource.fetchListMembers(remoteListId)
+        val myMember = members.firstOrNull { it.userId == authState.user.userId }
+        myMember?.id?.let { remoteDataSource.respondToInvitation(it, accept = false) }
+        withContext(ioContext) { listQueries.delete(listId) }
+    }
+
+    override fun getPendingInvitations(): Flow<List<GroceryListModel>> =
+        listQueries
+            .getAll()
+            .asFlow()
+            .mapToList(ioContext)
+            .map { lists ->
+                lists
+                    .filter { it.isShared && it.role != "owner" }
+                    .map { entity ->
+                        GroceryListModel(
+                            id = entity.id,
+                            name = entity.name,
+                            syncStatus = SyncStatus.SYNCED,
+                            role = entity.role.toListRole(),
+                            isShared = true,
+                        )
+                    }
+            }
+            .flowOn(ioContext)
+
+    private suspend fun syncListMembers(userId: String) {
+        val allLists = withContext(ioContext) { listQueries.getAll().executeAsList() }
+        for (list in allLists) {
+            val remoteListId = list.remoteId ?: continue
+            try {
+                val remoteMembers = remoteDataSource.fetchListMembers(remoteListId)
+                withContext(ioContext) {
+                    memberQueries.deleteByListId(list.id)
+                    for (member in remoteMembers) {
+                        memberQueries.insert(
+                            listLocalId = list.id,
+                            remoteId = member.id,
+                            userId = member.userId,
+                            userEmail = member.invitedEmail,
+                            role = member.role,
+                            status = member.status,
+                            displayName = null,
+                        )
+                    }
+                    // Determine role from members
+                    val myMember = remoteMembers.firstOrNull { it.userId == userId }
+                    if (myMember != null) {
+                        listQueries.updateOwnership(
+                            ownerId = list.ownerId,
+                            role = myMember.role,
+                            isShared = list.ownerId != userId,
+                            id = list.id,
+                        )
+                    }
+                }
+            } catch (_: Exception) {}
+        }
+    }
+
+    private fun String.toListRole(): ListRole =
+        when (this) {
+            "editor" -> ListRole.EDITOR
+            "viewer" -> ListRole.VIEWER
+            else -> ListRole.OWNER
+        }
 
     private fun fromEntity(entity: Grocery, syncing: Set<Long>): GroceryItem {
         val syncStatus =

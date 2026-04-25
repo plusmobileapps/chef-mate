@@ -2,7 +2,9 @@ package com.plusmobileapps.chefmate.recipe.data.testing
 
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.recipe.data.RecipeCollaborator
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
+import com.plusmobileapps.chefmate.recipe.data.RecipeRole
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,6 +45,20 @@ class FakeRecipeRepository(
     }
 
     override suspend fun syncAllUnsynced() {}
+
+    override fun getSharedRecipes(): Flow<List<Recipe>> = MutableStateFlow(emptyList())
+
+    override suspend fun shareRecipe(recipeId: Long, email: String, role: RecipeRole) {}
+
+    override suspend fun forkRecipe(recipeId: Long): Recipe =
+        recipes.value.first { it.id == recipeId }.copy(id = recipeId + 1000)
+
+    override suspend fun acceptRecipeShare(recipeId: Long) {}
+
+    override suspend fun rejectRecipeShare(recipeId: Long) {}
+
+    override fun getRecipeCollaborators(recipeId: Long): Flow<List<RecipeCollaborator>> =
+        MutableStateFlow(emptyList())
 
     private fun Recipe.matchesFilter(presets: Set<BuiltinCategory>): Boolean {
         val recipeBuiltins = categories.mapNotNull { BuiltinCategory.fromId(it.builtinId) }.toSet()

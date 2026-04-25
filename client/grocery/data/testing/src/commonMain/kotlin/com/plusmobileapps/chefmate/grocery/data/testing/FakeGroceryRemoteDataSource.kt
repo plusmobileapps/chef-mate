@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.grocery.data.testing
 import com.plusmobileapps.chefmate.grocery.data.remote.GroceryRemoteDataSource
 import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryItem
 import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryList
+import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryListMember
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -63,5 +64,32 @@ class FakeGroceryRemoteDataSource : GroceryRemoteDataSource {
         val index = ownerLists.indexOfFirst { it.id == list.id }
         if (index >= 0) ownerLists[index] = list
         return list
+    }
+
+    val remoteMembers = mutableMapOf<String, MutableList<RemoteGroceryListMember>>()
+
+    override suspend fun fetchAccessibleGroceryLists(): List<RemoteGroceryList> =
+        remoteLists.values.flatten()
+
+    override suspend fun fetchListMembers(listId: String): List<RemoteGroceryListMember> =
+        remoteMembers[listId].orEmpty()
+
+    override suspend fun inviteToList(member: RemoteGroceryListMember): RemoteGroceryListMember {
+        val result = member.copy(id = member.id ?: "remote-member-${Uuid.random()}")
+        remoteMembers.getOrPut(member.listId) { mutableListOf() }.add(result)
+        return result
+    }
+
+    override suspend fun respondToInvitation(memberId: String, accept: Boolean) {
+        remoteMembers.values.forEach { members ->
+            val idx = members.indexOfFirst { it.id == memberId }
+            if (idx >= 0) {
+                members[idx] = members[idx].copy(status = if (accept) "accepted" else "rejected")
+            }
+        }
+    }
+
+    override suspend fun removeFromList(memberId: String) {
+        remoteMembers.values.forEach { it.removeAll { m -> m.id == memberId } }
     }
 }

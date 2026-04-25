@@ -26,4 +26,16 @@ interface RecipeRepository {
     suspend fun clearLocalData()
 
     suspend fun syncAllUnsynced()
+
+    fun getSharedRecipes(): Flow<List<Recipe>>
+
+    suspend fun shareRecipe(recipeId: Long, email: String, role: RecipeRole = RecipeRole.VIEWER)
+
+    suspend fun forkRecipe(recipeId: Long): Recipe
+
+    suspend fun acceptRecipeShare(recipeId: Long)
+
+    suspend fun rejectRecipeShare(recipeId: Long)
+
+    fun getRecipeCollaborators(recipeId: Long): Flow<List<RecipeCollaborator>>
 }

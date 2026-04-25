@@ -13,11 +13,14 @@ import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.recipe.data.RecipeCollaborator
 import com.plusmobileapps.chefmate.recipe.data.RecipePhotoStorage
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
+import com.plusmobileapps.chefmate.recipe.data.RecipeRole
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.recipe.data.impl.remote.RecipeRemoteDataSource
 import com.plusmobileapps.chefmate.recipe.data.impl.remote.RemoteRecipe
+import com.plusmobileapps.chefmate.recipe.data.impl.remote.RemoteRecipeShare
 import com.plusmobileapps.chefmate.util.DateTimeUtil
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -380,13 +383,27 @@ class RecipeRepositoryImpl(
                 } catch (_: Exception) {}
             }
 
-            // Pull remote recipes
-            val remoteRecipes = remoteDataSource.fetchAllRecipes(userId)
+            // Pull all accessible recipes (RLS handles filtering)
+            val remoteRecipes = remoteDataSource.fetchAccessibleRecipes()
             withContext(ioContext) {
                 for (remote in remoteRecipes) {
                     val remoteId = remote.id ?: continue
+                    val isOwned = remote.ownerId == userId
+                    val role = if (isOwned) "owner" else "viewer"
+                    val isShared = !isOwned
+
                     val existing = db.getByRemoteId(remoteId).executeAsOneOrNull()
-                    if (existing != null) continue
+                    if (existing != null) {
+                        db.updateOwnership(role = role, isShared = isShared, id = existing.id)
+                        if (remote.forkedFrom != null) {
+                            db.updateForkedFrom(
+                                forkedFromRemoteId = remote.forkedFrom,
+                                forkedFromTitle = null,
+                                id = existing.id,
+                            )
+                        }
+                        continue
+                    }
 
                     val matchedByClientId =
                         remote.clientId?.let { clientId ->
@@ -394,6 +411,11 @@ class RecipeRepositoryImpl(
                         }
                     if (matchedByClientId != null) {
                         db.updateRemoteId(remoteId = remoteId, id = matchedByClientId.id)
+                        db.updateOwnership(
+                            role = role,
+                            isShared = isShared,
+                            id = matchedByClientId.id,
+                        )
                     } else {
                         db.createWithRemoteId(
                             title = remote.title,
@@ -413,8 +435,19 @@ class RecipeRepositoryImpl(
                             updatedAt = remote.updatedAt ?: dateTimeUtil.now.toString(),
                             remoteId = remoteId,
                             clientId = remote.clientId,
-                            ownerId = userId,
+                            ownerId = remote.ownerId,
                         )
+                        val newId = db.lastInsertId().executeAsOne().MAX
+                        if (newId != null) {
+                            db.updateOwnership(role = role, isShared = isShared, id = newId)
+                            if (remote.forkedFrom != null) {
+                                db.updateForkedFrom(
+                                    forkedFromRemoteId = remote.forkedFrom,
+                                    forkedFromTitle = null,
+                                    id = newId,
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -478,6 +511,106 @@ class RecipeRepositoryImpl(
         }
     }
 
+    override fun getSharedRecipes(): Flow<List<Recipe>> =
+        db.getShared()
+            .asFlow()
+            .map { it.executeAsList() }
+            .map { recipes -> recipes.map { it.toRecipe() } }
+            .flowOn(ioContext)
+
+    override suspend fun shareRecipe(recipeId: Long, email: String, role: RecipeRole) {
+        val authState = authRepository.state.value
+        if (authState !is AuthState.Authenticated) return
+        val recipe = withContext(ioContext) { db.getById(recipeId).executeAsOneOrNull() } ?: return
+        val remoteRecipeId = recipe.remoteId ?: return
+
+        remoteDataSource.shareRecipe(
+            RemoteRecipeShare(
+                recipeId = remoteRecipeId,
+                invitedEmail = email,
+                role = role.name.lowercase(),
+                invitedBy = authState.user.userId,
+            )
+        )
+    }
+
+    override suspend fun forkRecipe(recipeId: Long): Recipe {
+        val original =
+            withContext(ioContext) { db.getById(recipeId).executeAsOneOrNull() }
+                ?: error("Recipe not found")
+        val forkedFromRemoteId = original.remoteId
+
+        val forked =
+            createRecipe(
+                Recipe(
+                    id = 0,
+                    title = original.title,
+                    description = original.description,
+                    ingredients = original.ingredients.orEmpty(),
+                    directions = original.directions.orEmpty(),
+                    imageUrl = original.imageUrl,
+                    sourceUrl = original.sourceUrl,
+                    servings = original.servings?.toInt(),
+                    prepTime = original.prepTime?.toInt(),
+                    cookTime = original.cookTime?.toInt(),
+                    totalTime = original.totalTime?.toInt(),
+                    calories = original.calories?.toInt(),
+                    starRating = original.starRating?.toInt(),
+                    isFavorite = false,
+                    createdAt = Instant.parse(dateTimeUtil.now.toString()),
+                    updatedAt = Instant.parse(dateTimeUtil.now.toString()),
+                    forkedFromRemoteId = forkedFromRemoteId,
+                    forkedFromTitle = original.title,
+                )
+            )
+
+        if (forkedFromRemoteId != null) {
+            withContext(ioContext) {
+                db.updateForkedFrom(
+                    forkedFromRemoteId = forkedFromRemoteId,
+                    forkedFromTitle = original.title,
+                    id = forked.id,
+                )
+            }
+        }
+
+        return forked
+    }
+
+    override suspend fun acceptRecipeShare(recipeId: Long) {
+        val authState = authRepository.state.value
+        if (authState !is AuthState.Authenticated) return
+        val recipe = withContext(ioContext) { db.getById(recipeId).executeAsOneOrNull() } ?: return
+        val remoteRecipeId = recipe.remoteId ?: return
+
+        val shares = remoteDataSource.fetchRecipeShares(remoteRecipeId)
+        val myShare = shares.firstOrNull { it.userId == authState.user.userId }
+        myShare?.id?.let { remoteDataSource.respondToRecipeShare(it, accept = true) }
+    }
+
+    override suspend fun rejectRecipeShare(recipeId: Long) {
+        val authState = authRepository.state.value
+        if (authState !is AuthState.Authenticated) return
+        val recipe = withContext(ioContext) { db.getById(recipeId).executeAsOneOrNull() } ?: return
+        val remoteRecipeId = recipe.remoteId ?: return
+
+        val shares = remoteDataSource.fetchRecipeShares(remoteRecipeId)
+        val myShare = shares.firstOrNull { it.userId == authState.user.userId }
+        myShare?.id?.let { remoteDataSource.respondToRecipeShare(it, accept = false) }
+        withContext(ioContext) { db.delete(recipeId) }
+    }
+
+    override fun getRecipeCollaborators(recipeId: Long): Flow<List<RecipeCollaborator>> =
+        MutableStateFlow(emptyList<RecipeCollaborator>())
+
+    private fun String.toRecipeRole(): RecipeRole =
+        when (this) {
+            "editor" -> RecipeRole.EDITOR
+            "viewer" -> RecipeRole.VIEWER
+            else -> RecipeRole.OWNER
+        }
+
+
     private fun DbRecipe.toRecipe(syncing: Set<Long> = emptySet()): Recipe {
         val syncStatus =
             when {
@@ -519,6 +652,10 @@ class RecipeRepositoryImpl(
             syncStatus = syncStatus,
             createdAt = Instant.parse(createdAt),
             updatedAt = Instant.parse(updatedAt),
+            forkedFromRemoteId = forkedFromRemoteId,
+            forkedFromTitle = forkedFromTitle,
+            role = role.toRecipeRole(),
+            isShared = isShared,
         )
     }
 

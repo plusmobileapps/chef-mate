@@ -33,6 +33,7 @@ class GroceryRepositoryImplTest {
         GroceryRepositoryImpl(
             queries = db.groceryQueries,
             listQueries = db.groceryListQueries,
+            memberQueries = db.groceryListMemberQueries,
             ioContext = testDispatcher,
             dateTimeUtil = dateTimeUtil,
             remoteDataSource = fakeRemote,
