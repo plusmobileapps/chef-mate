@@ -126,8 +126,13 @@ class AddRecipeToGroceryListViewModel(
                     .filter { it.isNotBlank() }
                     .map { raw ->
                         val parsed = IngredientParser.parse(raw)
-                        ListItem(id = raw.hashCode(), name = raw, isSelected = true) to
-                            parsed.category
+                        ListItem(
+                            id = raw.hashCode(),
+                            name = raw,
+                            displayName = parsed.name,
+                            quantity = parsed.quantity,
+                            isSelected = true,
+                        ) to parsed.category
                     }
                     .groupBy { it.second }
                     .entries

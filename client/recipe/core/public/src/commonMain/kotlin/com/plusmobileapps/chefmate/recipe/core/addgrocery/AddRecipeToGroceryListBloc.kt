@@ -19,7 +19,13 @@ interface AddRecipeToGroceryListBloc : BackClickBloc {
 
     data class IngredientGroup(val category: GroceryCategory, val items: List<ListItem>)
 
-    data class ListItem(val id: Int, val name: String, val isSelected: Boolean)
+    data class ListItem(
+        val id: Int,
+        val name: String,
+        val displayName: String,
+        val quantity: String? = null,
+        val isSelected: Boolean,
+    )
 
     data class Model(
         val isLoading: Boolean,
