@@ -20,9 +20,10 @@ actual fun PlatformWebView(
     instanceKeeper: InstanceKeeper,
     modifier: Modifier,
 ) {
-    val webViewState = rememberWebViewState(url = url)
+    val initialUrl = remember { url }
+    val webViewState = rememberWebViewState(url = initialUrl)
     val webViewNavigator = rememberWebViewNavigator()
-    var lastCommandedUrl by remember { mutableStateOf("") }
+    var lastCommandedUrl by remember { mutableStateOf(initialUrl) }
 
     LaunchedEffect(url) {
         if (url.isNotBlank() && url != lastCommandedUrl) {
