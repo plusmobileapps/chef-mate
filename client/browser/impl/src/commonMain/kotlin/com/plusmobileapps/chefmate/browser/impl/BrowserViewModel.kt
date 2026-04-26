@@ -41,7 +41,8 @@ class BrowserViewModel(
     }
 
     fun onUrlLoadedInWebView(url: String) {
-        _state.value = _state.value.copy(webViewReportedUrl = url, addressBarText = url)
+        _state.value =
+            _state.value.copy(currentUrl = url, webViewReportedUrl = url, addressBarText = url)
     }
 
     fun onWebViewLoadingChanged(isLoading: Boolean) {
