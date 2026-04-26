@@ -13,8 +13,10 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import chefmate.client.browser.public.generated.resources.Res
 import chefmate.client.browser.public.generated.resources.browser_address_hint
 import chefmate.client.browser.public.generated.resources.browser_extract_recipe
+import chefmate.client.browser.public.generated.resources.browser_view_recipe
 import chefmate.client.browser.public.generated.resources.tab_browser
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
@@ -42,10 +45,21 @@ fun BrowserScreen(bloc: BrowserBloc, modifier: Modifier = Modifier) {
 
     val message = viewState.extractionMessage
     val messageText = message?.localized()
+    val actionLabel =
+        if (viewState.hasExtractedRecipe) stringResource(Res.string.browser_view_recipe) else null
     LaunchedEffect(message) {
         if (messageText != null) {
-            snackbarHostState.showSnackbar(messageText)
-            bloc.onDismissMessage()
+            val result =
+                snackbarHostState.showSnackbar(
+                    message = messageText,
+                    actionLabel = actionLabel,
+                    duration =
+                        if (actionLabel != null) SnackbarDuration.Long else SnackbarDuration.Short,
+                )
+            when (result) {
+                SnackbarResult.ActionPerformed -> bloc.onViewExtractedRecipe()
+                SnackbarResult.Dismissed -> bloc.onDismissMessage()
+            }
         }
     }
 
@@ -65,12 +79,14 @@ fun BrowserScreen(bloc: BrowserBloc, modifier: Modifier = Modifier) {
                     onNavigate = bloc::onNavigate,
                     showExtract = viewState.currentUrl.isNotBlank(),
                     isExtracting = viewState.isExtracting,
+                    isWebViewLoading = viewState.isWebViewLoading,
                     onExtractRecipe = bloc::onExtractRecipe,
                 )
             }
             PlatformWebView(
                 url = viewState.navigateUrl,
                 onUrlLoaded = bloc::onUrlLoadedInWebView,
+                onLoadingChanged = bloc::onWebViewLoadingChanged,
                 instanceKeeper = bloc.instanceKeeper,
                 modifier = Modifier.fillMaxWidth().weight(1f),
             )
@@ -85,6 +101,7 @@ private fun AddressBar(
     onNavigate: () -> Unit,
     showExtract: Boolean,
     isExtracting: Boolean,
+    isWebViewLoading: Boolean,
     onExtractRecipe: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -109,8 +126,8 @@ private fun AddressBar(
             )
         }
         if (showExtract) {
-            IconButton(onClick = onExtractRecipe) {
-                if (isExtracting) {
+            IconButton(onClick = onExtractRecipe, enabled = !isWebViewLoading && !isExtracting) {
+                if (isExtracting || isWebViewLoading) {
                     CircularProgressIndicator()
                 } else {
                     Icon(

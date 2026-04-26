@@ -5,4 +5,5 @@
     <string name="browser_extracting">Extracting recipe…</string>
     <string name="browser_extraction_failed">Failed to extract recipe from this page</string>
     <string name="browser_recipe_saved">Recipe saved!</string>
+    <string name="browser_view_recipe">View Recipe</string>
 </resources>

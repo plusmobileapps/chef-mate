@@ -20,24 +20,21 @@ import javax.swing.JPanel
 actual fun PlatformWebView(
     url: String,
     onUrlLoaded: (String) -> Unit,
+    onLoadingChanged: (Boolean) -> Unit,
     instanceKeeper: InstanceKeeper,
     modifier: Modifier,
 ) {
     val holder = remember { instanceKeeper.getOrCreate { WebViewHolder() } }
 
     DisposableEffect(Unit) {
-        holder.ensureInitialized(onUrlLoaded, url)
+        holder.ensureInitialized(onUrlLoaded, onLoadingChanged, url)
         onDispose {}
     }
 
     LaunchedEffect(url) {
-        if (url.isNotBlank()) {
-            Platform.runLater {
-                val currentLocation = holder.webView?.engine?.location
-                if (currentLocation != url) {
-                    holder.webView?.engine?.load(url)
-                }
-            }
+        if (url.isNotBlank() && url != holder.lastCommandedUrl) {
+            holder.lastCommandedUrl = url
+            Platform.runLater { holder.webView?.engine?.load(url) }
         }
     }
 
@@ -54,9 +51,15 @@ private class WebViewHolder : InstanceKeeper.Instance {
     var webView: WebView? = null
         private set
 
+    @Volatile var lastCommandedUrl: String = ""
+
     private var initialized = false
 
-    fun ensureInitialized(onUrlLoaded: (String) -> Unit, initialUrl: String) {
+    fun ensureInitialized(
+        onUrlLoaded: (String) -> Unit,
+        onLoadingChanged: (Boolean) -> Unit,
+        initialUrl: String,
+    ) {
         if (initialized) return
         initialized = true
 
@@ -65,8 +68,18 @@ private class WebViewHolder : InstanceKeeper.Instance {
             webView = wv
 
             wv.engine.loadWorker.stateProperty().addListener { _, _, newState ->
-                if (newState == Worker.State.SUCCEEDED) {
-                    wv.engine.location?.let(onUrlLoaded)
+                when (newState) {
+                    Worker.State.RUNNING -> onLoadingChanged(true)
+                    Worker.State.SUCCEEDED -> {
+                        onLoadingChanged(false)
+                        wv.engine.location?.let {
+                            lastCommandedUrl = it
+                            onUrlLoaded(it)
+                        }
+                    }
+                    Worker.State.FAILED,
+                    Worker.State.CANCELLED -> onLoadingChanged(false)
+                    else -> {}
                 }
             }
 

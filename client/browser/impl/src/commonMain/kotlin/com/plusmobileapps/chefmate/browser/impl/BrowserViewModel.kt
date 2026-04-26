@@ -44,6 +44,10 @@ class BrowserViewModel(
         _state.value = _state.value.copy(webViewReportedUrl = url, addressBarText = url)
     }
 
+    fun onWebViewLoadingChanged(isLoading: Boolean) {
+        _state.value = _state.value.copy(isWebViewLoading = isLoading)
+    }
+
     fun extractRecipe() {
         val url = _state.value.webViewReportedUrl.ifBlank { _state.value.currentUrl }
         if (url.isBlank() || _state.value.isExtracting) return
@@ -78,8 +82,8 @@ class BrowserViewModel(
                     _state.value.copy(
                         isExtracting = false,
                         extractionMessage = ExtractMessage.SUCCESS,
+                        extractedRecipeId = recipe.id,
                     )
-                output?.onNext(BrowserBloc.Output.RecipeExtracted(recipe.id))
             } catch (e: Exception) {
                 Logger.d(e) { "Failed to extract recipe from $url" }
                 _state.value =
@@ -91,8 +95,14 @@ class BrowserViewModel(
         }
     }
 
+    fun onViewExtractedRecipe() {
+        val recipeId = _state.value.extractedRecipeId ?: return
+        _state.value = _state.value.copy(extractionMessage = null, extractedRecipeId = null)
+        output?.onNext(BrowserBloc.Output.RecipeExtracted(recipeId))
+    }
+
     fun dismissMessage() {
-        _state.value = _state.value.copy(extractionMessage = null)
+        _state.value = _state.value.copy(extractionMessage = null, extractedRecipeId = null)
     }
 
     private fun String.ensureHttps(): String =
@@ -107,7 +117,9 @@ class BrowserViewModel(
         val addressBarText: String = DEFAULT_URL,
         val webViewReportedUrl: String = "",
         val isExtracting: Boolean = false,
+        val isWebViewLoading: Boolean = false,
         val extractionMessage: ExtractMessage? = null,
+        val extractedRecipeId: Long? = null,
     )
 
     companion object {

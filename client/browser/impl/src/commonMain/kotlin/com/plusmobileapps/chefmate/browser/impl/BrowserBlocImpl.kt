@@ -41,9 +41,10 @@ class BrowserBlocImpl(
         viewModel.state.mapState {
             BrowserBloc.Model(
                 currentUrl = it.webViewReportedUrl.ifBlank { it.currentUrl },
-                navigateUrl = it.currentUrl,
+                navigateUrl = it.webViewReportedUrl.ifBlank { it.currentUrl },
                 addressBarText = it.addressBarText,
                 isExtracting = it.isExtracting,
+                isWebViewLoading = it.isWebViewLoading,
                 showControls = showControls,
                 extractionMessage =
                     it.extractionMessage?.let { msg ->
@@ -53,6 +54,7 @@ class BrowserBlocImpl(
                                 createExtractionFailedMessage()
                         }
                     },
+                hasExtractedRecipe = it.extractedRecipeId != null,
             )
         }
 
@@ -68,8 +70,16 @@ class BrowserBlocImpl(
         viewModel.onUrlLoadedInWebView(url)
     }
 
+    override fun onWebViewLoadingChanged(isLoading: Boolean) {
+        viewModel.onWebViewLoadingChanged(isLoading)
+    }
+
     override fun onExtractRecipe() {
         viewModel.extractRecipe()
+    }
+
+    override fun onViewExtractedRecipe() {
+        viewModel.onViewExtractedRecipe()
     }
 
     override fun onDismissMessage() {

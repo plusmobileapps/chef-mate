@@ -17,7 +17,11 @@ interface BrowserBloc {
 
     fun onUrlLoadedInWebView(url: String)
 
+    fun onWebViewLoadingChanged(isLoading: Boolean)
+
     fun onExtractRecipe()
+
+    fun onViewExtractedRecipe()
 
     fun onDismissMessage()
 
@@ -26,7 +30,9 @@ interface BrowserBloc {
         val navigateUrl: String = "",
         val addressBarText: String = "",
         val isExtracting: Boolean = false,
+        val isWebViewLoading: Boolean = false,
         val extractionMessage: TextData? = null,
+        val hasExtractedRecipe: Boolean = false,
         val showControls: Boolean = true,
     )
 
