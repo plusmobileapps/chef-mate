@@ -40,7 +40,7 @@ class AddRecipeToGroceryListBlocImpl(
             AddRecipeToGroceryListBloc.Model(
                 isLoading = it.isLoading,
                 isAdding = it.isAdding,
-                ingredients = it.ingredients,
+                groupedIngredients = it.groupedIngredients,
                 groceryLists = it.groceryLists,
                 selectedGroceryList = it.selectedGroceryList,
             )

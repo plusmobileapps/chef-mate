@@ -3,8 +3,10 @@ package com.plusmobileapps.chefmate.recipe.core.impl.addgrocery
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
+import com.plusmobileapps.chefmate.grocery.data.IngredientParser
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc.GroceryListItem
-import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc.Model.ListItem
+import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc.IngredientGroup
+import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc.ListItem
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import com.russhwolf.settings.Settings
@@ -48,13 +50,18 @@ class AddRecipeToGroceryListViewModel(
     fun toggleIngredient(ingredientId: Int) {
         _state.update {
             it.copy(
-                ingredients =
-                    it.ingredients.map { ingredient ->
-                        if (ingredient.id == ingredientId) {
-                            ingredient.copy(isSelected = !ingredient.isSelected)
-                        } else {
-                            ingredient
-                        }
+                groupedIngredients =
+                    it.groupedIngredients.map { group ->
+                        group.copy(
+                            items =
+                                group.items.map { ingredient ->
+                                    if (ingredient.id == ingredientId) {
+                                        ingredient.copy(isSelected = !ingredient.isSelected)
+                                    } else {
+                                        ingredient
+                                    }
+                                }
+                        )
                     }
             )
         }
@@ -67,7 +74,11 @@ class AddRecipeToGroceryListViewModel(
     }
 
     fun save() {
-        val ingredients = state.value.ingredients.filter { it.isSelected }.map { it.name }
+        val ingredients =
+            state.value.groupedIngredients
+                .flatMap { it.items }
+                .filter { it.isSelected }
+                .map { it.name }
         val selectedListId = state.value.selectedGroceryList?.id
         _state.update { it.copy(isAdding = true) }
         scope.launch {
@@ -109,15 +120,24 @@ class AddRecipeToGroceryListViewModel(
                         _output.send(Output.Finished)
                         return@launch
                     }
-            val ingredients =
-                recipe.ingredients.split("\n").mapIndexedNotNull { _, ingredient ->
-                    if (ingredient.isBlank()) {
-                        null
-                    } else {
-                        ListItem(id = ingredient.hashCode(), name = ingredient, isSelected = true)
+            val grouped =
+                recipe.ingredients
+                    .split("\n")
+                    .filter { it.isNotBlank() }
+                    .map { raw ->
+                        val parsed = IngredientParser.parse(raw)
+                        ListItem(id = raw.hashCode(), name = raw, isSelected = true) to
+                            parsed.category
                     }
-                }
-            _state.update { it.copy(isLoading = false, recipe = recipe, ingredients = ingredients) }
+                    .groupBy { it.second }
+                    .entries
+                    .sortedBy { it.key.ordinal }
+                    .map { (category, pairs) ->
+                        IngredientGroup(category = category, items = pairs.map { it.first })
+                    }
+            _state.update {
+                it.copy(isLoading = false, recipe = recipe, groupedIngredients = grouped)
+            }
         }
     }
 
@@ -125,7 +145,7 @@ class AddRecipeToGroceryListViewModel(
         val isLoading: Boolean = true,
         val isAdding: Boolean = false,
         val recipe: Recipe = Recipe.Empty,
-        val ingredients: List<ListItem> = emptyList(),
+        val groupedIngredients: List<IngredientGroup> = emptyList(),
         val groceryLists: List<GroceryListItem> = emptyList(),
         val selectedGroceryList: GroceryListItem? = null,
     )
