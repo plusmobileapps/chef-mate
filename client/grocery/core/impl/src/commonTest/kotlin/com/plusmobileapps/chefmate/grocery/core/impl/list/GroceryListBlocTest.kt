@@ -88,4 +88,107 @@ class GroceryListBlocTest {
         bloc.onGroceryItemDelete(item)
         verifySuspend { repository.deleteGrocery(item) }
     }
+
+    @Test
+    fun When_alphabetical_sort_applied_Then_items_sorted_alphabetically() = runTest {
+        val items =
+            listOf(
+                GroceryItem(
+                    id = 1,
+                    name = "Chicken",
+                    displayName = "Chicken",
+                    category = GroceryCategory.MEAT,
+                    isChecked = false,
+                ),
+                GroceryItem(
+                    id = 2,
+                    name = "Apples",
+                    displayName = "Apples",
+                    category = GroceryCategory.PRODUCE,
+                    isChecked = false,
+                ),
+                GroceryItem(
+                    id = 3,
+                    name = "Bread",
+                    displayName = "Bread",
+                    category = GroceryCategory.BAKERY,
+                    isChecked = false,
+                ),
+            )
+        groceries.emit(items)
+        bloc.onApplySortAndFilter(
+            GroceryListBloc.GrocerySort.ALPHABETICAL,
+            GroceryListBloc.GroceryFilter.ALL,
+        )
+        bloc.state.test {
+            val result = awaitItem()
+            result.sort shouldBe GroceryListBloc.GrocerySort.ALPHABETICAL
+            result.groupedItems.size shouldBe 1
+            result.groupedItems[0].items.map { it.displayName } shouldBe
+                listOf("Apples", "Bread", "Chicken")
+        }
+    }
+
+    @Test
+    fun When_sort_and_filter_applied_Then_state_reflects_both() = runTest {
+        val items =
+            listOf(
+                GroceryItem(
+                    id = 1,
+                    name = "Apples",
+                    displayName = "Apples",
+                    category = GroceryCategory.PRODUCE,
+                    isChecked = true,
+                ),
+                GroceryItem(
+                    id = 2,
+                    name = "Bananas",
+                    displayName = "Bananas",
+                    category = GroceryCategory.PRODUCE,
+                    isChecked = false,
+                ),
+            )
+        groceries.emit(items)
+        bloc.onApplySortAndFilter(
+            GroceryListBloc.GrocerySort.ALPHABETICAL,
+            GroceryListBloc.GroceryFilter.UNPURCHASED,
+        )
+        bloc.state.test {
+            val result = awaitItem()
+            result.sort shouldBe GroceryListBloc.GrocerySort.ALPHABETICAL
+            result.filter shouldBe GroceryListBloc.GroceryFilter.UNPURCHASED
+            result.groupedItems.flatMap { it.items }.size shouldBe 1
+            result.groupedItems.flatMap { it.items }.first().displayName shouldBe "Bananas"
+        }
+    }
+
+    @Test
+    fun When_items_have_recipe_name_Then_model_contains_recipe_name() = runTest {
+        bloc.state.test {
+            awaitItem() shouldBe GroceryListBloc.Model()
+            val items =
+                listOf(
+                    GroceryItem(
+                        id = 1,
+                        name = "Flour",
+                        displayName = "Flour",
+                        category = GroceryCategory.BAKING,
+                        isChecked = false,
+                        recipeName = "Chocolate Cake",
+                    ),
+                    GroceryItem(
+                        id = 2,
+                        name = "Sugar",
+                        displayName = "Sugar",
+                        category = GroceryCategory.BAKING,
+                        isChecked = false,
+                    ),
+                )
+            groceries.emit(items)
+            val result = awaitItem()
+            val bakingItems = result.groupedItems.first { it.category == GroceryCategory.BAKING }
+            bakingItems.items[0].recipeName shouldBe "Chocolate Cake"
+            bakingItems.items[1].recipeName shouldBe null
+        }
+    }
 }

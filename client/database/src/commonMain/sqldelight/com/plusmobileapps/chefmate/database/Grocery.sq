@@ -10,22 +10,24 @@ CREATE TABLE Grocery (
     listRemoteId TEXT,
     clientId TEXT,
     isDirty INTEGER AS Boolean NOT NULL DEFAULT 0,
-    listId INTEGER
+    listId INTEGER,
+    recipeName TEXT
 );
 
 create:
-INSERT INTO Grocery (name, isChecked, createdAt, updatedAt, clientId, listId) VALUES (?, ?, ?, ?, ?, ?);
+INSERT INTO Grocery (name, isChecked, createdAt, updatedAt, clientId, listId, recipeName) VALUES (?, ?, ?, ?, ?, ?, ?);
 
 createWithRemoteId:
-INSERT INTO Grocery (name, isChecked, createdAt, updatedAt, remoteId, listRemoteId, clientId, listId)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO Grocery (name, isChecked, createdAt, updatedAt, remoteId, listRemoteId, clientId, listId, recipeName)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(remoteId) DO UPDATE SET
     name = excluded.name,
     isChecked = excluded.isChecked,
     updatedAt = excluded.updatedAt,
     listRemoteId = excluded.listRemoteId,
     clientId = excluded.clientId,
-    listId = excluded.listId;
+    listId = excluded.listId,
+    recipeName = excluded.recipeName;
 
 readAll:
 SELECT * FROM Grocery ORDER BY name DESC;

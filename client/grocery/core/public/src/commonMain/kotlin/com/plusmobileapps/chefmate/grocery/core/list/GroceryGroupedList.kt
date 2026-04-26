@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import chefmate.client.grocery.core.public.generated.resources.Res
 import chefmate.client.grocery.core.public.generated.resources.grocery_checked
 import chefmate.client.grocery.core.public.generated.resources.grocery_not_checked
+import chefmate.client.grocery.core.public.generated.resources.grocery_recipe_source
 import com.plusmobileapps.chefmate.grocery.core.displayName
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import org.jetbrains.compose.resources.stringResource
@@ -33,6 +34,7 @@ data class GroceryDisplayItem(
     val displayName: String,
     val quantity: String? = null,
     val isChecked: Boolean = false,
+    val recipeName: String? = null,
 )
 
 data class GroceryDisplayGroup(val category: GroceryCategory, val items: List<GroceryDisplayItem>)
@@ -44,13 +46,16 @@ fun GroceryGroupedList(
     onItemClick: (Any) -> Unit,
     onCheckedChange: (Any) -> Unit,
     modifier: Modifier = Modifier,
+    showHeaders: Boolean = true,
     trailingContent: (@Composable (GroceryDisplayItem) -> Unit)? = null,
     footer: (LazyListScope.() -> Unit)? = null,
 ) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
         groups.forEach { group ->
-            stickyHeader(key = "header_${group.category.name}") {
-                CategoryHeader(category = group.category)
+            if (showHeaders) {
+                stickyHeader(key = "header_${group.category.name}") {
+                    CategoryHeader(category = group.category)
+                }
             }
             items(group.items.size, key = { group.items[it].key }) { index ->
                 val item = group.items[index]
@@ -112,6 +117,14 @@ private fun GroceryDisplayListItem(
                     text = quantity,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            val recipeName = item.recipeName
+            if (recipeName != null) {
+                Text(
+                    text = stringResource(Res.string.grocery_recipe_source, recipeName),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         }

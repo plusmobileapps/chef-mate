@@ -1,12 +1,17 @@
 package com.plusmobileapps.chefmate.grocery.core.list
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -18,11 +23,13 @@ import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,6 +54,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import chefmate.client.grocery.core.public.generated.resources.Res
 import chefmate.client.grocery.core.public.generated.resources.grocery_add_item
+import chefmate.client.grocery.core.public.generated.resources.grocery_apply
 import chefmate.client.grocery.core.public.generated.resources.grocery_cancel
 import chefmate.client.grocery.core.public.generated.resources.grocery_create_list_cancel
 import chefmate.client.grocery.core.public.generated.resources.grocery_create_list_confirm
@@ -62,10 +70,15 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_delete_li
 import chefmate.client.grocery.core.public.generated.resources.grocery_delete_purchased
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter_all
+import chefmate.client.grocery.core.public.generated.resources.grocery_filter_by
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter_purchased
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter_unpurchased
 import chefmate.client.grocery.core.public.generated.resources.grocery_list
 import chefmate.client.grocery.core.public.generated.resources.grocery_select_list
+import chefmate.client.grocery.core.public.generated.resources.grocery_sort_aisle
+import chefmate.client.grocery.core.public.generated.resources.grocery_sort_alphabetical
+import chefmate.client.grocery.core.public.generated.resources.grocery_sort_and_filter
+import chefmate.client.grocery.core.public.generated.resources.grocery_sort_by
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_all
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_not_synced
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_synced
@@ -81,6 +94,11 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
+    var showSortFilterSheet by remember { mutableStateOf(false) }
+    val hasActiveFilter = state.filter != GroceryListBloc.GroceryFilter.ALL
+    val hasNonDefaultSort = state.sort != GroceryListBloc.GrocerySort.AISLE
+    val activeCount = (if (hasActiveFilter) 1 else 0) + (if (hasNonDefaultSort) 1 else 0)
+
     PlusNavContainer(
         modifier = modifier.fillMaxSize(),
         data = PlusHeaderData.None,
@@ -101,7 +119,22 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
                     }
                 },
                 actions = {
-                    FilterButton(filter = state.filter, onFilterChanged = bloc::onFilterChanged)
+                    IconButton(onClick = { showSortFilterSheet = true }) {
+                        if (activeCount > 0) {
+                            BadgedBox(badge = { Badge { Text("$activeCount") } }) {
+                                Icon(
+                                    imageVector = Icons.Default.FilterList,
+                                    contentDescription = stringResource(Res.string.grocery_filter),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        } else {
+                            Icon(
+                                Icons.Default.FilterList,
+                                contentDescription = stringResource(Res.string.grocery_filter),
+                            )
+                        }
+                    }
                     IconButton(onClick = bloc::onDeleteClicked) {
                         Icon(
                             Icons.Default.DeleteSweep,
@@ -139,6 +172,7 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
                                         displayName = item.displayName,
                                         quantity = item.quantity,
                                         isChecked = item.isChecked,
+                                        recipeName = item.recipeName,
                                     )
                                 },
                         )
@@ -152,6 +186,7 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
                     }
                 },
                 modifier = Modifier.weight(1f),
+                showHeaders = state.sort == GroceryListBloc.GrocerySort.AISLE,
                 trailingContent = { displayItem ->
                     val item = itemLookup[displayItem.key as Long]
                     if (item != null) {
@@ -169,6 +204,18 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
             )
         },
     )
+
+    if (showSortFilterSheet) {
+        GrocerySortFilterBottomSheet(
+            currentSort = state.sort,
+            currentFilter = state.filter,
+            onApply = { sort, filter ->
+                bloc.onApplySortAndFilter(sort, filter)
+                showSortFilterSheet = false
+            },
+            onDismiss = { showSortFilterSheet = false },
+        )
+    }
 
     if (state.showListSelector) {
         GroceryListSelectorSheet(
@@ -196,46 +243,86 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-private fun FilterButton(
-    filter: GroceryListBloc.GroceryFilter,
-    onFilterChanged: (GroceryListBloc.GroceryFilter) -> Unit,
+private fun GrocerySortFilterBottomSheet(
+    currentSort: GroceryListBloc.GrocerySort,
+    currentFilter: GroceryListBloc.GroceryFilter,
+    onApply: (sort: GroceryListBloc.GrocerySort, filter: GroceryListBloc.GroceryFilter) -> Unit,
+    onDismiss: () -> Unit,
 ) {
-    var filterExpanded by remember { mutableStateOf(false) }
-    IconButton(onClick = { filterExpanded = true }) {
-        Icon(
-            Icons.Default.FilterList,
-            contentDescription = stringResource(Res.string.grocery_filter),
-        )
-    }
-    DropdownMenu(expanded = filterExpanded, onDismissRequest = { filterExpanded = false }) {
-        GroceryListBloc.GroceryFilter.entries.forEach { filterOption ->
-            val label =
-                when (filterOption) {
-                    GroceryListBloc.GroceryFilter.ALL ->
-                        stringResource(Res.string.grocery_filter_all)
-                    GroceryListBloc.GroceryFilter.UNPURCHASED ->
-                        stringResource(Res.string.grocery_filter_unpurchased)
-                    GroceryListBloc.GroceryFilter.PURCHASED ->
-                        stringResource(Res.string.grocery_filter_purchased)
-                }
-            DropdownMenuItem(
-                text = {
-                    Text(
-                        text = label,
-                        color =
-                            if (filter == filterOption) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
-                            },
-                    )
-                },
-                onClick = {
-                    onFilterChanged(filterOption)
-                    filterExpanded = false
-                },
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    var selectedSort by remember { mutableStateOf(currentSort) }
+    var selectedFilter by remember { mutableStateOf(currentFilter) }
+
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp).navigationBarsPadding()) {
+            Text(
+                text = stringResource(Res.string.grocery_sort_and_filter),
+                style = MaterialTheme.typography.titleLarge,
             )
+            Spacer(Modifier.height(16.dp))
+
+            Text(
+                text = stringResource(Res.string.grocery_sort_by),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(8.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                GroceryListBloc.GrocerySort.entries.forEach { option ->
+                    FilterChip(
+                        selected = option == selectedSort,
+                        onClick = { selectedSort = option },
+                        label = {
+                            Text(
+                                when (option) {
+                                    GroceryListBloc.GrocerySort.AISLE ->
+                                        stringResource(Res.string.grocery_sort_aisle)
+                                    GroceryListBloc.GrocerySort.ALPHABETICAL ->
+                                        stringResource(Res.string.grocery_sort_alphabetical)
+                                }
+                            )
+                        },
+                    )
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+
+            Text(
+                text = stringResource(Res.string.grocery_filter_by),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(8.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                GroceryListBloc.GroceryFilter.entries.forEach { filterOption ->
+                    FilterChip(
+                        selected = filterOption == selectedFilter,
+                        onClick = { selectedFilter = filterOption },
+                        label = {
+                            Text(
+                                when (filterOption) {
+                                    GroceryListBloc.GroceryFilter.ALL ->
+                                        stringResource(Res.string.grocery_filter_all)
+                                    GroceryListBloc.GroceryFilter.UNPURCHASED ->
+                                        stringResource(Res.string.grocery_filter_unpurchased)
+                                    GroceryListBloc.GroceryFilter.PURCHASED ->
+                                        stringResource(Res.string.grocery_filter_purchased)
+                                }
+                            )
+                        },
+                    )
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+            Button(
+                onClick = { onApply(selectedSort, selectedFilter) },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(Res.string.grocery_apply))
+            }
+            Spacer(Modifier.height(16.dp))
         }
     }
 }

@@ -6,6 +6,7 @@ import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryFilter
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryGroup
+import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GrocerySort
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
@@ -29,6 +30,7 @@ class GroceryListViewModel(
     private val _state = MutableStateFlow(State())
     private val _newGroceryItemName = MutableStateFlow("")
     private val selectedListId = MutableStateFlow<Long?>(null)
+    private val _sort = MutableStateFlow(GrocerySort.AISLE)
     private val _filter = MutableStateFlow(GroceryFilter.ALL)
 
     val state: StateFlow<State> = _state.asStateFlow()
@@ -67,22 +69,36 @@ class GroceryListViewModel(
                         }
                     },
                     _filter,
-                ) { items, filter ->
+                    _sort,
+                ) { items, filter, sort ->
                     val filtered =
                         when (filter) {
                             GroceryFilter.ALL -> items
                             GroceryFilter.UNPURCHASED -> items.filter { !it.isChecked }
                             GroceryFilter.PURCHASED -> items.filter { it.isChecked }
                         }
-                    val grouped =
-                        filtered
-                            .groupBy { it.category }
-                            .entries
-                            .sortedBy { it.key.ordinal }
-                            .map { (category, categoryItems) ->
-                                GroceryGroup(category = category, items = categoryItems)
-                            }
-                    grouped
+                    when (sort) {
+                        GrocerySort.AISLE ->
+                            filtered
+                                .groupBy { it.category }
+                                .entries
+                                .sortedBy { it.key.ordinal }
+                                .map { (category, categoryItems) ->
+                                    GroceryGroup(category = category, items = categoryItems)
+                                }
+                        GrocerySort.ALPHABETICAL ->
+                            listOf(
+                                    GroceryGroup(
+                                        category =
+                                            filtered.firstOrNull()?.category
+                                                ?: com.plusmobileapps.chefmate.grocery.data
+                                                    .GroceryCategory
+                                                    .OTHER,
+                                        items = filtered.sortedBy { it.displayName.lowercase() },
+                                    )
+                                )
+                                .filter { it.items.isNotEmpty() }
+                    }
                 }
                 .collect { grouped -> _state.update { it.copy(groupedItems = grouped) } }
         }
@@ -153,9 +169,10 @@ class GroceryListViewModel(
         }
     }
 
-    fun onFilterChanged(filter: GroceryFilter) {
+    fun onApplySortAndFilter(sort: GrocerySort, filter: GroceryFilter) {
+        _sort.value = sort
         _filter.value = filter
-        _state.update { it.copy(filter = filter) }
+        _state.update { it.copy(sort = sort, filter = filter) }
     }
 
     fun onDeleteClicked() {
@@ -188,6 +205,7 @@ class GroceryListViewModel(
 
     data class State(
         val groupedItems: List<GroceryGroup> = emptyList(),
+        val sort: GrocerySort = GrocerySort.AISLE,
         val filter: GroceryFilter = GroceryFilter.ALL,
         val isSyncing: Boolean = false,
         val lists: List<GroceryListModel> = emptyList(),

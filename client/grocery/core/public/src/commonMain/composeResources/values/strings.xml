@@ -27,6 +27,13 @@
     <string name="grocery_delete_purchased">Delete Purchased</string>
     <string name="grocery_delete_all">Delete All</string>
     <string name="grocery_cancel">Cancel</string>
+    <string name="grocery_sort_and_filter">Sort &amp; Filter</string>
+    <string name="grocery_sort_by">Sort by</string>
+    <string name="grocery_sort_aisle">Aisle</string>
+    <string name="grocery_sort_alphabetical">Alphabetical</string>
+    <string name="grocery_filter_by">Filter by</string>
+    <string name="grocery_apply">Apply</string>
+    <string name="grocery_recipe_source">From: %1$s</string>
     <string name="grocery_category_produce">Produce</string>
     <string name="grocery_category_dairy">Dairy</string>
     <string name="grocery_category_meat">Meat &amp; Seafood</string>

@@ -12,6 +12,7 @@ data class RemoteGroceryItem(
     @SerialName("created_at") val createdAt: String? = null,
     @SerialName("updated_at") val updatedAt: String? = null,
     @SerialName("client_id") val clientId: String? = null,
+    @SerialName("recipe_name") val recipeName: String? = null,
 )
 
 @Serializable
