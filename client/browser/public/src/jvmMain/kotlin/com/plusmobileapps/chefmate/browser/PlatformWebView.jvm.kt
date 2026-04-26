@@ -20,13 +20,14 @@ import javax.swing.JPanel
 actual fun PlatformWebView(
     url: String,
     onUrlLoaded: (String) -> Unit,
+    onLoadingChanged: (Boolean) -> Unit,
     instanceKeeper: InstanceKeeper,
     modifier: Modifier,
 ) {
     val holder = remember { instanceKeeper.getOrCreate { WebViewHolder() } }
 
     DisposableEffect(Unit) {
-        holder.ensureInitialized(onUrlLoaded, url)
+        holder.ensureInitialized(onUrlLoaded, onLoadingChanged, url)
         onDispose {}
     }
 
@@ -56,7 +57,11 @@ private class WebViewHolder : InstanceKeeper.Instance {
 
     private var initialized = false
 
-    fun ensureInitialized(onUrlLoaded: (String) -> Unit, initialUrl: String) {
+    fun ensureInitialized(
+        onUrlLoaded: (String) -> Unit,
+        onLoadingChanged: (Boolean) -> Unit,
+        initialUrl: String,
+    ) {
         if (initialized) return
         initialized = true
 
@@ -65,8 +70,15 @@ private class WebViewHolder : InstanceKeeper.Instance {
             webView = wv
 
             wv.engine.loadWorker.stateProperty().addListener { _, _, newState ->
-                if (newState == Worker.State.SUCCEEDED) {
-                    wv.engine.location?.let(onUrlLoaded)
+                when (newState) {
+                    Worker.State.RUNNING -> onLoadingChanged(true)
+                    Worker.State.SUCCEEDED -> {
+                        onLoadingChanged(false)
+                        wv.engine.location?.let(onUrlLoaded)
+                    }
+                    Worker.State.FAILED,
+                    Worker.State.CANCELLED -> onLoadingChanged(false)
+                    else -> {}
                 }
             }
 

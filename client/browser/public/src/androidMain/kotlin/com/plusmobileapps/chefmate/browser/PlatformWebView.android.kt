@@ -12,6 +12,7 @@ import com.multiplatform.webview.web.rememberWebViewState
 actual fun PlatformWebView(
     url: String,
     onUrlLoaded: (String) -> Unit,
+    onLoadingChanged: (Boolean) -> Unit,
     instanceKeeper: InstanceKeeper,
     modifier: Modifier,
 ) {
@@ -25,6 +26,8 @@ actual fun PlatformWebView(
     }
 
     LaunchedEffect(webViewState.lastLoadedUrl) { webViewState.lastLoadedUrl?.let(onUrlLoaded) }
+
+    LaunchedEffect(webViewState.isLoading) { onLoadingChanged(webViewState.isLoading) }
 
     WebView(state = webViewState, modifier = modifier, navigator = webViewNavigator)
 }

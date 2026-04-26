@@ -44,6 +44,7 @@ class BrowserBlocImpl(
                 navigateUrl = it.currentUrl,
                 addressBarText = it.addressBarText,
                 isExtracting = it.isExtracting,
+                isWebViewLoading = it.isWebViewLoading,
                 showControls = showControls,
                 extractionMessage =
                     it.extractionMessage?.let { msg ->
@@ -66,6 +67,10 @@ class BrowserBlocImpl(
 
     override fun onUrlLoadedInWebView(url: String) {
         viewModel.onUrlLoadedInWebView(url)
+    }
+
+    override fun onWebViewLoadingChanged(isLoading: Boolean) {
+        viewModel.onWebViewLoadingChanged(isLoading)
     }
 
     override fun onExtractRecipe() {

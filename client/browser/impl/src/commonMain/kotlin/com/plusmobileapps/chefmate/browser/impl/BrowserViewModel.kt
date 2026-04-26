@@ -44,6 +44,10 @@ class BrowserViewModel(
         _state.value = _state.value.copy(webViewReportedUrl = url, addressBarText = url)
     }
 
+    fun onWebViewLoadingChanged(isLoading: Boolean) {
+        _state.value = _state.value.copy(isWebViewLoading = isLoading)
+    }
+
     fun extractRecipe() {
         val url = _state.value.webViewReportedUrl.ifBlank { _state.value.currentUrl }
         if (url.isBlank() || _state.value.isExtracting) return
@@ -107,6 +111,7 @@ class BrowserViewModel(
         val addressBarText: String = DEFAULT_URL,
         val webViewReportedUrl: String = "",
         val isExtracting: Boolean = false,
+        val isWebViewLoading: Boolean = false,
         val extractionMessage: ExtractMessage? = null,
     )
 

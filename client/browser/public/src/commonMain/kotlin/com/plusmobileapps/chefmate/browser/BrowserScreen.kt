@@ -65,12 +65,14 @@ fun BrowserScreen(bloc: BrowserBloc, modifier: Modifier = Modifier) {
                     onNavigate = bloc::onNavigate,
                     showExtract = viewState.currentUrl.isNotBlank(),
                     isExtracting = viewState.isExtracting,
+                    isWebViewLoading = viewState.isWebViewLoading,
                     onExtractRecipe = bloc::onExtractRecipe,
                 )
             }
             PlatformWebView(
                 url = viewState.navigateUrl,
                 onUrlLoaded = bloc::onUrlLoadedInWebView,
+                onLoadingChanged = bloc::onWebViewLoadingChanged,
                 instanceKeeper = bloc.instanceKeeper,
                 modifier = Modifier.fillMaxWidth().weight(1f),
             )
@@ -85,6 +87,7 @@ private fun AddressBar(
     onNavigate: () -> Unit,
     showExtract: Boolean,
     isExtracting: Boolean,
+    isWebViewLoading: Boolean,
     onExtractRecipe: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -109,8 +112,8 @@ private fun AddressBar(
             )
         }
         if (showExtract) {
-            IconButton(onClick = onExtractRecipe) {
-                if (isExtracting) {
+            IconButton(onClick = onExtractRecipe, enabled = !isWebViewLoading && !isExtracting) {
+                if (isExtracting || isWebViewLoading) {
                     CircularProgressIndicator()
                 } else {
                     Icon(

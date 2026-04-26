@@ -10,6 +10,7 @@ import com.arkivanov.essenty.instancekeeper.InstanceKeeper
  *
  * @param url The URL to load in the browser.
  * @param onUrlLoaded Callback invoked when the WebView finishes navigating to a URL.
+ * @param onLoadingChanged Callback invoked when the WebView loading state changes.
  * @param instanceKeeper Used on JVM to cache the WebView across recompositions so browser history
  *   survives tab switches.
  * @param modifier Modifier for layout.
@@ -18,6 +19,7 @@ import com.arkivanov.essenty.instancekeeper.InstanceKeeper
 expect fun PlatformWebView(
     url: String,
     onUrlLoaded: (String) -> Unit,
+    onLoadingChanged: (Boolean) -> Unit,
     instanceKeeper: InstanceKeeper,
     modifier: Modifier = Modifier,
 )
