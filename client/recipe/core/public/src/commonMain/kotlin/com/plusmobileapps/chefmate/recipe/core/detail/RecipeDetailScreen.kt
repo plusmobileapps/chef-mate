@@ -13,13 +13,14 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
@@ -56,8 +57,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -85,6 +88,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.core.public.generated.resources.Res
+import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_grocery_list_added
+import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_grocery_list_view
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_favorite
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_to_meal_plan
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_calories
@@ -149,6 +154,23 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val copiedMessage = stringResource(Res.string.recipe_detail_copied_to_clipboard)
+    val groceryAddedMessage = stringResource(Res.string.recipe_add_to_grocery_list_added)
+    val groceryViewLabel = stringResource(Res.string.recipe_add_to_grocery_list_view)
+
+    LaunchedEffect(state.showGroceryAddedSnackbar) {
+        if (state.showGroceryAddedSnackbar) {
+            val result =
+                snackbarHostState.showSnackbar(
+                    message = groceryAddedMessage,
+                    actionLabel = groceryViewLabel,
+                    duration = SnackbarDuration.Long,
+                )
+            when (result) {
+                SnackbarResult.ActionPerformed -> bloc.onViewGroceryListClicked()
+                SnackbarResult.Dismissed -> bloc.onGrocerySnackbarDismissed()
+            }
+        }
+    }
 
     // Delete confirmation dialog
     if (state.showDeleteConfirmationDialog) {
@@ -375,8 +397,9 @@ private fun RecipeDetailSheet(
             sheetState = sheetState,
             contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
             dragHandle = {
+                val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Spacer(Modifier.statusBarsPadding())
+                    Spacer(Modifier.height(statusBarTop))
                     BottomSheetDefaults.DragHandle()
                 }
             },
@@ -1266,6 +1289,14 @@ private val previewBloc =
         }
 
         override fun onDismissSheet() {
+            TODO("Not yet implemented")
+        }
+
+        override fun onViewGroceryListClicked() {
+            TODO("Not yet implemented")
+        }
+
+        override fun onGrocerySnackbarDismissed() {
             TODO("Not yet implemented")
         }
 

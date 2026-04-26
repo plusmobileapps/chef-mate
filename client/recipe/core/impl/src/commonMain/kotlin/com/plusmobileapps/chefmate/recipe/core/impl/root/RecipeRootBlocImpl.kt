@@ -108,6 +108,9 @@ class RecipeRootBlocImpl(
             is RecipeDetailBloc.Output.OpenUrl -> {
                 this.output.onNext(RecipeRootBloc.Output.OpenUrl(output.url))
             }
+            RecipeDetailBloc.Output.OpenGroceryList -> {
+                this.output.onNext(RecipeRootBloc.Output.OpenGroceryList)
+            }
         }
     }
 

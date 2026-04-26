@@ -16,6 +16,8 @@ kotlin {
             implementation(projects.client.shared)
             implementation(projects.client.ui.public)
             implementation(projects.client.util.public)
+            implementation(projects.client.grocery.data.public)
+            implementation(projects.client.grocery.core.public)
             implementation(libs.arkivanov.decompose.compose.extensions)
             implementation(libs.arkivanov.decompose.core)
             implementation(compose.components.resources)

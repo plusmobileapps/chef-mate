@@ -40,7 +40,7 @@ class AddRecipeToGroceryListBlocImpl(
             AddRecipeToGroceryListBloc.Model(
                 isLoading = it.isLoading,
                 isAdding = it.isAdding,
-                ingredients = it.ingredients,
+                groupedIngredients = it.groupedIngredients,
                 groceryLists = it.groceryLists,
                 selectedGroceryList = it.selectedGroceryList,
             )
@@ -52,6 +52,9 @@ class AddRecipeToGroceryListBlocImpl(
                 when (it) {
                     AddRecipeToGroceryListViewModel.Output.Finished -> {
                         output.onNext(Output.Finished)
+                    }
+                    AddRecipeToGroceryListViewModel.Output.Added -> {
+                        output.onNext(Output.Added)
                     }
                 }
             }

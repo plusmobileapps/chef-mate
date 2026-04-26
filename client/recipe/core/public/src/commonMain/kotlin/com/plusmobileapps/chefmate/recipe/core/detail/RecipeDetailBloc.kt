@@ -34,6 +34,10 @@ interface RecipeDetailBloc : BackClickBloc {
 
     fun onDismissSheet()
 
+    fun onViewGroceryListClicked()
+
+    fun onGrocerySnackbarDismissed()
+
     data class Model(
         val isLoading: Boolean,
         val isDeleting: Boolean,
@@ -44,6 +48,7 @@ interface RecipeDetailBloc : BackClickBloc {
         val formattedPrepTime: TextData? = null,
         val formattedCookTime: TextData? = null,
         val formattedTotalTime: TextData? = null,
+        val showGroceryAddedSnackbar: Boolean = false,
     )
 
     sealed class Output {
@@ -52,6 +57,8 @@ interface RecipeDetailBloc : BackClickBloc {
         data class EditRecipe(val recipeId: Long) : Output()
 
         data class OpenUrl(val url: String) : Output()
+
+        data object OpenGroceryList : Output()
     }
 
     sealed class Sheet {

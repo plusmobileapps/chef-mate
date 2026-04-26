@@ -1,5 +1,6 @@
 package com.plusmobileapps.chefmate.recipe.core.addgrocery
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,6 +18,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -32,6 +34,8 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_groc
 import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_grocery_list_add
 import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_grocery_list_no_ingredients
 import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_grocery_list_select_list
+import com.plusmobileapps.chefmate.grocery.core.displayName
+import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
@@ -40,7 +44,7 @@ import com.plusmobileapps.chefmate.ui.components.lastItemFloatingActionButtonSpa
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun AddRecipeToGroceryListScreen(bloc: AddRecipeToGroceryListBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
@@ -54,7 +58,7 @@ fun AddRecipeToGroceryListScreen(bloc: AddRecipeToGroceryListBloc, modifier: Mod
             ),
         scrollEnabled = false,
         floatingActionButton = {
-            if (!state.isLoading && state.ingredients.any { it.isSelected }) {
+            if (!state.isLoading && state.hasSelectedIngredients) {
                 ExtendedFloatingActionButton(onClick = bloc::onSaveClicked) {
                     if (state.isAdding) {
                         PlusLoadingIndicator(
@@ -72,7 +76,7 @@ fun AddRecipeToGroceryListScreen(bloc: AddRecipeToGroceryListBloc, modifier: Mod
                     PlusLoadingIndicator()
                 }
             }
-            state.ingredients.isEmpty() -> {
+            state.isEmpty -> {
                 Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     Text(
                         text = stringResource(Res.string.recipe_add_to_grocery_list_no_ingredients),
@@ -87,8 +91,8 @@ fun AddRecipeToGroceryListScreen(bloc: AddRecipeToGroceryListBloc, modifier: Mod
                     selectedList = state.selectedGroceryList,
                     onListSelected = bloc::onGroceryListSelected,
                 )
-                IngredientsList(
-                    ingredients = state.ingredients,
+                GroupedIngredientsList(
+                    groups = state.groupedIngredients,
                     onIngredientToggled = bloc::onIngredientToggled,
                     modifier = Modifier.weight(1f),
                 )
@@ -135,19 +139,25 @@ private fun GroceryListSelector(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun IngredientsList(
-    ingredients: List<AddRecipeToGroceryListBloc.Model.ListItem>,
+private fun GroupedIngredientsList(
+    groups: List<AddRecipeToGroceryListBloc.IngredientGroup>,
     onIngredientToggled: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
-        items(ingredients.size, key = { it }) { index ->
-            val ingredient = ingredients[index]
-            IngredientListItem(
-                ingredient = ingredient,
-                onToggle = { onIngredientToggled(ingredient.id) },
-            )
+        groups.forEach { group ->
+            stickyHeader(key = "header_${group.category.name}") {
+                CategoryHeader(category = group.category)
+            }
+            items(group.items.size, key = { group.items[it].id }) { index ->
+                val ingredient = group.items[index]
+                IngredientListItem(
+                    ingredient = ingredient,
+                    onToggle = { onIngredientToggled(ingredient.id) },
+                )
+            }
         }
 
         lastItemFloatingActionButtonSpacer()
@@ -155,8 +165,20 @@ private fun IngredientsList(
 }
 
 @Composable
+private fun CategoryHeader(category: GroceryCategory, modifier: Modifier = Modifier) {
+    Surface(color = MaterialTheme.colorScheme.surfaceVariant, modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = category.displayName().localized(),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        )
+    }
+}
+
+@Composable
 private fun IngredientListItem(
-    ingredient: AddRecipeToGroceryListBloc.Model.ListItem,
+    ingredient: AddRecipeToGroceryListBloc.ListItem,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
