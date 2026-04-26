@@ -32,13 +32,9 @@ actual fun PlatformWebView(
     }
 
     LaunchedEffect(url) {
-        if (url.isNotBlank()) {
-            Platform.runLater {
-                val currentLocation = holder.webView?.engine?.location
-                if (currentLocation != url) {
-                    holder.webView?.engine?.load(url)
-                }
-            }
+        if (url.isNotBlank() && url != holder.lastCommandedUrl) {
+            holder.lastCommandedUrl = url
+            Platform.runLater { holder.webView?.engine?.load(url) }
         }
     }
 
@@ -54,6 +50,8 @@ private class WebViewHolder : InstanceKeeper.Instance {
     @Volatile
     var webView: WebView? = null
         private set
+
+    @Volatile var lastCommandedUrl: String = ""
 
     private var initialized = false
 
@@ -74,7 +72,10 @@ private class WebViewHolder : InstanceKeeper.Instance {
                     Worker.State.RUNNING -> onLoadingChanged(true)
                     Worker.State.SUCCEEDED -> {
                         onLoadingChanged(false)
-                        wv.engine.location?.let(onUrlLoaded)
+                        wv.engine.location?.let {
+                            lastCommandedUrl = it
+                            onUrlLoaded(it)
+                        }
                     }
                     Worker.State.FAILED,
                     Worker.State.CANCELLED -> onLoadingChanged(false)
