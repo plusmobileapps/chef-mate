@@ -43,6 +43,7 @@ import androidx.compose.material.icons.outlined.SearchOff
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -73,6 +74,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.list.public.generated.resources.Res
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_add_recipe
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_apply
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_clear_filters
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_by
@@ -223,9 +225,10 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
         SortFilterBottomSheet(
             currentSort = state.currentSort,
             activeFilters = state.activeFilters,
-            onSortSelected = bloc::onSortOptionSelected,
-            onFilterToggled = bloc::onFilterToggled,
-            onClearFilters = bloc::onClearFilters,
+            onApply = { sort, filters ->
+                bloc.onApplySortAndFilters(sort, filters)
+                showSortFilterSheet = false
+            },
             onDismiss = { showSortFilterSheet = false },
         )
     }
@@ -238,12 +241,12 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
 private fun SortFilterBottomSheet(
     currentSort: RecipeSortOption,
     activeFilters: Set<RecipeFilterOption>,
-    onSortSelected: (RecipeSortOption) -> Unit,
-    onFilterToggled: (RecipeFilterOption) -> Unit,
-    onClearFilters: () -> Unit,
+    onApply: (sort: RecipeSortOption, filters: Set<RecipeFilterOption>) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    var selectedSort by remember { mutableStateOf(currentSort) }
+    var selectedFilters by remember { mutableStateOf(activeFilters) }
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(modifier = Modifier.padding(horizontal = 16.dp).navigationBarsPadding()) {
@@ -263,8 +266,8 @@ private fun SortFilterBottomSheet(
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 RecipeSortOption.entries.forEach { option ->
                     FilterChip(
-                        selected = option == currentSort,
-                        onClick = { onSortSelected(option) },
+                        selected = option == selectedSort,
+                        onClick = { selectedSort = option },
                         label = { Text(stringResource(option.labelRes())) },
                     )
                 }
@@ -282,8 +285,8 @@ private fun SortFilterBottomSheet(
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                if (activeFilters.isNotEmpty()) {
-                    TextButton(onClick = onClearFilters) {
+                if (selectedFilters.isNotEmpty()) {
+                    TextButton(onClick = { selectedFilters = emptySet() }) {
                         Text(stringResource(Res.string.recipe_list_clear_filters))
                     }
                 }
@@ -292,11 +295,22 @@ private fun SortFilterBottomSheet(
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 RecipeFilterOption.entries.forEach { filter ->
                     FilterChip(
-                        selected = filter in activeFilters,
-                        onClick = { onFilterToggled(filter) },
+                        selected = filter in selectedFilters,
+                        onClick = {
+                            selectedFilters =
+                                if (filter in selectedFilters) selectedFilters - filter
+                                else selectedFilters + filter
+                        },
                         label = { Text(stringResource(filter.labelRes())) },
                     )
                 }
+            }
+            Spacer(Modifier.height(16.dp))
+            Button(
+                onClick = { onApply(selectedSort, selectedFilters) },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(Res.string.recipe_list_apply))
             }
             Spacer(Modifier.height(16.dp))
         }

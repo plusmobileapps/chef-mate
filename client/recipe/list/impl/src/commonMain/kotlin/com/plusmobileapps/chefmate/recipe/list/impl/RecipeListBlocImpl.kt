@@ -83,6 +83,10 @@ class RecipeListBlocImpl(
         viewModel.clearFilters()
     }
 
+    override fun onApplySortAndFilters(sort: RecipeSortOption, filters: Set<RecipeFilterOption>) {
+        viewModel.applySortAndFilters(sort, filters)
+    }
+
     private fun Recipe.toRecipeListItem(): RecipeListItem =
         RecipeListItem(
             id = id,

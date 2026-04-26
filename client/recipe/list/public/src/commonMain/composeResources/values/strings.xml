@@ -30,6 +30,7 @@
     <string name="recipe_list_sort_by">Sort by</string>
     <string name="recipe_list_filter_by">Filter by</string>
     <string name="recipe_list_clear_filters">Clear all</string>
+    <string name="recipe_list_apply">Apply</string>
 
     <!-- Filter -->
     <string name="recipe_list_filter">Filter</string>

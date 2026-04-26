@@ -25,6 +25,8 @@ interface RecipeListBloc {
 
     fun onClearFilters()
 
+    fun onApplySortAndFilters(sort: RecipeSortOption, filters: Set<RecipeFilterOption>)
+
     data class Model(
         val recipes: List<RecipeListItem> = emptyList(),
         val isLoading: Boolean = false,

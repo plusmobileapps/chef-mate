@@ -90,6 +90,12 @@ class RecipeListViewModel(
         persistFilters()
     }
 
+    fun applySortAndFilters(sort: RecipeSortOption, filters: Set<RecipeFilterOption>) {
+        _state.update { it.copy(currentSort = sort, activeFilters = filters) }
+        sortOptionPref = sort.name
+        persistFilters()
+    }
+
     private fun persistFilters() {
         activeFiltersPref = _state.value.activeFilters.joinToString(",") { it.name }
     }

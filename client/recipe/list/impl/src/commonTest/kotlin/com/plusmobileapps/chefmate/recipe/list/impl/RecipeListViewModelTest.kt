@@ -353,5 +353,24 @@ class RecipeListViewModelTest {
         verify { settings.putString("recipe_list_active_filters", "") }
     }
 
+    @Test
+    fun When_apply_sort_and_filters_Then_both_updated_and_persisted() {
+        recipes.value =
+            listOf(
+                recipe(1, title = "Zucchini", isFavorite = true, starRating = 5),
+                recipe(2, title = "Apple", isFavorite = false, starRating = null),
+            )
+        viewModel.applySortAndFilters(
+            RecipeSortOption.ALPHABETICAL_ASC,
+            setOf(RecipeFilterOption.FAVORITES, RecipeFilterOption.RATED),
+        )
+        val state = viewModel.state.value
+        state.currentSort shouldBe RecipeSortOption.ALPHABETICAL_ASC
+        state.activeFilters shouldBe setOf(RecipeFilterOption.FAVORITES, RecipeFilterOption.RATED)
+        state.displayRecipes.map { it.id } shouldBe listOf(1L)
+        verify { settings.putString("recipe_list_sort_option", "ALPHABETICAL_ASC") }
+        verify { settings.putString("recipe_list_active_filters", any()) }
+    }
+
     // endregion
 }
