@@ -25,6 +25,12 @@
     <string name="recipe_list_item_servings">{servings} servings</string>
     <string name="recipe_list_item_calories">{calories} cal</string>
 
+    <!-- Sort & Filter -->
+    <string name="recipe_list_sort_and_filter">Sort &amp; Filter</string>
+    <string name="recipe_list_sort_by">Sort by</string>
+    <string name="recipe_list_filter_by">Filter by</string>
+    <string name="recipe_list_clear_filters">Clear all</string>
+
     <!-- Filter -->
     <string name="recipe_list_filter">Filter</string>
     <string name="recipe_list_filter_favorites">Favorites</string>

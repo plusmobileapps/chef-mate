@@ -23,6 +23,8 @@ interface RecipeListBloc {
 
     fun onSearchQueryChanged(query: String)
 
+    fun onClearFilters()
+
     data class Model(
         val recipes: List<RecipeListItem> = emptyList(),
         val isLoading: Boolean = false,

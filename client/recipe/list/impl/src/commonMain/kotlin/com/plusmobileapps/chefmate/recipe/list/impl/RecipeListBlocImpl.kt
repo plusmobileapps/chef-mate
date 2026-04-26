@@ -79,6 +79,10 @@ class RecipeListBlocImpl(
         viewModel.updateSearchQuery(query)
     }
 
+    override fun onClearFilters() {
+        viewModel.clearFilters()
+    }
+
     private fun Recipe.toRecipeListItem(): RecipeListItem =
         RecipeListItem(
             id = id,

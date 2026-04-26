@@ -8,6 +8,7 @@ import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.boolean
+import com.russhwolf.settings.string
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,8 +25,25 @@ class RecipeListViewModel(
     settings: Settings,
 ) : ViewModel(mainContext) {
     private var isGridViewPref by settings.boolean(KEY_IS_GRID_VIEW, false)
+    private var sortOptionPref by
+        settings.string(KEY_SORT_OPTION, RecipeSortOption.RECENTLY_ADDED.name)
+    private var activeFiltersPref by settings.string(KEY_ACTIVE_FILTERS, "")
 
-    private val _state = MutableStateFlow(State(isGridView = isGridViewPref))
+    private val _state =
+        MutableStateFlow(
+            State(
+                isGridView = isGridViewPref,
+                currentSort =
+                    RecipeSortOption.entries.find { it.name == sortOptionPref }
+                        ?: RecipeSortOption.RECENTLY_ADDED,
+                activeFilters =
+                    activeFiltersPref
+                        .split(",")
+                        .filter { it.isNotBlank() }
+                        .mapNotNull { name -> RecipeFilterOption.entries.find { it.name == name } }
+                        .toSet(),
+            )
+        )
     val state: StateFlow<State> = _state.asStateFlow()
 
     init {
@@ -51,6 +69,7 @@ class RecipeListViewModel(
 
     fun updateSort(option: RecipeSortOption) {
         _state.update { it.copy(currentSort = option) }
+        sortOptionPref = option.name
     }
 
     fun toggleFilter(filter: RecipeFilterOption) {
@@ -63,6 +82,16 @@ class RecipeListViewModel(
                 }
             state.copy(activeFilters = newFilters)
         }
+        persistFilters()
+    }
+
+    fun clearFilters() {
+        _state.update { it.copy(activeFilters = emptySet()) }
+        persistFilters()
+    }
+
+    private fun persistFilters() {
+        activeFiltersPref = _state.value.activeFilters.joinToString(",") { it.name }
     }
 
     fun toggleViewMode() {
@@ -95,6 +124,8 @@ class RecipeListViewModel(
 }
 
 private const val KEY_IS_GRID_VIEW = "recipe_list_is_grid_view"
+private const val KEY_SORT_OPTION = "recipe_list_sort_option"
+private const val KEY_ACTIVE_FILTERS = "recipe_list_active_filters"
 
 private fun applySearch(recipes: List<Recipe>, query: String): List<Recipe> {
     if (query.isBlank()) return recipes
