@@ -41,7 +41,7 @@ class BrowserBlocImpl(
         viewModel.state.mapState {
             BrowserBloc.Model(
                 currentUrl = it.webViewReportedUrl.ifBlank { it.currentUrl },
-                navigateUrl = it.currentUrl,
+                navigateUrl = it.webViewReportedUrl.ifBlank { it.currentUrl },
                 addressBarText = it.addressBarText,
                 isExtracting = it.isExtracting,
                 isWebViewLoading = it.isWebViewLoading,
