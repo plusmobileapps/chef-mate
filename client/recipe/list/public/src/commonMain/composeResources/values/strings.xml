@@ -38,6 +38,14 @@
     <string name="recipe_list_filter_rated">Rated</string>
     <string name="recipe_list_filter_quick_recipes">Quick (under 30 min)</string>
 
+    <!-- Empty States -->
+    <string name="recipe_list_empty_title">No recipes yet</string>
+    <string name="recipe_list_empty_description">Get started by finding recipes online or creating one from scratch.</string>
+    <string name="recipe_list_empty_browse">Find Recipes Online</string>
+    <string name="recipe_list_empty_create">Create New Recipe</string>
+    <string name="recipe_list_filter_empty_title">No matching recipes</string>
+    <string name="recipe_list_filter_empty_description">No recipes match the active filters: {filters}</string>
+
     <!-- Sync -->
     <string name="recipe_sync_not_synced">Not synced</string>
     <string name="recipe_sync_syncing">Syncing</string>

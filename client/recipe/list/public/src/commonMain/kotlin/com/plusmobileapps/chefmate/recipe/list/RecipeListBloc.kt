@@ -27,8 +27,11 @@ interface RecipeListBloc {
 
     fun onApplySortAndFilters(sort: RecipeSortOption, filters: Set<RecipeFilterOption>)
 
+    fun onBrowseRecipesClicked()
+
     data class Model(
         val recipes: List<RecipeListItem> = emptyList(),
+        val totalRecipeCount: Int = 0,
         val isLoading: Boolean = false,
         val currentSort: RecipeSortOption = RecipeSortOption.RECENTLY_ADDED,
         val activeFilters: Set<RecipeFilterOption> = emptySet(),
@@ -41,6 +44,8 @@ interface RecipeListBloc {
         data class OpenRecipe(val recipeId: Long) : Output()
 
         object AddNewRecipe : Output()
+
+        object OpenBrowser : Output()
     }
 
     interface Factory {

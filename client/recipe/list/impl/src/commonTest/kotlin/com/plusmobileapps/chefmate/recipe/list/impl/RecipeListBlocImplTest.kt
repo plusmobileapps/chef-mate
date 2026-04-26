@@ -209,4 +209,24 @@ class RecipeListBlocImplTest {
             cleared.recipes.size shouldBe 2
         }
     }
+
+    @Test
+    fun When_browse_recipes_clicked_Then_OpenBrowser_output_emitted() {
+        bloc.onBrowseRecipesClicked()
+        output.lastValue shouldBe RecipeListBloc.Output.OpenBrowser
+    }
+
+    @Test
+    fun When_recipes_loaded_Then_totalRecipeCount_reflects_unfiltered_count() = runTest {
+        bloc.state.test {
+            awaitItem()
+            recipes.value = listOf(recipe(1, isFavorite = true), recipe(2, isFavorite = false))
+            awaitItem().totalRecipeCount shouldBe 2
+
+            bloc.onFilterToggled(RecipeFilterOption.FAVORITES)
+            val filtered = awaitItem()
+            filtered.recipes.size shouldBe 1
+            filtered.totalRecipeCount shouldBe 2
+        }
+    }
 }

@@ -157,6 +157,9 @@ class BottomNavBlocImpl(
             is RecipeListBloc.Output.OpenRecipe -> {
                 this.output.onNext(BottomNavBloc.Output.OpenRecipe(output.recipeId))
             }
+            RecipeListBloc.Output.OpenBrowser -> {
+                onTabSelected(BottomNavBloc.Tab.BROWSER)
+            }
         }
     }
 

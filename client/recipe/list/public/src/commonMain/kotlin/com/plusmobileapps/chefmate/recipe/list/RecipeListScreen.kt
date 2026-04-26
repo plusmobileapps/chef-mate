@@ -53,6 +53,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -70,14 +71,21 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.list.public.generated.resources.Res
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_add_recipe
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_apply
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_clear_filters
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_empty_browse
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_empty_create
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_empty_description
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_empty_title
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_by
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_empty_description
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_empty_title
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_favorites
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_quick_recipes
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_rated
@@ -201,22 +209,40 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                     },
                 )
             }
-            if (state.recipes.isEmpty() && state.isSearchActive) {
-                SearchEmptyState(modifier = Modifier.weight(1f))
-            } else if (state.isGridView) {
-                RecipeGrid(
-                    modifier = Modifier.weight(1f),
-                    recipes = state.recipes,
-                    onRecipeClicked = bloc::onRecipeClicked,
-                    state = gridState,
-                )
-            } else {
-                RecipeList(
-                    modifier = Modifier.weight(1f),
-                    recipes = state.recipes,
-                    onRecipeClicked = bloc::onRecipeClicked,
-                    state = listState,
-                )
+            when {
+                !state.isLoading && state.totalRecipeCount == 0 -> {
+                    NoRecipesEmptyState(
+                        onBrowseClicked = bloc::onBrowseRecipesClicked,
+                        onCreateClicked = bloc::onAddRecipeClicked,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                state.recipes.isEmpty() && state.isSearchActive -> {
+                    SearchEmptyState(modifier = Modifier.weight(1f))
+                }
+                state.recipes.isEmpty() && state.activeFilters.isNotEmpty() -> {
+                    FilterEmptyState(
+                        activeFilters = state.activeFilters,
+                        onClearFilters = bloc::onClearFilters,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                state.isGridView -> {
+                    RecipeGrid(
+                        modifier = Modifier.weight(1f),
+                        recipes = state.recipes,
+                        onRecipeClicked = bloc::onRecipeClicked,
+                        state = gridState,
+                    )
+                }
+                else -> {
+                    RecipeList(
+                        modifier = Modifier.weight(1f),
+                        recipes = state.recipes,
+                        onRecipeClicked = bloc::onRecipeClicked,
+                        state = listState,
+                    )
+                }
             }
         },
     )
@@ -388,6 +414,98 @@ private fun SearchEmptyState(modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 16.dp),
         )
+    }
+}
+
+// endregion
+
+// region Empty States
+
+@Composable
+private fun NoRecipesEmptyState(
+    onBrowseClicked: () -> Unit,
+    onCreateClicked: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Restaurant,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text = stringResource(Res.string.recipe_list_empty_title),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = stringResource(Res.string.recipe_list_empty_description),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(24.dp))
+        Button(onClick = onBrowseClicked, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.size(8.dp))
+            Text(stringResource(Res.string.recipe_list_empty_browse))
+        }
+        Spacer(Modifier.height(8.dp))
+        OutlinedButton(onClick = onCreateClicked, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.size(8.dp))
+            Text(stringResource(Res.string.recipe_list_empty_create))
+        }
+    }
+}
+
+@Composable
+private fun FilterEmptyState(
+    activeFilters: Set<RecipeFilterOption>,
+    onClearFilters: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val filterLabels =
+        activeFilters.map { filter -> stringResource(filter.labelRes()) }.joinToString(", ")
+
+    Column(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Default.FilterList,
+            contentDescription = null,
+            modifier = Modifier.size(48.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text = stringResource(Res.string.recipe_list_filter_empty_title),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text =
+                PhraseModel(
+                        Res.string.recipe_list_filter_empty_description,
+                        "filters" to FixedString(filterLabels),
+                    )
+                    .localized(),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(16.dp))
+        OutlinedButton(onClick = onClearFilters) {
+            Text(stringResource(Res.string.recipe_list_clear_filters))
+        }
     }
 }
 
