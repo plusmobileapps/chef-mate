@@ -54,6 +54,7 @@ class BrowserBlocImpl(
                                 createExtractionFailedMessage()
                         }
                     },
+                hasExtractedRecipe = it.extractedRecipeId != null,
             )
         }
 
@@ -75,6 +76,10 @@ class BrowserBlocImpl(
 
     override fun onExtractRecipe() {
         viewModel.extractRecipe()
+    }
+
+    override fun onViewExtractedRecipe() {
+        viewModel.onViewExtractedRecipe()
     }
 
     override fun onDismissMessage() {

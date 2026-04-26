@@ -21,6 +21,8 @@ interface BrowserBloc {
 
     fun onExtractRecipe()
 
+    fun onViewExtractedRecipe()
+
     fun onDismissMessage()
 
     data class Model(
@@ -30,6 +32,7 @@ interface BrowserBloc {
         val isExtracting: Boolean = false,
         val isWebViewLoading: Boolean = false,
         val extractionMessage: TextData? = null,
+        val hasExtractedRecipe: Boolean = false,
         val showControls: Boolean = true,
     )
 
