@@ -7,6 +7,7 @@ import app.cash.turbine.test
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
+import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
 import com.plusmobileapps.chefmate.testing.TestBlocContext
@@ -17,6 +18,7 @@ import com.plusmobileapps.chefmate.util.TimeFormatterUtil
 import com.russhwolf.settings.Settings
 import dev.mokkery.answering.returns
 import dev.mokkery.every
+import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -40,6 +42,10 @@ class RecipeListBlocImplTest {
         }
     private val settings: Settings = mock {
         every { getBoolean("recipe_list_is_grid_view", false) } returns false
+        every { getString("recipe_list_sort_option", "RECENTLY_ADDED") } returns "RECENTLY_ADDED"
+        every { getString("recipe_list_active_filters", "") } returns ""
+        every { putBoolean(any(), any()) } returns Unit
+        every { putString(any(), any()) } returns Unit
     }
 
     private val bloc =
@@ -184,6 +190,43 @@ class RecipeListBlocImplTest {
             byId[1L]!!.syncStatus shouldBe SyncStatus.NOT_SYNCED
             byId[2L]!!.syncStatus shouldBe SyncStatus.SYNCING
             byId[3L]!!.syncStatus shouldBe SyncStatus.SYNCED
+        }
+    }
+
+    @Test
+    fun When_clear_filters_Then_all_filters_removed_from_state() = runTest {
+        bloc.state.test {
+            awaitItem()
+            recipes.value = listOf(recipe(1, isFavorite = true), recipe(2, isFavorite = false))
+            awaitItem()
+
+            bloc.onFilterToggled(RecipeFilterOption.FAVORITES)
+            awaitItem().activeFilters shouldBe setOf(RecipeFilterOption.FAVORITES)
+
+            bloc.onClearFilters()
+            val cleared = awaitItem()
+            cleared.activeFilters shouldBe emptySet()
+            cleared.recipes.size shouldBe 2
+        }
+    }
+
+    @Test
+    fun When_browse_recipes_clicked_Then_OpenBrowser_output_emitted() {
+        bloc.onBrowseRecipesClicked()
+        output.lastValue shouldBe RecipeListBloc.Output.OpenBrowser
+    }
+
+    @Test
+    fun When_recipes_loaded_Then_totalRecipeCount_reflects_unfiltered_count() = runTest {
+        bloc.state.test {
+            awaitItem()
+            recipes.value = listOf(recipe(1, isFavorite = true), recipe(2, isFavorite = false))
+            awaitItem().totalRecipeCount shouldBe 2
+
+            bloc.onFilterToggled(RecipeFilterOption.FAVORITES)
+            val filtered = awaitItem()
+            filtered.recipes.size shouldBe 1
+            filtered.totalRecipeCount shouldBe 2
         }
     }
 }

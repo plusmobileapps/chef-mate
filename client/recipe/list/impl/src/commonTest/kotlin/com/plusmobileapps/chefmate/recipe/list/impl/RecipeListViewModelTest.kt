@@ -12,6 +12,7 @@ import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
 import com.russhwolf.settings.Settings
 import dev.mokkery.answering.returns
 import dev.mokkery.every
+import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import dev.mokkery.verify
 import io.kotest.matchers.shouldBe
@@ -29,6 +30,10 @@ class RecipeListViewModelTest {
     private val repository = FakeRecipeRepository(recipes)
     private val settings: Settings = mock {
         every { getBoolean("recipe_list_is_grid_view", false) } returns false
+        every { getString("recipe_list_sort_option", "RECENTLY_ADDED") } returns "RECENTLY_ADDED"
+        every { getString("recipe_list_active_filters", "") } returns ""
+        every { putBoolean(any(), any()) } returns Unit
+        every { putString(any(), any()) } returns Unit
     }
     private val viewModel =
         RecipeListViewModel(
@@ -198,7 +203,6 @@ class RecipeListViewModelTest {
 
     @Test
     fun When_toggle_view_mode_Then_isGridView_flipped_and_persisted() {
-        every { settings.putBoolean("recipe_list_is_grid_view", true) } returns Unit
         viewModel.state.value.isGridView shouldBe false
         viewModel.toggleViewMode()
         viewModel.state.value.isGridView shouldBe true
@@ -209,6 +213,9 @@ class RecipeListViewModelTest {
     fun When_settings_has_grid_view_true_Then_initial_state_is_grid() {
         val gridSettings: Settings = mock {
             every { getBoolean("recipe_list_is_grid_view", false) } returns true
+            every { getString("recipe_list_sort_option", "RECENTLY_ADDED") } returns
+                "RECENTLY_ADDED"
+            every { getString("recipe_list_active_filters", "") } returns ""
         }
         val vm =
             RecipeListViewModel(
@@ -280,4 +287,90 @@ class RecipeListViewModelTest {
         viewModel.updateSort(RecipeSortOption.ALPHABETICAL_ASC)
         viewModel.state.value.displayRecipes.map { it.title } shouldBe listOf("Apple", "Zucchini")
     }
+
+    // region Persistence tests
+
+    @Test
+    fun When_sort_updated_Then_persisted_to_settings() {
+        viewModel.updateSort(RecipeSortOption.ALPHABETICAL_ASC)
+        verify { settings.putString("recipe_list_sort_option", "ALPHABETICAL_ASC") }
+    }
+
+    @Test
+    fun When_settings_has_sort_option_Then_initial_state_uses_it() {
+        val sortSettings: Settings = mock {
+            every { getBoolean("recipe_list_is_grid_view", false) } returns false
+            every { getString("recipe_list_sort_option", "RECENTLY_ADDED") } returns "TOP_RATED"
+            every { getString("recipe_list_active_filters", "") } returns ""
+        }
+        val vm =
+            RecipeListViewModel(
+                mainContext = UnconfinedTestDispatcher(),
+                repository = FakeRecipeRepository(),
+                settings = sortSettings,
+            )
+        vm.state.value.currentSort shouldBe RecipeSortOption.TOP_RATED
+    }
+
+    @Test
+    fun When_filter_toggled_Then_persisted_to_settings() {
+        viewModel.toggleFilter(RecipeFilterOption.FAVORITES)
+        verify { settings.putString("recipe_list_active_filters", "FAVORITES") }
+    }
+
+    @Test
+    fun When_settings_has_active_filters_Then_initial_state_uses_them() {
+        val filterSettings: Settings = mock {
+            every { getBoolean("recipe_list_is_grid_view", false) } returns false
+            every { getString("recipe_list_sort_option", "RECENTLY_ADDED") } returns
+                "RECENTLY_ADDED"
+            every { getString("recipe_list_active_filters", "") } returns "FAVORITES,RATED"
+        }
+        val vm =
+            RecipeListViewModel(
+                mainContext = UnconfinedTestDispatcher(),
+                repository = FakeRecipeRepository(),
+                settings = filterSettings,
+            )
+        vm.state.value.activeFilters shouldBe
+            setOf(RecipeFilterOption.FAVORITES, RecipeFilterOption.RATED)
+    }
+
+    @Test
+    fun When_clear_filters_Then_all_filters_removed() {
+        recipes.value = listOf(recipe(1, isFavorite = true), recipe(2, isFavorite = false))
+        viewModel.toggleFilter(RecipeFilterOption.FAVORITES)
+        viewModel.state.value.activeFilters shouldBe setOf(RecipeFilterOption.FAVORITES)
+        viewModel.clearFilters()
+        viewModel.state.value.activeFilters shouldBe emptySet()
+        viewModel.state.value.displayRecipes.size shouldBe 2
+    }
+
+    @Test
+    fun When_clear_filters_Then_persisted_to_settings() {
+        viewModel.toggleFilter(RecipeFilterOption.FAVORITES)
+        viewModel.clearFilters()
+        verify { settings.putString("recipe_list_active_filters", "") }
+    }
+
+    @Test
+    fun When_apply_sort_and_filters_Then_both_updated_and_persisted() {
+        recipes.value =
+            listOf(
+                recipe(1, title = "Zucchini", isFavorite = true, starRating = 5),
+                recipe(2, title = "Apple", isFavorite = false, starRating = null),
+            )
+        viewModel.applySortAndFilters(
+            RecipeSortOption.ALPHABETICAL_ASC,
+            setOf(RecipeFilterOption.FAVORITES, RecipeFilterOption.RATED),
+        )
+        val state = viewModel.state.value
+        state.currentSort shouldBe RecipeSortOption.ALPHABETICAL_ASC
+        state.activeFilters shouldBe setOf(RecipeFilterOption.FAVORITES, RecipeFilterOption.RATED)
+        state.displayRecipes.map { it.id } shouldBe listOf(1L)
+        verify { settings.putString("recipe_list_sort_option", "ALPHABETICAL_ASC") }
+        verify { settings.putString("recipe_list_active_filters", any()) }
+    }
+
+    // endregion
 }

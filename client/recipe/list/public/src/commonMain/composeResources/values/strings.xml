@@ -25,11 +25,26 @@
     <string name="recipe_list_item_servings">{servings} servings</string>
     <string name="recipe_list_item_calories">{calories} cal</string>
 
+    <!-- Sort & Filter -->
+    <string name="recipe_list_sort_and_filter">Sort &amp; Filter</string>
+    <string name="recipe_list_sort_by">Sort by</string>
+    <string name="recipe_list_filter_by">Filter by</string>
+    <string name="recipe_list_clear_filters">Clear all</string>
+    <string name="recipe_list_apply">Apply</string>
+
     <!-- Filter -->
     <string name="recipe_list_filter">Filter</string>
     <string name="recipe_list_filter_favorites">Favorites</string>
     <string name="recipe_list_filter_rated">Rated</string>
     <string name="recipe_list_filter_quick_recipes">Quick (under 30 min)</string>
+
+    <!-- Empty States -->
+    <string name="recipe_list_empty_title">No recipes yet</string>
+    <string name="recipe_list_empty_description">Get started by finding recipes online or creating one from scratch.</string>
+    <string name="recipe_list_empty_browse">Find Recipes Online</string>
+    <string name="recipe_list_empty_create">Create New Recipe</string>
+    <string name="recipe_list_filter_empty_title">No matching recipes</string>
+    <string name="recipe_list_filter_empty_description">No recipes match the active filters: {filters}</string>
 
     <!-- Sync -->
     <string name="recipe_sync_not_synced">Not synced</string>

@@ -5,25 +5,29 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FilterList
@@ -37,16 +41,23 @@ import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.outlined.SearchOff
 import androidx.compose.material.icons.outlined.StarOutline
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -60,11 +71,21 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.list.public.generated.resources.Res
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_add_recipe
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_apply
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_clear_filters
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_empty_browse
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_empty_create
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_empty_description
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_empty_title
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_by
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_empty_description
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_empty_title
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_favorites
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_quick_recipes
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_rated
@@ -74,8 +95,9 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_search
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_clear
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_empty
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_placeholder
-import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort_a_to_z
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort_and_filter
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort_by
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort_oldest_first
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort_recently_added
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort_top_rated
@@ -96,12 +118,19 @@ import com.plusmobileapps.chefmate.ui.components.RecipeImage
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
-    var showSortMenu by remember { mutableStateOf(false) }
-    var showFilterMenu by remember { mutableStateOf(false) }
     var showSearchBar by remember { mutableStateOf(state.isSearchActive) }
+    var showSortFilterSheet by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+    val gridState = rememberLazyGridState()
+
+    LaunchedEffect(state.currentSort, state.activeFilters) {
+        listState.animateScrollToItem(0)
+        gridState.animateScrollToItem(0)
+    }
 
     PlusNavContainer(
         modifier = modifier.fillMaxSize(),
@@ -136,75 +165,23 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                                     ),
                             )
                         }
-                        Box {
-                            IconButton(onClick = { showSortMenu = true }) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.Sort,
-                                    contentDescription = stringResource(Res.string.recipe_list_sort),
-                                )
-                            }
-                            DropdownMenu(
-                                expanded = showSortMenu,
-                                onDismissRequest = { showSortMenu = false },
-                            ) {
-                                RecipeSortOption.entries.forEach { option ->
-                                    DropdownMenuItem(
-                                        text = { Text(stringResource(option.labelRes())) },
-                                        onClick = {
-                                            bloc.onSortOptionSelected(option)
-                                            showSortMenu = false
-                                        },
-                                        leadingIcon =
-                                            if (option == state.currentSort) {
-                                                {
-                                                    Icon(
-                                                        imageVector = Icons.Default.Check,
-                                                        contentDescription = null,
-                                                    )
-                                                }
-                                            } else {
-                                                null
-                                            },
+                        IconButton(onClick = { showSortFilterSheet = true }) {
+                            val filterCount = state.activeFilters.size
+                            if (filterCount > 0) {
+                                BadgedBox(badge = { Badge { Text("$filterCount") } }) {
+                                    Icon(
+                                        imageVector = Icons.Default.FilterList,
+                                        contentDescription =
+                                            stringResource(Res.string.recipe_list_filter),
+                                        tint = MaterialTheme.colorScheme.primary,
                                     )
                                 }
-                            }
-                        }
-                        Box {
-                            IconButton(onClick = { showFilterMenu = true }) {
+                            } else {
                                 Icon(
                                     imageVector = Icons.Default.FilterList,
                                     contentDescription =
                                         stringResource(Res.string.recipe_list_filter),
-                                    tint =
-                                        if (state.activeFilters.isNotEmpty()) {
-                                            MaterialTheme.colorScheme.primary
-                                        } else {
-                                            MaterialTheme.colorScheme.onSurface
-                                        },
                                 )
-                            }
-                            DropdownMenu(
-                                expanded = showFilterMenu,
-                                onDismissRequest = { showFilterMenu = false },
-                            ) {
-                                RecipeFilterOption.entries.forEach { filter ->
-                                    val isActive = filter in state.activeFilters
-                                    DropdownMenuItem(
-                                        text = { Text(stringResource(filter.labelRes())) },
-                                        onClick = { bloc.onFilterToggled(filter) },
-                                        leadingIcon =
-                                            if (isActive) {
-                                                {
-                                                    Icon(
-                                                        imageVector = Icons.Default.Check,
-                                                        contentDescription = null,
-                                                    )
-                                                }
-                                            } else {
-                                                null
-                                            },
-                                    )
-                                }
                             }
                         }
                         IconButton(onClick = bloc::onAddRecipeClicked) {
@@ -232,24 +209,141 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                     },
                 )
             }
-            if (state.recipes.isEmpty() && state.isSearchActive) {
-                SearchEmptyState(modifier = Modifier.weight(1f))
-            } else if (state.isGridView) {
-                RecipeGrid(
-                    modifier = Modifier.weight(1f),
-                    recipes = state.recipes,
-                    onRecipeClicked = bloc::onRecipeClicked,
-                )
-            } else {
-                RecipeList(
-                    modifier = Modifier.weight(1f),
-                    recipes = state.recipes,
-                    onRecipeClicked = bloc::onRecipeClicked,
-                )
+            when {
+                !state.isLoading && state.totalRecipeCount == 0 -> {
+                    NoRecipesEmptyState(
+                        onBrowseClicked = bloc::onBrowseRecipesClicked,
+                        onCreateClicked = bloc::onAddRecipeClicked,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                state.recipes.isEmpty() && state.isSearchActive -> {
+                    SearchEmptyState(modifier = Modifier.weight(1f))
+                }
+                state.recipes.isEmpty() && state.activeFilters.isNotEmpty() -> {
+                    FilterEmptyState(
+                        activeFilters = state.activeFilters,
+                        onClearFilters = bloc::onClearFilters,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                state.isGridView -> {
+                    RecipeGrid(
+                        modifier = Modifier.weight(1f),
+                        recipes = state.recipes,
+                        onRecipeClicked = bloc::onRecipeClicked,
+                        state = gridState,
+                    )
+                }
+                else -> {
+                    RecipeList(
+                        modifier = Modifier.weight(1f),
+                        recipes = state.recipes,
+                        onRecipeClicked = bloc::onRecipeClicked,
+                        state = listState,
+                    )
+                }
             }
         },
     )
+
+    if (showSortFilterSheet) {
+        SortFilterBottomSheet(
+            currentSort = state.currentSort,
+            activeFilters = state.activeFilters,
+            onApply = { sort, filters ->
+                bloc.onApplySortAndFilters(sort, filters)
+                showSortFilterSheet = false
+            },
+            onDismiss = { showSortFilterSheet = false },
+        )
+    }
 }
+
+// region Sort & Filter Bottom Sheet
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+private fun SortFilterBottomSheet(
+    currentSort: RecipeSortOption,
+    activeFilters: Set<RecipeFilterOption>,
+    onApply: (sort: RecipeSortOption, filters: Set<RecipeFilterOption>) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    var selectedSort by remember { mutableStateOf(currentSort) }
+    var selectedFilters by remember { mutableStateOf(activeFilters) }
+
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp).navigationBarsPadding()) {
+            Text(
+                text = stringResource(Res.string.recipe_list_sort_and_filter),
+                style = MaterialTheme.typography.titleLarge,
+            )
+            Spacer(Modifier.height(16.dp))
+
+            // Sort by
+            Text(
+                text = stringResource(Res.string.recipe_list_sort_by),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(8.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                RecipeSortOption.entries.forEach { option ->
+                    FilterChip(
+                        selected = option == selectedSort,
+                        onClick = { selectedSort = option },
+                        label = { Text(stringResource(option.labelRes())) },
+                    )
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+
+            // Filter by
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(Res.string.recipe_list_filter_by),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                if (selectedFilters.isNotEmpty()) {
+                    TextButton(onClick = { selectedFilters = emptySet() }) {
+                        Text(stringResource(Res.string.recipe_list_clear_filters))
+                    }
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                RecipeFilterOption.entries.forEach { filter ->
+                    FilterChip(
+                        selected = filter in selectedFilters,
+                        onClick = {
+                            selectedFilters =
+                                if (filter in selectedFilters) selectedFilters - filter
+                                else selectedFilters + filter
+                        },
+                        label = { Text(stringResource(filter.labelRes())) },
+                    )
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+            Button(
+                onClick = { onApply(selectedSort, selectedFilters) },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(Res.string.recipe_list_apply))
+            }
+            Spacer(Modifier.height(16.dp))
+        }
+    }
+}
+
+// endregion
 
 private fun RecipeSortOption.labelRes(): StringResource =
     when (this) {
@@ -325,6 +419,98 @@ private fun SearchEmptyState(modifier: Modifier = Modifier) {
 
 // endregion
 
+// region Empty States
+
+@Composable
+private fun NoRecipesEmptyState(
+    onBrowseClicked: () -> Unit,
+    onCreateClicked: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Restaurant,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text = stringResource(Res.string.recipe_list_empty_title),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = stringResource(Res.string.recipe_list_empty_description),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(24.dp))
+        Button(onClick = onBrowseClicked, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.size(8.dp))
+            Text(stringResource(Res.string.recipe_list_empty_browse))
+        }
+        Spacer(Modifier.height(8.dp))
+        OutlinedButton(onClick = onCreateClicked, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.size(8.dp))
+            Text(stringResource(Res.string.recipe_list_empty_create))
+        }
+    }
+}
+
+@Composable
+private fun FilterEmptyState(
+    activeFilters: Set<RecipeFilterOption>,
+    onClearFilters: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val filterLabels =
+        activeFilters.map { filter -> stringResource(filter.labelRes()) }.joinToString(", ")
+
+    Column(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Default.FilterList,
+            contentDescription = null,
+            modifier = Modifier.size(48.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text = stringResource(Res.string.recipe_list_filter_empty_title),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text =
+                PhraseModel(
+                        Res.string.recipe_list_filter_empty_description,
+                        "filters" to FixedString(filterLabels),
+                    )
+                    .localized(),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(16.dp))
+        OutlinedButton(onClick = onClearFilters) {
+            Text(stringResource(Res.string.recipe_list_clear_filters))
+        }
+    }
+}
+
+// endregion
+
 // region Grid View
 
 @Composable
@@ -332,9 +518,11 @@ private fun RecipeGrid(
     recipes: List<RecipeListItem>,
     onRecipeClicked: (RecipeListItem) -> Unit,
     modifier: Modifier = Modifier,
+    state: LazyGridState = rememberLazyGridState(),
 ) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 160.dp),
+        state = state,
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -396,8 +584,9 @@ private fun RecipeList(
     recipes: List<RecipeListItem>,
     onRecipeClicked: (RecipeListItem) -> Unit,
     modifier: Modifier = Modifier,
+    state: LazyListState = rememberLazyListState(),
 ) {
-    LazyColumn(modifier = modifier.fillMaxWidth()) {
+    LazyColumn(state = state, modifier = modifier.fillMaxWidth()) {
         items(recipes.size, key = { recipes[it].id }) { index ->
             val recipe = recipes[index]
             RecipeListItemContent(recipe = recipe, onClick = { onRecipeClicked(recipe) })

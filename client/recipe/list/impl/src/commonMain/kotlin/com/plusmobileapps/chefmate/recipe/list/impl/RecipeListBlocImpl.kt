@@ -39,6 +39,7 @@ class RecipeListBlocImpl(
             RecipeListBloc.Model(
                 isLoading = it.isLoading,
                 recipes = it.displayRecipes.map { recipe -> recipe.toRecipeListItem() },
+                totalRecipeCount = it.recipes.size,
                 currentSort = it.currentSort,
                 activeFilters = it.activeFilters,
                 isGridView = it.isGridView,
@@ -77,6 +78,18 @@ class RecipeListBlocImpl(
 
     override fun onSearchQueryChanged(query: String) {
         viewModel.updateSearchQuery(query)
+    }
+
+    override fun onClearFilters() {
+        viewModel.clearFilters()
+    }
+
+    override fun onApplySortAndFilters(sort: RecipeSortOption, filters: Set<RecipeFilterOption>) {
+        viewModel.applySortAndFilters(sort, filters)
+    }
+
+    override fun onBrowseRecipesClicked() {
+        output.onNext(Output.OpenBrowser)
     }
 
     private fun Recipe.toRecipeListItem(): RecipeListItem =
