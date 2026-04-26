@@ -89,6 +89,7 @@ class RecipeDetailBlocImpl(
                     it.recipe.cookTime?.let { time -> timeFormatterUtil.formatMinutes(time) },
                 formattedTotalTime =
                     it.recipe.totalTime?.let { time -> timeFormatterUtil.formatMinutes(time) },
+                showGroceryAddedSnackbar = it.showGroceryAddedSnackbar,
             )
         }
 
@@ -128,6 +129,15 @@ class RecipeDetailBlocImpl(
         sheetNavigation.dismiss()
     }
 
+    override fun onViewGroceryListClicked() {
+        viewModel.dismissGroceryAddedSnackbar()
+        output.onNext(Output.OpenGroceryList)
+    }
+
+    override fun onGrocerySnackbarDismissed() {
+        viewModel.dismissGroceryAddedSnackbar()
+    }
+
     override fun onBackClicked() {
         output.onNext(Output.Finished)
     }
@@ -140,10 +150,14 @@ class RecipeDetailBlocImpl(
                         addToGroceryList.create(
                             context = context,
                             recipeId = config.recipeId,
-                            output = { output ->
-                                when (output) {
+                            output = { groceryOutput ->
+                                when (groceryOutput) {
                                     AddRecipeToGroceryListBloc.Output.Finished ->
                                         sheetNavigation.dismiss()
+                                    AddRecipeToGroceryListBloc.Output.Added -> {
+                                        sheetNavigation.dismiss()
+                                        viewModel.showGroceryAddedSnackbar()
+                                    }
                                 }
                             },
                         )

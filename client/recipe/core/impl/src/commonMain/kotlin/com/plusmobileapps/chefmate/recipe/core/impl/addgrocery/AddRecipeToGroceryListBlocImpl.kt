@@ -53,6 +53,9 @@ class AddRecipeToGroceryListBlocImpl(
                     AddRecipeToGroceryListViewModel.Output.Finished -> {
                         output.onNext(Output.Finished)
                     }
+                    AddRecipeToGroceryListViewModel.Output.Added -> {
+                        output.onNext(Output.Added)
+                    }
                 }
             }
         }

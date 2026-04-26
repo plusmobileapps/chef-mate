@@ -68,11 +68,20 @@ class RecipeDetailViewModel(
         _output.close()
     }
 
+    fun showGroceryAddedSnackbar() {
+        _state.update { it.copy(showGroceryAddedSnackbar = true) }
+    }
+
+    fun dismissGroceryAddedSnackbar() {
+        _state.update { it.copy(showGroceryAddedSnackbar = false) }
+    }
+
     data class State(
         val isLoading: Boolean = true,
         val isDeleting: Boolean = false,
         val showDeleteConfirmationDialog: Boolean = false,
         val recipe: Recipe = Recipe.Empty,
+        val showGroceryAddedSnackbar: Boolean = false,
     )
 
     sealed class Output {

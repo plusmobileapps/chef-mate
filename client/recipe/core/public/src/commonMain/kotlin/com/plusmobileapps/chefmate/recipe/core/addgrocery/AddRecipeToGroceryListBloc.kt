@@ -37,6 +37,8 @@ interface AddRecipeToGroceryListBloc : BackClickBloc {
 
     sealed class Output {
         data object Finished : Output()
+
+        data object Added : Output()
     }
 
     fun interface Factory {

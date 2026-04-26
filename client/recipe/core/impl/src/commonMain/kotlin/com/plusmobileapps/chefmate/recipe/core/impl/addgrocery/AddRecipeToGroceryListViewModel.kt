@@ -89,7 +89,7 @@ class AddRecipeToGroceryListViewModel(
                     groceryRepository.addGroceries(ingredients)
                 }
             }
-            _output.send(Output.Finished)
+            _output.send(Output.Added)
         }
     }
 
@@ -152,6 +152,8 @@ class AddRecipeToGroceryListViewModel(
 
     sealed class Output {
         data object Finished : Output()
+
+        data object Added : Output()
     }
 
     @AssistedFactory

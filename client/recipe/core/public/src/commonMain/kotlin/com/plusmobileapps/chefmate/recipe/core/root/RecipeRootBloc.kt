@@ -23,6 +23,8 @@ interface RecipeRootBloc : BackHandlerOwner, BackClickBloc {
         data object Finished : Output()
 
         data class OpenUrl(val url: String) : Output()
+
+        data object OpenGroceryList : Output()
     }
 
     @Serializable

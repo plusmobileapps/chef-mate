@@ -164,6 +164,15 @@ class RootBlocImpl(
             is RecipeRootBloc.Output.OpenUrl -> {
                 navigation.bringToFront(Configuration.Browser(output.url))
             }
+            RecipeRootBloc.Output.OpenGroceryList -> {
+                val bottomNavChild =
+                    stack.value.items
+                        .map { it.instance }
+                        .filterIsInstance<BottomNavigation>()
+                        .firstOrNull()
+                bottomNavChild?.bloc?.onTabSelected(BottomNavBloc.Tab.GROCERIES)
+                navigation.bringToFront(Configuration.BottomNavigation)
+            }
         }
     }
 
