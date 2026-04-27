@@ -4,6 +4,7 @@ package com.plusmobileapps.chefmate.grocery.core.impl.list
 
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.di.Main
+import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryFilter
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryGroup
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GrocerySort
@@ -42,6 +43,7 @@ class GroceryListViewModel(
     private val selectedListId = MutableStateFlow<Long?>(null)
     private val _sort = MutableStateFlow(initialSort)
     private val _filter = MutableStateFlow(initialFilter)
+    private val _recipeFilter = MutableStateFlow<String?>(null)
 
     val state: StateFlow<State> = _state.asStateFlow()
 
@@ -80,37 +82,60 @@ class GroceryListViewModel(
                     },
                     _filter,
                     _sort,
-                ) { items, filter, sort ->
+                    _recipeFilter,
+                ) { items, filter, sort, recipeFilter ->
+                    val availableRecipes = items.mapNotNull { it.recipeName }.distinct().sorted()
+                    val hasNoRecipeItems = items.any { it.recipeName == null }
                     val filtered =
                         when (filter) {
                             GroceryFilter.ALL -> items
                             GroceryFilter.UNPURCHASED -> items.filter { !it.isChecked }
                             GroceryFilter.PURCHASED -> items.filter { it.isChecked }
                         }
-                    when (sort) {
-                        GrocerySort.AISLE ->
-                            filtered
-                                .groupBy { it.category }
-                                .entries
-                                .sortedBy { it.key.ordinal }
-                                .map { (category, categoryItems) ->
-                                    GroceryGroup(category = category, items = categoryItems)
-                                }
-                        GrocerySort.ALPHABETICAL ->
-                            listOf(
-                                    GroceryGroup(
-                                        category =
-                                            filtered.firstOrNull()?.category
-                                                ?: com.plusmobileapps.chefmate.grocery.data
-                                                    .GroceryCategory
-                                                    .OTHER,
-                                        items = filtered.sortedBy { it.displayName.lowercase() },
+                    val recipeFiltered =
+                        when (recipeFilter) {
+                            null -> filtered
+                            GroceryListBloc.NO_RECIPE_FILTER ->
+                                filtered.filter { it.recipeName == null }
+                            else -> filtered.filter { it.recipeName == recipeFilter }
+                        }
+                    val grouped =
+                        when (sort) {
+                            GrocerySort.AISLE ->
+                                recipeFiltered
+                                    .groupBy { it.category }
+                                    .entries
+                                    .sortedBy { it.key.ordinal }
+                                    .map { (category, categoryItems) ->
+                                        GroceryGroup(category = category, items = categoryItems)
+                                    }
+                            GrocerySort.ALPHABETICAL ->
+                                listOf(
+                                        GroceryGroup(
+                                            category =
+                                                recipeFiltered.firstOrNull()?.category
+                                                    ?: com.plusmobileapps.chefmate.grocery.data
+                                                        .GroceryCategory
+                                                        .OTHER,
+                                            items =
+                                                recipeFiltered.sortedBy {
+                                                    it.displayName.lowercase()
+                                                },
+                                        )
                                     )
-                                )
-                                .filter { it.items.isNotEmpty() }
+                                    .filter { it.items.isNotEmpty() }
+                        }
+                    Triple(grouped, availableRecipes, hasNoRecipeItems)
+                }
+                .collect { (grouped, availableRecipes, hasNoRecipeItems) ->
+                    _state.update {
+                        it.copy(
+                            groupedItems = grouped,
+                            availableRecipes = availableRecipes,
+                            hasNoRecipeItems = hasNoRecipeItems,
+                        )
                     }
                 }
-                .collect { grouped -> _state.update { it.copy(groupedItems = grouped) } }
         }
     }
 
@@ -179,12 +204,17 @@ class GroceryListViewModel(
         }
     }
 
-    fun onApplySortAndFilter(sort: GrocerySort, filter: GroceryFilter) {
+    fun onApplySortAndFilter(
+        sort: GrocerySort,
+        filter: GroceryFilter,
+        recipeFilter: String? = null,
+    ) {
         _sort.value = sort
         _filter.value = filter
+        _recipeFilter.value = recipeFilter
         sortPref = sort.name
         filterPref = filter.name
-        _state.update { it.copy(sort = sort, filter = filter) }
+        _state.update { it.copy(sort = sort, filter = filter, recipeFilter = recipeFilter) }
     }
 
     fun onDeleteClicked() {
@@ -219,6 +249,9 @@ class GroceryListViewModel(
         val groupedItems: List<GroceryGroup> = emptyList(),
         val sort: GrocerySort = GrocerySort.AISLE,
         val filter: GroceryFilter = GroceryFilter.ALL,
+        val recipeFilter: String? = null,
+        val availableRecipes: List<String> = emptyList(),
+        val hasNoRecipeItems: Boolean = false,
         val isSyncing: Boolean = false,
         val lists: List<GroceryListModel> = emptyList(),
         val selectedList: GroceryListModel? = null,

@@ -34,7 +34,7 @@ interface GroceryListBloc {
 
     fun onDeleteListClicked(list: GroceryListModel)
 
-    fun onApplySortAndFilter(sort: GrocerySort, filter: GroceryFilter)
+    fun onApplySortAndFilter(sort: GrocerySort, filter: GroceryFilter, recipeFilter: String? = null)
 
     fun onDeleteClicked()
 
@@ -65,6 +65,9 @@ interface GroceryListBloc {
         val groupedItems: List<GroceryGroup> = emptyList(),
         val sort: GrocerySort = GrocerySort.AISLE,
         val filter: GroceryFilter = GroceryFilter.ALL,
+        val recipeFilter: String? = null,
+        val availableRecipes: List<String> = emptyList(),
+        val hasNoRecipeItems: Boolean = false,
         val isSyncing: Boolean = false,
         val lists: List<GroceryListModel> = emptyList(),
         val selectedList: GroceryListModel? = null,
@@ -79,5 +82,9 @@ interface GroceryListBloc {
 
     fun interface Factory {
         fun create(context: BlocContext, output: Consumer<Output>): GroceryListBloc
+    }
+
+    companion object {
+        const val NO_RECIPE_FILTER = ""
     }
 }
