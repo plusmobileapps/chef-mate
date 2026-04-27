@@ -11,13 +11,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -28,7 +26,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.outlined.CloudOff
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,19 +33,13 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -75,11 +66,9 @@ import chefmate.client.meal.core.public.generated.resources.meal_plan_sync_synce
 import chefmate.client.meal.core.public.generated.resources.meal_plan_sync_syncing
 import chefmate.client.meal.core.public.generated.resources.meal_plan_title
 import chefmate.client.meal.core.public.generated.resources.meal_plan_week
-import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
 import com.plusmobileapps.chefmate.meal.data.MealType
 import com.plusmobileapps.chefmate.meal.data.SyncStatus
-import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootScreen
 import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusDialog
@@ -97,7 +86,6 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     state.mealToDelete?.let {
         PlusDialog(
@@ -109,8 +97,6 @@ fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
             onDismissRequest = bloc::onDeleteMealDismissed,
         )
     }
-
-    MealPlanSheet(bloc = bloc, sheetState = sheetState)
 
     Box(modifier = modifier.fillMaxSize()) {
         PlusNavContainer(
@@ -171,48 +157,6 @@ fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
         ) {
             Icon(Icons.Default.Add, contentDescription = null)
             Text(stringResource(Res.string.meal_plan_add_meal))
-        }
-    }
-}
-
-@Composable
-private fun MealPlanSheet(bloc: MealPlanBloc, sheetState: androidx.compose.material3.SheetState) {
-    val slot = bloc.childSlot.subscribeAsState()
-    val child = slot.value.child?.instance
-
-    var sheetChild by remember { mutableStateOf(child) }
-    if (child != null) {
-        sheetChild = child
-    }
-
-    LaunchedEffect(child) {
-        if (child == null && sheetChild != null) {
-            sheetState.hide()
-            sheetChild = null
-        }
-    }
-
-    if (sheetChild != null) {
-        ModalBottomSheet(
-            onDismissRequest = {
-                when (sheetChild) {
-                    is MealPlanBloc.Sheet.AddMeal -> bloc.onDismissSheet()
-                    null -> {}
-                }
-            },
-            sheetState = sheetState,
-            contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
-            dragHandle = {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Spacer(Modifier.statusBarsPadding())
-                    BottomSheetDefaults.DragHandle()
-                }
-            },
-        ) {
-            when (val current = sheetChild) {
-                is MealPlanBloc.Sheet.AddMeal -> MealPlannerRootScreen(current.bloc)
-                null -> {}
-            }
         }
     }
 }

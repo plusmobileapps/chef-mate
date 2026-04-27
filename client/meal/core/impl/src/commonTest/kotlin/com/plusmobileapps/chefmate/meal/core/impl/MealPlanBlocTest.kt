@@ -8,7 +8,6 @@ import com.plusmobileapps.chefmate.meal.core.MealPlanBloc
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
 import com.plusmobileapps.chefmate.meal.data.MealPlanRepository
 import com.plusmobileapps.chefmate.meal.data.MealType
-import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
 import com.plusmobileapps.chefmate.text.FixedString
@@ -37,10 +36,6 @@ class MealPlanBlocTest {
         every { getMealsByDateRange("2026-04-13", "2026-04-19") } returns mealsFlow
     }
 
-    val mealPlannerRootFactory = MealPlannerRootBloc.Factory { _, _, _ ->
-        error("not used in test")
-    }
-
     val bloc =
         MealPlanBlocImpl(
             context = context,
@@ -52,7 +47,6 @@ class MealPlanBlocTest {
                     dateTimeUtil = dateTimeUtil,
                 )
             },
-            mealPlannerRootFactory = mealPlannerRootFactory,
         )
 
     @Test

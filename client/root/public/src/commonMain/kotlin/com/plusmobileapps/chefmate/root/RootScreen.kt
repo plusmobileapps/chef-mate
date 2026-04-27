@@ -20,6 +20,7 @@ import com.plusmobileapps.chefmate.auth.ui.AuthenticationScreen
 import com.plusmobileapps.chefmate.browser.BrowserScreen
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavigationScreen
+import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootScreen
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootScreen
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
@@ -40,7 +41,9 @@ fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
                         stackAnimation { child, otherChild, _ ->
                             if (
                                 child.instance is RootBloc.Child.Browser ||
-                                    otherChild.instance is RootBloc.Child.Browser
+                                    otherChild.instance is RootBloc.Child.Browser ||
+                                    child.instance is RootBloc.Child.MealPlanner ||
+                                    otherChild.instance is RootBloc.Child.MealPlanner
                             ) {
                                 verticalSlide()
                             } else {
@@ -67,6 +70,7 @@ fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
                             maxContentWidth = Dp.Unspecified,
                             content = { BrowserScreen(child.bloc, modifier = Modifier.weight(1f)) },
                         )
+                    is RootBloc.Child.MealPlanner -> MealPlannerRootScreen(child.bloc)
                 }
             },
         )

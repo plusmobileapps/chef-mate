@@ -7,6 +7,7 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
+import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import dev.mokkery.MockMode
@@ -49,6 +50,7 @@ class RootBlocTest {
                 detailOutput = output
                 mock()
             },
+            mealPlannerRoot = MealPlannerRootBloc.Factory { _, _, _ -> mock() },
             authentication = { context, props, output -> mock() },
         )
 

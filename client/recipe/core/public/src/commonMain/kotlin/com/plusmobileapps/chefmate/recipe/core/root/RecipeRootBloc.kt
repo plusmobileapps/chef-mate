@@ -6,6 +6,7 @@ import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
 import kotlinx.serialization.Serializable
@@ -25,6 +26,8 @@ interface RecipeRootBloc : BackHandlerOwner, BackClickBloc {
         data class OpenUrl(val url: String) : Output()
 
         data object OpenGroceryList : Output()
+
+        data class OpenMealPlanner(val props: MealPlannerRootBloc.Props) : Output()
     }
 
     @Serializable

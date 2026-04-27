@@ -10,6 +10,7 @@ import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
+import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
@@ -110,6 +111,13 @@ class RecipeRootBlocImpl(
             }
             RecipeDetailBloc.Output.OpenGroceryList -> {
                 this.output.onNext(RecipeRootBloc.Output.OpenGroceryList)
+            }
+            is RecipeDetailBloc.Output.OpenMealPlanner -> {
+                this.output.onNext(
+                    RecipeRootBloc.Output.OpenMealPlanner(
+                        MealPlannerRootBloc.Props.FromRecipeDetail(output.recipeId)
+                    )
+                )
             }
         }
     }

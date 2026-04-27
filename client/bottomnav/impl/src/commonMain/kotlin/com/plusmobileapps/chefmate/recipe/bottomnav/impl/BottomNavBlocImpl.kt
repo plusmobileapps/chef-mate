@@ -183,6 +183,8 @@ class BottomNavBlocImpl(
         when (output) {
             is MealPlanBloc.Output.OpenRecipe ->
                 this.output.onNext(BottomNavBloc.Output.OpenRecipe(output.recipeId))
+            is MealPlanBloc.Output.OpenMealPlanner ->
+                this.output.onNext(BottomNavBloc.Output.OpenMealPlanner(output.props))
         }
     }
 

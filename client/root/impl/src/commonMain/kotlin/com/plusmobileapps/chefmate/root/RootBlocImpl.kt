@@ -15,6 +15,7 @@ import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
+import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc.Props.Detail
 import com.plusmobileapps.chefmate.root.RootBloc.Child.BottomNavigation
@@ -34,6 +35,7 @@ class RootBlocImpl(
     private val browserBlocFactory: BrowserBloc.Factory,
     private val groceryDetail: GroceryDetailBloc.Factory,
     private val recipeRoot: RecipeRootBloc.Factory,
+    private val mealPlannerRoot: MealPlannerRootBloc.Factory,
     private val authentication: AuthenticationBloc.Factory,
 ) : RootBloc, BlocContext by context {
 
@@ -118,6 +120,16 @@ class RootBlocImpl(
                                 bloc.onNavigate()
                             }
                 )
+
+            is Configuration.MealPlanner ->
+                RootBloc.Child.MealPlanner(
+                    bloc =
+                        mealPlannerRoot.create(
+                            context = context,
+                            props = config.props,
+                            output = ::handleMealPlannerOutput,
+                        )
+                )
         }
 
     private fun handleBottomNavOutput(output: BottomNavBloc.Output) {
@@ -149,6 +161,10 @@ class RootBlocImpl(
             is BottomNavBloc.Output.OpenUrl -> {
                 navigation.bringToFront(Configuration.Browser(output.url))
             }
+
+            is BottomNavBloc.Output.OpenMealPlanner -> {
+                navigation.bringToFront(Configuration.MealPlanner(output.props))
+            }
         }
     }
 
@@ -173,6 +189,15 @@ class RootBlocImpl(
                 bottomNavChild?.bloc?.onTabSelected(BottomNavBloc.Tab.GROCERIES)
                 navigation.bringToFront(Configuration.BottomNavigation)
             }
+            is RecipeRootBloc.Output.OpenMealPlanner -> {
+                navigation.bringToFront(Configuration.MealPlanner(output.props))
+            }
+        }
+    }
+
+    private fun handleMealPlannerOutput(output: MealPlannerRootBloc.Output) {
+        when (output) {
+            MealPlannerRootBloc.Output.Finished -> navigation.pop()
         }
     }
 
@@ -198,6 +223,8 @@ class RootBlocImpl(
         data class Authentication(val props: AuthenticationBloc.Props) : Configuration()
 
         @Serializable data class Browser(val url: String) : Configuration()
+
+        @Serializable data class MealPlanner(val props: MealPlannerRootBloc.Props) : Configuration()
     }
 }
 
