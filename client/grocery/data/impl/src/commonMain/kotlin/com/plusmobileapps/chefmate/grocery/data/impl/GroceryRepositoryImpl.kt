@@ -420,7 +420,38 @@ class GroceryRepositoryImpl(
         try {
             // --- Sync lists first ---
 
-            // Push unsynced lists
+            // Pull remote lists BEFORE pushing to avoid creating duplicates.
+            // When signing in on a new device, a local default list may already
+            // exist. Pulling first lets us link it to the remote list instead of
+            // pushing a duplicate.
+            val remoteLists = remoteDataSource.fetchGroceryLists(userId)
+            withContext(ioContext) {
+                for (remoteList in remoteLists) {
+                    val remoteId = remoteList.id ?: continue
+                    val existing = listQueries.getByRemoteId(remoteId).executeAsOneOrNull()
+                    if (existing != null) continue
+
+                    // Try to match a local unsynced list by name
+                    val localLists = listQueries.getAll().executeAsList()
+                    val matchedByName = localLists.firstOrNull {
+                        it.remoteId == null && it.name == remoteList.name
+                    }
+                    if (matchedByName != null) {
+                        // Link the local list to the remote one so we don't
+                        // create a duplicate. Any local items will be synced
+                        // to the remote list below.
+                        listQueries.updateRemoteId(remoteId = remoteId, id = matchedByName.id)
+                    } else {
+                        val newId = listQueries.transactionWithResult {
+                            listQueries.create(name = remoteList.name, clientId = null)
+                            listQueries.lastId().executeAsOne().MAX!!
+                        }
+                        listQueries.updateRemoteId(remoteId = remoteId, id = newId)
+                    }
+                }
+            }
+
+            // Push unsynced lists (only those that weren't linked to a remote list above)
             val unsyncedLists = withContext(ioContext) { listQueries.getUnsynced().executeAsList() }
             for (list in unsyncedLists) {
                 try {
@@ -444,36 +475,6 @@ class GroceryRepositoryImpl(
                     )
                     withContext(ioContext) { listQueries.clearDirty(list.id) }
                 } catch (_: Exception) {}
-            }
-
-            // Pull remote lists
-            val remoteLists = remoteDataSource.fetchGroceryLists(userId)
-            withContext(ioContext) {
-                for (remoteList in remoteLists) {
-                    val remoteId = remoteList.id ?: continue
-                    val existing = listQueries.getByRemoteId(remoteId).executeAsOneOrNull()
-                    if (existing != null) continue
-
-                    val matchedByClientId =
-                        remoteList.id.let { _ ->
-                            // Lists created locally have a clientId; check for match
-                            val localLists = listQueries.getAll().executeAsList()
-                            localLists.firstOrNull {
-                                it.clientId != null &&
-                                    it.remoteId == null &&
-                                    it.name == remoteList.name
-                            }
-                        }
-                    if (matchedByClientId != null) {
-                        listQueries.updateRemoteId(remoteId = remoteId, id = matchedByClientId.id)
-                    } else {
-                        val newId = listQueries.transactionWithResult {
-                            listQueries.create(name = remoteList.name, clientId = null)
-                            listQueries.lastId().executeAsOne().MAX!!
-                        }
-                        listQueries.updateRemoteId(remoteId = remoteId, id = newId)
-                    }
-                }
             }
 
             // --- Sync items per list ---
