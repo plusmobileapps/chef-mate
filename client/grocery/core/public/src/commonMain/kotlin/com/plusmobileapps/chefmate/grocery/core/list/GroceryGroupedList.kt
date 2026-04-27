@@ -28,6 +28,8 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_not_check
 import chefmate.client.grocery.core.public.generated.resources.grocery_recipe_source
 import com.plusmobileapps.chefmate.grocery.core.displayName
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.PhraseModel
 import org.jetbrains.compose.resources.stringResource
 
 data class GroceryDisplayItem(
@@ -124,7 +126,12 @@ private fun GroceryDisplayListItem(
             val recipeName = item.recipeName
             if (recipeName != null) {
                 Text(
-                    text = stringResource(Res.string.grocery_recipe_source, recipeName),
+                    text =
+                        PhraseModel(
+                                Res.string.grocery_recipe_source,
+                                "recipe" to FixedString(recipeName),
+                            )
+                            .localized(),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                 )

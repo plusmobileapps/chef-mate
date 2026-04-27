@@ -87,6 +87,7 @@ import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.SyncStatus
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
+import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.flow.StateFlow
 import org.jetbrains.compose.resources.stringResource
 
@@ -255,21 +256,24 @@ private fun GrocerySortFilterBottomSheet(
     var selectedSort by remember { mutableStateOf(currentSort) }
     var selectedFilter by remember { mutableStateOf(currentFilter) }
 
+    val dimens = ChefMateTheme.dimens
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp).navigationBarsPadding()) {
+        Column(
+            modifier = Modifier.padding(horizontal = dimens.paddingNormal).navigationBarsPadding()
+        ) {
             Text(
                 text = stringResource(Res.string.grocery_sort_and_filter),
                 style = MaterialTheme.typography.titleLarge,
             )
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(dimens.paddingNormal))
 
             Text(
                 text = stringResource(Res.string.grocery_sort_by),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(Modifier.height(8.dp))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Spacer(Modifier.height(dimens.paddingSmall))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(dimens.paddingSmall)) {
                 GroceryListBloc.GrocerySort.entries.forEach { option ->
                     FilterChip(
                         selected = option == selectedSort,
@@ -287,15 +291,15 @@ private fun GrocerySortFilterBottomSheet(
                     )
                 }
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(dimens.paddingNormal))
 
             Text(
                 text = stringResource(Res.string.grocery_filter_by),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(Modifier.height(8.dp))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Spacer(Modifier.height(dimens.paddingSmall))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(dimens.paddingSmall)) {
                 GroceryListBloc.GroceryFilter.entries.forEach { filterOption ->
                     FilterChip(
                         selected = filterOption == selectedFilter,
@@ -315,14 +319,14 @@ private fun GrocerySortFilterBottomSheet(
                     )
                 }
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(dimens.paddingNormal))
             Button(
                 onClick = { onApply(selectedSort, selectedFilter) },
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(stringResource(Res.string.grocery_apply))
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(dimens.paddingNormal))
         }
     }
 }
