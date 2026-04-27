@@ -270,7 +270,7 @@ private fun GrocerySortFilterBottomSheet(
         ) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var selectedSort by remember { mutableStateOf(currentSort) }
     var selectedFilter by remember { mutableStateOf(currentFilter) }
     var selectedRecipeFilter by remember { mutableStateOf(currentRecipeFilter) }
