@@ -6,7 +6,7 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.client.database)
+            implementation(projects.client.database.core)
             implementation(projects.client.grocery.data.public)
             implementation(projects.client.shared)
             implementation(projects.client.util.public)
@@ -14,6 +14,11 @@ kotlin {
             implementation(libs.supabase.client)
             implementation(libs.supabase.postgrest)
             implementation(libs.kotlinx.serialization.json)
+        }
+        commonTest.dependencies {
+            implementation(projects.client.auth.data.testing)
+            implementation(projects.client.grocery.data.testing)
+            implementation(projects.client.util.testing)
         }
         jvmMain.dependencies { implementation(libs.ktor.client.cio) }
         androidMain.dependencies { implementation(libs.ktor.client.cio) }
@@ -25,4 +30,5 @@ plusLibrary {
     namespace = "com.plusmobileapps.chefmate.grocery.data.impl"
     enableDi = true
     enableTesting = true
+    enableDatabaseTesting = true
 }

@@ -8,7 +8,7 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.client.recipe.data.public)
             implementation(projects.client.shared)
-            implementation(projects.client.database)
+            implementation(projects.client.database.core)
             api(projects.client.util.public)
             implementation(projects.client.auth.data.public)
             implementation(libs.supabase.client)

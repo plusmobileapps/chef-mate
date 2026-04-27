@@ -10,4 +10,10 @@ open class PlusLibraryExtension {
 
     /** Flag to enable test dependencies and configurations. Default is false. */
     var enableTesting: Boolean = false
+
+    /**
+     * Flag to enable database testing support. When true, adds the `database:testing` dependency to
+     * commonTest and links sqlite3 for iOS test binaries. Requires [enableTesting] to also be true.
+     */
+    var enableDatabaseTesting: Boolean = false
 }

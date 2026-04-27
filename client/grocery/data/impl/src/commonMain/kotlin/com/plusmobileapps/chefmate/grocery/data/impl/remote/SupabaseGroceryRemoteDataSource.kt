@@ -1,6 +1,9 @@
 package com.plusmobileapps.chefmate.grocery.data.impl.remote
 
 import com.plusmobileapps.chefmate.di.AppScope
+import com.plusmobileapps.chefmate.grocery.data.remote.GroceryRemoteDataSource
+import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryItem
+import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryList
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn

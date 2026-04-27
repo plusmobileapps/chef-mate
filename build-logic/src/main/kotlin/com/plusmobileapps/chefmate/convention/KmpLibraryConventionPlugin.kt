@@ -24,7 +24,7 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
                 }
 
                 if (plusLibraryExtension.enableTesting) {
-                    applyTesting()
+                    applyTesting(enableDatabaseTesting = plusLibraryExtension.enableDatabaseTesting)
                 }
             }
 

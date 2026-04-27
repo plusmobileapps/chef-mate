@@ -42,6 +42,11 @@ Every feature is split into three module types:
 - `impl` — Production implementation. Depends on `public` modules only. Every new `impl` module must be added to `client/composeApp/build.gradle.kts` under `commonMain` to register it in the DI graph.
 - `testing` — Fake/stub implementations for use in other modules' tests.
 
+The `plusLibrary` extension in each module's `build.gradle.kts` controls convention plugin features:
+- `enableDi = true` — sets up Metro (kotlin-inject) dependency injection
+- `enableTesting = true` — adds test dependencies (mokkery, turbine, kotest, coroutines-test)
+- `enableDatabaseTesting = true` — adds `client/database/testing` (in-memory SQLDelight) to test dependencies and links sqlite3 for iOS. Use this when tests need a real database via `createTestDatabase()`. Requires `enableTesting = true`.
+
 ### BLoC Pattern (Decompose)
 
 Every screen is a BLoC. The pattern is:
@@ -56,7 +61,7 @@ See `docs/architecture.md` for full annotated examples of both patterns.
 
 ### Data Layer
 
-- **Offline-first**: All data stored locally via SQLDelight (`client/database` module).
+- **Offline-first**: All data stored locally via SQLDelight (`client/database/core` module).
 - **Remote**: Supabase (Kotlin Multiplatform SDK) for sync.
 - Repositories mediate between local cache and remote source.
 
@@ -92,7 +97,7 @@ Add strings at `client/<module>/src/commonMain/composeResources/values/strings.x
 |---|---|
 | App entry (common) | `client/composeApp/src/commonMain/.../App.kt` |
 | DI component | `client/composeApp/src/commonMain/.../ApplicationComponent.kt` |
-| Database schemas | `client/database/src/commonMain/sqldelight/` |
+| Database schemas | `client/database/core/src/commonMain/sqldelight/` |
 | Root navigation | `client/root/` |
 | Shared utilities | `client/shared/` |
 | Reusable UI | `client/ui/public/` |

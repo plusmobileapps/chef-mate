@@ -7,7 +7,7 @@ kotlin {
             implementation(projects.client.grocery.core.public)
             implementation(projects.client.shared)
             implementation(libs.arkivanov.decompose.core)
-            implementation(projects.client.database)
+            implementation(projects.client.database.core)
         }
         commonTest.dependencies { implementation(libs.multiplatform.settings.test) }
     }

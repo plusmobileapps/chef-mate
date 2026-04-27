@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.grocery.data.impl.remote
+package com.plusmobileapps.chefmate.grocery.data.remote
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
