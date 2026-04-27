@@ -16,7 +16,9 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
         }
         commonTest.dependencies {
+            implementation(projects.client.auth.data.testing)
             implementation(projects.client.database.testing)
+            implementation(projects.client.grocery.data.testing)
             implementation(projects.client.util.testing)
         }
         jvmMain.dependencies { implementation(libs.ktor.client.cio) }

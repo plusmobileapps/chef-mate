@@ -14,9 +14,9 @@ import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.grocery.data.IngredientParser
 import com.plusmobileapps.chefmate.grocery.data.SyncStatus
-import com.plusmobileapps.chefmate.grocery.data.impl.remote.GroceryRemoteDataSource
-import com.plusmobileapps.chefmate.grocery.data.impl.remote.RemoteGroceryItem
-import com.plusmobileapps.chefmate.grocery.data.impl.remote.RemoteGroceryList
+import com.plusmobileapps.chefmate.grocery.data.remote.GroceryRemoteDataSource
+import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryItem
+import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryList
 import com.plusmobileapps.chefmate.util.DateTimeUtil
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject

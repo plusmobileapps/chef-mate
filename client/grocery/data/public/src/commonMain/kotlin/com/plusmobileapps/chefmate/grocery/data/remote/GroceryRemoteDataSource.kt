@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.grocery.data.impl.remote
+package com.plusmobileapps.chefmate.grocery.data.remote
 
 interface GroceryRemoteDataSource {
     suspend fun ensureDefaultList(ownerId: String): String
