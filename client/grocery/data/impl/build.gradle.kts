@@ -15,6 +15,10 @@ kotlin {
             implementation(libs.supabase.postgrest)
             implementation(libs.kotlinx.serialization.json)
         }
+        commonTest.dependencies {
+            implementation(projects.client.database.testing)
+            implementation(projects.client.util.testing)
+        }
         jvmMain.dependencies { implementation(libs.ktor.client.cio) }
         androidMain.dependencies { implementation(libs.ktor.client.cio) }
         iosMain.dependencies { implementation(libs.ktor.client.darwin) }

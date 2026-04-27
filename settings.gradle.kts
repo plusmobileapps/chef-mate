@@ -54,6 +54,8 @@ include(":client:composeApp")
 
 include(":client:database")
 
+include(":client:database:testing")
+
 include(":client:grocery:core:impl")
 
 include(":client:grocery:core:public")
