@@ -14,11 +14,19 @@ class TestingConventionPlugin : Plugin<Project> {
     }
 }
 
-fun Project.applyTesting() {
+fun Project.applyTesting(enableDatabaseTesting: Boolean = false) {
     pluginManager.apply(libs.plugins.ksp.get().pluginId)
     pluginManager.apply(libs.plugins.mokkery.get().pluginId)
 
     extensions.configure<KotlinMultiplatformExtension> {
+        if (enableDatabaseTesting) {
+            targets.withType(
+                org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget::class.java
+            ) {
+                binaries.all { linkerOpts("-lsqlite3") }
+            }
+        }
+
         sourceSets.apply {
             val commonTest = getByName("commonTest")
             val jvmTest = getByName("jvmTest")
@@ -31,6 +39,9 @@ fun Project.applyTesting() {
                 implementation(libs.turbine)
                 implementation(libs.kotest.assertions)
                 implementation(project(":client:testing"))
+                if (enableDatabaseTesting) {
+                    implementation(project(":client:database:testing"))
+                }
             }
         }
 

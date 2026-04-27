@@ -42,6 +42,11 @@ Every feature is split into three module types:
 - `impl` — Production implementation. Depends on `public` modules only. Every new `impl` module must be added to `client/composeApp/build.gradle.kts` under `commonMain` to register it in the DI graph.
 - `testing` — Fake/stub implementations for use in other modules' tests.
 
+The `plusLibrary` extension in each module's `build.gradle.kts` controls convention plugin features:
+- `enableDi = true` — sets up Metro (kotlin-inject) dependency injection
+- `enableTesting = true` — adds test dependencies (mokkery, turbine, kotest, coroutines-test)
+- `enableDatabaseTesting = true` — adds `client/database/testing` (in-memory SQLDelight) to test dependencies and links sqlite3 for iOS. Use this when tests need a real database via `createTestDatabase()`. Requires `enableTesting = true`.
+
 ### BLoC Pattern (Decompose)
 
 Every screen is a BLoC. The pattern is:

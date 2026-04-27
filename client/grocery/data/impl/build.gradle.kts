@@ -4,10 +4,6 @@ plugins {
 }
 
 kotlin {
-    targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget> {
-        binaries.all { linkerOpts("-lsqlite3") }
-    }
-
     sourceSets {
         commonMain.dependencies {
             implementation(projects.client.database.core)
@@ -21,7 +17,6 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(projects.client.auth.data.testing)
-            implementation(projects.client.database.testing)
             implementation(projects.client.grocery.data.testing)
             implementation(projects.client.util.testing)
         }
@@ -35,4 +30,5 @@ plusLibrary {
     namespace = "com.plusmobileapps.chefmate.grocery.data.impl"
     enableDi = true
     enableTesting = true
+    enableDatabaseTesting = true
 }
