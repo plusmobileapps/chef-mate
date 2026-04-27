@@ -4,6 +4,10 @@ plugins {
 }
 
 kotlin {
+    targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget> {
+        binaries.all { linkerOpts("-lsqlite3") }
+    }
+
     sourceSets {
         commonMain.dependencies {
             implementation(projects.client.database.core)
