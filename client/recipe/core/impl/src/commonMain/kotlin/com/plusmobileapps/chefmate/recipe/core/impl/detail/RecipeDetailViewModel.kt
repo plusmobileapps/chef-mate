@@ -4,6 +4,8 @@ import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
+import com.russhwolf.settings.Settings
+import com.russhwolf.settings.boolean
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -23,11 +25,14 @@ class RecipeDetailViewModel(
     @Assisted private val recipeId: Long,
     @Main mainContext: CoroutineContext,
     private val repository: RecipeRepository,
+    settings: Settings,
 ) : ViewModel(mainContext) {
+
+    private var keepScreenOnPref by settings.boolean(KEY_KEEP_SCREEN_ON, defaultValue = true)
     private val _output = Channel<Output>(Channel.BUFFERED)
     val output: Flow<Output> = _output.receiveAsFlow()
 
-    private val _state = MutableStateFlow(State())
+    private val _state = MutableStateFlow(State(keepScreenOn = keepScreenOnPref))
     val state: StateFlow<State> = _state.asStateFlow()
 
     init {
@@ -76,12 +81,19 @@ class RecipeDetailViewModel(
         _state.update { it.copy(showGroceryAddedSnackbar = false) }
     }
 
+    fun toggleKeepScreenOn() {
+        val newValue = !_state.value.keepScreenOn
+        keepScreenOnPref = newValue
+        _state.update { it.copy(keepScreenOn = newValue) }
+    }
+
     data class State(
         val isLoading: Boolean = true,
         val isDeleting: Boolean = false,
         val showDeleteConfirmationDialog: Boolean = false,
         val recipe: Recipe = Recipe.Empty,
         val showGroceryAddedSnackbar: Boolean = false,
+        val keepScreenOn: Boolean = true,
     )
 
     sealed class Output {
@@ -91,5 +103,9 @@ class RecipeDetailViewModel(
     @AssistedFactory
     fun interface Factory {
         fun create(recipeId: Long): RecipeDetailViewModel
+    }
+
+    companion object {
+        private const val KEY_KEEP_SCREEN_ON = "recipe_detail_keep_screen_on"
     }
 }
