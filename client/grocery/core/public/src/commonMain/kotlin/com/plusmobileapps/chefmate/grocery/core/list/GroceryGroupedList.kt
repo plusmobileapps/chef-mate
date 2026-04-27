@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -66,6 +67,7 @@ fun GroceryGroupedList(
                     trailingContent = trailingContent,
                     modifier = Modifier.animateItem(),
                 )
+                HorizontalDivider()
             }
         }
         footer?.invoke(this)
@@ -124,7 +126,7 @@ private fun GroceryDisplayListItem(
                 Text(
                     text = stringResource(Res.string.grocery_recipe_source, recipeName),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                 )
             }
         }
