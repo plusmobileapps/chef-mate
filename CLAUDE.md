@@ -56,7 +56,7 @@ See `docs/architecture.md` for full annotated examples of both patterns.
 
 ### Data Layer
 
-- **Offline-first**: All data stored locally via SQLDelight (`client/database` module).
+- **Offline-first**: All data stored locally via SQLDelight (`client/database/core` module).
 - **Remote**: Supabase (Kotlin Multiplatform SDK) for sync.
 - Repositories mediate between local cache and remote source.
 
@@ -92,7 +92,7 @@ Add strings at `client/<module>/src/commonMain/composeResources/values/strings.x
 |---|---|
 | App entry (common) | `client/composeApp/src/commonMain/.../App.kt` |
 | DI component | `client/composeApp/src/commonMain/.../ApplicationComponent.kt` |
-| Database schemas | `client/database/src/commonMain/sqldelight/` |
+| Database schemas | `client/database/core/src/commonMain/sqldelight/` |
 | Root navigation | `client/root/` |
 | Shared utilities | `client/shared/` |
 | Reusable UI | `client/ui/public/` |

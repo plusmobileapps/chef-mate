@@ -6,7 +6,7 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.client.database)
+            implementation(projects.client.database.core)
             implementation(projects.client.grocery.data.public)
             implementation(projects.client.shared)
             implementation(projects.client.util.public)

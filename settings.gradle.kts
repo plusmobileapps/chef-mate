@@ -52,7 +52,7 @@ include(":client:bottomnav:public")
 
 include(":client:composeApp")
 
-include(":client:database")
+include(":client:database:core")
 
 include(":client:database:testing")
 

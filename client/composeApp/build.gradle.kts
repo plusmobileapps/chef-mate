@@ -62,7 +62,7 @@ kotlin {
             api(projects.client.meal.data.impl)
             api(projects.client.meal.core.impl)
             implementation(libs.kotlinx.serialization.json)
-            api(projects.client.database)
+            api(projects.client.database.core)
             api(projects.client.root.public)
             api(projects.client.root.impl)
             api(projects.client.bottomnav.impl)
