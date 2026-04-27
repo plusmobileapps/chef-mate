@@ -9,6 +9,7 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.meal.core.MealPlanBloc
+import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.settings.SettingsBloc
 import kotlinx.coroutines.flow.StateFlow
@@ -56,6 +57,8 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc {
         data object OpenSignUp : Output()
 
         data class OpenUrl(val url: String) : Output()
+
+        data class OpenMealPlanner(val props: MealPlannerRootBloc.Props) : Output()
     }
 
     fun interface Factory {

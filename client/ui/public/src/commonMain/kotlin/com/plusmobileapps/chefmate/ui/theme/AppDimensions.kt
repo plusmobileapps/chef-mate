@@ -11,6 +11,7 @@ data class AppDimensions(
     val paddingLarge: Dp = 24.dp,
     val paddingExtraLarge: Dp = 32.dp,
     val rowHeight: Dp = 56.dp,
+    val fabClearance: Dp = 88.dp,
 )
 
 internal val LocalDimensions = staticCompositionLocalOf { AppDimensions() }

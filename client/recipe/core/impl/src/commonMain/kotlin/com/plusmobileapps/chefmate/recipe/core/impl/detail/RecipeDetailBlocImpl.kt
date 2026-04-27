@@ -12,7 +12,6 @@ import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc
-import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc.Output
 import com.plusmobileapps.chefmate.text.FixedString
@@ -36,7 +35,6 @@ class RecipeDetailBlocImpl(
     private val dateTimeUtil: DateTimeUtil,
     private val timeFormatterUtil: TimeFormatterUtil,
     private val addToGroceryList: AddRecipeToGroceryListBloc.Factory,
-    private val mealPlannerRootFactory: MealPlannerRootBloc.Factory,
 ) : RecipeDetailBloc, BlocContext by context {
     @AssistedFactory
     fun interface ManagedFactory {
@@ -119,7 +117,7 @@ class RecipeDetailBlocImpl(
     }
 
     override fun onAddToMealPlanClicked() {
-        sheetNavigation.activate(SheetConfig.AddToMealPlan(recipeId))
+        output.onNext(Output.OpenMealPlanner(recipeId))
     }
 
     override fun onSourceUrlClicked(url: String) {
@@ -167,26 +165,11 @@ class RecipeDetailBlocImpl(
                             },
                         )
                 )
-            is SheetConfig.AddToMealPlan ->
-                RecipeDetailBloc.Sheet.AddToMealPlan(
-                    bloc =
-                        mealPlannerRootFactory.create(
-                            context = context,
-                            props = MealPlannerRootBloc.Props.FromRecipeDetail(config.recipeId),
-                            output = { output ->
-                                when (output) {
-                                    MealPlannerRootBloc.Output.Finished -> sheetNavigation.dismiss()
-                                }
-                            },
-                        )
-                )
         }
 
     @Serializable
     sealed class SheetConfig {
         data class AddToGroceryList(val recipeId: Long) : SheetConfig()
-
-        data class AddToMealPlan(val recipeId: Long) : SheetConfig()
     }
 }
 
