@@ -74,7 +74,8 @@ class GroceryListBlocTest {
             awaitItem() shouldBe
                 GroceryListBloc.Model(
                     groupedItems =
-                        listOf(GroceryGroup(category = GroceryCategory.PRODUCE, items = items))
+                        listOf(GroceryGroup(category = GroceryCategory.PRODUCE, items = items)),
+                    hasNoRecipeItems = true,
                 )
         }
     }
@@ -165,6 +166,166 @@ class GroceryListBlocTest {
             result.filter shouldBe GroceryListBloc.GroceryFilter.UNPURCHASED
             result.groupedItems.flatMap { it.items }.size shouldBe 1
             result.groupedItems.flatMap { it.items }.first().displayName shouldBe "Bananas"
+        }
+    }
+
+    @Test
+    fun When_recipe_filter_applied_Then_only_items_from_that_recipe_shown() = runTest {
+        val items =
+            listOf(
+                GroceryItem(
+                    id = 1,
+                    name = "Flour",
+                    displayName = "Flour",
+                    category = GroceryCategory.BAKING,
+                    isChecked = false,
+                    recipeName = "Chocolate Cake",
+                ),
+                GroceryItem(
+                    id = 2,
+                    name = "Sugar",
+                    displayName = "Sugar",
+                    category = GroceryCategory.BAKING,
+                    isChecked = false,
+                    recipeName = "Chocolate Cake",
+                ),
+                GroceryItem(
+                    id = 3,
+                    name = "Chicken",
+                    displayName = "Chicken",
+                    category = GroceryCategory.MEAT,
+                    isChecked = false,
+                    recipeName = "Chicken Soup",
+                ),
+                GroceryItem(
+                    id = 4,
+                    name = "Salt",
+                    displayName = "Salt",
+                    category = GroceryCategory.SPICES,
+                    isChecked = false,
+                ),
+            )
+        groceries.emit(items)
+        bloc.onApplySortAndFilter(
+            GroceryListBloc.GrocerySort.AISLE,
+            GroceryListBloc.GroceryFilter.ALL,
+            recipeFilter = "Chocolate Cake",
+        )
+        bloc.state.test {
+            val result = awaitItem()
+            result.recipeFilter shouldBe "Chocolate Cake"
+            val allItems = result.groupedItems.flatMap { it.items }
+            allItems.size shouldBe 2
+            allItems.map { it.displayName } shouldBe listOf("Flour", "Sugar")
+        }
+    }
+
+    @Test
+    fun When_no_recipe_filter_applied_Then_only_items_without_recipe_shown() = runTest {
+        val items =
+            listOf(
+                GroceryItem(
+                    id = 1,
+                    name = "Flour",
+                    displayName = "Flour",
+                    category = GroceryCategory.BAKING,
+                    isChecked = false,
+                    recipeName = "Chocolate Cake",
+                ),
+                GroceryItem(
+                    id = 2,
+                    name = "Salt",
+                    displayName = "Salt",
+                    category = GroceryCategory.SPICES,
+                    isChecked = false,
+                ),
+            )
+        groceries.emit(items)
+        bloc.onApplySortAndFilter(
+            GroceryListBloc.GrocerySort.AISLE,
+            GroceryListBloc.GroceryFilter.ALL,
+            recipeFilter = GroceryListBloc.NO_RECIPE_FILTER,
+        )
+        bloc.state.test {
+            val result = awaitItem()
+            result.recipeFilter shouldBe GroceryListBloc.NO_RECIPE_FILTER
+            val allItems = result.groupedItems.flatMap { it.items }
+            allItems.size shouldBe 1
+            allItems.first().displayName shouldBe "Salt"
+        }
+    }
+
+    @Test
+    fun When_available_recipes_exist_Then_model_contains_sorted_recipe_names() = runTest {
+        bloc.state.test {
+            awaitItem() shouldBe GroceryListBloc.Model()
+            val items =
+                listOf(
+                    GroceryItem(
+                        id = 1,
+                        name = "Flour",
+                        category = GroceryCategory.BAKING,
+                        isChecked = false,
+                        recipeName = "Chocolate Cake",
+                    ),
+                    GroceryItem(
+                        id = 2,
+                        name = "Chicken",
+                        category = GroceryCategory.MEAT,
+                        isChecked = false,
+                        recipeName = "Chicken Soup",
+                    ),
+                    GroceryItem(
+                        id = 3,
+                        name = "Salt",
+                        category = GroceryCategory.SPICES,
+                        isChecked = false,
+                    ),
+                )
+            groceries.emit(items)
+            val result = awaitItem()
+            result.availableRecipes shouldBe listOf("Chicken Soup", "Chocolate Cake")
+            result.hasNoRecipeItems shouldBe true
+        }
+    }
+
+    @Test
+    fun When_clear_filters_applied_Then_recipe_filter_is_also_cleared() = runTest {
+        val items =
+            listOf(
+                GroceryItem(
+                    id = 1,
+                    name = "Flour",
+                    displayName = "Flour",
+                    category = GroceryCategory.BAKING,
+                    isChecked = false,
+                    recipeName = "Chocolate Cake",
+                ),
+                GroceryItem(
+                    id = 2,
+                    name = "Salt",
+                    displayName = "Salt",
+                    category = GroceryCategory.SPICES,
+                    isChecked = false,
+                ),
+            )
+        groceries.emit(items)
+        bloc.onApplySortAndFilter(
+            GroceryListBloc.GrocerySort.ALPHABETICAL,
+            GroceryListBloc.GroceryFilter.ALL,
+            recipeFilter = "Chocolate Cake",
+        )
+        bloc.onApplySortAndFilter(
+            GroceryListBloc.GrocerySort.AISLE,
+            GroceryListBloc.GroceryFilter.ALL,
+            recipeFilter = null,
+        )
+        bloc.state.test {
+            val result = awaitItem()
+            result.recipeFilter shouldBe null
+            result.sort shouldBe GroceryListBloc.GrocerySort.AISLE
+            result.filter shouldBe GroceryListBloc.GroceryFilter.ALL
+            result.groupedItems.flatMap { it.items }.size shouldBe 2
         }
     }
 

@@ -56,6 +56,7 @@ import chefmate.client.grocery.core.public.generated.resources.Res
 import chefmate.client.grocery.core.public.generated.resources.grocery_add_item
 import chefmate.client.grocery.core.public.generated.resources.grocery_apply
 import chefmate.client.grocery.core.public.generated.resources.grocery_cancel
+import chefmate.client.grocery.core.public.generated.resources.grocery_clear_filters
 import chefmate.client.grocery.core.public.generated.resources.grocery_create_list_cancel
 import chefmate.client.grocery.core.public.generated.resources.grocery_create_list_confirm
 import chefmate.client.grocery.core.public.generated.resources.grocery_create_list_hint
@@ -71,6 +72,8 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_delete_pu
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter_all
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter_by
+import chefmate.client.grocery.core.public.generated.resources.grocery_filter_by_recipe
+import chefmate.client.grocery.core.public.generated.resources.grocery_filter_no_recipe
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter_purchased
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter_unpurchased
 import chefmate.client.grocery.core.public.generated.resources.grocery_list
@@ -98,7 +101,11 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
     var showSortFilterSheet by remember { mutableStateOf(false) }
     val hasActiveFilter = state.filter != GroceryListBloc.GroceryFilter.ALL
     val hasNonDefaultSort = state.sort != GroceryListBloc.GrocerySort.AISLE
-    val activeCount = (if (hasActiveFilter) 1 else 0) + (if (hasNonDefaultSort) 1 else 0)
+    val hasRecipeFilter = state.recipeFilter != null
+    val activeCount =
+        (if (hasActiveFilter) 1 else 0) +
+            (if (hasNonDefaultSort) 1 else 0) +
+            (if (hasRecipeFilter) 1 else 0)
 
     PlusNavContainer(
         modifier = modifier.fillMaxSize(),
@@ -210,8 +217,11 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
         GrocerySortFilterBottomSheet(
             currentSort = state.sort,
             currentFilter = state.filter,
-            onApply = { sort, filter ->
-                bloc.onApplySortAndFilter(sort, filter)
+            currentRecipeFilter = state.recipeFilter,
+            availableRecipes = state.availableRecipes,
+            hasNoRecipeItems = state.hasNoRecipeItems,
+            onApply = { sort, filter, recipeFilter ->
+                bloc.onApplySortAndFilter(sort, filter, recipeFilter)
                 showSortFilterSheet = false
             },
             onDismiss = { showSortFilterSheet = false },
@@ -249,22 +259,54 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
 private fun GrocerySortFilterBottomSheet(
     currentSort: GroceryListBloc.GrocerySort,
     currentFilter: GroceryListBloc.GroceryFilter,
-    onApply: (sort: GroceryListBloc.GrocerySort, filter: GroceryListBloc.GroceryFilter) -> Unit,
+    currentRecipeFilter: String?,
+    availableRecipes: List<String>,
+    hasNoRecipeItems: Boolean,
+    onApply:
+        (
+            sort: GroceryListBloc.GrocerySort,
+            filter: GroceryListBloc.GroceryFilter,
+            recipeFilter: String?,
+        ) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var selectedSort by remember { mutableStateOf(currentSort) }
     var selectedFilter by remember { mutableStateOf(currentFilter) }
+    var selectedRecipeFilter by remember { mutableStateOf(currentRecipeFilter) }
+
+    val showRecipeSection = availableRecipes.isNotEmpty() || hasNoRecipeItems
+    val hasActiveFilters =
+        selectedSort != GroceryListBloc.GrocerySort.AISLE ||
+            selectedFilter != GroceryListBloc.GroceryFilter.ALL ||
+            selectedRecipeFilter != null
 
     val dimens = ChefMateTheme.dimens
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(
             modifier = Modifier.padding(horizontal = dimens.paddingNormal).navigationBarsPadding()
         ) {
-            Text(
-                text = stringResource(Res.string.grocery_sort_and_filter),
-                style = MaterialTheme.typography.titleLarge,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(Res.string.grocery_sort_and_filter),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                if (hasActiveFilters) {
+                    TextButton(
+                        onClick = {
+                            selectedSort = GroceryListBloc.GrocerySort.AISLE
+                            selectedFilter = GroceryListBloc.GroceryFilter.ALL
+                            selectedRecipeFilter = null
+                        }
+                    ) {
+                        Text(stringResource(Res.string.grocery_clear_filters))
+                    }
+                }
+            }
             Spacer(Modifier.height(dimens.paddingNormal))
 
             Text(
@@ -319,9 +361,46 @@ private fun GrocerySortFilterBottomSheet(
                     )
                 }
             }
+
+            if (showRecipeSection) {
+                Spacer(Modifier.height(dimens.paddingNormal))
+                Text(
+                    text = stringResource(Res.string.grocery_filter_by_recipe),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(dimens.paddingSmall))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(dimens.paddingSmall)) {
+                    availableRecipes.forEach { recipe ->
+                        FilterChip(
+                            selected = selectedRecipeFilter == recipe,
+                            onClick = {
+                                selectedRecipeFilter =
+                                    if (selectedRecipeFilter == recipe) null else recipe
+                            },
+                            label = { Text(recipe) },
+                        )
+                    }
+                    if (hasNoRecipeItems) {
+                        FilterChip(
+                            selected = selectedRecipeFilter == GroceryListBloc.NO_RECIPE_FILTER,
+                            onClick = {
+                                selectedRecipeFilter =
+                                    if (selectedRecipeFilter == GroceryListBloc.NO_RECIPE_FILTER) {
+                                        null
+                                    } else {
+                                        GroceryListBloc.NO_RECIPE_FILTER
+                                    }
+                            },
+                            label = { Text(stringResource(Res.string.grocery_filter_no_recipe)) },
+                        )
+                    }
+                }
+            }
+
             Spacer(Modifier.height(dimens.paddingNormal))
             Button(
-                onClick = { onApply(selectedSort, selectedFilter) },
+                onClick = { onApply(selectedSort, selectedFilter, selectedRecipeFilter) },
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(stringResource(Res.string.grocery_apply))

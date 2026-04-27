@@ -41,6 +41,9 @@ class GroceryListBlocImpl(
                 groupedItems = it.groupedItems,
                 sort = it.sort,
                 filter = it.filter,
+                recipeFilter = it.recipeFilter,
+                availableRecipes = it.availableRecipes,
+                hasNoRecipeItems = it.hasNoRecipeItems,
                 isSyncing = it.isSyncing,
                 lists = it.lists,
                 selectedList = it.selectedList,
@@ -100,8 +103,12 @@ class GroceryListBlocImpl(
         viewModel.onDeleteListClicked(list)
     }
 
-    override fun onApplySortAndFilter(sort: GrocerySort, filter: GroceryFilter) {
-        viewModel.onApplySortAndFilter(sort, filter)
+    override fun onApplySortAndFilter(
+        sort: GrocerySort,
+        filter: GroceryFilter,
+        recipeFilter: String?,
+    ) {
+        viewModel.onApplySortAndFilter(sort, filter, recipeFilter)
     }
 
     override fun onDeleteClicked() {
