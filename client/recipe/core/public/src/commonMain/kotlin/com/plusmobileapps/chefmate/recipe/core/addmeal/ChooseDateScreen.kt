@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Arrangement.spacedBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -88,101 +89,124 @@ fun ChooseDateScreen(bloc: ChooseDateBloc, showAsChild: Boolean, modifier: Modif
             }
         },
     ) {
-        Row(
-            modifier =
-                Modifier.fillMaxWidth().padding(horizontal = ChefMateTheme.dimens.paddingSmall),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = bloc::onPreviousMonth) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = null)
-            }
-            Text(text = state.monthLabel, style = MaterialTheme.typography.titleMedium)
-            IconButton(onClick = bloc::onNextMonth) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
-            }
-        }
-
-        if (state.selectedDate != null) {
-            Row(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = ChefMateTheme.dimens.paddingNormal),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = state.formattedSelectedDate,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                TextButton(onClick = bloc::onTodayClicked) {
-                    Text(stringResource(Res.string.add_meal_plan_today))
-                }
-            }
-        }
-
-        MonthCalendar(
-            firstDayOfMonth = state.firstDayOfMonth,
-            selectedDate = state.selectedDate,
-            daysWithMeals = state.daysWithMeals,
+        ChooseDateContent(
+            state = state,
+            onPreviousMonth = bloc::onPreviousMonth,
+            onNextMonth = bloc::onNextMonth,
+            onTodayClicked = bloc::onTodayClicked,
             onDaySelected = bloc::onDaySelected,
-            modifier = Modifier.fillMaxWidth().padding(ChefMateTheme.dimens.paddingNormal),
+            modifier = Modifier.fillMaxWidth().weight(1f),
         )
-
-        if (state.selectedDate != null) {
-            SelectedDayMeals(
-                meals = state.selectedDayMeals,
-                modifier = Modifier.fillMaxWidth().weight(1f),
-            )
-        }
     }
 }
 
 @Composable
-private fun SelectedDayMeals(meals: List<MealPlanItem>, modifier: Modifier = Modifier) {
-    if (meals.isEmpty()) {
-        Box(modifier = modifier, contentAlignment = Alignment.Center) {
-            Text(
-                text = stringResource(Res.string.add_meal_plan_no_meals),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+private fun ChooseDateContent(
+    state: ChooseDateBloc.Model,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit,
+    onTodayClicked: () -> Unit,
+    onDaySelected: (LocalDate) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(bottom = ChefMateTheme.dimens.fabClearance),
+    ) {
+        item(key = "month_nav") {
+            Row(
+                modifier =
+                    Modifier.fillMaxWidth().padding(horizontal = ChefMateTheme.dimens.paddingSmall),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = onPreviousMonth) {
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = null)
+                }
+                Text(text = state.monthLabel, style = MaterialTheme.typography.titleMedium)
+                IconButton(onClick = onNextMonth) {
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                }
+            }
+        }
+
+        if (state.selectedDate != null) {
+            item(key = "selected_date") {
+                Row(
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = ChefMateTheme.dimens.paddingNormal),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = state.formattedSelectedDate,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    TextButton(onClick = onTodayClicked) {
+                        Text(stringResource(Res.string.add_meal_plan_today))
+                    }
+                }
+            }
+        }
+
+        item(key = "calendar") {
+            MonthCalendar(
+                firstDayOfMonth = state.firstDayOfMonth,
+                selectedDate = state.selectedDate,
+                daysWithMeals = state.daysWithMeals,
+                onDaySelected = onDaySelected,
+                modifier = Modifier.fillMaxWidth().padding(ChefMateTheme.dimens.paddingNormal),
             )
         }
-    } else {
-        val breakfast = meals.filter { it.mealType == MealType.BREAKFAST }
-        val lunch = meals.filter { it.mealType == MealType.LUNCH }
-        val dinner = meals.filter { it.mealType == MealType.DINNER }
-        val snacks = meals.filter { it.mealType == MealType.SNACKS }
 
-        LazyColumn(
-            modifier = modifier.padding(horizontal = ChefMateTheme.dimens.paddingNormal),
-            verticalArrangement = spacedBy(ChefMateTheme.dimens.paddingSmall),
-        ) {
-            if (breakfast.isNotEmpty()) {
-                stickyHeader(key = "breakfast") {
-                    MealSectionHeader(stringResource(Res.string.add_meal_plan_breakfast))
+        if (state.selectedDate != null) {
+            val meals = state.selectedDayMeals
+            if (meals.isEmpty()) {
+                item(key = "no_meals") {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(120.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.add_meal_plan_no_meals),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
-                items(breakfast, key = { it.id }) { meal -> MealRow(meal) }
-            }
-            if (lunch.isNotEmpty()) {
-                stickyHeader(key = "lunch") {
-                    MealSectionHeader(stringResource(Res.string.add_meal_plan_lunch))
+            } else {
+                val breakfast = meals.filter { it.mealType == MealType.BREAKFAST }
+                val lunch = meals.filter { it.mealType == MealType.LUNCH }
+                val dinner = meals.filter { it.mealType == MealType.DINNER }
+                val snacks = meals.filter { it.mealType == MealType.SNACKS }
+
+                if (breakfast.isNotEmpty()) {
+                    stickyHeader(key = "breakfast") {
+                        MealSectionHeader(stringResource(Res.string.add_meal_plan_breakfast))
+                    }
+                    items(breakfast, key = { it.id }) { meal -> MealRow(meal) }
                 }
-                items(lunch, key = { it.id }) { meal -> MealRow(meal) }
-            }
-            if (dinner.isNotEmpty()) {
-                stickyHeader(key = "dinner") {
-                    MealSectionHeader(stringResource(Res.string.add_meal_plan_dinner))
+                if (lunch.isNotEmpty()) {
+                    stickyHeader(key = "lunch") {
+                        MealSectionHeader(stringResource(Res.string.add_meal_plan_lunch))
+                    }
+                    items(lunch, key = { it.id }) { meal -> MealRow(meal) }
                 }
-                items(dinner, key = { it.id }) { meal -> MealRow(meal) }
-            }
-            if (snacks.isNotEmpty()) {
-                stickyHeader(key = "snacks") {
-                    MealSectionHeader(stringResource(Res.string.add_meal_plan_snacks))
+                if (dinner.isNotEmpty()) {
+                    stickyHeader(key = "dinner") {
+                        MealSectionHeader(stringResource(Res.string.add_meal_plan_dinner))
+                    }
+                    items(dinner, key = { it.id }) { meal -> MealRow(meal) }
                 }
-                items(snacks, key = { it.id }) { meal -> MealRow(meal) }
+                if (snacks.isNotEmpty()) {
+                    stickyHeader(key = "snacks") {
+                        MealSectionHeader(stringResource(Res.string.add_meal_plan_snacks))
+                    }
+                    items(snacks, key = { it.id }) { meal -> MealRow(meal) }
+                }
             }
         }
     }

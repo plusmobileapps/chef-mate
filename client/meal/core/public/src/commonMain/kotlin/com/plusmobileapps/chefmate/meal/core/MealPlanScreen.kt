@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Arrangement.spacedBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -235,6 +236,7 @@ private fun MonthView(
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = spacedBy(ChefMateTheme.dimens.paddingSmall),
+        contentPadding = PaddingValues(bottom = ChefMateTheme.dimens.fabClearance),
     ) {
         item(key = "month_calendar") {
             MonthCalendar(
@@ -444,6 +446,7 @@ private fun DayView(
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = spacedBy(ChefMateTheme.dimens.paddingSmall),
+        contentPadding = PaddingValues(bottom = ChefMateTheme.dimens.fabClearance),
     ) {
         if (dayMeals.breakfast.isNotEmpty()) {
             stickyHeader(key = "breakfast") {
@@ -511,6 +514,7 @@ private fun WeekView(
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = spacedBy(ChefMateTheme.dimens.paddingSmall),
+        contentPadding = PaddingValues(bottom = ChefMateTheme.dimens.fabClearance),
     ) {
         weekMeals.forEach { dayGroup ->
             if (dayGroup.meals.isNotEmpty()) {
