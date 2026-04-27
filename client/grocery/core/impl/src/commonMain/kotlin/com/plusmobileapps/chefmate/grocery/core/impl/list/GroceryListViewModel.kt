@@ -10,6 +10,8 @@ import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GrocerySort
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
+import com.russhwolf.settings.Settings
+import com.russhwolf.settings.string
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -26,12 +28,20 @@ import kotlinx.coroutines.launch
 class GroceryListViewModel(
     @Main mainContext: CoroutineContext,
     private val repository: GroceryRepository,
+    settings: Settings,
 ) : ViewModel(mainContext) {
-    private val _state = MutableStateFlow(State())
+    private var sortPref by settings.string(KEY_SORT, GrocerySort.AISLE.name)
+    private var filterPref by settings.string(KEY_FILTER, GroceryFilter.ALL.name)
+
+    private val initialSort = GrocerySort.entries.find { it.name == sortPref } ?: GrocerySort.AISLE
+    private val initialFilter =
+        GroceryFilter.entries.find { it.name == filterPref } ?: GroceryFilter.ALL
+
+    private val _state = MutableStateFlow(State(sort = initialSort, filter = initialFilter))
     private val _newGroceryItemName = MutableStateFlow("")
     private val selectedListId = MutableStateFlow<Long?>(null)
-    private val _sort = MutableStateFlow(GrocerySort.AISLE)
-    private val _filter = MutableStateFlow(GroceryFilter.ALL)
+    private val _sort = MutableStateFlow(initialSort)
+    private val _filter = MutableStateFlow(initialFilter)
 
     val state: StateFlow<State> = _state.asStateFlow()
 
@@ -172,6 +182,8 @@ class GroceryListViewModel(
     fun onApplySortAndFilter(sort: GrocerySort, filter: GroceryFilter) {
         _sort.value = sort
         _filter.value = filter
+        sortPref = sort.name
+        filterPref = filter.name
         _state.update { it.copy(sort = sort, filter = filter) }
     }
 
@@ -214,4 +226,9 @@ class GroceryListViewModel(
         val showDeleteDialog: Boolean = false,
         val showListSelector: Boolean = false,
     )
+
+    companion object {
+        private const val KEY_SORT = "grocery_list_sort"
+        private const val KEY_FILTER = "grocery_list_filter"
+    }
 }

@@ -12,6 +12,7 @@ import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
+import com.russhwolf.settings.MapSettings
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.everySuspend
@@ -29,6 +30,7 @@ class GroceryListBlocTest {
     val output = TestConsumer<GroceryListBloc.Output>()
     val groceries = MutableSharedFlow<List<GroceryItem>>()
     val groceryLists = MutableSharedFlow<List<GroceryListModel>>()
+    val settings = MapSettings()
     val repository: GroceryRepository = mock {
         every { getGroceries() } returns groceries.asSharedFlow()
         every { getGroceries(1L) } returns groceries.asSharedFlow()
@@ -41,7 +43,11 @@ class GroceryListBlocTest {
             context = context,
             output = output,
             viewModelFactory = {
-                GroceryListViewModel(mainContext = context.mainContext, repository = repository)
+                GroceryListViewModel(
+                    mainContext = context.mainContext,
+                    repository = repository,
+                    settings = settings,
+                )
             },
         )
 
