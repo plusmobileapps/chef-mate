@@ -204,4 +204,171 @@ class GroceryRepositoryImplTest {
                 items.map { it.name }.toSet() shouldBe setOf("Milk", "Eggs")
             }
         }
+
+    // ─── deleteAllGroceries ───────────────────────────────────────────────────
+
+    @Test
+    fun deleteAllGroceries_removes_all_items_from_local_db() =
+        runTest(testDispatcher) {
+            val listId = repository.ensureDefaultList()
+            repository.addGrocery(listId, "Apples")
+            repository.addGrocery(listId, "Bananas")
+
+            repository.deleteAllGroceries(listId)
+
+            repository.getGroceries(listId).test { awaitItem().isEmpty() shouldBe true }
+        }
+
+    @Test
+    fun deleteAllGroceries_calls_remote_delete_for_each_synced_item() =
+        runTest(testDispatcher) {
+            val listId = repository.ensureDefaultList()
+            val remoteListId = "remote-list-1"
+            val now = "2026-01-01T00:00:00"
+            db.groceryQueries.createWithRemoteId(
+                name = "Apples",
+                isChecked = false,
+                createdAt = now,
+                updatedAt = now,
+                remoteId = "remote-apple",
+                listRemoteId = remoteListId,
+                clientId = "client-apple",
+                listId = listId,
+                recipeName = null,
+            )
+            db.groceryQueries.createWithRemoteId(
+                name = "Bananas",
+                isChecked = false,
+                createdAt = now,
+                updatedAt = now,
+                remoteId = "remote-banana",
+                listRemoteId = remoteListId,
+                clientId = "client-banana",
+                listId = listId,
+                recipeName = null,
+            )
+            fakeRemote.remoteItems[remoteListId] =
+                mutableListOf(
+                    RemoteGroceryItem(id = "remote-apple", listId = remoteListId, name = "Apples"),
+                    RemoteGroceryItem(id = "remote-banana", listId = remoteListId, name = "Bananas"),
+                )
+
+            repository.deleteAllGroceries(listId)
+
+            fakeRemote.remoteItems[remoteListId].orEmpty().isEmpty() shouldBe true
+        }
+
+    @Test
+    fun deleteAllGroceries_skips_remote_delete_when_items_have_no_remote_id() =
+        runTest(testDispatcher) {
+            val listId = repository.ensureDefaultList()
+            repository.addGrocery(listId, "Apples") // no remoteId
+            val unrelatedListId = "unrelated-list"
+            fakeRemote.remoteItems[unrelatedListId] =
+                mutableListOf(
+                    RemoteGroceryItem(
+                        id = "remote-item-x",
+                        listId = unrelatedListId,
+                        name = "Other",
+                    )
+                )
+
+            repository.deleteAllGroceries(listId)
+
+            fakeRemote.remoteItems[unrelatedListId]!!.size shouldBe 1
+        }
+
+    @Test
+    fun deleteAllGroceries_only_deletes_items_from_the_specified_list() =
+        runTest(testDispatcher) {
+            val listId1 = repository.ensureDefaultList()
+            val listId2 = repository.createGroceryList("Second List")
+            repository.addGrocery(listId1, "Apples")
+            repository.addGrocery(listId2, "Bananas")
+
+            repository.deleteAllGroceries(listId1)
+
+            repository.getGroceries(listId1).test { awaitItem().isEmpty() shouldBe true }
+            repository.getGroceries(listId2).test { awaitItem().size shouldBe 1 }
+        }
+
+    // ─── deletePurchasedGroceries ─────────────────────────────────────────────
+
+    @Test
+    fun deletePurchasedGroceries_removes_only_checked_items_from_db() =
+        runTest(testDispatcher) {
+            val listId = repository.ensureDefaultList()
+            repository.addGrocery(listId, "Apples")
+            repository.addGrocery(listId, "Bananas")
+
+            val items = db.groceryQueries.readByListId(listId).executeAsList()
+            val toCheck = repository.getGrocery(items.first().id)!!
+            repository.updateChecked(toCheck, isChecked = true)
+
+            repository.deletePurchasedGroceries(listId)
+
+            repository.getGroceries(listId).test {
+                val remaining = awaitItem()
+                remaining.size shouldBe 1
+                remaining.first().isChecked shouldBe false
+            }
+        }
+
+    @Test
+    fun deletePurchasedGroceries_calls_remote_delete_only_for_checked_synced_items() =
+        runTest(testDispatcher) {
+            val listId = repository.ensureDefaultList()
+            val remoteListId = "remote-list-checked"
+            val now = "2026-01-01T00:00:00"
+            db.groceryQueries.createWithRemoteId(
+                name = "Milk",
+                isChecked = true,
+                createdAt = now,
+                updatedAt = now,
+                remoteId = "remote-milk",
+                listRemoteId = remoteListId,
+                clientId = "client-milk",
+                listId = listId,
+                recipeName = null,
+            )
+            db.groceryQueries.createWithRemoteId(
+                name = "Eggs",
+                isChecked = false,
+                createdAt = now,
+                updatedAt = now,
+                remoteId = "remote-eggs",
+                listRemoteId = remoteListId,
+                clientId = "client-eggs",
+                listId = listId,
+                recipeName = null,
+            )
+            fakeRemote.remoteItems[remoteListId] =
+                mutableListOf(
+                    RemoteGroceryItem(
+                        id = "remote-milk",
+                        listId = remoteListId,
+                        name = "Milk",
+                        isChecked = true,
+                    ),
+                    RemoteGroceryItem(id = "remote-eggs", listId = remoteListId, name = "Eggs"),
+                )
+
+            repository.deletePurchasedGroceries(listId)
+
+            val remaining = fakeRemote.remoteItems[remoteListId].orEmpty()
+            remaining.size shouldBe 1
+            remaining.first().name shouldBe "Eggs"
+        }
+
+    @Test
+    fun deletePurchasedGroceries_is_a_no_op_when_no_items_are_checked() =
+        runTest(testDispatcher) {
+            val listId = repository.ensureDefaultList()
+            repository.addGrocery(listId, "Apples")
+            repository.addGrocery(listId, "Bananas")
+
+            repository.deletePurchasedGroceries(listId)
+
+            repository.getGroceries(listId).test { awaitItem().size shouldBe 2 }
+        }
 }
