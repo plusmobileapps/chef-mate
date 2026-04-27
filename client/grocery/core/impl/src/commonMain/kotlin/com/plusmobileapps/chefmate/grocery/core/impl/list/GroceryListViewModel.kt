@@ -6,9 +6,12 @@ import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryFilter
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryGroup
+import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GrocerySort
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
+import com.russhwolf.settings.Settings
+import com.russhwolf.settings.string
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,11 +28,20 @@ import kotlinx.coroutines.launch
 class GroceryListViewModel(
     @Main mainContext: CoroutineContext,
     private val repository: GroceryRepository,
+    settings: Settings,
 ) : ViewModel(mainContext) {
-    private val _state = MutableStateFlow(State())
+    private var sortPref by settings.string(KEY_SORT, GrocerySort.AISLE.name)
+    private var filterPref by settings.string(KEY_FILTER, GroceryFilter.ALL.name)
+
+    private val initialSort = GrocerySort.entries.find { it.name == sortPref } ?: GrocerySort.AISLE
+    private val initialFilter =
+        GroceryFilter.entries.find { it.name == filterPref } ?: GroceryFilter.ALL
+
+    private val _state = MutableStateFlow(State(sort = initialSort, filter = initialFilter))
     private val _newGroceryItemName = MutableStateFlow("")
     private val selectedListId = MutableStateFlow<Long?>(null)
-    private val _filter = MutableStateFlow(GroceryFilter.ALL)
+    private val _sort = MutableStateFlow(initialSort)
+    private val _filter = MutableStateFlow(initialFilter)
 
     val state: StateFlow<State> = _state.asStateFlow()
 
@@ -67,22 +79,36 @@ class GroceryListViewModel(
                         }
                     },
                     _filter,
-                ) { items, filter ->
+                    _sort,
+                ) { items, filter, sort ->
                     val filtered =
                         when (filter) {
                             GroceryFilter.ALL -> items
                             GroceryFilter.UNPURCHASED -> items.filter { !it.isChecked }
                             GroceryFilter.PURCHASED -> items.filter { it.isChecked }
                         }
-                    val grouped =
-                        filtered
-                            .groupBy { it.category }
-                            .entries
-                            .sortedBy { it.key.ordinal }
-                            .map { (category, categoryItems) ->
-                                GroceryGroup(category = category, items = categoryItems)
-                            }
-                    grouped
+                    when (sort) {
+                        GrocerySort.AISLE ->
+                            filtered
+                                .groupBy { it.category }
+                                .entries
+                                .sortedBy { it.key.ordinal }
+                                .map { (category, categoryItems) ->
+                                    GroceryGroup(category = category, items = categoryItems)
+                                }
+                        GrocerySort.ALPHABETICAL ->
+                            listOf(
+                                    GroceryGroup(
+                                        category =
+                                            filtered.firstOrNull()?.category
+                                                ?: com.plusmobileapps.chefmate.grocery.data
+                                                    .GroceryCategory
+                                                    .OTHER,
+                                        items = filtered.sortedBy { it.displayName.lowercase() },
+                                    )
+                                )
+                                .filter { it.items.isNotEmpty() }
+                    }
                 }
                 .collect { grouped -> _state.update { it.copy(groupedItems = grouped) } }
         }
@@ -153,9 +179,12 @@ class GroceryListViewModel(
         }
     }
 
-    fun onFilterChanged(filter: GroceryFilter) {
+    fun onApplySortAndFilter(sort: GrocerySort, filter: GroceryFilter) {
+        _sort.value = sort
         _filter.value = filter
-        _state.update { it.copy(filter = filter) }
+        sortPref = sort.name
+        filterPref = filter.name
+        _state.update { it.copy(sort = sort, filter = filter) }
     }
 
     fun onDeleteClicked() {
@@ -188,6 +217,7 @@ class GroceryListViewModel(
 
     data class State(
         val groupedItems: List<GroceryGroup> = emptyList(),
+        val sort: GrocerySort = GrocerySort.AISLE,
         val filter: GroceryFilter = GroceryFilter.ALL,
         val isSyncing: Boolean = false,
         val lists: List<GroceryListModel> = emptyList(),
@@ -196,4 +226,9 @@ class GroceryListViewModel(
         val showDeleteDialog: Boolean = false,
         val showListSelector: Boolean = false,
     )
+
+    companion object {
+        private const val KEY_SORT = "grocery_list_sort"
+        private const val KEY_FILTER = "grocery_list_filter"
+    }
 }

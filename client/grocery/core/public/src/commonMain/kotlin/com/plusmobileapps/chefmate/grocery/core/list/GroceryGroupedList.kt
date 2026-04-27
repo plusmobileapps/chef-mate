@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -24,8 +25,11 @@ import androidx.compose.ui.unit.dp
 import chefmate.client.grocery.core.public.generated.resources.Res
 import chefmate.client.grocery.core.public.generated.resources.grocery_checked
 import chefmate.client.grocery.core.public.generated.resources.grocery_not_checked
+import chefmate.client.grocery.core.public.generated.resources.grocery_recipe_source
 import com.plusmobileapps.chefmate.grocery.core.displayName
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.PhraseModel
 import org.jetbrains.compose.resources.stringResource
 
 data class GroceryDisplayItem(
@@ -33,6 +37,7 @@ data class GroceryDisplayItem(
     val displayName: String,
     val quantity: String? = null,
     val isChecked: Boolean = false,
+    val recipeName: String? = null,
 )
 
 data class GroceryDisplayGroup(val category: GroceryCategory, val items: List<GroceryDisplayItem>)
@@ -44,13 +49,16 @@ fun GroceryGroupedList(
     onItemClick: (Any) -> Unit,
     onCheckedChange: (Any) -> Unit,
     modifier: Modifier = Modifier,
+    showHeaders: Boolean = true,
     trailingContent: (@Composable (GroceryDisplayItem) -> Unit)? = null,
     footer: (LazyListScope.() -> Unit)? = null,
 ) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
         groups.forEach { group ->
-            stickyHeader(key = "header_${group.category.name}") {
-                CategoryHeader(category = group.category)
+            if (showHeaders) {
+                stickyHeader(key = "header_${group.category.name}") {
+                    CategoryHeader(category = group.category)
+                }
             }
             items(group.items.size, key = { group.items[it].key }) { index ->
                 val item = group.items[index]
@@ -61,6 +69,7 @@ fun GroceryGroupedList(
                     trailingContent = trailingContent,
                     modifier = Modifier.animateItem(),
                 )
+                HorizontalDivider()
             }
         }
         footer?.invoke(this)
@@ -112,6 +121,19 @@ private fun GroceryDisplayListItem(
                     text = quantity,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            val recipeName = item.recipeName
+            if (recipeName != null) {
+                Text(
+                    text =
+                        PhraseModel(
+                                Res.string.grocery_recipe_source,
+                                "recipe" to FixedString(recipeName),
+                            )
+                            .localized(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                 )
             }
         }

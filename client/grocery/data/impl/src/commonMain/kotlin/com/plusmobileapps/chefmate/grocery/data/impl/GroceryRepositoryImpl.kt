@@ -113,6 +113,7 @@ class GroceryRepositoryImpl(
                 updatedAt = now,
                 clientId = clientId,
                 listId = defaultListId,
+                recipeName = null,
             )
         }
         pushAddToRemote(name)
@@ -129,6 +130,7 @@ class GroceryRepositoryImpl(
                 updatedAt = now,
                 clientId = clientId,
                 listId = listId,
+                recipeName = null,
             )
         }
         pushAddToRemote(name)
@@ -147,6 +149,7 @@ class GroceryRepositoryImpl(
                         updatedAt = now,
                         clientId = Uuid.random().toString(),
                         listId = defaultListId,
+                        recipeName = null,
                     )
                 }
             }
@@ -166,6 +169,27 @@ class GroceryRepositoryImpl(
                         updatedAt = now,
                         clientId = Uuid.random().toString(),
                         listId = listId,
+                        recipeName = null,
+                    )
+                }
+            }
+        }
+        names.forEach { pushAddToRemote(it) }
+    }
+
+    override suspend fun addGroceries(listId: Long, names: List<String>, recipeName: String?) {
+        withContext(ioContext) {
+            val now = dateTimeUtil.now.toString()
+            queries.transaction {
+                names.forEach { name ->
+                    queries.create(
+                        name = name,
+                        isChecked = false,
+                        createdAt = now,
+                        updatedAt = now,
+                        clientId = Uuid.random().toString(),
+                        listId = listId,
+                        recipeName = recipeName,
                     )
                 }
             }
@@ -347,6 +371,7 @@ class GroceryRepositoryImpl(
                                     createdAt = match.createdAt,
                                     updatedAt = match.updatedAt,
                                     clientId = clientId,
+                                    recipeName = match.recipeName,
                                 )
                             )
                         queries.updateRemoteId(
@@ -380,6 +405,7 @@ class GroceryRepositoryImpl(
                             isChecked = entity.isChecked,
                             updatedAt = entity.updatedAt,
                             clientId = entity.clientId,
+                            recipeName = entity.recipeName,
                         )
                     )
                     queries.clearDirty(localId)
@@ -481,6 +507,7 @@ class GroceryRepositoryImpl(
                                         createdAt = item.createdAt,
                                         updatedAt = item.updatedAt,
                                         clientId = clientId,
+                                        recipeName = item.recipeName,
                                     )
                                 )
                             withContext(ioContext) {
@@ -515,6 +542,7 @@ class GroceryRepositoryImpl(
                                     isChecked = item.isChecked,
                                     updatedAt = item.updatedAt,
                                     clientId = item.clientId,
+                                    recipeName = item.recipeName,
                                 )
                             )
                             withContext(ioContext) { queries.clearDirty(item.id) }
@@ -552,6 +580,7 @@ class GroceryRepositoryImpl(
                                 listRemoteId = listRemoteId,
                                 clientId = remoteItem.clientId,
                                 listId = list.id,
+                                recipeName = remoteItem.recipeName,
                             )
                         }
                     }
@@ -585,6 +614,7 @@ class GroceryRepositoryImpl(
             category = parsed.category,
             isChecked = entity.isChecked,
             syncStatus = syncStatus,
+            recipeName = entity.recipeName,
         )
     }
 }

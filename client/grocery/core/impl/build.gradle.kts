@@ -9,6 +9,7 @@ kotlin {
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.database)
         }
+        commonTest.dependencies { implementation(libs.multiplatform.settings.test) }
     }
 }
 

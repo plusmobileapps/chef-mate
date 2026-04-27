@@ -8,6 +8,7 @@ data class GroceryItem(
     val category: GroceryCategory = GroceryCategory.OTHER,
     val isChecked: Boolean = false,
     val syncStatus: SyncStatus = SyncStatus.NOT_SYNCED,
+    val recipeName: String? = null,
 ) {
     companion object {
         val empty = GroceryItem(id = 0L, name = "", isChecked = false)

@@ -6,6 +6,7 @@ import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryFilter
+import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GrocerySort
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.mapState
@@ -38,6 +39,7 @@ class GroceryListBlocImpl(
         viewModel.state.mapState {
             GroceryListBloc.Model(
                 groupedItems = it.groupedItems,
+                sort = it.sort,
                 filter = it.filter,
                 isSyncing = it.isSyncing,
                 lists = it.lists,
@@ -98,8 +100,8 @@ class GroceryListBlocImpl(
         viewModel.onDeleteListClicked(list)
     }
 
-    override fun onFilterChanged(filter: GroceryFilter) {
-        viewModel.onFilterChanged(filter)
+    override fun onApplySortAndFilter(sort: GrocerySort, filter: GroceryFilter) {
+        viewModel.onApplySortAndFilter(sort, filter)
     }
 
     override fun onDeleteClicked() {

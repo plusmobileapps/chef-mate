@@ -80,11 +80,12 @@ class AddRecipeToGroceryListViewModel(
                 .filter { it.isSelected }
                 .map { it.name }
         val selectedListId = state.value.selectedGroceryList?.id
+        val recipeName = state.value.recipe.title.takeIf { it.isNotBlank() }
         _state.update { it.copy(isAdding = true) }
         scope.launch {
             if (ingredients.isNotEmpty()) {
                 if (selectedListId != null) {
-                    groceryRepository.addGroceries(selectedListId, ingredients)
+                    groceryRepository.addGroceries(selectedListId, ingredients, recipeName)
                 } else {
                     groceryRepository.addGroceries(ingredients)
                 }

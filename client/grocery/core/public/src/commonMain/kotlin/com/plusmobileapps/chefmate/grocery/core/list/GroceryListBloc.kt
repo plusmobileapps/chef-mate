@@ -34,7 +34,7 @@ interface GroceryListBloc {
 
     fun onDeleteListClicked(list: GroceryListModel)
 
-    fun onFilterChanged(filter: GroceryFilter)
+    fun onApplySortAndFilter(sort: GrocerySort, filter: GroceryFilter)
 
     fun onDeleteClicked()
 
@@ -50,6 +50,11 @@ interface GroceryListBloc {
 
     data class GroceryGroup(val category: GroceryCategory, val items: List<GroceryItem>)
 
+    enum class GrocerySort {
+        AISLE,
+        ALPHABETICAL,
+    }
+
     enum class GroceryFilter {
         ALL,
         UNPURCHASED,
@@ -58,6 +63,7 @@ interface GroceryListBloc {
 
     data class Model(
         val groupedItems: List<GroceryGroup> = emptyList(),
+        val sort: GrocerySort = GrocerySort.AISLE,
         val filter: GroceryFilter = GroceryFilter.ALL,
         val isSyncing: Boolean = false,
         val lists: List<GroceryListModel> = emptyList(),

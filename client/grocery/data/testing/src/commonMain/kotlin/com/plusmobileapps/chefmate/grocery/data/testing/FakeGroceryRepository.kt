@@ -52,6 +52,10 @@ class FakeGroceryRepository : GroceryRepository {
     }
 
     override suspend fun addGroceries(listId: Long, names: List<String>) {
+        addGroceries(listId, names, null)
+    }
+
+    override suspend fun addGroceries(listId: Long, names: List<String>, recipeName: String?) {
         val newItems = names.map { name ->
             val parsed = IngredientParser.parse(name)
             val item =
@@ -62,6 +66,7 @@ class FakeGroceryRepository : GroceryRepository {
                     quantity = parsed.quantity,
                     category = parsed.category,
                     isChecked = false,
+                    recipeName = recipeName,
                 )
             itemListMap[item.id] = listId
             item
