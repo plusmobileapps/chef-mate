@@ -124,9 +124,9 @@ class RecipeRootBlocImpl(
 
     @Serializable
     sealed class Configuration {
-        data class Detail(val recipeId: Long) : Configuration()
+        @Serializable data class Detail(val recipeId: Long) : Configuration()
 
-        data class Edit(val recipeId: Long?) : Configuration()
+        @Serializable data class Edit(val recipeId: Long?) : Configuration()
     }
 }
 
