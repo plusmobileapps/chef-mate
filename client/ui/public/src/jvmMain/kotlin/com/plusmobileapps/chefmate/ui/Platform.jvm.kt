@@ -2,6 +2,4 @@
 
 package com.plusmobileapps.chefmate.ui
 
-import androidx.compose.runtime.Composable
-
-@Composable actual fun isIosPlatform(): Boolean = false
+actual fun isIosPlatform(): Boolean = false
