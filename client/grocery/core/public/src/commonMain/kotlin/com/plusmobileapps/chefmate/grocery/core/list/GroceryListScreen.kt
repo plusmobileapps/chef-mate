@@ -1,5 +1,10 @@
 package com.plusmobileapps.chefmate.grocery.core.list
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -52,6 +57,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -77,6 +83,7 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_delete_it
 import chefmate.client.grocery.core.public.generated.resources.grocery_delete_items_title
 import chefmate.client.grocery.core.public.generated.resources.grocery_delete_list
 import chefmate.client.grocery.core.public.generated.resources.grocery_delete_purchased
+import chefmate.client.grocery.core.public.generated.resources.grocery_done
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter_all
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter_by
@@ -98,6 +105,7 @@ import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.SyncStatus
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
+import com.plusmobileapps.chefmate.ui.isIosPlatform
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.flow.StateFlow
 import org.jetbrains.compose.resources.stringResource
@@ -548,32 +556,52 @@ private fun GroceryListInput(
 ) {
     val state = name.collectAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
-    OutlinedTextField(
-        value = state.value,
-        onValueChange = onNameChange,
-        modifier = modifier.fillMaxWidth(),
-        singleLine = true,
-        keyboardOptions =
-            KeyboardOptions(
-                capitalization = KeyboardCapitalization.Sentences,
-                imeAction = ImeAction.Done,
-            ),
-        keyboardActions =
-            KeyboardActions(
-                onDone = {
-                    if (state.value.isNotBlank()) onAddClick()
+    val focusManager = LocalFocusManager.current
+    val isIos = isIosPlatform()
+    var isFocused by remember { mutableStateOf(false) }
+
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        OutlinedTextField(
+            value = state.value,
+            onValueChange = onNameChange,
+            modifier = Modifier.weight(1f).onFocusChanged { isFocused = it.isFocused },
+            singleLine = true,
+            keyboardOptions =
+                KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                    imeAction = ImeAction.Done,
+                ),
+            keyboardActions =
+                KeyboardActions(
+                    onDone = {
+                        if (state.value.isNotBlank()) onAddClick()
+                        keyboardController?.hide()
+                    }
+                ),
+            trailingIcon = {
+                IconButton(onClick = onAddClick, enabled = state.value.isNotBlank()) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = stringResource(Res.string.grocery_add_item),
+                    )
+                }
+            },
+        )
+        AnimatedVisibility(
+            visible = isIos && isFocused,
+            enter = fadeIn() + expandHorizontally(),
+            exit = fadeOut() + shrinkHorizontally(),
+        ) {
+            TextButton(
+                onClick = {
+                    focusManager.clearFocus()
                     keyboardController?.hide()
                 }
-            ),
-        trailingIcon = {
-            IconButton(onClick = onAddClick, enabled = state.value.isNotBlank()) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = stringResource(Res.string.grocery_add_item),
-                )
+            ) {
+                Text(stringResource(Res.string.grocery_done))
             }
-        },
-    )
+        }
+    }
 }
 
 @Composable

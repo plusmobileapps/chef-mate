@@ -2,7 +2,10 @@
 
 package com.plusmobileapps.chefmate.recipe.bottomnav
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
@@ -25,6 +28,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import chefmate.client.bottomnav.public.generated.resources.Res
 import chefmate.client.bottomnav.public.generated.resources.tab_browser
 import chefmate.client.bottomnav.public.generated.resources.tab_grocery
@@ -103,13 +108,25 @@ private fun MobileBottomNavContent(bloc: BottomNavBloc, modifier: Modifier = Mod
     val isImeVisible = imeBottom > 0
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             if (!isImeVisible) {
                 PlusBottomBar(state = state.value, onClick = bloc::onTabSelected)
             }
         },
     ) { paddingValues ->
-        BottomNavContentContainer(modifier = Modifier.padding(paddingValues), bloc = bloc)
+        val adjustedPadding =
+            if (isImeVisible) {
+                PaddingValues(
+                    start = paddingValues.calculateStartPadding(LayoutDirection.Ltr),
+                    top = paddingValues.calculateTopPadding(),
+                    end = paddingValues.calculateEndPadding(LayoutDirection.Ltr),
+                    bottom = 0.dp,
+                )
+            } else {
+                paddingValues
+            }
+        BottomNavContentContainer(modifier = Modifier.padding(adjustedPadding), bloc = bloc)
     }
 }
 
