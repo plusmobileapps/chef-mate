@@ -38,6 +38,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -117,34 +118,43 @@ fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
                         onNext = bloc::onNextClicked,
                     )
 
-                    if (state.isLoading) {
-                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            PlusLoadingIndicator()
-                        }
-                    } else {
-                        when (state.viewMode) {
-                            MealPlanBloc.ViewMode.DAY ->
-                                DayView(
-                                    dayMeals = state.dayMeals,
-                                    onMealClicked = bloc::onMealClicked,
-                                    onDeleteClicked = bloc::onDeleteMealClicked,
-                                    modifier = Modifier.weight(1f),
-                                )
-                            MealPlanBloc.ViewMode.WEEK ->
-                                WeekView(
-                                    weekMeals = state.weekMeals.orEmpty(),
-                                    onMealClicked = bloc::onMealClicked,
-                                    onDeleteClicked = bloc::onDeleteMealClicked,
-                                    modifier = Modifier.weight(1f),
-                                )
-                            MealPlanBloc.ViewMode.MONTH ->
-                                MonthView(
-                                    monthModel = state.monthModel,
-                                    onDaySelected = bloc::onMonthDaySelected,
-                                    onMealClicked = bloc::onMealClicked,
-                                    onDeleteClicked = bloc::onDeleteMealClicked,
-                                    modifier = Modifier.weight(1f),
-                                )
+                    PullToRefreshBox(
+                        isRefreshing = state.isSyncing,
+                        onRefresh = bloc::onSyncClicked,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        if (state.isLoading) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                PlusLoadingIndicator()
+                            }
+                        } else {
+                            when (state.viewMode) {
+                                MealPlanBloc.ViewMode.DAY ->
+                                    DayView(
+                                        dayMeals = state.dayMeals,
+                                        onMealClicked = bloc::onMealClicked,
+                                        onDeleteClicked = bloc::onDeleteMealClicked,
+                                        modifier = Modifier.fillMaxSize(),
+                                    )
+                                MealPlanBloc.ViewMode.WEEK ->
+                                    WeekView(
+                                        weekMeals = state.weekMeals.orEmpty(),
+                                        onMealClicked = bloc::onMealClicked,
+                                        onDeleteClicked = bloc::onDeleteMealClicked,
+                                        modifier = Modifier.fillMaxSize(),
+                                    )
+                                MealPlanBloc.ViewMode.MONTH ->
+                                    MonthView(
+                                        monthModel = state.monthModel,
+                                        onDaySelected = bloc::onMonthDaySelected,
+                                        onMealClicked = bloc::onMealClicked,
+                                        onDeleteClicked = bloc::onDeleteMealClicked,
+                                        modifier = Modifier.fillMaxSize(),
+                                    )
+                            }
                         }
                     }
                 }

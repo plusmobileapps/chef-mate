@@ -109,8 +109,20 @@ class RecipeListViewModel(
         _state.update { it.copy(searchQuery = query) }
     }
 
+    fun onSyncClicked() {
+        scope.launch {
+            _state.update { it.copy(isSyncing = true) }
+            try {
+                repository.syncAllUnsynced()
+            } finally {
+                _state.update { it.copy(isSyncing = false) }
+            }
+        }
+    }
+
     data class State(
         val isLoading: Boolean = true,
+        val isSyncing: Boolean = false,
         val recipes: List<Recipe> = emptyList(),
         val currentSort: RecipeSortOption = RecipeSortOption.RECENTLY_ADDED,
         val activeFilters: Set<RecipeFilterOption> = emptySet(),

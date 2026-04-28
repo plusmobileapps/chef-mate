@@ -48,6 +48,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -185,46 +186,52 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
                 remember(state.groupedItems) {
                     state.groupedItems.flatMap { it.items }.associateBy { it.id }
                 }
-            GroceryGroupedList(
-                groups =
-                    state.groupedItems.map { group ->
-                        GroceryDisplayGroup(
-                            category = group.category,
-                            items =
-                                group.items.map { item ->
-                                    GroceryDisplayItem(
-                                        key = item.id,
-                                        displayName = item.displayName,
-                                        quantity = item.quantity,
-                                        isChecked = item.isChecked,
-                                        recipeName = item.recipeName,
-                                    )
-                                },
-                        )
+            PullToRefreshBox(
+                isRefreshing = state.isSyncing,
+                onRefresh = bloc::onSyncClicked,
+                modifier = Modifier.weight(1f),
+            ) {
+                GroceryGroupedList(
+                    groups =
+                        state.groupedItems.map { group ->
+                            GroceryDisplayGroup(
+                                category = group.category,
+                                items =
+                                    group.items.map { item ->
+                                        GroceryDisplayItem(
+                                            key = item.id,
+                                            displayName = item.displayName,
+                                            quantity = item.quantity,
+                                            isChecked = item.isChecked,
+                                            recipeName = item.recipeName,
+                                        )
+                                    },
+                            )
+                        },
+                    onItemClick = { key ->
+                        itemLookup[key as Long]?.let { bloc.onGroceryItemClicked(it) }
                     },
-                onItemClick = { key ->
-                    itemLookup[key as Long]?.let { bloc.onGroceryItemClicked(it) }
-                },
-                onCheckedChange = { key ->
-                    itemLookup[key as Long]?.let {
-                        bloc.onGroceryItemCheckedChange(it, !it.isChecked)
-                    }
-                },
-                modifier =
-                    Modifier.weight(1f).pointerInput(Unit) {
-                        detectTapGestures(onTap = { focusManager.clearFocus() })
+                    onCheckedChange = { key ->
+                        itemLookup[key as Long]?.let {
+                            bloc.onGroceryItemCheckedChange(it, !it.isChecked)
+                        }
                     },
-                showHeaders = state.sort == GroceryListBloc.GrocerySort.AISLE,
-                trailingContent = { displayItem ->
-                    val item = itemLookup[displayItem.key as Long]
-                    if (item != null) {
-                        GroceryItemTrailingContent(
-                            item = item,
-                            onDeleteClick = { bloc.onGroceryItemDelete(item) },
-                        )
-                    }
-                },
-            )
+                    modifier =
+                        Modifier.fillMaxSize().pointerInput(Unit) {
+                            detectTapGestures(onTap = { focusManager.clearFocus() })
+                        },
+                    showHeaders = state.sort == GroceryListBloc.GrocerySort.AISLE,
+                    trailingContent = { displayItem ->
+                        val item = itemLookup[displayItem.key as Long]
+                        if (item != null) {
+                            GroceryItemTrailingContent(
+                                item = item,
+                                onDeleteClick = { bloc.onGroceryItemDelete(item) },
+                            )
+                        }
+                    },
+                )
+            }
             GroceryListInput(
                 name = bloc.newGroceryItemName,
                 onNameChange = bloc::onNewGroceryItemNameChange,

@@ -30,8 +30,11 @@ interface MealPlanBloc {
 
     fun onAddMealClicked()
 
+    fun onSyncClicked()
+
     data class Model(
         val isLoading: Boolean = true,
+        val isSyncing: Boolean = false,
         val viewMode: ViewMode = ViewMode.DAY,
         val dateLabel: TextData = FixedString(""),
         val dayMeals: DayMeals? = null,

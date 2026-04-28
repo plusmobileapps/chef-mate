@@ -10,4 +10,6 @@ interface MealPlanRepository {
     suspend fun addMeal(recipeId: Long, date: String, mealType: MealType)
 
     suspend fun removeMeal(id: Long)
+
+    suspend fun syncAllUnsynced()
 }
