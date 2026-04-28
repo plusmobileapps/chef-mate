@@ -25,9 +25,9 @@ interface MealPlannerRootBloc : BackHandlerOwner, BackClickBloc {
 
     @Serializable
     sealed class Props {
-        data class FromRecipeDetail(val recipeId: Long) : Props()
+        @Serializable data class FromRecipeDetail(val recipeId: Long) : Props()
 
-        data object FromMealPlanner : Props()
+        @Serializable data object FromMealPlanner : Props()
     }
 
     fun interface Factory {

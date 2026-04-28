@@ -32,9 +32,9 @@ interface RecipeRootBloc : BackHandlerOwner, BackClickBloc {
 
     @Serializable
     sealed class Props {
-        data class Detail(val recipeId: Long) : Props()
+        @Serializable data class Detail(val recipeId: Long) : Props()
 
-        data object Create : Props()
+        @Serializable data object Create : Props()
     }
 
     fun interface Factory {
