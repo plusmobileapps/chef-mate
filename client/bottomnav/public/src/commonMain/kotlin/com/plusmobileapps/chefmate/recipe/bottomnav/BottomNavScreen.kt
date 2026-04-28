@@ -2,6 +2,7 @@
 
 package com.plusmobileapps.chefmate.recipe.bottomnav
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -102,14 +103,19 @@ private fun MobileBottomNavContent(bloc: BottomNavBloc, modifier: Modifier = Mod
     val isImeVisible = WindowInsets.ime.getBottom(density) > 0
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             if (!isImeVisible) {
                 PlusBottomBar(state = state.value, onClick = bloc::onTabSelected)
             }
         },
     ) { paddingValues ->
-        BottomNavContentContainer(modifier = Modifier.padding(paddingValues), bloc = bloc)
+        val contentPadding =
+            if (isImeVisible) {
+                PaddingValues(top = paddingValues.calculateTopPadding())
+            } else {
+                paddingValues
+            }
+        BottomNavContentContainer(modifier = Modifier.padding(contentPadding), bloc = bloc)
     }
 }
 
