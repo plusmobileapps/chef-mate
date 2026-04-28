@@ -36,6 +36,7 @@
     <string name="grocery_filter_no_recipe">No Recipe</string>
     <string name="grocery_clear_filters">Clear</string>
     <string name="grocery_apply">Apply</string>
+    <string name="grocery_done">Done</string>
     <string name="grocery_recipe_source">From: {recipe}</string>
     <string name="grocery_category_produce">Produce</string>
     <string name="grocery_category_dairy">Dairy</string>
