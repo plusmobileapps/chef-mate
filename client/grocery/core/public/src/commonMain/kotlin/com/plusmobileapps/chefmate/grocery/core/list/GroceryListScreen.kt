@@ -1,6 +1,7 @@
 package com.plusmobileapps.chefmate.grocery.core.list
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -14,6 +15,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -49,8 +52,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import chefmate.client.grocery.core.public.generated.resources.Res
 import chefmate.client.grocery.core.public.generated.resources.grocery_add_item
@@ -106,6 +114,7 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
         (if (hasActiveFilter) 1 else 0) +
             (if (hasNonDefaultSort) 1 else 0) +
             (if (hasRecipeFilter) 1 else 0)
+    val focusManager = LocalFocusManager.current
 
     PlusNavContainer(
         modifier = modifier.fillMaxSize(),
@@ -193,7 +202,10 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
                         bloc.onGroceryItemCheckedChange(it, !it.isChecked)
                     }
                 },
-                modifier = Modifier.weight(1f),
+                modifier =
+                    Modifier.weight(1f).pointerInput(Unit) {
+                        detectTapGestures(onTap = { focusManager.clearFocus() })
+                    },
                 showHeaders = state.sort == GroceryListBloc.GrocerySort.AISLE,
                 trailingContent = { displayItem ->
                     val item = itemLookup[displayItem.key as Long]
@@ -535,10 +547,24 @@ private fun GroceryListInput(
     modifier: Modifier = Modifier,
 ) {
     val state = name.collectAsState()
+    val keyboardController = LocalSoftwareKeyboardController.current
     OutlinedTextField(
         value = state.value,
         onValueChange = onNameChange,
         modifier = modifier.fillMaxWidth(),
+        singleLine = true,
+        keyboardOptions =
+            KeyboardOptions(
+                capitalization = KeyboardCapitalization.Sentences,
+                imeAction = ImeAction.Done,
+            ),
+        keyboardActions =
+            KeyboardActions(
+                onDone = {
+                    if (state.value.isNotBlank()) onAddClick()
+                    keyboardController?.hide()
+                }
+            ),
         trailingIcon = {
             IconButton(onClick = onAddClick, enabled = state.value.isNotBlank()) {
                 Icon(
