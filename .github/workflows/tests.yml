@@ -57,6 +57,13 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
+      - name: Cache Kotlin/Native compiler and toolchain
+        uses: actions/cache@v4
+        with:
+          path: ~/.konan
+          key: ${{ runner.os }}-konan-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-konan-
       - run: ./gradlew iosSimulatorArm64Test --continue
       - name: Publish test report
         uses: dorny/test-reporter@v2
