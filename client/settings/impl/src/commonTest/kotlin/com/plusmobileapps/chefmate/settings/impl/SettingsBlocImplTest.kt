@@ -4,8 +4,6 @@
 package com.plusmobileapps.chefmate.settings.impl
 
 import app.cash.turbine.test
-import com.plusmobileapps.chefmate.auth.data.AuthState
-import com.plusmobileapps.chefmate.auth.data.ChefMateUser
 import com.plusmobileapps.chefmate.auth.data.testing.FakeAuthenticationRepository
 import com.plusmobileapps.chefmate.grocery.data.testing.FakeGroceryRepository
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
@@ -42,7 +40,7 @@ class SettingsBlocImplTest {
 
     @Test
     fun When_sign_out_clicked_Then_confirmation_dialog_is_shown() = runTest {
-        authRepository.setState(AuthState.Authenticated(fakeUser()))
+        authRepository.setAuthenticated()
 
         bloc.state.test {
             awaitItem() // initial authenticated state
@@ -55,7 +53,7 @@ class SettingsBlocImplTest {
 
     @Test
     fun When_sign_out_dismissed_Then_confirmation_dialog_is_hidden() = runTest {
-        authRepository.setState(AuthState.Authenticated(fakeUser()))
+        authRepository.setAuthenticated()
 
         bloc.state.test {
             awaitItem()
@@ -70,7 +68,7 @@ class SettingsBlocImplTest {
 
     @Test
     fun When_sign_out_confirmed_Then_user_is_signed_out() = runTest {
-        authRepository.setState(AuthState.Authenticated(fakeUser()))
+        authRepository.setAuthenticated()
         bloc.onSignOutClicked()
         bloc.onSignOutConfirmed()
 
@@ -80,7 +78,7 @@ class SettingsBlocImplTest {
 
     @Test
     fun When_sign_out_confirmed_Then_dialog_is_hidden() = runTest {
-        authRepository.setState(AuthState.Authenticated(fakeUser()))
+        authRepository.setAuthenticated()
 
         bloc.state.test {
             awaitItem()
@@ -117,16 +115,9 @@ class SettingsBlocImplTest {
         bloc.state.test {
             awaitItem().isAuthenticated shouldBe false
 
-            authRepository.setState(AuthState.Authenticated(fakeUser()))
+            authRepository.setAuthenticated()
             awaitItem().isAuthenticated shouldBe true
         }
     }
 
-    private fun fakeUser() =
-        ChefMateUser(
-            userId = "test-id",
-            userName = "Test User",
-            userEmail = "test@example.com",
-            userProfileImageUrl = null,
-        )
 }
