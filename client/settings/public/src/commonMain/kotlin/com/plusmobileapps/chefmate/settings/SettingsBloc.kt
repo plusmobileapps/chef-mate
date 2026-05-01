@@ -14,12 +14,17 @@ interface SettingsBloc {
 
     fun onSignOutClicked()
 
+    fun onSignOutConfirmed()
+
+    fun onSignOutDismissed()
+
     fun onUrlClicked(url: String)
 
     data class Model(
         val isAuthenticated: Boolean = false,
         val greeting: TextData? = null,
         val verificationMessage: TextData? = null,
+        val showSignOutConfirmationDialog: Boolean = false,
     )
 
     sealed class Output {

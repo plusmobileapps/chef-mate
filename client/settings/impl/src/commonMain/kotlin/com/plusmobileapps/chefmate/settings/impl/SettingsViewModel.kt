@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @Inject
@@ -64,7 +65,16 @@ class SettingsViewModel(
             .launchIn(scope)
     }
 
+    fun showSignOutConfirmationDialog() {
+        _state.update { it.copy(showSignOutConfirmationDialog = true) }
+    }
+
+    fun dismissSignOutConfirmationDialog() {
+        _state.update { it.copy(showSignOutConfirmationDialog = false) }
+    }
+
     fun signOut() {
+        _state.update { it.copy(showSignOutConfirmationDialog = false) }
         scope.launch {
             authenticationRepository.signOut()
             groceryRepository.clearLocalData()
@@ -77,5 +87,6 @@ class SettingsViewModel(
         val isAuthenticated: Boolean = false,
         val userName: String? = null,
         val emailAwaitingVerification: String? = null,
+        val showSignOutConfirmationDialog: Boolean = false,
     )
 }

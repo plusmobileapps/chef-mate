@@ -8,4 +8,8 @@
     <string name="sign_up">Sign Up</string>
     <string name="greeting_authenticated">Hello {name}!</string>
     <string name="email_verification_required">Please check your email ({email}) to verify your account before signing in.</string>
+    <string name="sign_out_confirmation_title">Sign Out</string>
+    <string name="sign_out_confirmation_message">Are you sure you want to sign out?</string>
+    <string name="sign_out_confirmation_confirm">Sign Out</string>
+    <string name="sign_out_confirmation_cancel">Cancel</string>
 </resources>
