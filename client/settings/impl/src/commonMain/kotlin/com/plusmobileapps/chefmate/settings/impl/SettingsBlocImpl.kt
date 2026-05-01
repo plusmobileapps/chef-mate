@@ -40,6 +40,7 @@ class SettingsBlocImpl(
                     it.emailAwaitingVerification?.let { email ->
                         createEmailVerificationMessage(email)
                     },
+                showSignOutConfirmationDialog = it.showSignOutConfirmationDialog,
             )
         }
 
@@ -52,7 +53,15 @@ class SettingsBlocImpl(
     }
 
     override fun onSignOutClicked() {
+        viewModel.showSignOutConfirmationDialog()
+    }
+
+    override fun onSignOutConfirmed() {
         viewModel.signOut()
+    }
+
+    override fun onSignOutDismissed() {
+        viewModel.dismissSignOutConfirmationDialog()
     }
 
     override fun onUrlClicked(url: String) {

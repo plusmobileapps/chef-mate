@@ -35,10 +35,15 @@ import chefmate.client.settings.public.generated.resources.more
 import chefmate.client.settings.public.generated.resources.privacy_policy
 import chefmate.client.settings.public.generated.resources.sign_in
 import chefmate.client.settings.public.generated.resources.sign_out
+import chefmate.client.settings.public.generated.resources.sign_out_confirmation_cancel
+import chefmate.client.settings.public.generated.resources.sign_out_confirmation_confirm
+import chefmate.client.settings.public.generated.resources.sign_out_confirmation_message
+import chefmate.client.settings.public.generated.resources.sign_out_confirmation_title
 import chefmate.client.settings.public.generated.resources.sign_up
 import chefmate.client.settings.public.generated.resources.terms_of_use
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -46,6 +51,17 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 @Composable
 fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
     val viewState by bloc.state.collectAsState()
+
+    if (viewState.showSignOutConfirmationDialog) {
+        PlusDialog(
+            title = Res.string.sign_out_confirmation_title.asTextData(),
+            message = Res.string.sign_out_confirmation_message.asTextData(),
+            confirmButtonText = Res.string.sign_out_confirmation_confirm.asTextData(),
+            dismissButtonText = Res.string.sign_out_confirmation_cancel.asTextData(),
+            onConfirmClick = bloc::onSignOutConfirmed,
+            onDismissRequest = bloc::onSignOutDismissed,
+        )
+    }
 
     PlusNavContainer(
         data = PlusHeaderData.Parent(title = Res.string.more.asTextData()),
@@ -158,6 +174,10 @@ private val previewBlocUnauthenticated =
 
         override fun onSignOutClicked() = Unit
 
+        override fun onSignOutConfirmed() = Unit
+
+        override fun onSignOutDismissed() = Unit
+
         override fun onUrlClicked(url: String) = Unit
     }
 
@@ -180,6 +200,10 @@ private val previewBlocAuthenticated =
         override fun onSignUpClicked() = Unit
 
         override fun onSignOutClicked() = Unit
+
+        override fun onSignOutConfirmed() = Unit
+
+        override fun onSignOutDismissed() = Unit
 
         override fun onUrlClicked(url: String) = Unit
     }

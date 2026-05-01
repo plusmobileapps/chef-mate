@@ -10,6 +10,11 @@ kotlin {
             implementation(projects.client.grocery.data.public)
             implementation(projects.client.recipe.data.public)
         }
+        commonTest.dependencies {
+            implementation(projects.client.auth.data.testing)
+            implementation(projects.client.grocery.data.testing)
+            implementation(projects.client.recipe.data.testing)
+        }
     }
 }
 
