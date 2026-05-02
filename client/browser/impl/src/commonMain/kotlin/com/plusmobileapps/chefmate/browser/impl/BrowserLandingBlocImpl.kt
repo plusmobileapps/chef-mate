@@ -46,6 +46,10 @@ class BrowserLandingBlocImpl(
         output.onNext(BrowserLandingBloc.Output.Navigate(url.toNavigationUrl()))
     }
 
+    override fun onCancel() {
+        output.onNext(BrowserLandingBloc.Output.Cancel)
+    }
+
     private fun String.toNavigationUrl(): String {
         val trimmed = trim()
         return when {

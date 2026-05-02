@@ -7,6 +7,7 @@ import com.arkivanov.decompose.DelicateDecomposeApi
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
@@ -121,6 +122,7 @@ class BrowserRootBlocImpl(
                             when (landingOutput) {
                                 is BrowserLandingBloc.Output.Navigate ->
                                     navigation.replaceAll(Configuration.Browser(landingOutput.url))
+                                BrowserLandingBloc.Output.Cancel -> Unit
                             }
                         }
                         .also { bloc ->
@@ -130,12 +132,13 @@ class BrowserRootBlocImpl(
                         }
                 )
             is Configuration.EditQuery ->
-                BrowserRootBloc.Child.Landing(
+                BrowserRootBloc.Child.EditQuery(
                     landingBlocFactory
                         .create(context) { landingOutput ->
                             when (landingOutput) {
                                 is BrowserLandingBloc.Output.Navigate ->
                                     navigation.replaceAll(Configuration.Browser(landingOutput.url))
+                                BrowserLandingBloc.Output.Cancel -> navigation.pop()
                             }
                         }
                         .also { bloc ->

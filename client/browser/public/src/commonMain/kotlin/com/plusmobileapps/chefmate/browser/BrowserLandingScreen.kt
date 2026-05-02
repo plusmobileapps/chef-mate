@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Restaurant
@@ -50,6 +51,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import chefmate.client.browser.public.generated.resources.Res
+import chefmate.client.browser.public.generated.resources.browser_back
 import chefmate.client.browser.public.generated.resources.browser_clear
 import chefmate.client.browser.public.generated.resources.browser_landing_hint
 import chefmate.client.browser.public.generated.resources.browser_landing_tagline
@@ -58,6 +60,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun BrowserLandingScreen(
     bloc: BrowserLandingBloc,
+    onBack: (() -> Unit)? = null,
     sharedTransitionScope: SharedTransitionScope? = null,
     animatedVisibilityScope: AnimatedVisibilityScope? = null,
     modifier: Modifier = Modifier,
@@ -123,7 +126,23 @@ fun BrowserLandingScreen(
                         bloc.onFocusChanged(focusState.isFocused)
                     },
             placeholder = { Text(stringResource(Res.string.browser_landing_hint)) },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+            leadingIcon = {
+                if (onBack != null) {
+                    IconButton(
+                        onClick = {
+                            keyboardController?.hide()
+                            onBack()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(Res.string.browser_back),
+                        )
+                    }
+                } else {
+                    Icon(Icons.Default.Search, contentDescription = null)
+                }
+            },
             trailingIcon = {
                 if (textFieldValue.text.isNotEmpty()) {
                     IconButton(
