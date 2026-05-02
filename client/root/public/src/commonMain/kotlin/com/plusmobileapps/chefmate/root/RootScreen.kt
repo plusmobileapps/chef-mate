@@ -17,7 +17,7 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimator
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationScreen
-import com.plusmobileapps.chefmate.browser.BrowserScreen
+import com.plusmobileapps.chefmate.browser.BrowserRootScreen
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavigationScreen
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootScreen
@@ -68,7 +68,9 @@ fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
                                 ),
                             scrollEnabled = false,
                             maxContentWidth = Dp.Unspecified,
-                            content = { BrowserScreen(child.bloc, modifier = Modifier.weight(1f)) },
+                            content = {
+                                BrowserRootScreen(child.bloc, modifier = Modifier.weight(1f))
+                            },
                         )
                     is RootBloc.Child.MealPlanner -> MealPlannerRootScreen(child.bloc)
                 }

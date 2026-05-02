@@ -120,6 +120,11 @@ class BrowserViewModel(
         _state.value = _state.value.copy(goForwardTrigger = _state.value.goForwardTrigger + 1)
     }
 
+    fun onAddressBarFocused() {
+        val currentText = _state.value.addressBarText
+        output?.onNext(BrowserBloc.Output.NavigateToLanding(currentText))
+    }
+
     private fun String.ensureHttps(): String =
         if (!startsWith("http://") && !startsWith("https://")) {
             "https://$this"

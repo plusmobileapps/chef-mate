@@ -6,7 +6,7 @@ import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
-import com.plusmobileapps.chefmate.browser.BrowserBloc
+import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.meal.core.MealPlanBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
@@ -40,7 +40,7 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc {
 
         data class Meals(val bloc: MealPlanBloc) : Child()
 
-        data class Browser(val bloc: BrowserBloc) : Child()
+        data class Browser(val bloc: BrowserRootBloc) : Child()
 
         data class Settings(val bloc: SettingsBloc) : Child()
     }

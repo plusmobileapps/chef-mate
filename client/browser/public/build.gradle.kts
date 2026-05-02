@@ -22,6 +22,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.arkivanov.decompose.core)
+            implementation(libs.arkivanov.decompose.compose.extensions)
             implementation(projects.client.shared)
             api(projects.client.text.public)
             implementation(projects.client.ui.public)

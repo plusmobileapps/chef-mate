@@ -4,7 +4,7 @@ package com.plusmobileapps.chefmate.root
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
-import com.plusmobileapps.chefmate.browser.BrowserBloc
+import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
@@ -32,13 +32,14 @@ class RootBlocTest {
                 bottomNavOutput = output
                 mock()
             },
-            browserBlocFactory =
-                object : BrowserBloc.Factory {
+            browserRootBlocFactory =
+                object : BrowserRootBloc.Factory {
                     override fun create(
                         context: BlocContext,
-                        output: Consumer<BrowserBloc.Output>,
+                        output: Consumer<BrowserRootBloc.Output>,
+                        initialUrl: String?,
                         showControls: Boolean,
-                    ): BrowserBloc = mock(MockMode.autoUnit)
+                    ): BrowserRootBloc = mock(MockMode.autoUnit)
                 },
             recipeRoot = { context, props, output ->
                 recipeOutput = output

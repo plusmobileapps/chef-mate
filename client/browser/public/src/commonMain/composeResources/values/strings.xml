@@ -13,4 +13,6 @@
     <string name="browser_forward">Forward</string>
     <string name="browser_navigate">Navigate</string>
     <string name="browser_download">Download</string>
+    <string name="browser_landing_hint">Search Google or type a URL</string>
+    <string name="browser_landing_tagline">Find your favorite recipes online, click download, and start cooking!</string>
 </resources>

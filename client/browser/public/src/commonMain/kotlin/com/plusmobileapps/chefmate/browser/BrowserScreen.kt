@@ -1,11 +1,17 @@
+@file:OptIn(ExperimentalSharedTransitionApi::class)
+
 package com.plusmobileapps.chefmate.browser
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -30,7 +36,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
@@ -52,7 +57,12 @@ import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun BrowserScreen(bloc: BrowserBloc, modifier: Modifier = Modifier) {
+fun BrowserScreen(
+    bloc: BrowserBloc,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedVisibilityScope: AnimatedVisibilityScope? = null,
+    modifier: Modifier = Modifier,
+) {
     val viewState by bloc.state.collectAsState()
 
     val message = viewState.extractionMessage
@@ -83,6 +93,9 @@ fun BrowserScreen(bloc: BrowserBloc, modifier: Modifier = Modifier) {
                 onNavigate = bloc::onNavigate,
                 onGoBack = bloc::onGoBack,
                 onGoForward = bloc::onGoForward,
+                onAddressBarFocused = bloc::onAddressBarFocused,
+                sharedTransitionScope = sharedTransitionScope,
+                animatedVisibilityScope = animatedVisibilityScope,
             )
         }
         PlatformWebView(
@@ -115,6 +128,9 @@ private fun AddressBar(
     onNavigate: () -> Unit,
     onGoBack: () -> Unit,
     onGoForward: () -> Unit,
+    onAddressBarFocused: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedVisibilityScope: AnimatedVisibilityScope? = null,
     modifier: Modifier = Modifier,
 ) {
     var textFieldValue by remember { mutableStateOf(TextFieldValue(url)) }
@@ -126,6 +142,16 @@ private fun AddressBar(
             textFieldValue = TextFieldValue(url)
         }
     }
+
+    val sharedFieldModifier =
+        if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+            with(sharedTransitionScope) {
+                Modifier.sharedElement(
+                    sharedContentState = rememberSharedContentState(key = "browser-address-bar"),
+                    animatedVisibilityScope = animatedVisibilityScope,
+                )
+            }
+        } else Modifier
 
     Row(
         modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
@@ -150,16 +176,17 @@ private fun AddressBar(
                 onUrlChanged(newValue.text)
             },
             modifier =
-                Modifier.weight(1f).focusRequester(focusRequester).onFocusChanged { focusState ->
-                    if (focusState.isFocused) {
-                        textFieldValue =
-                            textFieldValue.copy(
-                                selection = TextRange(0, textFieldValue.text.length)
-                            )
-                    }
-                },
+                Modifier.weight(1f)
+                    .then(sharedFieldModifier)
+                    .focusRequester(focusRequester)
+                    .onFocusChanged { focusState ->
+                        if (focusState.isFocused) {
+                            onAddressBarFocused()
+                        }
+                    },
             placeholder = { Text(stringResource(Res.string.browser_address_hint)) },
             singleLine = true,
+            shape = RoundedCornerShape(28.dp),
             keyboardOptions =
                 KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Go),
             keyboardActions =

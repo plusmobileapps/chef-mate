@@ -101,6 +101,10 @@ class BrowserBlocImpl(
     override fun onGoForward() {
         viewModel.onGoForward()
     }
+
+    override fun onAddressBarFocused() {
+        viewModel.onAddressBarFocused()
+    }
 }
 
 @ContributesTo(AppScope::class)

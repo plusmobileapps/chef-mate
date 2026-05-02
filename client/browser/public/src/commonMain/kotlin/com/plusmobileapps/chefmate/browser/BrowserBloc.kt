@@ -31,6 +31,8 @@ interface BrowserBloc {
 
     fun onGoForward()
 
+    fun onAddressBarFocused()
+
     data class Model(
         val currentUrl: String = "",
         val navigateUrl: String = "",
@@ -48,6 +50,8 @@ interface BrowserBloc {
 
     sealed class Output {
         data class RecipeExtracted(val recipeId: Long) : Output()
+
+        data class NavigateToLanding(val initialText: String) : Output()
     }
 
     interface Factory {
