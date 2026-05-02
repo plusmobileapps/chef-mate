@@ -31,6 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,6 +66,8 @@ fun BrowserLandingScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
     var textFieldValue by remember { mutableStateOf(TextFieldValue(state.searchText)) }
+
+    LaunchedEffect(Unit) { if (state.isFocused) focusRequester.requestFocus() }
 
     val sharedFieldModifier =
         if (sharedTransitionScope != null && animatedVisibilityScope != null) {
