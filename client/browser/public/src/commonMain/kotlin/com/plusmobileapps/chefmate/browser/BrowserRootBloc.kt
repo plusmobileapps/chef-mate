@@ -4,6 +4,7 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 
 interface BrowserRootBloc {
     val routerState: Value<ChildStack<*, Child>>
@@ -19,7 +20,7 @@ interface BrowserRootBloc {
     }
 
     sealed class Output {
-        data class RecipeExtracted(val recipeId: Long) : Output()
+        data class RecipeExtracted(val extracted: ExtractedRecipeData) : Output()
     }
 
     interface Factory {

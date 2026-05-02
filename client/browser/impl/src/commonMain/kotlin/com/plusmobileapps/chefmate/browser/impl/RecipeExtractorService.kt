@@ -4,6 +4,7 @@ import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.parser.Parser
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.IO
+import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -22,22 +23,8 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-data class ExtractedRecipe(
-    val title: String,
-    val description: String?,
-    val ingredients: List<String>,
-    val directions: List<String>,
-    val imageUrl: String?,
-    val sourceUrl: String,
-    val servings: Int?,
-    val prepTime: Int?,
-    val cookTime: Int?,
-    val totalTime: Int?,
-    val calories: Int?,
-)
-
 interface RecipeExtractorService {
-    suspend fun extractRecipe(url: String): ExtractedRecipe
+    suspend fun extractRecipe(url: String): ExtractedRecipeData
 }
 
 @SingleIn(AppScope::class)
@@ -50,7 +37,7 @@ class RecipeExtractorServiceImpl(@IO private val ioContext: CoroutineContext) :
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    override suspend fun extractRecipe(url: String): ExtractedRecipe =
+    override suspend fun extractRecipe(url: String): ExtractedRecipeData =
         withContext(ioContext) {
             val html =
                 httpClient
@@ -101,14 +88,14 @@ class RecipeExtractorServiceImpl(@IO private val ioContext: CoroutineContext) :
         }
     }
 
-    internal fun parseRecipeJsonText(jsonText: String, sourceUrl: String): ExtractedRecipe? {
+    internal fun parseRecipeJsonText(jsonText: String, sourceUrl: String): ExtractedRecipeData? {
         val recipeJson = findRecipeJson(jsonText) ?: return null
         return parseRecipeFromJson(recipeJson, sourceUrl)
     }
 
     private fun String.decodeHtmlEntities(): String = Parser.unescapeEntities(this, false)
 
-    private fun parseRecipeFromJson(obj: JsonObject, sourceUrl: String): ExtractedRecipe {
+    private fun parseRecipeFromJson(obj: JsonObject, sourceUrl: String): ExtractedRecipeData {
         val title = obj["name"]?.jsonPrimitive?.contentOrNull?.decodeHtmlEntities() ?: ""
         val description = obj["description"]?.jsonPrimitive?.contentOrNull?.decodeHtmlEntities()
 
@@ -132,7 +119,7 @@ class RecipeExtractorServiceImpl(@IO private val ioContext: CoroutineContext) :
         val totalTime = parseDuration(obj["totalTime"]?.jsonPrimitive?.contentOrNull)
         val calories = parseCalories(obj)
 
-        return ExtractedRecipe(
+        return ExtractedRecipeData(
             title = title,
             description = description,
             ingredients = ingredients,

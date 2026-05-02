@@ -142,6 +142,12 @@ class RootBlocImpl(
                 navigation.bringToFront(RecipeRoot(Detail(output.recipeId)))
             }
 
+            is BottomNavBloc.Output.OpenExtractedRecipe -> {
+                navigation.bringToFront(
+                    RecipeRoot(RecipeRootBloc.Props.CreateFromExtracted(output.extracted))
+                )
+            }
+
             BottomNavBloc.Output.OpenSignIn -> {
                 navigation.bringToFront(
                     Configuration.Authentication(AuthenticationBloc.Props.SignIn)

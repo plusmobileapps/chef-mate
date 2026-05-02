@@ -4,6 +4,7 @@ package com.plusmobileapps.chefmate.recipe.core.impl.edit
 
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.di.Main
+import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import dev.zacsweers.metro.Assisted
@@ -25,6 +26,7 @@ import kotlinx.coroutines.launch
 @AssistedInject
 class EditRecipeViewModel(
     @Assisted private val recipeId: Long?,
+    @Assisted extractedRecipe: ExtractedRecipeData?,
     @Main mainContext: CoroutineContext,
     private val repository: RecipeRepository,
 ) : ViewModel(mainContext) {
@@ -70,9 +72,24 @@ class EditRecipeViewModel(
     val starRating: StateFlow<Int?> = _starRating.asStateFlow()
 
     init {
-        if (recipeId != null) {
-            _state.update { it.copy(isLoading = false) }
-            scope.launch { loadRecipe(recipeId) }
+        when {
+            recipeId != null -> {
+                _state.update { it.copy(isLoading = false) }
+                scope.launch { loadRecipe(recipeId) }
+            }
+            extractedRecipe != null -> {
+                _title.value = extractedRecipe.title
+                _description.value = extractedRecipe.description.orEmpty()
+                _ingredients.value = extractedRecipe.ingredients.joinToString("\n")
+                _directions.value = extractedRecipe.directions.joinToString("\n")
+                _imageUrl.value = extractedRecipe.imageUrl.orEmpty()
+                _sourceUrl.value = extractedRecipe.sourceUrl
+                _servings.value = extractedRecipe.servings?.toString().orEmpty()
+                _prepTime.value = extractedRecipe.prepTime?.toString().orEmpty()
+                _cookTime.value = extractedRecipe.cookTime?.toString().orEmpty()
+                _totalTime.value = extractedRecipe.totalTime?.toString().orEmpty()
+                _calories.value = extractedRecipe.calories?.toString().orEmpty()
+            }
         }
     }
 
@@ -252,6 +269,6 @@ class EditRecipeViewModel(
 
     @AssistedFactory
     fun interface Factory {
-        fun create(recipeId: Long?): EditRecipeViewModel
+        fun create(recipeId: Long?, extractedRecipe: ExtractedRecipeData?): EditRecipeViewModel
     }
 }

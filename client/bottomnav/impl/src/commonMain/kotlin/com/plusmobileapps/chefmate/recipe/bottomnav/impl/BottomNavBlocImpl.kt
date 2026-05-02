@@ -164,7 +164,7 @@ class BottomNavBlocImpl(
     private fun handleBrowserOutput(output: BrowserRootBloc.Output) {
         when (output) {
             is BrowserRootBloc.Output.RecipeExtracted -> {
-                this.output.onNext(BottomNavBloc.Output.OpenRecipe(output.recipeId))
+                this.output.onNext(BottomNavBloc.Output.OpenExtractedRecipe(output.extracted))
             }
         }
     }

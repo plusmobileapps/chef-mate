@@ -9,6 +9,7 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
+import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import kotlinx.serialization.Serializable
 
 interface RecipeRootBloc : BackHandlerOwner, BackClickBloc {
@@ -35,6 +36,8 @@ interface RecipeRootBloc : BackHandlerOwner, BackClickBloc {
         @Serializable data class Detail(val recipeId: Long) : Props()
 
         @Serializable data object Create : Props()
+
+        @Serializable data class CreateFromExtracted(val extracted: ExtractedRecipeData) : Props()
     }
 
     fun interface Factory {

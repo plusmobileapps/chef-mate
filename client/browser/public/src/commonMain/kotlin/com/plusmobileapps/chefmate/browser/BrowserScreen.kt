@@ -48,8 +48,6 @@ import chefmate.client.browser.public.generated.resources.browser_download
 import chefmate.client.browser.public.generated.resources.browser_extraction_failed_body
 import chefmate.client.browser.public.generated.resources.browser_forward
 import chefmate.client.browser.public.generated.resources.browser_navigate
-import chefmate.client.browser.public.generated.resources.browser_recipe_saved_body
-import chefmate.client.browser.public.generated.resources.browser_view_recipe
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusButton
@@ -65,20 +63,13 @@ fun BrowserScreen(
 ) {
     val viewState by bloc.state.collectAsState()
 
-    val message = viewState.extractionMessage
-    if (message != null) {
+    val failureMessage = viewState.extractionFailureMessage
+    if (failureMessage != null) {
         PlusDialog(
-            title = message,
-            message =
-                if (viewState.hasExtractedRecipe) Res.string.browser_recipe_saved_body.asTextData()
-                else Res.string.browser_extraction_failed_body.asTextData(),
-            confirmButtonText =
-                if (viewState.hasExtractedRecipe) Res.string.browser_view_recipe.asTextData()
-                else FixedString("OK"),
-            dismissButtonText = if (viewState.hasExtractedRecipe) FixedString("OK") else null,
-            onConfirmClick =
-                if (viewState.hasExtractedRecipe) bloc::onViewExtractedRecipe
-                else bloc::onDismissMessage,
+            title = failureMessage,
+            message = Res.string.browser_extraction_failed_body.asTextData(),
+            confirmButtonText = FixedString("OK"),
+            onConfirmClick = bloc::onDismissMessage,
             onDismissRequest = bloc::onDismissMessage,
         )
     }

@@ -160,7 +160,7 @@ class BrowserRootBlocImpl(
                                     is BrowserBloc.Output.RecipeExtracted ->
                                         output.onNext(
                                             BrowserRootBloc.Output.RecipeExtracted(
-                                                blocOutput.recipeId
+                                                blocOutput.extracted
                                             )
                                         )
                                     is BrowserBloc.Output.NavigateToLanding ->

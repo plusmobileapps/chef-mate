@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.recipe.core.edit
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.text.TextData
 import kotlinx.coroutines.flow.StateFlow
 
@@ -77,6 +78,11 @@ interface EditRecipeBloc : BackClickBloc {
     }
 
     fun interface Factory {
-        fun create(context: BlocContext, recipeId: Long?, output: Consumer<Output>): EditRecipeBloc
+        fun create(
+            context: BlocContext,
+            recipeId: Long?,
+            extractedRecipe: ExtractedRecipeData?,
+            output: Consumer<Output>,
+        ): EditRecipeBloc
     }
 }

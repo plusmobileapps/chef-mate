@@ -25,6 +25,7 @@ kotlin {
             implementation(libs.arkivanov.decompose.compose.extensions)
             implementation(projects.client.shared)
             api(projects.client.text.public)
+            api(projects.client.recipe.data.public)
             implementation(projects.client.ui.public)
             implementation(compose.components.resources)
         }

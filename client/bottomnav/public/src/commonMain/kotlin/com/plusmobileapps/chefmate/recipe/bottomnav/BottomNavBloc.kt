@@ -10,6 +10,7 @@ import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.meal.core.MealPlanBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
+import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.settings.SettingsBloc
 import kotlinx.coroutines.flow.StateFlow
@@ -47,6 +48,8 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc {
 
     sealed class Output {
         data class OpenRecipe(val recipeId: Long) : Output()
+
+        data class OpenExtractedRecipe(val extracted: ExtractedRecipeData) : Output()
 
         object AddNewRecipe : Output()
 
