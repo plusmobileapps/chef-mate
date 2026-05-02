@@ -55,6 +55,10 @@ class BrowserBlocImpl(
                         }
                     },
                 hasExtractedRecipe = it.extractedRecipeId != null,
+                canGoBack = it.canGoBack,
+                canGoForward = it.canGoForward,
+                goBackTrigger = it.goBackTrigger,
+                goForwardTrigger = it.goForwardTrigger,
             )
         }
 
@@ -84,6 +88,18 @@ class BrowserBlocImpl(
 
     override fun onDismissMessage() {
         viewModel.dismissMessage()
+    }
+
+    override fun onCanNavigateChanged(canGoBack: Boolean, canGoForward: Boolean) {
+        viewModel.onCanNavigateChanged(canGoBack, canGoForward)
+    }
+
+    override fun onGoBack() {
+        viewModel.onGoBack()
+    }
+
+    override fun onGoForward() {
+        viewModel.onGoForward()
     }
 }
 

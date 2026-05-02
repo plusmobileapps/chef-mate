@@ -25,6 +25,12 @@ interface BrowserBloc {
 
     fun onDismissMessage()
 
+    fun onCanNavigateChanged(canGoBack: Boolean, canGoForward: Boolean)
+
+    fun onGoBack()
+
+    fun onGoForward()
+
     data class Model(
         val currentUrl: String = "",
         val navigateUrl: String = "",
@@ -34,6 +40,10 @@ interface BrowserBloc {
         val extractionMessage: TextData? = null,
         val hasExtractedRecipe: Boolean = false,
         val showControls: Boolean = true,
+        val canGoBack: Boolean = false,
+        val canGoForward: Boolean = false,
+        val goBackTrigger: Int = 0,
+        val goForwardTrigger: Int = 0,
     )
 
     sealed class Output {

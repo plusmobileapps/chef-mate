@@ -37,7 +37,10 @@ class BrowserViewModel(
 
     fun onNavigate() {
         val url = _state.value.addressBarText.ensureHttps()
-        _state.value = _state.value.copy(currentUrl = url, addressBarText = url)
+        // Reset webViewReportedUrl so the BLoC's navigateUrl formula falls through to currentUrl,
+        // ensuring a new navigation is always triggered even if the formula value didn't change.
+        _state.value =
+            _state.value.copy(currentUrl = url, addressBarText = url, webViewReportedUrl = "")
     }
 
     fun onUrlLoadedInWebView(url: String) {
@@ -105,6 +108,18 @@ class BrowserViewModel(
         _state.value = _state.value.copy(extractionMessage = null, extractedRecipeId = null)
     }
 
+    fun onCanNavigateChanged(canGoBack: Boolean, canGoForward: Boolean) {
+        _state.value = _state.value.copy(canGoBack = canGoBack, canGoForward = canGoForward)
+    }
+
+    fun onGoBack() {
+        _state.value = _state.value.copy(goBackTrigger = _state.value.goBackTrigger + 1)
+    }
+
+    fun onGoForward() {
+        _state.value = _state.value.copy(goForwardTrigger = _state.value.goForwardTrigger + 1)
+    }
+
     private fun String.ensureHttps(): String =
         if (!startsWith("http://") && !startsWith("https://")) {
             "https://$this"
@@ -120,6 +135,10 @@ class BrowserViewModel(
         val isWebViewLoading: Boolean = false,
         val extractionMessage: ExtractMessage? = null,
         val extractedRecipeId: Long? = null,
+        val canGoBack: Boolean = false,
+        val canGoForward: Boolean = false,
+        val goBackTrigger: Int = 0,
+        val goForwardTrigger: Int = 0,
     )
 
     companion object {

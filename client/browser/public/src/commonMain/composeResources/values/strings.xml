@@ -3,7 +3,14 @@
     <string name="browser_address_hint">Enter URL</string>
     <string name="browser_extract_recipe">Extract Recipe</string>
     <string name="browser_extracting">Extracting recipe…</string>
-    <string name="browser_extraction_failed">Failed to extract recipe from this page</string>
+    <string name="browser_extraction_failed">Couldn\'t extract recipe</string>
+    <string name="browser_extraction_failed_body">We weren\'t able to pull a recipe from this page. Make sure you\'re on a recipe page and try again, or build the recipe manually.</string>
     <string name="browser_recipe_saved">Recipe saved!</string>
+    <string name="browser_recipe_saved_body">Your recipe has been saved to your collection. Tap \"View Recipe\" to open it now.</string>
     <string name="browser_view_recipe">View Recipe</string>
+    <string name="browser_clear">Clear</string>
+    <string name="browser_back">Back</string>
+    <string name="browser_forward">Forward</string>
+    <string name="browser_navigate">Navigate</string>
+    <string name="browser_download">Download</string>
 </resources>

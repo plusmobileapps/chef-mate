@@ -21,13 +21,16 @@ actual fun PlatformWebView(
     url: String,
     onUrlLoaded: (String) -> Unit,
     onLoadingChanged: (Boolean) -> Unit,
+    onCanNavigateChanged: (canGoBack: Boolean, canGoForward: Boolean) -> Unit,
+    goBackTrigger: Int,
+    goForwardTrigger: Int,
     instanceKeeper: InstanceKeeper,
     modifier: Modifier,
 ) {
     val holder = remember { instanceKeeper.getOrCreate { WebViewHolder() } }
 
     DisposableEffect(Unit) {
-        holder.ensureInitialized(onUrlLoaded, onLoadingChanged, url)
+        holder.ensureInitialized(onUrlLoaded, onLoadingChanged, onCanNavigateChanged, url)
         onDispose {}
     }
 
@@ -37,6 +40,10 @@ actual fun PlatformWebView(
             Platform.runLater { holder.webView?.engine?.load(url) }
         }
     }
+
+    LaunchedEffect(goBackTrigger) { if (goBackTrigger > 0) holder.goBack() }
+
+    LaunchedEffect(goForwardTrigger) { if (goForwardTrigger > 0) holder.goForward() }
 
     SwingPanel(
         modifier = modifier,
@@ -53,13 +60,33 @@ private class WebViewHolder : InstanceKeeper.Instance {
 
     @Volatile var lastCommandedUrl: String = ""
 
+    @Volatile private var onCanNavigateChanged: ((Boolean, Boolean) -> Unit)? = null
+
     private var initialized = false
+
+    fun goBack() {
+        Platform.runLater {
+            webView?.engine?.history?.let { history ->
+                if (history.currentIndex > 0) history.go(-1)
+            }
+        }
+    }
+
+    fun goForward() {
+        Platform.runLater {
+            webView?.engine?.history?.let { history ->
+                if (history.currentIndex < history.entries.size - 1) history.go(1)
+            }
+        }
+    }
 
     fun ensureInitialized(
         onUrlLoaded: (String) -> Unit,
         onLoadingChanged: (Boolean) -> Unit,
+        onCanNavigateChanged: (Boolean, Boolean) -> Unit,
         initialUrl: String,
     ) {
+        this.onCanNavigateChanged = onCanNavigateChanged
         if (initialized) return
         initialized = true
 
@@ -76,6 +103,11 @@ private class WebViewHolder : InstanceKeeper.Instance {
                             lastCommandedUrl = it
                             onUrlLoaded(it)
                         }
+                        val history = wv.engine.history
+                        this.onCanNavigateChanged?.invoke(
+                            history.currentIndex > 0,
+                            history.currentIndex < history.entries.size - 1,
+                        )
                     }
                     Worker.State.FAILED,
                     Worker.State.CANCELLED -> onLoadingChanged(false)
