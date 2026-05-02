@@ -1,7 +1,8 @@
-@file:OptIn(DelicateDecomposeApi::class, kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+@file:OptIn(DelicateDecomposeApi::class)
 
 package com.plusmobileapps.chefmate.browser.impl
 
+import com.arkivanov.decompose.Cancellation
 import com.arkivanov.decompose.DelicateDecomposeApi
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
@@ -10,6 +11,8 @@ import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackCallback
+import com.arkivanov.essenty.lifecycle.doOnPause
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.browser.BrowserBloc
@@ -21,10 +24,7 @@ import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -84,23 +84,31 @@ class BrowserRootBlocImpl(
     }
 
     private fun observeCanGoBack() {
-        val stackFlow = MutableStateFlow(stack.value)
-        val cancellation = stack.subscribe { stackFlow.value = it }
-        scope.launch {
-            try {
-                stackFlow
-                    .flatMapLatest { childStack ->
-                        val activeChild = childStack.active.instance
-                        if (activeChild is BrowserRootBloc.Child.Browser) {
-                            activeChild.bloc.state.map { it.canGoBack }
-                        } else {
-                            flowOf(false)
+        var stackCancellation: Cancellation? = null
+        var canGoBackJob: Job? = null
+
+        lifecycle.doOnResume {
+            stackCancellation = stack.subscribe { childStack ->
+                canGoBackJob?.cancel()
+                val activeChild = childStack.active.instance
+                if (activeChild is BrowserRootBloc.Child.Browser) {
+                    canGoBackJob = scope.launch {
+                        activeChild.bloc.state.collect { state ->
+                            webViewBackCallback.isEnabled = state.canGoBack
                         }
                     }
-                    .collect { canGoBack -> webViewBackCallback.isEnabled = canGoBack }
-            } finally {
-                cancellation.cancel()
+                } else {
+                    webViewBackCallback.isEnabled = false
+                }
             }
+        }
+
+        lifecycle.doOnPause {
+            canGoBackJob?.cancel()
+            canGoBackJob = null
+            stackCancellation?.cancel()
+            stackCancellation = null
+            webViewBackCallback.isEnabled = false
         }
     }
 
