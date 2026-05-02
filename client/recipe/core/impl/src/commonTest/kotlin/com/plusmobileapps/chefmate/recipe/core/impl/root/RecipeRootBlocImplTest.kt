@@ -7,6 +7,7 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
+import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
 import dev.mokkery.mock
@@ -20,6 +21,8 @@ class RecipeRootBlocImplTest {
     private val output = TestConsumer<RecipeRootBloc.Output>()
     private var detailOutput: Consumer<RecipeDetailBloc.Output> = Consumer {}
     private var editOutput: Consumer<EditRecipeBloc.Output> = Consumer {}
+    private var lastEditRecipeId: Long? = null
+    private var lastEditExtractedRecipe: ExtractedRecipeData? = null
 
     private fun createBloc(
         props: RecipeRootBloc.Props = RecipeRootBloc.Props.Detail(1L)
@@ -40,7 +43,9 @@ class RecipeRootBlocImplTest {
                     }
                 },
             editBloc =
-                EditRecipeBloc.Factory { _, _, _, output ->
+                EditRecipeBloc.Factory { _, recipeId, extractedRecipe, output ->
+                    lastEditRecipeId = recipeId
+                    lastEditExtractedRecipe = extractedRecipe
                     editOutput = output
                     mock()
                 },
@@ -93,4 +98,35 @@ class RecipeRootBlocImplTest {
         editOutput.onNext(EditRecipeBloc.Output.Finished(1L))
         bloc.routerState.value.active.instance.shouldBeInstanceOf<RecipeRootBloc.Child.Detail>()
     }
+
+    @Test
+    fun When_created_with_create_from_extracted_props_Then_edit_child_is_shown_with_seed() {
+        val extracted = sampleExtractedRecipe()
+        val bloc = createBloc(RecipeRootBloc.Props.CreateFromExtracted(extracted))
+        bloc.routerState.value.active.instance.shouldBeInstanceOf<RecipeRootBloc.Child.Edit>()
+        lastEditRecipeId shouldBe null
+        lastEditExtractedRecipe shouldBe extracted
+    }
+
+    @Test
+    fun When_edit_outputs_cancelled_from_create_from_extracted_Then_root_outputs_finished() {
+        createBloc(RecipeRootBloc.Props.CreateFromExtracted(sampleExtractedRecipe()))
+        editOutput.onNext(EditRecipeBloc.Output.Cancelled)
+        output.lastValue shouldBe RecipeRootBloc.Output.Finished
+    }
+
+    private fun sampleExtractedRecipe() =
+        ExtractedRecipeData(
+            title = "Test",
+            description = null,
+            ingredients = listOf("flour"),
+            directions = listOf("mix"),
+            imageUrl = null,
+            sourceUrl = "https://example.com/recipe",
+            servings = 4,
+            prepTime = 10,
+            cookTime = 20,
+            totalTime = 30,
+            calories = 200,
+        )
 }

@@ -9,6 +9,7 @@ import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
+import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import dev.mokkery.MockMode
 import dev.mokkery.mock
@@ -117,5 +118,32 @@ class RootBlocTest {
         recipeOutput.onNext(RecipeRootBloc.Output.OpenUrl("https://example.com/recipe"))
         rootBloc.instance() should instanceOf<RootBloc.Child.Browser>()
         rootBloc.state.value.backStack.size shouldBe 2
+    }
+
+    @Test
+    fun When_bottom_nav_outputs_open_extracted_recipe_Then_recipe_root_shown_with_create_from_extracted_props() {
+        val extracted =
+            ExtractedRecipeData(
+                title = "Extracted",
+                description = null,
+                ingredients = listOf("flour"),
+                directions = listOf("mix"),
+                imageUrl = null,
+                sourceUrl = "https://example.com/recipe",
+                servings = 4,
+                prepTime = 10,
+                cookTime = 20,
+                totalTime = 30,
+                calories = 200,
+            )
+
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenExtractedRecipe(extracted))
+
+        rootBloc.instance() should instanceOf<RootBloc.Child.RecipeRoot>()
+        rootBloc.state.value.backStack.size shouldBe 1
+        recipeProps shouldBe RecipeRootBloc.Props.CreateFromExtracted(extracted)
+
+        recipeOutput.onNext(RecipeRootBloc.Output.Finished)
+        rootBloc.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
     }
 }
