@@ -143,7 +143,7 @@ class BrowserRootBlocImpl(
                         output = { editOutput ->
                             when (editOutput) {
                                 is BrowserEditQueryBloc.Output.Navigate ->
-                                    navigation.replaceAll(Configuration.Browser(editOutput.url))
+                                    navigation.push(Configuration.Browser(editOutput.url))
                                 BrowserEditQueryBloc.Output.Cancel -> navigation.pop()
                             }
                         },
