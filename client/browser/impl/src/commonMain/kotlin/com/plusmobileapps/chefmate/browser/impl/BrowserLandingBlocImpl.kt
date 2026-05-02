@@ -36,14 +36,14 @@ class BrowserLandingBlocImpl(
         viewModel.onSearchTextChanged(text)
     }
 
-    override fun onFocusChanged(isFocused: Boolean) {
-        viewModel.onFocusChanged(isFocused)
-    }
-
     override fun onNavigate() {
         val url = viewModel.state.value.searchText
         if (url.isBlank()) return
         output.onNext(BrowserLandingBloc.Output.Navigate(url.toNavigationUrl()))
+    }
+
+    override fun onSearchFieldFocused() {
+        output.onNext(BrowserLandingBloc.Output.OpenEditQuery(viewModel.state.value.searchText))
     }
 }
 

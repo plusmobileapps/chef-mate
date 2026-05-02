@@ -124,6 +124,10 @@ class BrowserRootBlocImpl(
                             when (landingOutput) {
                                 is BrowserLandingBloc.Output.Navigate ->
                                     navigation.replaceAll(Configuration.Browser(landingOutput.url))
+                                is BrowserLandingBloc.Output.OpenEditQuery ->
+                                    navigation.push(
+                                        Configuration.EditQuery(landingOutput.initialText)
+                                    )
                             }
                         }
                         .also { bloc ->

@@ -18,8 +18,4 @@ class BrowserLandingViewModel(@Main mainContext: CoroutineContext) : ViewModel(m
     fun onSearchTextChanged(text: String) {
         _state.value = _state.value.copy(searchText = text)
     }
-
-    fun onFocusChanged(isFocused: Boolean) {
-        _state.value = _state.value.copy(isFocused = isFocused)
-    }
 }

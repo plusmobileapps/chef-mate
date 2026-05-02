@@ -11,12 +11,14 @@ interface BrowserLandingBloc {
 
     fun onNavigate()
 
-    fun onFocusChanged(isFocused: Boolean)
+    fun onSearchFieldFocused()
 
-    data class Model(val searchText: String = "", val isFocused: Boolean = false)
+    data class Model(val searchText: String = "")
 
     sealed class Output {
         data class Navigate(val url: String) : Output()
+
+        data class OpenEditQuery(val initialText: String) : Output()
     }
 
     fun interface Factory {
