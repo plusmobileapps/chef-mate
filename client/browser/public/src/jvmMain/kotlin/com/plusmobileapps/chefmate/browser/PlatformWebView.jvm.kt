@@ -13,6 +13,8 @@ import javafx.application.Platform
 import javafx.concurrent.Worker
 import javafx.embed.swing.JFXPanel
 import javafx.scene.Scene
+import javafx.scene.input.MouseButton
+import javafx.scene.input.MouseEvent
 import javafx.scene.web.WebView
 import javax.swing.JPanel
 
@@ -111,6 +113,20 @@ private class WebViewHolder : InstanceKeeper.Instance {
                     }
                     Worker.State.FAILED,
                     Worker.State.CANCELLED -> onLoadingChanged(false)
+                    else -> {}
+                }
+            }
+
+            wv.addEventFilter(MouseEvent.MOUSE_PRESSED) { event ->
+                when (event.button) {
+                    MouseButton.BACK -> {
+                        goBack()
+                        event.consume()
+                    }
+                    MouseButton.FORWARD -> {
+                        goForward()
+                        event.consume()
+                    }
                     else -> {}
                 }
             }

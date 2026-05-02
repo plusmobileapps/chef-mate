@@ -7,8 +7,8 @@ import com.arkivanov.decompose.DelicateDecomposeApi
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.navigate
 import com.arkivanov.decompose.router.stack.pop
-import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackCallback
@@ -125,7 +125,7 @@ class BrowserRootBlocImpl(
                                 is BrowserLandingBloc.Output.Navigate ->
                                     navigation.replaceAll(Configuration.Browser(landingOutput.url))
                                 is BrowserLandingBloc.Output.OpenEditQuery ->
-                                    navigation.push(
+                                    navigation.replaceTopEditQueryWith(
                                         Configuration.EditQuery(landingOutput.initialText)
                                     )
                             }
@@ -143,7 +143,9 @@ class BrowserRootBlocImpl(
                         output = { editOutput ->
                             when (editOutput) {
                                 is BrowserEditQueryBloc.Output.Navigate ->
-                                    navigation.push(Configuration.Browser(editOutput.url))
+                                    navigation.replaceEditQueryWithBrowser(
+                                        Configuration.Browser(editOutput.url)
+                                    )
                                 BrowserEditQueryBloc.Output.Cancel -> navigation.pop()
                             }
                         },
@@ -164,7 +166,7 @@ class BrowserRootBlocImpl(
                                             )
                                         )
                                     is BrowserBloc.Output.NavigateToLanding ->
-                                        navigation.push(
+                                        navigation.replaceTopEditQueryWith(
                                             Configuration.EditQuery(blocOutput.initialText)
                                         )
                                 }
@@ -177,6 +179,28 @@ class BrowserRootBlocImpl(
                         }
                 )
         }
+
+    /**
+     * Drops any existing EditQuery from the stack before adding the new one. Decompose enforces
+     * unique configurations within a stack, so re-entering the EditQuery flow with the same
+     * initialText (e.g. tapping the X clear button which triggers focus on an empty field) would
+     * otherwise crash.
+     */
+    private fun StackNavigation<Configuration>.replaceTopEditQueryWith(
+        newConfig: Configuration.EditQuery
+    ) {
+        navigate { stack -> stack.filter { it !is Configuration.EditQuery } + newConfig }
+    }
+
+    /**
+     * Pops the EditQuery on top, drops any existing Browser with the same URL (to avoid duplicate
+     * configuration crashes when submitting the same URL twice), and adds the new Browser.
+     */
+    private fun StackNavigation<Configuration>.replaceEditQueryWithBrowser(
+        newConfig: Configuration.Browser
+    ) {
+        navigate { stack -> stack.dropLast(1).filter { it != newConfig } + newConfig }
+    }
 
     @Serializable
     private sealed class Configuration {
