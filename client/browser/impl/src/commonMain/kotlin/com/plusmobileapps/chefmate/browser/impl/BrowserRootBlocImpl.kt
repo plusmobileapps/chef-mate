@@ -17,6 +17,7 @@ import com.arkivanov.essenty.lifecycle.doOnResume
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.browser.BrowserBloc
+import com.plusmobileapps.chefmate.browser.BrowserEditQueryBloc
 import com.plusmobileapps.chefmate.browser.BrowserLandingBloc
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.di.AppScope
@@ -37,6 +38,7 @@ class BrowserRootBlocImpl(
     @Assisted private val showControls: Boolean,
     private val browserBlocFactory: BrowserBloc.Factory,
     private val landingBlocFactory: BrowserLandingBloc.Factory,
+    private val editQueryBlocFactory: BrowserEditQueryBloc.Factory,
 ) : BrowserRootBloc, BlocContext by context {
 
     @AssistedFactory
@@ -122,7 +124,6 @@ class BrowserRootBlocImpl(
                             when (landingOutput) {
                                 is BrowserLandingBloc.Output.Navigate ->
                                     navigation.replaceAll(Configuration.Browser(landingOutput.url))
-                                BrowserLandingBloc.Output.Cancel -> Unit
                             }
                         }
                         .also { bloc ->
@@ -133,18 +134,17 @@ class BrowserRootBlocImpl(
                 )
             is Configuration.EditQuery ->
                 BrowserRootBloc.Child.EditQuery(
-                    landingBlocFactory
-                        .create(context) { landingOutput ->
-                            when (landingOutput) {
-                                is BrowserLandingBloc.Output.Navigate ->
-                                    navigation.replaceAll(Configuration.Browser(landingOutput.url))
-                                BrowserLandingBloc.Output.Cancel -> navigation.pop()
+                    editQueryBlocFactory.create(
+                        context = context,
+                        output = { editOutput ->
+                            when (editOutput) {
+                                is BrowserEditQueryBloc.Output.Navigate ->
+                                    navigation.replaceAll(Configuration.Browser(editOutput.url))
+                                BrowserEditQueryBloc.Output.Cancel -> navigation.pop()
                             }
-                        }
-                        .also { bloc ->
-                            bloc.onSearchTextChanged(config.initialText)
-                            bloc.onFocusChanged(true)
-                        }
+                        },
+                        initialText = config.initialText,
+                    )
                 )
             is Configuration.Browser ->
                 BrowserRootBloc.Child.Browser(

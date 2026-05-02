@@ -45,19 +45,6 @@ class BrowserLandingBlocImpl(
         if (url.isBlank()) return
         output.onNext(BrowserLandingBloc.Output.Navigate(url.toNavigationUrl()))
     }
-
-    override fun onCancel() {
-        output.onNext(BrowserLandingBloc.Output.Cancel)
-    }
-
-    private fun String.toNavigationUrl(): String {
-        val trimmed = trim()
-        return when {
-            trimmed.startsWith("http://") || trimmed.startsWith("https://") -> trimmed
-            !trimmed.contains(" ") && trimmed.contains(".") -> "https://$trimmed"
-            else -> "https://www.google.com/search?q=${trimmed.replace(" ", "+")}"
-        }
-    }
 }
 
 @ContributesTo(AppScope::class)

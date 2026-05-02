@@ -13,7 +13,7 @@ interface BrowserRootBloc {
     sealed class Child {
         data class Landing(val bloc: BrowserLandingBloc) : Child()
 
-        data class EditQuery(val bloc: BrowserLandingBloc) : Child()
+        data class EditQuery(val bloc: BrowserEditQueryBloc) : Child()
 
         data class Browser(val bloc: BrowserBloc) : Child()
     }

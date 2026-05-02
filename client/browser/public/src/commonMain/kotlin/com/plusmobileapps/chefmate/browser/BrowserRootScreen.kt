@@ -37,9 +37,8 @@ fun BrowserRootScreen(bloc: BrowserRootBloc, modifier: Modifier = Modifier) {
                         modifier = Modifier.fillMaxSize(),
                     )
                 is BrowserRootBloc.Child.EditQuery ->
-                    BrowserLandingScreen(
+                    BrowserEditQueryScreen(
                         bloc = instance.bloc,
-                        onBack = instance.bloc::onCancel,
                         sharedTransitionScope = this@SharedTransitionLayout,
                         animatedVisibilityScope = this,
                         modifier = Modifier.fillMaxSize(),
