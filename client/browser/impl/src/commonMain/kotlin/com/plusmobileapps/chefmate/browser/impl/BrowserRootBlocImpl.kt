@@ -129,6 +129,20 @@ class BrowserRootBlocImpl(
                             }
                         }
                 )
+            is Configuration.EditQuery ->
+                BrowserRootBloc.Child.Landing(
+                    landingBlocFactory
+                        .create(context) { landingOutput ->
+                            when (landingOutput) {
+                                is BrowserLandingBloc.Output.Navigate ->
+                                    navigation.replaceAll(Configuration.Browser(landingOutput.url))
+                            }
+                        }
+                        .also { bloc ->
+                            bloc.onSearchTextChanged(config.initialText)
+                            bloc.onFocusChanged(true)
+                        }
+                )
             is Configuration.Browser ->
                 BrowserRootBloc.Child.Browser(
                     browserBlocFactory
@@ -144,7 +158,7 @@ class BrowserRootBlocImpl(
                                         )
                                     is BrowserBloc.Output.NavigateToLanding ->
                                         navigation.push(
-                                            Configuration.Landing(blocOutput.initialText)
+                                            Configuration.EditQuery(blocOutput.initialText)
                                         )
                                 }
                             },
@@ -160,6 +174,8 @@ class BrowserRootBlocImpl(
     @Serializable
     private sealed class Configuration {
         @Serializable data class Landing(val initialText: String = "") : Configuration()
+
+        @Serializable data class EditQuery(val initialText: String) : Configuration()
 
         @Serializable data class Browser(val url: String) : Configuration()
     }
