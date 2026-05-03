@@ -1,0 +1,21 @@
+CREATE TABLE BrowserHistory (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    url TEXT NOT NULL UNIQUE,
+    visitedAt TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX idx_browser_history_visited_at ON BrowserHistory(visitedAt);
+
+recordVisit:
+INSERT INTO BrowserHistory (url, visitedAt)
+VALUES (?, datetime('now'))
+ON CONFLICT(url) DO UPDATE SET visitedAt = datetime('now');
+
+getRecent:
+SELECT * FROM BrowserHistory ORDER BY visitedAt DESC LIMIT ?;
+
+deleteById:
+DELETE FROM BrowserHistory WHERE id = ?;
+
+deleteAll:
+DELETE FROM BrowserHistory;
