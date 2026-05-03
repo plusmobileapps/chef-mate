@@ -35,13 +35,9 @@ fun AppSettingsScreen(bloc: AppSettingsBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
 
     if (state.showClearHistoryDialog) {
-        PlusDialog(
-            title = Res.string.app_settings_clear_history_dialog_title.asTextData(),
-            message = Res.string.app_settings_clear_history_dialog_message.asTextData(),
-            confirmButtonText = Res.string.app_settings_clear_history_dialog_confirm.asTextData(),
-            dismissButtonText = Res.string.app_settings_clear_history_dialog_cancel.asTextData(),
-            onConfirmClick = bloc::onClearHistoryConfirmed,
-            onDismissRequest = bloc::onClearHistoryDismissed,
+        ClearHistoryDialog(
+            onConfirm = bloc::onClearHistoryConfirmed,
+            onDismiss = bloc::onClearHistoryDismissed,
         )
     }
 
@@ -65,6 +61,18 @@ fun AppSettingsScreen(bloc: AppSettingsBloc, modifier: Modifier = Modifier) {
                 onClick = bloc::onClearHistoryClicked,
             )
         },
+    )
+}
+
+@Composable
+private fun ClearHistoryDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    PlusDialog(
+        title = Res.string.app_settings_clear_history_dialog_title.asTextData(),
+        message = Res.string.app_settings_clear_history_dialog_message.asTextData(),
+        confirmButtonText = Res.string.app_settings_clear_history_dialog_confirm.asTextData(),
+        dismissButtonText = Res.string.app_settings_clear_history_dialog_cancel.asTextData(),
+        onConfirmClick = onConfirm,
+        onDismissRequest = onDismiss,
     )
 }
 

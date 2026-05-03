@@ -13,6 +13,7 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(projects.client.auth.data.testing)
+            implementation(projects.client.browser.testing)
             implementation(projects.client.grocery.data.testing)
             implementation(projects.client.recipe.data.testing)
         }

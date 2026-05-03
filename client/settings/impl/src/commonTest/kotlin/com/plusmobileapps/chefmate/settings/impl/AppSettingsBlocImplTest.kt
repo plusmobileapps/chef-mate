@@ -5,7 +5,7 @@ package com.plusmobileapps.chefmate.settings.impl
 
 import com.plusmobileapps.chefmate.browser.BrowserHistoryEntry
 import com.plusmobileapps.chefmate.browser.BrowserHistoryRepository
-import com.plusmobileapps.chefmate.browser.BrowserPreferences
+import com.plusmobileapps.chefmate.browser.testing.FakeBrowserPreferences
 import com.plusmobileapps.chefmate.settings.AppSettingsBloc
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
@@ -18,8 +18,6 @@ import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.test.runTest
 
 class AppSettingsBlocImplTest {
@@ -93,14 +91,5 @@ class AppSettingsBlocImplTest {
         val bloc = createBloc()
         bloc.onBack()
         output.lastValue shouldBe AppSettingsBloc.Output.Back
-    }
-}
-
-private class FakeBrowserPreferences : BrowserPreferences {
-    private val _isHistoryEnabled = MutableStateFlow(true)
-    override val isHistoryEnabled: StateFlow<Boolean> = _isHistoryEnabled.asStateFlow()
-
-    override fun setHistoryEnabled(enabled: Boolean) {
-        _isHistoryEnabled.value = enabled
     }
 }
