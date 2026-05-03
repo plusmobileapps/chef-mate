@@ -13,7 +13,14 @@ interface BrowserEditQueryBloc {
 
     fun onCancel()
 
-    data class Model(val searchText: String = "")
+    fun onHistoryItemClicked(entry: BrowserHistoryEntry)
+
+    fun onHistoryItemDeleteClicked(entry: BrowserHistoryEntry)
+
+    data class Model(
+        val searchText: String = "",
+        val history: List<BrowserHistoryEntry> = emptyList(),
+    )
 
     sealed class Output {
         data class Navigate(val url: String) : Output()

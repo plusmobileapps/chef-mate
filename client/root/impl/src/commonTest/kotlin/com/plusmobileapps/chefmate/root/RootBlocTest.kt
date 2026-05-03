@@ -10,6 +10,7 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.chefmate.settings.AppSettingsBloc
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import dev.mokkery.MockMode
 import dev.mokkery.mock
@@ -25,6 +26,7 @@ class RootBlocTest {
     var recipeOutput: Consumer<RecipeRootBloc.Output> = Consumer {}
     var recipeProps: RecipeRootBloc.Props? = null
     var groceryDetailId: Long? = null
+    var appSettingsOutput: Consumer<AppSettingsBloc.Output> = Consumer {}
 
     val rootBloc =
         RootBlocImpl(
@@ -54,6 +56,10 @@ class RootBlocTest {
             },
             mealPlannerRoot = MealPlannerRootBloc.Factory { _, _, _ -> mock() },
             authentication = { context, props, output -> mock() },
+            appSettings = { _, output ->
+                appSettingsOutput = output
+                mock()
+            },
         )
 
     fun RootBloc.instance(): RootBloc.Child = state.value.active.instance
@@ -118,6 +124,21 @@ class RootBlocTest {
         recipeOutput.onNext(RecipeRootBloc.Output.OpenUrl("https://example.com/recipe"))
         rootBloc.instance() should instanceOf<RootBloc.Child.Browser>()
         rootBloc.state.value.backStack.size shouldBe 2
+    }
+
+    @Test
+    fun When_bottom_nav_outputs_open_app_settings_Then_app_settings_is_shown() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenAppSettings)
+        rootBloc.instance() should instanceOf<RootBloc.Child.AppSettings>()
+        rootBloc.state.value.backStack.size shouldBe 1
+    }
+
+    @Test
+    fun Given_app_settings_When_back_outputted_Then_bottom_nav_is_shown() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenAppSettings)
+        rootBloc.instance() should instanceOf<RootBloc.Child.AppSettings>()
+        appSettingsOutput.onNext(AppSettingsBloc.Output.Back)
+        rootBloc.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
     }
 
     @Test

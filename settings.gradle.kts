@@ -46,6 +46,8 @@ include(":client:browser:impl")
 
 include(":client:browser:public")
 
+include(":client:browser:testing")
+
 include(":client:bottomnav:impl")
 
 include(":client:bottomnav:public")

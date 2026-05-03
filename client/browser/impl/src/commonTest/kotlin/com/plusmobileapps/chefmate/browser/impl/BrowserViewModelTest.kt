@@ -4,6 +4,7 @@
 package com.plusmobileapps.chefmate.browser.impl
 
 import com.plusmobileapps.chefmate.browser.BrowserBloc
+import com.plusmobileapps.chefmate.browser.BrowserHistoryRepository
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import dev.mokkery.answering.returns
 import dev.mokkery.answering.throws
@@ -20,11 +21,14 @@ import kotlinx.coroutines.test.runTest
 class BrowserViewModelTest {
 
     private val extractorService: RecipeExtractorService = mock()
+    private val historyRepository: BrowserHistoryRepository =
+        mock(block = { everySuspend { recordVisit(any()) } returns Unit })
     private val outputs = mutableListOf<BrowserBloc.Output>()
     private val viewModel =
         BrowserViewModel(
                 mainContext = UnconfinedTestDispatcher(),
                 recipeExtractorService = extractorService,
+                historyRepository = historyRepository,
             )
             .also { it.setOutput { output -> outputs.add(output) } }
 
@@ -78,6 +82,12 @@ class BrowserViewModelTest {
     fun When_url_loaded_in_webview_Then_currentUrl_not_changed() {
         viewModel.onUrlLoadedInWebView("https://www.example.com/page")
         viewModel.state.value.currentUrl shouldBe "https://www.google.com"
+    }
+
+    @Test
+    fun When_url_loaded_in_webview_Then_history_repository_records_visit() = runTest {
+        viewModel.onUrlLoadedInWebView("https://www.example.com/page")
+        verifySuspend { historyRepository.recordVisit("https://www.example.com/page") }
     }
 
     // endregion

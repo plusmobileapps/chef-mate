@@ -7,11 +7,13 @@ kotlin {
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
             implementation(projects.client.auth.data.public)
+            implementation(projects.client.browser.public)
             implementation(projects.client.grocery.data.public)
             implementation(projects.client.recipe.data.public)
         }
         commonTest.dependencies {
             implementation(projects.client.auth.data.testing)
+            implementation(projects.client.browser.testing)
             implementation(projects.client.grocery.data.testing)
             implementation(projects.client.recipe.data.testing)
         }

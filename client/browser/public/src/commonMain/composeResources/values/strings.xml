@@ -12,4 +12,5 @@
     <string name="browser_download">Download</string>
     <string name="browser_landing_hint">Search Google or type a URL</string>
     <string name="browser_landing_tagline">Find your favorite recipes online, click download, and start cooking!</string>
+    <string name="browser_history_delete">Delete history entry</string>
 </resources>

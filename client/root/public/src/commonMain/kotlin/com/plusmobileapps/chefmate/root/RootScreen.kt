@@ -22,6 +22,7 @@ import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavigationScreen
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootScreen
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootScreen
+import com.plusmobileapps.chefmate.settings.AppSettingsScreen
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
@@ -73,6 +74,7 @@ fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
                             },
                         )
                     is RootBloc.Child.MealPlanner -> MealPlannerRootScreen(child.bloc)
+                    is RootBloc.Child.AppSettings -> AppSettingsScreen(child.bloc)
                 }
             },
         )

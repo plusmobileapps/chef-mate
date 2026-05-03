@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.browser.impl
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.browser.BrowserEditQueryBloc
+import com.plusmobileapps.chefmate.browser.BrowserHistoryEntry
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import dev.zacsweers.metro.Assisted
@@ -50,6 +51,14 @@ class BrowserEditQueryBlocImpl(
 
     override fun onCancel() {
         output.onNext(BrowserEditQueryBloc.Output.Cancel)
+    }
+
+    override fun onHistoryItemClicked(entry: BrowserHistoryEntry) {
+        output.onNext(BrowserEditQueryBloc.Output.Navigate(entry.url))
+    }
+
+    override fun onHistoryItemDeleteClicked(entry: BrowserHistoryEntry) {
+        viewModel.deleteHistoryEntry(entry)
     }
 }
 

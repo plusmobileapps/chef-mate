@@ -4,6 +4,7 @@ import co.touchlab.kermit.Logger
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.browser.BrowserBloc
+import com.plusmobileapps.chefmate.browser.BrowserHistoryRepository
 import com.plusmobileapps.chefmate.di.Main
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
@@ -16,6 +17,7 @@ import kotlinx.coroutines.launch
 class BrowserViewModel(
     @Main mainContext: CoroutineContext,
     private val recipeExtractorService: RecipeExtractorService,
+    private val historyRepository: BrowserHistoryRepository,
 ) : ViewModel(mainContext) {
 
     private val _state = MutableStateFlow(State())
@@ -41,6 +43,7 @@ class BrowserViewModel(
 
     fun onUrlLoadedInWebView(url: String) {
         _state.value = _state.value.copy(webViewReportedUrl = url, addressBarText = url)
+        scope.launch { historyRepository.recordVisit(url) }
     }
 
     fun onWebViewLoadingChanged(isLoading: Boolean) {
