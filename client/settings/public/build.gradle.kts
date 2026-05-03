@@ -9,6 +9,7 @@ kotlin {
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
             api(projects.client.text.public)
+            api(projects.client.browser.public)
             implementation(projects.client.ui.public)
             implementation(compose.components.resources)
         }

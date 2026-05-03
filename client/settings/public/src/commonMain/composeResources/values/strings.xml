@@ -12,4 +12,13 @@
     <string name="sign_out_confirmation_message">Are you sure you want to sign out?</string>
     <string name="sign_out_confirmation_confirm">Sign Out</string>
     <string name="sign_out_confirmation_cancel">Cancel</string>
+    <string name="settings">Settings</string>
+    <string name="app_settings_title">Settings</string>
+    <string name="app_settings_browser_section">Browser</string>
+    <string name="app_settings_browser_history_enabled">Save browsing history</string>
+    <string name="app_settings_clear_history">Clear browsing history</string>
+    <string name="app_settings_clear_history_dialog_title">Clear browsing history?</string>
+    <string name="app_settings_clear_history_dialog_message">This will remove all sites from your history on this device.</string>
+    <string name="app_settings_clear_history_dialog_confirm">Clear</string>
+    <string name="app_settings_clear_history_dialog_cancel">Cancel</string>
 </resources>

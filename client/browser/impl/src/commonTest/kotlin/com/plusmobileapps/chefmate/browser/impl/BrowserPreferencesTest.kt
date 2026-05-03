@@ -11,7 +11,7 @@ class BrowserPreferencesTest {
 
     @Test
     fun isHistoryEnabled_defaults_to_true() {
-        val preferences = BrowserPreferences(MapSettings())
+        val preferences = BrowserPreferencesImpl(MapSettings())
         preferences.isHistoryEnabled.value shouldBe true
     }
 
@@ -19,14 +19,14 @@ class BrowserPreferencesTest {
     fun isHistoryEnabled_reads_existing_value_from_settings() {
         val settings = MapSettings()
         settings.putBoolean(BROWSER_HISTORY_ENABLED_KEY, false)
-        val preferences = BrowserPreferences(settings)
+        val preferences = BrowserPreferencesImpl(settings)
         preferences.isHistoryEnabled.value shouldBe false
     }
 
     @Test
     fun setHistoryEnabled_updates_state_flow_and_settings() {
         val settings = MapSettings()
-        val preferences = BrowserPreferences(settings)
+        val preferences = BrowserPreferencesImpl(settings)
 
         preferences.setHistoryEnabled(false)
 

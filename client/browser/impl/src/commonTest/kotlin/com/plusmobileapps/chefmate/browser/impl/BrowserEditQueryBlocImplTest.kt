@@ -32,7 +32,7 @@ class BrowserEditQueryBlocImplTest {
                 everySuspend { deleteById(any()) } returns Unit
             }
         )
-    private val browserPreferences = BrowserPreferences(MapSettings())
+    private val browserPreferences = BrowserPreferencesImpl(MapSettings())
 
     private fun createBloc(initialText: String = "") =
         BrowserEditQueryBlocImpl(

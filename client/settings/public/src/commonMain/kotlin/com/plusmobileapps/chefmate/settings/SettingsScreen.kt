@@ -143,7 +143,7 @@ private fun EmailVerificationMessage(message: TextData, modifier: Modifier = Mod
 }
 
 @Composable
-private fun SettingsRow(name: TextData, onClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun SettingsRow(name: TextData, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val contentDescription = name.localized()
     Row(
         modifier =

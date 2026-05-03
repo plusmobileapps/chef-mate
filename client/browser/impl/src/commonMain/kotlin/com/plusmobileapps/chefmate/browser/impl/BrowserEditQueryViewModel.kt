@@ -6,6 +6,7 @@ import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.browser.BrowserEditQueryBloc
 import com.plusmobileapps.chefmate.browser.BrowserHistoryEntry
 import com.plusmobileapps.chefmate.browser.BrowserHistoryRepository
+import com.plusmobileapps.chefmate.browser.BrowserPreferences
 import com.plusmobileapps.chefmate.di.Main
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
