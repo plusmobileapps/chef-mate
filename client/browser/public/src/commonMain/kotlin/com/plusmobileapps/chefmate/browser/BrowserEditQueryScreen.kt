@@ -117,7 +117,7 @@ fun BrowserEditQueryScreen(
             singleLine = true,
             shape = RoundedCornerShape(28.dp),
             keyboardOptions =
-                KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Search),
+                KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Search),
             keyboardActions =
                 KeyboardActions(
                     onSearch = {

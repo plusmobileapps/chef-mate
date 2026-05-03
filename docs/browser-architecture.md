@@ -24,13 +24,13 @@ flowchart TD
 | BLoC | Purpose | Responsibilities |
 |---|---|---|
 | `BrowserRootBloc` | Navigation root | Owns the `ChildStack`. Receives `BrowserBloc.Output.RecipeExtracted` and forwards it to its parent. Hosts the `BackCallback` that drives the WebView back button. Exposes `navigateToUrl(url)` for shared-URL handling from the bottom nav. |
-| `BrowserLandingBloc` | New-tab home | Holds search text. Tapping the read-only field emits `Output.OpenEditQuery(currentText)`. Submitting from EditQuery is what actually navigates; Landing's own `Output.Navigate` is the legacy direct-submit path used when `searchText` is non-empty before any focus event. |
+| `BrowserLandingBloc` | New-tab home | Stateless. Tapping the read-only field emits `Output.OpenEditQuery`; the EditQuery screen is what actually accepts input and submits. |
 | `BrowserEditQueryBloc` | URL/search editor | Same URL/search heuristic as Landing (see `toNavigationUrl`). On submit emits `Output.Navigate(url)`; the back arrow emits `Output.Cancel`. |
 | `BrowserBloc` | WebView screen | Tracks `currentUrl`, `webViewReportedUrl`, `addressBarText`, and `canGoBack/canGoForward` reported by the WebView. Tapping the address bar emits `Output.NavigateToLanding(currentText)`. The Download button calls `extractRecipe()` which extracts via `RecipeExtractorService` and emits `Output.RecipeExtracted(extracted)` — it does **not** save to the repo. |
 
 ## Navigation state machine
 
-`BrowserRootBlocImpl` manages a `StackNavigation<Configuration>` with three serializable configurations: `Landing(initialText)`, `EditQuery(initialText)`, and `Browser(url)`. Decompose enforces uniqueness of configurations within a stack, so two of the navigation transitions go through dedupe helpers (`replaceTopEditQueryWith`, `replaceEditQueryWithBrowser`).
+`BrowserRootBlocImpl` manages a `StackNavigation<Configuration>` with three serializable configurations: `Landing` (object), `EditQuery(initialText)`, and `Browser(url)`. Decompose enforces uniqueness of configurations within a stack, so two of the navigation transitions go through dedupe helpers (`replaceTopEditQueryWith`, `replaceEditQueryWithBrowser`).
 
 ```mermaid
 stateDiagram-v2
@@ -38,7 +38,6 @@ stateDiagram-v2
     [*] --> Browser: initialUrl != null
 
     Landing --> EditQuery: OpenEditQuery (tap field)
-    Landing --> Browser: Navigate (legacy direct submit, replaceAll)
 
     EditQuery --> Browser: Navigate (submit URL)
     EditQuery --> Landing: Cancel / system back
@@ -55,8 +54,7 @@ stateDiagram-v2
 | Trigger | Origin | Implementation | Notes |
 |---|---|---|---|
 | Initial child | constructor | `if (initialUrl != null) listOf(Browser(initialUrl)) else listOf(Landing())` | Recipe-detail "open source URL" provides `initialUrl`. |
-| `BrowserLandingBloc.Output.OpenEditQuery` | tap landing field | `replaceTopEditQueryWith(EditQuery(text))` | Drops any pre-existing `EditQuery` to avoid duplicate-config crash. |
-| `BrowserLandingBloc.Output.Navigate` | legacy submit | `navigation.replaceAll(Browser(url))` | Clears the entire stack to a single Browser. |
+| `BrowserLandingBloc.Output.OpenEditQuery` | tap landing field | `replaceTopEditQueryWith(EditQuery(""))` | Drops any pre-existing `EditQuery` to avoid duplicate-config crash. The Landing field is read-only so the seed is always empty. |
 | `BrowserEditQueryBloc.Output.Navigate` | submit URL | `replaceEditQueryWithBrowser(Browser(url))` | Drops the EditQuery on top **and** any existing same-URL Browser before adding the new Browser. |
 | `BrowserEditQueryBloc.Output.Cancel` | back arrow | `navigation.pop()` | Returns to whatever was below the EditQuery. |
 | `BrowserBloc.Output.NavigateToLanding` | tap address bar | `replaceTopEditQueryWith(EditQuery(text))` | Same dedupe as Landing's path. |

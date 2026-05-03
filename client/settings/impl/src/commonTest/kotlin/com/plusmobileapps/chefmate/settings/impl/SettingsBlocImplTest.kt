@@ -119,5 +119,4 @@ class SettingsBlocImplTest {
             awaitItem().isAuthenticated shouldBe true
         }
     }
-
 }

@@ -88,26 +88,19 @@ class BrowserRootBlocImplTest {
     }
 
     @Test
-    fun When_landing_emits_navigate_Then_browser_is_shown_and_landing_replaced() {
-        val bloc = createBloc()
-        landingOutput.onNext(BrowserLandingBloc.Output.Navigate("https://example.com"))
-        bloc.activeChild().shouldBeInstanceOf<BrowserRootBloc.Child.Browser>()
-        bloc.stackSize() shouldBe 1
-    }
-
-    @Test
     fun When_landing_emits_open_edit_query_Then_edit_query_pushed_on_top_of_landing() {
         val bloc = createBloc()
-        landingOutput.onNext(BrowserLandingBloc.Output.OpenEditQuery("typed"))
+        landingOutput.onNext(BrowserLandingBloc.Output.OpenEditQuery)
         bloc.activeChild().shouldBeInstanceOf<BrowserRootBloc.Child.EditQuery>()
         bloc.stackSize() shouldBe 2
-        lastEditQueryInitialText shouldBe "typed"
+        // Landing always seeds an empty initialText since the field is read-only.
+        lastEditQueryInitialText shouldBe ""
     }
 
     @Test
     fun When_edit_query_emits_navigate_Then_browser_replaces_edit_query() {
         val bloc = createBloc()
-        landingOutput.onNext(BrowserLandingBloc.Output.OpenEditQuery(""))
+        landingOutput.onNext(BrowserLandingBloc.Output.OpenEditQuery)
         editQueryOutput.onNext(BrowserEditQueryBloc.Output.Navigate("https://example.com"))
         bloc.activeChild().shouldBeInstanceOf<BrowserRootBloc.Child.Browser>()
         // Landing remains below the new Browser; back from Browser returns to Landing.
@@ -117,7 +110,7 @@ class BrowserRootBlocImplTest {
     @Test
     fun When_edit_query_emits_cancel_Then_stack_pops_to_previous_child() {
         val bloc = createBloc()
-        landingOutput.onNext(BrowserLandingBloc.Output.OpenEditQuery(""))
+        landingOutput.onNext(BrowserLandingBloc.Output.OpenEditQuery)
         bloc.activeChild().shouldBeInstanceOf<BrowserRootBloc.Child.EditQuery>()
 
         editQueryOutput.onNext(BrowserEditQueryBloc.Output.Cancel)
@@ -159,7 +152,7 @@ class BrowserRootBlocImplTest {
     @Test
     fun When_edit_query_pushed_while_one_already_in_back_stack_Then_no_duplicate_crash() {
         val bloc = createBloc()
-        landingOutput.onNext(BrowserLandingBloc.Output.OpenEditQuery(""))
+        landingOutput.onNext(BrowserLandingBloc.Output.OpenEditQuery)
         editQueryOutput.onNext(BrowserEditQueryBloc.Output.Navigate("https://example.com"))
         // Tapping the cleared address bar in the new Browser would otherwise duplicate
         // EditQuery("") in the stack.
@@ -175,7 +168,10 @@ class BrowserRootBlocImplTest {
     @Test
     fun When_edit_query_navigate_with_same_url_as_existing_browser_Then_no_duplicate_crash() {
         val bloc = createBloc()
-        landingOutput.onNext(BrowserLandingBloc.Output.Navigate("https://example.com"))
+        // Get to a Browser with a known URL the only way Landing currently allows: through
+        // EditQuery. [Landing] -> [Landing, EditQuery] -> [Landing, Browser].
+        landingOutput.onNext(BrowserLandingBloc.Output.OpenEditQuery)
+        editQueryOutput.onNext(BrowserEditQueryBloc.Output.Navigate("https://example.com"))
         // Tap address bar → push EditQuery
         browserOutput.onNext(BrowserBloc.Output.NavigateToLanding("https://example.com"))
         // Submit the same URL we were just on; the existing Browser config matches.

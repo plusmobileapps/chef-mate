@@ -32,11 +32,12 @@ class FakeAuthenticationRepository : AuthenticationRepository {
     override suspend fun sendPasswordResetEmail(email: String) = Result.success(Unit)
 
     companion object {
-        fun fakeUser() = ChefMateUser(
-            userId = "test-id",
-            userName = "Test User",
-            userEmail = "test@example.com",
-            userProfileImageUrl = null,
-        )
+        fun fakeUser() =
+            ChefMateUser(
+                userId = "test-id",
+                userName = "Test User",
+                userEmail = "test@example.com",
+                userProfileImageUrl = null,
+            )
     }
 }

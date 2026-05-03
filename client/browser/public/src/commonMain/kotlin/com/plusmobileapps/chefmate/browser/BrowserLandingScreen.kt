@@ -22,15 +22,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import chefmate.client.browser.public.generated.resources.Res
@@ -45,10 +40,7 @@ fun BrowserLandingScreen(
     animatedVisibilityScope: AnimatedVisibilityScope? = null,
     modifier: Modifier = Modifier,
 ) {
-    val state by bloc.state.collectAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
-    val textFieldValue =
-        remember(state.searchText) { mutableStateOf(TextFieldValue(state.searchText)) }
 
     val sharedFieldModifier =
         if (sharedTransitionScope != null && animatedVisibilityScope != null) {
@@ -77,7 +69,7 @@ fun BrowserLandingScreen(
         Spacer(Modifier.height(32.dp))
 
         OutlinedTextField(
-            value = textFieldValue.value,
+            value = "",
             onValueChange = {},
             readOnly = true,
             modifier =

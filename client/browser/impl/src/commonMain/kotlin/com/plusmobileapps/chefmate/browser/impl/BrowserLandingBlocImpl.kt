@@ -4,20 +4,16 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.browser.BrowserLandingBloc
 import com.plusmobileapps.chefmate.di.AppScope
-import com.plusmobileapps.chefmate.getViewModel
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.Provider
 import dev.zacsweers.metro.Provides
-import kotlinx.coroutines.flow.StateFlow
 
 @AssistedInject
 class BrowserLandingBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<BrowserLandingBloc.Output>,
-    viewModelFactory: Provider<BrowserLandingViewModel>,
 ) : BrowserLandingBloc, BlocContext by context {
 
     @AssistedFactory
@@ -28,22 +24,8 @@ class BrowserLandingBlocImpl(
         ): BrowserLandingBlocImpl
     }
 
-    private val viewModel = instanceKeeper.getViewModel { viewModelFactory() }
-
-    override val state: StateFlow<BrowserLandingBloc.Model> = viewModel.state
-
-    override fun onSearchTextChanged(text: String) {
-        viewModel.onSearchTextChanged(text)
-    }
-
-    override fun onNavigate() {
-        val url = viewModel.state.value.searchText
-        if (url.isBlank()) return
-        output.onNext(BrowserLandingBloc.Output.Navigate(url.toNavigationUrl()))
-    }
-
     override fun onSearchFieldFocused() {
-        output.onNext(BrowserLandingBloc.Output.OpenEditQuery(viewModel.state.value.searchText))
+        output.onNext(BrowserLandingBloc.Output.OpenEditQuery)
     }
 }
 

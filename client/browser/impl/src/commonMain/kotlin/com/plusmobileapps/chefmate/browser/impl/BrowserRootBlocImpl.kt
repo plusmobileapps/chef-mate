@@ -68,7 +68,7 @@ class BrowserRootBlocImpl(
             serializer = Configuration.serializer(),
             initialStack = {
                 if (initialUrl != null) listOf(Configuration.Browser(initialUrl))
-                else listOf(Configuration.Landing())
+                else listOf(Configuration.Landing)
             },
             handleBackButton = true,
             key = "BrowserRootRouter",
@@ -117,24 +117,14 @@ class BrowserRootBlocImpl(
 
     private fun createChild(config: Configuration, context: BlocContext): BrowserRootBloc.Child =
         when (config) {
-            is Configuration.Landing ->
+            Configuration.Landing ->
                 BrowserRootBloc.Child.Landing(
-                    landingBlocFactory
-                        .create(context) { landingOutput ->
-                            when (landingOutput) {
-                                is BrowserLandingBloc.Output.Navigate ->
-                                    navigation.replaceAll(Configuration.Browser(landingOutput.url))
-                                is BrowserLandingBloc.Output.OpenEditQuery ->
-                                    navigation.replaceTopEditQueryWith(
-                                        Configuration.EditQuery(landingOutput.initialText)
-                                    )
-                            }
+                    landingBlocFactory.create(context) { landingOutput ->
+                        when (landingOutput) {
+                            BrowserLandingBloc.Output.OpenEditQuery ->
+                                navigation.replaceTopEditQueryWith(Configuration.EditQuery(""))
                         }
-                        .also { bloc ->
-                            if (config.initialText.isNotEmpty()) {
-                                bloc.onSearchTextChanged(config.initialText)
-                            }
-                        }
+                    }
                 )
             is Configuration.EditQuery ->
                 BrowserRootBloc.Child.EditQuery(
@@ -204,7 +194,7 @@ class BrowserRootBlocImpl(
 
     @Serializable
     private sealed class Configuration {
-        @Serializable data class Landing(val initialText: String = "") : Configuration()
+        @Serializable data object Landing : Configuration()
 
         @Serializable data class EditQuery(val initialText: String) : Configuration()
 
