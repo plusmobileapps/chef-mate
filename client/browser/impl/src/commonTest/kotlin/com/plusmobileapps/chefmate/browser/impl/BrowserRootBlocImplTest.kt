@@ -12,10 +12,13 @@ import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
 import dev.mokkery.MockMode
+import dev.mokkery.answering.returns
+import dev.mokkery.every
 import dev.mokkery.mock
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlin.test.Test
+import kotlinx.coroutines.flow.MutableStateFlow
 
 class BrowserRootBlocImplTest {
 
@@ -44,7 +47,12 @@ class BrowserRootBlocImplTest {
                         showControls: Boolean,
                     ): BrowserBloc {
                         browserOutput = output
-                        return mock(MockMode.autoUnit)
+                        val bloc: BrowserBloc = mock(MockMode.autoUnit)
+                        // observeCanGoBack collects bloc.state when Browser is active; provide
+                        // a real StateFlow so the collect doesn't fail on platforms where
+                        // mokkery's autoUnit doesn't synthesize one (notably iOS).
+                        every { bloc.state } returns MutableStateFlow(BrowserBloc.Model())
+                        return bloc
                     }
                 },
             landingBlocFactory =
