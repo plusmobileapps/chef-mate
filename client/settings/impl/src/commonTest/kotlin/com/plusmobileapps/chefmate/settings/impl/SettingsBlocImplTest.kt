@@ -111,6 +111,12 @@ class SettingsBlocImplTest {
     }
 
     @Test
+    fun When_app_settings_clicked_Then_OpenAppSettings_output_emitted() {
+        bloc.onAppSettingsClicked()
+        output.lastValue shouldBe SettingsBloc.Output.OpenAppSettings
+    }
+
+    @Test
     fun When_authenticated_Then_state_reflects_authenticated() = runTest {
         bloc.state.test {
             awaitItem().isAuthenticated shouldBe false

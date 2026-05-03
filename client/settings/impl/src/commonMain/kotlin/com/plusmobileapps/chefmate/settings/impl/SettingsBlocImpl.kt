@@ -67,6 +67,10 @@ class SettingsBlocImpl(
     override fun onUrlClicked(url: String) {
         output.onNext(Output.OpenUrl(url))
     }
+
+    override fun onAppSettingsClicked() {
+        output.onNext(Output.OpenAppSettings)
+    }
 }
 
 @ContributesTo(AppScope::class)

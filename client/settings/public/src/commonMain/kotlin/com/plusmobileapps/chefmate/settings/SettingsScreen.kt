@@ -33,6 +33,7 @@ import chefmate.client.settings.public.generated.resources.about
 import chefmate.client.settings.public.generated.resources.greeting_authenticated
 import chefmate.client.settings.public.generated.resources.more
 import chefmate.client.settings.public.generated.resources.privacy_policy
+import chefmate.client.settings.public.generated.resources.settings
 import chefmate.client.settings.public.generated.resources.sign_in
 import chefmate.client.settings.public.generated.resources.sign_out
 import chefmate.client.settings.public.generated.resources.sign_out_confirmation_cancel
@@ -84,6 +85,11 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
                 HorizontalDivider()
                 SettingsRow(name = Res.string.sign_up.asTextData(), onClick = bloc::onSignUpClicked)
             }
+            HorizontalDivider()
+            SettingsRow(
+                name = Res.string.settings.asTextData(),
+                onClick = bloc::onAppSettingsClicked,
+            )
             HorizontalDivider()
             SettingsRow(
                 name = Res.string.privacy_policy.asTextData(),
@@ -179,6 +185,8 @@ private val previewBlocUnauthenticated =
         override fun onSignOutDismissed() = Unit
 
         override fun onUrlClicked(url: String) = Unit
+
+        override fun onAppSettingsClicked() = Unit
     }
 
 private val previewBlocAuthenticated =
@@ -206,6 +214,8 @@ private val previewBlocAuthenticated =
         override fun onSignOutDismissed() = Unit
 
         override fun onUrlClicked(url: String) = Unit
+
+        override fun onAppSettingsClicked() = Unit
     }
 
 @Preview(showBackground = true)

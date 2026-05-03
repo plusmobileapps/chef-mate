@@ -11,6 +11,7 @@ import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
+import com.plusmobileapps.chefmate.settings.AppSettingsBloc
 
 interface RootBloc : BackHandlerOwner, BackClickBloc {
     val state: Value<ChildStack<*, Child>>
@@ -29,6 +30,8 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
         data class Browser(val bloc: BrowserRootBloc) : Child()
 
         data class MealPlanner(val bloc: MealPlannerRootBloc) : Child()
+
+        data class AppSettings(val bloc: AppSettingsBloc) : Child()
     }
 
     fun interface Factory {

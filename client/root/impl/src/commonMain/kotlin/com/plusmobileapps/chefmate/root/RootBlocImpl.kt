@@ -21,6 +21,7 @@ import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc.Props.Detail
 import com.plusmobileapps.chefmate.root.RootBloc.Child.BottomNavigation
 import com.plusmobileapps.chefmate.root.RootBlocImpl.Configuration.GroceryDetail
 import com.plusmobileapps.chefmate.root.RootBlocImpl.Configuration.RecipeRoot
+import com.plusmobileapps.chefmate.settings.AppSettingsBloc
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -37,6 +38,7 @@ class RootBlocImpl(
     private val recipeRoot: RecipeRootBloc.Factory,
     private val mealPlannerRoot: MealPlannerRootBloc.Factory,
     private val authentication: AuthenticationBloc.Factory,
+    private val appSettings: AppSettingsBloc.Factory,
 ) : RootBloc, BlocContext by context {
 
     @AssistedFactory
@@ -126,6 +128,11 @@ class RootBlocImpl(
                             output = ::handleMealPlannerOutput,
                         )
                 )
+
+            Configuration.AppSettings ->
+                RootBloc.Child.AppSettings(
+                    bloc = appSettings.create(context = context, output = ::handleAppSettingsOutput)
+                )
         }
 
     private fun handleBottomNavOutput(output: BottomNavBloc.Output) {
@@ -167,6 +174,16 @@ class RootBlocImpl(
             is BottomNavBloc.Output.OpenMealPlanner -> {
                 navigation.bringToFront(Configuration.MealPlanner(output.props))
             }
+
+            BottomNavBloc.Output.OpenAppSettings -> {
+                navigation.bringToFront(Configuration.AppSettings)
+            }
+        }
+    }
+
+    private fun handleAppSettingsOutput(output: AppSettingsBloc.Output) {
+        when (output) {
+            AppSettingsBloc.Output.Back -> navigation.pop()
         }
     }
 
@@ -227,6 +244,8 @@ class RootBlocImpl(
         @Serializable data class Browser(val url: String) : Configuration()
 
         @Serializable data class MealPlanner(val props: MealPlannerRootBloc.Props) : Configuration()
+
+        @Serializable data object AppSettings : Configuration()
     }
 }
 
