@@ -11,7 +11,7 @@ import com.arkivanov.essenty.lifecycle.doOnPause
 import com.arkivanov.essenty.lifecycle.doOnResume
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
-import com.plusmobileapps.chefmate.browser.BrowserBloc
+import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
@@ -42,7 +42,7 @@ class BottomNavBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<BottomNavBloc.Output>,
     viewModelFactory: Provider<BottomNavViewModel>,
-    private val browser: BrowserBloc.Factory,
+    private val browser: BrowserRootBloc.Factory,
     private val groceryList: GroceryListBloc.Factory,
     private val mealPlan: MealPlanBloc.Factory,
     private val recipeList: RecipeListBloc.Factory,
@@ -60,7 +60,7 @@ class BottomNavBlocImpl(
 
     private val navigation = StackNavigation<Configuration>()
 
-    private var browserBloc: BrowserBloc? = null
+    private var browserRootBloc: BrowserRootBloc? = null
     private var pendingUrl: String? = null
 
     private val stack =
@@ -89,10 +89,9 @@ class BottomNavBlocImpl(
     }
 
     override fun handleSharedUrl(url: String) {
-        val existingBloc = browserBloc
+        val existingBloc = browserRootBloc
         if (existingBloc != null) {
-            existingBloc.onUrlChanged(url)
-            existingBloc.onNavigate()
+            existingBloc.navigateToUrl(url)
         } else {
             pendingUrl = url
         }
@@ -124,10 +123,9 @@ class BottomNavBlocImpl(
 
             Configuration.Browser -> {
                 val bloc = browser.create(context = context, output = ::handleBrowserOutput)
-                browserBloc = bloc
+                browserRootBloc = bloc
                 pendingUrl?.let { url ->
-                    bloc.onUrlChanged(url)
-                    bloc.onNavigate()
+                    bloc.navigateToUrl(url)
                     pendingUrl = null
                 }
                 Browser(bloc)
@@ -163,10 +161,10 @@ class BottomNavBlocImpl(
         }
     }
 
-    private fun handleBrowserOutput(output: BrowserBloc.Output) {
+    private fun handleBrowserOutput(output: BrowserRootBloc.Output) {
         when (output) {
-            is BrowserBloc.Output.RecipeExtracted -> {
-                this.output.onNext(BottomNavBloc.Output.OpenRecipe(output.recipeId))
+            is BrowserRootBloc.Output.RecipeExtracted -> {
+                this.output.onNext(BottomNavBloc.Output.OpenExtractedRecipe(output.extracted))
             }
         }
     }

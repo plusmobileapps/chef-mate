@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.browser
 import com.arkivanov.essenty.instancekeeper.InstanceKeeper
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.text.TextData
 import kotlinx.coroutines.flow.StateFlow
 
@@ -21,9 +22,15 @@ interface BrowserBloc {
 
     fun onExtractRecipe()
 
-    fun onViewExtractedRecipe()
-
     fun onDismissMessage()
+
+    fun onCanNavigateChanged(canGoBack: Boolean, canGoForward: Boolean)
+
+    fun onGoBack()
+
+    fun onGoForward()
+
+    fun onAddressBarFocused()
 
     data class Model(
         val currentUrl: String = "",
@@ -31,13 +38,18 @@ interface BrowserBloc {
         val addressBarText: String = "",
         val isExtracting: Boolean = false,
         val isWebViewLoading: Boolean = false,
-        val extractionMessage: TextData? = null,
-        val hasExtractedRecipe: Boolean = false,
+        val extractionFailureMessage: TextData? = null,
         val showControls: Boolean = true,
+        val canGoBack: Boolean = false,
+        val canGoForward: Boolean = false,
+        val goBackTrigger: Int = 0,
+        val goForwardTrigger: Int = 0,
     )
 
     sealed class Output {
-        data class RecipeExtracted(val recipeId: Long) : Output()
+        data class RecipeExtracted(val extracted: ExtractedRecipeData) : Output()
+
+        data class NavigateToLanding(val initialText: String) : Output()
     }
 
     interface Factory {

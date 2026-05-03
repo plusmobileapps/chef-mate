@@ -19,6 +19,7 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(projects.client.util.testing)
+            implementation(projects.client.recipe.data.testing)
             implementation(libs.multiplatform.settings.test)
         }
     }

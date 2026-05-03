@@ -14,6 +14,7 @@ import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
+import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -47,7 +48,10 @@ class RecipeRootBlocImpl(
                 when (props) {
                     is RecipeRootBloc.Props.Detail ->
                         listOf(Configuration.Detail(recipeId = props.recipeId))
-                    is RecipeRootBloc.Props.Create -> listOf(Configuration.Edit(recipeId = null))
+                    is RecipeRootBloc.Props.Create ->
+                        listOf(Configuration.Edit(recipeId = null, extracted = null))
+                    is RecipeRootBloc.Props.CreateFromExtracted ->
+                        listOf(Configuration.Edit(recipeId = null, extracted = props.extracted))
                 }
             },
             handleBackButton = true,
@@ -78,6 +82,7 @@ class RecipeRootBlocImpl(
                         editBloc.create(
                             context = context,
                             recipeId = config.recipeId,
+                            extractedRecipe = config.extracted,
                             output = ::handleEditOutput,
                         )
                 )
@@ -86,7 +91,10 @@ class RecipeRootBlocImpl(
     private fun handleEditOutput(output: EditRecipeBloc.Output) {
         when (output) {
             EditRecipeBloc.Output.Cancelled -> {
-                if (props is RecipeRootBloc.Props.Create) {
+                if (
+                    props is RecipeRootBloc.Props.Create ||
+                        props is RecipeRootBloc.Props.CreateFromExtracted
+                ) {
                     this.output.onNext(RecipeRootBloc.Output.Finished)
                 } else {
                     navigation.pop()
@@ -104,7 +112,7 @@ class RecipeRootBlocImpl(
                 this.output.onNext(RecipeRootBloc.Output.Finished)
             }
             is RecipeDetailBloc.Output.EditRecipe -> {
-                navigation.bringToFront(Configuration.Edit(output.recipeId))
+                navigation.bringToFront(Configuration.Edit(output.recipeId, extracted = null))
             }
             is RecipeDetailBloc.Output.OpenUrl -> {
                 this.output.onNext(RecipeRootBloc.Output.OpenUrl(output.url))
@@ -126,7 +134,8 @@ class RecipeRootBlocImpl(
     sealed class Configuration {
         @Serializable data class Detail(val recipeId: Long) : Configuration()
 
-        @Serializable data class Edit(val recipeId: Long?) : Configuration()
+        @Serializable
+        data class Edit(val recipeId: Long?, val extracted: ExtractedRecipeData?) : Configuration()
     }
 }
 

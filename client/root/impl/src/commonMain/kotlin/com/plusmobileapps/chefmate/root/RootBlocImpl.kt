@@ -11,7 +11,7 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
-import com.plusmobileapps.chefmate.browser.BrowserBloc
+import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
@@ -32,7 +32,7 @@ import kotlinx.serialization.Serializable
 class RootBlocImpl(
     @Assisted context: BlocContext,
     private val bottomNav: BottomNavBloc.Factory,
-    private val browserBlocFactory: BrowserBloc.Factory,
+    private val browserRootBlocFactory: BrowserRootBloc.Factory,
     private val groceryDetail: GroceryDetailBloc.Factory,
     private val recipeRoot: RecipeRootBloc.Factory,
     private val mealPlannerRoot: MealPlannerRootBloc.Factory,
@@ -109,16 +109,12 @@ class RootBlocImpl(
             is Configuration.Browser ->
                 RootBloc.Child.Browser(
                     bloc =
-                        browserBlocFactory
-                            .create(
-                                context = context,
-                                output = { navigation.pop() },
-                                showControls = false,
-                            )
-                            .also { bloc ->
-                                bloc.onUrlChanged(config.url)
-                                bloc.onNavigate()
-                            }
+                        browserRootBlocFactory.create(
+                            context = context,
+                            output = { _ -> navigation.pop() },
+                            initialUrl = config.url,
+                            showControls = false,
+                        )
                 )
 
             is Configuration.MealPlanner ->
@@ -144,6 +140,12 @@ class RootBlocImpl(
 
             is BottomNavBloc.Output.OpenRecipe -> {
                 navigation.bringToFront(RecipeRoot(Detail(output.recipeId)))
+            }
+
+            is BottomNavBloc.Output.OpenExtractedRecipe -> {
+                navigation.bringToFront(
+                    RecipeRoot(RecipeRootBloc.Props.CreateFromExtracted(output.extracted))
+                )
             }
 
             BottomNavBloc.Output.OpenSignIn -> {

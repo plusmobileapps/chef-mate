@@ -10,6 +10,7 @@ import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc.Output
+import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.text.ResourceString
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -23,6 +24,7 @@ import kotlinx.coroutines.launch
 class EditRecipeBlocImpl(
     @Assisted context: BlocContext,
     @Assisted recipeId: Long?,
+    @Assisted extractedRecipe: ExtractedRecipeData?,
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: EditRecipeViewModel.Factory,
 ) : EditRecipeBloc, BlocContext by context {
@@ -31,6 +33,7 @@ class EditRecipeBlocImpl(
         fun create(
             context: BlocContext,
             recipeId: Long?,
+            extractedRecipe: ExtractedRecipeData?,
             output: Consumer<Output>,
         ): EditRecipeBlocImpl
     }
@@ -38,7 +41,7 @@ class EditRecipeBlocImpl(
     private val scope = createScope()
 
     private val viewModel: EditRecipeViewModel = instanceKeeper.getViewModel {
-        viewModelFactory.create(recipeId)
+        viewModelFactory.create(recipeId, extractedRecipe)
     }
 
     override val state: StateFlow<EditRecipeBloc.Model> =
@@ -154,7 +157,8 @@ interface EditRecipeBlocBindingModule {
     @Provides
     fun provideEditRecipeBlocFactory(
         factory: EditRecipeBlocImpl.ManagedFactory
-    ): EditRecipeBloc.Factory = EditRecipeBloc.Factory { context, recipeId, output ->
-        factory.create(context, recipeId, output)
-    }
+    ): EditRecipeBloc.Factory =
+        EditRecipeBloc.Factory { context, recipeId, extractedRecipe, output ->
+            factory.create(context, recipeId, extractedRecipe, output)
+        }
 }

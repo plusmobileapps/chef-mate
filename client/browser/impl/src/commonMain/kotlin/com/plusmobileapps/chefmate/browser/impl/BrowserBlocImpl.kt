@@ -4,7 +4,6 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.browser.createExtractionFailedMessage
-import com.plusmobileapps.chefmate.browser.createRecipeSavedMessage
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
@@ -46,15 +45,12 @@ class BrowserBlocImpl(
                 isExtracting = it.isExtracting,
                 isWebViewLoading = it.isWebViewLoading,
                 showControls = showControls,
-                extractionMessage =
-                    it.extractionMessage?.let { msg ->
-                        when (msg) {
-                            BrowserViewModel.ExtractMessage.SUCCESS -> createRecipeSavedMessage()
-                            BrowserViewModel.ExtractMessage.FAILURE ->
-                                createExtractionFailedMessage()
-                        }
-                    },
-                hasExtractedRecipe = it.extractedRecipeId != null,
+                extractionFailureMessage =
+                    if (it.extractionFailed) createExtractionFailedMessage() else null,
+                canGoBack = it.canGoBack,
+                canGoForward = it.canGoForward,
+                goBackTrigger = it.goBackTrigger,
+                goForwardTrigger = it.goForwardTrigger,
             )
         }
 
@@ -78,12 +74,24 @@ class BrowserBlocImpl(
         viewModel.extractRecipe()
     }
 
-    override fun onViewExtractedRecipe() {
-        viewModel.onViewExtractedRecipe()
-    }
-
     override fun onDismissMessage() {
         viewModel.dismissMessage()
+    }
+
+    override fun onCanNavigateChanged(canGoBack: Boolean, canGoForward: Boolean) {
+        viewModel.onCanNavigateChanged(canGoBack, canGoForward)
+    }
+
+    override fun onGoBack() {
+        viewModel.onGoBack()
+    }
+
+    override fun onGoForward() {
+        viewModel.onGoForward()
+    }
+
+    override fun onAddressBarFocused() {
+        viewModel.onAddressBarFocused()
     }
 }
 

@@ -4,8 +4,7 @@
 package com.plusmobileapps.chefmate.browser.impl
 
 import com.plusmobileapps.chefmate.browser.BrowserBloc
-import com.plusmobileapps.chefmate.recipe.data.Recipe
-import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
+import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import dev.mokkery.answering.returns
 import dev.mokkery.answering.throws
 import dev.mokkery.everySuspend
@@ -14,7 +13,6 @@ import dev.mokkery.mock
 import dev.mokkery.verifySuspend
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
-import kotlin.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -22,13 +20,11 @@ import kotlinx.coroutines.test.runTest
 class BrowserViewModelTest {
 
     private val extractorService: RecipeExtractorService = mock()
-    private val recipeRepository: RecipeRepository = mock()
     private val outputs = mutableListOf<BrowserBloc.Output>()
     private val viewModel =
         BrowserViewModel(
                 mainContext = UnconfinedTestDispatcher(),
                 recipeExtractorService = extractorService,
-                recipeRepository = recipeRepository,
             )
             .also { it.setOutput { output -> outputs.add(output) } }
 
@@ -106,11 +102,9 @@ class BrowserViewModelTest {
     // region Recipe extraction
 
     @Test
-    fun When_extract_recipe_succeeds_Then_shows_success_message_and_stores_recipe_id() = runTest {
+    fun When_extract_recipe_succeeds_Then_emits_output_with_extracted_data() = runTest {
         val extracted = testExtractedRecipe()
-        val savedRecipe = testRecipe(id = 42)
         everySuspend { extractorService.extractRecipe(any()) } returns extracted
-        everySuspend { recipeRepository.createRecipe(any()) } returns savedRecipe
 
         viewModel.onUrlChanged("https://example.com/recipe")
         viewModel.onNavigate()
@@ -118,26 +112,12 @@ class BrowserViewModelTest {
 
         val state = viewModel.state.value
         state.isExtracting shouldBe false
-        state.extractionMessage shouldBe BrowserViewModel.ExtractMessage.SUCCESS
-        state.extractedRecipeId shouldBe 42
+        state.extractionFailed shouldBe false
+        outputs shouldBe listOf(BrowserBloc.Output.RecipeExtracted(extracted))
     }
 
     @Test
-    fun When_extract_recipe_succeeds_Then_does_not_emit_output_immediately() = runTest {
-        val extracted = testExtractedRecipe()
-        val savedRecipe = testRecipe(id = 42)
-        everySuspend { extractorService.extractRecipe(any()) } returns extracted
-        everySuspend { recipeRepository.createRecipe(any()) } returns savedRecipe
-
-        viewModel.onUrlChanged("https://example.com/recipe")
-        viewModel.onNavigate()
-        viewModel.extractRecipe()
-
-        outputs shouldBe emptyList()
-    }
-
-    @Test
-    fun When_extract_recipe_fails_Then_shows_failure_message() = runTest {
+    fun When_extract_recipe_fails_Then_marks_failure_and_emits_no_output() = runTest {
         everySuspend { extractorService.extractRecipe(any()) } throws
             IllegalStateException("No recipe")
 
@@ -147,8 +127,8 @@ class BrowserViewModelTest {
 
         val state = viewModel.state.value
         state.isExtracting shouldBe false
-        state.extractionMessage shouldBe BrowserViewModel.ExtractMessage.FAILURE
-        state.extractedRecipeId shouldBe null
+        state.extractionFailed shouldBe true
+        outputs shouldBe emptyList()
     }
 
     @Test
@@ -160,9 +140,7 @@ class BrowserViewModelTest {
     @Test
     fun When_already_extracting_Then_second_call_ignored() = runTest {
         val extracted = testExtractedRecipe()
-        val savedRecipe = testRecipe(id = 1)
         everySuspend { extractorService.extractRecipe(any()) } returns extracted
-        everySuspend { recipeRepository.createRecipe(any()) } returns savedRecipe
 
         viewModel.onUrlChanged("https://example.com/recipe")
         viewModel.onNavigate()
@@ -175,9 +153,7 @@ class BrowserViewModelTest {
     @Test
     fun When_extract_uses_webViewReportedUrl_over_currentUrl() = runTest {
         val extracted = testExtractedRecipe()
-        val savedRecipe = testRecipe(id = 1)
         everySuspend { extractorService.extractRecipe(any()) } returns extracted
-        everySuspend { recipeRepository.createRecipe(any()) } returns savedRecipe
 
         viewModel.onUrlChanged("https://google.com")
         viewModel.onNavigate()
@@ -189,43 +165,12 @@ class BrowserViewModelTest {
 
     // endregion
 
-    // region View extracted recipe
-
-    @Test
-    fun When_view_extracted_recipe_Then_emits_output_and_clears_state() = runTest {
-        val extracted = testExtractedRecipe()
-        val savedRecipe = testRecipe(id = 42)
-        everySuspend { extractorService.extractRecipe(any()) } returns extracted
-        everySuspend { recipeRepository.createRecipe(any()) } returns savedRecipe
-
-        viewModel.onUrlChanged("https://example.com/recipe")
-        viewModel.onNavigate()
-        viewModel.extractRecipe()
-
-        viewModel.onViewExtractedRecipe()
-
-        outputs shouldBe listOf(BrowserBloc.Output.RecipeExtracted(42))
-        val state = viewModel.state.value
-        state.extractionMessage shouldBe null
-        state.extractedRecipeId shouldBe null
-    }
-
-    @Test
-    fun When_view_extracted_recipe_without_recipe_id_Then_does_nothing() {
-        viewModel.onViewExtractedRecipe()
-        outputs shouldBe emptyList()
-    }
-
-    // endregion
-
     // region Dismiss message
 
     @Test
-    fun When_dismiss_message_Then_clears_message_and_recipe_id() = runTest {
-        val extracted = testExtractedRecipe()
-        val savedRecipe = testRecipe(id = 42)
-        everySuspend { extractorService.extractRecipe(any()) } returns extracted
-        everySuspend { recipeRepository.createRecipe(any()) } returns savedRecipe
+    fun When_dismiss_message_Then_clears_failure_state() = runTest {
+        everySuspend { extractorService.extractRecipe(any()) } throws
+            IllegalStateException("No recipe")
 
         viewModel.onUrlChanged("https://example.com/recipe")
         viewModel.onNavigate()
@@ -233,15 +178,13 @@ class BrowserViewModelTest {
 
         viewModel.dismissMessage()
 
-        val state = viewModel.state.value
-        state.extractionMessage shouldBe null
-        state.extractedRecipeId shouldBe null
+        viewModel.state.value.extractionFailed shouldBe false
     }
 
     // endregion
 
     private fun testExtractedRecipe() =
-        ExtractedRecipe(
+        ExtractedRecipeData(
             title = "Test Recipe",
             description = "A test recipe",
             ingredients = listOf("1 cup flour"),
@@ -253,25 +196,5 @@ class BrowserViewModelTest {
             cookTime = 20,
             totalTime = 30,
             calories = 200,
-        )
-
-    private fun testRecipe(id: Long) =
-        Recipe(
-            id = id,
-            title = "Test Recipe",
-            description = "A test recipe",
-            ingredients = "1 cup flour",
-            directions = "Mix",
-            imageUrl = null,
-            sourceUrl = "https://example.com/recipe",
-            servings = 4,
-            prepTime = 10,
-            cookTime = 20,
-            totalTime = 30,
-            calories = 200,
-            starRating = null,
-            isFavorite = false,
-            createdAt = Instant.DISTANT_PAST,
-            updatedAt = Instant.DISTANT_PAST,
         )
 }
