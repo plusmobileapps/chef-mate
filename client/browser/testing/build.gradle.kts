@@ -2,7 +2,10 @@ plugins { alias(libs.plugins.kmpLibrary) }
 
 kotlin {
     sourceSets {
-        commonMain.dependencies { implementation(projects.client.browser.public) }
+        commonMain.dependencies {
+            implementation(projects.client.browser.public)
+            implementation(projects.client.shared)
+        }
     }
 }
 
