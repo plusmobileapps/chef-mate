@@ -101,6 +101,13 @@ class MealPlanRepositoryImpl(
         }
     }
 
+    override suspend fun syncAllUnsynced() {
+        val authState = authRepository.state.value
+        if (authState is AuthState.Authenticated) {
+            syncWithRemote(authState.user.userId)
+        }
+    }
+
     private fun pushAddToRemote(localId: Long) {
         val authState = authRepository.state.value
         if (authState !is AuthState.Authenticated) return

@@ -57,6 +57,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -209,39 +210,45 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                     },
                 )
             }
-            when {
-                !state.isLoading && state.totalRecipeCount == 0 -> {
-                    NoRecipesEmptyState(
-                        onBrowseClicked = bloc::onBrowseRecipesClicked,
-                        onCreateClicked = bloc::onAddRecipeClicked,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-                state.recipes.isEmpty() && state.isSearchActive -> {
-                    SearchEmptyState(modifier = Modifier.weight(1f))
-                }
-                state.recipes.isEmpty() && state.activeFilters.isNotEmpty() -> {
-                    FilterEmptyState(
-                        activeFilters = state.activeFilters,
-                        onClearFilters = bloc::onClearFilters,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-                state.isGridView -> {
-                    RecipeGrid(
-                        modifier = Modifier.weight(1f),
-                        recipes = state.recipes,
-                        onRecipeClicked = bloc::onRecipeClicked,
-                        state = gridState,
-                    )
-                }
-                else -> {
-                    RecipeList(
-                        modifier = Modifier.weight(1f),
-                        recipes = state.recipes,
-                        onRecipeClicked = bloc::onRecipeClicked,
-                        state = listState,
-                    )
+            PullToRefreshBox(
+                isRefreshing = state.isSyncing,
+                onRefresh = bloc::onSyncClicked,
+                modifier = Modifier.weight(1f),
+            ) {
+                when {
+                    !state.isLoading && state.totalRecipeCount == 0 -> {
+                        NoRecipesEmptyState(
+                            onBrowseClicked = bloc::onBrowseRecipesClicked,
+                            onCreateClicked = bloc::onAddRecipeClicked,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+                    state.recipes.isEmpty() && state.isSearchActive -> {
+                        SearchEmptyState(modifier = Modifier.fillMaxSize())
+                    }
+                    state.recipes.isEmpty() && state.activeFilters.isNotEmpty() -> {
+                        FilterEmptyState(
+                            activeFilters = state.activeFilters,
+                            onClearFilters = bloc::onClearFilters,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+                    state.isGridView -> {
+                        RecipeGrid(
+                            modifier = Modifier.fillMaxSize(),
+                            recipes = state.recipes,
+                            onRecipeClicked = bloc::onRecipeClicked,
+                            state = gridState,
+                        )
+                    }
+                    else -> {
+                        RecipeList(
+                            modifier = Modifier.fillMaxSize(),
+                            recipes = state.recipes,
+                            onRecipeClicked = bloc::onRecipeClicked,
+                            state = listState,
+                        )
+                    }
                 }
             }
         },

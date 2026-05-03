@@ -37,4 +37,8 @@ class FakeMealPlanRepository : MealPlanRepository {
     override suspend fun removeMeal(id: Long) {
         _meals.update { items -> items.filter { it.id != id } }
     }
+
+    override suspend fun syncAllUnsynced() {
+        // No-op in fake
+    }
 }

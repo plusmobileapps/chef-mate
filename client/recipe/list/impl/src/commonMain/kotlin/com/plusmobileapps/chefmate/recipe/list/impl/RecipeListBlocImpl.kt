@@ -38,6 +38,7 @@ class RecipeListBlocImpl(
         viewModel.state.mapState {
             RecipeListBloc.Model(
                 isLoading = it.isLoading,
+                isSyncing = it.isSyncing,
                 recipes = it.displayRecipes.map { recipe -> recipe.toRecipeListItem() },
                 totalRecipeCount = it.recipes.size,
                 currentSort = it.currentSort,
@@ -90,6 +91,10 @@ class RecipeListBlocImpl(
 
     override fun onBrowseRecipesClicked() {
         output.onNext(Output.OpenBrowser)
+    }
+
+    override fun onSyncClicked() {
+        viewModel.onSyncClicked()
     }
 
     private fun Recipe.toRecipeListItem(): RecipeListItem =

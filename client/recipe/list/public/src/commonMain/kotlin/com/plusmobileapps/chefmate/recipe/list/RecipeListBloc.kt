@@ -29,10 +29,13 @@ interface RecipeListBloc {
 
     fun onBrowseRecipesClicked()
 
+    fun onSyncClicked()
+
     data class Model(
         val recipes: List<RecipeListItem> = emptyList(),
         val totalRecipeCount: Int = 0,
         val isLoading: Boolean = false,
+        val isSyncing: Boolean = false,
         val currentSort: RecipeSortOption = RecipeSortOption.RECENTLY_ADDED,
         val activeFilters: Set<RecipeFilterOption> = emptySet(),
         val isGridView: Boolean = false,

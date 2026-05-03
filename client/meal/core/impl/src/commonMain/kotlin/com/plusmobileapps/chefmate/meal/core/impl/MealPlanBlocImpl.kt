@@ -37,6 +37,7 @@ class MealPlanBlocImpl(
         viewModel.state.mapState {
             MealPlanBloc.Model(
                 isLoading = it.isLoading,
+                isSyncing = it.isSyncing,
                 viewMode = it.viewMode,
                 dateLabel = FixedString(viewModel.getDateLabel()),
                 dayMeals =
@@ -95,6 +96,10 @@ class MealPlanBlocImpl(
 
     override fun onAddMealClicked() {
         output.onNext(Output.OpenMealPlanner(MealPlannerRootBloc.Props.FromMealPlanner))
+    }
+
+    override fun onSyncClicked() {
+        viewModel.onSyncClicked()
     }
 }
 

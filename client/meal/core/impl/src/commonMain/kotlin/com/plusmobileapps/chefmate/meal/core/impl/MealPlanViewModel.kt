@@ -100,6 +100,17 @@ class MealPlanViewModel(
         _state.update { it.copy(mealToDelete = null) }
     }
 
+    fun onSyncClicked() {
+        scope.launch {
+            _state.update { it.copy(isSyncing = true) }
+            try {
+                repository.syncAllUnsynced()
+            } finally {
+                _state.update { it.copy(isSyncing = false) }
+            }
+        }
+    }
+
     fun getDateLabel(): String {
         val current = _state.value
         return when (current.viewMode) {
@@ -191,6 +202,7 @@ class MealPlanViewModel(
 
     data class State(
         val isLoading: Boolean = true,
+        val isSyncing: Boolean = false,
         val viewMode: MealPlanBloc.ViewMode = MealPlanBloc.ViewMode.DAY,
         val currentDate: LocalDate = LocalDate(2000, 1, 1),
         val selectedMonthDay: LocalDate = LocalDate(2000, 1, 1),
