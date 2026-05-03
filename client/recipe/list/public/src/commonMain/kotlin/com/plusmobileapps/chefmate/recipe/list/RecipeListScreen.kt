@@ -558,6 +558,7 @@ private fun RecipeGridItem(
             imageUrl = recipe.imageUrl,
             contentDescription = recipe.title,
             modifier = Modifier.fillMaxWidth().aspectRatio(1.2f),
+            sharedElementKey = "recipe-image-${recipe.id}",
         )
         Column(
             modifier = Modifier.padding(12.dp),
@@ -617,6 +618,7 @@ private fun RecipeListItemContent(
             imageUrl = recipe.imageUrl,
             contentDescription = recipe.title,
             modifier = Modifier.size(80.dp),
+            sharedElementKey = "recipe-image-${recipe.id}",
         )
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(

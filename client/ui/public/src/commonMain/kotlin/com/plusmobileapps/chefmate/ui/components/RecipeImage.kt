@@ -1,5 +1,8 @@
+@file:OptIn(ExperimentalSharedTransitionApi::class)
+
 package com.plusmobileapps.chefmate.ui.components
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
@@ -12,20 +15,42 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import coil3.compose.AsyncImage
+import com.plusmobileapps.chefmate.ui.LocalAnimatedVisibilityScope
+import com.plusmobileapps.chefmate.ui.LocalSharedTransitionScope
 
 @Composable
-fun RecipeImage(imageUrl: String?, contentDescription: String?, modifier: Modifier = Modifier) {
+fun RecipeImage(
+    imageUrl: String?,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    sharedElementKey: String? = null,
+) {
+    val sharedScope = LocalSharedTransitionScope.current
+    val animatedScope = LocalAnimatedVisibilityScope.current
+    val sharedModifier =
+        if (sharedElementKey != null && sharedScope != null && animatedScope != null) {
+            with(sharedScope) {
+                Modifier.sharedElement(
+                    sharedContentState = rememberSharedContentState(key = sharedElementKey),
+                    animatedVisibilityScope = animatedScope,
+                )
+            }
+        } else {
+            Modifier
+        }
+
     if (imageUrl != null) {
         AsyncImage(
             model = imageUrl,
             contentDescription = contentDescription,
-            modifier = modifier.clip(MaterialTheme.shapes.medium),
+            modifier = modifier.then(sharedModifier).clip(MaterialTheme.shapes.medium),
             contentScale = ContentScale.Crop,
         )
     } else {
         Box(
             modifier =
                 modifier
+                    .then(sharedModifier)
                     .clip(MaterialTheme.shapes.medium)
                     .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center,
