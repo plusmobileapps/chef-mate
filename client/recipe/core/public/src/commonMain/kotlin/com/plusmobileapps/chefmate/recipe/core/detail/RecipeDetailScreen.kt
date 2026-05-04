@@ -92,6 +92,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import chefmate.client.recipe.core.public.generated.resources.Res
 import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_grocery_list_added
 import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_grocery_list_view
@@ -1090,7 +1091,7 @@ private fun IngredientLineItem(
 ) {
     Text(
         text = text,
-        style = MaterialTheme.typography.bodyMedium,
+        style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 22.sp),
         textDecoration = if (crossedOut) TextDecoration.LineThrough else TextDecoration.None,
         color =
             if (crossedOut) {
@@ -1116,7 +1117,7 @@ private fun DirectionLineItem(
     val dimens = ChefMateTheme.dimens
     Text(
         text = text,
-        style = MaterialTheme.typography.bodyMedium,
+        style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 22.sp),
         modifier =
             modifier
                 .fillMaxWidth()
