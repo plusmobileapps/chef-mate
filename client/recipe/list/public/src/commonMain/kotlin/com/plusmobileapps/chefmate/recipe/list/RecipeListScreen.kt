@@ -117,6 +117,9 @@ import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
 import com.plusmobileapps.chefmate.ui.sharedBoundsBy
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -129,9 +132,15 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
     val listState = rememberLazyListState()
     val gridState = rememberLazyGridState()
 
-    LaunchedEffect(state.currentSort, state.activeFilters) {
-        listState.animateScrollToItem(0)
-        gridState.animateScrollToItem(0)
+    LaunchedEffect(Unit) {
+        bloc.state
+            .map { it.currentSort to it.activeFilters }
+            .distinctUntilChanged()
+            .drop(1)
+            .collect {
+                listState.animateScrollToItem(0)
+                gridState.animateScrollToItem(0)
+            }
     }
 
     PlusNavContainer(
