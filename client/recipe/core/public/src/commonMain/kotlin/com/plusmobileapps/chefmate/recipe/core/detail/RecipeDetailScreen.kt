@@ -8,6 +8,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Arrangement.Absolute.spacedBy
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -23,13 +24,16 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuOpen
 import androidx.compose.material.icons.filled.AddShoppingCart
@@ -364,29 +368,50 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
                     Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                         PlusLoadingIndicator()
                     }
-                } else if (isCompact) {
-                    RecipeDetailCompactContent(
-                        recipe = state.recipe,
-                        createdAt = state.createdAt,
-                        updatedAt = state.updatedAt,
-                        formattedPrepTime = state.formattedPrepTime,
-                        formattedCookTime = state.formattedCookTime,
-                        formattedTotalTime = state.formattedTotalTime,
-                        onSourceUrlClicked = bloc::onSourceUrlClicked,
-                        modifier = Modifier.weight(1f),
-                    )
                 } else {
-                    RecipeDetailExpandedContent(
-                        recipe = state.recipe,
-                        createdAt = state.createdAt,
-                        updatedAt = state.updatedAt,
-                        formattedPrepTime = state.formattedPrepTime,
-                        formattedCookTime = state.formattedCookTime,
-                        formattedTotalTime = state.formattedTotalTime,
-                        onSourceUrlClicked = bloc::onSourceUrlClicked,
-                        metadataCollapsed = metadataCollapsed,
-                        onMetadataCollapsedChange = { metadataCollapsed = it },
-                    )
+                    // Height-aware layout pick: a phone in landscape (height < 500dp) gets a
+                    // dedicated 2-column layout — condensed hero on the left, tabs + pager on
+                    // the right — instead of the cramped stacked-compact or 3-col tablet view.
+                    BoxWithConstraints(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                        val isLandscapePhone = maxHeight < 500.dp
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            when {
+                                isLandscapePhone ->
+                                    RecipeDetailLandscapeContent(
+                                        recipe = state.recipe,
+                                        createdAt = state.createdAt,
+                                        updatedAt = state.updatedAt,
+                                        formattedPrepTime = state.formattedPrepTime,
+                                        formattedCookTime = state.formattedCookTime,
+                                        formattedTotalTime = state.formattedTotalTime,
+                                        onSourceUrlClicked = bloc::onSourceUrlClicked,
+                                    )
+                                isCompact ->
+                                    RecipeDetailCompactContent(
+                                        recipe = state.recipe,
+                                        createdAt = state.createdAt,
+                                        updatedAt = state.updatedAt,
+                                        formattedPrepTime = state.formattedPrepTime,
+                                        formattedCookTime = state.formattedCookTime,
+                                        formattedTotalTime = state.formattedTotalTime,
+                                        onSourceUrlClicked = bloc::onSourceUrlClicked,
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                else ->
+                                    RecipeDetailExpandedContent(
+                                        recipe = state.recipe,
+                                        createdAt = state.createdAt,
+                                        updatedAt = state.updatedAt,
+                                        formattedPrepTime = state.formattedPrepTime,
+                                        formattedCookTime = state.formattedCookTime,
+                                        formattedTotalTime = state.formattedTotalTime,
+                                        onSourceUrlClicked = bloc::onSourceUrlClicked,
+                                        metadataCollapsed = metadataCollapsed,
+                                        onMetadataCollapsedChange = { metadataCollapsed = it },
+                                    )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -487,10 +512,12 @@ private fun RecipeDetailCompactContent(
     val density = LocalDensity.current
     val pagerMinHeight = with(density) { maxOf(ingredientsHeightPx, directionsHeightPx).toDp() }
 
+    val navBarBottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
+
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = spacedBy(padding),
-        contentPadding = PaddingValues(bottom = 96.dp),
+        contentPadding = PaddingValues(bottom = 96.dp + navBarBottom),
     ) {
         // Hero section: image + key details side by side
         item(key = "hero") {
@@ -568,6 +595,164 @@ private fun RecipeDetailCompactContent(
 }
 
 /**
+ * Phone landscape layout: condensed hero (image + key details) scrolls on the left ~40%, sticky
+ * tabs + ingredients/directions pager on the right ~60%. Triggered when the available height is
+ * short (< 500dp), regardless of width — so it covers landscape phones whether they fall into
+ * COMPACT (<600dp wide) or EXPANDED (>=840dp wide) by the width-only breakpoint.
+ */
+@Composable
+private fun ColumnScope.RecipeDetailLandscapeContent(
+    recipe: Recipe,
+    createdAt: TextData,
+    updatedAt: TextData,
+    formattedPrepTime: TextData?,
+    formattedCookTime: TextData?,
+    formattedTotalTime: TextData?,
+    onSourceUrlClicked: (String) -> Unit,
+) {
+    val padding = ChefMateTheme.dimens.paddingNormal
+    val navBarBottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
+    val toolbarClearance = 96.dp + navBarBottom
+
+    val ingredientLines = remember(recipe.ingredients) { splitLines(recipe.ingredients) }
+    val crossedOut =
+        remember(recipe.ingredients) {
+            mutableStateListOf(*BooleanArray(ingredientLines.size) { false }.toTypedArray())
+        }
+    var highlightedDirectionIndex by remember(recipe.directions) { mutableStateOf(-1) }
+
+    val pagerState = rememberPagerState(pageCount = { 2 })
+    val tabs =
+        listOf(
+            stringResource(Res.string.recipe_detail_ingredients),
+            stringResource(Res.string.recipe_detail_directions),
+        )
+    val scope = rememberCoroutineScope()
+
+    Row(
+        modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = padding),
+        horizontalArrangement = Arrangement.spacedBy(padding),
+    ) {
+        // Left ~40%: condensed hero in a vertically scrolling column
+        Column(
+            modifier = Modifier.weight(0.4f).fillMaxHeight().verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            RecipeImage(
+                imageUrl = recipe.imageUrl,
+                contentDescription = recipe.title,
+                modifier = Modifier.fillMaxWidth().height(140.dp),
+                sharedElementKey = "recipe-image-${recipe.id}",
+            )
+            recipe.starRating?.let { rating -> StarRating(rating = rating) }
+            recipe.servings?.let { servings ->
+                DetailRow(
+                    icon = Icons.Default.Restaurant,
+                    label = stringResource(Res.string.recipe_detail_servings),
+                    value = "$servings",
+                )
+            }
+            formattedPrepTime?.let {
+                DetailRow(
+                    icon = Icons.Default.Timer,
+                    label = stringResource(Res.string.recipe_detail_prep_time),
+                    value = it.localized(),
+                )
+            }
+            formattedCookTime?.let {
+                DetailRow(
+                    icon = Icons.Default.Timer,
+                    label = stringResource(Res.string.recipe_detail_cook_time),
+                    value = it.localized(),
+                )
+            }
+            formattedTotalTime?.let {
+                DetailRow(
+                    icon = Icons.Default.Timer,
+                    label = stringResource(Res.string.recipe_detail_total_time),
+                    value = it.localized(),
+                )
+            }
+            recipe.calories?.let { calories ->
+                DetailRow(
+                    icon = Icons.Default.LocalFireDepartment,
+                    label = stringResource(Res.string.recipe_detail_calories),
+                    value =
+                        PhraseModel(
+                                Res.string.recipe_detail_kcal,
+                                "calories" to FixedString(calories.toString()),
+                            )
+                            .localized(),
+                )
+            }
+            recipe.sourceUrl?.let { sourceUrl ->
+                Text(
+                    text = sourceUrl,
+                    modifier = Modifier.fillMaxWidth().clickable { onSourceUrlClicked(sourceUrl) },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    textDecoration = TextDecoration.Underline,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                )
+            }
+            Text(
+                text =
+                    stringResource(Res.string.recipe_detail_created) + " " + createdAt.localized(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text =
+                    stringResource(Res.string.recipe_detail_updated) + " " + updatedAt.localized(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.height(toolbarClearance))
+        }
+
+        // Right ~60%: sticky tab row + pager. Each page scrolls independently so swiping
+        // between Ingredients and Directions does not affect the other tab's scroll position.
+        Column(modifier = Modifier.weight(0.6f).fillMaxHeight()) {
+            TabRow(selectedTabIndex = pagerState.currentPage) {
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = pagerState.currentPage == index,
+                        onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+                        text = { Text(title) },
+                    )
+                }
+            }
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                verticalAlignment = Alignment.Top,
+                beyondViewportPageCount = 1,
+            ) { page ->
+                Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                    when (page) {
+                        0 ->
+                            IngredientsContent(
+                                lines = ingredientLines,
+                                crossedOut = crossedOut,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        1 ->
+                            DirectionsContent(
+                                directions = recipe.directions,
+                                highlightedIndex = highlightedDirectionIndex,
+                                onHighlightedIndexChanged = { highlightedDirectionIndex = it },
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                    }
+                    Spacer(modifier = Modifier.height(toolbarClearance))
+                }
+            }
+        }
+    }
+}
+
+/**
  * Tablet layout: 3-column layout with a collapsible/resizable metadata column on the left,
  * ingredients in the middle, and directions on the right. All columns scroll independently with
  * sticky headers on ingredients/directions. The divider between ingredients and directions is also
@@ -587,7 +772,8 @@ private fun ColumnScope.RecipeDetailExpandedContent(
 ) {
     val padding = ChefMateTheme.dimens.paddingNormal
     val density = LocalDensity.current
-    val toolbarClearance = 80.dp
+    val navBarBottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
+    val toolbarClearance = 80.dp + navBarBottom
 
     var metadataWidthDp by remember { mutableStateOf(240.dp) }
     val minMetadataWidth = 160.dp
