@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement.Absolute.spacedBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -84,6 +86,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
@@ -475,7 +478,19 @@ private fun RecipeDetailCompactContent(
         }
     var highlightedDirectionIndex by remember(recipe.directions) { mutableStateOf(-1) }
 
-    LazyColumn(modifier = modifier.fillMaxSize(), verticalArrangement = spacedBy(padding)) {
+    // Track each page's natural height so we can set both pages to the taller one's height.
+    // Without this, swiping between tabs of different lengths shifts the LazyColumn's content
+    // size and the visible scroll position appears to jump.
+    var ingredientsHeightPx by remember(recipe.ingredients) { mutableStateOf(0) }
+    var directionsHeightPx by remember(recipe.directions) { mutableStateOf(0) }
+    val density = LocalDensity.current
+    val pagerMinHeight = with(density) { maxOf(ingredientsHeightPx, directionsHeightPx).toDp() }
+
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = spacedBy(padding),
+        contentPadding = PaddingValues(bottom = 96.dp),
+    ) {
         // Hero section: image + key details side by side
         item(key = "hero") {
             RecipeHeroSection(
@@ -521,21 +536,30 @@ private fun RecipeDetailCompactContent(
                 state = pagerState,
                 modifier = Modifier.fillMaxWidth().wrapContentHeight(),
                 verticalAlignment = Alignment.Top,
+                beyondViewportPageCount = 1,
             ) { page ->
-                when (page) {
-                    0 ->
-                        IngredientsContent(
-                            lines = ingredientLines,
-                            crossedOut = crossedOut,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    1 ->
-                        DirectionsContent(
-                            directions = recipe.directions,
-                            highlightedIndex = highlightedDirectionIndex,
-                            onHighlightedIndexChanged = { highlightedDirectionIndex = it },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
+                Box(modifier = Modifier.fillMaxWidth().heightIn(min = pagerMinHeight)) {
+                    when (page) {
+                        0 ->
+                            IngredientsContent(
+                                lines = ingredientLines,
+                                crossedOut = crossedOut,
+                                modifier =
+                                    Modifier.fillMaxWidth().onSizeChanged {
+                                        ingredientsHeightPx = it.height
+                                    },
+                            )
+                        1 ->
+                            DirectionsContent(
+                                directions = recipe.directions,
+                                highlightedIndex = highlightedDirectionIndex,
+                                onHighlightedIndexChanged = { highlightedDirectionIndex = it },
+                                modifier =
+                                    Modifier.fillMaxWidth().onSizeChanged {
+                                        directionsHeightPx = it.height
+                                    },
+                            )
+                    }
                 }
             }
         }
@@ -1133,7 +1157,6 @@ private fun IngredientsContent(
                 onClick = { crossedOut[index] = !crossedOut[index] },
             )
         }
-        Spacer(modifier = Modifier.height(80.dp))
     }
 }
 
@@ -1164,7 +1187,6 @@ private fun DirectionsContent(
                 },
             )
         }
-        Spacer(modifier = Modifier.height(80.dp))
     }
 }
 
