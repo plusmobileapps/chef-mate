@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import chefmate.client.ui.public.generated.resources.Res
 import chefmate.client.ui.public.generated.resources.back
 import chefmate.client.ui.public.generated.resources.close
+import com.plusmobileapps.chefmate.ui.sharedBoundsBy
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
 
@@ -181,7 +182,12 @@ fun PlusHeader(
                     bottom = WindowInsets.statusBars.getBottom(density),
                 ),
         title = {
-            Text(text = data.title.localized(), color = ChefMateTheme.colorScheme.onBackground)
+            val titleKey = (data as? PlusHeaderData.Child)?.titleSharedElementKey
+            Text(
+                text = data.title.localized(),
+                color = ChefMateTheme.colorScheme.onBackground,
+                modifier = Modifier.sharedBoundsBy(titleKey),
+            )
         },
         navigationIcon =
             when (data) {

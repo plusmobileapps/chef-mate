@@ -209,6 +209,7 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
                     PlusHeaderData.Child(
                         title = state.recipe.title.asTextData(),
                         onBackClick = bloc::onBackClicked,
+                        titleSharedElementKey = "recipe-title-${state.recipe.id}",
                         trailingAccessory =
                             PlusHeaderData.TrailingAccessory.Custom {
                                 IconButton(onClick = bloc::onKeepScreenOnToggled) {
@@ -613,6 +614,7 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                         imageUrl = recipe.imageUrl,
                         contentDescription = recipe.title,
                         modifier = Modifier.fillMaxWidth().height(180.dp),
+                        sharedElementKey = "recipe-image-${recipe.id}",
                     )
                 }
                 recipe.starRating?.let { rating ->
@@ -898,6 +900,7 @@ private fun RecipeHeroSection(
             imageUrl = recipe.imageUrl,
             contentDescription = recipe.title,
             modifier = Modifier.width(140.dp).height(140.dp),
+            sharedElementKey = "recipe-image-${recipe.id}",
         )
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             // Star Rating

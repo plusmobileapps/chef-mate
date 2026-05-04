@@ -24,6 +24,7 @@ sealed class PlusHeaderData {
         override val title: TextData,
         val onBackClick: () -> Unit,
         override val trailingAccessory: TrailingAccessory? = null,
+        val titleSharedElementKey: String? = null,
     ) : PlusHeaderData()
 
     data class Modal(

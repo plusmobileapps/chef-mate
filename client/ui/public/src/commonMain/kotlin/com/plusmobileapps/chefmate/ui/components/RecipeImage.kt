@@ -12,20 +12,29 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import coil3.compose.AsyncImage
+import com.plusmobileapps.chefmate.ui.sharedElementBy
 
 @Composable
-fun RecipeImage(imageUrl: String?, contentDescription: String?, modifier: Modifier = Modifier) {
+fun RecipeImage(
+    imageUrl: String?,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    sharedElementKey: String? = null,
+) {
+    val sharedModifier = Modifier.sharedElementBy(sharedElementKey)
+
     if (imageUrl != null) {
         AsyncImage(
             model = imageUrl,
             contentDescription = contentDescription,
-            modifier = modifier.clip(MaterialTheme.shapes.medium),
+            modifier = modifier.then(sharedModifier).clip(MaterialTheme.shapes.medium),
             contentScale = ContentScale.Crop,
         )
     } else {
         Box(
             modifier =
                 modifier
+                    .then(sharedModifier)
                     .clip(MaterialTheme.shapes.medium)
                     .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center,
