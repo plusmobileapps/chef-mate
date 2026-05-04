@@ -116,6 +116,7 @@ import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
+import com.plusmobileapps.chefmate.ui.sharedBoundsBy
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -570,6 +571,7 @@ private fun RecipeGridItem(
                 minLines = 2,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.sharedBoundsBy("recipe-title-${recipe.id}"),
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -631,7 +633,7 @@ private fun RecipeListItemContent(
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).sharedBoundsBy("recipe-title-${recipe.id}"),
                 )
                 SyncStatusIcon(syncStatus = recipe.syncStatus)
                 if (recipe.isFavorite) {

@@ -1,8 +1,5 @@
-@file:OptIn(ExperimentalSharedTransitionApi::class)
-
 package com.plusmobileapps.chefmate.ui.components
 
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
@@ -15,8 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import coil3.compose.AsyncImage
-import com.plusmobileapps.chefmate.ui.LocalAnimatedVisibilityScope
-import com.plusmobileapps.chefmate.ui.LocalSharedTransitionScope
+import com.plusmobileapps.chefmate.ui.sharedElementBy
 
 @Composable
 fun RecipeImage(
@@ -25,19 +21,7 @@ fun RecipeImage(
     modifier: Modifier = Modifier,
     sharedElementKey: String? = null,
 ) {
-    val sharedScope = LocalSharedTransitionScope.current
-    val animatedScope = LocalAnimatedVisibilityScope.current
-    val sharedModifier =
-        if (sharedElementKey != null && sharedScope != null && animatedScope != null) {
-            with(sharedScope) {
-                Modifier.sharedElement(
-                    sharedContentState = rememberSharedContentState(key = sharedElementKey),
-                    animatedVisibilityScope = animatedScope,
-                )
-            }
-        } else {
-            Modifier
-        }
+    val sharedModifier = Modifier.sharedElementBy(sharedElementKey)
 
     if (imageUrl != null) {
         AsyncImage(

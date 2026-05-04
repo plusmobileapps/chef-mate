@@ -209,6 +209,7 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
                     PlusHeaderData.Child(
                         title = state.recipe.title.asTextData(),
                         onBackClick = bloc::onBackClicked,
+                        titleSharedElementKey = "recipe-title-${state.recipe.id}",
                         trailingAccessory =
                             PlusHeaderData.TrailingAccessory.Custom {
                                 IconButton(onClick = bloc::onKeepScreenOnToggled) {
