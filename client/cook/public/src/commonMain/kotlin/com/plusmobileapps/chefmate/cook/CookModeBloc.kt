@@ -1,0 +1,49 @@
+package com.plusmobileapps.chefmate.cook
+
+import com.plusmobileapps.chefmate.BackClickBloc
+import com.plusmobileapps.chefmate.BlocContext
+import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.recipe.data.Recipe
+import kotlinx.coroutines.flow.StateFlow
+
+interface CookModeBloc : BackClickBloc {
+    val state: StateFlow<Model>
+
+    /**
+     * What's Cooking sub-bloc — kept alive for the lifetime of Cook Mode so the inline mobile sheet
+     * and the tablet modal share its state (selection, select-mode toggle, etc.).
+     */
+    val whatsCookingBloc: WhatsCookingBloc
+
+    fun onCloseClicked()
+
+    fun onRecipeChipClicked(recipeId: Long)
+
+    fun onLayoutToggled()
+
+    enum class LayoutMode {
+        Stacked,
+        Split,
+    }
+
+    data class Model(
+        val isLoading: Boolean = true,
+        val activeRecipe: Recipe? = null,
+        val activeSessions: List<Chip> = emptyList(),
+        val layoutMode: LayoutMode = LayoutMode.Stacked,
+    ) {
+        data class Chip(val recipeId: Long, val title: String, val isActive: Boolean)
+    }
+
+    sealed class Output {
+        data object Finished : Output()
+    }
+
+    fun interface Factory {
+        fun create(
+            context: BlocContext,
+            initialRecipeId: Long,
+            output: Consumer<Output>,
+        ): CookModeBloc
+    }
+}

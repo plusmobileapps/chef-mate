@@ -54,6 +54,10 @@ include(":client:bottomnav:public")
 
 include(":client:composeApp")
 
+include(":client:cook:impl")
+
+include(":client:cook:public")
+
 include(":client:database:core")
 
 include(":client:database:testing")

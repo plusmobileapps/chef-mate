@@ -56,6 +56,8 @@ kotlin {
             api(projects.client.auth.data.impl)
             api(projects.client.auth.data.public)
             api(projects.client.auth.ui.impl)
+            api(projects.client.cook.impl)
+            api(projects.client.cook.public)
             api(projects.client.grocery.data.impl)
             api(projects.client.grocery.core.impl)
             api(projects.client.grocery.core.public)
