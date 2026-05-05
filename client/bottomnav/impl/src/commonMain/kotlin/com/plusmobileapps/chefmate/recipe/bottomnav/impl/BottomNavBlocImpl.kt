@@ -159,6 +159,9 @@ class BottomNavBlocImpl(
             RecipeListBloc.Output.OpenBrowser -> {
                 onTabSelected(BottomNavBloc.Tab.BROWSER)
             }
+            is RecipeListBloc.Output.OpenCookMode -> {
+                this.output.onNext(BottomNavBloc.Output.OpenCookMode(output.recipeId))
+            }
         }
     }
 

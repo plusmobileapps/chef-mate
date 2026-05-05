@@ -31,6 +31,14 @@ interface RecipeListBloc {
 
     fun onSyncClicked()
 
+    fun onContinueCookingClicked()
+
+    fun onDoneCookingClicked()
+
+    fun onDoneCookingConfirmed()
+
+    fun onDoneCookingDismissed()
+
     data class Model(
         val recipes: List<RecipeListItem> = emptyList(),
         val totalRecipeCount: Int = 0,
@@ -41,6 +49,8 @@ interface RecipeListBloc {
         val isGridView: Boolean = false,
         val searchQuery: String = "",
         val isSearchActive: Boolean = false,
+        val cookingRecipeCount: Int = 0,
+        val showDoneCookingDialog: Boolean = false,
     )
 
     sealed class Output {
@@ -49,6 +59,8 @@ interface RecipeListBloc {
         object AddNewRecipe : Output()
 
         object OpenBrowser : Output()
+
+        data class OpenCookMode(val recipeId: Long) : Output()
     }
 
     interface Factory {

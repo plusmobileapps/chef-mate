@@ -46,6 +46,8 @@ class RecipeListBlocImpl(
                 isGridView = it.isGridView,
                 searchQuery = it.searchQuery,
                 isSearchActive = it.isSearchActive,
+                cookingRecipeCount = it.cookingRecipeIds.size,
+                showDoneCookingDialog = it.showDoneCookingDialog,
             )
         }
 
@@ -95,6 +97,24 @@ class RecipeListBlocImpl(
 
     override fun onSyncClicked() {
         viewModel.onSyncClicked()
+    }
+
+    override fun onContinueCookingClicked() {
+        viewModel.state.value.cookingRecipeIds.firstOrNull()?.let { recipeId ->
+            output.onNext(Output.OpenCookMode(recipeId))
+        }
+    }
+
+    override fun onDoneCookingClicked() {
+        viewModel.showDoneCookingDialog()
+    }
+
+    override fun onDoneCookingConfirmed() {
+        viewModel.confirmDoneCooking()
+    }
+
+    override fun onDoneCookingDismissed() {
+        viewModel.dismissDoneCookingDialog()
     }
 
     private fun Recipe.toRecipeListItem(): RecipeListItem =

@@ -64,6 +64,8 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc {
         data class OpenUrl(val url: String) : Output()
 
         data class OpenMealPlanner(val props: MealPlannerRootBloc.Props) : Output()
+
+        data class OpenCookMode(val recipeId: Long) : Output()
     }
 
     fun interface Factory {

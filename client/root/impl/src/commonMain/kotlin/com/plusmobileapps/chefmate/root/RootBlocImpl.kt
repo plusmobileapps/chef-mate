@@ -12,6 +12,7 @@ import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
+import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
@@ -39,6 +40,7 @@ class RootBlocImpl(
     private val mealPlannerRoot: MealPlannerRootBloc.Factory,
     private val authentication: AuthenticationBloc.Factory,
     private val appSettings: AppSettingsBloc.Factory,
+    private val cookMode: CookModeBloc.Factory,
 ) : RootBloc, BlocContext by context {
 
     @AssistedFactory
@@ -133,6 +135,16 @@ class RootBlocImpl(
                 RootBloc.Child.AppSettings(
                     bloc = appSettings.create(context = context, output = ::handleAppSettingsOutput)
                 )
+
+            is Configuration.CookMode ->
+                RootBloc.Child.CookMode(
+                    bloc =
+                        cookMode.create(
+                            context = context,
+                            initialRecipeId = config.recipeId,
+                            output = ::handleCookModeOutput,
+                        )
+                )
         }
 
     private fun handleBottomNavOutput(output: BottomNavBloc.Output) {
@@ -178,6 +190,10 @@ class RootBlocImpl(
             BottomNavBloc.Output.OpenAppSettings -> {
                 navigation.bringToFront(Configuration.AppSettings)
             }
+
+            is BottomNavBloc.Output.OpenCookMode -> {
+                navigation.bringToFront(Configuration.CookMode(output.recipeId))
+            }
         }
     }
 
@@ -211,6 +227,15 @@ class RootBlocImpl(
             is RecipeRootBloc.Output.OpenMealPlanner -> {
                 navigation.bringToFront(Configuration.MealPlanner(output.props))
             }
+            is RecipeRootBloc.Output.OpenCookMode -> {
+                navigation.bringToFront(Configuration.CookMode(output.recipeId))
+            }
+        }
+    }
+
+    private fun handleCookModeOutput(output: CookModeBloc.Output) {
+        when (output) {
+            CookModeBloc.Output.Finished -> navigation.pop()
         }
     }
 
@@ -246,6 +271,8 @@ class RootBlocImpl(
         @Serializable data class MealPlanner(val props: MealPlannerRootBloc.Props) : Configuration()
 
         @Serializable data object AppSettings : Configuration()
+
+        @Serializable data class CookMode(val recipeId: Long) : Configuration()
     }
 }
 

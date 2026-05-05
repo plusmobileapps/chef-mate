@@ -4,6 +4,7 @@
 package com.plusmobileapps.chefmate.recipe.list.impl
 
 import app.cash.turbine.test
+import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
@@ -28,6 +29,9 @@ class RecipeListViewModelTest {
 
     private val recipes = MutableStateFlow<List<Recipe>>(emptyList())
     private val repository = FakeRecipeRepository(recipes)
+    private val cookingSessionRepository: CookingSessionRepository = mock {
+        every { observeRecipeIds() } returns MutableStateFlow(emptyList())
+    }
     private val settings: Settings = mock {
         every { getBoolean("recipe_list_is_grid_view", false) } returns false
         every { getString("recipe_list_sort_option", "RECENTLY_ADDED") } returns "RECENTLY_ADDED"
@@ -39,6 +43,7 @@ class RecipeListViewModelTest {
         RecipeListViewModel(
             mainContext = UnconfinedTestDispatcher(),
             repository = repository,
+            cookingSessionRepository = cookingSessionRepository,
             settings = settings,
         )
 
@@ -221,6 +226,7 @@ class RecipeListViewModelTest {
             RecipeListViewModel(
                 mainContext = UnconfinedTestDispatcher(),
                 repository = FakeRecipeRepository(),
+                cookingSessionRepository = cookingSessionRepository,
                 settings = gridSettings,
             )
         vm.state.value.isGridView shouldBe true
@@ -307,6 +313,7 @@ class RecipeListViewModelTest {
             RecipeListViewModel(
                 mainContext = UnconfinedTestDispatcher(),
                 repository = FakeRecipeRepository(),
+                cookingSessionRepository = cookingSessionRepository,
                 settings = sortSettings,
             )
         vm.state.value.currentSort shouldBe RecipeSortOption.TOP_RATED
@@ -330,6 +337,7 @@ class RecipeListViewModelTest {
             RecipeListViewModel(
                 mainContext = UnconfinedTestDispatcher(),
                 repository = FakeRecipeRepository(),
+                cookingSessionRepository = cookingSessionRepository,
                 settings = filterSettings,
             )
         vm.state.value.activeFilters shouldBe

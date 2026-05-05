@@ -4,6 +4,7 @@
 package com.plusmobileapps.chefmate.recipe.list.impl
 
 import app.cash.turbine.test
+import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
@@ -35,6 +36,9 @@ class RecipeListBlocImplTest {
     private val output = TestConsumer<RecipeListBloc.Output>()
     private val recipes = MutableStateFlow<List<Recipe>>(emptyList())
     private val repository = FakeRecipeRepository(recipes)
+    private val cookingSessionRepository: CookingSessionRepository = mock {
+        every { observeRecipeIds() } returns MutableStateFlow(emptyList())
+    }
     private val timeFormatterUtil =
         object : TimeFormatterUtil {
             override fun formatMinutes(totalMinutes: Int): TextData =
@@ -56,6 +60,7 @@ class RecipeListBlocImplTest {
                 RecipeListViewModel(
                     mainContext = context.mainContext,
                     repository = repository,
+                    cookingSessionRepository = cookingSessionRepository,
                     settings = settings,
                 )
             },

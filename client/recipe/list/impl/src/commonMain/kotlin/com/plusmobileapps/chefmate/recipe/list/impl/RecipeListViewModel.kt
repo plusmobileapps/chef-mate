@@ -1,6 +1,7 @@
 package com.plusmobileapps.chefmate.recipe.list.impl
 
 import com.plusmobileapps.chefmate.ViewModel
+import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
@@ -22,6 +23,7 @@ import kotlinx.coroutines.launch
 class RecipeListViewModel(
     @Main mainContext: CoroutineContext,
     private val repository: RecipeRepository,
+    private val cookingSessionRepository: CookingSessionRepository,
     settings: Settings,
 ) : ViewModel(mainContext) {
     private var isGridViewPref by settings.boolean(KEY_IS_GRID_VIEW, false)
@@ -48,12 +50,32 @@ class RecipeListViewModel(
 
     init {
         scope.launch { observeRecipes() }
+        scope.launch { observeCookingSession() }
     }
 
     private suspend fun observeRecipes() {
         repository.getRecipes().collect { recipes ->
             _state.update { it.copy(isLoading = false, recipes = recipes) }
         }
+    }
+
+    private suspend fun observeCookingSession() {
+        cookingSessionRepository.observeRecipeIds().collect { ids ->
+            _state.update { it.copy(cookingRecipeIds = ids) }
+        }
+    }
+
+    fun showDoneCookingDialog() {
+        _state.update { it.copy(showDoneCookingDialog = true) }
+    }
+
+    fun dismissDoneCookingDialog() {
+        _state.update { it.copy(showDoneCookingDialog = false) }
+    }
+
+    fun confirmDoneCooking() {
+        _state.update { it.copy(showDoneCookingDialog = false) }
+        scope.launch { cookingSessionRepository.stopAll() }
     }
 
     fun deleteRecipe(recipeId: Long) {
@@ -128,6 +150,8 @@ class RecipeListViewModel(
         val activeFilters: Set<RecipeFilterOption> = emptySet(),
         val isGridView: Boolean = false,
         val searchQuery: String = "",
+        val cookingRecipeIds: List<Long> = emptyList(),
+        val showDoneCookingDialog: Boolean = false,
     ) {
         val isSearchActive: Boolean
             get() = searchQuery.isNotBlank()

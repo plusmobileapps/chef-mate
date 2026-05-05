@@ -5,6 +5,7 @@ package com.plusmobileapps.chefmate.root
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
+import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
@@ -60,6 +61,7 @@ class RootBlocTest {
                 appSettingsOutput = output
                 mock()
             },
+            cookMode = CookModeBloc.Factory { _, _, _ -> mock() },
         )
 
     fun RootBloc.instance(): RootBloc.Child = state.value.active.instance

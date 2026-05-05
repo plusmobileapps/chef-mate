@@ -24,6 +24,7 @@ import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationScreen
 import com.plusmobileapps.chefmate.browser.BrowserRootScreen
+import com.plusmobileapps.chefmate.cook.CookModeScreen
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavigationScreen
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootScreen
@@ -56,7 +57,11 @@ fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
         SharedTransitionLayout(modifier = modifier.fillMaxSize()) {
             AnimatedContent(
                 targetState = stack.active,
-                contentKey = { it.key },
+                // contentKey doubles as the key for AnimatedContent's internal
+                // SaveableStateHolder, which Bundle-validates the key on Android. The default
+                // Decompose Child.key is the Configuration data object, which is not
+                // Bundle-serializable — pass our derived String instead.
+                contentKey = { it.saveableKey() },
                 transitionSpec = {
                     val current = targetState.instance
                     val previous = initialState.instance
@@ -64,7 +69,9 @@ fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
                         current is RootBloc.Child.Browser ||
                             previous is RootBloc.Child.Browser ||
                             current is RootBloc.Child.MealPlanner ||
-                            previous is RootBloc.Child.MealPlanner
+                            previous is RootBloc.Child.MealPlanner ||
+                            current is RootBloc.Child.CookMode ||
+                            previous is RootBloc.Child.CookMode
                     val items = stack.items
                     val initialIndex = items.indexOfFirst { it.key == initialState.key }
                     val targetIndex = items.indexOfFirst { it.key == targetState.key }
@@ -124,5 +131,6 @@ private fun RootChildContent(child: RootBloc.Child, onBack: () -> Unit) {
             )
         is RootBloc.Child.MealPlanner -> MealPlannerRootScreen(child.bloc)
         is RootBloc.Child.AppSettings -> AppSettingsScreen(child.bloc)
+        is RootBloc.Child.CookMode -> CookModeScreen(child.bloc)
     }
 }

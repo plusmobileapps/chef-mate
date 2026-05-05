@@ -120,6 +120,10 @@ class RecipeDetailBlocImpl(
         output.onNext(Output.OpenMealPlanner(recipeId))
     }
 
+    override fun onCookModeClicked() {
+        output.onNext(Output.OpenCookMode(recipeId))
+    }
+
     override fun onSourceUrlClicked(url: String) {
         output.onNext(Output.OpenUrl(url))
     }

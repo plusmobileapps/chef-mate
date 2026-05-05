@@ -11,6 +11,7 @@ kotlin {
             implementation(projects.client.shared)
             implementation(projects.client.bottomnav.public)
             implementation(projects.client.browser.public)
+            implementation(projects.client.cook.public)
             implementation(projects.client.grocery.core.public)
             implementation(projects.client.recipe.core.public)
             implementation(projects.client.auth.ui.public)

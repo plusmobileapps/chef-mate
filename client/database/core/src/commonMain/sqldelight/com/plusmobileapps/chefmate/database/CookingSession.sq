@@ -1,0 +1,34 @@
+CREATE TABLE CookingSession (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    recipeId INTEGER NOT NULL UNIQUE,
+    startedAt TEXT NOT NULL DEFAULT (datetime('now')),
+    lastSelectedAt TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (recipeId) REFERENCES Recipe(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_cooking_session_started_at ON CookingSession(startedAt);
+CREATE INDEX idx_cooking_session_last_selected_at ON CookingSession(lastSelectedAt);
+
+readAll:
+SELECT * FROM CookingSession ORDER BY lastSelectedAt DESC;
+
+readRecipeIds:
+SELECT recipeId FROM CookingSession ORDER BY lastSelectedAt DESC;
+
+isCooking:
+SELECT EXISTS(SELECT 1 FROM CookingSession WHERE recipeId = ?);
+
+start:
+INSERT OR IGNORE INTO CookingSession (recipeId) VALUES (?);
+
+markSelected:
+UPDATE CookingSession SET lastSelectedAt = datetime('now') WHERE recipeId = ?;
+
+deleteByRecipeId:
+DELETE FROM CookingSession WHERE recipeId = ?;
+
+deleteByRecipeIds:
+DELETE FROM CookingSession WHERE recipeId IN ?;
+
+deleteAll:
+DELETE FROM CookingSession;

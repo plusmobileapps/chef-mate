@@ -1,0 +1,16 @@
+<resources>
+    <string name="cook_mode_title">Cook Mode</string>
+    <string name="cook_mode_close">Close cook mode</string>
+    <string name="cook_mode_whats_cooking">What’s Cooking</string>
+    <string name="cook_mode_ingredients">Ingredients</string>
+    <string name="cook_mode_directions">Directions</string>
+    <string name="cook_mode_loading">Loading recipe…</string>
+    <string name="cook_mode_no_active_recipe">No recipe selected</string>
+    <string name="cook_mode_layout_stacked">Show as single list</string>
+    <string name="cook_mode_layout_split">Show ingredients and directions side by side</string>
+    <string name="whats_cooking_title">What’s Cooking</string>
+    <string name="whats_cooking_select">Select recipes</string>
+    <string name="whats_cooking_cancel_select">Cancel selection</string>
+    <string name="whats_cooking_delete_selected">Remove selected</string>
+    <string name="whats_cooking_empty">No recipes are currently cooking.</string>
+</resources>

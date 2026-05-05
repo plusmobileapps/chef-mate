@@ -1,0 +1,10 @@
+CREATE TABLE CookingSession (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    recipeId INTEGER NOT NULL UNIQUE,
+    startedAt TEXT NOT NULL DEFAULT (datetime('now')),
+    lastSelectedAt TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (recipeId) REFERENCES Recipe(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_cooking_session_started_at ON CookingSession(startedAt);
+CREATE INDEX idx_cooking_session_last_selected_at ON CookingSession(lastSelectedAt);

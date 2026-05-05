@@ -2,6 +2,7 @@ package com.plusmobileapps.chefmate.client.database.di
 
 import com.plusmobileapps.chefmate.client.database.DriverFactory
 import com.plusmobileapps.chefmate.database.BrowserHistoryQueries
+import com.plusmobileapps.chefmate.database.CookingSessionQueries
 import com.plusmobileapps.chefmate.database.Database
 import com.plusmobileapps.chefmate.database.GroceryListQueries
 import com.plusmobileapps.chefmate.database.GroceryQueries
@@ -41,4 +42,9 @@ interface DatabaseComponent {
     @Provides
     fun providesBrowserHistoryQueries(database: Database): BrowserHistoryQueries =
         database.browserHistoryQueries
+
+    @SingleIn(AppScope::class)
+    @Provides
+    fun providesCookingSessionQueries(database: Database): CookingSessionQueries =
+        database.cookingSessionQueries
 }
