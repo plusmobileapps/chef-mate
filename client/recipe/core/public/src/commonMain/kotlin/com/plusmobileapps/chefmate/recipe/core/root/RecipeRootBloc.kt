@@ -29,6 +29,8 @@ interface RecipeRootBloc : BackHandlerOwner, BackClickBloc {
         data object OpenGroceryList : Output()
 
         data class OpenMealPlanner(val props: MealPlannerRootBloc.Props) : Output()
+
+        data class OpenCookMode(val recipeId: Long) : Output()
     }
 
     @Serializable

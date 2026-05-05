@@ -127,6 +127,9 @@ class RecipeRootBlocImpl(
                     )
                 )
             }
+            is RecipeDetailBloc.Output.OpenCookMode -> {
+                this.output.onNext(RecipeRootBloc.Output.OpenCookMode(output.recipeId))
+            }
         }
     }
 

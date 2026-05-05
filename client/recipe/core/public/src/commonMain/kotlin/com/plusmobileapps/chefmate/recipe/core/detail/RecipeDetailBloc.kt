@@ -27,6 +27,8 @@ interface RecipeDetailBloc : BackClickBloc {
 
     fun onAddToGroceryListClicked()
 
+    fun onCookModeClicked()
+
     fun onAddToMealPlanClicked()
 
     fun onSourceUrlClicked(url: String)
@@ -63,6 +65,8 @@ interface RecipeDetailBloc : BackClickBloc {
         data object OpenGroceryList : Output()
 
         data class OpenMealPlanner(val recipeId: Long) : Output()
+
+        data class OpenCookMode(val recipeId: Long) : Output()
     }
 
     sealed class Sheet {

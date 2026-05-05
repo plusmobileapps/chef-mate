@@ -46,6 +46,7 @@ import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.SoupKitchen
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Visibility
@@ -101,9 +102,11 @@ import chefmate.client.recipe.core.public.generated.resources.Res
 import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_grocery_list_added
 import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_grocery_list_view
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_favorite
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_to_grocery
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_to_meal_plan
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_allow_screen_off
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_calories
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_cook_mode
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_cook_time
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_copied_to_clipboard
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_created
@@ -252,13 +255,24 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
                                 expanded = true,
                                 floatingActionButton = {
                                     FloatingActionButton(
-                                        onClick = bloc::onAddToGroceryListClicked,
+                                        onClick = bloc::onCookModeClicked,
                                         shape = ChefMateTheme.shapes.large,
                                     ) {
-                                        Icon(Icons.Default.AddShoppingCart, null)
+                                        Icon(
+                                            imageVector = Icons.Default.SoupKitchen,
+                                            contentDescription =
+                                                stringResource(Res.string.recipe_detail_cook_mode),
+                                        )
                                     }
                                 },
                             ) {
+                                IconButton(onClick = bloc::onAddToGroceryListClicked) {
+                                    Icon(
+                                        imageVector = Icons.Default.AddShoppingCart,
+                                        contentDescription =
+                                            stringResource(Res.string.recipe_detail_add_to_grocery),
+                                    )
+                                }
                                 IconButton(onClick = { bloc.onFavoriteToggled() }) {
                                     Icon(
                                         imageVector =
@@ -1521,6 +1535,10 @@ private val previewBloc =
         }
 
         override fun onAddToMealPlanClicked() {
+            TODO("Not yet implemented")
+        }
+
+        override fun onCookModeClicked() {
             TODO("Not yet implemented")
         }
 

@@ -8,6 +8,8 @@
     <string name="recipe_add_to_grocery_list_added">Ingredients added to grocery list</string>
     <string name="recipe_add_to_grocery_list_view">View</string>
     <string name="recipe_detail_back">Back</string>
+    <string name="recipe_detail_cook_mode">Cook this recipe</string>
+    <string name="recipe_detail_add_to_grocery">Add ingredients to grocery list</string>
     <string name="recipe_detail_remove_favorite">Remove from favorites</string>
     <string name="recipe_detail_add_favorite">Add to favorites</string>
     <string name="recipe_detail_edit">Edit recipe</string>
