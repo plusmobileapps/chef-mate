@@ -57,7 +57,11 @@ fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
         SharedTransitionLayout(modifier = modifier.fillMaxSize()) {
             AnimatedContent(
                 targetState = stack.active,
-                contentKey = { it.key },
+                // contentKey doubles as the key for AnimatedContent's internal
+                // SaveableStateHolder, which Bundle-validates the key on Android. The default
+                // Decompose Child.key is the Configuration data object, which is not
+                // Bundle-serializable — pass our derived String instead.
+                contentKey = { it.saveableKey() },
                 transitionSpec = {
                     val current = targetState.instance
                     val previous = initialState.instance
