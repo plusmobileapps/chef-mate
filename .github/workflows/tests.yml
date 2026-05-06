@@ -57,15 +57,15 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew :client:ui:public:validateDebugScreenshotTest
+      - run: ./gradlew :client:ui:screenshot-test:validateDebugScreenshotTest
       - name: Upload screenshot diff report
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: screenshot-test-report
           path: |
-            client/ui/public/build/reports/screenshotTest/
-            client/ui/public/build/outputs/screenshotTest-results/
+            client/ui/screenshot-test/build/reports/screenshotTest/
+            client/ui/screenshot-test/build/outputs/screenshotTest-results/
 
   ios-tests:
     name: iOS simulator tests

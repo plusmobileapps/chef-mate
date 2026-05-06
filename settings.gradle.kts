@@ -112,6 +112,8 @@ include(":client:text:public")
 
 include(":client:ui:public")
 
+include(":client:ui:screenshot-test")
+
 include(":client:util:impl")
 
 include(":client:util:public")

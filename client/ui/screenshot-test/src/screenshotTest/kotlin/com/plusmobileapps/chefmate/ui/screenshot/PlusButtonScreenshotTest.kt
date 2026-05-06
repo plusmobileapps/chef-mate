@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.ui.components
+package com.plusmobileapps.chefmate.ui.screenshot
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
@@ -11,12 +11,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.ui.components.PlusButton
+import com.plusmobileapps.chefmate.ui.components.PlusButtonVariant
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
 @PreviewTest
 @Preview(showBackground = true)
 @Composable
-private fun PlusButtonPrimaryPreview() {
+fun PlusButtonPrimaryPreview() {
     ChefMateTheme {
         Surface {
             PlusButton(
@@ -32,7 +34,7 @@ private fun PlusButtonPrimaryPreview() {
 @PreviewTest
 @Preview(showBackground = true)
 @Composable
-private fun PlusButtonSecondaryPreview() {
+fun PlusButtonSecondaryPreview() {
     ChefMateTheme {
         Surface {
             PlusButton(
@@ -48,7 +50,7 @@ private fun PlusButtonSecondaryPreview() {
 @PreviewTest
 @Preview(showBackground = true)
 @Composable
-private fun PlusButtonDestructivePreview() {
+fun PlusButtonDestructivePreview() {
     ChefMateTheme {
         Surface {
             PlusButton(
@@ -64,7 +66,7 @@ private fun PlusButtonDestructivePreview() {
 @PreviewTest
 @Preview(showBackground = true)
 @Composable
-private fun PlusButtonLoadingPreview() {
+fun PlusButtonLoadingPreview() {
     ChefMateTheme {
         Surface {
             PlusButton(
@@ -81,7 +83,7 @@ private fun PlusButtonLoadingPreview() {
 @PreviewTest
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun PlusButtonAllVariantsDarkPreview() {
+fun PlusButtonAllVariantsDarkPreview() {
     ChefMateTheme(darkTheme = true) {
         Surface {
             Column(
