@@ -47,6 +47,28 @@ jobs:
             build/reports/kover/
             **/build/reports/kover/
 
+  screenshot-tests:
+    name: Compose screenshot tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew :client:ui:screenshot-test:validateDebugScreenshotTest
+      - name: Upload screenshot diff report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshot-test-report
+          path: |
+            client/ui/screenshot-test/build/reports/screenshotTest/
+            client/ui/screenshot-test/build/outputs/screenshotTest-results/
+
   ios-tests:
     name: iOS simulator tests
     runs-on: macos-15

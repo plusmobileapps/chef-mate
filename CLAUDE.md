@@ -26,6 +26,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # Tests (single module)
 ./gradlew :client:grocery:core:impl:test
+
+# Snapshot tests (record then verify)
+./gradlew :client:ui:screenshot-test:updateDebugScreenshotTest
+./gradlew :client:ui:screenshot-test:validateDebugScreenshotTest
 ```
 
 For iOS, open `/iosApp` in Xcode or use the IDE run configuration.
@@ -91,6 +95,25 @@ Add strings at `client/<module>/src/commonMain/composeResources/values/strings.x
 - `@ContributesAssistedFactory` binds impl classes to their assisted factory interface
 - KSP is set to v1 (not v2) for iOS compatibility — do not change this
 
+### Snapshot Testing
+
+Compose preview screenshot tests live in **`client/ui/screenshot-test`** — a plain Android library module (not KMP) that uses Google's `com.android.compose.screenshot` plugin. KMP modules can't host the `screenshotTest` source set with `com.android.library`, so all snapshot tests are centralized here and depend on the relevant feature `public` modules.
+
+**Pattern:**
+1. In the feature's `public` module, add a `<Feature>Previews.kt` file in `commonMain` with:
+   - **public** `previewXxxBloc` `val`s — fake Bloc implementations (`object : XxxBloc { ... }` returning `MutableStateFlow(model)` and `Unit` for handlers). Public visibility is required so `screenshot-test` can reuse them.
+   - `internal @Preview @Composable` functions for the IDE preview pane.
+2. In `client/ui/screenshot-test/build.gradle.kts`, add `implementation(project(":client:<feature>:public"))`.
+3. In `client/ui/screenshot-test/src/screenshotTest/kotlin/.../<Feature>ScreenshotTest.kt`, write `@PreviewTest @Preview @Composable` wrappers that import the public preview Blocs and call the screen.
+4. Record references: `./gradlew :client:ui:screenshot-test:updateDebugScreenshotTest`. Visually inspect the PNGs under `client/ui/screenshot-test/src/screenshotTestDebug/reference/` before committing.
+5. CI runs `validateDebugScreenshotTest` via the `screenshot-tests` job in `.github/workflows/tests.yml`. Diff reports upload as artifacts on failure.
+
+**Reusable fixtures**: `Recipe.Sample` is a populated companion val on `Recipe` (next to `Recipe.Empty`) for any preview that needs realistic recipe data. Add similar `<Type>.Sample` companions on shared data classes rather than redefining them per feature.
+
+**Caveats**: Plugin is Android-only (no JVM/iOS targets) and currently alpha (`com.android.compose.screenshot:0.0.1-alpha14`). `@PreviewTest` annotations only go in `screenshot-test` — never in production modules, since the annotation lives in a test-only artifact.
+
+See `client/cook/public/.../CookModePreviews.kt` and `client/ui/screenshot-test/.../CookModeScreenshotTest.kt` for a worked example covering stacked, split, loading, empty, and dark variants.
+
 ### Key Paths
 
 | Concern | Path |
@@ -102,4 +125,5 @@ Add strings at `client/<module>/src/commonMain/composeResources/values/strings.x
 | Shared utilities | `client/shared/` |
 | Reusable UI | `client/ui/public/` |
 | TextData | `client/text/public/` |
+| Snapshot tests | `client/ui/screenshot-test/` |
 | Architecture docs | `docs/architecture.md` |
