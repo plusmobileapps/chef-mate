@@ -11,18 +11,24 @@ import com.plusmobileapps.chefmate.cook.previewCookBlocSplit
 import com.plusmobileapps.chefmate.cook.previewCookBlocStacked
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
+// ── Phone portrait (360 × 1100 dp, COMPACT width → mobile layout) ──────────
+
 @PreviewTest
 @Preview(showBackground = true, heightDp = 1100)
 @Composable
-fun CookModeStackedScreenshot() {
+fun CookModePhonePortraitLightScreenshot() {
     ChefMateTheme { CookModeScreen(bloc = previewCookBlocStacked) }
 }
 
 @PreviewTest
-@Preview(showBackground = true, heightDp = 1100, widthDp = 800)
+@Preview(
+    showBackground = true,
+    heightDp = 1100,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
 @Composable
-fun CookModeSplitScreenshot() {
-    ChefMateTheme { CookModeScreen(bloc = previewCookBlocSplit) }
+fun CookModePhonePortraitDarkScreenshot() {
+    ChefMateTheme(darkTheme = true) { CookModeScreen(bloc = previewCookBlocStacked) }
 }
 
 @PreviewTest
@@ -39,31 +45,12 @@ fun CookModeEmptyScreenshot() {
     ChefMateTheme { CookModeScreen(bloc = previewCookBlocEmpty) }
 }
 
-@PreviewTest
-@Preview(showBackground = true, heightDp = 1100, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun CookModeStackedDarkScreenshot() {
-    ChefMateTheme(darkTheme = true) { CookModeScreen(bloc = previewCookBlocStacked) }
-}
+// ── Phone landscape (580 × 360 dp, COMPACT width → mobile layout, compact height) ──
 
-@PreviewTest
-@Preview(
-    showBackground = true,
-    heightDp = 1100,
-    widthDp = 800,
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-)
-@Composable
-fun CookModeSplitDarkScreenshot() {
-    ChefMateTheme(darkTheme = true) { CookModeScreen(bloc = previewCookBlocSplit) }
-}
-
-// Mobile landscape: widthDp stays under 600dp so the responsive container picks the
-// COMPACT (mobile) shell with the bottom-sheet peek row, in landscape orientation.
 @PreviewTest
 @Preview(showBackground = true, widthDp = 580, heightDp = 360)
 @Composable
-fun CookModeStackedLandscapeScreenshot() {
+fun CookModePhoneLandscapeLightScreenshot() {
     ChefMateTheme { CookModeScreen(bloc = previewCookBlocStacked) }
 }
 
@@ -75,6 +62,27 @@ fun CookModeStackedLandscapeScreenshot() {
     uiMode = Configuration.UI_MODE_NIGHT_YES,
 )
 @Composable
-fun CookModeStackedLandscapeDarkScreenshot() {
+fun CookModePhoneLandscapeDarkScreenshot() {
     ChefMateTheme(darkTheme = true) { CookModeScreen(bloc = previewCookBlocStacked) }
+}
+
+// ── Tablet (800 × 1100 dp, MEDIUM width → tablet layout with split body) ───
+
+@PreviewTest
+@Preview(showBackground = true, widthDp = 800, heightDp = 1100)
+@Composable
+fun CookModeTabletLightScreenshot() {
+    ChefMateTheme { CookModeScreen(bloc = previewCookBlocSplit) }
+}
+
+@PreviewTest
+@Preview(
+    showBackground = true,
+    widthDp = 800,
+    heightDp = 1100,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Composable
+fun CookModeTabletDarkScreenshot() {
+    ChefMateTheme(darkTheme = true) { CookModeScreen(bloc = previewCookBlocSplit) }
 }
