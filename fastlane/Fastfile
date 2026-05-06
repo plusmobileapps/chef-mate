@@ -10,7 +10,7 @@ platform :android do
     supply(
       package_name: "com.plusmobileapps.chefmate",
       track: "internal",
-      release_status: "draft",
+      release_status: "completed",
       aab: "client/composeApp/build/outputs/bundle/release/composeApp-release.aab",
       json_key_data: ENV["SUPPLY_JSON_KEY_DATA"],
       skip_upload_metadata: true,
