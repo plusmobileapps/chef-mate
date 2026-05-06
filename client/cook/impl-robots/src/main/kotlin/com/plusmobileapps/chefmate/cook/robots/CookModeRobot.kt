@@ -5,27 +5,32 @@ package com.plusmobileapps.chefmate.cook.robots
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 
 class CookModeRobot(private val rule: ComposeContentTestRule) {
 
+    // The cook screen renders the active recipe in several places (floating header,
+    // What's Cooking peek list), so we assert "at least one match is displayed"
+    // rather than expecting a unique node.
+
     fun assertIngredientShown(line: String): CookModeRobot {
         rule.waitUntilTextDisplayed(line)
-        rule.onNodeWithText(line, substring = true).assertIsDisplayed()
+        rule.onAllNodesWithText(line, substring = true).onFirst().assertIsDisplayed()
         return this
     }
 
     fun assertDirectionShown(line: String): CookModeRobot {
         rule.waitUntilTextDisplayed(line)
-        rule.onNodeWithText(line, substring = true).assertIsDisplayed()
+        rule.onAllNodesWithText(line, substring = true).onFirst().assertIsDisplayed()
         return this
     }
 
     fun assertRecipeTitleShown(title: String): CookModeRobot {
         rule.waitUntilTextDisplayed(title)
-        rule.onNodeWithText(title, substring = true).assertIsDisplayed()
+        rule.onAllNodesWithText(title, substring = true).onFirst().assertIsDisplayed()
         return this
     }
 
