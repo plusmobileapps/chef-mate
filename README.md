@@ -71,3 +71,4 @@ in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and r
 * [Kotest](https://kotest.io/docs/assertions/assertions.html) - assertions
 * [Mokkery](https://mokkery.dev/) - mocking library
 * [Turbine](https://github.com/cashapp/turbine) - coroutines testing library
+* [Compose Preview Screenshot Testing](https://developer.android.com/studio/preview/compose-screenshot-testing) - snapshot tests for `@Preview` composables (see `client/ui/screenshot-test/` and `CLAUDE.md` for the workflow)

@@ -1,42 +1,10 @@
-@file:OptIn(ExperimentalTime::class)
-
 package com.plusmobileapps.chefmate.cook
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.plusmobileapps.chefmate.recipe.data.Recipe
-import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
-import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
-
-private val sampleRecipe =
-    Recipe(
-        id = 1L,
-        title = "Pasta Carbonara",
-        description = "A classic Roman pasta with eggs, cheese, and cured pork.",
-        ingredients =
-            "200g spaghetti\n100g guanciale\n2 large eggs\n50g pecorino romano\nFreshly cracked black pepper\nSalt",
-        directions =
-            "Bring a large pot of salted water to a boil and cook pasta until al dente.\n" +
-                "Meanwhile, render the guanciale in a wide pan over medium heat until crisp.\n" +
-                "Whisk eggs and pecorino in a bowl with plenty of black pepper.\n" +
-                "Drain pasta (reserving a cup of water) and add to the pan off the heat.\n" +
-                "Pour in the egg mixture and toss vigorously, loosening with pasta water until silky.",
-        imageUrl = null,
-        sourceUrl = null,
-        servings = 2,
-        prepTime = 10,
-        cookTime = 15,
-        totalTime = 25,
-        calories = 620,
-        starRating = 5,
-        isFavorite = true,
-        syncStatus = SyncStatus.SYNCED,
-        createdAt = Instant.DISTANT_PAST,
-        updatedAt = Instant.DISTANT_PAST,
-    )
 
 val previewWhatsCookingBloc: WhatsCookingBloc =
     object : WhatsCookingBloc {
@@ -86,7 +54,7 @@ val previewCookBlocStacked: CookModeBloc =
     cookBloc(
         CookModeBloc.Model(
             isLoading = false,
-            activeRecipe = sampleRecipe,
+            activeRecipe = Recipe.Sample,
             activeSessions = activeSessionsSample,
             layoutMode = CookModeBloc.LayoutMode.Stacked,
         )
@@ -121,4 +89,10 @@ internal fun CookModeLoadingPreview() {
 @Composable
 internal fun CookModeEmptyPreview() {
     ChefMateTheme { CookModeScreen(bloc = previewCookBlocEmpty) }
+}
+
+@Preview(showBackground = true, heightDp = 1100, widthDp = 800)
+@Composable
+internal fun CookModeSplitDarkPreview() {
+    ChefMateTheme(darkTheme = true) { CookModeScreen(bloc = previewCookBlocSplit) }
 }

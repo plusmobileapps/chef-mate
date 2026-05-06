@@ -45,3 +45,15 @@ fun CookModeEmptyScreenshot() {
 fun CookModeStackedDarkScreenshot() {
     ChefMateTheme(darkTheme = true) { CookModeScreen(bloc = previewCookBlocStacked) }
 }
+
+@PreviewTest
+@Preview(
+    showBackground = true,
+    heightDp = 1100,
+    widthDp = 800,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Composable
+fun CookModeSplitDarkScreenshot() {
+    ChefMateTheme(darkTheme = true) { CookModeScreen(bloc = previewCookBlocSplit) }
+}
