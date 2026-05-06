@@ -2,6 +2,7 @@
 
 package com.plusmobileapps.chefmate.recipe.bottomnav
 
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
 import chefmate.client.bottomnav.public.generated.resources.Res
 import chefmate.client.bottomnav.public.generated.resources.tab_browser
 import chefmate.client.bottomnav.public.generated.resources.tab_grocery
@@ -52,28 +54,43 @@ import com.plusmobileapps.chefmate.settings.SettingsScreen
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.NavRailItem
 import com.plusmobileapps.chefmate.ui.components.PlusNavRailHeaderContainer
-import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
-import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
 import com.plusmobileapps.chefmate.ui.fadeScalePredictiveBackAnimatable
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
+private enum class NavigationLayout {
+    BOTTOM,
+    SIDE_COMPACT,
+    SIDE_EXPANDED,
+}
+
 @Composable
 fun BottomNavigationScreen(bloc: BottomNavBloc) {
-    PlusResponsiveContainer { windowSize ->
-        when (windowSize) {
-            WindowSizeClass.COMPACT ->
+    BoxWithConstraints {
+        val layout =
+            when {
+                maxWidth < 600.dp -> NavigationLayout.BOTTOM
+                maxHeight < 480.dp -> NavigationLayout.SIDE_COMPACT
+                else -> NavigationLayout.SIDE_EXPANDED
+            }
+        when (layout) {
+            NavigationLayout.BOTTOM ->
                 MobileBottomNavContent(modifier = Modifier.imePadding(), bloc = bloc)
-            WindowSizeClass.MEDIUM,
-            WindowSizeClass.EXPANDED ->
-                TabletNavRailContent(modifier = Modifier.imePadding(), bloc = bloc)
+            NavigationLayout.SIDE_COMPACT ->
+                SideNavContent(modifier = Modifier.imePadding(), bloc = bloc, expandedItems = false)
+            NavigationLayout.SIDE_EXPANDED ->
+                SideNavContent(modifier = Modifier.imePadding(), bloc = bloc, expandedItems = true)
         }
     }
 }
 
 @Composable
-private fun TabletNavRailContent(bloc: BottomNavBloc, modifier: Modifier = Modifier) {
+private fun SideNavContent(
+    bloc: BottomNavBloc,
+    expandedItems: Boolean,
+    modifier: Modifier = Modifier,
+) {
     val state = bloc.state.collectAsState()
 
     val navRailItems =
@@ -92,6 +109,7 @@ private fun TabletNavRailContent(bloc: BottomNavBloc, modifier: Modifier = Modif
     PlusNavRailHeaderContainer(
         modifier = modifier.fillMaxSize(),
         navRail = navRailItems,
+        expandedItems = expandedItems,
         content = { BottomNavContentContainer(modifier = Modifier.padding(it), bloc = bloc) },
     )
 }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -34,20 +35,21 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.ViewAgenda
 import androidx.compose.material.icons.filled.ViewWeek
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.BottomSheetScaffold
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -62,12 +64,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -78,6 +80,8 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -85,16 +89,20 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import chefmate.client.cook.public.generated.resources.Res
-import chefmate.client.cook.public.generated.resources.cook_mode_close
+import chefmate.client.cook.public.generated.resources.cook_mode_allow_screen_off
 import chefmate.client.cook.public.generated.resources.cook_mode_directions
 import chefmate.client.cook.public.generated.resources.cook_mode_ingredients
+import chefmate.client.cook.public.generated.resources.cook_mode_keep_screen_on
 import chefmate.client.cook.public.generated.resources.cook_mode_layout_split
 import chefmate.client.cook.public.generated.resources.cook_mode_layout_stacked
 import chefmate.client.cook.public.generated.resources.cook_mode_loading
 import chefmate.client.cook.public.generated.resources.cook_mode_no_active_recipe
 import chefmate.client.cook.public.generated.resources.cook_mode_whats_cooking
 import com.plusmobileapps.chefmate.recipe.data.Recipe
-import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.ui.KeepScreenOn
+import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
+import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.launch
@@ -103,12 +111,27 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun CookModeScreen(bloc: CookModeBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
+    if (state.keepScreenOn) {
+        KeepScreenOn()
+    }
     Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        PlusResponsiveContainer(modifier = Modifier.fillMaxSize()) { windowSizeClass ->
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val windowSizeClass =
+                when {
+                    maxWidth < 600.dp -> WindowSizeClass.COMPACT
+                    maxWidth < 840.dp -> WindowSizeClass.MEDIUM
+                    else -> WindowSizeClass.EXPANDED
+                }
+            val isCompactHeight = maxHeight < 480.dp
             if (windowSizeClass == WindowSizeClass.COMPACT) {
                 CookModeMobileLayout(bloc = bloc, state = state, windowSizeClass = windowSizeClass)
             } else {
-                CookModeTabletLayout(bloc = bloc, state = state, windowSizeClass = windowSizeClass)
+                CookModeTabletLayout(
+                    bloc = bloc,
+                    state = state,
+                    windowSizeClass = windowSizeClass,
+                    isCompactHeight = isCompactHeight,
+                )
             }
         }
     }
@@ -119,31 +142,81 @@ private fun CookModeTabletLayout(
     bloc: CookModeBloc,
     state: CookModeBloc.Model,
     windowSizeClass: WindowSizeClass,
+    isCompactHeight: Boolean,
 ) {
     var showWhatsCooking by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        CookModeBody(
-            isLoading = state.isLoading,
-            recipe = state.activeRecipe,
-            layoutMode = state.layoutMode,
-            windowSizeClass = windowSizeClass,
-            bottomReserve = BottomBarReserve,
+        PlusHeaderContainer(
+            data =
+                PlusHeaderData.Modal(
+                    title = FixedString(state.activeRecipe?.title.orEmpty()),
+                    onCloseClick = bloc::onCloseClicked,
+                    trailingAccessory =
+                        PlusHeaderData.TrailingAccessory.Custom {
+                            if (isCompactHeight) {
+                                IconButton(onClick = { showWhatsCooking = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Restaurant,
+                                        contentDescription =
+                                            stringResource(Res.string.cook_mode_whats_cooking),
+                                    )
+                                }
+                            }
+                            IconButton(onClick = bloc::onKeepScreenOnToggled) {
+                                Icon(
+                                    imageVector =
+                                        if (state.keepScreenOn) Icons.Default.Visibility
+                                        else Icons.Default.VisibilityOff,
+                                    contentDescription =
+                                        stringResource(
+                                            if (state.keepScreenOn)
+                                                Res.string.cook_mode_allow_screen_off
+                                            else Res.string.cook_mode_keep_screen_on
+                                        ),
+                                )
+                            }
+                            IconButton(onClick = bloc::onLayoutToggled) {
+                                Icon(
+                                    imageVector =
+                                        if (state.layoutMode == CookModeBloc.LayoutMode.Stacked)
+                                            Icons.Default.ViewWeek
+                                        else Icons.Default.ViewAgenda,
+                                    contentDescription =
+                                        stringResource(
+                                            if (state.layoutMode == CookModeBloc.LayoutMode.Stacked)
+                                                Res.string.cook_mode_layout_split
+                                            else Res.string.cook_mode_layout_stacked
+                                        ),
+                                )
+                            }
+                        },
+                ),
             modifier = Modifier.fillMaxSize(),
-        )
-        CookModeAppBar(
-            title = state.activeRecipe?.title.orEmpty(),
-            layoutMode = state.layoutMode,
-            onLayoutToggle = bloc::onLayoutToggled,
-            onCloseClicked = bloc::onCloseClicked,
-            modifier = Modifier.align(Alignment.TopCenter),
-        )
-        CookModeBottomBar(
-            chips = state.activeSessions,
-            onWhatsCookingClicked = { showWhatsCooking = true },
-            onChipClicked = bloc::onRecipeChipClicked,
-            modifier = Modifier.align(Alignment.BottomCenter),
-        )
+            floatingHeader = true,
+            headerContainerAlpha = 0.85f,
+            centerAlignTitle = true,
+            floatingHeaderTopReserve = false,
+            scrollEnabled = false,
+            maxContentWidth = Dp.Unspecified,
+        ) {
+            CookModeBody(
+                isLoading = state.isLoading,
+                recipe = state.activeRecipe,
+                layoutMode = state.layoutMode,
+                windowSizeClass = windowSizeClass,
+                bottomReserve = if (isCompactHeight) 0.dp else BottomBarReserve,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+        if (!isCompactHeight) {
+            CookModeBottomBar(
+                chips = state.activeSessions,
+                onWhatsCookingClicked = { showWhatsCooking = true },
+                onChipClicked = bloc::onRecipeChipClicked,
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
+        }
     }
 
     if (showWhatsCooking) {
@@ -215,21 +288,62 @@ private fun CookModeMobileLayout(
         Box(
             modifier = Modifier.fillMaxSize().padding(bottom = bodyPadding.calculateBottomPadding())
         ) {
-            CookModeBody(
-                isLoading = state.isLoading,
-                recipe = state.activeRecipe,
-                layoutMode = state.layoutMode,
-                windowSizeClass = windowSizeClass,
-                bottomReserve = 0.dp,
+            PlusHeaderContainer(
+                data =
+                    PlusHeaderData.Modal(
+                        title = FixedString(state.activeRecipe?.title.orEmpty()),
+                        onCloseClick = bloc::onCloseClicked,
+                        trailingAccessory =
+                            PlusHeaderData.TrailingAccessory.Custom {
+                                IconButton(onClick = bloc::onKeepScreenOnToggled) {
+                                    Icon(
+                                        imageVector =
+                                            if (state.keepScreenOn) Icons.Default.Visibility
+                                            else Icons.Default.VisibilityOff,
+                                        contentDescription =
+                                            stringResource(
+                                                if (state.keepScreenOn)
+                                                    Res.string.cook_mode_allow_screen_off
+                                                else Res.string.cook_mode_keep_screen_on
+                                            ),
+                                    )
+                                }
+                                IconButton(onClick = bloc::onLayoutToggled) {
+                                    Icon(
+                                        imageVector =
+                                            if (state.layoutMode == CookModeBloc.LayoutMode.Stacked)
+                                                Icons.Default.ViewWeek
+                                            else Icons.Default.ViewAgenda,
+                                        contentDescription =
+                                            stringResource(
+                                                if (
+                                                    state.layoutMode ==
+                                                        CookModeBloc.LayoutMode.Stacked
+                                                )
+                                                    Res.string.cook_mode_layout_split
+                                                else Res.string.cook_mode_layout_stacked
+                                            ),
+                                    )
+                                }
+                            },
+                    ),
                 modifier = Modifier.fillMaxSize(),
-            )
-            CookModeAppBar(
-                title = state.activeRecipe?.title.orEmpty(),
-                layoutMode = state.layoutMode,
-                onLayoutToggle = bloc::onLayoutToggled,
-                onCloseClicked = bloc::onCloseClicked,
-                modifier = Modifier.align(Alignment.TopCenter),
-            )
+                floatingHeader = true,
+                headerContainerAlpha = 0.85f,
+                centerAlignTitle = true,
+                floatingHeaderTopReserve = false,
+                scrollEnabled = false,
+                maxContentWidth = Dp.Unspecified,
+            ) {
+                CookModeBody(
+                    isLoading = state.isLoading,
+                    recipe = state.activeRecipe,
+                    layoutMode = state.layoutMode,
+                    windowSizeClass = windowSizeClass,
+                    bottomReserve = 0.dp,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
     }
 }
@@ -259,53 +373,6 @@ private fun CookingPeekRow(
             modifier = Modifier.weight(1f),
         )
     }
-}
-
-@Composable
-private fun CookModeAppBar(
-    title: String,
-    layoutMode: CookModeBloc.LayoutMode,
-    onLayoutToggle: () -> Unit,
-    onCloseClicked: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    CenterAlignedTopAppBar(
-        modifier = modifier.fillMaxWidth(),
-        windowInsets =
-            WindowInsets.systemBars
-                .union(WindowInsets.displayCutout)
-                .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
-        title = { Text(text = title, maxLines = 1) },
-        navigationIcon = {
-            IconButton(onClick = onCloseClicked) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = stringResource(Res.string.cook_mode_close),
-                )
-            }
-        },
-        actions = {
-            IconButton(onClick = onLayoutToggle) {
-                Icon(
-                    imageVector =
-                        if (layoutMode == CookModeBloc.LayoutMode.Stacked) Icons.Default.ViewWeek
-                        else Icons.Default.ViewAgenda,
-                    contentDescription =
-                        stringResource(
-                            if (layoutMode == CookModeBloc.LayoutMode.Stacked) {
-                                Res.string.cook_mode_layout_split
-                            } else {
-                                Res.string.cook_mode_layout_stacked
-                            }
-                        ),
-                )
-            }
-        },
-        colors =
-            TopAppBarDefaults.centerAlignedTopAppBarColors(
-                containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.85f)
-            ),
-    )
 }
 
 @Composable
@@ -437,37 +504,72 @@ private fun StackedLayout(
     val padding = ChefMateTheme.dimens.paddingNormal
     val contentPadding = bodyContentPadding(bottomReserve)
     val layoutDir = LocalLayoutDirection.current
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding =
-            PaddingValues(
-                start = contentPadding.calculateStartPadding(layoutDir) + padding,
-                end = contentPadding.calculateEndPadding(layoutDir) + padding,
-                top = contentPadding.calculateTopPadding(),
-                bottom = contentPadding.calculateBottomPadding(),
-            ),
-        verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingExtraSmall),
-    ) {
-        stickyHeader(key = "ingredients_header") {
-            CookSectionHeader(stringResource(Res.string.cook_mode_ingredients))
+    val lazyListState = rememberLazyListState()
+
+    val ingredientsTitle = stringResource(Res.string.cook_mode_ingredients)
+    val directionsTitle = stringResource(Res.string.cook_mode_directions)
+
+    // List layout (no sticky headers):
+    //   indices 0..N-1     → ingredient items
+    //   index  N           → directions section header (regular item, scrolls normally)
+    //   indices N+1..      → direction items
+    // Switch to "Directions" label when the directions header or a direction item is first visible.
+    val currentSectionTitle by
+        remember(ingredientLines.size) {
+            derivedStateOf {
+                if (lazyListState.firstVisibleItemIndex < ingredientLines.size) ingredientsTitle
+                else directionsTitle
+            }
         }
-        itemsIndexed(ingredientLines, key = { i, _ -> "ingredient_$i" }) { index, line ->
-            IngredientRow(
-                text = line,
-                crossedOut = crossedOut[index],
-                onClick = { crossedOut[index] = !crossedOut[index] },
-            )
+
+    // Measure the overlay header height so contentPadding reserves the same space below the
+    // app bar. Starts at 0 on the first frame then stabilises immediately.
+    var overlayHeaderHeightPx by remember { mutableStateOf(0) }
+    val density = LocalDensity.current
+
+    Box(Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            state = lazyListState,
+            contentPadding =
+                PaddingValues(
+                    start = contentPadding.calculateStartPadding(layoutDir) + padding,
+                    end = contentPadding.calculateEndPadding(layoutDir) + padding,
+                    top =
+                        contentPadding.calculateTopPadding() +
+                            with(density) { overlayHeaderHeightPx.toDp() },
+                    bottom = contentPadding.calculateBottomPadding(),
+                ),
+            verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingExtraSmall),
+        ) {
+            itemsIndexed(ingredientLines, key = { i, _ -> "ingredient_$i" }) { index, line ->
+                IngredientRow(
+                    text = line,
+                    crossedOut = crossedOut[index],
+                    onClick = { crossedOut[index] = !crossedOut[index] },
+                )
+            }
+            // Directions header as a regular scrollable item — acts as a visual section divider.
+            item(key = "directions_header") { CookSectionHeader(directionsTitle) }
+            itemsIndexed(directionParagraphs, key = { i, _ -> "direction_$i" }) { index, paragraph
+                ->
+                DirectionRow(
+                    text = paragraph,
+                    highlighted = highlightedIndex == index,
+                    onClick = { onDirectionToggled(index) },
+                )
+            }
         }
-        stickyHeader(key = "directions_header") {
-            CookSectionHeader(stringResource(Res.string.cook_mode_directions))
-        }
-        itemsIndexed(directionParagraphs, key = { i, _ -> "direction_$i" }) { index, paragraph ->
-            DirectionRow(
-                text = paragraph,
-                highlighted = highlightedIndex == index,
-                onClick = { onDirectionToggled(index) },
-            )
-        }
+
+        // Overlay sticky header pinned to the bottom edge of the floating app bar.
+        // Items scroll freely through/behind the transparent app bar; only this header is anchored.
+        CookSectionHeader(
+            title = currentSectionTitle,
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(top = contentPadding.calculateTopPadding())
+                    .onSizeChanged { overlayHeaderHeightPx = it.height },
+        )
     }
 }
 
@@ -637,9 +739,9 @@ private fun VerticalDragHandle(onDrag: (Float) -> Unit) {
 }
 
 @Composable
-private fun CookSectionHeader(title: String) {
+private fun CookSectionHeader(title: String, modifier: Modifier = Modifier) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 2.dp,
     ) {

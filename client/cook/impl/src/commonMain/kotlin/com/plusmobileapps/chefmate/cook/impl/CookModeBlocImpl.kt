@@ -54,6 +54,7 @@ class CookModeBlocImpl(
                         )
                     },
                 layoutMode = vm.layoutMode,
+                keepScreenOn = vm.keepScreenOn,
             )
         }
 
@@ -67,6 +68,10 @@ class CookModeBlocImpl(
 
     override fun onLayoutToggled() {
         viewModel.toggleLayout()
+    }
+
+    override fun onKeepScreenOnToggled() {
+        viewModel.toggleKeepScreenOn()
     }
 
     override fun onBackClicked() {

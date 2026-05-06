@@ -1,6 +1,6 @@
 @file:Suppress("ktlint:standard:filename")
 
-package com.plusmobileapps.chefmate.util
+package com.plusmobileapps.chefmate.ui
 
 import androidx.compose.runtime.Composable
 

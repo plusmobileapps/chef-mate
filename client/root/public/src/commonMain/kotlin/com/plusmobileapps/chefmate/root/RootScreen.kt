@@ -3,9 +3,12 @@
 package com.plusmobileapps.chefmate.root
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
@@ -77,14 +80,26 @@ fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
                     val targetIndex = items.indexOfFirst { it.key == targetState.key }
                     val isForward = if (initialIndex < 0) false else targetIndex > initialIndex
                     val spec = tween<androidx.compose.ui.unit.IntOffset>(durationMillis = 300)
+                    val floatSpec = tween<Float>(durationMillis = 300)
 
                     if (isVertical) {
                         if (isForward) {
-                            slideInVertically(spec) { it } togetherWith
-                                slideOutVertically(spec) { 0 }
+                            // Modal slides up over the background. The background must stay alive
+                            // (via fadeOut) for the full duration so it's visible behind the
+                            // incoming screen; z-index puts the modal on top.
+                            ContentTransform(
+                                targetContentEnter = slideInVertically(spec) { it },
+                                initialContentExit = fadeOut(floatSpec),
+                                targetContentZIndex = 1f,
+                            )
                         } else {
-                            slideInVertically(spec) { 0 } togetherWith
-                                slideOutVertically(spec) { it }
+                            // Modal slides back down. The background should sit underneath while
+                            // the modal exits; negative z-index keeps the modal on top.
+                            ContentTransform(
+                                targetContentEnter = EnterTransition.None,
+                                initialContentExit = slideOutVertically(spec) { it },
+                                targetContentZIndex = -1f,
+                            )
                         }
                     } else {
                         if (isForward) {
@@ -98,9 +113,16 @@ fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
                 },
                 label = "root-stack",
             ) { activeChild ->
+                // Only BottomNavigation and RecipeRoot participate in shared element transitions
+                // (recipe image/title morph). All other screens get a null AnimatedVisibilityScope
+                // so SharedTransitionLayout never intercepts their enter/exit timing.
+                val isSharedTransitionParticipant =
+                    activeChild.instance is RootBloc.Child.BottomNavigation ||
+                        activeChild.instance is RootBloc.Child.RecipeRoot
                 CompositionLocalProvider(
                     LocalSharedTransitionScope provides this@SharedTransitionLayout,
-                    LocalAnimatedVisibilityScope provides this,
+                    LocalAnimatedVisibilityScope provides
+                        if (isSharedTransitionParticipant) this else null,
                 ) {
                     saveableStateHolder.SaveableStateProvider(activeChild.saveableKey()) {
                         RootChildContent(activeChild.instance, rootBloc::onBackClicked)

@@ -11,15 +11,18 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.systemGestures
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.rememberScrollState
@@ -27,6 +30,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -34,6 +38,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.BottomCenter
@@ -61,40 +66,96 @@ fun PlusHeaderContainer(
     snackbarHost: @Composable () -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
     floatingToolbar: (@Composable () -> Unit)? = null,
+    floatingHeader: Boolean = false,
+    headerContainerAlpha: Float = 1f,
+    centerAlignTitle: Boolean = false,
+    // When true the container adds status-bar + app-bar top padding to the content so it clears
+    // the floating header. Pass false when the content manages its own top inset (e.g. Cook Mode).
+    floatingHeaderTopReserve: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val scrollState = rememberScrollState()
     val density = LocalDensity.current
 
-    Column(
-        modifier = modifier.fillMaxSize().background(ChefMateTheme.colorScheme.background),
-        verticalArrangement = verticalArrangement,
-        horizontalAlignment = horizontalAlignment,
-    ) {
-        if (data !is PlusHeaderData.None) {
-            PlusHeader(data = data)
+    if (floatingHeader) {
+        val topPadding =
+            if (floatingHeaderTopReserve) {
+                with(density) { WindowInsets.statusBars.getTop(density).toDp() } + 64.dp
+            } else {
+                0.dp
+            }
+        Box(modifier = modifier.fillMaxSize().background(ChefMateTheme.colorScheme.background)) {
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = ChefMateTheme.colorScheme.background,
+                contentColor = ChefMateTheme.colorScheme.onBackground,
+            ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    ScrollingContent(
+                        scrollEnabled = scrollEnabled,
+                        scrollState = scrollState,
+                        maxContentWidth = maxContentWidth,
+                        topPadding = topPadding,
+                        content = content,
+                    )
+                    BottomBarBox(
+                        density = density,
+                        floatingActionButton = floatingActionButton,
+                        snackbarHost = snackbarHost,
+                    )
+                    floatingToolbar?.let {
+                        Box(modifier = Modifier.align(BottomCenter).floatingToolbarPadding()) {
+                            it()
+                        }
+                    }
+                }
+            }
+            if (data !is PlusHeaderData.None) {
+                PlusHeader(
+                    data = data,
+                    containerAlpha = headerContainerAlpha,
+                    centerAlign = centerAlignTitle,
+                    windowInsets =
+                        WindowInsets.systemBars
+                            .union(WindowInsets.displayCutout)
+                            .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
+                    modifier = Modifier.align(Alignment.TopCenter),
+                )
+            }
         }
-
-        Surface(
-            modifier = Modifier.weight(1f),
-            color = ChefMateTheme.colorScheme.background,
-            contentColor = ChefMateTheme.colorScheme.onBackground,
+    } else {
+        Column(
+            modifier = modifier.fillMaxSize().background(ChefMateTheme.colorScheme.background),
+            verticalArrangement = verticalArrangement,
+            horizontalAlignment = horizontalAlignment,
         ) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                ScrollingContent(
-                    scrollEnabled = scrollEnabled,
-                    scrollState = scrollState,
-                    maxContentWidth = maxContentWidth,
-                    content = content,
-                )
-                BottomBarBox(
-                    density = density,
-                    floatingActionButton = floatingActionButton,
-                    snackbarHost = snackbarHost,
-                )
+            if (data !is PlusHeaderData.None) {
+                PlusHeader(data = data)
+            }
 
-                floatingToolbar?.let {
-                    Box(modifier = Modifier.align(BottomCenter).floatingToolbarPadding()) { it() }
+            Surface(
+                modifier = Modifier.weight(1f),
+                color = ChefMateTheme.colorScheme.background,
+                contentColor = ChefMateTheme.colorScheme.onBackground,
+            ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    ScrollingContent(
+                        scrollEnabled = scrollEnabled,
+                        scrollState = scrollState,
+                        maxContentWidth = maxContentWidth,
+                        content = content,
+                    )
+                    BottomBarBox(
+                        density = density,
+                        floatingActionButton = floatingActionButton,
+                        snackbarHost = snackbarHost,
+                    )
+
+                    floatingToolbar?.let {
+                        Box(modifier = Modifier.align(BottomCenter).floatingToolbarPadding()) {
+                            it()
+                        }
+                    }
                 }
             }
         }
@@ -140,6 +201,7 @@ private fun ScrollingContent(
     scrollEnabled: Boolean,
     scrollState: ScrollState,
     maxContentWidth: Dp,
+    topPadding: Dp = 0.dp,
     content: @Composable (ColumnScope.() -> Unit),
 ) {
     Column(
@@ -148,12 +210,14 @@ private fun ScrollingContent(
                 modifier
                     .fillMaxHeight()
                     .widthIn(max = maxContentWidth)
+                    .padding(top = topPadding)
                     .scaffoldContentInsetPadding()
                     .verticalScroll(scrollState)
             } else {
                 modifier
                     .fillMaxHeight()
                     .widthIn(max = maxContentWidth)
+                    .padding(top = topPadding)
                     .scaffoldContentInsetPadding()
             }
     ) {
@@ -168,83 +232,104 @@ private fun ScrollingContent(
 fun PlusHeader(
     data: PlusHeaderData,
     windowInsets: WindowInsets? = null,
+    containerAlpha: Float = 1f,
+    centerAlign: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
-    TopAppBar(
-        modifier = modifier,
-        windowInsets =
-            windowInsets
-                ?: WindowInsets(
-                    left = WindowInsets.displayCutout.getLeft(density, LayoutDirection.Ltr),
-                    right = WindowInsets.displayCutout.getRight(density, LayoutDirection.Ltr),
-                    top = WindowInsets.statusBars.getTop(density),
-                    bottom = WindowInsets.statusBars.getBottom(density),
-                ),
-        title = {
-            val titleKey = (data as? PlusHeaderData.Child)?.titleSharedElementKey
-            Text(
-                text = data.title.localized(),
-                color = ChefMateTheme.colorScheme.onBackground,
-                modifier = Modifier.sharedBoundsBy(titleKey),
+    val resolvedInsets =
+        windowInsets
+            ?: WindowInsets(
+                left = WindowInsets.displayCutout.getLeft(density, LayoutDirection.Ltr),
+                right = WindowInsets.displayCutout.getRight(density, LayoutDirection.Ltr),
+                top = WindowInsets.statusBars.getTop(density),
+                bottom = WindowInsets.statusBars.getBottom(density),
             )
-        },
-        navigationIcon =
-            when (data) {
-                is PlusHeaderData.Child -> {
-                    {
-                        PlusIconButton(
-                            modifier = Modifier.padding(end = ChefMateTheme.dimens.paddingSmall),
-                            icon = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(Res.string.back),
-                            onClick = data.onBackClick,
-                        )
-                    }
+    val colors =
+        if (containerAlpha < 1f) {
+            TopAppBarDefaults.topAppBarColors(
+                containerColor = ChefMateTheme.colorScheme.background.copy(alpha = containerAlpha)
+            )
+        } else {
+            TopAppBarDefaults.topAppBarColors()
+        }
+    val title: @Composable () -> Unit = {
+        val titleKey = (data as? PlusHeaderData.Child)?.titleSharedElementKey
+        Text(
+            text = data.title.localized(),
+            color = ChefMateTheme.colorScheme.onBackground,
+            modifier = Modifier.sharedBoundsBy(titleKey),
+        )
+    }
+    val navigationIcon: @Composable () -> Unit =
+        when (data) {
+            is PlusHeaderData.Child -> {
+                {
+                    PlusIconButton(
+                        modifier = Modifier.padding(end = ChefMateTheme.dimens.paddingSmall),
+                        icon = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(Res.string.back),
+                        onClick = data.onBackClick,
+                    )
                 }
-
-                is PlusHeaderData.Modal -> {
-                    {
-                        PlusIconButton(
-                            icon = Icons.Default.Close,
-                            contentDescription = stringResource(Res.string.close),
-                            onClick = data.onCloseClick,
-                        )
-                    }
+            }
+            is PlusHeaderData.Modal -> {
+                {
+                    PlusIconButton(
+                        icon = Icons.Default.Close,
+                        contentDescription = stringResource(Res.string.close),
+                        onClick = data.onCloseClick,
+                    )
                 }
-
-                is PlusHeaderData.Parent -> {
-                    {}
-                }
-                PlusHeaderData.None -> {
-                    {}
-                }
-            },
-        actions = {
-            when (val trailingAccessory = data.trailingAccessory) {
-                is PlusHeaderData.TrailingAccessory.Button -> {
-                    PlusButton(text = trailingAccessory.text, onClick = trailingAccessory.onClick)
-                }
-
-                is PlusHeaderData.TrailingAccessory.Custom -> trailingAccessory.content(this)
-                null -> Unit
-                is PlusHeaderData.TrailingAccessory.Icon -> {
-                    if (trailingAccessory.onClick != null) {
-                        IconButton(onClick = trailingAccessory.onClick) {
-                            Icon(
-                                trailingAccessory.icon,
-                                contentDescription = trailingAccessory.contentDesc.localized(),
-                                tint = ChefMateTheme.colorScheme.onBackground,
-                            )
-                        }
-                    } else {
+            }
+            is PlusHeaderData.Parent,
+            PlusHeaderData.None -> {
+                {}
+            }
+        }
+    val actions: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
+        when (val trailingAccessory = data.trailingAccessory) {
+            is PlusHeaderData.TrailingAccessory.Button -> {
+                PlusButton(text = trailingAccessory.text, onClick = trailingAccessory.onClick)
+            }
+            is PlusHeaderData.TrailingAccessory.Custom -> trailingAccessory.content(this)
+            null -> Unit
+            is PlusHeaderData.TrailingAccessory.Icon -> {
+                if (trailingAccessory.onClick != null) {
+                    IconButton(onClick = trailingAccessory.onClick) {
                         Icon(
                             trailingAccessory.icon,
                             contentDescription = trailingAccessory.contentDesc.localized(),
                             tint = ChefMateTheme.colorScheme.onBackground,
                         )
                     }
+                } else {
+                    Icon(
+                        trailingAccessory.icon,
+                        contentDescription = trailingAccessory.contentDesc.localized(),
+                        tint = ChefMateTheme.colorScheme.onBackground,
+                    )
                 }
             }
-        },
-    )
+        }
+    }
+    if (centerAlign) {
+        CenterAlignedTopAppBar(
+            modifier = modifier,
+            windowInsets = resolvedInsets,
+            title = title,
+            navigationIcon = navigationIcon,
+            actions = actions,
+            colors = colors,
+        )
+    } else {
+        TopAppBar(
+            modifier = modifier,
+            windowInsets = resolvedInsets,
+            title = title,
+            navigationIcon = navigationIcon,
+            actions = actions,
+            colors = colors,
+        )
+    }
 }

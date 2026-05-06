@@ -43,70 +43,62 @@ data class NavRailItem(
 fun PlusNavRailHeaderContainer(
     modifier: Modifier = Modifier,
     navRail: List<NavRailItem>,
+    expandedItems: Boolean = false,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val density = LocalDensity.current
 
-    PlusResponsiveContainer(modifier = modifier.fillMaxSize()) { windowSize ->
-        Row(modifier = modifier.fillMaxSize()) {
-            NavigationRail(
-                modifier = Modifier.fillMaxHeight(),
-                windowInsets =
-                    WindowInsets(
-                        left = WindowInsets.displayCutout.getLeft(density, LayoutDirection.Ltr),
-                        right = 0,
-                        top = WindowInsets.statusBars.getTop(density),
-                        bottom = WindowInsets.systemGestures.getBottom(density),
-                    ),
-                content = {
-                    when (windowSize) {
-                        WindowSizeClass.COMPACT,
-                        WindowSizeClass.MEDIUM -> {
-                            navRail.forEach { item ->
-                                NavigationRailItem(
-                                    selected = item.selected,
-                                    onClick = item.onClick,
-                                    icon = { item.icon() },
-                                    label = { item.label.localized() },
-                                )
-                            }
-                        }
-
-                        WindowSizeClass.EXPANDED -> {
-                            navRail.forEach { item ->
-                                PlusExpandedNavRailItem(
-                                    selected = item.selected,
-                                    onClick = item.onClick,
-                                    icon = { item.icon() },
-                                    label = { Text(item.label.localized()) },
-                                )
-                            }
-                        }
-                    }
-                },
-                containerColor = ChefMateTheme.colorScheme.surfaceContainer,
-                contentColor = ChefMateTheme.colorScheme.onSurface,
-            )
-
-            Box(modifier = Modifier.weight(1f)) {
-                val paddingValues: PaddingValues =
-                    with(density) {
-                        PaddingValues.Absolute(
-                            right =
-                                WindowInsets.displayCutout
-                                    .getRight(density, LayoutDirection.Ltr)
-                                    .toDp(),
-                            top = WindowInsets.statusBars.getTop(density).toDp(),
-                            bottom = WindowInsets.navigationBars.getBottom(density).toDp(),
+    Row(modifier = modifier.fillMaxSize()) {
+        NavigationRail(
+            modifier = Modifier.fillMaxHeight(),
+            windowInsets =
+                WindowInsets(
+                    left = WindowInsets.displayCutout.getLeft(density, LayoutDirection.Ltr),
+                    right = 0,
+                    top = WindowInsets.statusBars.getTop(density),
+                    bottom = WindowInsets.systemGestures.getBottom(density),
+                ),
+            content = {
+                navRail.forEach { item ->
+                    if (expandedItems) {
+                        PlusExpandedNavRailItem(
+                            selected = item.selected,
+                            onClick = item.onClick,
+                            icon = { item.icon() },
+                            label = { Text(item.label.localized()) },
+                        )
+                    } else {
+                        NavigationRailItem(
+                            selected = item.selected,
+                            onClick = item.onClick,
+                            icon = { item.icon() },
+                            label = { Text(item.label.localized()) },
                         )
                     }
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = ChefMateTheme.colorScheme.background,
-                    contentColor = ChefMateTheme.colorScheme.onBackground,
-                ) {
-                    content(paddingValues)
                 }
+            },
+            containerColor = ChefMateTheme.colorScheme.surfaceContainer,
+            contentColor = ChefMateTheme.colorScheme.onSurface,
+        )
+
+        Box(modifier = Modifier.weight(1f)) {
+            val paddingValues: PaddingValues =
+                with(density) {
+                    PaddingValues.Absolute(
+                        right =
+                            WindowInsets.displayCutout
+                                .getRight(density, LayoutDirection.Ltr)
+                                .toDp(),
+                        top = WindowInsets.statusBars.getTop(density).toDp(),
+                        bottom = WindowInsets.navigationBars.getBottom(density).toDp(),
+                    )
+                }
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = ChefMateTheme.colorScheme.background,
+                contentColor = ChefMateTheme.colorScheme.onBackground,
+            ) {
+                content(paddingValues)
             }
         }
     }

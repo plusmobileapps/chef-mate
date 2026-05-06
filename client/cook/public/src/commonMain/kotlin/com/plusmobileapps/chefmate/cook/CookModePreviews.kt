@@ -41,6 +41,8 @@ private fun cookBloc(model: CookModeBloc.Model): CookModeBloc =
 
         override fun onLayoutToggled() = Unit
 
+        override fun onKeepScreenOnToggled() = Unit
+
         override fun onBackClicked() = Unit
     }
 
@@ -57,6 +59,7 @@ val previewCookBlocStacked: CookModeBloc =
             activeRecipe = Recipe.Sample,
             activeSessions = activeSessionsSample,
             layoutMode = CookModeBloc.LayoutMode.Stacked,
+            keepScreenOn = true,
         )
     )
 

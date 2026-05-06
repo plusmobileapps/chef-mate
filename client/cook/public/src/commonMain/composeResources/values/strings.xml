@@ -8,6 +8,8 @@
     <string name="cook_mode_no_active_recipe">No recipe selected</string>
     <string name="cook_mode_layout_stacked">Show as single list</string>
     <string name="cook_mode_layout_split">Show ingredients and directions side by side</string>
+    <string name="cook_mode_keep_screen_on">Keep screen on</string>
+    <string name="cook_mode_allow_screen_off">Allow screen to turn off</string>
     <string name="whats_cooking_title">What’s Cooking</string>
     <string name="whats_cooking_select">Select recipes</string>
     <string name="whats_cooking_cancel_select">Cancel selection</string>
