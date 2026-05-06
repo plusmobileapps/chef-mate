@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -99,7 +100,6 @@ import chefmate.client.cook.public.generated.resources.cook_mode_no_active_recip
 import chefmate.client.cook.public.generated.resources.cook_mode_whats_cooking
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.ui.KeepScreenOn
-import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.launch
@@ -112,11 +112,23 @@ fun CookModeScreen(bloc: CookModeBloc, modifier: Modifier = Modifier) {
         KeepScreenOn()
     }
     Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        PlusResponsiveContainer(modifier = Modifier.fillMaxSize()) { windowSizeClass ->
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val windowSizeClass =
+                when {
+                    maxWidth < 600.dp -> WindowSizeClass.COMPACT
+                    maxWidth < 840.dp -> WindowSizeClass.MEDIUM
+                    else -> WindowSizeClass.EXPANDED
+                }
+            val isCompactHeight = maxHeight < 480.dp
             if (windowSizeClass == WindowSizeClass.COMPACT) {
                 CookModeMobileLayout(bloc = bloc, state = state, windowSizeClass = windowSizeClass)
             } else {
-                CookModeTabletLayout(bloc = bloc, state = state, windowSizeClass = windowSizeClass)
+                CookModeTabletLayout(
+                    bloc = bloc,
+                    state = state,
+                    windowSizeClass = windowSizeClass,
+                    isCompactHeight = isCompactHeight,
+                )
             }
         }
     }
@@ -127,6 +139,7 @@ private fun CookModeTabletLayout(
     bloc: CookModeBloc,
     state: CookModeBloc.Model,
     windowSizeClass: WindowSizeClass,
+    isCompactHeight: Boolean,
 ) {
     var showWhatsCooking by remember { mutableStateOf(false) }
 
@@ -136,7 +149,7 @@ private fun CookModeTabletLayout(
             recipe = state.activeRecipe,
             layoutMode = state.layoutMode,
             windowSizeClass = windowSizeClass,
-            bottomReserve = BottomBarReserve,
+            bottomReserve = if (isCompactHeight) 0.dp else BottomBarReserve,
             modifier = Modifier.fillMaxSize(),
         )
         CookModeAppBar(
@@ -146,14 +159,17 @@ private fun CookModeTabletLayout(
             onLayoutToggle = bloc::onLayoutToggled,
             onKeepScreenOnToggle = bloc::onKeepScreenOnToggled,
             onCloseClicked = bloc::onCloseClicked,
+            onWhatsCookingClicked = if (isCompactHeight) ({ showWhatsCooking = true }) else null,
             modifier = Modifier.align(Alignment.TopCenter),
         )
-        CookModeBottomBar(
-            chips = state.activeSessions,
-            onWhatsCookingClicked = { showWhatsCooking = true },
-            onChipClicked = bloc::onRecipeChipClicked,
-            modifier = Modifier.align(Alignment.BottomCenter),
-        )
+        if (!isCompactHeight) {
+            CookModeBottomBar(
+                chips = state.activeSessions,
+                onWhatsCookingClicked = { showWhatsCooking = true },
+                onChipClicked = bloc::onRecipeChipClicked,
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
+        }
     }
 
     if (showWhatsCooking) {
@@ -281,6 +297,7 @@ private fun CookModeAppBar(
     onLayoutToggle: () -> Unit,
     onKeepScreenOnToggle: () -> Unit,
     onCloseClicked: () -> Unit,
+    onWhatsCookingClicked: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     CenterAlignedTopAppBar(
@@ -299,6 +316,14 @@ private fun CookModeAppBar(
             }
         },
         actions = {
+            if (onWhatsCookingClicked != null) {
+                IconButton(onClick = onWhatsCookingClicked) {
+                    Icon(
+                        imageVector = Icons.Default.Restaurant,
+                        contentDescription = stringResource(Res.string.cook_mode_whats_cooking),
+                    )
+                }
+            }
             IconButton(onClick = onKeepScreenOnToggle) {
                 Icon(
                     imageVector =
