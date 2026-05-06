@@ -1,7 +1,12 @@
-@file:OptIn(kotlin.time.ExperimentalTime::class)
+@file:OptIn(
+    kotlin.time.ExperimentalTime::class,
+    androidx.compose.ui.test.ExperimentalTestApi::class,
+)
 
 package com.plusmobileapps.chefmate.e2e
 
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -23,8 +28,8 @@ import org.junit.Test
 
 /**
  * Navigation-level end-to-end test. Boots the real DI graph (with only RecipeRemoteDataSource
- * faked), seeds one recipe + an active cooking session, renders [App], and uses the cook robot to
- * verify the recipe's ingredients and directions appear in cook mode.
+ * faked), seeds one recipe, renders [App], and walks the user from the recipes tab → recipe detail
+ * → cook mode, asserting via [CookModeRobot] that the recipe's ingredients and directions show up.
  */
 class CookFlowE2eTest {
 
@@ -63,12 +68,13 @@ class CookFlowE2eTest {
         composeRule.setContent { App(rootBloc) }
 
         // Recipe list is the default landing tab — open the seeded recipe.
+        composeRule.waitUntilAtLeastOneExists(hasText("Pasta Carbonara"))
         composeRule.onNodeWithText("Pasta Carbonara").performClick()
 
-        // Recipe detail's cook FAB has a "Cook mode" content description.
-        composeRule
-            .onNodeWithContentDescription("Cook mode", substring = true, ignoreCase = true)
-            .performClick()
+        // Recipe detail's cook FAB content description comes from
+        // recipe_detail_cook_mode = "Cook this recipe".
+        composeRule.waitUntilAtLeastOneExists(hasContentDescription("Cook this recipe"))
+        composeRule.onNodeWithContentDescription("Cook this recipe").performClick()
 
         CookModeRobot(composeRule)
             .assertRecipeTitleShown("Pasta Carbonara")
