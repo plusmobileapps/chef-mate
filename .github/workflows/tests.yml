@@ -47,6 +47,25 @@ jobs:
             build/reports/kover/
             **/build/reports/kover/
 
+  snapshot-tests:
+    name: Snapshot tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew :client:snapshot:verifyPaparazziDebug
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: snapshot-failures
+          path: client/snapshot/src/test/snapshots/failures/
+
   ios-tests:
     name: iOS simulator tests
     runs-on: macos-15

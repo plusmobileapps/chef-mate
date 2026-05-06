@@ -58,6 +58,8 @@ include(":client:cook:impl")
 
 include(":client:cook:public")
 
+include(":client:snapshot")
+
 include(":client:database:core")
 
 include(":client:database:testing")
