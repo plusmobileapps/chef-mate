@@ -96,3 +96,17 @@ internal fun CookModeEmptyPreview() {
 internal fun CookModeSplitDarkPreview() {
     ChefMateTheme(darkTheme = true) { CookModeScreen(bloc = previewCookBlocSplit) }
 }
+
+// Mobile landscape: widthDp stays under 600dp so the responsive container picks the
+// COMPACT (mobile) shell with the bottom-sheet peek row.
+@Preview(showBackground = true, widthDp = 580, heightDp = 360)
+@Composable
+internal fun CookModeStackedLandscapePreview() {
+    ChefMateTheme { CookModeScreen(bloc = previewCookBlocStacked) }
+}
+
+@Preview(showBackground = true, widthDp = 580, heightDp = 360)
+@Composable
+internal fun CookModeStackedLandscapeDarkPreview() {
+    ChefMateTheme(darkTheme = true) { CookModeScreen(bloc = previewCookBlocStacked) }
+}
