@@ -39,6 +39,7 @@ ktor = "3.2.3"
 ktfmt = "0.26.0"
 ksp = "2.3.6"
 logback = "1.5.18"
+screenshot = "0.0.1-alpha14"
 sqldelight = "2.1.0"
 supabase = "3.2.6"
 turbine = "1.2.1"
@@ -100,6 +101,8 @@ ktor-serialization-json = { module = "io.ktor:ktor-serialization-kotlinx-json", 
 ktor-serverCore = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor" }
 ktor-serverNetty = { module = "io.ktor:ktor-server-netty-jvm", version.ref = "ktor" }
 ktor-serverTestHost = { module = "io.ktor:ktor-server-test-host-jvm", version.ref = "ktor" }
+screenshot-validation-api = { group = "com.android.tools.screenshot", name = "screenshot-validation-api", version.ref = "screenshot" }
+androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 sqldelight-coroutines = { group = "app.cash.sqldelight", name = "coroutines-extensions", version.ref = "sqldelight" }
 sqldelight-primitive-adapters = { group = "app.cash.sqldelight", name = "primitive-adapters", version.ref = "sqldelight" }
 sqldelight-drivers-android = { group = "app.cash.sqldelight", name = "android-driver", version.ref = "sqldelight" }
@@ -126,6 +129,7 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
 mokkery = { id = "dev.mokkery",  version.ref = "mokkery" }
+screenshot = { id = "com.android.compose.screenshot", version.ref = "screenshot" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 metro = { id = "dev.zacsweers.metro", version.ref = "metro" }
 metroDi = { id = "com.plusmobileapps.chefmate.metro" }

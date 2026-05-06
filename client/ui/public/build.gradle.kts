@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.kmpLibrary)
     alias(libs.plugins.compose)
+    alias(libs.plugins.screenshot)
 }
 
 kotlin {
@@ -18,5 +19,12 @@ kotlin {
 }
 
 compose { resources { publicResClass = true } }
+
+android { experimentalProperties["android.experimental.enableScreenshotTest"] = true }
+
+dependencies {
+    screenshotTestImplementation(libs.screenshot.validation.api)
+    screenshotTestImplementation(libs.androidx.compose.ui.tooling)
+}
 
 plusLibrary { namespace = "com.plusmobileapps.chefmate.ui" }
