@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.androidKmpLibrary)
+    id("com.android.kotlin.multiplatform.library")
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.paparazzi)
     alias(libs.plugins.plusKtfmt)
