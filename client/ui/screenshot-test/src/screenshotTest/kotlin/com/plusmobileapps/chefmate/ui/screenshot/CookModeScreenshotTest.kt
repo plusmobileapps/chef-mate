@@ -21,11 +21,7 @@ fun CookModePhonePortraitLightScreenshot() {
 }
 
 @PreviewTest
-@Preview(
-    showBackground = true,
-    heightDp = 1100,
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-)
+@Preview(showBackground = true, heightDp = 1100, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun CookModePhonePortraitDarkScreenshot() {
     ChefMateTheme(darkTheme = true) { CookModeScreen(bloc = previewCookBlocStacked) }

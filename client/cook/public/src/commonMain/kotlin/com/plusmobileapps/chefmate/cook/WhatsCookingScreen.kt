@@ -38,6 +38,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import chefmate.client.cook.public.generated.resources.Res
 import chefmate.client.cook.public.generated.resources.whats_cooking_cancel_select
@@ -88,7 +89,10 @@ fun WhatsCookingScreen(
                         )
                     }
                 }
-                IconButton(onClick = bloc::onSelectModeToggled) {
+                IconButton(
+                    onClick = bloc::onSelectModeToggled,
+                    modifier = Modifier.testTag(WhatsCookingTestTags.SelectModeToggle),
+                ) {
                     Icon(
                         imageVector = Icons.Default.Checklist,
                         contentDescription =
@@ -138,6 +142,7 @@ fun WhatsCookingScreen(
                                 onRecipeSelected()
                             }
                         },
+                        modifier = Modifier.testTag(WhatsCookingTestTags.recipeRow(item.recipeId)),
                     )
                 }
             }
@@ -151,9 +156,10 @@ private fun WhatsCookingRow(
     isSelectMode: Boolean,
     isSelected: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     ListItem(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        modifier = modifier.fillMaxWidth().clickable(onClick = onClick),
         leadingContent = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 AnimatedVisibility(

@@ -114,6 +114,17 @@ Compose preview screenshot tests live in **`client/ui/screenshot-test`** — a p
 
 See `client/cook/public/.../CookModePreviews.kt` and `client/ui/screenshot-test/.../CookModeScreenshotTest.kt` for a worked example covering stacked, split, loading, empty, and dark variants.
 
+### Compose UI Testing (multiplatform)
+
+`compose.uiTest` is wired into every module that applies the `compose` convention plugin (commonTest gets `compose.uiTest`; jvmTest gets `compose.desktop.uiTestJUnit4`). Write tests in `<feature>/public/src/commonTest/...` using `runComposeUiTest { ... }` and they run on JVM (desktop) and iOS targets via `./gradlew :client:<feature>:public:jvmTest` or `:iosSimulatorArm64Test`.
+
+**Pattern:**
+1. Add a `<Screen>TestTags` object in the feature's `public` `commonMain` with stable string tags, then attach them to relevant nodes via `Modifier.testTag(...)`.
+2. In `commonTest`, write a hand-rolled `Fake<Bloc>` (extend the bloc interface with a `MutableStateFlow<Model>`) that mutates state in response to handlers — mokkery is not on the classpath here.
+3. Use `runComposeUiTest { setContent { ... }; onNodeWithTag(...).performClick(); ... }`.
+
+See `client/cook/public/src/commonMain/.../WhatsCookingTestTags.kt` and `client/cook/public/src/commonTest/.../WhatsCookingScreenTest.kt`.
+
 ### Key Paths
 
 | Concern | Path |
