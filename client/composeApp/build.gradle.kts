@@ -1,6 +1,8 @@
 import java.util.Properties
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
 
 fun osClassifier(): String {
     val osName = System.getProperty("os.name").lowercase()
@@ -27,7 +29,11 @@ plugins {
 }
 
 kotlin {
-    androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
+    androidTarget {
+        compilerOptions { jvmTarget.set(JvmTarget.JVM_11) }
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        instrumentedTestVariant.sourceSetTree.set(KotlinSourceSetTree.test)
+    }
 
     listOf(iosArm64(), iosSimulatorArm64()).forEach { iosTarget ->
         iosTarget.binaries.framework {
@@ -105,6 +111,14 @@ kotlin {
     }
 }
 
+dependencies {
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4.android)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(project(":client:cook:impl-robots"))
+    androidTestImplementation(project(":client:database:testing"))
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+
 android {
     namespace = "com.plusmobileapps.chefmate"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -146,6 +160,7 @@ android {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 61
         versionName = "1.4.1"
+        testInstrumentationRunner = "com.plusmobileapps.chefmate.testing.E2eTestRunner"
     }
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
     buildTypes {

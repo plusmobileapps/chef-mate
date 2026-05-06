@@ -56,6 +56,8 @@ include(":client:composeApp")
 
 include(":client:cook:impl")
 
+include(":client:cook:impl-robots")
+
 include(":client:cook:public")
 
 include(":client:database:core")

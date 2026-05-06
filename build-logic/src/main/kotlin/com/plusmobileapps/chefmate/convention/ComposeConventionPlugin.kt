@@ -8,7 +8,6 @@ import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.getByType
 import org.jetbrains.compose.ComposeExtension
 import org.jetbrains.compose.ComposePlugin
-import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 class ComposeConventionPlugin : Plugin<Project> {
@@ -32,8 +31,6 @@ class ComposeConventionPlugin : Plugin<Project> {
                     val commonMain = getByName("commonMain")
                     val androidMain = findByName("androidMain")
                     val jvmMain = findByName("jvmMain")
-                    val commonTest = findByName("commonTest")
-                    val jvmTest = findByName("jvmTest")
                     val compose = ComposePlugin.Dependencies(project)
 
                     commonMain.dependencies {
@@ -54,10 +51,6 @@ class ComposeConventionPlugin : Plugin<Project> {
                         implementation(compose.desktop.currentOs)
                         implementation(libs.kotlinx.coroutinesSwing)
                     }
-
-                    @OptIn(ExperimentalComposeLibrary::class)
-                    commonTest?.dependencies { implementation(compose.uiTest) }
-                    jvmTest?.dependencies { implementation(compose.desktop.uiTestJUnit4) }
                 }
 
                 // Add debug-specific dependencies

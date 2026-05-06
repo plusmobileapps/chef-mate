@@ -21,13 +21,3 @@ kotlin {
 }
 
 plusLibrary { namespace = "com.plusmobileapps.chefmate.cook" }
-
-// Compose multiplatform UI tests in commonTest run on JVM and iOS only.
-// runComposeUiTest on Android requires Robolectric + ui-test-junit4-android,
-// which we have not wired up yet — skip Android unit tests for this module
-// (it has no Android-specific source) until that infrastructure lands.
-afterEvaluate {
-    tasks
-        .matching { it.name == "testDebugUnitTest" || it.name == "testReleaseUnitTest" }
-        .configureEach { enabled = false }
-}
