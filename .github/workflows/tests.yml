@@ -113,7 +113,7 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: ./gradlew :client:composeApp:connectedDebugAndroidTest --no-configuration-cache
+          script: ./gradlew connectedDebugAndroidTest --no-configuration-cache --continue
       - name: Publish test report
         uses: dorny/test-reporter@v2
         if: always()

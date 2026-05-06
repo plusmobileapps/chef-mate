@@ -17,7 +17,11 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(compose.components.resources)
         }
+        commonTest.dependencies { implementation(projects.client.cook.implRobots) }
     }
 }
 
-plusLibrary { namespace = "com.plusmobileapps.chefmate.cook" }
+plusLibrary {
+    namespace = "com.plusmobileapps.chefmate.cook"
+    enableComposeUiTest = true
+}

@@ -6,16 +6,15 @@
 package com.plusmobileapps.chefmate.e2e
 
 import androidx.compose.ui.test.hasContentDescription
-import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.runComposeUiTest
 import com.plusmobileapps.chefmate.cook.robots.CookModeRobot
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.list.robots.RecipeListRobot
 import com.plusmobileapps.chefmate.testing.E2eTestHarness
 import kotlin.time.Clock
 import kotlinx.coroutines.runBlocking
-import org.junit.Rule
 import org.junit.Test
 
 /**
@@ -26,11 +25,9 @@ import org.junit.Test
  */
 class CookFlowE2eTest {
 
-    @get:Rule val composeRule = createComposeRule()
-
     @Test
-    fun openingCookModeShowsIngredientsAndDirections() {
-        val harness = E2eTestHarness(composeRule)
+    fun openingCookModeShowsIngredientsAndDirections() = runComposeUiTest {
+        val harness = E2eTestHarness(this)
 
         runBlocking {
             harness.component.recipeRepository.createRecipe(
@@ -46,19 +43,16 @@ class CookFlowE2eTest {
 
         harness.launchApp()
 
-        RecipeListRobot(composeRule).openRecipe("Pasta Carbonara")
+        RecipeListRobot(this).openRecipe("Pasta Carbonara")
 
         // Recipe detail's cook FAB content description comes from
         // recipe_detail_cook_mode = "Cook this recipe".
-        composeRule.waitUntil(5_000) {
-            composeRule
-                .onAllNodes(hasContentDescription("Cook this recipe"))
-                .fetchSemanticsNodes()
-                .isNotEmpty()
+        waitUntil(timeoutMillis = 5_000) {
+            onAllNodes(hasContentDescription("Cook this recipe")).fetchSemanticsNodes().isNotEmpty()
         }
-        composeRule.onNodeWithContentDescription("Cook this recipe").performClick()
+        onNodeWithContentDescription("Cook this recipe").performClick()
 
-        CookModeRobot(composeRule)
+        CookModeRobot(this)
             .assertRecipeTitleShown("Pasta Carbonara")
             .assertIngredientShown("spaghetti")
             .assertDirectionShown("Boil water")

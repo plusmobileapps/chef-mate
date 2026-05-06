@@ -26,6 +26,10 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
                 if (plusLibraryExtension.enableTesting) {
                     applyTesting(enableDatabaseTesting = plusLibraryExtension.enableDatabaseTesting)
                 }
+
+                if (plusLibraryExtension.enableComposeUiTest) {
+                    applyComposeUiTest()
+                }
             }
 
             with(pluginManager) {
