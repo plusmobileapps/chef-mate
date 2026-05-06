@@ -70,6 +70,24 @@ val previewCookBlocLoading: CookModeBloc = cookBloc(CookModeBloc.Model(isLoading
 
 val previewCookBlocEmpty: CookModeBloc = cookBloc(CookModeBloc.Model(isLoading = false))
 
+// Recipe with an unusually long title — guards against the header growing past two lines and
+// breaking the sticky section header (issue #149).
+val previewCookBlocLongTitle: CookModeBloc =
+    cookBloc(
+        CookModeBloc.Model(
+            isLoading = false,
+            activeRecipe =
+                Recipe.Sample.copy(
+                    title =
+                        "Grandma's Authentic Sunday Slow-Simmered Pasta Carbonara with " +
+                            "Hand-Rolled Spaghetti and Crispy Guanciale"
+                ),
+            activeSessions = activeSessionsSample,
+            layoutMode = CookModeBloc.LayoutMode.Stacked,
+            keepScreenOn = true,
+        )
+    )
+
 @Preview(showBackground = true, heightDp = 1100)
 @Composable
 internal fun CookModeStackedPreview() {
@@ -112,4 +130,10 @@ internal fun CookModeStackedLandscapePreview() {
 @Composable
 internal fun CookModeStackedLandscapeDarkPreview() {
     ChefMateTheme(darkTheme = true) { CookModeScreen(bloc = previewCookBlocStacked) }
+}
+
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+internal fun CookModeLongTitlePreview() {
+    ChefMateTheme { CookModeScreen(bloc = previewCookBlocLongTitle) }
 }
