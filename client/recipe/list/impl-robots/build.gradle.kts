@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "com.plusmobileapps.chefmate.cook.robots"
+    namespace = "com.plusmobileapps.chefmate.recipe.list.robots"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig { minSdk = libs.versions.android.minSdk.get().toInt() }
@@ -24,6 +24,6 @@ android {
 kotlin { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
 
 dependencies {
-    api(project(":client:cook:public"))
+    api(project(":client:recipe:list:public"))
     api(project(":client:ui:robots"))
 }

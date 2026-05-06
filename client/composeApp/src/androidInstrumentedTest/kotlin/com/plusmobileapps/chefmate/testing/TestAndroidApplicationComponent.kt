@@ -19,13 +19,15 @@ import dev.zacsweers.metro.SingleIn
  * androidInstrumentedTest so [FakeRecipeRemoteDataSource]'s `replaces` contribution overrides the
  * production Supabase remote binding.
  *
- * Exposes the repositories that the e2e test needs to seed before rendering the app.
+ * Exposes the repositories and the fake remote so tests can seed the DB and stub network responses
+ * before rendering the app.
  */
 @DependencyGraph(AppScope::class)
 @SingleIn(AppScope::class)
 abstract class TestAndroidApplicationComponent : ApplicationComponent {
     abstract val recipeRepository: RecipeRepository
     abstract val cookingSessionRepository: CookingSessionRepository
+    abstract val fakeRecipeRemoteDataSource: FakeRecipeRemoteDataSource
 
     @DependencyGraph.Factory
     fun interface Factory {

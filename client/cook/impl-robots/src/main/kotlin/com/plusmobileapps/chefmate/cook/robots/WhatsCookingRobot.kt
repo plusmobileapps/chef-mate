@@ -6,22 +6,20 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.plusmobileapps.chefmate.cook.WhatsCookingTestTags
+import com.plusmobileapps.chefmate.ui.robots.Robot
 
-class WhatsCookingRobot(private val rule: ComposeContentTestRule) {
+class WhatsCookingRobot(rule: ComposeContentTestRule) : Robot(rule) {
 
-    fun assertRecipeListed(title: String): WhatsCookingRobot {
-        rule.waitUntilTextDisplayed(title)
+    fun assertRecipeListed(title: String) = apply {
+        waitUntilTextDisplayed(title)
         rule.onNodeWithText(title).assertIsDisplayed()
-        return this
     }
 
-    fun selectRecipe(recipeId: Long): WhatsCookingRobot {
+    fun selectRecipe(recipeId: Long) = apply {
         rule.onNodeWithTag(WhatsCookingTestTags.recipeRow(recipeId)).performClick()
-        return this
     }
 
-    fun toggleSelectMode(): WhatsCookingRobot {
+    fun toggleSelectMode() = apply {
         rule.onNodeWithTag(WhatsCookingTestTags.SelectModeToggle).performClick()
-        return this
     }
 }

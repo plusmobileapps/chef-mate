@@ -12,14 +12,38 @@ import dev.zacsweers.metro.SingleIn
  * Replaces [SupabaseRecipeRemoteDataSource] in instrumented tests so the test never makes a network
  * call. The real recipe data flow (repository → DB) is exercised; only the remote boundary is
  * faked.
+ *
+ * Each interface method's response is configurable via the corresponding `stub*` method. Defaults
+ * are no-ops (echo back, empty list).
  */
 @SingleIn(AppScope::class)
 @Inject
 @ContributesBinding(scope = AppScope::class, replaces = [SupabaseRecipeRemoteDataSource::class])
 class FakeRecipeRemoteDataSource : RecipeRemoteDataSource {
-    override suspend fun upsertRecipe(recipe: RemoteRecipe): RemoteRecipe = recipe
+    private var upsertHandler: suspend (RemoteRecipe) -> RemoteRecipe = { it }
+    private var deleteHandler: suspend (String) -> Unit = {}
+    private var fetchAllHandler: suspend (String) -> List<RemoteRecipe> = { emptyList() }
 
-    override suspend fun deleteRecipe(remoteId: String) = Unit
+    fun stubUpsertRecipe(handler: suspend (RemoteRecipe) -> RemoteRecipe) {
+        upsertHandler = handler
+    }
 
-    override suspend fun fetchAllRecipes(ownerId: String): List<RemoteRecipe> = emptyList()
+    fun stubDeleteRecipe(handler: suspend (String) -> Unit) {
+        deleteHandler = handler
+    }
+
+    fun stubFetchAllRecipes(recipes: List<RemoteRecipe>) {
+        fetchAllHandler = { recipes }
+    }
+
+    fun stubFetchAllRecipes(handler: suspend (ownerId: String) -> List<RemoteRecipe>) {
+        fetchAllHandler = handler
+    }
+
+    override suspend fun upsertRecipe(recipe: RemoteRecipe): RemoteRecipe = upsertHandler(recipe)
+
+    override suspend fun deleteRecipe(remoteId: String) = deleteHandler(remoteId)
+
+    override suspend fun fetchAllRecipes(ownerId: String): List<RemoteRecipe> =
+        fetchAllHandler(ownerId)
 }

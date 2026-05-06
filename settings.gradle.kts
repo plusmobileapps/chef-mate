@@ -96,6 +96,8 @@ include(":client:recipe:data:testing")
 
 include(":client:recipe:list:impl")
 
+include(":client:recipe:list:impl-robots")
+
 include(":client:recipe:list:public")
 
 include(":client:root:impl")
@@ -113,6 +115,8 @@ include(":client:testing")
 include(":client:text:public")
 
 include(":client:ui:public")
+
+include(":client:ui:robots")
 
 include(":client:ui:screenshot-test")
 

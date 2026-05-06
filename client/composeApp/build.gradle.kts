@@ -116,6 +116,8 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(project(":client:cook:impl-robots"))
     androidTestImplementation(project(":client:database:testing"))
+    androidTestImplementation(project(":client:recipe:list:impl-robots"))
+    androidTestImplementation(project(":client:ui:robots"))
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
 
