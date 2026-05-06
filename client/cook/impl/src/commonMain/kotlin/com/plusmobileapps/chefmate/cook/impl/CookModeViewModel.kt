@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.cook.impl
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
+import com.plusmobileapps.chefmate.di.KeepScreenOnRepository
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
@@ -26,6 +27,7 @@ class CookModeViewModel(
     private val recipeRepository: RecipeRepository,
     private val sessionRepository: CookingSessionRepository,
     settings: Settings,
+    private val keepScreenOnRepository: KeepScreenOnRepository,
 ) : ViewModel(mainContext) {
 
     private var splitLayoutPref by settings.boolean(KEY_LAYOUT_SPLIT, defaultValue = false)
@@ -35,7 +37,8 @@ class CookModeViewModel(
             State(
                 layoutMode =
                     if (splitLayoutPref) CookModeBloc.LayoutMode.Split
-                    else CookModeBloc.LayoutMode.Stacked
+                    else CookModeBloc.LayoutMode.Stacked,
+                keepScreenOn = keepScreenOnRepository.keepScreenOn.value,
             )
         )
     val state: StateFlow<State> = _state.asStateFlow()
@@ -63,6 +66,11 @@ class CookModeViewModel(
                     }
                 }
         }
+        scope.launch {
+            keepScreenOnRepository.keepScreenOn.collect { keepScreenOn ->
+                _state.update { it.copy(keepScreenOn = keepScreenOn) }
+            }
+        }
     }
 
     fun selectRecipe(recipeId: Long) {
@@ -80,11 +88,16 @@ class CookModeViewModel(
         _state.update { it.copy(layoutMode = next) }
     }
 
+    fun toggleKeepScreenOn() {
+        keepScreenOnRepository.toggle()
+    }
+
     data class State(
         val isLoading: Boolean = true,
         val cookingRecipes: List<Recipe> = emptyList(),
         val activeRecipeId: Long? = null,
         val layoutMode: CookModeBloc.LayoutMode = CookModeBloc.LayoutMode.Stacked,
+        val keepScreenOn: Boolean = true,
     )
 
     @AssistedFactory

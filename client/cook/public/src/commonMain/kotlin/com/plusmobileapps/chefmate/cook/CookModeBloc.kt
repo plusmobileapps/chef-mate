@@ -21,6 +21,8 @@ interface CookModeBloc : BackClickBloc {
 
     fun onLayoutToggled()
 
+    fun onKeepScreenOnToggled()
+
     enum class LayoutMode {
         Stacked,
         Split,
@@ -31,6 +33,7 @@ interface CookModeBloc : BackClickBloc {
         val activeRecipe: Recipe? = null,
         val activeSessions: List<Chip> = emptyList(),
         val layoutMode: LayoutMode = LayoutMode.Stacked,
+        val keepScreenOn: Boolean = true,
     ) {
         data class Chip(val recipeId: Long, val title: String, val isActive: Boolean)
     }

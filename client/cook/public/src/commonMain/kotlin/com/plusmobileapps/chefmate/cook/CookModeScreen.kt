@@ -44,6 +44,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.ViewAgenda
 import androidx.compose.material.icons.filled.ViewWeek
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.BottomSheetScaffold
@@ -85,15 +87,18 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import chefmate.client.cook.public.generated.resources.Res
+import chefmate.client.cook.public.generated.resources.cook_mode_allow_screen_off
 import chefmate.client.cook.public.generated.resources.cook_mode_close
 import chefmate.client.cook.public.generated.resources.cook_mode_directions
 import chefmate.client.cook.public.generated.resources.cook_mode_ingredients
+import chefmate.client.cook.public.generated.resources.cook_mode_keep_screen_on
 import chefmate.client.cook.public.generated.resources.cook_mode_layout_split
 import chefmate.client.cook.public.generated.resources.cook_mode_layout_stacked
 import chefmate.client.cook.public.generated.resources.cook_mode_loading
 import chefmate.client.cook.public.generated.resources.cook_mode_no_active_recipe
 import chefmate.client.cook.public.generated.resources.cook_mode_whats_cooking
 import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.ui.KeepScreenOn
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -103,6 +108,9 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun CookModeScreen(bloc: CookModeBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
+    if (state.keepScreenOn) {
+        KeepScreenOn()
+    }
     Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         PlusResponsiveContainer(modifier = Modifier.fillMaxSize()) { windowSizeClass ->
             if (windowSizeClass == WindowSizeClass.COMPACT) {
@@ -134,7 +142,9 @@ private fun CookModeTabletLayout(
         CookModeAppBar(
             title = state.activeRecipe?.title.orEmpty(),
             layoutMode = state.layoutMode,
+            keepScreenOn = state.keepScreenOn,
             onLayoutToggle = bloc::onLayoutToggled,
+            onKeepScreenOnToggle = bloc::onKeepScreenOnToggled,
             onCloseClicked = bloc::onCloseClicked,
             modifier = Modifier.align(Alignment.TopCenter),
         )
@@ -226,7 +236,9 @@ private fun CookModeMobileLayout(
             CookModeAppBar(
                 title = state.activeRecipe?.title.orEmpty(),
                 layoutMode = state.layoutMode,
+                keepScreenOn = state.keepScreenOn,
                 onLayoutToggle = bloc::onLayoutToggled,
+                onKeepScreenOnToggle = bloc::onKeepScreenOnToggled,
                 onCloseClicked = bloc::onCloseClicked,
                 modifier = Modifier.align(Alignment.TopCenter),
             )
@@ -265,7 +277,9 @@ private fun CookingPeekRow(
 private fun CookModeAppBar(
     title: String,
     layoutMode: CookModeBloc.LayoutMode,
+    keepScreenOn: Boolean,
     onLayoutToggle: () -> Unit,
+    onKeepScreenOnToggle: () -> Unit,
     onCloseClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -285,6 +299,17 @@ private fun CookModeAppBar(
             }
         },
         actions = {
+            IconButton(onClick = onKeepScreenOnToggle) {
+                Icon(
+                    imageVector =
+                        if (keepScreenOn) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                    contentDescription =
+                        stringResource(
+                            if (keepScreenOn) Res.string.cook_mode_allow_screen_off
+                            else Res.string.cook_mode_keep_screen_on
+                        ),
+                )
+            }
             IconButton(onClick = onLayoutToggle) {
                 Icon(
                     imageVector =
