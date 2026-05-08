@@ -1,0 +1,39 @@
+package com.plusmobileapps.chefmate.settings
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
+import com.arkivanov.essenty.backhandler.BackDispatcher
+import com.arkivanov.essenty.backhandler.BackHandler
+import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import kotlinx.coroutines.flow.MutableStateFlow
+
+private fun appSettingsBloc(model: AppSettingsBloc.Model): AppSettingsBloc =
+    object : AppSettingsBloc {
+        override val backHandler: BackHandler = BackDispatcher()
+        override val state = MutableStateFlow(model)
+
+        override fun onBack() = Unit
+
+        override fun onHistoryEnabledChanged(enabled: Boolean) = Unit
+
+        override fun onClearHistoryClicked() = Unit
+
+        override fun onClearHistoryConfirmed() = Unit
+
+        override fun onClearHistoryDismissed() = Unit
+    }
+
+val previewAppSettingsBloc: AppSettingsBloc =
+    appSettingsBloc(AppSettingsBloc.Model(isHistoryEnabled = true, showClearHistoryDialog = false))
+
+@Preview(showBackground = true)
+@Composable
+internal fun AppSettingsScreenPreview() {
+    ChefMateTheme { AppSettingsScreen(bloc = previewAppSettingsBloc) }
+}
+
+@Preview(showBackground = true)
+@Composable
+internal fun AppSettingsScreenDarkPreview() {
+    ChefMateTheme(darkTheme = true) { AppSettingsScreen(bloc = previewAppSettingsBloc) }
+}

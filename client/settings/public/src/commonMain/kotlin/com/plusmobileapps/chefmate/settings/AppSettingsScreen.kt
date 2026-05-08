@@ -26,8 +26,8 @@ import chefmate.client.settings.public.generated.resources.app_settings_title
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusDialog
+import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
-import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
 @Composable
@@ -41,7 +41,7 @@ fun AppSettingsScreen(bloc: AppSettingsBloc, modifier: Modifier = Modifier) {
         )
     }
 
-    PlusNavContainer(
+    PlusHeaderContainer(
         modifier = modifier,
         data =
             PlusHeaderData.Child(

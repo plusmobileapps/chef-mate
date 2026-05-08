@@ -31,6 +31,7 @@ dependencies {
     implementation(project(":client:text:public"))
     implementation(project(":client:cook:public"))
     implementation(project(":client:recipe:list:public"))
+    implementation(project(":client:settings:public"))
 
     screenshotTestImplementation(libs.screenshot.validation.api)
     screenshotTestImplementation(libs.androidx.compose.ui.tooling)
