@@ -172,6 +172,7 @@ For type-mapped UI items (`RecipeListItem`, etc.) where the production mapper li
 5. **Preview Blocs return `Unit` for handlers.** Don't try to wire side-effects through them — the screen is rendered once, not interacted with.
 6. **`compose.components.resources` is needed transitively.** Most feature `public` modules already pull it via the convention plugin, but if a fresh module's previews fail to resolve `Res.string.*`, check that `compose.components.resources` is in `commonMain.dependencies`.
 7. **Don't share preview Blocs between features by re-exporting from `screenshot-test`.** Each feature owns its own previews file; the screenshot-test module just imports them.
+8. **Cross-platform subpixel AA.** The plugin does **zero-tolerance** pixel comparison. Mac arm64 and Linux x64 (CI) can produce 1-pixel-different antialiasing on FAB shadows / elevation edges, especially when the shadow lands on subpixel-misaligned coordinates at non-default `widthDp`. CI runs on Linux; if you record on Mac and CI fails on a handful of pixels in a shadow region, that's the cause. Two practical responses: (a) drop the variant if it doesn't actually exercise extra layout logic — the FAB stack uses absolute alignment regardless of canvas size, so extra widths/heights add little coverage; (b) keep the variant and accept that only one platform will validate cleanly until the plugin gains a tolerance setting (still alpha as of `0.0.1-alpha14`). Don't try to suppress with try/catch or pixel-tweak the PNG.
 
 ## Verification checklist
 
