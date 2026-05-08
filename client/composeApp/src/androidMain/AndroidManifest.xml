@@ -30,19 +30,6 @@
 
                 <data android:mimeType="text/plain" />
             </intent-filter>
-
-            <!-- Deep link for email verification -->
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-                
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                
-                <data
-                    android:scheme="chefmate"
-                    android:host="auth"
-                    android:pathPrefix="/callback" />
-            </intent-filter>
         </activity>
     </application>
 

@@ -12,7 +12,19 @@
     <string name="auth_error_password_reset_failed">Failed to send password reset email. Please try again.</string>
     <string name="auth_error_password_reset_rate_limit">Too many password reset requests. Please wait a few minutes before trying again.</string>
     <string name="auth_error_password_reset_user_not_found">If an account exists with this email, you will receive a password reset link.</string>
-    
+    <string name="auth_error_send_otp_failed">Failed to send code. Please try again.</string>
+    <string name="auth_error_send_otp_rate_limit">Too many code requests. Please wait a few minutes before trying again.</string>
+
+    <!-- OTP errors -->
+    <string name="auth_otp_error_required">Enter the 6-digit code from your email</string>
+    <string name="auth_otp_error_invalid_length">Code must be exactly 6 digits</string>
+    <string name="auth_otp_error_invalid_token">That code doesn’t match. Double-check and try again.</string>
+    <string name="auth_otp_error_expired">That code has expired. Tap "Resend code" for a new one.</string>
+    <string name="auth_otp_error_rate_limit">Too many attempts. Please wait a few minutes before trying again.</string>
+    <string name="auth_otp_error_verification_failed">Could not verify your code. Please try again.</string>
+    <string name="auth_otp_error_resend_failed">Could not resend code. Please try again.</string>
+    <string name="auth_otp_resend_success">A fresh code is on its way.</string>
+
     <!-- Success messages -->
     <string name="auth_success_password_reset_sent">Password reset email sent</string>
 </resources>

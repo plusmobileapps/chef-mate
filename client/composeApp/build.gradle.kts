@@ -235,7 +235,6 @@ compose.desktop {
                 bundleID = "com.plusmobileapps.chefmate"
                 dockName = "Chef Mate"
 
-                infoPlist { extraKeysRawXml = macExtraPlistKeys }
                 iconFile.set(project.file("src/jvmMain/resources/app-icon.icns"))
             }
 
@@ -247,8 +246,6 @@ compose.desktop {
                 menuGroup = "Utility"
                 appCategory = "Utility"
 
-                // The .desktop file will be generated with MimeType for URL scheme
-                // Custom .desktop file is placed in resources and will be used
                 iconFile.set(project.file("src/jvmMain/resources/app-icon.png"))
             }
 
@@ -258,26 +255,7 @@ compose.desktop {
                 menu = true
                 menuGroup = "Chef Mate"
                 upgradeUuid = "18159995-d967-4CD2-8885-77BFE3B59F98"
-
-                // Register URL protocol via registry (handled by jpackage installer)
-                // The installer will create registry entries for chefmate:// scheme
             }
         }
     }
 }
-
-val macExtraPlistKeys: String
-    get() =
-        """
-      <key>CFBundleURLTypes</key>
-      <array>
-        <dict>
-          <key>CFBundleURLName</key>
-          <string>Chef Mate deep link</string>
-          <key>CFBundleURLSchemes</key>
-          <array>
-            <string>chefmate</string>
-          </array>
-        </dict>
-      </array>
-    """

@@ -61,6 +61,8 @@ class AuthenticationBlocImpl(
                         output.onNext(Output.AuthenticationSuccess)
                     is AuthenticationViewModel.Output.EmailVerificationRequired ->
                         output.onNext(Output.EmailVerificationRequired(it.email))
+                    is AuthenticationViewModel.Output.PasswordlessOtpSent ->
+                        output.onNext(Output.PasswordlessOtpSent(it.email))
                 }
             }
         }
@@ -88,6 +90,10 @@ class AuthenticationBlocImpl(
 
     override fun onForgotPasswordClicked() {
         viewModel.forgotPassword()
+    }
+
+    override fun onEmailMeACodeClicked() {
+        viewModel.onEmailMeACodeClicked()
     }
 
     override fun onBackClicked() {

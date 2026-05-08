@@ -6,6 +6,7 @@ import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
+import com.plusmobileapps.chefmate.auth.ui.otp.OtpBloc
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc
@@ -30,6 +31,8 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
         data class RecipeRoot(val bloc: RecipeRootBloc) : Child()
 
         data class Authentication(val bloc: AuthenticationBloc) : Child()
+
+        data class OtpVerification(val bloc: OtpBloc) : Child()
 
         data class Browser(val bloc: BrowserRootBloc) : Child()
 

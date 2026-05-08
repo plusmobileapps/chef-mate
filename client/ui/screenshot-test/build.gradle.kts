@@ -29,6 +29,7 @@ kotlin { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
 dependencies {
     implementation(project(":client:ui:public"))
     implementation(project(":client:text:public"))
+    implementation(project(":client:auth:ui:public"))
     implementation(project(":client:bottomnav:public"))
     implementation(project(":client:cook:public"))
     implementation(project(":client:recipe:list:public"))

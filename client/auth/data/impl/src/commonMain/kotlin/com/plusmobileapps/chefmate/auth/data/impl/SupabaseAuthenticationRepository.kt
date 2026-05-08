@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.auth.data.impl
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.auth.data.ChefMateUser
+import com.plusmobileapps.chefmate.auth.data.OtpFlow
 import com.plusmobileapps.chefmate.auth.data.SignUpResult
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.Main
@@ -10,8 +11,10 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.OtpType
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.auth.providers.builtin.OTP
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.auth.user.UserInfo
 import kotlin.coroutines.CoroutineContext
@@ -70,10 +73,8 @@ class SupabaseAuthenticationRepository(
         password: String,
     ): Result<SignUpResult> {
         return try {
-            // Note: The redirectUrl will be used by Supabase for email verification links
-            // Format is platform-specific via expect/actual
             val result =
-                supabaseClient.auth.signUpWith(Email, authCallbackUrl) {
+                supabaseClient.auth.signUpWith(Email) {
                     this.email = email
                     this.password = password
                 }
@@ -100,6 +101,45 @@ class SupabaseAuthenticationRepository(
             Result.failure(e)
         }
     }
+
+    override suspend fun sendSignInOtp(email: String): Result<Unit> =
+        try {
+            supabaseClient.auth.signInWith(OTP) { this.email = email }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    override suspend fun verifyEmailOtp(email: String, token: String, flow: OtpFlow): Result<Unit> =
+        try {
+            supabaseClient.auth.verifyEmailOtp(
+                type = flow.toOtpType(),
+                email = email,
+                token = token,
+            )
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    override suspend fun resendOtp(email: String, flow: OtpFlow): Result<Unit> =
+        try {
+            when (flow) {
+                OtpFlow.SignUp ->
+                    supabaseClient.auth.resendEmail(type = OtpType.Email.SIGNUP, email = email)
+                OtpFlow.PasswordlessSignIn ->
+                    supabaseClient.auth.signInWith(OTP) { this.email = email }
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    private fun OtpFlow.toOtpType(): OtpType.Email =
+        when (this) {
+            OtpFlow.SignUp -> OtpType.Email.SIGNUP
+            OtpFlow.PasswordlessSignIn -> OtpType.Email.EMAIL
+        }
 
     override suspend fun signOut() {
         try {

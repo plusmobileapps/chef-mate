@@ -44,6 +44,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import chefmate.client.auth.ui.public.generated.resources.Res
+import chefmate.client.auth.ui.public.generated.resources.auth_button_email_me_a_code
 import chefmate.client.auth.ui.public.generated.resources.auth_button_forgot_password
 import chefmate.client.auth.ui.public.generated.resources.auth_button_okay
 import chefmate.client.auth.ui.public.generated.resources.auth_button_sign_in
@@ -99,6 +100,7 @@ fun AuthenticationScreen(bloc: AuthenticationBloc, modifier: Modifier = Modifier
                     onSubmitClicked = bloc::onSubmitClicked,
                     onToggleMode = bloc::onToggleMode,
                     onForgotPasswordClicked = bloc::onForgotPasswordClicked,
+                    onEmailMeACodeClicked = bloc::onEmailMeACodeClicked,
                     onDismissError = bloc::onDismissError,
                 )
                 if (model.isLoading) {
@@ -145,6 +147,7 @@ private fun AuthenticationBody(
     onSubmitClicked: () -> Unit,
     onToggleMode: () -> Unit,
     onForgotPasswordClicked: () -> Unit,
+    onEmailMeACodeClicked: () -> Unit,
     onDismissError: () -> Unit,
 ) {
     val passwordFocusRequester = remember { FocusRequester() }
@@ -206,8 +209,16 @@ private fun AuthenticationBody(
         Spacer(modifier = Modifier.height(ChefMateTheme.dimens.paddingNormal))
 
         AnimatedVisibility(visible = isSignIn) {
-            TextButton(onClick = onForgotPasswordClicked) {
-                Text(text = stringResource(Res.string.auth_button_forgot_password))
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                TextButton(onClick = onForgotPasswordClicked) {
+                    Text(text = stringResource(Res.string.auth_button_forgot_password))
+                }
+                TextButton(onClick = onEmailMeACodeClicked) {
+                    Text(text = stringResource(Res.string.auth_button_email_me_a_code))
+                }
             }
         }
 

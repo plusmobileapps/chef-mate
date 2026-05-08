@@ -11,6 +11,8 @@ import chefmate.client.auth.ui.impl.generated.resources.auth_error_password_rese
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_password_reset_rate_limit
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_password_reset_user_not_found
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_passwords_do_not_match
+import chefmate.client.auth.ui.impl.generated.resources.auth_error_send_otp_failed
+import chefmate.client.auth.ui.impl.generated.resources.auth_error_send_otp_rate_limit
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_sign_up_failed
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_user_already_exists
 import chefmate.client.auth.ui.impl.generated.resources.auth_success_password_reset_sent
@@ -283,6 +285,41 @@ class AuthenticationViewModel(
         }
     }
 
+    fun onEmailMeACodeClicked() {
+        val email = _email.value
+
+        if (email.isBlank()) {
+            _state.value =
+                _state.value.copy(emailError = Res.string.auth_error_email_required.asTextData())
+            return
+        }
+        if (!emailUtil.isValidEmail(email)) {
+            _state.value =
+                _state.value.copy(emailError = Res.string.auth_error_invalid_email.asTextData())
+            return
+        }
+
+        _state.value = _state.value.copy(isLoading = true, errorMessage = null, emailError = null)
+
+        scope.launch {
+            val result = authRepository.sendSignInOtp(email)
+            result.fold(
+                onSuccess = {
+                    _state.value = _state.value.copy(isLoading = false)
+                    output.send(Output.PasswordlessOtpSent(email))
+                },
+                onFailure = { e ->
+                    Logger.e("Send sign-in OTP failed", e)
+                    _state.value =
+                        _state.value.copy(
+                            isLoading = false,
+                            errorMessage = getOtpSendErrorMessage(e),
+                        )
+                },
+            )
+        }
+    }
+
     fun onDismissError() {
         _state.value = _state.value.copy(errorMessage = null)
     }
@@ -317,6 +354,15 @@ class AuthenticationViewModel(
         }
     }
 
+    private fun getOtpSendErrorMessage(e: Throwable): TextData {
+        val message = e.message?.lowercase() ?: ""
+        return when {
+            message.contains("rate") || message.contains("too many") || message.contains("limit") ->
+                Res.string.auth_error_send_otp_rate_limit.asTextData()
+            else -> Res.string.auth_error_send_otp_failed.asTextData()
+        }
+    }
+
     data class State(
         val mode: AuthenticationBloc.Model.Mode = SignIn,
         val isLoading: Boolean = false,
@@ -329,6 +375,8 @@ class AuthenticationViewModel(
         data object AuthenticationSuccess : Output()
 
         data class EmailVerificationRequired(val email: String) : Output()
+
+        data class PasswordlessOtpSent(val email: String) : Output()
     }
 
     @AssistedFactory
