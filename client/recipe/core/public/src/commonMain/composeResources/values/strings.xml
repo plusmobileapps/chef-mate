@@ -71,6 +71,9 @@
     <string name="edit_recipe_field_image_url_placeholder">Enter image URL</string>
     <string name="edit_recipe_upload_photo">Upload photo</string>
     <string name="edit_recipe_upload_photo_dismiss">OK</string>
+    <string name="edit_recipe_crop_title">Crop photo</string>
+    <string name="edit_recipe_crop_cancel">Cancel</string>
+    <string name="edit_recipe_crop_confirm">Crop</string>
     <string name="edit_recipe_field_source_url">Source URL</string>
     <string name="edit_recipe_field_source_url_placeholder">Enter source URL</string>
     <string name="edit_recipe_field_servings">Servings</string>

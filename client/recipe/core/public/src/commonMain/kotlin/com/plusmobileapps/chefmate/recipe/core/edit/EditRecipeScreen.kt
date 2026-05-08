@@ -34,11 +34,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -92,9 +95,14 @@ import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import com.plusmobileapps.chefmate.util.cropImageToSquare
+import com.plusmobileapps.chefmate.util.decodeImageBitmap
 import com.plusmobileapps.chefmate.util.rememberImagePickerLauncher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -340,13 +348,27 @@ private fun RecipeStarRatingField(bloc: EditRecipeBloc, modifier: Modifier = Mod
     }
 }
 
+private data class PendingCrop(val bytes: ByteArray, val bitmap: ImageBitmap)
+
 @Composable
 private fun RecipePhotoUploader(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     val imageUrl by bloc.imageUrl.collectAsState()
     val pendingBytes by bloc.pendingPhotoBytes.collectAsState()
+    val scope = rememberCoroutineScope()
+    var pendingCrop by remember { mutableStateOf<PendingCrop?>(null) }
+    var isCropping by remember { mutableStateOf(false) }
     val pickPhoto = rememberImagePickerLauncher { picked ->
         if (picked != null) {
-            bloc.onPhotoPicked(picked.bytes, picked.fileExtension)
+            scope.launch {
+                val bitmap =
+                    runCatching {
+                            withContext(Dispatchers.Default) { decodeImageBitmap(picked.bytes) }
+                        }
+                        .getOrNull()
+                if (bitmap != null) {
+                    pendingCrop = PendingCrop(bytes = picked.bytes, bitmap = bitmap)
+                }
+            }
         }
     }
 
@@ -360,7 +382,7 @@ private fun RecipePhotoUploader(bloc: EditRecipeBloc, modifier: Modifier = Modif
                 model = previewModel,
                 contentDescription = null,
                 modifier =
-                    Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(MaterialTheme.shapes.medium),
+                    Modifier.fillMaxWidth().aspectRatio(1f).clip(MaterialTheme.shapes.medium),
                 contentScale = ContentScale.Crop,
             )
         }
@@ -372,6 +394,34 @@ private fun RecipePhotoUploader(bloc: EditRecipeBloc, modifier: Modifier = Modif
             )
             Text(stringResource(Res.string.edit_recipe_upload_photo))
         }
+    }
+
+    pendingCrop?.let { crop ->
+        CropPhotoOverlay(
+            bitmap = crop.bitmap,
+            isProcessing = isCropping,
+            onCancel = { pendingCrop = null },
+            onConfirm = { srcX, srcY, srcSize ->
+                isCropping = true
+                scope.launch {
+                    try {
+                        val cropped =
+                            withContext(Dispatchers.Default) {
+                                cropImageToSquare(
+                                    bytes = crop.bytes,
+                                    srcX = srcX,
+                                    srcY = srcY,
+                                    srcSize = srcSize,
+                                )
+                            }
+                        bloc.onPhotoPicked(cropped, "jpg")
+                    } finally {
+                        isCropping = false
+                        pendingCrop = null
+                    }
+                }
+            },
+        )
     }
 }
 

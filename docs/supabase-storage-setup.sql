@@ -65,3 +65,32 @@ using (
   bucket_id = 'recipe-photos'
   and (storage.foldername(name))[1] = auth.uid()::text
 );
+
+-- 4. Cascade-delete the recipe's photo from storage when the recipe row is deleted.
+-- Parses the storage path out of image_url; URLs pointing to other domains
+-- (e.g. manually-typed image URLs) are left alone. `security definer` is needed
+-- so the function runs as the owner role, which has delete rights on storage.objects.
+create or replace function public.delete_recipe_photo()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, storage
+as $$
+declare
+  storage_path text;
+begin
+  if old.image_url is not null and old.image_url like '%/recipe-photos/%' then
+    storage_path := substring(old.image_url from '/recipe-photos/(.+)$');
+    if storage_path is not null and length(storage_path) > 0 then
+      delete from storage.objects
+      where bucket_id = 'recipe-photos' and name = storage_path;
+    end if;
+  end if;
+  return old;
+end;
+$$;
+
+drop trigger if exists recipes_delete_photo on public.recipes;
+create trigger recipes_delete_photo
+after delete on public.recipes
+for each row execute function public.delete_recipe_photo();
