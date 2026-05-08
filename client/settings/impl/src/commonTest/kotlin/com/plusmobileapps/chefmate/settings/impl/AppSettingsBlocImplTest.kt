@@ -92,4 +92,11 @@ class AppSettingsBlocImplTest {
         bloc.onBack()
         output.lastValue shouldBe AppSettingsBloc.Output.Back
     }
+
+    @Test
+    fun When_bottom_nav_order_clicked_Then_open_bottom_nav_order_output_emitted() {
+        val bloc = createBloc()
+        bloc.onBottomNavOrderClicked()
+        output.lastValue shouldBe AppSettingsBloc.Output.OpenBottomNavOrder
+    }
 }

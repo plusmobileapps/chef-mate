@@ -16,6 +16,7 @@ import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
+import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc.Props.Detail
@@ -40,6 +41,7 @@ class RootBlocImpl(
     private val mealPlannerRoot: MealPlannerRootBloc.Factory,
     private val authentication: AuthenticationBloc.Factory,
     private val appSettings: AppSettingsBloc.Factory,
+    private val bottomNavOrder: BottomNavOrderBloc.Factory,
     private val cookMode: CookModeBloc.Factory,
 ) : RootBloc, BlocContext by context {
 
@@ -136,6 +138,15 @@ class RootBlocImpl(
                     bloc = appSettings.create(context = context, output = ::handleAppSettingsOutput)
                 )
 
+            Configuration.BottomNavOrder ->
+                RootBloc.Child.BottomNavOrder(
+                    bloc =
+                        bottomNavOrder.create(
+                            context = context,
+                            output = ::handleBottomNavOrderOutput,
+                        )
+                )
+
             is Configuration.CookMode ->
                 RootBloc.Child.CookMode(
                     bloc =
@@ -200,6 +211,15 @@ class RootBlocImpl(
     private fun handleAppSettingsOutput(output: AppSettingsBloc.Output) {
         when (output) {
             AppSettingsBloc.Output.Back -> navigation.pop()
+            AppSettingsBloc.Output.OpenBottomNavOrder -> {
+                navigation.bringToFront(Configuration.BottomNavOrder)
+            }
+        }
+    }
+
+    private fun handleBottomNavOrderOutput(output: BottomNavOrderBloc.Output) {
+        when (output) {
+            BottomNavOrderBloc.Output.Back -> navigation.pop()
         }
     }
 
@@ -271,6 +291,8 @@ class RootBlocImpl(
         @Serializable data class MealPlanner(val props: MealPlannerRootBloc.Props) : Configuration()
 
         @Serializable data object AppSettings : Configuration()
+
+        @Serializable data object BottomNavOrder : Configuration()
 
         @Serializable data class CookMode(val recipeId: Long) : Configuration()
     }

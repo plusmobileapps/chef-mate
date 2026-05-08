@@ -16,6 +16,7 @@ kotlin {
             api(projects.client.recipe.list.public)
             api(projects.client.settings.public)
         }
+        commonTest.dependencies { implementation(libs.multiplatform.settings.test) }
     }
 }
 

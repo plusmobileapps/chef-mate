@@ -18,6 +18,8 @@ interface AppSettingsBloc : BackHandlerOwner {
 
     fun onClearHistoryDismissed()
 
+    fun onBottomNavOrderClicked()
+
     data class Model(
         val isHistoryEnabled: Boolean = true,
         val showClearHistoryDialog: Boolean = false,
@@ -25,6 +27,8 @@ interface AppSettingsBloc : BackHandlerOwner {
 
     sealed class Output {
         data object Back : Output()
+
+        data object OpenBottomNavOrder : Output()
     }
 
     fun interface Factory {

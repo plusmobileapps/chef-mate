@@ -21,6 +21,8 @@ private fun appSettingsBloc(model: AppSettingsBloc.Model): AppSettingsBloc =
         override fun onClearHistoryConfirmed() = Unit
 
         override fun onClearHistoryDismissed() = Unit
+
+        override fun onBottomNavOrderClicked() = Unit
     }
 
 val previewAppSettingsBloc: AppSettingsBloc =

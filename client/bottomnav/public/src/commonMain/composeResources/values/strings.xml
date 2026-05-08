@@ -4,4 +4,8 @@
     <string name="tab_meals">Meals</string>
     <string name="tab_recipes">Recipes</string>
     <string name="tab_more">More</string>
+    <string name="bottom_nav_order_title">Bottom navigation order</string>
+    <string name="bottom_nav_order_settings_row">Bottom navigation order</string>
+    <string name="bottom_nav_order_save">Save</string>
+    <string name="bottom_nav_order_drag_handle_content_description">Drag to reorder</string>
 </resources>

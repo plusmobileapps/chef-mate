@@ -49,6 +49,10 @@ class AppSettingsBlocImpl(
     override fun onClearHistoryDismissed() {
         viewModel.dismissClearHistoryDialog()
     }
+
+    override fun onBottomNavOrderClicked() {
+        output.onNext(Output.OpenBottomNavOrder)
+    }
 }
 
 @ContributesTo(AppScope::class)

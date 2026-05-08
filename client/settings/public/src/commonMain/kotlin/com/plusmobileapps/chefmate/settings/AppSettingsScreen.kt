@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import chefmate.client.settings.public.generated.resources.Res
+import chefmate.client.settings.public.generated.resources.app_settings_bottom_nav_order
 import chefmate.client.settings.public.generated.resources.app_settings_browser_history_enabled
 import chefmate.client.settings.public.generated.resources.app_settings_browser_section
 import chefmate.client.settings.public.generated.resources.app_settings_clear_history
@@ -22,6 +23,7 @@ import chefmate.client.settings.public.generated.resources.app_settings_clear_hi
 import chefmate.client.settings.public.generated.resources.app_settings_clear_history_dialog_confirm
 import chefmate.client.settings.public.generated.resources.app_settings_clear_history_dialog_message
 import chefmate.client.settings.public.generated.resources.app_settings_clear_history_dialog_title
+import chefmate.client.settings.public.generated.resources.app_settings_navigation_section
 import chefmate.client.settings.public.generated.resources.app_settings_title
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
@@ -49,6 +51,12 @@ fun AppSettingsScreen(bloc: AppSettingsBloc, modifier: Modifier = Modifier) {
                 onBackClick = bloc::onBack,
             ),
         content = {
+            SectionHeader(name = Res.string.app_settings_navigation_section.asTextData())
+            SettingsRow(
+                name = Res.string.app_settings_bottom_nav_order.asTextData(),
+                onClick = bloc::onBottomNavOrderClicked,
+            )
+            HorizontalDivider()
             SectionHeader(name = Res.string.app_settings_browser_section.asTextData())
             HistoryToggleRow(
                 name = Res.string.app_settings_browser_history_enabled.asTextData(),
