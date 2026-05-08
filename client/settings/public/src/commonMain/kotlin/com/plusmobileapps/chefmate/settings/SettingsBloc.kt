@@ -22,11 +22,14 @@ interface SettingsBloc {
 
     fun onAppSettingsClicked()
 
+    fun onDeveloperSettingsClicked()
+
     data class Model(
         val isAuthenticated: Boolean = false,
         val greeting: TextData? = null,
         val verificationMessage: TextData? = null,
         val showSignOutConfirmationDialog: Boolean = false,
+        val isDebugBuild: Boolean = false,
     )
 
     sealed class Output {
@@ -35,6 +38,8 @@ interface SettingsBloc {
         data object OpenSignIn : Output()
 
         data object OpenAppSettings : Output()
+
+        data object OpenDeveloperSettings : Output()
 
         data class OpenUrl(val url: String) : Output()
     }

@@ -67,6 +67,7 @@ class RootBlocTest {
                 bottomNavOrderOutput = output
                 mock()
             },
+            developerSettings = { _, _ -> mock() },
             cookMode = CookModeBloc.Factory { _, _, _ -> mock() },
         )
 

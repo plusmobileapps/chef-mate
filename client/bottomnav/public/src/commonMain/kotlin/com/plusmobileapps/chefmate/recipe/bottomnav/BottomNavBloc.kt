@@ -61,6 +61,8 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc {
 
         data object OpenAppSettings : Output()
 
+        data object OpenDeveloperSettings : Output()
+
         data class OpenUrl(val url: String) : Output()
 
         data class OpenMealPlanner(val props: MealPlannerRootBloc.Props) : Output()

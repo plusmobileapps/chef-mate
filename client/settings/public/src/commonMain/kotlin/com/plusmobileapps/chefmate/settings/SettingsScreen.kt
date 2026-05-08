@@ -30,6 +30,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import chefmate.client.settings.public.generated.resources.Res
 import chefmate.client.settings.public.generated.resources.about
+import chefmate.client.settings.public.generated.resources.developer_settings
 import chefmate.client.settings.public.generated.resources.greeting_authenticated
 import chefmate.client.settings.public.generated.resources.more
 import chefmate.client.settings.public.generated.resources.privacy_policy
@@ -107,6 +108,13 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
                 name = Res.string.about.asTextData(),
                 onClick = { bloc.onUrlClicked("https://chefmate.plusmobileapps.com/") },
             )
+            if (viewState.isDebugBuild) {
+                HorizontalDivider()
+                SettingsRow(
+                    name = Res.string.developer_settings.asTextData(),
+                    onClick = bloc::onDeveloperSettingsClicked,
+                )
+            }
         },
     )
     Column(modifier = modifier.fillMaxSize()) {
@@ -187,6 +195,8 @@ private val previewBlocUnauthenticated =
         override fun onUrlClicked(url: String) = Unit
 
         override fun onAppSettingsClicked() = Unit
+
+        override fun onDeveloperSettingsClicked() = Unit
     }
 
 private val previewBlocAuthenticated =
@@ -216,6 +226,8 @@ private val previewBlocAuthenticated =
         override fun onUrlClicked(url: String) = Unit
 
         override fun onAppSettingsClicked() = Unit
+
+        override fun onDeveloperSettingsClicked() = Unit
     }
 
 @Preview(showBackground = true)

@@ -4,6 +4,7 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
+import com.plusmobileapps.chefmate.isDebugBuild
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.settings.SettingsBloc
 import com.plusmobileapps.chefmate.settings.SettingsBloc.Output
@@ -41,6 +42,7 @@ class SettingsBlocImpl(
                         createEmailVerificationMessage(email)
                     },
                 showSignOutConfirmationDialog = it.showSignOutConfirmationDialog,
+                isDebugBuild = isDebugBuild,
             )
         }
 
@@ -70,6 +72,10 @@ class SettingsBlocImpl(
 
     override fun onAppSettingsClicked() {
         output.onNext(Output.OpenAppSettings)
+    }
+
+    override fun onDeveloperSettingsClicked() {
+        output.onNext(Output.OpenDeveloperSettings)
     }
 }
 
