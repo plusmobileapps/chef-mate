@@ -1,9 +1,13 @@
 package com.plusmobileapps.chefmate.recipe.bottomnav
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,8 +22,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DragHandle
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -43,8 +47,9 @@ import chefmate.client.bottomnav.public.generated.resources.bottom_nav_order_dra
 import chefmate.client.bottomnav.public.generated.resources.bottom_nav_order_save
 import chefmate.client.bottomnav.public.generated.resources.bottom_nav_order_title
 import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.components.PlusFloatingActionButton
+import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
-import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
 
@@ -52,41 +57,35 @@ import org.jetbrains.compose.resources.stringResource
 fun BottomNavOrderScreen(bloc: BottomNavOrderBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
 
-    // Wrap in a themed Surface so the empty area between the tab list and the Save bar respects
-    // the active color scheme — matches the pattern PR #161 used for AppSettings to avoid white
-    // background bleed in dark mode.
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = ChefMateTheme.colorScheme.background,
-        contentColor = ChefMateTheme.colorScheme.onBackground,
+    PlusHeaderContainer(
+        modifier = modifier,
+        scrollEnabled = false,
+        data =
+            PlusHeaderData.Child(
+                title = Res.string.bottom_nav_order_title.asTextData(),
+                onBackClick = bloc::onBack,
+            ),
+        floatingActionButton = {
+            // Hide the Save FAB until something has actually been reordered. AnimatedVisibility
+            // gives it a quick fade+scale entrance so the affordance doesn't pop in abruptly on
+            // the first move.
+            AnimatedVisibility(
+                visible = state.hasUnsavedChanges,
+                enter = scaleIn() + fadeIn(),
+                exit = scaleOut() + fadeOut(),
+            ) {
+                PlusFloatingActionButton(
+                    text = stringResource(Res.string.bottom_nav_order_save),
+                    icon = Icons.Default.Check,
+                    onClick = bloc::onSave,
+                )
+            }
+        },
     ) {
-        PlusNavContainer(
-            scrollEnabled = false,
-            data =
-                PlusHeaderData.Child(
-                    title = Res.string.bottom_nav_order_title.asTextData(),
-                    onBackClick = bloc::onBack,
-                ),
-            content = {
-                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                    ReorderableTabList(
-                        tabs = state.editedOrder,
-                        onMove = bloc::onMove,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                }
-                Surface(tonalElevation = 4.dp) {
-                    Row(
-                        modifier =
-                            Modifier.fillMaxWidth().padding(ChefMateTheme.dimens.paddingNormal),
-                        horizontalArrangement = Arrangement.End,
-                    ) {
-                        Button(onClick = bloc::onSave, enabled = state.hasUnsavedChanges) {
-                            Text(stringResource(Res.string.bottom_nav_order_save))
-                        }
-                    }
-                }
-            },
+        ReorderableTabList(
+            tabs = state.editedOrder,
+            onMove = bloc::onMove,
+            modifier = Modifier.fillMaxSize(),
         )
     }
 }
@@ -102,12 +101,17 @@ private fun ReorderableTabList(
     var dragOffsetY by remember { mutableStateOf(0f) }
 
     LazyColumn(state = listState, modifier = modifier) {
-        itemsIndexed(items = tabs, key = { _, tab -> tab.name }) { index, tab ->
+        itemsIndexed(items = tabs, key = { _, tab -> tab.name }) { _, tab ->
             val isDragging = tab == draggingId
             ReorderableTabRow(
                 tab = tab,
                 isDragging = isDragging,
                 offsetY = if (isDragging) dragOffsetY else 0f,
+                // Animate placement for non-dragged rows so they slide into the slot the dragged
+                // row vacates. Skip it for the dragged row itself — its position is driven by a
+                // manual translationY and offset compensation in `onDrag`, so an animated
+                // placement would fight that and visually lag the finger.
+                modifier = if (isDragging) Modifier else Modifier.animateItem(),
                 onDragStart = {
                     draggingId = tab
                     dragOffsetY = 0f
@@ -147,6 +151,7 @@ private fun ReorderableTabRow(
     onDragStart: () -> Unit,
     onDrag: (Float) -> Unit,
     onDragEnd: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val dragDescription =
         stringResource(Res.string.bottom_nav_order_drag_handle_content_description)
@@ -169,7 +174,8 @@ private fun ReorderableTabRow(
         shadowElevation = elevation,
         shape = RoundedCornerShape(cornerRadius),
         modifier =
-            Modifier.fillMaxWidth()
+            modifier
+                .fillMaxWidth()
                 // LazyColumn paints items in source order, so a row dragged downward would render
                 // beneath the rows it overlaps. Lifting `zIndex` keeps the dragged row on top in
                 // either direction.

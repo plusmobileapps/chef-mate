@@ -20,8 +20,7 @@ val previewBottomNavOrderBloc: BottomNavOrderBloc = bottomNavOrderBloc(BottomNav
 
 /**
  * A reordered + dirty state: SETTINGS has been moved to the top so
- * [BottomNavOrderBloc.Model. hasUnsavedChanges] resolves to `true` and the Save button renders
- * enabled.
+ * [BottomNavOrderBloc.Model.hasUnsavedChanges] resolves to `true` and the Save FAB is visible.
  */
 val previewBottomNavOrderDirtyBloc: BottomNavOrderBloc =
     bottomNavOrderBloc(
