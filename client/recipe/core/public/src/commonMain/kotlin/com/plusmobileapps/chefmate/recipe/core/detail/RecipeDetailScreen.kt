@@ -8,7 +8,6 @@ package com.plusmobileapps.chefmate.recipe.core.detail
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -159,7 +158,7 @@ import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.KeepScreenOn
 import com.plusmobileapps.chefmate.ui.LocalAnimatedVisibilityScope
-import com.plusmobileapps.chefmate.ui.LocalSharedTransitionScope
+import com.plusmobileapps.chefmate.ui.LocalSecondaryAnimatedVisibilityScope
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
@@ -229,37 +228,41 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
     val fullImageSlot by bloc.fullImageSlot.subscribeAsState()
     val fullImageActive = fullImageSlot.child?.instance as? RecipeDetailBloc.FullImage.Active
 
-    SharedTransitionLayout(modifier = modifier.fillMaxSize()) {
-        AnimatedContent(
-            targetState = fullImageActive,
-            transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(250)) },
-            label = "recipe-detail-full-image",
-        ) { fullImage ->
-            CompositionLocalProvider(
-                LocalSharedTransitionScope provides this@SharedTransitionLayout,
-                LocalAnimatedVisibilityScope provides this,
-            ) {
-                if (fullImage != null) {
-                    RecipeImageFullScreenScreen(
-                        imageUrl = fullImage.imageUrl,
-                        recipeId = fullImage.recipeId,
-                        contentDescription = fullImage.title,
-                        onDismiss = bloc::onCloseFullImage,
-                    )
-                } else {
-                    RecipeDetailBody(
-                        bloc = bloc,
-                        state = state,
-                        showOverflowMenu = showOverflowMenu,
-                        onShowOverflowMenuChange = { showOverflowMenu = it },
-                        metadataCollapsed = metadataCollapsed,
-                        onMetadataCollapsedChange = { metadataCollapsed = it },
-                        snackbarHostState = snackbarHostState,
-                        shareLauncher = shareLauncher,
-                        copiedMessage = copiedMessage,
-                        scope = scope,
-                    )
-                }
+    AnimatedContent(
+        targetState = fullImageActive,
+        transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(250)) },
+        label = "recipe-detail-full-image",
+        modifier = modifier.fillMaxSize(),
+    ) { fullImage ->
+        if (fullImage != null) {
+            // Override primary AVS so the fullscreen image registers in the inner
+            // AnimatedContent's AVS — pairing with the body image's *secondary* registration
+            // (LocalSecondaryAnimatedVisibilityScope) for the morph.
+            CompositionLocalProvider(LocalAnimatedVisibilityScope provides this) {
+                RecipeImageFullScreenScreen(
+                    imageUrl = fullImage.imageUrl,
+                    recipeId = fullImage.recipeId,
+                    contentDescription = fullImage.title,
+                    onDismiss = bloc::onCloseFullImage,
+                )
+            }
+        } else {
+            // Body image keeps the *outer* (RecipeRoot) AVS via the unchanged
+            // LocalAnimatedVisibilityScope so the cross-stack list↔detail morph still works,
+            // and exposes the inner AVS as a *secondary* scope for body↔fullscreen.
+            CompositionLocalProvider(LocalSecondaryAnimatedVisibilityScope provides this) {
+                RecipeDetailBody(
+                    bloc = bloc,
+                    state = state,
+                    showOverflowMenu = showOverflowMenu,
+                    onShowOverflowMenuChange = { showOverflowMenu = it },
+                    metadataCollapsed = metadataCollapsed,
+                    onMetadataCollapsedChange = { metadataCollapsed = it },
+                    snackbarHostState = snackbarHostState,
+                    shareLauncher = shareLauncher,
+                    copiedMessage = copiedMessage,
+                    scope = scope,
+                )
             }
         }
     }
@@ -756,6 +759,7 @@ private fun ColumnScope.RecipeDetailLandscapeContent(
                 contentDescription = recipe.title,
                 modifier = Modifier.fillMaxWidth().height(140.dp),
                 sharedElementKey = "recipe-image-${recipe.id}",
+                secondarySharedElementKey = "recipe-image-fullscreen-${recipe.id}",
                 onClick = onImageClicked,
             )
             recipe.starRating?.let { rating -> StarRating(rating = rating) }
@@ -941,6 +945,7 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                         contentDescription = recipe.title,
                         modifier = Modifier.fillMaxWidth().height(180.dp),
                         sharedElementKey = "recipe-image-${recipe.id}",
+                        secondarySharedElementKey = "recipe-image-fullscreen-${recipe.id}",
                         onClick = onImageClicked,
                     )
                 }
@@ -1229,6 +1234,7 @@ private fun RecipeHeroSection(
             contentDescription = recipe.title,
             modifier = Modifier.width(140.dp).height(140.dp),
             sharedElementKey = "recipe-image-${recipe.id}",
+            secondarySharedElementKey = "recipe-image-fullscreen-${recipe.id}",
             onClick = onImageClicked,
         )
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {

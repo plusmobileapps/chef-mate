@@ -120,6 +120,17 @@ The key must be unique per logical element across the whole app. Prefix with the
 6. **`Modifier.sharedElement` placement** — apply it before any `clip` / `background` so the shared bounds match the visible bounds. If clip is applied first, the shared element animates the unclipped rect.
 7. **Replicating `slide()` / `verticalSlide()`** — Decompose's animator is direction-aware. In `transitionSpec`, infer direction from `stack.items.indexOfFirst { it.key == initialState.key }` vs `targetState.key`. If `initialIndex < 0` (popped), treat as back. See `RootScreen.kt` for the full spec.
 8. **Preview support** — `RecipeImage`-style components rendered in a `@Preview` won't have `LocalSharedTransitionScope` set; the null-check above handles this. Don't wrap previews in `SharedTransitionLayout` unless the preview is specifically for the transition.
+9. **An element that participates in two transitions needs two registrations.** The shared-element framework only morphs when *both* source and destination AVSes are transitioning in opposite directions. A settled-visible AVS on either side gives a hard snap to the final bounds, not a morph. Concretely: if a recipe image is the destination of a cross-screen morph (list → detail, both in root-level AVSes) and *also* the source of an in-screen morph (detail body → fullscreen overlay, both in an inner `AnimatedContent`'s AVSes), one `Modifier.sharedElement` cannot serve both — its AVS only transitions for one of the two events. Also, **never re-provide `LocalSharedTransitionScope` from a nested `SharedTransitionLayout`**: the inner scope and outer scope are different `SharedTransitionScope` instances, and the framework only pairs keys within a single scope.
+
+    The fix: keep one `SharedTransitionLayout` (the outer one) and add a *second* shared-element registration on the bridging element with a distinct key and the inner AVS:
+
+    - Outer transition keeps the original key, primary AVS via `LocalAnimatedVisibilityScope` (the root's).
+    - Inner transition uses a distinct key (e.g. `"recipe-image-fullscreen-{id}"`), explicit AVS via `LocalSecondaryAnimatedVisibilityScope` (the inner `AnimatedContent`'s `this`).
+    - The bridging composable applies both modifiers (see `RecipeImage` for the `sharedElementKey` + `secondarySharedElementKey` pattern).
+    - The fullscreen-only target uses the inner key with the inner AVS — override `LocalAnimatedVisibilityScope` only inside the fullscreen branch.
+    - Don't override `LocalAnimatedVisibilityScope` in the body branch — it must keep pointing at the outer AVS so the cross-screen morph still pairs.
+
+    Symptom of getting this wrong: the cross-screen morph drops to a hard cut ("the destination just snaps to its final size") even though the in-screen morph still works. See `RecipeDetailScreen` (body branch provides `LocalSecondaryAnimatedVisibilityScope`; fullscreen branch overrides `LocalAnimatedVisibilityScope`) and `RecipeImage` (chains `sharedElementBy(key)` and `sharedElementBy(secondaryKey, scope)`) for the worked example.
 
 ## Verification checklist
 

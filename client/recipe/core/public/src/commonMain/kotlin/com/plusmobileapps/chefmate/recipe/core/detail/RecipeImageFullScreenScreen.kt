@@ -71,7 +71,7 @@ internal fun RecipeImageFullScreenScreen(
             contentScale = ContentScale.Fit,
             modifier =
                 Modifier.fillMaxSize()
-                    .sharedElementBy("recipe-image-$recipeId")
+                    .sharedElementBy("recipe-image-fullscreen-$recipeId")
                     .graphicsLayer {
                         scaleX = scale
                         scaleY = scale
