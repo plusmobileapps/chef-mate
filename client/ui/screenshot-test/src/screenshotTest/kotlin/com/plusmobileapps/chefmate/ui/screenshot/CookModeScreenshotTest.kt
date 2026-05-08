@@ -7,6 +7,7 @@ import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.cook.CookModeScreen
 import com.plusmobileapps.chefmate.cook.previewCookBlocEmpty
 import com.plusmobileapps.chefmate.cook.previewCookBlocLoading
+import com.plusmobileapps.chefmate.cook.previewCookBlocLongTitle
 import com.plusmobileapps.chefmate.cook.previewCookBlocSplit
 import com.plusmobileapps.chefmate.cook.previewCookBlocStacked
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -21,11 +22,7 @@ fun CookModePhonePortraitLightScreenshot() {
 }
 
 @PreviewTest
-@Preview(
-    showBackground = true,
-    heightDp = 1100,
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-)
+@Preview(showBackground = true, heightDp = 1100, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun CookModePhonePortraitDarkScreenshot() {
     ChefMateTheme(darkTheme = true) { CookModeScreen(bloc = previewCookBlocStacked) }
@@ -43,6 +40,15 @@ fun CookModeLoadingScreenshot() {
 @Composable
 fun CookModeEmptyScreenshot() {
     ChefMateTheme { CookModeScreen(bloc = previewCookBlocEmpty) }
+}
+
+// Long-title regression for issue #149: header must ellipsis after two lines so the floating
+// app bar doesn't grow and overlap the sticky section header.
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+fun CookModeLongTitleScreenshot() {
+    ChefMateTheme { CookModeScreen(bloc = previewCookBlocLongTitle) }
 }
 
 // ── Phone landscape (580 × 360 dp, COMPACT width → mobile layout, compact height) ──
