@@ -14,18 +14,38 @@ val LocalSharedTransitionScope = compositionLocalOf<SharedTransitionScope?> { nu
 val LocalAnimatedVisibilityScope = compositionLocalOf<AnimatedVisibilityScope?> { null }
 
 /**
+ * Secondary [AnimatedVisibilityScope] for elements that participate in *two* transitions
+ * simultaneously. Compose's shared-element framework only morphs when both source and destination
+ * AVSes are transitioning, so an element bridging an outer (cross-screen) and inner (in-screen
+ * overlay) transition needs a second registration with this scope and a distinct key. See
+ * `RecipeDetailScreen` for the reference wiring.
+ */
+val LocalSecondaryAnimatedVisibilityScope = compositionLocalOf<AnimatedVisibilityScope?> { null }
+
+/**
  * Applies `Modifier.sharedElement` when [key] is non-null and both scopes are present. Use for
  * visually identical content morphing between locations (e.g. an image).
  */
 @Composable
-fun Modifier.sharedElementBy(key: String?): Modifier {
+fun Modifier.sharedElementBy(key: String?): Modifier =
+    sharedElementBy(key = key, animatedVisibilityScope = LocalAnimatedVisibilityScope.current)
+
+/**
+ * Variant of [sharedElementBy] that takes an explicit [animatedVisibilityScope] instead of pulling
+ * it from [LocalAnimatedVisibilityScope]. Use this when registering a *secondary* shared element on
+ * an element already bound to a different AVS — see [LocalSecondaryAnimatedVisibilityScope].
+ */
+@Composable
+fun Modifier.sharedElementBy(
+    key: String?,
+    animatedVisibilityScope: AnimatedVisibilityScope?,
+): Modifier {
     val sharedScope = LocalSharedTransitionScope.current
-    val animatedScope = LocalAnimatedVisibilityScope.current
-    return if (key != null && sharedScope != null && animatedScope != null) {
+    return if (key != null && sharedScope != null && animatedVisibilityScope != null) {
         with(sharedScope) {
             this@sharedElementBy.sharedElement(
                 sharedContentState = rememberSharedContentState(key = key),
-                animatedVisibilityScope = animatedScope,
+                animatedVisibilityScope = animatedVisibilityScope,
             )
         }
     } else this

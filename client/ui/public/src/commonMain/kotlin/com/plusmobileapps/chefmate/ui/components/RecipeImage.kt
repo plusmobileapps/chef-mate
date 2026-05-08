@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import coil3.compose.AsyncImage
+import com.plusmobileapps.chefmate.ui.LocalSecondaryAnimatedVisibilityScope
 import com.plusmobileapps.chefmate.ui.sharedElementBy
 
 @Composable
@@ -21,9 +22,15 @@ fun RecipeImage(
     contentDescription: String?,
     modifier: Modifier = Modifier,
     sharedElementKey: String? = null,
+    secondarySharedElementKey: String? = null,
     onClick: (() -> Unit)? = null,
 ) {
     val sharedModifier = Modifier.sharedElementBy(sharedElementKey)
+    val secondarySharedModifier =
+        Modifier.sharedElementBy(
+            key = secondarySharedElementKey,
+            animatedVisibilityScope = LocalSecondaryAnimatedVisibilityScope.current,
+        )
     val clickModifier =
         if (imageUrl != null && onClick != null) {
             Modifier.clickable(onClick = onClick)
@@ -36,7 +43,11 @@ fun RecipeImage(
             model = imageUrl,
             contentDescription = contentDescription,
             modifier =
-                modifier.then(sharedModifier).clip(MaterialTheme.shapes.medium).then(clickModifier),
+                modifier
+                    .then(sharedModifier)
+                    .then(secondarySharedModifier)
+                    .clip(MaterialTheme.shapes.medium)
+                    .then(clickModifier),
             contentScale = ContentScale.Crop,
         )
     } else {
@@ -44,6 +55,7 @@ fun RecipeImage(
             modifier =
                 modifier
                     .then(sharedModifier)
+                    .then(secondarySharedModifier)
                     .clip(MaterialTheme.shapes.medium)
                     .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center,
