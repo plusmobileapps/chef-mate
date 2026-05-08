@@ -108,6 +108,10 @@ include(":client:settings:impl")
 
 include(":client:settings:public")
 
+include(":client:developer-settings:impl")
+
+include(":client:developer-settings:public")
+
 include(":client:shared")
 
 include(":client:testing")

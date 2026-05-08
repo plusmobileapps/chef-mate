@@ -1,0 +1,17 @@
+<resources>
+    <string name="developer_settings">Developer Settings</string>
+    <string name="dev_environment">Environment</string>
+    <string name="dev_env_prod">Production</string>
+    <string name="dev_env_testing">Testing</string>
+    <string name="dev_env_fake">Fake (local seed)</string>
+    <string name="dev_login_as_user">Login as test user</string>
+    <string name="dev_user_label_format">User {index}: {email}</string>
+    <string name="dev_no_test_users">No test users configured</string>
+    <string name="dev_no_test_users_message">Set CHEF_MATE_USER_1 / CHEF_MATE_USER_PASSWORD_1 (and optionally _2, _3, …) as Gradle env vars or local.properties keys, then rebuild.</string>
+    <string name="dev_signed_out">Not signed in</string>
+    <string name="dev_sign_out_test_user">Sign out</string>
+    <string name="dev_restart_required_title">Restart required</string>
+    <string name="dev_restart_required_message">Environment changed. Local data was wiped and you were signed out. Force-stop and reopen the app for the new environment to take effect.</string>
+    <string name="dev_restart_acknowledge">OK</string>
+    <string name="dev_picker_dismiss">Cancel</string>
+</resources>
