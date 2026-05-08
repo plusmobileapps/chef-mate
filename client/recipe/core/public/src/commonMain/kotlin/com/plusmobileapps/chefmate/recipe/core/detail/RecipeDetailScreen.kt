@@ -1,7 +1,18 @@
-@file:OptIn(ExperimentalTime::class, ExperimentalMaterial3ExpressiveApi::class)
+@file:OptIn(
+    ExperimentalTime::class,
+    ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalSharedTransitionApi::class,
+)
 
 package com.plusmobileapps.chefmate.recipe.core.detail
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -78,6 +89,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -146,6 +158,8 @@ import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.KeepScreenOn
+import com.plusmobileapps.chefmate.ui.LocalAnimatedVisibilityScope
+import com.plusmobileapps.chefmate.ui.LocalSharedTransitionScope
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
@@ -156,6 +170,7 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import com.plusmobileapps.chefmate.util.rememberShareLauncher
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -211,7 +226,60 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
     var showOverflowMenu by remember { mutableStateOf(false) }
     var metadataCollapsed by rememberSaveable { mutableStateOf(false) }
 
-    Box(modifier = modifier.fillMaxSize().testTag(RecipeDetailTestTags.SCREEN)) {
+    val fullImageSlot by bloc.fullImageSlot.subscribeAsState()
+    val fullImageActive = fullImageSlot.child?.instance as? RecipeDetailBloc.FullImage.Active
+
+    SharedTransitionLayout(modifier = modifier.fillMaxSize()) {
+        AnimatedContent(
+            targetState = fullImageActive,
+            transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(250)) },
+            label = "recipe-detail-full-image",
+        ) { fullImage ->
+            CompositionLocalProvider(
+                LocalSharedTransitionScope provides this@SharedTransitionLayout,
+                LocalAnimatedVisibilityScope provides this,
+            ) {
+                if (fullImage != null) {
+                    RecipeImageFullScreenScreen(
+                        imageUrl = fullImage.imageUrl,
+                        recipeId = fullImage.recipeId,
+                        contentDescription = fullImage.title,
+                        onDismiss = bloc::onCloseFullImage,
+                    )
+                } else {
+                    RecipeDetailBody(
+                        bloc = bloc,
+                        state = state,
+                        showOverflowMenu = showOverflowMenu,
+                        onShowOverflowMenuChange = { showOverflowMenu = it },
+                        metadataCollapsed = metadataCollapsed,
+                        onMetadataCollapsedChange = { metadataCollapsed = it },
+                        snackbarHostState = snackbarHostState,
+                        shareLauncher = shareLauncher,
+                        copiedMessage = copiedMessage,
+                        scope = scope,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RecipeDetailBody(
+    bloc: RecipeDetailBloc,
+    state: RecipeDetailBloc.Model,
+    showOverflowMenu: Boolean,
+    onShowOverflowMenuChange: (Boolean) -> Unit,
+    metadataCollapsed: Boolean,
+    onMetadataCollapsedChange: (Boolean) -> Unit,
+    snackbarHostState: SnackbarHostState,
+    shareLauncher: (String) -> Boolean,
+    copiedMessage: String,
+    scope: CoroutineScope,
+) {
+    Box(modifier = Modifier.fillMaxSize().testTag(RecipeDetailTestTags.SCREEN)) {
         PlusResponsiveContainer(modifier = Modifier.fillMaxSize()) { windowSizeClass ->
             val isCompact = windowSizeClass == WindowSizeClass.COMPACT
             val showToolbar = isCompact || !metadataCollapsed
@@ -245,7 +313,7 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
                                     )
                                 }
                                 Box {
-                                    IconButton(onClick = { showOverflowMenu = true }) {
+                                    IconButton(onClick = { onShowOverflowMenuChange(true) }) {
                                         Icon(
                                             imageVector = Icons.Default.MoreVert,
                                             contentDescription =
@@ -254,7 +322,7 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
                                     }
                                     DropdownMenu(
                                         expanded = showOverflowMenu,
-                                        onDismissRequest = { showOverflowMenu = false },
+                                        onDismissRequest = { onShowOverflowMenuChange(false) },
                                     ) {
                                         DropdownMenuItem(
                                             text = {
@@ -264,7 +332,7 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
                                                 Icon(Icons.Default.Edit, contentDescription = null)
                                             },
                                             onClick = {
-                                                showOverflowMenu = false
+                                                onShowOverflowMenuChange(false)
                                                 bloc.onEditClicked()
                                             },
                                         )
@@ -284,7 +352,7 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
                                                     )
                                                 },
                                                 onClick = {
-                                                    showOverflowMenu = false
+                                                    onShowOverflowMenuChange(false)
                                                     if (shareLauncher(url)) {
                                                         scope.launch {
                                                             snackbarHostState.showSnackbar(
@@ -307,7 +375,7 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
                                                 Icon(Icons.Default.Share, contentDescription = null)
                                             },
                                             onClick = {
-                                                showOverflowMenu = false
+                                                onShowOverflowMenuChange(false)
                                                 if (
                                                     shareLauncher(formatRecipeAsText(state.recipe))
                                                 ) {
@@ -332,7 +400,7 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
                                                 )
                                             },
                                             onClick = {
-                                                showOverflowMenu = false
+                                                onShowOverflowMenuChange(false)
                                                 bloc.onDeleteClicked()
                                             },
                                         )
@@ -424,6 +492,7 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
                                         formattedCookTime = state.formattedCookTime,
                                         formattedTotalTime = state.formattedTotalTime,
                                         onSourceUrlClicked = bloc::onSourceUrlClicked,
+                                        onImageClicked = bloc::onImageClicked,
                                     )
                                 isCompact ->
                                     RecipeDetailCompactContent(
@@ -434,6 +503,7 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
                                         formattedCookTime = state.formattedCookTime,
                                         formattedTotalTime = state.formattedTotalTime,
                                         onSourceUrlClicked = bloc::onSourceUrlClicked,
+                                        onImageClicked = bloc::onImageClicked,
                                         modifier = Modifier.weight(1f),
                                     )
                                 else ->
@@ -445,8 +515,9 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
                                         formattedCookTime = state.formattedCookTime,
                                         formattedTotalTime = state.formattedTotalTime,
                                         onSourceUrlClicked = bloc::onSourceUrlClicked,
+                                        onImageClicked = bloc::onImageClicked,
                                         metadataCollapsed = metadataCollapsed,
-                                        onMetadataCollapsedChange = { metadataCollapsed = it },
+                                        onMetadataCollapsedChange = onMetadataCollapsedChange,
                                     )
                             }
                         }
@@ -525,6 +596,7 @@ private fun RecipeDetailCompactContent(
     formattedCookTime: TextData?,
     formattedTotalTime: TextData?,
     onSourceUrlClicked: (String) -> Unit,
+    onImageClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val pagerState = rememberPagerState(pageCount = { 2 })
@@ -568,6 +640,7 @@ private fun RecipeDetailCompactContent(
                 formattedCookTime = formattedCookTime,
                 formattedTotalTime = formattedTotalTime,
                 onSourceUrlClicked = onSourceUrlClicked,
+                onImageClicked = onImageClicked,
                 modifier = Modifier.padding(horizontal = padding),
             )
         }
@@ -648,6 +721,7 @@ private fun ColumnScope.RecipeDetailLandscapeContent(
     formattedCookTime: TextData?,
     formattedTotalTime: TextData?,
     onSourceUrlClicked: (String) -> Unit,
+    onImageClicked: () -> Unit,
 ) {
     val padding = ChefMateTheme.dimens.paddingNormal
     val navBarBottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
@@ -682,6 +756,7 @@ private fun ColumnScope.RecipeDetailLandscapeContent(
                 contentDescription = recipe.title,
                 modifier = Modifier.fillMaxWidth().height(140.dp),
                 sharedElementKey = "recipe-image-${recipe.id}",
+                onClick = onImageClicked,
             )
             recipe.starRating?.let { rating -> StarRating(rating = rating) }
             recipe.servings?.let { servings ->
@@ -806,6 +881,7 @@ private fun ColumnScope.RecipeDetailExpandedContent(
     formattedCookTime: TextData?,
     formattedTotalTime: TextData?,
     onSourceUrlClicked: (String) -> Unit,
+    onImageClicked: () -> Unit,
     metadataCollapsed: Boolean,
     onMetadataCollapsedChange: (Boolean) -> Unit,
 ) {
@@ -865,6 +941,7 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                         contentDescription = recipe.title,
                         modifier = Modifier.fillMaxWidth().height(180.dp),
                         sharedElementKey = "recipe-image-${recipe.id}",
+                        onClick = onImageClicked,
                     )
                 }
                 recipe.starRating?.let { rating ->
@@ -1143,6 +1220,7 @@ private fun RecipeHeroSection(
     formattedCookTime: TextData?,
     formattedTotalTime: TextData?,
     onSourceUrlClicked: (String) -> Unit,
+    onImageClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -1151,6 +1229,7 @@ private fun RecipeHeroSection(
             contentDescription = recipe.title,
             modifier = Modifier.width(140.dp).height(140.dp),
             sharedElementKey = "recipe-image-${recipe.id}",
+            onClick = onImageClicked,
         )
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             // Star Rating
@@ -1534,6 +1613,17 @@ private val previewBloc =
             )
         override val childSlot: Value<ChildSlot<*, RecipeDetailBloc.Sheet>> =
             MutableValue(ChildSlot<Any, RecipeDetailBloc.Sheet>(null))
+
+        override val fullImageSlot: Value<ChildSlot<*, RecipeDetailBloc.FullImage>> =
+            MutableValue(ChildSlot<Any, RecipeDetailBloc.FullImage>(null))
+
+        override fun onImageClicked() {
+            // Preview no-op
+        }
+
+        override fun onCloseFullImage() {
+            // Preview no-op
+        }
 
         override fun onEditClicked() {
             TODO("Not yet implemented")
