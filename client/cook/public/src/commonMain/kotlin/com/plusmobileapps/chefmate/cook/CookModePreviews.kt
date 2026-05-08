@@ -132,6 +132,28 @@ internal fun CookModeStackedLandscapeDarkPreview() {
     ChefMateTheme(darkTheme = true) { CookModeScreen(bloc = previewCookBlocStacked) }
 }
 
+// Tablet/large-phone landscape with the split body — mirrors the configuration in issue #155
+// where the body layouts must stay clear of horizontal insets without double-padding the
+// cutout side. (Screenshot rendering doesn't inject real display-cutout insets, so this
+// preview locks in the no-cutout baseline for the split landscape layout.)
+@Preview(showBackground = true, widthDp = 1000, heightDp = 460)
+@Composable
+internal fun CookModeSplitLandscapePreview() {
+    ChefMateTheme { CookModeScreen(bloc = previewCookBlocSplit) }
+}
+
+@Preview(showBackground = true, widthDp = 1000, heightDp = 460)
+@Composable
+internal fun CookModeSplitLandscapeDarkPreview() {
+    ChefMateTheme(darkTheme = true) { CookModeScreen(bloc = previewCookBlocSplit) }
+}
+
+@Preview(showBackground = true, widthDp = 1000, heightDp = 460)
+@Composable
+internal fun CookModeStackedLandscapeWidePreview() {
+    ChefMateTheme { CookModeScreen(bloc = previewCookBlocStacked) }
+}
+
 @Preview(showBackground = true, heightDp = 1100)
 @Composable
 internal fun CookModeLongTitlePreview() {

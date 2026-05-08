@@ -92,3 +92,35 @@ fun CookModeTabletLightScreenshot() {
 fun CookModeTabletDarkScreenshot() {
     ChefMateTheme(darkTheme = true) { CookModeScreen(bloc = previewCookBlocSplit) }
 }
+
+// ── Tablet/large phone landscape (1000 × 460 dp, EXPANDED width, compact height) ──
+// Regression coverage for issue #155: the split body must not double-pad horizontally
+// when the floating header container also handles insets. Screenshot rendering doesn't
+// inject real display-cutout insets, so these lock in the no-cutout baseline for the
+// landscape layouts that exhibited the bug.
+
+@PreviewTest
+@Preview(showBackground = true, widthDp = 1000, heightDp = 460)
+@Composable
+fun CookModeSplitLandscapeLightScreenshot() {
+    ChefMateTheme { CookModeScreen(bloc = previewCookBlocSplit) }
+}
+
+@PreviewTest
+@Preview(
+    showBackground = true,
+    widthDp = 1000,
+    heightDp = 460,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Composable
+fun CookModeSplitLandscapeDarkScreenshot() {
+    ChefMateTheme(darkTheme = true) { CookModeScreen(bloc = previewCookBlocSplit) }
+}
+
+@PreviewTest
+@Preview(showBackground = true, widthDp = 1000, heightDp = 460)
+@Composable
+fun CookModeStackedLandscapeWideScreenshot() {
+    ChefMateTheme { CookModeScreen(bloc = previewCookBlocStacked) }
+}

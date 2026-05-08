@@ -70,9 +70,11 @@ fun PlusHeaderContainer(
     floatingHeader: Boolean = false,
     headerContainerAlpha: Float = 1f,
     centerAlignTitle: Boolean = false,
-    // When true the container adds status-bar + app-bar top padding to the content so it clears
-    // the floating header. Pass false when the content manages its own top inset (e.g. Cook Mode).
-    floatingHeaderTopReserve: Boolean = true,
+    // When true the container reserves status-bar + app-bar space at the top *and* applies
+    // horizontal display-cutout padding to the content. Pass false when the content manages all
+    // its own insets (e.g. Cook Mode applies horizontal insets per body region) so the cutout
+    // side isn't padded twice.
+    applyContentInsets: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val scrollState = rememberScrollState()
@@ -80,7 +82,7 @@ fun PlusHeaderContainer(
 
     if (floatingHeader) {
         val topPadding =
-            if (floatingHeaderTopReserve) {
+            if (applyContentInsets) {
                 with(density) { WindowInsets.statusBars.getTop(density).toDp() } + 64.dp
             } else {
                 0.dp
@@ -97,6 +99,7 @@ fun PlusHeaderContainer(
                         scrollState = scrollState,
                         maxContentWidth = maxContentWidth,
                         topPadding = topPadding,
+                        applyHorizontalInsets = applyContentInsets,
                         content = content,
                     )
                     BottomBarBox(
@@ -144,6 +147,7 @@ fun PlusHeaderContainer(
                         scrollEnabled = scrollEnabled,
                         scrollState = scrollState,
                         maxContentWidth = maxContentWidth,
+                        applyHorizontalInsets = true,
                         content = content,
                     )
                     BottomBarBox(
@@ -203,24 +207,15 @@ private fun ScrollingContent(
     scrollState: ScrollState,
     maxContentWidth: Dp,
     topPadding: Dp = 0.dp,
+    applyHorizontalInsets: Boolean = true,
     content: @Composable (ColumnScope.() -> Unit),
 ) {
+    val baseModifier =
+        modifier.fillMaxHeight().widthIn(max = maxContentWidth).padding(top = topPadding)
+    val insetModifier =
+        if (applyHorizontalInsets) baseModifier.scaffoldContentInsetPadding() else baseModifier
     Column(
-        modifier =
-            if (scrollEnabled) {
-                modifier
-                    .fillMaxHeight()
-                    .widthIn(max = maxContentWidth)
-                    .padding(top = topPadding)
-                    .scaffoldContentInsetPadding()
-                    .verticalScroll(scrollState)
-            } else {
-                modifier
-                    .fillMaxHeight()
-                    .widthIn(max = maxContentWidth)
-                    .padding(top = topPadding)
-                    .scaffoldContentInsetPadding()
-            }
+        modifier = if (scrollEnabled) insetModifier.verticalScroll(scrollState) else insetModifier
     ) {
         content()
         if (scrollEnabled) {

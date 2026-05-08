@@ -196,7 +196,7 @@ private fun CookModeTabletLayout(
             floatingHeader = true,
             headerContainerAlpha = 0.85f,
             centerAlignTitle = true,
-            floatingHeaderTopReserve = false,
+            applyContentInsets = false,
             scrollEnabled = false,
             maxContentWidth = Dp.Unspecified,
         ) {
@@ -331,7 +331,7 @@ private fun CookModeMobileLayout(
                 floatingHeader = true,
                 headerContainerAlpha = 0.85f,
                 centerAlignTitle = true,
-                floatingHeaderTopReserve = false,
+                applyContentInsets = false,
                 scrollEnabled = false,
                 maxContentWidth = Dp.Unspecified,
             ) {
