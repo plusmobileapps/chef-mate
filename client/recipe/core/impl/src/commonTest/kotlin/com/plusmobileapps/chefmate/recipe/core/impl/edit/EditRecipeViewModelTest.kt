@@ -8,6 +8,7 @@ import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeCategoryRepository
+import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipePhotoStorage
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
@@ -24,6 +25,7 @@ class EditRecipeViewModelTest {
     private val recipes = MutableStateFlow<List<Recipe>>(emptyList())
     private val repository = FakeRecipeRepository(recipes)
     private val categoryRepository = FakeCategoryRepository()
+    private val photoStorage = FakeRecipePhotoStorage()
     private val mainContext = UnconfinedTestDispatcher()
 
     private fun createViewModel(
@@ -36,6 +38,7 @@ class EditRecipeViewModelTest {
             mainContext = mainContext,
             repository = repository,
             categoryRepository = categoryRepository,
+            photoStorage = photoStorage,
         )
 
     @Test
@@ -404,6 +407,36 @@ class EditRecipeViewModelTest {
         vm.output.first().shouldBeFinished()
 
         recipes.value.first().categories shouldBe emptySet()
+    }
+
+    @Test
+    fun When_photo_uploaded_Then_image_url_is_updated() = runTest {
+        photoStorage.nextResult = { "https://cdn.example.com/photo.jpg" }
+        val vm = createViewModel()
+
+        vm.uploadPhoto(bytes = byteArrayOf(1, 2, 3), fileExtension = "jpg")
+
+        vm.imageUrl.value shouldBe "https://cdn.example.com/photo.jpg"
+        vm.state.value.isUploadingPhoto shouldBe false
+        vm.state.value.uploadError shouldBe null
+        photoStorage.uploads.size shouldBe 1
+        photoStorage.uploads.first().fileExtension shouldBe "jpg"
+    }
+
+    @Test
+    fun When_photo_upload_fails_Then_error_is_surfaced_and_url_is_unchanged() = runTest {
+        val failure = RuntimeException("network down")
+        photoStorage.nextResult = { throw failure }
+        val vm = createViewModel()
+
+        vm.uploadPhoto(bytes = byteArrayOf(0), fileExtension = "png")
+
+        vm.imageUrl.value shouldBe ""
+        vm.state.value.isUploadingPhoto shouldBe false
+        vm.state.value.uploadError shouldBe failure
+
+        vm.dismissUploadError()
+        vm.state.value.uploadError shouldBe null
     }
 
     private fun EditRecipeViewModel.Output.shouldBeFinished() {

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
@@ -24,6 +26,7 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -78,12 +81,16 @@ import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_total_time
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_total_time_placeholder
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_save
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload_photo
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload_photo_dismiss
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
+import com.plusmobileapps.chefmate.ui.components.RecipeImage
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import com.plusmobileapps.chefmate.util.rememberImagePickerLauncher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.jetbrains.compose.resources.StringResource
@@ -99,6 +106,10 @@ fun EditRecipeScreen(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
             onConfirm = bloc::onDiscardChangesConfirmed,
             onDismiss = bloc::onDiscardChangesCancelled,
         )
+    }
+
+    state.uploadError?.let { error ->
+        UploadErrorDialog(message = error.localized(), onDismiss = bloc::onUploadErrorDismissed)
     }
 
     PlusHeaderContainer(
@@ -152,6 +163,7 @@ private fun EditRecipeContent(bloc: EditRecipeBloc, modifier: Modifier = Modifie
         RecipeDescriptionField(bloc = bloc)
         RecipeCategoryField(bloc = bloc)
         RecipeStarRatingField(bloc = bloc)
+        RecipePhotoUploader(bloc = bloc)
         RecipeImageUrlField(bloc = bloc)
         RecipeSourceUrlField(bloc = bloc)
         RecipeServingsField(bloc = bloc)
@@ -327,6 +339,66 @@ private fun RecipeStarRatingField(bloc: EditRecipeBloc, modifier: Modifier = Mod
 }
 
 @Composable
+private fun RecipePhotoUploader(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
+    val state by bloc.state.collectAsState()
+    val imageUrl by bloc.imageUrl.collectAsState()
+    val pickPhoto = rememberImagePickerLauncher { picked ->
+        if (picked != null) {
+            bloc.onPhotoPicked(picked.bytes, picked.fileExtension)
+        }
+    }
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
+    ) {
+        if (imageUrl.isNotBlank()) {
+            RecipeImage(
+                imageUrl = imageUrl,
+                contentDescription = null,
+                modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
+            )
+        }
+        OutlinedButton(
+            onClick = pickPhoto,
+            enabled = !state.isUploadingPhoto,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            if (state.isUploadingPhoto) {
+                PlusLoadingIndicator(
+                    modifier = Modifier.padding(end = ChefMateTheme.dimens.paddingSmall)
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Filled.AddPhotoAlternate,
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = ChefMateTheme.dimens.paddingSmall),
+                )
+            }
+            Text(stringResource(Res.string.edit_recipe_upload_photo))
+        }
+    }
+}
+
+@Composable
+private fun UploadErrorDialog(
+    message: String,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        text = { Text(message) },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(Res.string.edit_recipe_upload_photo_dismiss))
+            }
+        },
+        modifier = modifier,
+    )
+}
+
+@Composable
 private fun RecipeImageUrlField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     val imageUrl by bloc.imageUrl.collectAsState()
 
@@ -488,6 +560,7 @@ private val previewBloc =
                     title = FixedString("Edit Recipe"),
                     isLoading = false,
                     isSaving = false,
+                    isUploadingPhoto = false,
                     showDiscardChangesDialog = false,
                 )
             )
@@ -586,6 +659,10 @@ Salt for pasta water"""
         override fun onDiscardChangesCancelled() {}
 
         override fun onSaveClicked() {}
+
+        override fun onPhotoPicked(bytes: ByteArray, fileExtension: String) {}
+
+        override fun onUploadErrorDismissed() {}
 
         override fun onBackClicked() {}
     }

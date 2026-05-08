@@ -14,7 +14,10 @@ kotlin {
             implementation(compose.ui)
         }
 
-        androidMain.dependencies { implementation(libs.androidx.annotation) }
+        androidMain.dependencies {
+            implementation(libs.androidx.annotation)
+            implementation(libs.androidx.activity.compose)
+        }
     }
 }
 

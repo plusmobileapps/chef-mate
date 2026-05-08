@@ -2,6 +2,7 @@
 
 package com.plusmobileapps.chefmate.recipe.core.impl.edit
 
+import co.touchlab.kermit.Logger
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
@@ -9,6 +10,7 @@ import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.CategoryRepository
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.recipe.data.RecipePhotoStorage
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -35,6 +37,7 @@ class EditRecipeViewModel(
     @Main mainContext: CoroutineContext,
     private val repository: RecipeRepository,
     private val categoryRepository: CategoryRepository,
+    private val photoStorage: RecipePhotoStorage,
 ) : ViewModel(mainContext) {
     private val _output = Channel<Output>(Channel.BUFFERED)
     val output: Flow<Output> = _output.receiveAsFlow()
@@ -250,6 +253,25 @@ class EditRecipeViewModel(
         _state.update { it.copy(showDiscardChangesDialog = false) }
     }
 
+    fun uploadPhoto(bytes: ByteArray, fileExtension: String) {
+        if (_state.value.isUploadingPhoto) return
+        _state.update { it.copy(isUploadingPhoto = true, uploadError = null) }
+        scope.launch {
+            try {
+                val url = photoStorage.uploadPhoto(bytes = bytes, fileExtension = fileExtension)
+                _imageUrl.value = url
+                _state.update { it.copy(isUploadingPhoto = false) }
+            } catch (t: Throwable) {
+                Logger.e(throwable = t, tag = "EditRecipeViewModel") { "Failed to upload photo" }
+                _state.update { it.copy(isUploadingPhoto = false, uploadError = t) }
+            }
+        }
+    }
+
+    fun dismissUploadError() {
+        _state.update { it.copy(uploadError = null) }
+    }
+
     fun save() {
         val originalRecipe = _state.value.recipe
         val currentRecipe = currentRecipe()
@@ -353,8 +375,10 @@ class EditRecipeViewModel(
     data class State(
         val isLoading: Boolean = false,
         val isSaving: Boolean = false,
+        val isUploadingPhoto: Boolean = false,
         val showDiscardChangesDialog: Boolean = false,
         val recipe: Recipe? = null,
+        val uploadError: Throwable? = null,
     )
 
     sealed class Output {

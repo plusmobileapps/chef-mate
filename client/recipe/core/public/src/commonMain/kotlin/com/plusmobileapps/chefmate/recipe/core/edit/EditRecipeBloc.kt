@@ -102,11 +102,17 @@ interface EditRecipeBloc : BackClickBloc {
 
     fun onSaveClicked()
 
+    fun onPhotoPicked(bytes: ByteArray, fileExtension: String)
+
+    fun onUploadErrorDismissed()
+
     data class Model(
         val title: TextData,
         val isLoading: Boolean,
         val isSaving: Boolean,
+        val isUploadingPhoto: Boolean,
         val showDiscardChangesDialog: Boolean,
+        val uploadError: TextData? = null,
     )
 
     sealed class Output {
