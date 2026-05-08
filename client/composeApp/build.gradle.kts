@@ -1,6 +1,8 @@
 import java.util.Properties
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
 
 fun osClassifier(): String {
     val osName = System.getProperty("os.name").lowercase()
@@ -9,10 +11,12 @@ fun osClassifier(): String {
         osName.contains("mac") || osName.contains("darwin") -> {
             if (osArch == "aarch64") "mac-aarch64" else "mac"
         }
+
         osName.contains("win") -> "win"
         osName.contains("linux") -> {
             if (osArch == "aarch64") "linux-aarch64" else "linux"
         }
+
         else -> error("Unsupported OS: $osName")
     }
 }
@@ -27,7 +31,20 @@ plugins {
 }
 
 kotlin {
-    androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
+    androidTarget {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11)
+
+            // commonTest is shared with the Android instrumented test variant
+            // (connectedDebugAndroidTest), not the unit test variant (testDebugUnitTest).
+            // unitTestVariant gets its own (empty) tree so commonTest UI tests don't get
+            // dragged into testDebugUnitTest, where Robolectric isn't initialised.
+            @OptIn(ExperimentalKotlinGradlePluginApi::class)
+            instrumentedTestVariant.sourceSetTree.set(KotlinSourceSetTree.test)
+            @OptIn(ExperimentalKotlinGradlePluginApi::class)
+            unitTestVariant.sourceSetTree.set(KotlinSourceSetTree.unitTest)
+        }
+    }
 
     listOf(iosArm64(), iosSimulatorArm64()).forEach { iosTarget ->
         iosTarget.binaries.framework {
@@ -39,6 +56,11 @@ kotlin {
             export(libs.essenty.backhandler)
             export(projects.client.root.public)
             export(projects.client.shared)
+        }
+        iosTarget.binaries.withType(
+            org.jetbrains.kotlin.gradle.plugin.mpp.TestExecutable::class.java
+        ) {
+            linkerOpts.add("-lsqlite3")
         }
     }
 
@@ -101,7 +123,28 @@ kotlin {
             implementation(libs.bugsnag.kmp)
             implementation(libs.kermit.bugsnag)
         }
-        commonTest.dependencies { implementation(libs.kotlin.test) }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+            @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+            implementation(compose.uiTest)
+            implementation(projects.client.testing)
+            implementation(projects.client.database.testing)
+            implementation(projects.client.auth.data.testing)
+            implementation(projects.client.recipe.core.implRobots)
+            implementation(projects.client.recipe.list.implRobots)
+        }
+        val jvmTest by getting {
+            dependencies {
+                implementation(compose.desktop.uiTestJUnit4)
+                implementation(compose.desktop.currentOs)
+            }
+        }
+        val androidInstrumentedTest by getting {
+            dependencies {
+                implementation(libs.sqldelight.drivers.android)
+                implementation(libs.androidx.test.core)
+            }
+        }
     }
 }
 
@@ -146,6 +189,7 @@ android {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 61
         versionName = "1.4.1"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
     buildTypes {
@@ -158,6 +202,11 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+}
+
+dependencies {
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4.android)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
 
 compose.desktop {

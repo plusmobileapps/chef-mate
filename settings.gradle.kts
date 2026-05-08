@@ -84,6 +84,8 @@ include(":client:meal:data:testing")
 
 include(":client:recipe:core:impl")
 
+include(":client:recipe:core:impl-robots")
+
 include(":client:recipe:core:public")
 
 include(":client:recipe:data:impl")
@@ -93,6 +95,8 @@ include(":client:recipe:data:public")
 include(":client:recipe:data:testing")
 
 include(":client:recipe:list:impl")
+
+include(":client:recipe:list:impl-robots")
 
 include(":client:recipe:list:public")
 
