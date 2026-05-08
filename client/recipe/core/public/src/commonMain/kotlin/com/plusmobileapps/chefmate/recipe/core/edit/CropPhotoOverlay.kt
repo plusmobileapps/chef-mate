@@ -36,6 +36,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import chefmate.client.recipe.core.public.generated.resources.Res
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_crop_cancel
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_crop_confirm
@@ -60,112 +62,128 @@ fun CropPhotoOverlay(
     var userScale by remember(bitmap) { mutableStateOf(1f) }
     var userOffset by remember(bitmap) { mutableStateOf(Offset.Zero) }
 
-    BoxWithConstraints(
-        modifier = modifier.fillMaxSize().background(Color.Black),
-        contentAlignment = Alignment.Center,
+    Dialog(
+        onDismissRequest = { if (!isProcessing) onCancel() },
+        properties =
+            DialogProperties(
+                usePlatformDefaultWidth = false,
+                dismissOnBackPress = true,
+                dismissOnClickOutside = false,
+            ),
     ) {
-        val frameSidePx = (min(constraints.maxWidth, constraints.maxHeight) * 0.85f).toInt()
-        val baseScale =
-            max(frameSidePx.toFloat() / imgW.toFloat(), frameSidePx.toFloat() / imgH.toFloat())
-        val effectiveScale = baseScale * userScale
+        BoxWithConstraints(
+            modifier = modifier.fillMaxSize().background(Color.Black),
+            contentAlignment = Alignment.Center,
+        ) {
+            val frameSidePx = (min(constraints.maxWidth, constraints.maxHeight) * 0.85f).toInt()
+            val baseScale =
+                max(frameSidePx.toFloat() / imgW.toFloat(), frameSidePx.toFloat() / imgH.toFloat())
+            val effectiveScale = baseScale * userScale
 
-        Canvas(
-            modifier =
-                Modifier.fillMaxSize().pointerInput(bitmap) {
-                    detectTransformGestures { _, pan, zoom, _ ->
-                        val nextScale = (userScale * zoom).coerceIn(1f, MAX_USER_ZOOM)
-                        val nextEffective = baseScale * nextScale
-                        val nextRenderedW = imgW * nextEffective
-                        val nextRenderedH = imgH * nextEffective
-                        val nextMaxX = max(0f, (nextRenderedW - frameSidePx) / 2f)
-                        val nextMaxY = max(0f, (nextRenderedH - frameSidePx) / 2f)
-                        userScale = nextScale
-                        userOffset =
-                            Offset(
-                                (userOffset.x + pan.x).coerceIn(-nextMaxX, nextMaxX),
-                                (userOffset.y + pan.y).coerceIn(-nextMaxY, nextMaxY),
-                            )
+            Canvas(
+                modifier =
+                    Modifier.fillMaxSize().pointerInput(bitmap) {
+                        detectTransformGestures { _, pan, zoom, _ ->
+                            val nextScale = (userScale * zoom).coerceIn(1f, MAX_USER_ZOOM)
+                            val nextEffective = baseScale * nextScale
+                            val nextRenderedW = imgW * nextEffective
+                            val nextRenderedH = imgH * nextEffective
+                            val nextMaxX = max(0f, (nextRenderedW - frameSidePx) / 2f)
+                            val nextMaxY = max(0f, (nextRenderedH - frameSidePx) / 2f)
+                            userScale = nextScale
+                            userOffset =
+                                Offset(
+                                    (userOffset.x + pan.x).coerceIn(-nextMaxX, nextMaxX),
+                                    (userOffset.y + pan.y).coerceIn(-nextMaxY, nextMaxY),
+                                )
+                        }
                     }
-                }
-        ) {
-            val canvasCenter = Offset(size.width / 2f, size.height / 2f)
-            val renderedW = imgW * effectiveScale
-            val renderedH = imgH * effectiveScale
-            val imageTopLeft = canvasCenter + userOffset - Offset(renderedW / 2f, renderedH / 2f)
-            drawImage(
-                image = bitmap,
-                srcOffset = IntOffset.Zero,
-                srcSize = IntSize(imgW, imgH),
-                dstOffset = IntOffset(imageTopLeft.x.toInt(), imageTopLeft.y.toInt()),
-                dstSize = IntSize(renderedW.toInt(), renderedH.toInt()),
-            )
-
-            val frameSizeF = frameSidePx.toFloat()
-            val frameTopLeft = canvasCenter - Offset(frameSizeF / 2f, frameSizeF / 2f)
-            val dim = Color.Black.copy(alpha = 0.55f)
-            drawRect(dim, Offset.Zero, Size(size.width, frameTopLeft.y))
-            drawRect(
-                dim,
-                Offset(0f, frameTopLeft.y + frameSizeF),
-                Size(size.width, size.height - (frameTopLeft.y + frameSizeF)),
-            )
-            drawRect(dim, Offset(0f, frameTopLeft.y), Size(frameTopLeft.x, frameSizeF))
-            drawRect(
-                dim,
-                Offset(frameTopLeft.x + frameSizeF, frameTopLeft.y),
-                Size(size.width - (frameTopLeft.x + frameSizeF), frameSizeF),
-            )
-            drawRect(
-                color = Color.White,
-                topLeft = frameTopLeft,
-                size = Size(frameSizeF, frameSizeF),
-                style = Stroke(width = 2.dp.toPx()),
-            )
-        }
-
-        Text(
-            text = stringResource(Res.string.edit_recipe_crop_title),
-            color = Color.White,
-            style = MaterialTheme.typography.titleMedium,
-            modifier =
-                Modifier.align(Alignment.TopCenter)
-                    .windowInsetsPadding(WindowInsets.safeDrawing)
-                    .padding(ChefMateTheme.dimens.paddingNormal),
-        )
-
-        Row(
-            modifier =
-                Modifier.align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.safeDrawing)
-                    .padding(ChefMateTheme.dimens.paddingNormal),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            TextButton(onClick = onCancel, enabled = !isProcessing) {
-                Text(text = stringResource(Res.string.edit_recipe_crop_cancel), color = Color.White)
-            }
-            Button(
-                enabled = !isProcessing,
-                onClick = {
-                    val srcSizeF = frameSidePx.toFloat() / effectiveScale
-                    val srcSizeInt = srcSizeF.toInt().coerceIn(1, min(imgW, imgH))
-                    val srcCenterX = imgW / 2f - userOffset.x / effectiveScale
-                    val srcCenterY = imgH / 2f - userOffset.y / effectiveScale
-                    val srcX = (srcCenterX - srcSizeInt / 2f).toInt().coerceIn(0, imgW - srcSizeInt)
-                    val srcY = (srcCenterY - srcSizeInt / 2f).toInt().coerceIn(0, imgH - srcSizeInt)
-                    onConfirm(srcX, srcY, srcSizeInt)
-                },
             ) {
-                if (isProcessing) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.onPrimary,
+                val canvasCenter = Offset(size.width / 2f, size.height / 2f)
+                val renderedW = imgW * effectiveScale
+                val renderedH = imgH * effectiveScale
+                val imageTopLeft =
+                    canvasCenter + userOffset - Offset(renderedW / 2f, renderedH / 2f)
+                drawImage(
+                    image = bitmap,
+                    srcOffset = IntOffset.Zero,
+                    srcSize = IntSize(imgW, imgH),
+                    dstOffset = IntOffset(imageTopLeft.x.toInt(), imageTopLeft.y.toInt()),
+                    dstSize = IntSize(renderedW.toInt(), renderedH.toInt()),
+                )
+
+                val frameSizeF = frameSidePx.toFloat()
+                val frameTopLeft = canvasCenter - Offset(frameSizeF / 2f, frameSizeF / 2f)
+                val dim = Color.Black.copy(alpha = 0.55f)
+                drawRect(dim, Offset.Zero, Size(size.width, frameTopLeft.y))
+                drawRect(
+                    dim,
+                    Offset(0f, frameTopLeft.y + frameSizeF),
+                    Size(size.width, size.height - (frameTopLeft.y + frameSizeF)),
+                )
+                drawRect(dim, Offset(0f, frameTopLeft.y), Size(frameTopLeft.x, frameSizeF))
+                drawRect(
+                    dim,
+                    Offset(frameTopLeft.x + frameSizeF, frameTopLeft.y),
+                    Size(size.width - (frameTopLeft.x + frameSizeF), frameSizeF),
+                )
+                drawRect(
+                    color = Color.White,
+                    topLeft = frameTopLeft,
+                    size = Size(frameSizeF, frameSizeF),
+                    style = Stroke(width = 2.dp.toPx()),
+                )
+            }
+
+            Text(
+                text = stringResource(Res.string.edit_recipe_crop_title),
+                color = Color.White,
+                style = MaterialTheme.typography.titleMedium,
+                modifier =
+                    Modifier.align(Alignment.TopCenter)
+                        .windowInsetsPadding(WindowInsets.safeDrawing)
+                        .padding(ChefMateTheme.dimens.paddingNormal),
+            )
+
+            Row(
+                modifier =
+                    Modifier.align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .windowInsetsPadding(WindowInsets.safeDrawing)
+                        .padding(ChefMateTheme.dimens.paddingNormal),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                TextButton(onClick = onCancel, enabled = !isProcessing) {
+                    Text(
+                        text = stringResource(Res.string.edit_recipe_crop_cancel),
+                        color = Color.White,
                     )
-                    Spacer(Modifier.width(ChefMateTheme.dimens.paddingSmall))
                 }
-                Text(stringResource(Res.string.edit_recipe_crop_confirm))
+                Button(
+                    enabled = !isProcessing,
+                    onClick = {
+                        val srcSizeF = frameSidePx.toFloat() / effectiveScale
+                        val srcSizeInt = srcSizeF.toInt().coerceIn(1, min(imgW, imgH))
+                        val srcCenterX = imgW / 2f - userOffset.x / effectiveScale
+                        val srcCenterY = imgH / 2f - userOffset.y / effectiveScale
+                        val srcX =
+                            (srcCenterX - srcSizeInt / 2f).toInt().coerceIn(0, imgW - srcSizeInt)
+                        val srcY =
+                            (srcCenterY - srcSizeInt / 2f).toInt().coerceIn(0, imgH - srcSizeInt)
+                        onConfirm(srcX, srcY, srcSizeInt)
+                    },
+                ) {
+                    if (isProcessing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                        )
+                        Spacer(Modifier.width(ChefMateTheme.dimens.paddingSmall))
+                    }
+                    Text(stringResource(Res.string.edit_recipe_crop_confirm))
+                }
             }
         }
     }
