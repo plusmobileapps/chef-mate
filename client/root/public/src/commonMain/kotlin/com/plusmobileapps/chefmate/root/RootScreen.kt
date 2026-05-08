@@ -29,6 +29,7 @@ import com.plusmobileapps.chefmate.auth.ui.AuthenticationScreen
 import com.plusmobileapps.chefmate.browser.BrowserRootScreen
 import com.plusmobileapps.chefmate.cook.CookModeScreen
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailScreen
+import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavigationScreen
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootScreen
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootScreen
@@ -153,6 +154,7 @@ private fun RootChildContent(child: RootBloc.Child, onBack: () -> Unit) {
             )
         is RootBloc.Child.MealPlanner -> MealPlannerRootScreen(child.bloc)
         is RootBloc.Child.AppSettings -> AppSettingsScreen(child.bloc)
+        is RootBloc.Child.BottomNavOrder -> BottomNavOrderScreen(child.bloc)
         is RootBloc.Child.CookMode -> CookModeScreen(child.bloc)
     }
 }
