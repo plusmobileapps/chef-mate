@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material3.Button
@@ -25,15 +26,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import chefmate.client.bottomnav.public.generated.resources.Res
 import chefmate.client.bottomnav.public.generated.resources.bottom_nav_order_drag_handle_content_description
 import chefmate.client.bottomnav.public.generated.resources.bottom_nav_order_save
@@ -146,18 +149,32 @@ private fun ReorderableTabRow(
 ) {
     val dragDescription =
         stringResource(Res.string.bottom_nav_order_drag_handle_content_description)
+    // `pointerInput(tab)` is keyed by the tab, which is stable across reorders (LazyColumn keys by
+    // `tab.name`). That means the gesture coroutine never restarts and would otherwise capture the
+    // first `onDrag`/`onDragStart`/`onDragEnd` lambdas forever — which in turn close over the
+    // original `tabs` list from the parent. Route through `rememberUpdatedState` so each gesture
+    // event invokes the latest lambda (and the freshest `tabs` snapshot it captures).
+    val currentOnDragStart by rememberUpdatedState(onDragStart)
+    val currentOnDrag by rememberUpdatedState(onDrag)
+    val currentOnDragEnd by rememberUpdatedState(onDragEnd)
     Surface(
         tonalElevation = if (isDragging) 8.dp else 0.dp,
         shadowElevation = if (isDragging) 8.dp else 0.dp,
+        // Rounded corners only while dragging give the lifted row a card-like silhouette without
+        // changing the flat list-row appearance at rest.
+        shape = if (isDragging) RoundedCornerShape(12.dp) else RectangleShape,
         modifier =
             Modifier.fillMaxWidth()
+                // LazyColumn paints items in source order, so a row dragged downward would render
+                // beneath the rows it overlaps. Lifting `zIndex` keeps the dragged row on top in
+                // either direction.
+                .zIndex(if (isDragging) 1f else 0f)
                 .graphicsLayer {
                     translationY = offsetY
-                    val scale = if (isDragging) 1.02f else 1f
+                    val scale = if (isDragging) 0.96f else 1f
                     scaleX = scale
                     scaleY = scale
-                }
-                .shadow(elevation = if (isDragging) 4.dp else 0.dp),
+                },
     ) {
         Row(
             modifier =
@@ -179,12 +196,12 @@ private fun ReorderableTabRow(
                         .semantics { contentDescription = dragDescription }
                         .pointerInput(tab) {
                             detectDragGesturesAfterLongPress(
-                                onDragStart = { onDragStart() },
-                                onDragEnd = { onDragEnd() },
-                                onDragCancel = { onDragEnd() },
+                                onDragStart = { currentOnDragStart() },
+                                onDragEnd = { currentOnDragEnd() },
+                                onDragCancel = { currentOnDragEnd() },
                                 onDrag = { change, drag ->
                                     change.consume()
-                                    onDrag(drag.y)
+                                    currentOnDrag(drag.y)
                                 },
                             )
                         },
