@@ -48,34 +48,43 @@ import org.jetbrains.compose.resources.stringResource
 fun BottomNavOrderScreen(bloc: BottomNavOrderBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
 
-    PlusNavContainer(
-        modifier = modifier,
-        scrollEnabled = false,
-        data =
-            PlusHeaderData.Child(
-                title = Res.string.bottom_nav_order_title.asTextData(),
-                onBackClick = bloc::onBack,
-            ),
-        content = {
-            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                ReorderableTabList(
-                    tabs = state.editedOrder,
-                    onMove = bloc::onMove,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
-            Surface(tonalElevation = 4.dp) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(ChefMateTheme.dimens.paddingNormal),
-                    horizontalArrangement = Arrangement.End,
-                ) {
-                    Button(onClick = bloc::onSave, enabled = state.hasUnsavedChanges) {
-                        Text(stringResource(Res.string.bottom_nav_order_save))
+    // Wrap in a themed Surface so the empty area between the tab list and the Save bar respects
+    // the active color scheme — matches the pattern PR #161 used for AppSettings to avoid white
+    // background bleed in dark mode.
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = ChefMateTheme.colorScheme.background,
+        contentColor = ChefMateTheme.colorScheme.onBackground,
+    ) {
+        PlusNavContainer(
+            scrollEnabled = false,
+            data =
+                PlusHeaderData.Child(
+                    title = Res.string.bottom_nav_order_title.asTextData(),
+                    onBackClick = bloc::onBack,
+                ),
+            content = {
+                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                    ReorderableTabList(
+                        tabs = state.editedOrder,
+                        onMove = bloc::onMove,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+                Surface(tonalElevation = 4.dp) {
+                    Row(
+                        modifier =
+                            Modifier.fillMaxWidth().padding(ChefMateTheme.dimens.paddingNormal),
+                        horizontalArrangement = Arrangement.End,
+                    ) {
+                        Button(onClick = bloc::onSave, enabled = state.hasUnsavedChanges) {
+                            Text(stringResource(Res.string.bottom_nav_order_save))
+                        }
                     }
                 }
-            }
-        },
-    )
+            },
+        )
+    }
 }
 
 @Composable
@@ -191,20 +200,3 @@ private fun androidx.compose.foundation.lazy.LazyListState.rowHeightFor(
     tab: BottomNavBloc.Tab
 ): Float? =
     layoutInfo.visibleItemsInfo.firstOrNull { (it.key as? String) == tab.name }?.size?.toFloat()
-
-private val previewBloc =
-    object : BottomNavOrderBloc {
-        override val state = kotlinx.coroutines.flow.MutableStateFlow(BottomNavOrderBloc.Model())
-
-        override fun onMove(from: Int, to: Int) = Unit
-
-        override fun onSave() = Unit
-
-        override fun onBack() = Unit
-    }
-
-@androidx.compose.ui.tooling.preview.Preview
-@Composable
-internal fun BottomNavOrderScreenPreview() {
-    ChefMateTheme { BottomNavOrderScreen(bloc = previewBloc) }
-}
