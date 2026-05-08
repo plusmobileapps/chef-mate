@@ -1,3 +1,4 @@
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import java.util.Properties
 
@@ -45,8 +46,46 @@ val supabaseKey =
         ?: System.getenv("SUPABASE_KEY")
         ?: "your-anon-public-key"
 
+val supabaseTestingUrl =
+    localProperties.getProperty("supabase.testing.url")
+        ?: System.getenv("SUPABASE_TESTING_URL")
+        ?: supabaseUrl
+
+val supabaseTestingKey =
+    localProperties.getProperty("supabase.testing.key")
+        ?: System.getenv("SUPABASE_TESTING_KEY")
+        ?: supabaseKey
+
 val bugsnagApiKey =
     localProperties.getProperty("bugsnag.apiKey") ?: System.getenv("BUGSNAG_API_KEY") ?: ""
+
+// Collect test users from CHEF_MATE_USER_<n> / CHEF_MATE_USER_PASSWORD_<n> (or local.properties
+// chefmate.user.<n> / chefmate.user.password.<n>) by incrementing n until a pair is missing.
+// Serialize as "email1|password1;email2|password2".
+val testUsersSerialized = buildString {
+    var index = 1
+    while (true) {
+        val email =
+            localProperties.getProperty("chefmate.user.$index")
+                ?: System.getenv("CHEF_MATE_USER_$index")
+        val password =
+            localProperties.getProperty("chefmate.user.password.$index")
+                ?: System.getenv("CHEF_MATE_USER_PASSWORD_$index")
+        if (email.isNullOrBlank() || password.isNullOrBlank()) break
+        if (index > 1) append(';')
+        append(email).append('|').append(password)
+        index++
+    }
+}
+
+// Detect debug builds by inspecting requested Gradle task names. Defaults to debug when no
+// release-flavoured task is requested (e.g. during IDE sync), which is the safe choice for
+// developer-only UI gating.
+val isDebugBuildFlag: Boolean =
+    gradle.startParameter.taskNames.none { taskName ->
+        taskName.contains("Release", ignoreCase = true) ||
+            taskName.contains("bundleRelease", ignoreCase = true)
+    }
 
 buildkonfig {
     packageName = "com.plusmobileapps.chefmate.buildconfig"
@@ -56,6 +95,12 @@ buildkonfig {
     defaultConfigs {
         buildConfigField(STRING, "SUPABASE_URL", supabaseUrl)
         buildConfigField(STRING, "SUPABASE_KEY", supabaseKey)
+        buildConfigField(STRING, "SUPABASE_PROD_URL", supabaseUrl)
+        buildConfigField(STRING, "SUPABASE_PROD_KEY", supabaseKey)
+        buildConfigField(STRING, "SUPABASE_TESTING_URL", supabaseTestingUrl)
+        buildConfigField(STRING, "SUPABASE_TESTING_KEY", supabaseTestingKey)
         buildConfigField(STRING, "BUGSNAG_API_KEY", bugsnagApiKey)
+        buildConfigField(STRING, "TEST_USERS", testUsersSerialized)
+        buildConfigField(BOOLEAN, "IS_DEBUG", isDebugBuildFlag.toString())
     }
 }
