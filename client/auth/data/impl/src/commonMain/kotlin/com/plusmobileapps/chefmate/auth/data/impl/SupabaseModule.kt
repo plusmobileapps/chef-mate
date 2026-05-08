@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.auth.data.impl
 
+import com.plusmobileapps.chefmate.Environment
+import com.plusmobileapps.chefmate.EnvironmentProvider
 import com.plusmobileapps.chefmate.buildconfig.BuildConfig
 import com.plusmobileapps.chefmate.di.AppScope
 import dev.zacsweers.metro.ContributesTo
@@ -15,15 +17,25 @@ import io.github.jan.supabase.postgrest.Postgrest
 interface SupabaseModule {
     @SingleIn(AppScope::class)
     @Provides
-    fun provideSupabaseClient(): SupabaseClient =
-        createSupabaseClient(
-            supabaseUrl = BuildConfig.SUPABASE_URL,
-            supabaseKey = BuildConfig.SUPABASE_KEY,
-        ) {
+    fun provideSupabaseClient(environmentProvider: EnvironmentProvider): SupabaseClient {
+        // The client is bound to the env at first injection — switching env at runtime requires
+        // an app restart, which the dev-settings UI prompts for. FAKE falls back to PROD URL
+        // because we still need a valid client to construct; remote calls are gated by sign-in
+        // (the env switch signs the user out), so seeded FAKE data stays local until someone
+        // signs back in.
+        val (url, key) =
+            when (environmentProvider.environment.value) {
+                Environment.TESTING ->
+                    BuildConfig.SUPABASE_TESTING_URL to BuildConfig.SUPABASE_TESTING_KEY
+                Environment.PROD,
+                Environment.FAKE -> BuildConfig.SUPABASE_PROD_URL to BuildConfig.SUPABASE_PROD_KEY
+            }
+        return createSupabaseClient(supabaseUrl = url, supabaseKey = key) {
             install(Auth) {
                 scheme = "chefmate"
                 host = "auth"
             }
             install(Postgrest)
         }
+    }
 }
