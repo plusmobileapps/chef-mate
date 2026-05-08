@@ -94,6 +94,10 @@ class EditRecipeViewModel(
     // UI stuck on a spinner).
     private val _isCreatingCategory = MutableStateFlow(false)
 
+    private val _pendingPhotoBytes = MutableStateFlow<ByteArray?>(null)
+    val pendingPhotoBytes: StateFlow<ByteArray?> = _pendingPhotoBytes.asStateFlow()
+    private var pendingPhotoExtension: String? = null
+
     init {
         when {
             recipeId != null -> {
@@ -253,19 +257,10 @@ class EditRecipeViewModel(
         _state.update { it.copy(showDiscardChangesDialog = false) }
     }
 
-    fun uploadPhoto(bytes: ByteArray, fileExtension: String) {
-        if (_state.value.isUploadingPhoto) return
-        _state.update { it.copy(isUploadingPhoto = true, uploadError = null) }
-        scope.launch {
-            try {
-                val url = photoStorage.uploadPhoto(bytes = bytes, fileExtension = fileExtension)
-                _imageUrl.value = url
-                _state.update { it.copy(isUploadingPhoto = false) }
-            } catch (t: Throwable) {
-                Logger.e(throwable = t, tag = "EditRecipeViewModel") { "Failed to upload photo" }
-                _state.update { it.copy(isUploadingPhoto = false, uploadError = t) }
-            }
-        }
+    fun setPendingPhoto(bytes: ByteArray, fileExtension: String) {
+        _pendingPhotoBytes.value = bytes
+        pendingPhotoExtension = fileExtension
+        _state.update { it.copy(uploadError = null) }
     }
 
     fun dismissUploadError() {
@@ -273,10 +268,28 @@ class EditRecipeViewModel(
     }
 
     fun save() {
-        val originalRecipe = _state.value.recipe
-        val currentRecipe = currentRecipe()
-        _state.update { it.copy(isLoading = true) }
+        if (_state.value.isSaving) return
+        _state.update { it.copy(isSaving = true, uploadError = null) }
         scope.launch {
+            val pendingBytes = _pendingPhotoBytes.value
+            val pendingExt = pendingPhotoExtension
+            if (pendingBytes != null && pendingExt != null) {
+                try {
+                    val url =
+                        photoStorage.uploadPhoto(bytes = pendingBytes, fileExtension = pendingExt)
+                    _imageUrl.value = url
+                    _pendingPhotoBytes.value = null
+                    pendingPhotoExtension = null
+                } catch (t: Throwable) {
+                    Logger.e(throwable = t, tag = "EditRecipeViewModel") {
+                        "Failed to upload photo"
+                    }
+                    _state.update { it.copy(isSaving = false, uploadError = t) }
+                    return@launch
+                }
+            }
+            val originalRecipe = _state.value.recipe
+            val currentRecipe = currentRecipe()
             val savedRecipe =
                 if (originalRecipe != null) {
                     repository.updateRecipe(currentRecipe)
@@ -317,8 +330,9 @@ class EditRecipeViewModel(
     private fun shouldShowDiscardChangesDialog(
         originalRecipe: Recipe?,
         currentRecipe: Recipe,
-    ): Boolean =
-        when {
+    ): Boolean {
+        if (_pendingPhotoBytes.value != null) return true
+        return when {
             originalRecipe != null -> originalRecipe.isDirty()
             else ->
                 currentRecipe.title.isNotBlank() ||
@@ -335,6 +349,7 @@ class EditRecipeViewModel(
                     currentRecipe.starRating != null ||
                     currentRecipe.categories.isNotEmpty()
         }
+    }
 
     private fun Recipe.isDirty(): Boolean =
         title != _title.value ||
@@ -375,7 +390,6 @@ class EditRecipeViewModel(
     data class State(
         val isLoading: Boolean = false,
         val isSaving: Boolean = false,
-        val isUploadingPhoto: Boolean = false,
         val showDiscardChangesDialog: Boolean = false,
         val recipe: Recipe? = null,
         val uploadError: Throwable? = null,

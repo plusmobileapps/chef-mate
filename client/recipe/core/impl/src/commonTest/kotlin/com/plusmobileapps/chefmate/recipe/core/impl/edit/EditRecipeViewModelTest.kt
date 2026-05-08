@@ -410,33 +410,61 @@ class EditRecipeViewModelTest {
     }
 
     @Test
-    fun When_photo_uploaded_Then_image_url_is_updated() = runTest {
-        photoStorage.nextResult = { "https://cdn.example.com/photo.jpg" }
+    fun When_photo_picked_Then_bytes_are_held_and_no_upload_happens() {
         val vm = createViewModel()
 
-        vm.uploadPhoto(bytes = byteArrayOf(1, 2, 3), fileExtension = "jpg")
+        vm.setPendingPhoto(bytes = byteArrayOf(1, 2, 3), fileExtension = "jpg")
 
-        vm.imageUrl.value shouldBe "https://cdn.example.com/photo.jpg"
-        vm.state.value.isUploadingPhoto shouldBe false
-        vm.state.value.uploadError shouldBe null
-        photoStorage.uploads.size shouldBe 1
-        photoStorage.uploads.first().fileExtension shouldBe "jpg"
+        vm.pendingPhotoBytes.value?.toList() shouldBe listOf<Byte>(1, 2, 3)
+        vm.imageUrl.value shouldBe ""
+        photoStorage.uploads.size shouldBe 0
     }
 
     @Test
-    fun When_photo_upload_fails_Then_error_is_surfaced_and_url_is_unchanged() = runTest {
+    fun When_save_with_pending_photo_Then_photo_is_uploaded_before_recipe_save() = runTest {
+        photoStorage.nextResult = { "https://cdn.example.com/photo.jpg" }
+        val vm = createViewModel()
+        vm.updateTitle("With photo")
+        vm.setPendingPhoto(bytes = byteArrayOf(7, 7, 7), fileExtension = "png")
+
+        vm.save()
+        val output = vm.output.first()
+
+        output.shouldBeFinished()
+        photoStorage.uploads.size shouldBe 1
+        photoStorage.uploads.first().fileExtension shouldBe "png"
+        recipes.value.single().imageUrl shouldBe "https://cdn.example.com/photo.jpg"
+        vm.pendingPhotoBytes.value shouldBe null
+        vm.state.value.uploadError shouldBe null
+    }
+
+    @Test
+    fun When_save_upload_fails_Then_recipe_is_not_saved_and_error_is_surfaced() = runTest {
         val failure = RuntimeException("network down")
         photoStorage.nextResult = { throw failure }
         val vm = createViewModel()
+        vm.updateTitle("Will not save")
+        vm.setPendingPhoto(bytes = byteArrayOf(0), fileExtension = "jpg")
 
-        vm.uploadPhoto(bytes = byteArrayOf(0), fileExtension = "png")
+        vm.save()
 
-        vm.imageUrl.value shouldBe ""
-        vm.state.value.isUploadingPhoto shouldBe false
+        recipes.value shouldBe emptyList()
+        vm.state.value.isSaving shouldBe false
         vm.state.value.uploadError shouldBe failure
+        vm.pendingPhotoBytes.value?.toList() shouldBe listOf<Byte>(0)
 
         vm.dismissUploadError()
         vm.state.value.uploadError shouldBe null
+    }
+
+    @Test
+    fun When_only_photo_changed_Then_close_prompts_discard_dialog() {
+        val vm = createViewModel()
+        vm.setPendingPhoto(bytes = byteArrayOf(9), fileExtension = "jpg")
+
+        vm.tryToClose()
+
+        vm.state.value.showDiscardChangesDialog shouldBe true
     }
 
     private fun EditRecipeViewModel.Output.shouldBeFinished() {

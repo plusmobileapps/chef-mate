@@ -38,6 +38,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.core.public.generated.resources.Res
@@ -83,12 +85,12 @@ import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_save
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload_photo
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload_photo_dismiss
+import coil3.compose.AsyncImage
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
-import com.plusmobileapps.chefmate.ui.components.RecipeImage
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import com.plusmobileapps.chefmate.util.rememberImagePickerLauncher
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -340,8 +342,8 @@ private fun RecipeStarRatingField(bloc: EditRecipeBloc, modifier: Modifier = Mod
 
 @Composable
 private fun RecipePhotoUploader(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
-    val state by bloc.state.collectAsState()
     val imageUrl by bloc.imageUrl.collectAsState()
+    val pendingBytes by bloc.pendingPhotoBytes.collectAsState()
     val pickPhoto = rememberImagePickerLauncher { picked ->
         if (picked != null) {
             bloc.onPhotoPicked(picked.bytes, picked.fileExtension)
@@ -352,29 +354,22 @@ private fun RecipePhotoUploader(bloc: EditRecipeBloc, modifier: Modifier = Modif
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
     ) {
-        if (imageUrl.isNotBlank()) {
-            RecipeImage(
-                imageUrl = imageUrl,
+        val previewModel: Any? = pendingBytes ?: imageUrl.takeIf { it.isNotBlank() }
+        if (previewModel != null) {
+            AsyncImage(
+                model = previewModel,
                 contentDescription = null,
-                modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
+                modifier =
+                    Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(MaterialTheme.shapes.medium),
+                contentScale = ContentScale.Crop,
             )
         }
-        OutlinedButton(
-            onClick = pickPhoto,
-            enabled = !state.isUploadingPhoto,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            if (state.isUploadingPhoto) {
-                PlusLoadingIndicator(
-                    modifier = Modifier.padding(end = ChefMateTheme.dimens.paddingSmall)
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Filled.AddPhotoAlternate,
-                    contentDescription = null,
-                    modifier = Modifier.padding(end = ChefMateTheme.dimens.paddingSmall),
-                )
-            }
+        OutlinedButton(onClick = pickPhoto, modifier = Modifier.fillMaxWidth()) {
+            Icon(
+                imageVector = Icons.Filled.AddPhotoAlternate,
+                contentDescription = null,
+                modifier = Modifier.padding(end = ChefMateTheme.dimens.paddingSmall),
+            )
             Text(stringResource(Res.string.edit_recipe_upload_photo))
         }
     }
@@ -560,7 +555,6 @@ private val previewBloc =
                     title = FixedString("Edit Recipe"),
                     isLoading = false,
                     isSaving = false,
-                    isUploadingPhoto = false,
                     showDiscardChangesDialog = false,
                 )
             )
@@ -613,6 +607,7 @@ Salt for pasta water"""
         override val availableUserCategories:
             StateFlow<List<com.plusmobileapps.chefmate.recipe.data.Category>> =
             MutableStateFlow(emptyList())
+        override val pendingPhotoBytes: StateFlow<ByteArray?> = MutableStateFlow(null)
 
         override fun onTitleChanged(title: String) {}
 

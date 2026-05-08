@@ -50,7 +50,6 @@ class EditRecipeBlocImpl(
                     },
                 isLoading = it.isLoading,
                 isSaving = it.isSaving,
-                isUploadingPhoto = it.isUploadingPhoto,
                 showDiscardChangesDialog = it.showDiscardChangesDialog,
                 uploadError =
                     it.uploadError?.let { ResourceString(Res.string.edit_recipe_upload_failed) },
@@ -71,6 +70,7 @@ class EditRecipeBlocImpl(
     override val categories: StateFlow<Set<Category>> = viewModel.categories
     override val availableUserCategories: StateFlow<List<Category>> =
         viewModel.availableUserCategories
+    override val pendingPhotoBytes: StateFlow<ByteArray?> = viewModel.pendingPhotoBytes
 
     init {
         scope.launch {
@@ -177,7 +177,7 @@ class EditRecipeBlocImpl(
     }
 
     override fun onPhotoPicked(bytes: ByteArray, fileExtension: String) {
-        viewModel.uploadPhoto(bytes = bytes, fileExtension = fileExtension)
+        viewModel.setPendingPhoto(bytes = bytes, fileExtension = fileExtension)
     }
 
     override fun onUploadErrorDismissed() {
