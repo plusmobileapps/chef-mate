@@ -1,6 +1,7 @@
 package com.plusmobileapps.chefmate.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
@@ -20,14 +21,22 @@ fun RecipeImage(
     contentDescription: String?,
     modifier: Modifier = Modifier,
     sharedElementKey: String? = null,
+    onClick: (() -> Unit)? = null,
 ) {
     val sharedModifier = Modifier.sharedElementBy(sharedElementKey)
+    val clickModifier =
+        if (imageUrl != null && onClick != null) {
+            Modifier.clickable(onClick = onClick)
+        } else {
+            Modifier
+        }
 
     if (imageUrl != null) {
         AsyncImage(
             model = imageUrl,
             contentDescription = contentDescription,
-            modifier = modifier.then(sharedModifier).clip(MaterialTheme.shapes.medium),
+            modifier =
+                modifier.then(sharedModifier).clip(MaterialTheme.shapes.medium).then(clickModifier),
             contentScale = ContentScale.Crop,
         )
     } else {

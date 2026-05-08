@@ -6,6 +6,7 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.backhandler.BackCallback
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
@@ -72,6 +73,33 @@ class RecipeDetailBlocImpl(
 
     override val childSlot: Value<ChildSlot<*, RecipeDetailBloc.Sheet>> = sheetRouter
 
+    private val fullImageNavigation = SlotNavigation<FullImageConfig>()
+    private val fullImageRouter =
+        childSlot(
+            source = fullImageNavigation,
+            serializer = FullImageConfig.serializer(),
+            key = "RecipeDetailBloc_FullImage",
+            childFactory = { config, _ ->
+                RecipeDetailBloc.FullImage.Active(
+                    imageUrl = config.imageUrl,
+                    recipeId = config.recipeId,
+                    title = config.title,
+                )
+            },
+        )
+
+    override val fullImageSlot: Value<ChildSlot<*, RecipeDetailBloc.FullImage>> = fullImageRouter
+
+    private val fullImageBackCallback =
+        BackCallback(isEnabled = fullImageRouter.value.child != null) {
+            fullImageNavigation.dismiss()
+        }
+
+    init {
+        backHandler.register(fullImageBackCallback)
+        fullImageRouter.subscribe { slot -> fullImageBackCallback.isEnabled = slot.child != null }
+    }
+
     override val state: StateFlow<RecipeDetailBloc.Model> =
         viewModel.state.mapState {
             RecipeDetailBloc.Model(
@@ -116,6 +144,18 @@ class RecipeDetailBlocImpl(
         sheetNavigation.activate(SheetConfig.AddToGroceryList(recipeId))
     }
 
+    override fun onImageClicked() {
+        val recipe = viewModel.state.value.recipe
+        val imageUrl = recipe.imageUrl ?: return
+        fullImageNavigation.activate(
+            FullImageConfig(imageUrl = imageUrl, recipeId = recipe.id, title = recipe.title)
+        )
+    }
+
+    override fun onCloseFullImage() {
+        fullImageNavigation.dismiss()
+    }
+
     override fun onAddToMealPlanClicked() {
         output.onNext(Output.OpenMealPlanner(recipeId))
     }
@@ -146,7 +186,11 @@ class RecipeDetailBlocImpl(
     }
 
     override fun onBackClicked() {
-        output.onNext(Output.Finished)
+        if (fullImageRouter.value.child != null) {
+            fullImageNavigation.dismiss()
+        } else {
+            output.onNext(Output.Finished)
+        }
     }
 
     private fun createSheet(config: SheetConfig, context: BlocContext): RecipeDetailBloc.Sheet =
@@ -175,6 +219,9 @@ class RecipeDetailBlocImpl(
     sealed class SheetConfig {
         data class AddToGroceryList(val recipeId: Long) : SheetConfig()
     }
+
+    @Serializable
+    data class FullImageConfig(val imageUrl: String, val recipeId: Long, val title: String)
 }
 
 @ContributesTo(AppScope::class)

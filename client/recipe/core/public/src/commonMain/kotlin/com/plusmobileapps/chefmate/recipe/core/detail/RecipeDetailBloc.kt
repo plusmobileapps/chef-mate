@@ -15,6 +15,12 @@ interface RecipeDetailBloc : BackClickBloc {
 
     val childSlot: Value<ChildSlot<*, Sheet>>
 
+    val fullImageSlot: Value<ChildSlot<*, FullImage>>
+
+    fun onImageClicked()
+
+    fun onCloseFullImage()
+
     fun onEditClicked()
 
     fun onDeleteClicked()
@@ -71,6 +77,10 @@ interface RecipeDetailBloc : BackClickBloc {
 
     sealed class Sheet {
         data class AddToGroceryList(val bloc: AddRecipeToGroceryListBloc) : Sheet()
+    }
+
+    sealed class FullImage {
+        data class Active(val imageUrl: String, val recipeId: Long, val title: String) : FullImage()
     }
 
     interface Factory {
