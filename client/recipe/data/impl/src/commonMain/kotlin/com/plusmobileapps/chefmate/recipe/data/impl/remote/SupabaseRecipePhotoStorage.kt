@@ -23,17 +23,18 @@ class SupabaseRecipePhotoStorage(
 ) : RecipePhotoStorage {
 
     override suspend fun uploadPhoto(bytes: ByteArray, fileExtension: String): String {
-        val ownerId =
+        val ownerFolder =
             (authRepository.state.value as? AuthState.Authenticated)?.user?.userId
-                ?: error("Cannot upload recipe photo while signed out")
+                ?: ANONYMOUS_FOLDER
         val bucket = supabaseClient.storage.from(BUCKET_NAME)
         val sanitizedExtension = fileExtension.trimStart('.').lowercase().ifBlank { "jpg" }
-        val path = "$ownerId/${Uuid.random()}.$sanitizedExtension"
+        val path = "$ownerFolder/${Uuid.random()}.$sanitizedExtension"
         bucket.upload(path = path, data = bytes) { upsert = false }
         return bucket.publicUrl(path)
     }
 
     private companion object {
         const val BUCKET_NAME = "recipe-photos"
+        const val ANONYMOUS_FOLDER = "anonymous"
     }
 }

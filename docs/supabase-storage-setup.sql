@@ -34,6 +34,18 @@ with check (
   and (storage.foldername(name))[1] = auth.uid()::text
 );
 
+-- 3a. Signed-out users can write into the shared "anonymous/" folder.
+-- Note: this lets anyone with the anon key upload up to 5 MB at a time.
+-- The bucket's file_size_limit + allowed_mime_types are the only abuse
+-- guardrails; tighten or remove this policy if quota abuse becomes an issue.
+create policy "recipe_photos_anon_insert"
+on storage.objects for insert
+to anon
+with check (
+  bucket_id = 'recipe-photos'
+  and (storage.foldername(name))[1] = 'anonymous'
+);
+
 create policy "recipe_photos_owner_update"
 on storage.objects for update
 to authenticated
