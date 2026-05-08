@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.recipe.bottomnav
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,7 +32,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
@@ -157,12 +158,16 @@ private fun ReorderableTabRow(
     val currentOnDragStart by rememberUpdatedState(onDragStart)
     val currentOnDrag by rememberUpdatedState(onDrag)
     val currentOnDragEnd by rememberUpdatedState(onDragEnd)
+    // Spring between the resting list-row look and the lifted card look so picking up / dropping
+    // a tab feels physical instead of snapping. `animate*AsState` starts at the target on first
+    // composition, so rest-state screenshots remain unchanged.
+    val elevation by animateDpAsState(if (isDragging) 8.dp else 0.dp, label = "drag-elevation")
+    val cornerRadius by animateDpAsState(if (isDragging) 12.dp else 0.dp, label = "drag-corner")
+    val scale by animateFloatAsState(if (isDragging) 0.96f else 1f, label = "drag-scale")
     Surface(
-        tonalElevation = if (isDragging) 8.dp else 0.dp,
-        shadowElevation = if (isDragging) 8.dp else 0.dp,
-        // Rounded corners only while dragging give the lifted row a card-like silhouette without
-        // changing the flat list-row appearance at rest.
-        shape = if (isDragging) RoundedCornerShape(12.dp) else RectangleShape,
+        tonalElevation = elevation,
+        shadowElevation = elevation,
+        shape = RoundedCornerShape(cornerRadius),
         modifier =
             Modifier.fillMaxWidth()
                 // LazyColumn paints items in source order, so a row dragged downward would render
@@ -171,7 +176,6 @@ private fun ReorderableTabRow(
                 .zIndex(if (isDragging) 1f else 0f)
                 .graphicsLayer {
                     translationY = offsetY
-                    val scale = if (isDragging) 0.96f else 1f
                     scaleX = scale
                     scaleY = scale
                 },
