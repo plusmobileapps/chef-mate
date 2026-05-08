@@ -59,17 +59,21 @@ val supabaseTestingKey =
 val bugsnagApiKey =
     localProperties.getProperty("bugsnag.apiKey") ?: System.getenv("BUGSNAG_API_KEY") ?: ""
 
-// Collect test users from CHEF_MATE_USER_<n> / CHEF_MATE_USER_PASSWORD_<n> (or local.properties
-// chefmate.user.<n> / chefmate.user.password.<n>) by incrementing n until a pair is missing.
+// Collect test users by incrementing n until a pair is missing. Looked up in order:
+// 1. local.properties at the project root (chefmate.user.<n> / chefmate.user.password.<n>)
+// 2. ~/.gradle/gradle.properties or any other Gradle property source (same keys)
+// 3. Environment variables (CHEF_MATE_USER_<n> / CHEF_MATE_USER_PASSWORD_<n>)
 // Serialize as "email1|password1;email2|password2".
 val testUsersSerialized = buildString {
     var index = 1
     while (true) {
         val email =
             localProperties.getProperty("chefmate.user.$index")
+                ?: (findProperty("chefmate.user.$index") as? String)
                 ?: System.getenv("CHEF_MATE_USER_$index")
         val password =
             localProperties.getProperty("chefmate.user.password.$index")
+                ?: (findProperty("chefmate.user.password.$index") as? String)
                 ?: System.getenv("CHEF_MATE_USER_PASSWORD_$index")
         if (email.isNullOrBlank() || password.isNullOrBlank()) break
         if (index > 1) append(';')
