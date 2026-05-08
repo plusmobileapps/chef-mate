@@ -83,6 +83,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -162,7 +163,7 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
             }
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize().testTag(RecipeListTestTags.SCREEN)) {
         PlusNavContainer(
             modifier = modifier.fillMaxSize(),
             data =
