@@ -26,6 +26,8 @@ interface DeveloperSettingsBloc {
 
     fun onRestartPromptDismissed()
 
+    fun onSignInErrorDismissed()
+
     data class Model(
         val currentEnvironment: Environment = Environment.PROD,
         val availableUsers: List<TestUser> = emptyList(),
@@ -35,6 +37,7 @@ interface DeveloperSettingsBloc {
         val showEnvironmentPicker: Boolean = false,
         val showUserPicker: Boolean = false,
         val showRestartPrompt: Boolean = false,
+        val signInError: String? = null,
     )
 
     sealed class Output {

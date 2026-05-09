@@ -37,6 +37,8 @@ import chefmate.client.developer_settings.public.generated.resources.dev_picker_
 import chefmate.client.developer_settings.public.generated.resources.dev_restart_acknowledge
 import chefmate.client.developer_settings.public.generated.resources.dev_restart_required_message
 import chefmate.client.developer_settings.public.generated.resources.dev_restart_required_title
+import chefmate.client.developer_settings.public.generated.resources.dev_sign_in_error_title
+import chefmate.client.developer_settings.public.generated.resources.dev_sign_in_error_unknown
 import chefmate.client.developer_settings.public.generated.resources.dev_sign_out_test_user
 import chefmate.client.developer_settings.public.generated.resources.dev_signed_out
 import chefmate.client.developer_settings.public.generated.resources.dev_user_label_format
@@ -79,6 +81,22 @@ fun DeveloperSettingsScreen(bloc: DeveloperSettingsBloc, modifier: Modifier = Mo
             text = { Text(Res.string.dev_restart_required_message.asTextData().localized()) },
             confirmButton = {
                 TextButton(onClick = bloc::onRestartPromptDismissed) {
+                    Text(Res.string.dev_restart_acknowledge.asTextData().localized())
+                }
+            },
+        )
+    }
+
+    state.signInError?.let { rawMessage ->
+        val message = rawMessage.ifBlank {
+            Res.string.dev_sign_in_error_unknown.asTextData().localized()
+        }
+        AlertDialog(
+            onDismissRequest = bloc::onSignInErrorDismissed,
+            title = { Text(Res.string.dev_sign_in_error_title.asTextData().localized()) },
+            text = { Text(message) },
+            confirmButton = {
+                TextButton(onClick = bloc::onSignInErrorDismissed) {
                     Text(Res.string.dev_restart_acknowledge.asTextData().localized())
                 }
             },
@@ -298,4 +316,6 @@ val previewDeveloperSettingsBloc =
         override fun onSignOutTestUserClicked() = Unit
 
         override fun onRestartPromptDismissed() = Unit
+
+        override fun onSignInErrorDismissed() = Unit
     }

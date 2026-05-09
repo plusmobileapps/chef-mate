@@ -6,8 +6,9 @@ A debug-only screen reachable from the bottom of the **More** tab that lets you 
 
 | Setting | Effect |
 |---|---|
-| **Environment** | Switches between `PROD`, `TESTING`, and `FAKE`. Persisted via `multiplatform-settings`. Selecting a new env signs you out, wipes the local DB, seeds `Recipe.Samples` if `FAKE` is chosen, and prompts for an app restart so the Supabase client rebinds. |
-| **Login as test user** | Lists pre-baked users sourced from Gradle env vars / properties and signs in via the existing Supabase auth repo. Persists which user is selected so the screen can show "currently signed in as User N" across restarts. |
+| **Environment** | Switches between `PROD`, `TESTING`, and `FAKE`. Persisted via `multiplatform-settings`. Selecting a new env signs you out, wipes the local DB (recipes, grocery, meal plans), seeds `Recipe.Samples` if `FAKE` is chosen, and prompts for an app restart so the Supabase client rebinds. |
+| **Login as test user** | Lists pre-baked users sourced from Gradle env vars / properties and signs in via the existing Supabase auth repo. Persists which user is selected so the screen can show "currently signed in as User N" across restarts. If the credentials are wrong, an error dialog surfaces the Supabase error message. |
+| **Sign out** | Visible only when authenticated. Signs the test user out **and** wipes the local DB so the next user starts from a clean cache. |
 
 ## Configuring the environment URLs
 
@@ -33,19 +34,28 @@ If `supabase.testing.*` is not set, the build falls back to the PROD values, so 
 
 Users are detected by **incrementing `n`** (starting at 1) until a pair (email + password) is missing. Provide as many as you like.
 
+> **Heads-up on key naming:** `local.properties` and `gradle.properties` use **dotted lower-case keys** (`chefmate.user.1`, `chefmate.user.password.1`). The `CHEF_MATE_USER_1` / `CHEF_MATE_USER_PASSWORD_1` form is for **shell environment variables only** — putting that form in `local.properties` will silently do nothing because Java's `Properties` loader doesn't translate the underscored uppercase form into a dotted key.
+
 Lookup order per index, first match wins:
 
-1. `local.properties` (project root)
-2. Gradle properties (`~/.gradle/gradle.properties`, `-P` flags, etc.)
-3. Environment variables
+1. `local.properties` (project root) — key form `chefmate.user.<n>` / `chefmate.user.password.<n>`
+2. Gradle properties (`~/.gradle/gradle.properties`, `-P` flags, etc.) — same dotted key form
+3. Environment variables — uppercase form `CHEF_MATE_USER_<n>` / `CHEF_MATE_USER_PASSWORD_<n>`
 
-### `local.properties`
+### `local.properties` (recommended for local-only secrets, gitignored)
 
 ```properties
 chefmate.user.1=alice@chefmate.test
 chefmate.user.password.1=hunter2
 chefmate.user.2=bob@chefmate.test
 chefmate.user.password.2=hunter3
+```
+
+After editing `local.properties`, re-run the JVM/Android target so Gradle regenerates `BuildConfig.TEST_USERS`:
+
+```bash
+./gradlew :client:composeApp:run            # desktop
+./gradlew :client:composeApp:installDebug   # Android
 ```
 
 ### `~/.gradle/gradle.properties` (machine-wide, outside any repo)
@@ -55,7 +65,7 @@ chefmate.user.1=alice@chefmate.test
 chefmate.user.password.1=hunter2
 ```
 
-### Environment variables
+### Environment variables (CI / one-off shells)
 
 ```bash
 export CHEF_MATE_USER_1=alice@chefmate.test
@@ -93,4 +103,6 @@ The "Developer Settings" row only appears when `BuildConfig.IS_DEBUG` is `true`.
 3. Switch Environment → TESTING. Verify: signed out, recipe list empty, restart-required dialog. Force-stop + reopen, confirm sync now hits the testing URL.
 4. Switch Environment → FAKE. Verify several seeded recipes appear after the wipe.
 5. Tap "Login as test user" → User 1. Verify signed in; user persists across an app restart.
-6. Build a release APK. Confirm the row is absent.
+6. Tap "Login as test user" with a deliberately bad password (edit `local.properties`, rebuild). Verify an error dialog appears with the Supabase message.
+7. Tap "Sign out". Verify recipes / meal plan / grocery list are wiped locally.
+8. Build a release APK. Confirm the row is absent.

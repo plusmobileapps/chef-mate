@@ -41,4 +41,9 @@ class FakeMealPlanRepository : MealPlanRepository {
     override suspend fun syncAllUnsynced() {
         // No-op in fake
     }
+
+    override suspend fun clearLocalData() {
+        _meals.value = emptyList()
+        nextId = 1L
+    }
 }

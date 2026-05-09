@@ -7,7 +7,9 @@
     <string name="dev_login_as_user">Login as test user</string>
     <string name="dev_user_label_format">User {index}: {email}</string>
     <string name="dev_no_test_users">No test users configured</string>
-    <string name="dev_no_test_users_message">Set CHEF_MATE_USER_1 / CHEF_MATE_USER_PASSWORD_1 (and optionally _2, _3, …) as Gradle env vars or local.properties keys, then rebuild.</string>
+    <string name="dev_no_test_users_message">Add chefmate.user.1 / chefmate.user.password.1 (and optionally .2, .3, …) to local.properties or ~/.gradle/gradle.properties, or export CHEF_MATE_USER_1 / CHEF_MATE_USER_PASSWORD_1, then rebuild.</string>
+    <string name="dev_sign_in_error_title">Sign-in failed</string>
+    <string name="dev_sign_in_error_unknown">Unable to sign in. Check the password in local.properties.</string>
     <string name="dev_signed_out">Not signed in</string>
     <string name="dev_sign_out_test_user">Sign out</string>
     <string name="dev_restart_required_title">Restart required</string>

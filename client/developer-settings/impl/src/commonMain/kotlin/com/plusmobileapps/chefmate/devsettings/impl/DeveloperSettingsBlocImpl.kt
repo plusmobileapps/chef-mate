@@ -67,6 +67,10 @@ class DeveloperSettingsBlocImpl(
     override fun onRestartPromptDismissed() {
         viewModel.dismissRestartPrompt()
     }
+
+    override fun onSignInErrorDismissed() {
+        viewModel.dismissSignInError()
+    }
 }
 
 @ContributesTo(AppScope::class)

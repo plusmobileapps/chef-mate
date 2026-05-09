@@ -8,11 +8,13 @@ kotlin {
             implementation(projects.client.shared)
             implementation(projects.client.auth.data.public)
             implementation(projects.client.grocery.data.public)
+            implementation(projects.client.meal.data.public)
             implementation(projects.client.recipe.data.public)
         }
         commonTest.dependencies {
             implementation(projects.client.auth.data.testing)
             implementation(projects.client.grocery.data.testing)
+            implementation(projects.client.meal.data.testing)
             implementation(projects.client.recipe.data.testing)
         }
     }

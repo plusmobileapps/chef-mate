@@ -108,6 +108,10 @@ class MealPlanRepositoryImpl(
         }
     }
 
+    override suspend fun clearLocalData() {
+        withContext(ioContext) { queries.deleteAll() }
+    }
+
     private fun pushAddToRemote(localId: Long) {
         val authState = authRepository.state.value
         if (authState !is AuthState.Authenticated) return

@@ -9,6 +9,7 @@ import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc
 import com.plusmobileapps.chefmate.devsettings.TestUser
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
+import com.plusmobileapps.chefmate.meal.data.MealPlanRepository
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
@@ -29,6 +30,7 @@ class DeveloperSettingsViewModel(
     private val authenticationRepository: AuthenticationRepository,
     private val groceryRepository: GroceryRepository,
     private val recipeRepository: RecipeRepository,
+    private val mealPlanRepository: MealPlanRepository,
     private val fakeRecipeSeeder: FakeRecipeSeeder,
 ) : ViewModel(mainContext) {
 
@@ -77,6 +79,10 @@ class DeveloperSettingsViewModel(
         _state.update { it.copy(showRestartPrompt = false) }
     }
 
+    fun dismissSignInError() {
+        _state.update { it.copy(signInError = null) }
+    }
+
     fun changeEnvironment(environment: Environment) {
         _state.update { it.copy(showEnvironmentPicker = false) }
         if (environment == _state.value.currentEnvironment) return
@@ -84,9 +90,7 @@ class DeveloperSettingsViewModel(
             preferences.setEnvironment(environment)
             preferences.setSelectedUserIndex(null)
             authenticationRepository.signOut()
-            recipeRepository.clearLocalData()
-            groceryRepository.clearLocalData()
-            groceryRepository.ensureDefaultList()
+            wipeLocalData()
             if (environment == Environment.FAKE) {
                 fakeRecipeSeeder.seed()
             }
@@ -95,13 +99,17 @@ class DeveloperSettingsViewModel(
     }
 
     fun signInAsTestUser(user: TestUser) {
-        _state.update { it.copy(showUserPicker = false) }
+        _state.update { it.copy(showUserPicker = false, signInError = null) }
         scope.launch {
             authenticationRepository.signOut()
             val result =
                 authenticationRepository.signInWithEmailAndPassword(user.email, user.password)
             if (result.isSuccess) {
                 preferences.setSelectedUserIndex(user.index)
+            } else {
+                val message =
+                    result.exceptionOrNull()?.message?.takeIf(String::isNotBlank).orEmpty()
+                _state.update { it.copy(signInError = message) }
             }
         }
     }
@@ -110,6 +118,14 @@ class DeveloperSettingsViewModel(
         scope.launch {
             authenticationRepository.signOut()
             preferences.setSelectedUserIndex(null)
+            wipeLocalData()
         }
+    }
+
+    private suspend fun wipeLocalData() {
+        mealPlanRepository.clearLocalData()
+        recipeRepository.clearLocalData()
+        groceryRepository.clearLocalData()
+        groceryRepository.ensureDefaultList()
     }
 }
