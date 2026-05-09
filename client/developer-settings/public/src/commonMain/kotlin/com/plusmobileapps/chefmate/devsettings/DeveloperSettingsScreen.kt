@@ -34,7 +34,6 @@ import chefmate.client.developer_settings.public.generated.resources.dev_login_a
 import chefmate.client.developer_settings.public.generated.resources.dev_no_test_users
 import chefmate.client.developer_settings.public.generated.resources.dev_no_test_users_message
 import chefmate.client.developer_settings.public.generated.resources.dev_picker_dismiss
-import chefmate.client.developer_settings.public.generated.resources.dev_restart_acknowledge
 import chefmate.client.developer_settings.public.generated.resources.dev_restart_required_message
 import chefmate.client.developer_settings.public.generated.resources.dev_restart_required_title
 import chefmate.client.developer_settings.public.generated.resources.dev_sign_in_error_title
@@ -48,6 +47,7 @@ import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -75,31 +75,23 @@ fun DeveloperSettingsScreen(bloc: DeveloperSettingsBloc, modifier: Modifier = Mo
     }
 
     if (state.showRestartPrompt) {
-        AlertDialog(
+        PlusDialog(
+            title = Res.string.dev_restart_required_title.asTextData(),
+            message = Res.string.dev_restart_required_message.asTextData(),
+            onConfirmClick = bloc::onRestartPromptDismissed,
             onDismissRequest = bloc::onRestartPromptDismissed,
-            title = { Text(Res.string.dev_restart_required_title.asTextData().localized()) },
-            text = { Text(Res.string.dev_restart_required_message.asTextData().localized()) },
-            confirmButton = {
-                TextButton(onClick = bloc::onRestartPromptDismissed) {
-                    Text(Res.string.dev_restart_acknowledge.asTextData().localized())
-                }
-            },
         )
     }
 
     state.signInError?.let { rawMessage ->
-        val message = rawMessage.ifBlank {
-            Res.string.dev_sign_in_error_unknown.asTextData().localized()
-        }
-        AlertDialog(
+        val message: TextData =
+            if (rawMessage.isBlank()) Res.string.dev_sign_in_error_unknown.asTextData()
+            else FixedString(rawMessage)
+        PlusDialog(
+            title = Res.string.dev_sign_in_error_title.asTextData(),
+            message = message,
+            onConfirmClick = bloc::onSignInErrorDismissed,
             onDismissRequest = bloc::onSignInErrorDismissed,
-            title = { Text(Res.string.dev_sign_in_error_title.asTextData().localized()) },
-            text = { Text(message) },
-            confirmButton = {
-                TextButton(onClick = bloc::onSignInErrorDismissed) {
-                    Text(Res.string.dev_restart_acknowledge.asTextData().localized())
-                }
-            },
         )
     }
 

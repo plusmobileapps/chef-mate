@@ -14,6 +14,5 @@
     <string name="dev_sign_out_test_user">Sign out</string>
     <string name="dev_restart_required_title">Restart required</string>
     <string name="dev_restart_required_message">Environment changed. Local data was wiped and you were signed out. Force-stop and reopen the app for the new environment to take effect.</string>
-    <string name="dev_restart_acknowledge">OK</string>
     <string name="dev_picker_dismiss">Cancel</string>
 </resources>
