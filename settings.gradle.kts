@@ -42,6 +42,10 @@ include(":client:auth:ui:impl")
 
 include(":client:auth:ui:public")
 
+include(":client:auth:usecase:impl")
+
+include(":client:auth:usecase:public")
+
 include(":client:browser:impl")
 
 include(":client:browser:public")

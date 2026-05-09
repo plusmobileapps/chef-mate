@@ -4,13 +4,11 @@ import com.plusmobileapps.chefmate.Environment
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
+import com.plusmobileapps.chefmate.auth.usecase.SignOutUseCase
 import com.plusmobileapps.chefmate.devsettings.DeveloperPreferences
 import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc
 import com.plusmobileapps.chefmate.devsettings.TestUser
 import com.plusmobileapps.chefmate.di.Main
-import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
-import com.plusmobileapps.chefmate.meal.data.MealPlanRepository
-import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,9 +26,7 @@ class DeveloperSettingsViewModel(
     private val preferences: DeveloperPreferences,
     private val testUserProvider: TestUserProvider,
     private val authenticationRepository: AuthenticationRepository,
-    private val groceryRepository: GroceryRepository,
-    private val recipeRepository: RecipeRepository,
-    private val mealPlanRepository: MealPlanRepository,
+    private val signOutUseCase: SignOutUseCase,
     private val fakeRecipeSeeder: FakeRecipeSeeder,
 ) : ViewModel(mainContext) {
 
@@ -89,8 +85,7 @@ class DeveloperSettingsViewModel(
         scope.launch {
             preferences.setEnvironment(environment)
             preferences.setSelectedUserIndex(null)
-            authenticationRepository.signOut()
-            wipeLocalData()
+            signOutUseCase()
             if (environment == Environment.FAKE) {
                 fakeRecipeSeeder.seed()
             }
@@ -116,16 +111,8 @@ class DeveloperSettingsViewModel(
 
     fun signOutTestUser() {
         scope.launch {
-            authenticationRepository.signOut()
             preferences.setSelectedUserIndex(null)
-            wipeLocalData()
+            signOutUseCase()
         }
-    }
-
-    private suspend fun wipeLocalData() {
-        mealPlanRepository.clearLocalData()
-        recipeRepository.clearLocalData()
-        groceryRepository.clearLocalData()
-        groceryRepository.ensureDefaultList()
     }
 }
