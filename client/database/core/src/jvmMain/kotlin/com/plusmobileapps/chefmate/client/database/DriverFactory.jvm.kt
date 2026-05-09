@@ -13,10 +13,11 @@ actual class DriverFactory {
         val dbFile = File(dbPath, "chefmate.db")
 
         return JdbcSqliteDriver(
-            url = "jdbc:sqlite:${dbFile.absolutePath}",
-            properties = Properties(),
-            schema = Database.Schema,
-        )
+                url = "jdbc:sqlite:${dbFile.absolutePath}",
+                properties = Properties(),
+                schema = Database.Schema,
+            )
+            .also { it.execute(null, "PRAGMA foreign_keys = ON", 0) }
     }
 
     private fun getAppDataDirectory(): File {
