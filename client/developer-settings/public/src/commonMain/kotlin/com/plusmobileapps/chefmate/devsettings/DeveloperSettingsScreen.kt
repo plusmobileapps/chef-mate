@@ -49,8 +49,8 @@ import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusDialog
+import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
-import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -97,7 +97,7 @@ fun DeveloperSettingsScreen(bloc: DeveloperSettingsBloc, modifier: Modifier = Mo
     }
 
     Surface(modifier = modifier.fillMaxSize(), color = ChefMateTheme.colorScheme.background) {
-        PlusNavContainer(
+        PlusHeaderContainer(
             data =
                 PlusHeaderData.Child(
                     title = Res.string.developer_settings.asTextData(),

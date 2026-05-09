@@ -43,6 +43,9 @@ import chefmate.client.settings.public.generated.resources.sign_out_confirmation
 import chefmate.client.settings.public.generated.resources.sign_out_confirmation_title
 import chefmate.client.settings.public.generated.resources.sign_up
 import chefmate.client.settings.public.generated.resources.terms_of_use
+import chefmate.client.settings.public.generated.resources.version_label
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusDialog
@@ -115,6 +118,8 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
                     onClick = bloc::onDeveloperSettingsClicked,
                 )
             }
+            HorizontalDivider()
+            VersionLabel(versionName = viewState.versionName)
         },
     )
     Column(modifier = modifier.fillMaxSize()) {
@@ -157,6 +162,27 @@ private fun EmailVerificationMessage(message: TextData, modifier: Modifier = Mod
 }
 
 @Composable
+private fun VersionLabel(versionName: String, modifier: Modifier = Modifier) {
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = ChefMateTheme.dimens.paddingNormal,
+                    vertical = ChefMateTheme.dimens.paddingSmall,
+                ),
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            PhraseModel(resource = Res.string.version_label, "version" to FixedString(versionName))
+                .localized(),
+            style = ChefMateTheme.typography.bodySmall,
+            color = ChefMateTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
 internal fun SettingsRow(name: TextData, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val contentDescription = name.localized()
     Row(
@@ -179,7 +205,7 @@ private val previewBlocUnauthenticated =
     object : SettingsBloc {
         override val state =
             kotlinx.coroutines.flow.MutableStateFlow(
-                SettingsBloc.Model(isAuthenticated = false, greeting = null)
+                SettingsBloc.Model(isAuthenticated = false, greeting = null, versionName = "1.4.3")
             )
 
         override fun onSignInClicked() = Unit
@@ -210,6 +236,7 @@ private val previewBlocAuthenticated =
                             resource = Res.string.greeting_authenticated,
                             "name" to com.plusmobileapps.chefmate.text.FixedString("John Doe"),
                         ),
+                    versionName = "1.4.3",
                 )
             )
 

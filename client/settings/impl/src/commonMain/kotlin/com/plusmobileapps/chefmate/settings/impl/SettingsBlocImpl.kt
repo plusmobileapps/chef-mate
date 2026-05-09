@@ -2,6 +2,7 @@ package com.plusmobileapps.chefmate.settings.impl
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.buildconfig.BuildConfig
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.isDebugBuild
@@ -43,6 +44,7 @@ class SettingsBlocImpl(
                     },
                 showSignOutConfirmationDialog = it.showSignOutConfirmationDialog,
                 isDebugBuild = isDebugBuild,
+                versionName = BuildConfig.VERSION_NAME,
             )
         }
 

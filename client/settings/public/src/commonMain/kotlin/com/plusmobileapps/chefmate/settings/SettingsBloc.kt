@@ -30,6 +30,7 @@ interface SettingsBloc {
         val verificationMessage: TextData? = null,
         val showSignOutConfirmationDialog: Boolean = false,
         val isDebugBuild: Boolean = false,
+        val versionName: String = "",
     )
 
     sealed class Output {
