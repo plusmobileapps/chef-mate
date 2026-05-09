@@ -91,6 +91,16 @@ val isDebugBuildFlag: Boolean =
             taskName.contains("bundleRelease", ignoreCase = true)
     }
 
+// Single source of truth lives in client/composeApp/build.gradle.kts (versionName = "..").
+// The bump-version scripts already update that file via sed; we mirror its value into
+// BuildConfig so common code (e.g. feature-flag version targeting) can read it.
+val composeAppGradleFile = rootProject.file("client/composeApp/build.gradle.kts")
+val appVersionName =
+    Regex("""versionName\s*=\s*"([^"]+)"""")
+        .find(composeAppGradleFile.readText())
+        ?.groupValues
+        ?.get(1) ?: "0.0.0"
+
 buildkonfig {
     packageName = "com.plusmobileapps.chefmate.buildconfig"
     objectName = "BuildConfig"
@@ -106,5 +116,6 @@ buildkonfig {
         buildConfigField(STRING, "BUGSNAG_API_KEY", bugsnagApiKey)
         buildConfigField(STRING, "TEST_USERS", testUsersSerialized)
         buildConfigField(BOOLEAN, "IS_DEBUG", isDebugBuildFlag.toString())
+        buildConfigField(STRING, "VERSION_NAME", appVersionName)
     }
 }

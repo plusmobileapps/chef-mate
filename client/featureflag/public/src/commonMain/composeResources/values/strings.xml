@@ -1,0 +1,14 @@
+<resources>
+    <string name="feature_flags_title">Feature Flags</string>
+    <string name="feature_flags_clear_all">Reset all overrides</string>
+    <string name="feature_flags_default">Default</string>
+    <string name="feature_flags_on">On</string>
+    <string name="feature_flags_off">Off</string>
+    <string name="feature_flags_save">Save</string>
+    <string name="feature_flags_reset">Reset</string>
+    <string name="feature_flags_resolved">Resolved: {value}</string>
+    <string name="feature_flags_override_active">Override active</string>
+    <string name="feature_flags_default_value">Default: {value}</string>
+    <string name="feature_flags_string_placeholder">Enter override value</string>
+    <string name="feature_flags_empty">No flags registered.</string>
+</resources>

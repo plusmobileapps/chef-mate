@@ -81,6 +81,8 @@ kotlin {
             api(projects.client.auth.usecase.impl)
             api(projects.client.cook.impl)
             api(projects.client.cook.public)
+            api(projects.client.featureflag.impl)
+            api(projects.client.featureflag.public)
             api(projects.client.grocery.data.impl)
             api(projects.client.grocery.core.impl)
             api(projects.client.grocery.core.public)

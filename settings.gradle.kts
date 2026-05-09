@@ -64,6 +64,12 @@ include(":client:cook:public")
 
 include(":client:database:core")
 
+include(":client:featureflag:impl")
+
+include(":client:featureflag:public")
+
+include(":client:featureflag:testing")
+
 include(":client:database:testing")
 
 include(":client:grocery:core:impl")

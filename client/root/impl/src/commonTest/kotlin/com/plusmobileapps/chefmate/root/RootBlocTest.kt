@@ -6,6 +6,7 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.cook.CookModeBloc
+import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
@@ -30,6 +31,9 @@ class RootBlocTest {
     var groceryDetailId: Long? = null
     var appSettingsOutput: Consumer<AppSettingsBloc.Output> = Consumer {}
     var bottomNavOrderOutput: Consumer<BottomNavOrderBloc.Output> = Consumer {}
+    var developerSettingsOutput:
+        Consumer<com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc.Output> =
+        Consumer {}
 
     val rootBloc =
         RootBlocImpl(
@@ -67,8 +71,13 @@ class RootBlocTest {
                 bottomNavOrderOutput = output
                 mock()
             },
-            developerSettings = { _, _ -> mock() },
+            developerSettings = { _, output ->
+                developerSettingsOutput = output
+                mock()
+            },
             cookMode = CookModeBloc.Factory { _, _, _ -> mock() },
+            featureFlags = FakeFeatureFlags(),
+            featureFlagsBlocFactory = { _, _ -> mock() },
         )
 
     fun RootBloc.instance(): RootBloc.Child = state.value.active.instance
@@ -164,6 +173,16 @@ class RootBlocTest {
         appSettingsOutput.onNext(AppSettingsBloc.Output.OpenBottomNavOrder)
         bottomNavOrderOutput.onNext(BottomNavOrderBloc.Output.Back)
         rootBloc.instance() should instanceOf<RootBloc.Child.AppSettings>()
+    }
+
+    @Test
+    fun When_dev_settings_outputs_open_feature_flags_Then_feature_flags_shown() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenDeveloperSettings)
+        rootBloc.instance() should instanceOf<RootBloc.Child.DeveloperSettings>()
+        developerSettingsOutput.onNext(
+            com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc.Output.OpenFeatureFlags
+        )
+        rootBloc.instance() should instanceOf<RootBloc.Child.FeatureFlags>()
     }
 
     @Test

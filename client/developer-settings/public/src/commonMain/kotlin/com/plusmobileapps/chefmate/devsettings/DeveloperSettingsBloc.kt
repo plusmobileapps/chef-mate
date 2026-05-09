@@ -28,6 +28,8 @@ interface DeveloperSettingsBloc {
 
     fun onSignInErrorDismissed()
 
+    fun onFeatureFlagsClicked()
+
     data class Model(
         val currentEnvironment: Environment = Environment.PROD,
         val availableUsers: List<TestUser> = emptyList(),
@@ -42,6 +44,8 @@ interface DeveloperSettingsBloc {
 
     sealed class Output {
         data object Back : Output()
+
+        data object OpenFeatureFlags : Output()
     }
 
     fun interface Factory {
