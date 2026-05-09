@@ -8,6 +8,7 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.cook.CookModeBloc
+import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
@@ -36,6 +37,8 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
         data class AppSettings(val bloc: AppSettingsBloc) : Child()
 
         data class BottomNavOrder(val bloc: BottomNavOrderBloc) : Child()
+
+        data class DeveloperSettings(val bloc: DeveloperSettingsBloc) : Child()
 
         data class CookMode(val bloc: CookModeBloc) : Child()
     }

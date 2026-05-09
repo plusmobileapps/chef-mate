@@ -73,6 +73,72 @@ data class Recipe(
                 createdAt = Instant.DISTANT_PAST,
                 updatedAt = Instant.DISTANT_PAST,
             )
+
+        /** Variants of [Sample] for seeding the local DB in FAKE environment / dev contexts. */
+        val Samples: List<Recipe> =
+            listOf(
+                Sample,
+                Sample.copy(
+                    id = 2L,
+                    title = "Margherita Pizza",
+                    description = "Neapolitan-style pizza with tomato, mozzarella, and basil.",
+                    servings = 4,
+                    prepTime = 90,
+                    cookTime = 5,
+                    totalTime = 95,
+                    calories = 720,
+                    starRating = 4,
+                    isFavorite = false,
+                ),
+                Sample.copy(
+                    id = 3L,
+                    title = "Beef Tacos",
+                    description = "Quick weeknight tacos with seasoned ground beef.",
+                    servings = 4,
+                    prepTime = 10,
+                    cookTime = 15,
+                    totalTime = 25,
+                    calories = 540,
+                    starRating = 4,
+                    isFavorite = true,
+                ),
+                Sample.copy(
+                    id = 4L,
+                    title = "Caesar Salad",
+                    description = "Crisp romaine, parmesan, and a creamy anchovy dressing.",
+                    servings = 2,
+                    prepTime = 15,
+                    cookTime = 0,
+                    totalTime = 15,
+                    calories = 380,
+                    starRating = 3,
+                    isFavorite = false,
+                ),
+                Sample.copy(
+                    id = 5L,
+                    title = "Chocolate Chip Cookies",
+                    description = "Chewy cookies with pools of dark chocolate.",
+                    servings = 24,
+                    prepTime = 20,
+                    cookTime = 12,
+                    totalTime = 32,
+                    calories = 180,
+                    starRating = 5,
+                    isFavorite = true,
+                ),
+                Sample.copy(
+                    id = 6L,
+                    title = "Chicken Curry",
+                    description = "Aromatic curry with coconut milk and warm spices.",
+                    servings = 4,
+                    prepTime = 15,
+                    cookTime = 35,
+                    totalTime = 50,
+                    calories = 610,
+                    starRating = 4,
+                    isFavorite = false,
+                ),
+            )
     }
 }
 

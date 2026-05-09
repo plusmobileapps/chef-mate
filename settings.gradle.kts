@@ -42,6 +42,10 @@ include(":client:auth:ui:impl")
 
 include(":client:auth:ui:public")
 
+include(":client:auth:usecase:impl")
+
+include(":client:auth:usecase:public")
+
 include(":client:browser:impl")
 
 include(":client:browser:public")
@@ -107,6 +111,10 @@ include(":client:root:public")
 include(":client:settings:impl")
 
 include(":client:settings:public")
+
+include(":client:developer-settings:impl")
+
+include(":client:developer-settings:public")
 
 include(":client:shared")
 

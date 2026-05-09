@@ -5,8 +5,7 @@ package com.plusmobileapps.chefmate.settings.impl
 
 import app.cash.turbine.test
 import com.plusmobileapps.chefmate.auth.data.testing.FakeAuthenticationRepository
-import com.plusmobileapps.chefmate.grocery.data.testing.FakeGroceryRepository
-import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
+import com.plusmobileapps.chefmate.auth.usecase.SignOutUseCase
 import com.plusmobileapps.chefmate.settings.SettingsBloc
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
@@ -20,8 +19,7 @@ class SettingsBlocImplTest {
     private val context = TestBlocContext.create()
     private val output = TestConsumer<SettingsBloc.Output>()
     private val authRepository = FakeAuthenticationRepository()
-    private val groceryRepository = FakeGroceryRepository()
-    private val recipeRepository = FakeRecipeRepository()
+    private val signOutUseCase = SignOutUseCase { authRepository.signOut() }
 
     private val bloc by lazy {
         SettingsBlocImpl(
@@ -31,8 +29,7 @@ class SettingsBlocImplTest {
                 SettingsViewModel(
                     mainContext = context.mainContext,
                     authenticationRepository = authRepository,
-                    groceryRepository = groceryRepository,
-                    recipeRepository = recipeRepository,
+                    signOutUseCase = signOutUseCase,
                 )
             },
         )

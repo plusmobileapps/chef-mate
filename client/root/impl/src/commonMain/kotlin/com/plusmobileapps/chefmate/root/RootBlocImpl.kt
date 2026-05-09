@@ -13,6 +13,7 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.cook.CookModeBloc
+import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
@@ -42,6 +43,7 @@ class RootBlocImpl(
     private val authentication: AuthenticationBloc.Factory,
     private val appSettings: AppSettingsBloc.Factory,
     private val bottomNavOrder: BottomNavOrderBloc.Factory,
+    private val developerSettings: DeveloperSettingsBloc.Factory,
     private val cookMode: CookModeBloc.Factory,
 ) : RootBloc, BlocContext by context {
 
@@ -147,6 +149,15 @@ class RootBlocImpl(
                         )
                 )
 
+            Configuration.DeveloperSettings ->
+                RootBloc.Child.DeveloperSettings(
+                    bloc =
+                        developerSettings.create(
+                            context = context,
+                            output = ::handleDeveloperSettingsOutput,
+                        )
+                )
+
             is Configuration.CookMode ->
                 RootBloc.Child.CookMode(
                     bloc =
@@ -202,6 +213,10 @@ class RootBlocImpl(
                 navigation.bringToFront(Configuration.AppSettings)
             }
 
+            BottomNavBloc.Output.OpenDeveloperSettings -> {
+                navigation.bringToFront(Configuration.DeveloperSettings)
+            }
+
             is BottomNavBloc.Output.OpenCookMode -> {
                 navigation.bringToFront(Configuration.CookMode(output.recipeId))
             }
@@ -220,6 +235,12 @@ class RootBlocImpl(
     private fun handleBottomNavOrderOutput(output: BottomNavOrderBloc.Output) {
         when (output) {
             BottomNavOrderBloc.Output.Back -> navigation.pop()
+        }
+    }
+
+    private fun handleDeveloperSettingsOutput(output: DeveloperSettingsBloc.Output) {
+        when (output) {
+            DeveloperSettingsBloc.Output.Back -> navigation.pop()
         }
     }
 
@@ -293,6 +314,8 @@ class RootBlocImpl(
         @Serializable data object AppSettings : Configuration()
 
         @Serializable data object BottomNavOrder : Configuration()
+
+        @Serializable data object DeveloperSettings : Configuration()
 
         @Serializable data class CookMode(val recipeId: Long) : Configuration()
     }

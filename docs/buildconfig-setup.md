@@ -76,3 +76,7 @@ buildkonfig {
 - **Never commit `local.properties` with real credentials** - it's already in `.gitignore`
 - The anon/public key is safe to use in client-side code (it's meant to be public)
 - For sensitive operations, always use Row Level Security (RLS) in your Supabase database
+
+## Related
+
+- [developer-settings.md](developer-settings.md) — how to wire up the staging Supabase URL (`supabase.testing.*` / `SUPABASE_TESTING_*`) and pre-baked test users for the in-app developer menu.

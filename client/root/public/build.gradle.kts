@@ -9,6 +9,7 @@ kotlin {
             api(projects.client.bottomnav.public)
             api(projects.client.browser.public)
             api(projects.client.cook.public)
+            api(projects.client.developerSettings.public)
             api(projects.client.grocery.core.public)
             api(projects.client.recipe.core.public)
             api(projects.client.auth.ui.public)

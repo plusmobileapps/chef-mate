@@ -12,4 +12,6 @@ interface MealPlanRepository {
     suspend fun removeMeal(id: Long)
 
     suspend fun syncAllUnsynced()
+
+    suspend fun clearLocalData()
 }
