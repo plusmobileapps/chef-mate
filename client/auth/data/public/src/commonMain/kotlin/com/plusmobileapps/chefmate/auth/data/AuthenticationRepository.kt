@@ -19,6 +19,15 @@ interface AuthenticationRepository {
     suspend fun verifyEmailOtp(email: String, token: String, flow: OtpFlow): Result<Unit>
 
     suspend fun resendOtp(email: String, flow: OtpFlow): Result<Unit>
+
+    suspend fun signInWithGoogle(): Result<GoogleSignInOutcome>
+}
+
+sealed class GoogleSignInOutcome {
+    data object Success : GoogleSignInOutcome()
+
+    // User dismissed the credential picker / closed the browser — not an error worth surfacing.
+    data object Cancelled : GoogleSignInOutcome()
 }
 
 sealed class SignUpResult {

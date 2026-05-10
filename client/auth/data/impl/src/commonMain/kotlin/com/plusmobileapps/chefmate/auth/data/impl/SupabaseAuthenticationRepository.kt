@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.auth.data.impl
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.auth.data.ChefMateUser
+import com.plusmobileapps.chefmate.auth.data.GoogleSignInOutcome
 import com.plusmobileapps.chefmate.auth.data.OtpFlow
 import com.plusmobileapps.chefmate.auth.data.SignUpResult
 import com.plusmobileapps.chefmate.di.AppScope
@@ -13,7 +14,9 @@ import dev.zacsweers.metro.SingleIn
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.OtpType
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.auth.providers.builtin.OTP
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.auth.user.UserInfo
@@ -29,6 +32,7 @@ import kotlinx.coroutines.launch
 @ContributesBinding(AppScope::class)
 class SupabaseAuthenticationRepository(
     private val supabaseClient: SupabaseClient,
+    private val googleSignInProvider: GoogleSignInProvider,
     @Main private val mainContext: CoroutineContext,
 ) : AuthenticationRepository {
     private val scope = CoroutineScope(mainContext)
@@ -149,6 +153,21 @@ class SupabaseAuthenticationRepository(
             println("Error signing out: ${e.message}")
         }
     }
+
+    override suspend fun signInWithGoogle(): Result<GoogleSignInOutcome> =
+        try {
+            val token = googleSignInProvider.signIn()
+            supabaseClient.auth.signInWith(IDToken) {
+                idToken = token.idToken
+                provider = Google
+                nonce = token.rawNonce
+            }
+            Result.success(GoogleSignInOutcome.Success)
+        } catch (e: GoogleSignInException.Cancelled) {
+            Result.success(GoogleSignInOutcome.Cancelled)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
 
     override suspend fun sendPasswordResetEmail(email: String): Result<Unit> =
         try {

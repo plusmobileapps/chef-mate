@@ -16,6 +16,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     override init() {
         super.init()
         BugsnagStartup_iosKt.initializeBugsnag()
+        IosGoogleSignInBridgeHolder.shared.bridge = GoogleSignInBridge()
     }
 
     lazy var root: RootBloc = RootBlocProvider.shared.buildRootBloc(

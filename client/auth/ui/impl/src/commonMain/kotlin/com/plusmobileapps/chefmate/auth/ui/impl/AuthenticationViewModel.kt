@@ -4,6 +4,8 @@ import chefmate.client.auth.ui.impl.generated.resources.Res
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_authentication_failed
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_confirm_password_required
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_email_required
+import chefmate.client.auth.ui.impl.generated.resources.auth_error_google_sign_in_failed
+import chefmate.client.auth.ui.impl.generated.resources.auth_error_google_sign_in_not_configured
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_invalid_credentials
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_invalid_email
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_password_required
@@ -19,6 +21,7 @@ import chefmate.client.auth.ui.impl.generated.resources.auth_success_password_re
 import co.touchlab.kermit.Logger
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
+import com.plusmobileapps.chefmate.auth.data.GoogleSignInOutcome
 import com.plusmobileapps.chefmate.auth.data.SignUpResult
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc.Model.Mode.SignIn
@@ -320,6 +323,41 @@ class AuthenticationViewModel(
         }
     }
 
+    fun onGoogleSignInClicked() {
+        _state.value =
+            _state.value.copy(
+                isLoading = true,
+                errorMessage = null,
+                emailError = null,
+                confirmPasswordError = null,
+            )
+
+        scope.launch {
+            val result = authRepository.signInWithGoogle()
+            result.fold(
+                onSuccess = { outcome ->
+                    when (outcome) {
+                        GoogleSignInOutcome.Success -> {
+                            _state.value = _state.value.copy(isLoading = false)
+                            output.send(Output.AuthenticationSuccess)
+                        }
+                        GoogleSignInOutcome.Cancelled -> {
+                            _state.value = _state.value.copy(isLoading = false)
+                        }
+                    }
+                },
+                onFailure = { e ->
+                    Logger.e("Google sign-in failed", e)
+                    _state.value =
+                        _state.value.copy(
+                            isLoading = false,
+                            errorMessage = getGoogleSignInErrorMessage(e),
+                        )
+                },
+            )
+        }
+    }
+
     fun onDismissError() {
         _state.value = _state.value.copy(errorMessage = null)
     }
@@ -355,6 +393,15 @@ class AuthenticationViewModel(
             message.contains("not found") || message.contains("no user") ->
                 Res.string.auth_error_password_reset_user_not_found.asTextData()
             else -> Res.string.auth_error_password_reset_failed.asTextData()
+        }
+    }
+
+    private fun getGoogleSignInErrorMessage(e: Throwable): TextData {
+        val message = e.message?.lowercase() ?: ""
+        return when {
+            message.contains("not configured") || message.contains("not set") ->
+                Res.string.auth_error_google_sign_in_not_configured.asTextData()
+            else -> Res.string.auth_error_google_sign_in_failed.asTextData()
         }
     }
 

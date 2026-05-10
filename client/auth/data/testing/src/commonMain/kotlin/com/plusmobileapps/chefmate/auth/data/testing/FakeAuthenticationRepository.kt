@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.auth.data.testing
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.auth.data.ChefMateUser
+import com.plusmobileapps.chefmate.auth.data.GoogleSignInOutcome
 import com.plusmobileapps.chefmate.auth.data.OtpFlow
 import com.plusmobileapps.chefmate.auth.data.SignUpResult
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +19,8 @@ class FakeAuthenticationRepository : AuthenticationRepository {
     var sendSignInOtpResult: Result<Unit> = Result.success(Unit)
     var verifyEmailOtpResult: Result<Unit> = Result.success(Unit)
     var resendOtpResult: Result<Unit> = Result.success(Unit)
+    var signInWithGoogleResult: Result<GoogleSignInOutcome> =
+        Result.success(GoogleSignInOutcome.Success)
 
     var lastVerifyOtpFlow: OtpFlow? = null
         private set
@@ -61,6 +64,13 @@ class FakeAuthenticationRepository : AuthenticationRepository {
         lastResendOtpFlow = flow
         return resendOtpResult
     }
+
+    override suspend fun signInWithGoogle(): Result<GoogleSignInOutcome> =
+        signInWithGoogleResult.also { result ->
+            if (result.getOrNull() == GoogleSignInOutcome.Success) {
+                _state.value = AuthState.Authenticated(fakeUser())
+            }
+        }
 
     companion object {
         fun fakeUser(email: String = "test@example.com") =

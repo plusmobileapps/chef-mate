@@ -1,6 +1,7 @@
 package com.plusmobileapps.chefmate.di
 
 import com.plusmobileapps.chefmate.ApplicationComponent
+import com.plusmobileapps.chefmate.auth.data.impl.GoogleSignInProvider
 import com.plusmobileapps.chefmate.client.database.DriverFactory
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
@@ -16,4 +17,8 @@ abstract class IosApplicationComponent : ApplicationComponent {
     }
 
     @Provides fun driverFactory(): DriverFactory = DriverFactory()
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun provideGoogleSignInProvider(): GoogleSignInProvider = GoogleSignInProvider()
 }

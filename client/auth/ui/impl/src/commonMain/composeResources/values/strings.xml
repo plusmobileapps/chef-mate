@@ -27,4 +27,8 @@
 
     <!-- Success messages -->
     <string name="auth_success_password_reset_sent">Password reset email sent</string>
+
+    <!-- Google sign-in errors -->
+    <string name="auth_error_google_sign_in_failed">Google sign-in failed. Please try again.</string>
+    <string name="auth_error_google_sign_in_not_configured">Google sign-in isn\'t available in this build. Check the developer setup.</string>
 </resources>

@@ -98,6 +98,10 @@ class AuthenticationBlocImpl(
         viewModel.onEmailMeACodeClicked()
     }
 
+    override fun onGoogleSignInClicked() {
+        viewModel.onGoogleSignInClicked()
+    }
+
     override fun onBackClicked() {
         output.onNext(Output.Finished)
     }

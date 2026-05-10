@@ -18,6 +18,8 @@ fun Project.applyKtfmt() {
 
     configure<KtfmtExtension> {
         kotlinLangStyle()
-        srcSetPathExclusionPattern.set(Regex(".*generated.*"))
+        // Exclude all build outputs — BuildKonfig writes to build/buildkonfig/, and the rest of
+        // build/ is generated code that we don't author.
+        srcSetPathExclusionPattern.set(Regex(".*(generated|/build/).*"))
     }
 }

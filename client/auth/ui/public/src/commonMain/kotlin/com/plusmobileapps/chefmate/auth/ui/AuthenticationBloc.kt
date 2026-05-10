@@ -27,6 +27,8 @@ interface AuthenticationBloc : BackClickBloc {
 
     fun onEmailMeACodeClicked()
 
+    fun onGoogleSignInClicked()
+
     fun onUrlClicked(url: String)
 
     fun onDismissError()

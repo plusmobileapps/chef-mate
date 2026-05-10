@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,6 +28,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -46,11 +48,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import chefmate.client.auth.ui.public.generated.resources.Res
+import chefmate.client.auth.ui.public.generated.resources.auth_button_continue_with_google
 import chefmate.client.auth.ui.public.generated.resources.auth_button_email_me_a_code
 import chefmate.client.auth.ui.public.generated.resources.auth_button_forgot_password
 import chefmate.client.auth.ui.public.generated.resources.auth_button_okay
 import chefmate.client.auth.ui.public.generated.resources.auth_button_sign_in
 import chefmate.client.auth.ui.public.generated.resources.auth_button_sign_up
+import chefmate.client.auth.ui.public.generated.resources.auth_divider_or
 import chefmate.client.auth.ui.public.generated.resources.auth_label_confirm_password
 import chefmate.client.auth.ui.public.generated.resources.auth_label_email
 import chefmate.client.auth.ui.public.generated.resources.auth_label_password
@@ -105,6 +109,7 @@ fun AuthenticationScreen(bloc: AuthenticationBloc, modifier: Modifier = Modifier
                     onToggleMode = bloc::onToggleMode,
                     onForgotPasswordClicked = bloc::onForgotPasswordClicked,
                     onEmailMeACodeClicked = bloc::onEmailMeACodeClicked,
+                    onGoogleSignInClicked = bloc::onGoogleSignInClicked,
                     onDismissError = bloc::onDismissError,
                     onUrlClicked = bloc::onUrlClicked,
                 )
@@ -153,6 +158,7 @@ private fun AuthenticationBody(
     onToggleMode: () -> Unit,
     onForgotPasswordClicked: () -> Unit,
     onEmailMeACodeClicked: () -> Unit,
+    onGoogleSignInClicked: () -> Unit,
     onDismissError: () -> Unit,
     onUrlClicked: (String) -> Unit,
 ) {
@@ -188,6 +194,14 @@ private fun AuthenticationBody(
                 ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        GoogleSignInButton(onClick = onGoogleSignInClicked)
+
+        Spacer(modifier = Modifier.height(ChefMateTheme.dimens.paddingLarge))
+
+        OrDivider()
+
+        Spacer(modifier = Modifier.height(ChefMateTheme.dimens.paddingLarge))
+
         EmailField(
             email = email,
             error = model.emailError,
@@ -331,6 +345,41 @@ fun EmailField(
             KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
         keyboardActions = KeyboardActions(onNext = { onImeAction() }),
     )
+}
+
+@Composable
+private fun GoogleSignInButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        contentPadding =
+            PaddingValues(
+                vertical = ChefMateTheme.dimens.paddingNormal,
+                horizontal = ChefMateTheme.dimens.paddingLarge,
+            ),
+    ) {
+        Text(
+            text = stringResource(Res.string.auth_button_continue_with_google),
+            style = MaterialTheme.typography.titleMedium,
+        )
+    }
+}
+
+@Composable
+private fun OrDivider(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingNormal),
+    ) {
+        HorizontalDivider(modifier = Modifier.weight(1f))
+        Text(
+            text = stringResource(Res.string.auth_divider_or),
+            style = MaterialTheme.typography.labelMedium,
+        )
+        HorizontalDivider(modifier = Modifier.weight(1f))
+    }
 }
 
 @Composable

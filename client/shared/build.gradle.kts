@@ -59,6 +59,25 @@ val supabaseTestingKey =
 val bugsnagApiKey =
     localProperties.getProperty("bugsnag.apiKey") ?: System.getenv("BUGSNAG_API_KEY") ?: ""
 
+// Web OAuth client ID from Google Cloud Console. Used by Android Credential Manager as
+// `serverClientId` so the issued ID token's audience is something Supabase will accept.
+val googleWebClientId =
+    localProperties.getProperty("google.webClientId") ?: System.getenv("GOOGLE_WEB_CLIENT_ID") ?: ""
+
+// Desktop OAuth client ID + secret from Google Cloud Console (client type = "Desktop app").
+// Used by the JVM loopback flow to exchange the auth code for an ID token. Desktop clients
+// can ship a "secret" — Google explicitly documents it as not actually secret for this
+// client type, and PKCE is the real protection.
+val googleDesktopClientId =
+    localProperties.getProperty("google.desktopClientId")
+        ?: System.getenv("GOOGLE_DESKTOP_CLIENT_ID")
+        ?: ""
+
+val googleDesktopClientSecret =
+    localProperties.getProperty("google.desktopClientSecret")
+        ?: System.getenv("GOOGLE_DESKTOP_CLIENT_SECRET")
+        ?: ""
+
 // Collect test users by incrementing n until a pair is missing. Looked up in order:
 // 1. local.properties at the project root (chefmate.user.<n> / chefmate.user.password.<n>)
 // 2. ~/.gradle/gradle.properties or any other Gradle property source (same keys)
@@ -117,5 +136,8 @@ buildkonfig {
         buildConfigField(STRING, "TEST_USERS", testUsersSerialized)
         buildConfigField(BOOLEAN, "IS_DEBUG", isDebugBuildFlag.toString())
         buildConfigField(STRING, "VERSION_NAME", appVersionName)
+        buildConfigField(STRING, "GOOGLE_WEB_CLIENT_ID", googleWebClientId)
+        buildConfigField(STRING, "GOOGLE_DESKTOP_CLIENT_ID", googleDesktopClientId)
+        buildConfigField(STRING, "GOOGLE_DESKTOP_CLIENT_SECRET", googleDesktopClientSecret)
     }
 }

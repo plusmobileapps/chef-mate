@@ -10,8 +10,17 @@ kotlin {
             implementation(libs.supabase.auth)
             implementation(libs.supabase.postgrest)
         }
-        jvmMain.dependencies { implementation(libs.ktor.client.cio) }
-        androidMain.dependencies { implementation(libs.ktor.client.cio) }
+        jvmMain.dependencies {
+            implementation(libs.ktor.client.cio)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.json)
+        }
+        androidMain.dependencies {
+            implementation(libs.ktor.client.cio)
+            implementation(libs.androidx.credentials)
+            implementation(libs.androidx.credentials.play.services.auth)
+            implementation(libs.googleid)
+        }
         iosMain.dependencies { implementation(libs.ktor.client.darwin) }
     }
 }
