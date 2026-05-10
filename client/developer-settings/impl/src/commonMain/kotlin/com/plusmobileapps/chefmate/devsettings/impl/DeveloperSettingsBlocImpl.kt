@@ -71,6 +71,10 @@ class DeveloperSettingsBlocImpl(
     override fun onSignInErrorDismissed() {
         viewModel.dismissSignInError()
     }
+
+    override fun onFeatureFlagsClicked() {
+        output.onNext(Output.OpenFeatureFlags)
+    }
 }
 
 @ContributesTo(AppScope::class)

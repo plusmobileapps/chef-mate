@@ -15,6 +15,8 @@ import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc
 import com.plusmobileapps.chefmate.di.AppScope
+import com.plusmobileapps.chefmate.featureflag.FeatureFlags
+import com.plusmobileapps.chefmate.featureflag.FeatureFlagsBloc
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
@@ -30,6 +32,7 @@ import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 @AssistedInject
@@ -45,11 +48,17 @@ class RootBlocImpl(
     private val bottomNavOrder: BottomNavOrderBloc.Factory,
     private val developerSettings: DeveloperSettingsBloc.Factory,
     private val cookMode: CookModeBloc.Factory,
+    private val featureFlags: FeatureFlags,
+    private val featureFlagsBlocFactory: FeatureFlagsBloc.Factory,
 ) : RootBloc, BlocContext by context {
 
     @AssistedFactory
     fun interface ManagedFactory {
         fun create(context: BlocContext): RootBlocImpl
+    }
+
+    init {
+        createScope().launch { featureFlags.refresh() }
     }
 
     private val navigation = StackNavigation<Configuration>()
@@ -158,6 +167,15 @@ class RootBlocImpl(
                         )
                 )
 
+            Configuration.FeatureFlags ->
+                RootBloc.Child.FeatureFlags(
+                    bloc =
+                        featureFlagsBlocFactory.create(
+                            context = context,
+                            output = ::handleFeatureFlagsOutput,
+                        )
+                )
+
             is Configuration.CookMode ->
                 RootBloc.Child.CookMode(
                     bloc =
@@ -241,6 +259,15 @@ class RootBlocImpl(
     private fun handleDeveloperSettingsOutput(output: DeveloperSettingsBloc.Output) {
         when (output) {
             DeveloperSettingsBloc.Output.Back -> navigation.pop()
+            DeveloperSettingsBloc.Output.OpenFeatureFlags -> {
+                navigation.bringToFront(Configuration.FeatureFlags)
+            }
+        }
+    }
+
+    private fun handleFeatureFlagsOutput(output: FeatureFlagsBloc.Output) {
+        when (output) {
+            FeatureFlagsBloc.Output.Back -> navigation.pop()
         }
     }
 
@@ -316,6 +343,8 @@ class RootBlocImpl(
         @Serializable data object BottomNavOrder : Configuration()
 
         @Serializable data object DeveloperSettings : Configuration()
+
+        @Serializable data object FeatureFlags : Configuration()
 
         @Serializable data class CookMode(val recipeId: Long) : Configuration()
     }

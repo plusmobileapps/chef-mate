@@ -1,0 +1,37 @@
+package com.plusmobileapps.chefmate.featureflag
+
+sealed interface FeatureFlag<T : Any> {
+    val key: String
+    val defaultValue: T
+    val description: String
+}
+
+abstract class BooleanFlag(
+    override val key: String,
+    override val defaultValue: Boolean,
+    override val description: String,
+) : FeatureFlag<Boolean>
+
+abstract class StringFlag(
+    override val key: String,
+    override val defaultValue: String,
+    override val description: String,
+) : FeatureFlag<String>
+
+object FeatureFlagRegistry {
+    object CookModeV2 :
+        BooleanFlag(
+            key = "cook_mode_v2",
+            defaultValue = false,
+            description = "Opt-in flow for the next iteration of Cook Mode.",
+        )
+
+    object HomeBannerText :
+        StringFlag(
+            key = "home_banner_text",
+            defaultValue = "",
+            description = "Optional banner copy shown on the home screen. Empty hides the banner.",
+        )
+
+    val all: List<FeatureFlag<*>> = listOf(CookModeV2, HomeBannerText)
+}

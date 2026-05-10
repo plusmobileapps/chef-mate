@@ -12,11 +12,13 @@ kotlin {
             implementation(projects.client.bottomnav.public)
             implementation(projects.client.browser.public)
             implementation(projects.client.cook.public)
+            implementation(projects.client.featureflag.public)
             implementation(projects.client.grocery.core.public)
             implementation(projects.client.recipe.core.public)
             implementation(projects.client.auth.ui.public)
             implementation(libs.kotlinx.serialization.json)
         }
+        commonTest.dependencies { implementation(projects.client.featureflag.testing) }
     }
 }
 

@@ -30,6 +30,7 @@ import chefmate.client.developer_settings.public.generated.resources.dev_env_fak
 import chefmate.client.developer_settings.public.generated.resources.dev_env_prod
 import chefmate.client.developer_settings.public.generated.resources.dev_env_testing
 import chefmate.client.developer_settings.public.generated.resources.dev_environment
+import chefmate.client.developer_settings.public.generated.resources.dev_feature_flags
 import chefmate.client.developer_settings.public.generated.resources.dev_login_as_user
 import chefmate.client.developer_settings.public.generated.resources.dev_no_test_users
 import chefmate.client.developer_settings.public.generated.resources.dev_no_test_users_message
@@ -48,8 +49,8 @@ import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusDialog
+import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
-import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -96,7 +97,7 @@ fun DeveloperSettingsScreen(bloc: DeveloperSettingsBloc, modifier: Modifier = Mo
     }
 
     Surface(modifier = modifier.fillMaxSize(), color = ChefMateTheme.colorScheme.background) {
-        PlusNavContainer(
+        PlusHeaderContainer(
             data =
                 PlusHeaderData.Child(
                     title = Res.string.developer_settings.asTextData(),
@@ -123,6 +124,11 @@ fun DeveloperSettingsScreen(bloc: DeveloperSettingsBloc, modifier: Modifier = Mo
                         onClick = bloc::onSignOutTestUserClicked,
                     )
                 }
+                HorizontalDivider()
+                DeveloperRow(
+                    title = Res.string.dev_feature_flags.asTextData(),
+                    onClick = bloc::onFeatureFlagsClicked,
+                )
             },
         )
     }
@@ -310,4 +316,6 @@ val previewDeveloperSettingsBloc =
         override fun onRestartPromptDismissed() = Unit
 
         override fun onSignInErrorDismissed() = Unit
+
+        override fun onFeatureFlagsClicked() = Unit
     }
