@@ -341,6 +341,8 @@ class RootBlocImpl(
                         flow = OtpFlow.PasswordlessSignIn,
                     )
                 )
+            is AuthenticationBloc.Output.OpenUrl ->
+                navigation.bringToFront(Configuration.Browser(output.url))
         }
     }
 

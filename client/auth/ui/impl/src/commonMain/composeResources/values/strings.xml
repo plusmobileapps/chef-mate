@@ -16,8 +16,8 @@
     <string name="auth_error_send_otp_rate_limit">Too many code requests. Please wait a few minutes before trying again.</string>
 
     <!-- OTP errors -->
-    <string name="auth_otp_error_required">Enter the 6-digit code from your email</string>
-    <string name="auth_otp_error_invalid_length">Code must be exactly 6 digits</string>
+    <string name="auth_otp_error_required">Enter the code from your email</string>
+    <string name="auth_otp_error_invalid_length">Code must be exactly 8 digits</string>
     <string name="auth_otp_error_invalid_token">That code doesn’t match. Double-check and try again.</string>
     <string name="auth_otp_error_expired">That code has expired. Tap "Resend code" for a new one.</string>
     <string name="auth_otp_error_rate_limit">Too many attempts. Please wait a few minutes before trying again.</string>

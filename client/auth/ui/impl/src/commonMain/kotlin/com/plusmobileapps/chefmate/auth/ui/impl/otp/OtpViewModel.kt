@@ -52,7 +52,7 @@ class OtpViewModel(
     }
 
     fun onCodeChanged(code: String) {
-        val sanitized = code.filter(Char::isDigit).take(6)
+        val sanitized = code.filter(Char::isDigit).take(OTP_CODE_LENGTH)
         _code.value = sanitized
         if (_state.value.errorMessage != null) {
             _state.value = _state.value.copy(errorMessage = null)
@@ -66,7 +66,7 @@ class OtpViewModel(
                 _state.value.copy(errorMessage = Res.string.auth_otp_error_required.asTextData())
             return
         }
-        if (token.length != 6) {
+        if (token.length != OTP_CODE_LENGTH) {
             _state.value =
                 _state.value.copy(
                     errorMessage = Res.string.auth_otp_error_invalid_length.asTextData()
@@ -181,5 +181,6 @@ class OtpViewModel(
 
     companion object {
         const val RESEND_COUNTDOWN_SECONDS = 30
+        const val OTP_CODE_LENGTH = 8
     }
 }

@@ -324,6 +324,10 @@ class AuthenticationViewModel(
         _state.value = _state.value.copy(errorMessage = null)
     }
 
+    fun onUrlClicked(url: String) {
+        scope.launch { output.send(Output.OpenUrl(url)) }
+    }
+
     /**
      * Determines the appropriate error message for sign-in failures. Supabase returns "Invalid
      * login credentials" for wrong email/password combinations.
@@ -377,6 +381,8 @@ class AuthenticationViewModel(
         data class EmailVerificationRequired(val email: String) : Output()
 
         data class PasswordlessOtpSent(val email: String) : Output()
+
+        data class OpenUrl(val url: String) : Output()
     }
 
     @AssistedFactory

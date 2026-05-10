@@ -59,7 +59,7 @@ class OtpViewModelTest {
 
         viewModel.onCodeChanged("12abc34d56789")
 
-        viewModel.code.value shouldBe "123456"
+        viewModel.code.value shouldBe "12345678"
     }
 
     @Test
@@ -69,7 +69,7 @@ class OtpViewModelTest {
             val viewModel = viewModel(repo = repo)
 
             viewModel.outputs.test {
-                viewModel.onCodeChanged("123456")
+                viewModel.onCodeChanged("12345678")
                 viewModel.onVerifyClicked()
 
                 awaitItem() shouldBe OtpViewModel.Output.Verified
@@ -87,7 +87,7 @@ class OtpViewModelTest {
             val viewModel = viewModel(repo = repo, flow = OtpFlow.PasswordlessSignIn)
 
             viewModel.outputs.test {
-                viewModel.onCodeChanged("654321")
+                viewModel.onCodeChanged("87654321")
                 viewModel.onVerifyClicked()
 
                 awaitItem() shouldBe OtpViewModel.Output.Verified
@@ -105,7 +105,7 @@ class OtpViewModelTest {
             }
         val viewModel = viewModel(repo = repo)
 
-        viewModel.onCodeChanged("123456")
+        viewModel.onCodeChanged("12345678")
         viewModel.onVerifyClicked()
 
         viewModel.state.value.errorMessage shouldNotBe null
