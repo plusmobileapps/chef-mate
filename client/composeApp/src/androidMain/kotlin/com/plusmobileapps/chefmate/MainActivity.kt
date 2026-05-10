@@ -7,18 +7,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.arkivanov.decompose.defaultComponentContext
 import com.plusmobileapps.chefmate.root.RootBloc
-import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.auth.handleDeeplinks
 
 class MainActivity : ComponentActivity() {
-    private lateinit var supabaseClient: SupabaseClient
     private lateinit var rootBloc: RootBloc
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val appComponent = (application as MyApplication).appComponent
-        supabaseClient = appComponent.supabaseClient
 
         rootBloc =
             buildRootBloc(
@@ -27,13 +23,11 @@ class MainActivity : ComponentActivity() {
             )
         setContent { App(rootBloc) }
 
-        supabaseClient.handleDeeplinks(intent)
         handleShareIntent(intent)
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        supabaseClient.handleDeeplinks(intent)
         handleShareIntent(intent)
     }
 

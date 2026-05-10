@@ -12,6 +12,7 @@ kotlin {
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
         }
+        commonTest.dependencies { implementation(projects.client.auth.data.testing) }
     }
 }
 

@@ -31,10 +31,7 @@ interface SupabaseModule {
                 Environment.FAKE -> BuildConfig.SUPABASE_PROD_URL to BuildConfig.SUPABASE_PROD_KEY
             }
         return createSupabaseClient(supabaseUrl = url, supabaseKey = key) {
-            install(Auth) {
-                scheme = "chefmate"
-                host = "auth"
-            }
+            install(Auth)
             install(Postgrest)
         }
     }

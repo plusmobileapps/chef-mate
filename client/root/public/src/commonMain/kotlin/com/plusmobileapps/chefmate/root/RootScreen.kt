@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.Dp
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationScreen
+import com.plusmobileapps.chefmate.auth.ui.otp.OtpScreen
 import com.plusmobileapps.chefmate.browser.BrowserRootScreen
 import com.plusmobileapps.chefmate.cook.CookModeScreen
 import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsScreen
@@ -146,6 +147,7 @@ private fun RootChildContent(child: RootBloc.Child, onBack: () -> Unit) {
         is RootBloc.Child.GroceryDetail -> GroceryDetailScreen(child.bloc)
         is RootBloc.Child.RecipeRoot -> RecipeRootScreen(child.bloc)
         is RootBloc.Child.Authentication -> AuthenticationScreen(child.bloc)
+        is RootBloc.Child.OtpVerification -> OtpScreen(child.bloc)
         is RootBloc.Child.Browser ->
             PlusHeaderContainer(
                 modifier = Modifier.fillMaxSize(),

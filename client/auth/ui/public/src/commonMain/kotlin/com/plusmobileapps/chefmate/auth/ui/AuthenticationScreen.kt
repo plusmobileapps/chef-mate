@@ -1,8 +1,10 @@
 package com.plusmobileapps.chefmate.auth.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,6 +46,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import chefmate.client.auth.ui.public.generated.resources.Res
+import chefmate.client.auth.ui.public.generated.resources.auth_button_email_me_a_code
 import chefmate.client.auth.ui.public.generated.resources.auth_button_forgot_password
 import chefmate.client.auth.ui.public.generated.resources.auth_button_okay
 import chefmate.client.auth.ui.public.generated.resources.auth_button_sign_in
@@ -54,10 +57,12 @@ import chefmate.client.auth.ui.public.generated.resources.auth_label_password
 import chefmate.client.auth.ui.public.generated.resources.auth_loading_creating_account
 import chefmate.client.auth.ui.public.generated.resources.auth_loading_signing_in
 import chefmate.client.auth.ui.public.generated.resources.auth_password_toggle
+import chefmate.client.auth.ui.public.generated.resources.auth_privacy_policy
 import chefmate.client.auth.ui.public.generated.resources.auth_screen_title_sign_in
 import chefmate.client.auth.ui.public.generated.resources.auth_screen_title_sign_up
 import chefmate.client.auth.ui.public.generated.resources.auth_switch_to_sign_in
 import chefmate.client.auth.ui.public.generated.resources.auth_switch_to_sign_up
+import chefmate.client.auth.ui.public.generated.resources.auth_terms_of_use
 import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
@@ -99,7 +104,9 @@ fun AuthenticationScreen(bloc: AuthenticationBloc, modifier: Modifier = Modifier
                     onSubmitClicked = bloc::onSubmitClicked,
                     onToggleMode = bloc::onToggleMode,
                     onForgotPasswordClicked = bloc::onForgotPasswordClicked,
+                    onEmailMeACodeClicked = bloc::onEmailMeACodeClicked,
                     onDismissError = bloc::onDismissError,
+                    onUrlClicked = bloc::onUrlClicked,
                 )
                 if (model.isLoading) {
                     PlusLoadingDialog(
@@ -145,7 +152,9 @@ private fun AuthenticationBody(
     onSubmitClicked: () -> Unit,
     onToggleMode: () -> Unit,
     onForgotPasswordClicked: () -> Unit,
+    onEmailMeACodeClicked: () -> Unit,
     onDismissError: () -> Unit,
+    onUrlClicked: (String) -> Unit,
 ) {
     val passwordFocusRequester = remember { FocusRequester() }
     val confirmPasswordFocusRequester = remember { FocusRequester() }
@@ -206,8 +215,16 @@ private fun AuthenticationBody(
         Spacer(modifier = Modifier.height(ChefMateTheme.dimens.paddingNormal))
 
         AnimatedVisibility(visible = isSignIn) {
-            TextButton(onClick = onForgotPasswordClicked) {
-                Text(text = stringResource(Res.string.auth_button_forgot_password))
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                TextButton(onClick = onForgotPasswordClicked) {
+                    Text(text = stringResource(Res.string.auth_button_forgot_password))
+                }
+                TextButton(onClick = onEmailMeACodeClicked) {
+                    Text(text = stringResource(Res.string.auth_button_email_me_a_code))
+                }
             }
         }
 
@@ -235,6 +252,27 @@ private fun AuthenticationBody(
         }
 
         AuthenticationSwitcher(isSignIn = isSignIn, onToggleMode = onToggleMode)
+
+        Spacer(modifier = Modifier.height(ChefMateTheme.dimens.paddingLarge))
+
+        Row(horizontalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall)) {
+            TextButton(
+                onClick = { onUrlClicked("https://chefmate.plusmobileapps.com/privacy-policy/") }
+            ) {
+                Text(
+                    text = stringResource(Res.string.auth_privacy_policy),
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
+            TextButton(
+                onClick = { onUrlClicked("https://chefmate.plusmobileapps.com/terms-of-use/") }
+            ) {
+                Text(
+                    text = stringResource(Res.string.auth_terms_of_use),
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(120.dp))
     }

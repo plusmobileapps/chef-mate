@@ -4,6 +4,9 @@ package com.plusmobileapps.chefmate.root
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.auth.data.OtpFlow
+import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
+import com.plusmobileapps.chefmate.auth.ui.otp.OtpBloc
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
@@ -34,6 +37,9 @@ class RootBlocTest {
     var developerSettingsOutput:
         Consumer<com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc.Output> =
         Consumer {}
+    var authOutput: Consumer<AuthenticationBloc.Output> = Consumer {}
+    var otpOutput: Consumer<OtpBloc.Output> = Consumer {}
+    var otpProps: OtpBloc.Props? = null
 
     val rootBloc =
         RootBlocImpl(
@@ -62,7 +68,15 @@ class RootBlocTest {
                 mock()
             },
             mealPlannerRoot = MealPlannerRootBloc.Factory { _, _, _ -> mock() },
-            authentication = { context, props, output -> mock() },
+            authentication = { _, _, output ->
+                authOutput = output
+                mock()
+            },
+            otpBloc = { _, props, output ->
+                otpProps = props
+                otpOutput = output
+                mock()
+            },
             appSettings = { _, output ->
                 appSettingsOutput = output
                 mock()
@@ -183,6 +197,51 @@ class RootBlocTest {
             com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc.Output.OpenFeatureFlags
         )
         rootBloc.instance() should instanceOf<RootBloc.Child.FeatureFlags>()
+    }
+
+    @Test
+    fun When_auth_outputs_email_verification_Then_otp_screen_shown_with_signup_flow() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenSignUp)
+        rootBloc.instance() should instanceOf<RootBloc.Child.Authentication>()
+
+        authOutput.onNext(AuthenticationBloc.Output.EmailVerificationRequired("user@example.com"))
+
+        rootBloc.instance() should instanceOf<RootBloc.Child.OtpVerification>()
+        otpProps shouldBe OtpBloc.Props(email = "user@example.com", flow = OtpFlow.SignUp)
+    }
+
+    @Test
+    fun When_auth_outputs_passwordless_otp_Then_otp_screen_shown_with_passwordless_flow() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenSignIn)
+        rootBloc.instance() should instanceOf<RootBloc.Child.Authentication>()
+
+        authOutput.onNext(AuthenticationBloc.Output.PasswordlessOtpSent("user@example.com"))
+
+        rootBloc.instance() should instanceOf<RootBloc.Child.OtpVerification>()
+        otpProps shouldBe
+            OtpBloc.Props(email = "user@example.com", flow = OtpFlow.PasswordlessSignIn)
+    }
+
+    @Test
+    fun Given_otp_screen_When_otp_verified_Then_bottom_nav_is_shown() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenSignUp)
+        authOutput.onNext(AuthenticationBloc.Output.EmailVerificationRequired("user@example.com"))
+        rootBloc.instance() should instanceOf<RootBloc.Child.OtpVerification>()
+
+        otpOutput.onNext(OtpBloc.Output.Verified)
+
+        rootBloc.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
+    }
+
+    @Test
+    fun Given_otp_screen_When_otp_cancelled_Then_returns_to_previous() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenSignUp)
+        authOutput.onNext(AuthenticationBloc.Output.EmailVerificationRequired("user@example.com"))
+        rootBloc.instance() should instanceOf<RootBloc.Child.OtpVerification>()
+
+        otpOutput.onNext(OtpBloc.Output.Cancelled)
+
+        rootBloc.instance() should instanceOf<RootBloc.Child.Authentication>()
     }
 
     @Test

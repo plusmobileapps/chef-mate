@@ -10,7 +10,9 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
+import com.plusmobileapps.chefmate.auth.data.OtpFlow
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
+import com.plusmobileapps.chefmate.auth.ui.otp.OtpBloc
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc
@@ -44,6 +46,7 @@ class RootBlocImpl(
     private val recipeRoot: RecipeRootBloc.Factory,
     private val mealPlannerRoot: MealPlannerRootBloc.Factory,
     private val authentication: AuthenticationBloc.Factory,
+    private val otpBloc: OtpBloc.Factory,
     private val appSettings: AppSettingsBloc.Factory,
     private val bottomNavOrder: BottomNavOrderBloc.Factory,
     private val developerSettings: DeveloperSettingsBloc.Factory,
@@ -120,6 +123,16 @@ class RootBlocImpl(
                             context = context,
                             props = config.props,
                             output = ::handleAuthenticationOutput,
+                        )
+                )
+
+            is Configuration.OtpVerification ->
+                RootBloc.Child.OtpVerification(
+                    bloc =
+                        otpBloc.create(
+                            context = context,
+                            props = OtpBloc.Props(email = config.email, flow = config.flow),
+                            output = ::handleOtpOutput,
                         )
                 )
 
@@ -317,9 +330,26 @@ class RootBlocImpl(
         when (output) {
             AuthenticationBloc.Output.Finished -> navigation.pop()
             AuthenticationBloc.Output.AuthenticationSuccess -> navigation.pop()
-            is AuthenticationBloc.Output.EmailVerificationRequired -> {
-                navigation.pop()
-            }
+            is AuthenticationBloc.Output.EmailVerificationRequired ->
+                navigation.bringToFront(
+                    Configuration.OtpVerification(email = output.email, flow = OtpFlow.SignUp)
+                )
+            is AuthenticationBloc.Output.PasswordlessOtpSent ->
+                navigation.bringToFront(
+                    Configuration.OtpVerification(
+                        email = output.email,
+                        flow = OtpFlow.PasswordlessSignIn,
+                    )
+                )
+            is AuthenticationBloc.Output.OpenUrl ->
+                navigation.bringToFront(Configuration.Browser(output.url))
+        }
+    }
+
+    private fun handleOtpOutput(output: OtpBloc.Output) {
+        when (output) {
+            OtpBloc.Output.Verified -> navigation.bringToFront(Configuration.BottomNavigation)
+            OtpBloc.Output.Cancelled -> navigation.pop()
         }
     }
 
@@ -333,6 +363,9 @@ class RootBlocImpl(
 
         @Serializable
         data class Authentication(val props: AuthenticationBloc.Props) : Configuration()
+
+        @Serializable
+        data class OtpVerification(val email: String, val flow: OtpFlow) : Configuration()
 
         @Serializable data class Browser(val url: String) : Configuration()
 

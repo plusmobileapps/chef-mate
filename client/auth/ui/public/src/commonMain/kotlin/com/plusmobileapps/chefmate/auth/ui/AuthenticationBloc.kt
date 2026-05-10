@@ -25,6 +25,10 @@ interface AuthenticationBloc : BackClickBloc {
 
     fun onForgotPasswordClicked()
 
+    fun onEmailMeACodeClicked()
+
+    fun onUrlClicked(url: String)
+
     fun onDismissError()
 
     data class Model(
@@ -46,6 +50,10 @@ interface AuthenticationBloc : BackClickBloc {
         data object AuthenticationSuccess : Output()
 
         data class EmailVerificationRequired(val email: String) : Output()
+
+        data class PasswordlessOtpSent(val email: String) : Output()
+
+        data class OpenUrl(val url: String) : Output()
     }
 
     @Serializable

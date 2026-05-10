@@ -8,6 +8,7 @@ kotlin {
         commonMain.dependencies {
             api(libs.arkivanov.decompose.core)
             api(libs.kotlin.coroutines.core)
+            api(projects.client.auth.data.public)
             api(projects.client.shared)
             api(projects.client.text.public)
             implementation(projects.client.ui.public)
