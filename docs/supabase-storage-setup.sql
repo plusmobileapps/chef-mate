@@ -94,3 +94,34 @@ drop trigger if exists recipes_delete_photo on public.recipes;
 create trigger recipes_delete_photo
 after delete on public.recipes
 for each row execute function public.delete_recipe_photo();
+
+-- 4a. When a recipe's image_url is replaced, delete the previous photo from storage.
+-- Mirrors the delete trigger so admin updates / other clients also clean up. The
+-- client-side photo storage layer also calls deletePhoto() during updateRecipe, so
+-- this is belt-and-suspenders for direct DB edits.
+create or replace function public.delete_replaced_recipe_photo()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, storage
+as $$
+declare
+  storage_path text;
+begin
+  if old.image_url is not null and old.image_url like '%/recipe-photos/%' then
+    storage_path := substring(old.image_url from '/recipe-photos/(.+)$');
+    if storage_path is not null and length(storage_path) > 0 then
+      delete from storage.objects
+      where bucket_id = 'recipe-photos' and name = storage_path;
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists recipes_update_photo on public.recipes;
+create trigger recipes_update_photo
+after update of image_url on public.recipes
+for each row
+when (old.image_url is distinct from new.image_url)
+execute function public.delete_replaced_recipe_photo();

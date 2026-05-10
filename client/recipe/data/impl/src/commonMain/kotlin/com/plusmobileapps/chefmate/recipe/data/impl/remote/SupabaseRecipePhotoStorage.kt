@@ -2,6 +2,7 @@
 
 package com.plusmobileapps.chefmate.recipe.data.impl.remote
 
+import co.touchlab.kermit.Logger
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.di.AppScope
@@ -31,6 +32,20 @@ class SupabaseRecipePhotoStorage(
         val path = "$ownerFolder/${Uuid.random()}.$sanitizedExtension"
         bucket.upload(path = path, data = bytes) { upsert = false }
         return bucket.publicUrl(path)
+    }
+
+    override suspend fun deletePhoto(publicUrl: String) {
+        val needle = "/$BUCKET_NAME/"
+        if (!publicUrl.contains(needle)) return
+        val path = publicUrl.substringAfter(needle)
+        if (path.isBlank()) return
+        try {
+            supabaseClient.storage.from(BUCKET_NAME).delete(path)
+        } catch (t: Throwable) {
+            Logger.w(throwable = t, tag = "SupabaseRecipePhotoStorage") {
+                "Failed to delete photo at $path"
+            }
+        }
     }
 
     private companion object {

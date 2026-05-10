@@ -12,6 +12,7 @@ import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.recipe.data.RecipePhotoStorage
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.recipe.data.impl.remote.RecipeRemoteDataSource
@@ -49,6 +50,7 @@ class RecipeRepositoryImpl(
     private val dateTimeUtil: DateTimeUtil,
     private val remoteDataSource: RecipeRemoteDataSource,
     private val authRepository: AuthenticationRepository,
+    private val photoStorage: RecipePhotoStorage,
 ) : RecipeRepository {
 
     private val scope = CoroutineScope(ioContext + SupervisorJob())
@@ -116,10 +118,11 @@ class RecipeRepositoryImpl(
     }
 
     override suspend fun updateRecipe(recipe: Recipe): Recipe {
-        val result =
+        val (result, previousImageUrl) =
             withContext(ioContext) {
                 val now = dateTimeUtil.now
-                db.transactionWithResult {
+                val previous = db.getById(recipe.id).executeAsOneOrNull()
+                val updated = db.transactionWithResult {
                     db.update(
                         id = recipe.id,
                         title = recipe.title,
@@ -140,7 +143,11 @@ class RecipeRepositoryImpl(
                     syncJoinRowsForRecipe(recipe.id, recipe.categories)
                     recipe.copy(updatedAt = now)
                 }
+                updated to previous?.imageUrl
             }
+        if (!previousImageUrl.isNullOrBlank() && previousImageUrl != recipe.imageUrl) {
+            scope.launch { photoStorage.deletePhoto(previousImageUrl) }
+        }
         pushUpdateToRemote(recipe.id)
         return result
     }
@@ -159,6 +166,10 @@ class RecipeRepositoryImpl(
                 db.delete(id)
                 entity
             }
+        entity
+            ?.imageUrl
+            ?.takeIf { it.isNotBlank() }
+            ?.let { imageUrl -> scope.launch { photoStorage.deletePhoto(imageUrl) } }
         entity?.remoteId?.let { remoteId ->
             scope.launch {
                 try {
