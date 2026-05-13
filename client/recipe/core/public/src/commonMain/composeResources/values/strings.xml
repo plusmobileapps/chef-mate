@@ -42,8 +42,6 @@
 <string name="recipe_detail_share_url">Share recipe URL</string>
 <string name="recipe_detail_share_text">Share recipe text</string>
     <string name="recipe_detail_copied_to_clipboard">Copied to clipboard</string>
-    <string name="recipe_detail_keep_screen_on">Keep screen on</string>
-    <string name="recipe_detail_allow_screen_off">Allow screen to turn off</string>
     <string name="recipe_full_image_close">Close</string>
 
     <!-- Add to Meal Plan -->

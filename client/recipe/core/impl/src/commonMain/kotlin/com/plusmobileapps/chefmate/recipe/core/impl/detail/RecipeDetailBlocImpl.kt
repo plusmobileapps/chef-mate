@@ -116,7 +116,6 @@ class RecipeDetailBlocImpl(
                 formattedTotalTime =
                     it.recipe.totalTime?.let { time -> timeFormatterUtil.formatMinutes(time) },
                 showGroceryAddedSnackbar = it.showGroceryAddedSnackbar,
-                keepScreenOn = it.keepScreenOn,
             )
         }
 
@@ -175,10 +174,6 @@ class RecipeDetailBlocImpl(
     override fun onViewGroceryListClicked() {
         viewModel.dismissGroceryAddedSnackbar()
         output.onNext(Output.OpenGroceryList)
-    }
-
-    override fun onKeepScreenOnToggled() {
-        viewModel.toggleKeepScreenOn()
     }
 
     override fun onGrocerySnackbarDismissed() {

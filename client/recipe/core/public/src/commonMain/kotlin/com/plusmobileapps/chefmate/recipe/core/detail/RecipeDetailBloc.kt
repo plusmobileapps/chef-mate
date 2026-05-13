@@ -43,8 +43,6 @@ interface RecipeDetailBloc : BackClickBloc {
 
     fun onViewGroceryListClicked()
 
-    fun onKeepScreenOnToggled()
-
     fun onGrocerySnackbarDismissed()
 
     data class Model(
@@ -58,7 +56,6 @@ interface RecipeDetailBloc : BackClickBloc {
         val formattedCookTime: TextData? = null,
         val formattedTotalTime: TextData? = null,
         val showGroceryAddedSnackbar: Boolean = false,
-        val keepScreenOn: Boolean = true,
     )
 
     sealed class Output {
