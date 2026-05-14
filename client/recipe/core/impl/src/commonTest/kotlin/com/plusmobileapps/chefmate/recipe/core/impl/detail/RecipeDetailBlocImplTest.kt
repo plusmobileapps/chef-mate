@@ -5,7 +5,6 @@ package com.plusmobileapps.chefmate.recipe.core.impl.detail
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
-import com.plusmobileapps.chefmate.di.KeepScreenOnRepository
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.data.Recipe
@@ -14,7 +13,6 @@ import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
 import com.plusmobileapps.chefmate.util.DateTimeUtil
 import com.plusmobileapps.chefmate.util.TimeFormatterUtil
-import com.russhwolf.settings.MapSettings
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.matcher.any
@@ -55,13 +53,11 @@ class RecipeDetailBlocImplTest {
 
     private fun createBloc(recipe: Recipe? = sampleRecipe): RecipeDetailBlocImpl {
         if (recipe != null) recipes.value = listOf(recipe)
-        val keepScreenOnRepository = KeepScreenOnRepository(MapSettings())
         val viewModelFactory = RecipeDetailViewModel.Factory { id ->
             RecipeDetailViewModel(
                 recipeId = id,
                 mainContext = context.mainContext,
                 repository = repository,
-                keepScreenOnRepository = keepScreenOnRepository,
             )
         }
         val dateTimeUtil =

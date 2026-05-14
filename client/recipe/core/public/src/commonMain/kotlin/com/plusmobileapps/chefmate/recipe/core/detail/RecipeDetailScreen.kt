@@ -60,8 +60,6 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SoupKitchen
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
@@ -117,7 +115,6 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_groc
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_favorite
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_to_grocery
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_to_meal_plan
-import chefmate.client.recipe.core.public.generated.resources.recipe_detail_allow_screen_off
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_calories
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_cook_mode
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_cook_time
@@ -136,7 +133,6 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_dire
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_edit
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_ingredients
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_kcal
-import chefmate.client.recipe.core.public.generated.resources.recipe_detail_keep_screen_on
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_prep_time
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_remove_favorite
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_servings
@@ -156,7 +152,6 @@ import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
-import com.plusmobileapps.chefmate.ui.KeepScreenOn
 import com.plusmobileapps.chefmate.ui.LocalAnimatedVisibilityScope
 import com.plusmobileapps.chefmate.ui.LocalSecondaryAnimatedVisibilityScope
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
@@ -179,9 +174,6 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
-    if (state.keepScreenOn) {
-        KeepScreenOn()
-    }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val shareLauncher = rememberShareLauncher()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -295,26 +287,6 @@ private fun RecipeDetailBody(
                         titleSharedElementKey = "recipe-title-${state.recipe.id}",
                         trailingAccessory =
                             PlusHeaderData.TrailingAccessory.Custom {
-                                IconButton(onClick = bloc::onKeepScreenOnToggled) {
-                                    Icon(
-                                        imageVector =
-                                            if (state.keepScreenOn) {
-                                                Icons.Default.Visibility
-                                            } else {
-                                                Icons.Default.VisibilityOff
-                                            },
-                                        contentDescription =
-                                            if (state.keepScreenOn) {
-                                                stringResource(
-                                                    Res.string.recipe_detail_allow_screen_off
-                                                )
-                                            } else {
-                                                stringResource(
-                                                    Res.string.recipe_detail_keep_screen_on
-                                                )
-                                            },
-                                    )
-                                }
                                 Box {
                                     IconButton(onClick = { onShowOverflowMenuChange(true) }) {
                                         Icon(
@@ -1672,10 +1644,6 @@ private val previewBloc =
         }
 
         override fun onViewGroceryListClicked() {
-            TODO("Not yet implemented")
-        }
-
-        override fun onKeepScreenOnToggled() {
             TODO("Not yet implemented")
         }
 

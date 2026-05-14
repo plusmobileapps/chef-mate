@@ -1,7 +1,6 @@
 package com.plusmobileapps.chefmate.recipe.core.impl.detail
 
 import com.plusmobileapps.chefmate.ViewModel
-import com.plusmobileapps.chefmate.di.KeepScreenOnRepository
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
@@ -24,23 +23,16 @@ class RecipeDetailViewModel(
     @Assisted private val recipeId: Long,
     @Main mainContext: CoroutineContext,
     private val repository: RecipeRepository,
-    private val keepScreenOnRepository: KeepScreenOnRepository,
 ) : ViewModel(mainContext) {
 
     private val _output = Channel<Output>(Channel.BUFFERED)
     val output: Flow<Output> = _output.receiveAsFlow()
 
-    private val _state =
-        MutableStateFlow(State(keepScreenOn = keepScreenOnRepository.keepScreenOn.value))
+    private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state.asStateFlow()
 
     init {
         scope.launch { observeRecipe() }
-        scope.launch {
-            keepScreenOnRepository.keepScreenOn.collect { keepScreenOn ->
-                _state.update { it.copy(keepScreenOn = keepScreenOn) }
-            }
-        }
     }
 
     private suspend fun observeRecipe() {
@@ -85,17 +77,12 @@ class RecipeDetailViewModel(
         _state.update { it.copy(showGroceryAddedSnackbar = false) }
     }
 
-    fun toggleKeepScreenOn() {
-        keepScreenOnRepository.toggle()
-    }
-
     data class State(
         val isLoading: Boolean = true,
         val isDeleting: Boolean = false,
         val showDeleteConfirmationDialog: Boolean = false,
         val recipe: Recipe = Recipe.Empty,
         val showGroceryAddedSnackbar: Boolean = false,
-        val keepScreenOn: Boolean = true,
     )
 
     sealed class Output {
