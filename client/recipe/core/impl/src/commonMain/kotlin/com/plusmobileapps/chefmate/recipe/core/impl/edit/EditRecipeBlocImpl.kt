@@ -10,6 +10,8 @@ import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc.Output
+import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
+import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
@@ -62,6 +64,9 @@ class EditRecipeBlocImpl(
     override val totalTime: StateFlow<String> = viewModel.totalTime
     override val calories: StateFlow<String> = viewModel.calories
     override val starRating: StateFlow<Int?> = viewModel.starRating
+    override val categories: StateFlow<Set<Category>> = viewModel.categories
+    override val availableUserCategories: StateFlow<List<Category>> =
+        viewModel.availableUserCategories
 
     init {
         scope.launch {
@@ -125,6 +130,26 @@ class EditRecipeBlocImpl(
 
     override fun onStarRatingChanged(starRating: Int?) {
         viewModel.updateStarRating(starRating)
+    }
+
+    override fun onCategoriesChanged(categories: Set<Category>) {
+        viewModel.updateCategories(categories)
+    }
+
+    override fun onAttachBuiltin(builtin: BuiltinCategory) {
+        viewModel.attachBuiltin(builtin)
+    }
+
+    override fun onAttachCategory(category: Category) {
+        viewModel.attachCategory(category)
+    }
+
+    override fun onDetachCategory(category: Category) {
+        viewModel.detachCategory(category)
+    }
+
+    override fun onCreateUserCategory(name: String) {
+        viewModel.createUserCategoryAndAttach(name)
     }
 
     override fun onDiscardChangesConfirmed() {

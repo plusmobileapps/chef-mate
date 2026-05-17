@@ -3,8 +3,11 @@
 
 package com.plusmobileapps.chefmate.recipe.core.impl.edit
 
+import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
+import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.recipe.data.testing.FakeCategoryRepository
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
@@ -20,6 +23,7 @@ class EditRecipeViewModelTest {
 
     private val recipes = MutableStateFlow<List<Recipe>>(emptyList())
     private val repository = FakeRecipeRepository(recipes)
+    private val categoryRepository = FakeCategoryRepository()
     private val mainContext = UnconfinedTestDispatcher()
 
     private fun createViewModel(
@@ -31,6 +35,7 @@ class EditRecipeViewModelTest {
             extractedRecipe = extractedRecipe,
             mainContext = mainContext,
             repository = repository,
+            categoryRepository = categoryRepository,
         )
 
     @Test
@@ -185,6 +190,117 @@ class EditRecipeViewModelTest {
         recipes.value.first().title shouldBe "From Web"
         recipes.value.first().ingredients shouldBe "flour"
         recipes.value.first().sourceUrl shouldBe "https://example.com/recipe"
+    }
+
+    @Test
+    fun When_no_recipe_loaded_Then_categories_starts_empty() {
+        val vm = createViewModel()
+        vm.categories.value shouldBe emptySet()
+    }
+
+    @Test
+    fun When_recipe_with_category_loaded_Then_categories_seeded() = runTest {
+        val breakfastCategory =
+            Category(id = 1L, name = "Breakfast", builtinId = BuiltinCategory.BREAKFAST.id)
+        val existing =
+            Recipe(
+                id = 11,
+                title = "Existing",
+                description = null,
+                ingredients = "",
+                directions = "",
+                imageUrl = null,
+                sourceUrl = null,
+                servings = null,
+                prepTime = null,
+                cookTime = null,
+                totalTime = null,
+                calories = null,
+                starRating = null,
+                isFavorite = false,
+                categories = setOf(breakfastCategory),
+                createdAt = Instant.DISTANT_PAST,
+                updatedAt = Instant.DISTANT_PAST,
+            )
+        recipes.value = listOf(existing)
+
+        val vm = createViewModel(recipeId = 11)
+
+        vm.categories.value shouldBe setOf(breakfastCategory)
+    }
+
+    @Test
+    fun When_preset_attached_and_saved_Then_persisted_on_recipe() = runTest {
+        val vm = createViewModel()
+        vm.updateTitle("Stack of Pancakes")
+        vm.attachBuiltin(BuiltinCategory.BREAKFAST)
+
+        vm.save()
+        vm.output.first().shouldBeFinished()
+
+        recipes.value.size shouldBe 1
+        recipes.value.first().categories.singleOrNull()?.builtinId shouldBe
+            BuiltinCategory.BREAKFAST.id
+    }
+
+    @Test
+    fun When_attaching_same_preset_twice_Then_only_one_row_is_attached() = runTest {
+        val vm = createViewModel()
+        vm.updateTitle("Bagels")
+        vm.attachBuiltin(BuiltinCategory.BREAKFAST)
+        vm.attachBuiltin(BuiltinCategory.BREAKFAST)
+
+        vm.save()
+        vm.output.first().shouldBeFinished()
+
+        // materializeBuiltin returns the existing row on the second call, so the Set ignores
+        // the duplicate; downstream join sync would otherwise create stale rows.
+        recipes.value.first().categories.size shouldBe 1
+    }
+
+    @Test
+    fun When_user_category_created_Then_attached_to_recipe() = runTest {
+        val vm = createViewModel()
+        vm.updateTitle("Family Favorites")
+
+        vm.createUserCategoryAndAttach("Weeknight")
+
+        vm.categories.value.singleOrNull()?.name shouldBe "Weeknight"
+    }
+
+    @Test
+    fun When_category_detached_Then_no_longer_attached() = runTest {
+        val dinnerCategory =
+            Category(id = 1L, name = "Dinner", builtinId = BuiltinCategory.DINNER.id)
+        val existing =
+            Recipe(
+                id = 12,
+                title = "Existing",
+                description = null,
+                ingredients = "",
+                directions = "",
+                imageUrl = null,
+                sourceUrl = null,
+                servings = null,
+                prepTime = null,
+                cookTime = null,
+                totalTime = null,
+                calories = null,
+                starRating = null,
+                isFavorite = false,
+                categories = setOf(dinnerCategory),
+                createdAt = Instant.DISTANT_PAST,
+                updatedAt = Instant.DISTANT_PAST,
+            )
+        recipes.value = listOf(existing)
+
+        val vm = createViewModel(recipeId = 12)
+        vm.detachCategory(dinnerCategory)
+
+        vm.save()
+        vm.output.first().shouldBeFinished()
+
+        recipes.value.first().categories shouldBe emptySet()
     }
 
     private fun EditRecipeViewModel.Output.shouldBeFinished() {

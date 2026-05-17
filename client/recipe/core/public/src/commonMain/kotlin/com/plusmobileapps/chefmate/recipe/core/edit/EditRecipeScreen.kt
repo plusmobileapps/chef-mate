@@ -4,6 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,6 +13,8 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.AlertDialog
@@ -18,6 +22,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -25,17 +30,33 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.core.public.generated.resources.Res
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_appetizer
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_breakfast
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_dessert
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_dinner
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_drink
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_lunch
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_other
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_side
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_snack
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_discard_cancel
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_discard_confirm
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_discard_message
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_discard_title
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_calories
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_calories_placeholder
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_add
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_none
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_remove_a11y
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_cook_time
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_cook_time_placeholder
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_description
@@ -57,6 +78,7 @@ import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_total_time
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_total_time_placeholder
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_save
+import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
@@ -64,6 +86,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -127,6 +150,7 @@ private fun EditRecipeContent(bloc: EditRecipeBloc, modifier: Modifier = Modifie
     ) {
         RecipeTitleField(bloc = bloc)
         RecipeDescriptionField(bloc = bloc)
+        RecipeCategoryField(bloc = bloc)
         RecipeStarRatingField(bloc = bloc)
         RecipeImageUrlField(bloc = bloc)
         RecipeSourceUrlField(bloc = bloc)
@@ -170,6 +194,97 @@ private fun RecipeDescriptionField(bloc: EditRecipeBloc, modifier: Modifier = Mo
         maxLines = 5,
     )
 }
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun RecipeCategoryField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
+    val categories by bloc.categories.collectAsState()
+    val userCategories by bloc.availableUserCategories.collectAsState()
+    var showSheet by rememberSaveable { mutableStateOf(false) }
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
+    ) {
+        Text(
+            text = stringResource(Res.string.edit_recipe_field_category),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        if (categories.isEmpty()) {
+            Text(
+                text = stringResource(Res.string.edit_recipe_field_category_none),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
+                verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
+            ) {
+                categories.forEach { category ->
+                    val label = category.displayLabel()
+                    InputChip(
+                        selected = true,
+                        onClick = { bloc.onDetachCategory(category) },
+                        label = { Text(label) },
+                        trailingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription =
+                                    stringResource(
+                                        Res.string.edit_recipe_field_category_remove_a11y,
+                                        label,
+                                    ),
+                                modifier = Modifier.size(18.dp),
+                            )
+                        },
+                    )
+                }
+            }
+        }
+
+        TextButton(onClick = { showSheet = true }) {
+            Icon(imageVector = Icons.Default.Add, contentDescription = null)
+            Text(
+                text = stringResource(Res.string.edit_recipe_field_category_add),
+                modifier = Modifier.padding(start = ChefMateTheme.dimens.paddingExtraSmall),
+            )
+        }
+    }
+
+    if (showSheet) {
+        CategoryPickerSheet(
+            selectedCategories = categories,
+            userCategories = userCategories,
+            onAttachBuiltin = bloc::onAttachBuiltin,
+            onAttachCategory = bloc::onAttachCategory,
+            onDetachCategory = bloc::onDetachCategory,
+            onCreateUserCategory = bloc::onCreateUserCategory,
+            onDismiss = { showSheet = false },
+        )
+    }
+}
+
+@Composable
+private fun com.plusmobileapps.chefmate.recipe.data.Category.displayLabel(): String {
+    val builtin = BuiltinCategory.fromId(builtinId)
+    return if (builtin != null) stringResource(builtin.fieldLabelRes()) else name
+}
+
+private fun BuiltinCategory.fieldLabelRes(): StringResource =
+    when (this) {
+        BuiltinCategory.BREAKFAST -> Res.string.edit_recipe_category_breakfast
+        BuiltinCategory.LUNCH -> Res.string.edit_recipe_category_lunch
+        BuiltinCategory.DINNER -> Res.string.edit_recipe_category_dinner
+        BuiltinCategory.APPETIZER -> Res.string.edit_recipe_category_appetizer
+        BuiltinCategory.SIDE -> Res.string.edit_recipe_category_side
+        BuiltinCategory.DESSERT -> Res.string.edit_recipe_category_dessert
+        BuiltinCategory.SNACK -> Res.string.edit_recipe_category_snack
+        BuiltinCategory.DRINK -> Res.string.edit_recipe_category_drink
+        BuiltinCategory.OTHER -> Res.string.edit_recipe_category_other
+    }
 
 @Composable
 private fun RecipeStarRatingField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
@@ -410,6 +525,19 @@ Salt for pasta water"""
         override val totalTime: StateFlow<String> = MutableStateFlow("25 minutes")
         override val calories: StateFlow<String> = MutableStateFlow("550")
         override val starRating: StateFlow<Int?> = MutableStateFlow(4)
+        override val categories: StateFlow<Set<com.plusmobileapps.chefmate.recipe.data.Category>> =
+            MutableStateFlow(
+                setOf(
+                    com.plusmobileapps.chefmate.recipe.data.Category(
+                        id = 1L,
+                        name = "Dinner",
+                        builtinId = BuiltinCategory.DINNER.id,
+                    )
+                )
+            )
+        override val availableUserCategories:
+            StateFlow<List<com.plusmobileapps.chefmate.recipe.data.Category>> =
+            MutableStateFlow(emptyList())
 
         override fun onTitleChanged(title: String) {}
 
@@ -434,6 +562,18 @@ Salt for pasta water"""
         override fun onCaloriesChanged(calories: String) {}
 
         override fun onStarRatingChanged(starRating: Int?) {}
+
+        override fun onCategoriesChanged(
+            categories: Set<com.plusmobileapps.chefmate.recipe.data.Category>
+        ) {}
+
+        override fun onAttachBuiltin(builtin: BuiltinCategory) {}
+
+        override fun onAttachCategory(category: com.plusmobileapps.chefmate.recipe.data.Category) {}
+
+        override fun onDetachCategory(category: com.plusmobileapps.chefmate.recipe.data.Category) {}
+
+        override fun onCreateUserCategory(name: String) {}
 
         override fun onDiscardChangesConfirmed() {}
 
