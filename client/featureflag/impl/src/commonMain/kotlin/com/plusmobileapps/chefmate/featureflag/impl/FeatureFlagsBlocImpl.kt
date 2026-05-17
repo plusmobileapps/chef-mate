@@ -10,25 +10,22 @@ import com.plusmobileapps.chefmate.featureflag.FeatureFlagsBloc.Output
 import com.plusmobileapps.chefmate.featureflag.Override
 import com.plusmobileapps.chefmate.featureflag.StringFlag
 import com.plusmobileapps.chefmate.getViewModel
+import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provider
-import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
 
 @AssistedInject
+@ContributesAssistedFactory(
+    scope = AppScope::class,
+    assistedFactory = FeatureFlagsBloc.Factory::class,
+)
 class FeatureFlagsBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<Output>,
     viewModelFactory: Provider<FeatureFlagsViewModel>,
 ) : FeatureFlagsBloc, BlocContext by context {
-
-    @AssistedFactory
-    fun interface ManagedFactory {
-        fun create(context: BlocContext, output: Consumer<Output>): FeatureFlagsBlocImpl
-    }
 
     private val viewModel = instanceKeeper.getViewModel { viewModelFactory() }
 
@@ -52,15 +49,5 @@ class FeatureFlagsBlocImpl(
 
     override fun onClearAllOverrides() {
         viewModel.clearAll()
-    }
-}
-
-@ContributesTo(AppScope::class)
-interface FeatureFlagsBlocBindingModule {
-    @Provides
-    fun provideFeatureFlagsBlocFactory(
-        factory: FeatureFlagsBlocImpl.ManagedFactory
-    ): FeatureFlagsBloc.Factory = FeatureFlagsBloc.Factory { context, output ->
-        factory.create(context, output)
     }
 }

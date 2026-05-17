@@ -6,25 +6,22 @@ import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc.Output
+import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provider
-import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
 
 @AssistedInject
+@ContributesAssistedFactory(
+    scope = AppScope::class,
+    assistedFactory = BottomNavOrderBloc.Factory::class,
+)
 class BottomNavOrderBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<Output>,
     viewModelFactory: Provider<BottomNavOrderViewModel>,
 ) : BottomNavOrderBloc, BlocContext by context {
-
-    @AssistedFactory
-    fun interface ManagedFactory {
-        fun create(context: BlocContext, output: Consumer<Output>): BottomNavOrderBlocImpl
-    }
 
     private val viewModel = instanceKeeper.getViewModel { viewModelFactory() }
 
@@ -41,15 +38,5 @@ class BottomNavOrderBlocImpl(
 
     override fun onBack() {
         output.onNext(Output.Back)
-    }
-}
-
-@ContributesTo(AppScope::class)
-interface BottomNavOrderBlocBindingModule {
-    @Provides
-    fun provideBottomNavOrderBlocFactory(
-        factory: BottomNavOrderBlocImpl.ManagedFactory
-    ): BottomNavOrderBloc.Factory = BottomNavOrderBloc.Factory { context, output ->
-        factory.create(context, output)
     }
 }

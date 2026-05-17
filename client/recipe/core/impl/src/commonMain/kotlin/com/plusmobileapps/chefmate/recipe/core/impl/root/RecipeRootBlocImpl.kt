@@ -15,14 +15,16 @@ import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.Provides
 import kotlinx.serialization.Serializable
 
 @AssistedInject
+@ContributesAssistedFactory(
+    scope = AppScope::class,
+    assistedFactory = RecipeRootBloc.Factory::class,
+)
 class RecipeRootBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val props: RecipeRootBloc.Props,
@@ -30,15 +32,6 @@ class RecipeRootBlocImpl(
     private val detailBloc: RecipeDetailBloc.Factory,
     private val editBloc: EditRecipeBloc.Factory,
 ) : RecipeRootBloc, BlocContext by context {
-    @AssistedFactory
-    fun interface ManagedFactory {
-        fun create(
-            context: BlocContext,
-            props: RecipeRootBloc.Props,
-            output: Consumer<RecipeRootBloc.Output>,
-        ): RecipeRootBlocImpl
-    }
-
     private val navigation = StackNavigation<Configuration>()
     private val stack =
         childStack(
@@ -139,15 +132,5 @@ class RecipeRootBlocImpl(
 
         @Serializable
         data class Edit(val recipeId: Long?, val extracted: ExtractedRecipeData?) : Configuration()
-    }
-}
-
-@ContributesTo(AppScope::class)
-interface RecipeRootBlocBindingModule {
-    @Provides
-    fun provideRecipeRootBlocFactory(
-        factory: RecipeRootBlocImpl.ManagedFactory
-    ): RecipeRootBloc.Factory = RecipeRootBloc.Factory { context, props, output ->
-        factory.create(context, props, output)
     }
 }

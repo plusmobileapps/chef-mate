@@ -14,14 +14,16 @@ import com.plusmobileapps.chefmate.recipe.core.addmeal.ChooseMealTypeBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc.Output
 import com.plusmobileapps.chefmate.recipe.core.addmeal.RecipePickerBloc
+import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.Provides
 import kotlinx.serialization.Serializable
 
 @AssistedInject
+@ContributesAssistedFactory(
+    scope = AppScope::class,
+    assistedFactory = MealPlannerRootBloc.Factory::class,
+)
 class MealPlannerRootBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val props: MealPlannerRootBloc.Props,
@@ -30,15 +32,6 @@ class MealPlannerRootBlocImpl(
     private val chooseDateFactory: ChooseDateBloc.Factory,
     private val chooseMealTypeFactory: ChooseMealTypeBloc.Factory,
 ) : MealPlannerRootBloc, BlocContext by context {
-
-    @AssistedFactory
-    fun interface ManagedFactory {
-        fun create(
-            context: BlocContext,
-            props: MealPlannerRootBloc.Props,
-            output: Consumer<Output>,
-        ): MealPlannerRootBlocImpl
-    }
 
     private val navigation = StackNavigation<Configuration>()
     private val stack =
@@ -133,15 +126,5 @@ class MealPlannerRootBlocImpl(
 
         @Serializable
         data class ChooseMealType(val recipeId: Long, val date: String) : Configuration()
-    }
-}
-
-@ContributesTo(AppScope::class)
-interface MealPlannerRootBlocBindingModule {
-    @Provides
-    fun provideMealPlannerRootBlocFactory(
-        factory: MealPlannerRootBlocImpl.ManagedFactory
-    ): MealPlannerRootBloc.Factory = MealPlannerRootBloc.Factory { context, props, output ->
-        factory.create(context, props, output)
     }
 }

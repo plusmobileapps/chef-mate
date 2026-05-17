@@ -7,25 +7,22 @@ import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.addmeal.RecipePickerBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.RecipePickerBloc.Output
+import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provider
-import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
 
 @AssistedInject
+@ContributesAssistedFactory(
+    scope = AppScope::class,
+    assistedFactory = RecipePickerBloc.Factory::class,
+)
 class RecipePickerBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: Provider<RecipePickerViewModel>,
 ) : RecipePickerBloc, BlocContext by context {
-
-    @AssistedFactory
-    fun interface ManagedFactory {
-        fun create(context: BlocContext, output: Consumer<Output>): RecipePickerBlocImpl
-    }
 
     private val viewModel: RecipePickerViewModel = instanceKeeper.getViewModel {
         viewModelFactory()
@@ -46,15 +43,5 @@ class RecipePickerBlocImpl(
 
     override fun onRecipeSelected(item: RecipePickerBloc.RecipePickerItem) {
         output.onNext(Output.RecipeSelected(recipeId = item.id))
-    }
-}
-
-@ContributesTo(AppScope::class)
-interface RecipePickerBlocBindingModule {
-    @Provides
-    fun provideRecipePickerBlocFactory(
-        factory: RecipePickerBlocImpl.ManagedFactory
-    ): RecipePickerBloc.Factory = RecipePickerBloc.Factory { context, output ->
-        factory.create(context, output)
     }
 }

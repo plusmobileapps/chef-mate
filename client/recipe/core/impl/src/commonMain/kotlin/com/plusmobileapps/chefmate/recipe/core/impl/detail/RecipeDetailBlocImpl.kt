@@ -18,16 +18,18 @@ import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc.Output
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.util.DateTimeUtil
 import com.plusmobileapps.chefmate.util.TimeFormatterUtil
+import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 @AssistedInject
+@ContributesAssistedFactory(
+    scope = AppScope::class,
+    assistedFactory = RecipeDetailBloc.Factory::class,
+)
 class RecipeDetailBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val recipeId: Long,
@@ -37,15 +39,6 @@ class RecipeDetailBlocImpl(
     private val timeFormatterUtil: TimeFormatterUtil,
     private val addToGroceryList: AddRecipeToGroceryListBloc.Factory,
 ) : RecipeDetailBloc, BlocContext by context {
-    @AssistedFactory
-    fun interface ManagedFactory {
-        fun create(
-            context: BlocContext,
-            recipeId: Long,
-            output: Consumer<Output>,
-        ): RecipeDetailBlocImpl
-    }
-
     private val scope = createScope()
 
     private val viewModel: RecipeDetailViewModel = instanceKeeper.getViewModel {
@@ -217,19 +210,4 @@ class RecipeDetailBlocImpl(
 
     @Serializable
     data class FullImageConfig(val imageUrl: String, val recipeId: Long, val title: String)
-}
-
-@ContributesTo(AppScope::class)
-interface RecipeDetailBlocBindingModule {
-    @Provides
-    fun provideRecipeDetailBlocFactory(
-        factory: RecipeDetailBlocImpl.ManagedFactory
-    ): RecipeDetailBloc.Factory =
-        object : RecipeDetailBloc.Factory {
-            override fun create(
-                context: BlocContext,
-                recipeId: Long,
-                output: Consumer<Output>,
-            ): RecipeDetailBloc = factory.create(context, recipeId, output)
-        }
 }

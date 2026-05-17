@@ -7,30 +7,23 @@ import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc.Output
+import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 @AssistedInject
+@ContributesAssistedFactory(
+    scope = AppScope::class,
+    assistedFactory = AddRecipeToGroceryListBloc.Factory::class,
+)
 class AddRecipeToGroceryListBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val recipeId: Long,
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: AddRecipeToGroceryListViewModel.Factory,
 ) : AddRecipeToGroceryListBloc, BlocContext by context {
-    @AssistedFactory
-    fun interface ManagedFactory {
-        fun create(
-            context: BlocContext,
-            recipeId: Long,
-            output: Consumer<Output>,
-        ): AddRecipeToGroceryListBlocImpl
-    }
-
     private val scope = createScope()
 
     private val viewModel = instanceKeeper.getViewModel { viewModelFactory.create(recipeId) }
@@ -76,15 +69,4 @@ class AddRecipeToGroceryListBlocImpl(
     override fun onBackClicked() {
         output.onNext(Output.Finished)
     }
-}
-
-@ContributesTo(AppScope::class)
-interface AddRecipeToGroceryListBlocBindingModule {
-    @Provides
-    fun provideAddRecipeToGroceryListBlocFactory(
-        factory: AddRecipeToGroceryListBlocImpl.ManagedFactory
-    ): AddRecipeToGroceryListBloc.Factory =
-        AddRecipeToGroceryListBloc.Factory { context, recipeId, output ->
-            factory.create(context, recipeId, output)
-        }
 }

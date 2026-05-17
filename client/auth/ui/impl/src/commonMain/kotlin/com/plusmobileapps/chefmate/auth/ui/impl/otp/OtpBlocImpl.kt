@@ -7,30 +7,20 @@ import com.plusmobileapps.chefmate.auth.ui.otp.OtpBloc.Output
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
+import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 @AssistedInject
+@ContributesAssistedFactory(scope = AppScope::class, assistedFactory = OtpBloc.Factory::class)
 class OtpBlocImpl(
     @Assisted context: BlocContext,
     @Assisted props: OtpBloc.Props,
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: OtpViewModel.Factory,
 ) : OtpBloc, BlocContext by context {
-
-    @AssistedFactory
-    fun interface ManagedFactory {
-        fun create(
-            context: BlocContext,
-            props: OtpBloc.Props,
-            output: Consumer<Output>,
-        ): OtpBlocImpl
-    }
 
     private val scope = createScope()
 
@@ -81,13 +71,4 @@ class OtpBlocImpl(
     override fun onBackClicked() {
         output.onNext(Output.Cancelled)
     }
-}
-
-@ContributesTo(AppScope::class)
-interface OtpBlocBindingModule {
-    @Provides
-    fun provideOtpBlocFactory(factory: OtpBlocImpl.ManagedFactory): OtpBloc.Factory =
-        OtpBloc.Factory { context, props, output ->
-            factory.create(context, props, output)
-        }
 }

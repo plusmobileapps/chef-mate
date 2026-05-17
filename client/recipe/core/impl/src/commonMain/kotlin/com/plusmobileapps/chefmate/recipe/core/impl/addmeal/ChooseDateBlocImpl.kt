@@ -7,26 +7,23 @@ import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.addmeal.ChooseDateBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.ChooseDateBloc.Output
+import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provider
-import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.LocalDate
 
 @AssistedInject
+@ContributesAssistedFactory(
+    scope = AppScope::class,
+    assistedFactory = ChooseDateBloc.Factory::class,
+)
 class ChooseDateBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: Provider<ChooseDateViewModel>,
 ) : ChooseDateBloc, BlocContext by context {
-
-    @AssistedFactory
-    fun interface ManagedFactory {
-        fun create(context: BlocContext, output: Consumer<Output>): ChooseDateBlocImpl
-    }
 
     private val viewModel: ChooseDateViewModel = instanceKeeper.getViewModel { viewModelFactory() }
 
@@ -65,15 +62,5 @@ class ChooseDateBlocImpl(
 
     override fun onBackClicked() {
         output.onNext(Output.Back)
-    }
-}
-
-@ContributesTo(AppScope::class)
-interface ChooseDateBlocBindingModule {
-    @Provides
-    fun provideChooseDateBlocFactory(
-        factory: ChooseDateBlocImpl.ManagedFactory
-    ): ChooseDateBloc.Factory = ChooseDateBloc.Factory { context, output ->
-        factory.create(context, output)
     }
 }

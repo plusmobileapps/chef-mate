@@ -21,16 +21,18 @@ import com.plusmobileapps.chefmate.browser.BrowserEditQueryBloc
 import com.plusmobileapps.chefmate.browser.BrowserLandingBloc
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.di.AppScope
+import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 @AssistedInject
+@ContributesAssistedFactory(
+    scope = AppScope::class,
+    assistedFactory = BrowserRootBloc.Factory::class,
+)
 class BrowserRootBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<BrowserRootBloc.Output>,
@@ -40,16 +42,6 @@ class BrowserRootBlocImpl(
     private val landingBlocFactory: BrowserLandingBloc.Factory,
     private val editQueryBlocFactory: BrowserEditQueryBloc.Factory,
 ) : BrowserRootBloc, BlocContext by context {
-
-    @AssistedFactory
-    fun interface ManagedFactory {
-        fun create(
-            context: BlocContext,
-            output: Consumer<BrowserRootBloc.Output>,
-            initialUrl: String?,
-            showControls: Boolean,
-        ): BrowserRootBlocImpl
-    }
 
     private val navigation = StackNavigation<Configuration>()
     private val scope = createScope()
@@ -200,20 +192,4 @@ class BrowserRootBlocImpl(
 
         @Serializable data class Browser(val url: String) : Configuration()
     }
-}
-
-@ContributesTo(AppScope::class)
-interface BrowserRootBlocBindingModule {
-    @Provides
-    fun provideBrowserRootBlocFactory(
-        factory: BrowserRootBlocImpl.ManagedFactory
-    ): BrowserRootBloc.Factory =
-        object : BrowserRootBloc.Factory {
-            override fun create(
-                context: BlocContext,
-                output: Consumer<BrowserRootBloc.Output>,
-                initialUrl: String?,
-                showControls: Boolean,
-            ): BrowserRootBloc = factory.create(context, output, initialUrl, showControls)
-        }
 }
