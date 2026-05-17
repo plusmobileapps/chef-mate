@@ -86,6 +86,15 @@ import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.list.public.generated.resources.Res
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_add_recipe
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_apply
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_appetizer
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_breakfast
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_dessert
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_dinner
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_drink
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_lunch
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_other
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_side
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_snack
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_clear_filters
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_continue_cooking
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_done_cooking
@@ -99,6 +108,7 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_empty_
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_empty_title
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_by
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_by_category
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_empty_description
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_empty_title
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_favorites
@@ -123,6 +133,7 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_view_l
 import chefmate.client.recipe.list.public.generated.resources.recipe_sync_not_synced
 import chefmate.client.recipe.list.public.generated.resources.recipe_sync_synced
 import chefmate.client.recipe.list.public.generated.resources.recipe_sync_syncing
+import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
@@ -148,7 +159,7 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
 
     LaunchedEffect(Unit) {
         bloc.state
-            .map { it.currentSort to it.activeFilters }
+            .map { Triple(it.currentSort, it.activeFilters, it.activeCategories) }
             .distinctUntilChanged()
             .drop(1)
             .collect {
@@ -193,7 +204,7 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                                 )
                             }
                             IconButton(onClick = { showSortFilterSheet = true }) {
-                                val filterCount = state.activeFilters.size
+                                val filterCount = state.totalActiveFilterCount
                                 if (filterCount > 0) {
                                     BadgedBox(badge = { Badge { Text("$filterCount") } }) {
                                         Icon(
@@ -252,9 +263,10 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                         state.recipes.isEmpty() && state.isSearchActive -> {
                             SearchEmptyState(modifier = Modifier.fillMaxSize())
                         }
-                        state.recipes.isEmpty() && state.activeFilters.isNotEmpty() -> {
+                        state.recipes.isEmpty() && state.totalActiveFilterCount > 0 -> {
                             FilterEmptyState(
                                 activeFilters = state.activeFilters,
+                                activeCategories = state.activeCategories,
                                 onClearFilters = bloc::onClearFilters,
                                 modifier = Modifier.fillMaxSize(),
                             )
@@ -288,8 +300,11 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
             SortFilterBottomSheet(
                 currentSort = state.currentSort,
                 activeFilters = state.activeFilters,
-                onApply = { sort, filters ->
-                    bloc.onApplySortAndFilters(sort, filters)
+                activeCategories = state.activeCategories,
+                activeUserCategoryIds = state.activeUserCategoryIds,
+                availableUserCategories = state.availableUserCategories,
+                onApply = { sort, filters, categories, userCategoryIds ->
+                    bloc.onApplySortAndFilters(sort, filters, categories, userCategoryIds)
                     showSortFilterSheet = false
                 },
                 onDismiss = { showSortFilterSheet = false },
@@ -379,79 +394,170 @@ private fun DoneCookingDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
 private fun SortFilterBottomSheet(
     currentSort: RecipeSortOption,
     activeFilters: Set<RecipeFilterOption>,
-    onApply: (sort: RecipeSortOption, filters: Set<RecipeFilterOption>) -> Unit,
+    activeCategories: Set<BuiltinCategory>,
+    activeUserCategoryIds: Set<Long>,
+    availableUserCategories: List<com.plusmobileapps.chefmate.recipe.data.Category>,
+    onApply:
+        (
+            sort: RecipeSortOption,
+            filters: Set<RecipeFilterOption>,
+            categories: Set<BuiltinCategory>,
+            userCategoryIds: Set<Long>,
+        ) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
-    var selectedSort by remember { mutableStateOf(currentSort) }
-    var selectedFilters by remember { mutableStateOf(activeFilters) }
-
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp).navigationBarsPadding()) {
-            Text(
-                text = stringResource(Res.string.recipe_list_sort_and_filter),
-                style = MaterialTheme.typography.titleLarge,
-            )
-            Spacer(Modifier.height(16.dp))
+        SortFilterSheetContent(
+            initialSort = currentSort,
+            initialFilters = activeFilters,
+            initialCategories = activeCategories,
+            initialUserCategoryIds = activeUserCategoryIds,
+            availableUserCategories = availableUserCategories,
+            onApply = onApply,
+        )
+    }
+}
 
-            // Sort by
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun SortFilterSheetContent(
+    initialSort: RecipeSortOption,
+    initialFilters: Set<RecipeFilterOption>,
+    initialCategories: Set<BuiltinCategory>,
+    initialUserCategoryIds: Set<Long> = emptySet(),
+    availableUserCategories: List<com.plusmobileapps.chefmate.recipe.data.Category> = emptyList(),
+    onApply:
+        (
+            sort: RecipeSortOption,
+            filters: Set<RecipeFilterOption>,
+            categories: Set<BuiltinCategory>,
+            userCategoryIds: Set<Long>,
+        ) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var selectedSort by remember { mutableStateOf(initialSort) }
+    var selectedFilters by remember { mutableStateOf(initialFilters) }
+    var selectedCategories by remember { mutableStateOf(initialCategories) }
+    var selectedUserCategoryIds by remember { mutableStateOf(initialUserCategoryIds) }
+    val anyFilterActive =
+        selectedFilters.isNotEmpty() ||
+            selectedCategories.isNotEmpty() ||
+            selectedUserCategoryIds.isNotEmpty()
+
+    Column(modifier = modifier.padding(horizontal = 16.dp).navigationBarsPadding()) {
+        Text(
+            text = stringResource(Res.string.recipe_list_sort_and_filter),
+            style = MaterialTheme.typography.titleLarge,
+        )
+        Spacer(Modifier.height(16.dp))
+
+        // Sort by
+        Text(
+            text = stringResource(Res.string.recipe_list_sort_by),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(8.dp))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            RecipeSortOption.entries.forEach { option ->
+                FilterChip(
+                    selected = option == selectedSort,
+                    onClick = { selectedSort = option },
+                    label = { Text(stringResource(option.labelRes())) },
+                )
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+
+        // Filter by
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Text(
-                text = stringResource(Res.string.recipe_list_sort_by),
+                text = stringResource(Res.string.recipe_list_filter_by),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(Modifier.height(8.dp))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                RecipeSortOption.entries.forEach { option ->
-                    FilterChip(
-                        selected = option == selectedSort,
-                        onClick = { selectedSort = option },
-                        label = { Text(stringResource(option.labelRes())) },
-                    )
-                }
-            }
-            Spacer(Modifier.height(16.dp))
-
-            // Filter by
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(Res.string.recipe_list_filter_by),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                if (selectedFilters.isNotEmpty()) {
-                    TextButton(onClick = { selectedFilters = emptySet() }) {
-                        Text(stringResource(Res.string.recipe_list_clear_filters))
+            if (anyFilterActive) {
+                TextButton(
+                    onClick = {
+                        selectedFilters = emptySet()
+                        selectedCategories = emptySet()
+                        selectedUserCategoryIds = emptySet()
                     }
+                ) {
+                    Text(stringResource(Res.string.recipe_list_clear_filters))
                 }
             }
-            Spacer(Modifier.height(8.dp))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                RecipeFilterOption.entries.forEach { filter ->
+        }
+        Spacer(Modifier.height(8.dp))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            RecipeFilterOption.entries.forEach { filter ->
+                FilterChip(
+                    selected = filter in selectedFilters,
+                    onClick = {
+                        selectedFilters =
+                            if (filter in selectedFilters) selectedFilters - filter
+                            else selectedFilters + filter
+                    },
+                    label = { Text(stringResource(filter.labelRes())) },
+                )
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+
+        // Filter by Category — presets first (in enum order) followed by user-created categories.
+        Text(
+            text = stringResource(Res.string.recipe_list_filter_by_category),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(8.dp))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            BuiltinCategory.entries.forEach { category ->
+                FilterChip(
+                    selected = category in selectedCategories,
+                    onClick = {
+                        selectedCategories =
+                            if (category in selectedCategories) {
+                                selectedCategories - category
+                            } else {
+                                selectedCategories + category
+                            }
+                    },
+                    label = { Text(stringResource(category.labelRes())) },
+                )
+            }
+            // User-created categories: filter out any that masquerade as a preset (by builtinId)
+            // so we don't render a duplicate chip when both representations are present.
+            availableUserCategories
+                .filter { it.builtinId == null }
+                .forEach { category ->
+                    val isSelected = category.id in selectedUserCategoryIds
                     FilterChip(
-                        selected = filter in selectedFilters,
+                        selected = isSelected,
                         onClick = {
-                            selectedFilters =
-                                if (filter in selectedFilters) selectedFilters - filter
-                                else selectedFilters + filter
+                            selectedUserCategoryIds =
+                                if (isSelected) selectedUserCategoryIds - category.id
+                                else selectedUserCategoryIds + category.id
                         },
-                        label = { Text(stringResource(filter.labelRes())) },
+                        label = { Text(category.name) },
                     )
                 }
-            }
-            Spacer(Modifier.height(16.dp))
-            Button(
-                onClick = { onApply(selectedSort, selectedFilters) },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(Res.string.recipe_list_apply))
-            }
-            Spacer(Modifier.height(16.dp))
         }
+        Spacer(Modifier.height(16.dp))
+        Button(
+            onClick = {
+                onApply(selectedSort, selectedFilters, selectedCategories, selectedUserCategoryIds)
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(Res.string.recipe_list_apply))
+        }
+        Spacer(Modifier.height(16.dp))
     }
 }
 
@@ -471,6 +577,19 @@ private fun RecipeFilterOption.labelRes(): StringResource =
         RecipeFilterOption.FAVORITES -> Res.string.recipe_list_filter_favorites
         RecipeFilterOption.RATED -> Res.string.recipe_list_filter_rated
         RecipeFilterOption.QUICK_RECIPES -> Res.string.recipe_list_filter_quick_recipes
+    }
+
+private fun BuiltinCategory.labelRes(): StringResource =
+    when (this) {
+        BuiltinCategory.BREAKFAST -> Res.string.recipe_list_category_breakfast
+        BuiltinCategory.LUNCH -> Res.string.recipe_list_category_lunch
+        BuiltinCategory.DINNER -> Res.string.recipe_list_category_dinner
+        BuiltinCategory.APPETIZER -> Res.string.recipe_list_category_appetizer
+        BuiltinCategory.SIDE -> Res.string.recipe_list_category_side
+        BuiltinCategory.DESSERT -> Res.string.recipe_list_category_dessert
+        BuiltinCategory.SNACK -> Res.string.recipe_list_category_snack
+        BuiltinCategory.DRINK -> Res.string.recipe_list_category_drink
+        BuiltinCategory.OTHER -> Res.string.recipe_list_category_other
     }
 
 // region Search
@@ -580,11 +699,14 @@ private fun NoRecipesEmptyState(
 @Composable
 private fun FilterEmptyState(
     activeFilters: Set<RecipeFilterOption>,
+    activeCategories: Set<BuiltinCategory>,
     onClearFilters: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val filterLabels =
-        activeFilters.map { filter -> stringResource(filter.labelRes()) }.joinToString(", ")
+        (activeFilters.map { stringResource(it.labelRes()) } +
+                activeCategories.map { stringResource(it.labelRes()) })
+            .joinToString(", ")
 
     Column(
         modifier = modifier.fillMaxWidth().padding(horizontal = 32.dp),

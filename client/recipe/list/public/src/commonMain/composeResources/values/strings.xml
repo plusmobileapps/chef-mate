@@ -38,6 +38,18 @@
     <string name="recipe_list_filter_rated">Rated</string>
     <string name="recipe_list_filter_quick_recipes">Quick (under 30 min)</string>
 
+    <!-- Category Filter -->
+    <string name="recipe_list_filter_by_category">Category</string>
+    <string name="recipe_list_category_breakfast">Breakfast</string>
+    <string name="recipe_list_category_lunch">Lunch</string>
+    <string name="recipe_list_category_dinner">Dinner</string>
+    <string name="recipe_list_category_appetizer">Appetizer</string>
+    <string name="recipe_list_category_side">Side</string>
+    <string name="recipe_list_category_dessert">Dessert</string>
+    <string name="recipe_list_category_snack">Snack</string>
+    <string name="recipe_list_category_drink">Drink</string>
+    <string name="recipe_list_category_other">Other</string>
+
     <!-- Empty States -->
     <string name="recipe_list_empty_title">No recipes yet</string>
     <string name="recipe_list_empty_description">Get started by finding recipes online or creating one from scratch.</string>

@@ -3,6 +3,9 @@ package com.plusmobileapps.chefmate.recipe.list.impl
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
 import com.plusmobileapps.chefmate.di.Main
+import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
+import com.plusmobileapps.chefmate.recipe.data.Category
+import com.plusmobileapps.chefmate.recipe.data.CategoryRepository
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
@@ -23,6 +26,7 @@ import kotlinx.coroutines.launch
 class RecipeListViewModel(
     @Main mainContext: CoroutineContext,
     private val repository: RecipeRepository,
+    private val categoryRepository: CategoryRepository,
     private val cookingSessionRepository: CookingSessionRepository,
     settings: Settings,
 ) : ViewModel(mainContext) {
@@ -30,6 +34,8 @@ class RecipeListViewModel(
     private var sortOptionPref by
         settings.string(KEY_SORT_OPTION, RecipeSortOption.RECENTLY_ADDED.name)
     private var activeFiltersPref by settings.string(KEY_ACTIVE_FILTERS, "")
+    private var activeCategoriesPref by settings.string(KEY_ACTIVE_CATEGORIES, "")
+    private var activeUserCategoriesPref by settings.string(KEY_ACTIVE_USER_CATEGORIES, "")
 
     private val _state =
         MutableStateFlow(
@@ -44,6 +50,18 @@ class RecipeListViewModel(
                         .filter { it.isNotBlank() }
                         .mapNotNull { name -> RecipeFilterOption.entries.find { it.name == name } }
                         .toSet(),
+                activeCategories =
+                    activeCategoriesPref
+                        .split(",")
+                        .filter { it.isNotBlank() }
+                        .mapNotNull { id -> BuiltinCategory.fromId(id) }
+                        .toSet(),
+                activeUserCategoryIds =
+                    activeUserCategoriesPref
+                        .split(",")
+                        .filter { it.isNotBlank() }
+                        .mapNotNull { it.toLongOrNull() }
+                        .toSet(),
             )
         )
     val state: StateFlow<State> = _state.asStateFlow()
@@ -51,6 +69,7 @@ class RecipeListViewModel(
     init {
         scope.launch { observeRecipes() }
         scope.launch { observeCookingSession() }
+        scope.launch { observeUserCategories() }
     }
 
     private suspend fun observeRecipes() {
@@ -62,6 +81,12 @@ class RecipeListViewModel(
     private suspend fun observeCookingSession() {
         cookingSessionRepository.observeRecipeIds().collect { ids ->
             _state.update { it.copy(cookingRecipeIds = ids) }
+        }
+    }
+
+    private suspend fun observeUserCategories() {
+        categoryRepository.observeUserCategories().collect { categories ->
+            _state.update { it.copy(availableUserCategories = categories) }
         }
     }
 
@@ -108,18 +133,49 @@ class RecipeListViewModel(
     }
 
     fun clearFilters() {
-        _state.update { it.copy(activeFilters = emptySet()) }
+        _state.update {
+            it.copy(
+                activeFilters = emptySet(),
+                activeCategories = emptySet(),
+                activeUserCategoryIds = emptySet(),
+            )
+        }
         persistFilters()
+        persistCategories()
+        persistUserCategories()
     }
 
-    fun applySortAndFilters(sort: RecipeSortOption, filters: Set<RecipeFilterOption>) {
-        _state.update { it.copy(currentSort = sort, activeFilters = filters) }
+    fun applySortAndFilters(
+        sort: RecipeSortOption,
+        filters: Set<RecipeFilterOption>,
+        categories: Set<BuiltinCategory>,
+        userCategoryIds: Set<Long>,
+    ) {
+        _state.update {
+            it.copy(
+                currentSort = sort,
+                activeFilters = filters,
+                activeCategories = categories,
+                activeUserCategoryIds = userCategoryIds,
+            )
+        }
         sortOptionPref = sort.name
         persistFilters()
+        persistCategories()
+        persistUserCategories()
     }
 
     private fun persistFilters() {
         activeFiltersPref = _state.value.activeFilters.joinToString(",") { it.name }
+    }
+
+    private fun persistCategories() {
+        activeCategoriesPref = _state.value.activeCategories.joinToString(",") { it.id }
+    }
+
+    private fun persistUserCategories() {
+        activeUserCategoriesPref =
+            _state.value.activeUserCategoryIds.joinToString(",") { it.toString() }
     }
 
     fun toggleViewMode() {
@@ -148,6 +204,9 @@ class RecipeListViewModel(
         val recipes: List<Recipe> = emptyList(),
         val currentSort: RecipeSortOption = RecipeSortOption.RECENTLY_ADDED,
         val activeFilters: Set<RecipeFilterOption> = emptySet(),
+        val activeCategories: Set<BuiltinCategory> = emptySet(),
+        val activeUserCategoryIds: Set<Long> = emptySet(),
+        val availableUserCategories: List<Category> = emptyList(),
         val isGridView: Boolean = false,
         val searchQuery: String = "",
         val cookingRecipeIds: List<Long> = emptyList(),
@@ -161,6 +220,7 @@ class RecipeListViewModel(
                 recipes
                     .let { applySearch(it, searchQuery) }
                     .let { applyFilters(it, activeFilters) }
+                    .let { applyCategoryFilter(it, activeCategories, activeUserCategoryIds) }
                     .let { applySort(it, currentSort) }
     }
 }
@@ -168,6 +228,8 @@ class RecipeListViewModel(
 private const val KEY_IS_GRID_VIEW = "recipe_list_is_grid_view"
 private const val KEY_SORT_OPTION = "recipe_list_sort_option"
 private const val KEY_ACTIVE_FILTERS = "recipe_list_active_filters"
+private const val KEY_ACTIVE_CATEGORIES = "recipe_list_active_categories"
+private const val KEY_ACTIVE_USER_CATEGORIES = "recipe_list_active_user_categories"
 
 private fun applySearch(recipes: List<Recipe>, query: String): List<Recipe> {
     if (query.isBlank()) return recipes
@@ -188,6 +250,24 @@ private fun applyFilters(recipes: List<Recipe>, filters: Set<RecipeFilterOption>
                 RecipeFilterOption.QUICK_RECIPES -> (recipe.totalTime ?: Int.MAX_VALUE) <= 30
             }
         }
+    }
+}
+
+private fun applyCategoryFilter(
+    recipes: List<Recipe>,
+    presets: Set<BuiltinCategory>,
+    userCategoryIds: Set<Long>,
+): List<Recipe> {
+    if (presets.isEmpty() && userCategoryIds.isEmpty()) return recipes
+    return recipes.filter { recipe ->
+        // OTHER preset acts as the "uncategorized" bucket — preserves the legacy behavior.
+        val noCategories = recipe.categories.isEmpty()
+        if (noCategories && BuiltinCategory.OTHER in presets) return@filter true
+
+        val recipeBuiltins =
+            recipe.categories.mapNotNull { BuiltinCategory.fromId(it.builtinId) }.toSet()
+        val recipeIds = recipe.categories.map { it.id }.toSet()
+        recipeBuiltins.any { it in presets } || recipeIds.any { it in userCategoryIds }
     }
 }
 
