@@ -90,10 +90,9 @@ Add strings at `client/<module>/src/commonMain/composeResources/values/strings.x
 
 ### Dependency Injection
 
-- `kotlin-inject` + `kotlin-inject-anvil` + `kotlin-inject-anvil-extensions` (assisted factory)
-- `AppScope` is the standard scope for binding implementations
-- `@ContributesAssistedFactory` binds impl classes to their assisted factory interface
-- KSP is set to v1 (not v2) for iOS compatibility — do not change this
+- `dev.zacsweers.metro` is the DI framework (compiler plugin). `AppScope` is the standard scope.
+- `@ContributesAssistedFactory(scope = AppScope::class, assistedFactory = FooBloc.Factory::class)` from `com.plusmobileapps.metro-extensions` is placed alongside `@AssistedInject` on each BLoC impl. A KSP processor generates the Metro `@AssistedFactory` and a `@ContributesBinding`/`@Origin`-tagged bridge to the public `Factory` interface — no manual binding modules needed.
+- KSP + metro-extensions are wired automatically by `MetroConventionPlugin` for any module with `plusLibrary { enableDi = true }`.
 
 ### Snapshot Testing
 
