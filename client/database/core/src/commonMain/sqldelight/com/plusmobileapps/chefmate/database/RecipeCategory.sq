@@ -1,0 +1,31 @@
+import kotlin.Boolean;
+
+CREATE TABLE RecipeCategory (
+    recipeId INTEGER NOT NULL,
+    categoryId INTEGER NOT NULL,
+    PRIMARY KEY (recipeId, categoryId),
+    FOREIGN KEY (recipeId) REFERENCES Recipe(id) ON DELETE CASCADE,
+    FOREIGN KEY (categoryId) REFERENCES Category(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_recipe_category_category ON RecipeCategory(categoryId);
+
+attach:
+INSERT OR IGNORE INTO RecipeCategory (recipeId, categoryId) VALUES (?, ?);
+
+detach:
+DELETE FROM RecipeCategory WHERE recipeId = ? AND categoryId = ?;
+
+detachAllForRecipe:
+DELETE FROM RecipeCategory WHERE recipeId = ?;
+
+getCategoriesForRecipe:
+SELECT Category.id, Category.name, Category.builtinId, Category.createdAt,
+       Category.remoteId, Category.clientId, Category.isDirty, Category.ownerId
+FROM Category
+INNER JOIN RecipeCategory ON Category.id = RecipeCategory.categoryId
+WHERE RecipeCategory.recipeId = ?
+ORDER BY Category.name ASC;
+
+getRecipeIdsForCategory:
+SELECT recipeId FROM RecipeCategory WHERE categoryId = ?;

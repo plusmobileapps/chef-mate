@@ -1,7 +1,0 @@
-CREATE TABLE BrowserHistory (
-    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    url TEXT NOT NULL UNIQUE,
-    visitedAt TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE INDEX idx_browser_history_visited_at ON BrowserHistory(visitedAt);

@@ -1,0 +1,70 @@
+import kotlin.Boolean;
+
+CREATE TABLE Category (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    builtinId TEXT,
+    createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+    remoteId TEXT UNIQUE,
+    clientId TEXT,
+    isDirty INTEGER AS Boolean NOT NULL DEFAULT 0,
+    ownerId TEXT
+);
+
+CREATE INDEX idx_category_owner ON Category(ownerId);
+CREATE UNIQUE INDEX idx_category_builtin_per_owner
+    ON Category(ownerId, builtinId) WHERE builtinId IS NOT NULL;
+
+getAll:
+SELECT * FROM Category ORDER BY name ASC;
+
+getById:
+SELECT * FROM Category WHERE id = ?;
+
+getByRemoteId:
+SELECT * FROM Category WHERE remoteId = ?;
+
+getByClientId:
+SELECT * FROM Category WHERE clientId = ?;
+
+getBuiltinForOwner:
+SELECT * FROM Category WHERE ownerId = ? AND builtinId = ?;
+
+create:
+INSERT INTO Category (name, builtinId, clientId, ownerId) VALUES (?, ?, ?, ?);
+
+createWithRemoteId:
+INSERT INTO Category (name, builtinId, remoteId, clientId, ownerId)
+VALUES (?, ?, ?, ?, ?)
+ON CONFLICT(remoteId) DO UPDATE SET
+    name = excluded.name,
+    builtinId = excluded.builtinId,
+    clientId = excluded.clientId,
+    ownerId = excluded.ownerId;
+
+lastInsertId:
+SELECT MAX(id) FROM Category;
+
+rename:
+UPDATE Category SET name = ?, isDirty = 1 WHERE id = ?;
+
+delete:
+DELETE FROM Category WHERE id = ?;
+
+deleteAll:
+DELETE FROM Category;
+
+getUnsynced:
+SELECT * FROM Category WHERE remoteId IS NULL;
+
+getDirty:
+SELECT * FROM Category WHERE isDirty = 1 AND remoteId IS NOT NULL;
+
+updateRemoteId:
+UPDATE Category SET remoteId = ?, isDirty = 0 WHERE id = ?;
+
+updateClientId:
+UPDATE Category SET clientId = ? WHERE id = ?;
+
+clearDirty:
+UPDATE Category SET isDirty = 0 WHERE id = ?;
