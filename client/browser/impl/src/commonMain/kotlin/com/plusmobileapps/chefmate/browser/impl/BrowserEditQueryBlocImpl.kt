@@ -6,30 +6,23 @@ import com.plusmobileapps.chefmate.browser.BrowserEditQueryBloc
 import com.plusmobileapps.chefmate.browser.BrowserHistoryEntry
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
+import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provider
-import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
 
 @AssistedInject
+@ContributesAssistedFactory(
+    scope = AppScope::class,
+    assistedFactory = BrowserEditQueryBloc.Factory::class,
+)
 class BrowserEditQueryBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<BrowserEditQueryBloc.Output>,
     @Assisted initialText: String,
     viewModelFactory: Provider<BrowserEditQueryViewModel>,
 ) : BrowserEditQueryBloc, BlocContext by context {
-
-    @AssistedFactory
-    fun interface ManagedFactory {
-        fun create(
-            context: BlocContext,
-            output: Consumer<BrowserEditQueryBloc.Output>,
-            initialText: String,
-        ): BrowserEditQueryBlocImpl
-    }
 
     private val viewModel = instanceKeeper.getViewModel {
         viewModelFactory().also {
@@ -59,15 +52,5 @@ class BrowserEditQueryBlocImpl(
 
     override fun onHistoryItemDeleteClicked(entry: BrowserHistoryEntry) {
         viewModel.deleteHistoryEntry(entry)
-    }
-}
-
-@ContributesTo(AppScope::class)
-interface BrowserEditQueryBlocBindingModule {
-    @Provides
-    fun provideBrowserEditQueryBlocFactory(
-        factory: BrowserEditQueryBlocImpl.ManagedFactory
-    ): BrowserEditQueryBloc.Factory = BrowserEditQueryBloc.Factory { context, output, initialText ->
-        factory.create(context, output, initialText)
     }
 }

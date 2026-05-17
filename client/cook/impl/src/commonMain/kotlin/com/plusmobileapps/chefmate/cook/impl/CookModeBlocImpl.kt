@@ -7,14 +7,13 @@ import com.plusmobileapps.chefmate.cook.WhatsCookingBloc
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
+import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
 
 @AssistedInject
+@ContributesAssistedFactory(scope = AppScope::class, assistedFactory = CookModeBloc.Factory::class)
 class CookModeBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val initialRecipeId: Long,
@@ -22,15 +21,6 @@ class CookModeBlocImpl(
     private val viewModelFactory: CookModeViewModel.Factory,
     whatsCookingFactory: WhatsCookingBloc.Factory,
 ) : CookModeBloc, BlocContext by context {
-
-    @AssistedFactory
-    fun interface ManagedFactory {
-        fun create(
-            context: BlocContext,
-            initialRecipeId: Long,
-            output: Consumer<CookModeBloc.Output>,
-        ): CookModeBlocImpl
-    }
 
     private val viewModel: CookModeViewModel = instanceKeeper.getViewModel {
         viewModelFactory.create(initialRecipeId)
@@ -87,13 +77,4 @@ class CookModeBlocImpl(
             is WhatsCookingBloc.Output.RecipeSelected -> viewModel.selectRecipe(out.recipeId)
         }
     }
-}
-
-@ContributesTo(AppScope::class)
-interface CookModeBlocBindingModule {
-    @Provides
-    fun provideCookModeBlocFactory(factory: CookModeBlocImpl.ManagedFactory): CookModeBloc.Factory =
-        CookModeBloc.Factory { context, initialRecipeId, output ->
-            factory.create(context, initialRecipeId, output)
-        }
 }

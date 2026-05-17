@@ -8,15 +8,17 @@ import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.meal.data.MealType
 import com.plusmobileapps.chefmate.recipe.core.addmeal.ChooseMealTypeBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.ChooseMealTypeBloc.Output
+import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 @AssistedInject
+@ContributesAssistedFactory(
+    scope = AppScope::class,
+    assistedFactory = ChooseMealTypeBloc.Factory::class,
+)
 class ChooseMealTypeBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val recipeId: Long,
@@ -24,16 +26,6 @@ class ChooseMealTypeBlocImpl(
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: ChooseMealTypeViewModel.Factory,
 ) : ChooseMealTypeBloc, BlocContext by context {
-
-    @AssistedFactory
-    fun interface ManagedFactory {
-        fun create(
-            context: BlocContext,
-            recipeId: Long,
-            date: String,
-            output: Consumer<Output>,
-        ): ChooseMealTypeBlocImpl
-    }
 
     private val scope = createScope()
 
@@ -71,15 +63,5 @@ class ChooseMealTypeBlocImpl(
 
     override fun onBackClicked() {
         output.onNext(Output.Back)
-    }
-}
-
-@ContributesTo(AppScope::class)
-interface ChooseMealTypeBlocBindingModule {
-    @Provides
-    fun provideChooseMealTypeBlocFactory(
-        factory: ChooseMealTypeBlocImpl.ManagedFactory
-    ): ChooseMealTypeBloc.Factory = ChooseMealTypeBloc.Factory { context, recipeId, date, output ->
-        factory.create(context, recipeId, date, output)
     }
 }

@@ -29,15 +29,14 @@ import com.plusmobileapps.chefmate.root.RootBloc.Child.BottomNavigation
 import com.plusmobileapps.chefmate.root.RootBlocImpl.Configuration.GroceryDetail
 import com.plusmobileapps.chefmate.root.RootBlocImpl.Configuration.RecipeRoot
 import com.plusmobileapps.chefmate.settings.AppSettingsBloc
+import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 @AssistedInject
+@ContributesAssistedFactory(scope = AppScope::class, assistedFactory = RootBloc.Factory::class)
 class RootBlocImpl(
     @Assisted context: BlocContext,
     private val bottomNav: BottomNavBloc.Factory,
@@ -54,11 +53,6 @@ class RootBlocImpl(
     private val featureFlags: FeatureFlags,
     private val featureFlagsBlocFactory: FeatureFlagsBloc.Factory,
 ) : RootBloc, BlocContext by context {
-
-    @AssistedFactory
-    fun interface ManagedFactory {
-        fun create(context: BlocContext): RootBlocImpl
-    }
 
     init {
         createScope().launch { featureFlags.refresh() }
@@ -381,13 +375,4 @@ class RootBlocImpl(
 
         @Serializable data class CookMode(val recipeId: Long) : Configuration()
     }
-}
-
-@ContributesTo(AppScope::class)
-interface RootBlocBindingModule {
-    @Provides
-    fun provideRootBlocFactory(factory: RootBlocImpl.ManagedFactory): RootBloc.Factory =
-        RootBloc.Factory { context ->
-            factory.create(context)
-        }
 }

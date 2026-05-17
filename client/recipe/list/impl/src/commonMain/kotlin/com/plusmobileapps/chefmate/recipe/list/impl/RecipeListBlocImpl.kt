@@ -12,26 +12,23 @@ import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc.Output
 import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
 import com.plusmobileapps.chefmate.util.TimeFormatterUtil
+import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provider
-import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
 
 @AssistedInject
+@ContributesAssistedFactory(
+    scope = AppScope::class,
+    assistedFactory = RecipeListBloc.Factory::class,
+)
 class RecipeListBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: Provider<RecipeListViewModel>,
     private val timeFormatterUtil: TimeFormatterUtil,
 ) : RecipeListBloc, BlocContext by context {
-    @AssistedFactory
-    fun interface ManagedFactory {
-        fun create(context: BlocContext, output: Consumer<Output>): RecipeListBlocImpl
-    }
-
     private val viewModel: RecipeListViewModel = instanceKeeper.getViewModel { viewModelFactory() }
 
     override val state: StateFlow<RecipeListBloc.Model> =
@@ -131,16 +128,4 @@ class RecipeListBlocImpl(
             isFavorite = isFavorite,
             syncStatus = syncStatus,
         )
-}
-
-@ContributesTo(AppScope::class)
-interface RecipeListBlocBindingModule {
-    @Provides
-    fun provideRecipeListBlocFactory(
-        factory: RecipeListBlocImpl.ManagedFactory
-    ): RecipeListBloc.Factory =
-        object : RecipeListBloc.Factory {
-            override fun create(context: BlocContext, output: Consumer<Output>): RecipeListBloc =
-                factory.create(context, output)
-        }
 }

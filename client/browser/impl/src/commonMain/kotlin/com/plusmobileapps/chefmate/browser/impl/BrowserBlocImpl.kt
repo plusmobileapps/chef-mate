@@ -7,30 +7,20 @@ import com.plusmobileapps.chefmate.browser.createExtractionFailedMessage
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
+import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provider
-import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
 
 @AssistedInject
+@ContributesAssistedFactory(scope = AppScope::class, assistedFactory = BrowserBloc.Factory::class)
 class BrowserBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<BrowserBloc.Output>,
     @Assisted private val showControls: Boolean,
     viewModelFactory: Provider<BrowserViewModel>,
 ) : BrowserBloc, BlocContext by context {
-
-    @AssistedFactory
-    fun interface ManagedFactory {
-        fun create(
-            context: BlocContext,
-            output: Consumer<BrowserBloc.Output>,
-            showControls: Boolean,
-        ): BrowserBlocImpl
-    }
 
     private val viewModel = instanceKeeper.getViewModel {
         viewModelFactory().also { it.setOutput(output) }
@@ -93,17 +83,4 @@ class BrowserBlocImpl(
     override fun onAddressBarFocused() {
         viewModel.onAddressBarFocused()
     }
-}
-
-@ContributesTo(AppScope::class)
-interface BrowserBlocBindingModule {
-    @Provides
-    fun provideBrowserBlocFactory(factory: BrowserBlocImpl.ManagedFactory): BrowserBloc.Factory =
-        object : BrowserBloc.Factory {
-            override fun create(
-                context: BlocContext,
-                output: Consumer<BrowserBloc.Output>,
-                showControls: Boolean,
-            ): BrowserBloc = factory.create(context, output, showControls)
-        }
 }

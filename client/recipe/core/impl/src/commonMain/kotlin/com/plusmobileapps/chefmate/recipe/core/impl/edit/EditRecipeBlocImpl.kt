@@ -12,15 +12,17 @@ import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc.Output
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.text.ResourceString
+import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 @AssistedInject
+@ContributesAssistedFactory(
+    scope = AppScope::class,
+    assistedFactory = EditRecipeBloc.Factory::class,
+)
 class EditRecipeBlocImpl(
     @Assisted context: BlocContext,
     @Assisted recipeId: Long?,
@@ -28,16 +30,6 @@ class EditRecipeBlocImpl(
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: EditRecipeViewModel.Factory,
 ) : EditRecipeBloc, BlocContext by context {
-    @AssistedFactory
-    fun interface ManagedFactory {
-        fun create(
-            context: BlocContext,
-            recipeId: Long?,
-            extractedRecipe: ExtractedRecipeData?,
-            output: Consumer<Output>,
-        ): EditRecipeBlocImpl
-    }
-
     private val scope = createScope()
 
     private val viewModel: EditRecipeViewModel = instanceKeeper.getViewModel {
@@ -150,15 +142,4 @@ class EditRecipeBlocImpl(
     override fun onBackClicked() {
         viewModel.tryToClose()
     }
-}
-
-@ContributesTo(AppScope::class)
-interface EditRecipeBlocBindingModule {
-    @Provides
-    fun provideEditRecipeBlocFactory(
-        factory: EditRecipeBlocImpl.ManagedFactory
-    ): EditRecipeBloc.Factory =
-        EditRecipeBloc.Factory { context, recipeId, extractedRecipe, output ->
-            factory.create(context, recipeId, extractedRecipe, output)
-        }
 }

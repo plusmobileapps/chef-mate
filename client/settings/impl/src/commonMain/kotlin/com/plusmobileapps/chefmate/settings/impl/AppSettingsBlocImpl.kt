@@ -6,25 +6,22 @@ import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.settings.AppSettingsBloc
 import com.plusmobileapps.chefmate.settings.AppSettingsBloc.Output
+import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provider
-import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
 
 @AssistedInject
+@ContributesAssistedFactory(
+    scope = AppScope::class,
+    assistedFactory = AppSettingsBloc.Factory::class,
+)
 class AppSettingsBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<Output>,
     viewModelFactory: Provider<AppSettingsViewModel>,
 ) : AppSettingsBloc, BlocContext by context {
-
-    @AssistedFactory
-    fun interface ManagedFactory {
-        fun create(context: BlocContext, output: Consumer<Output>): AppSettingsBlocImpl
-    }
 
     private val viewModel = instanceKeeper.getViewModel { viewModelFactory() }
 
@@ -52,15 +49,5 @@ class AppSettingsBlocImpl(
 
     override fun onBottomNavOrderClicked() {
         output.onNext(Output.OpenBottomNavOrder)
-    }
-}
-
-@ContributesTo(AppScope::class)
-interface AppSettingsBlocBindingModule {
-    @Provides
-    fun provideAppSettingsBlocFactory(
-        factory: AppSettingsBlocImpl.ManagedFactory
-    ): AppSettingsBloc.Factory = AppSettingsBloc.Factory { context, output ->
-        factory.create(context, output)
     }
 }

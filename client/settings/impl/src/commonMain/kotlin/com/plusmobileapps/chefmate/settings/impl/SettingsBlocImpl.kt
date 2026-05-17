@@ -11,25 +11,19 @@ import com.plusmobileapps.chefmate.settings.SettingsBloc
 import com.plusmobileapps.chefmate.settings.SettingsBloc.Output
 import com.plusmobileapps.chefmate.settings.createEmailVerificationMessage
 import com.plusmobileapps.chefmate.settings.createGreeting
+import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
-import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provider
-import dev.zacsweers.metro.Provides
 import kotlinx.coroutines.flow.StateFlow
 
 @AssistedInject
+@ContributesAssistedFactory(scope = AppScope::class, assistedFactory = SettingsBloc.Factory::class)
 class SettingsBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<Output>,
     viewModelFactory: Provider<SettingsViewModel>,
 ) : SettingsBloc, BlocContext by context {
-
-    @AssistedFactory
-    fun interface ManagedFactory {
-        fun create(context: BlocContext, output: Consumer<Output>): SettingsBlocImpl
-    }
 
     private val viewModel = instanceKeeper.getViewModel { viewModelFactory() }
 
@@ -79,13 +73,4 @@ class SettingsBlocImpl(
     override fun onDeveloperSettingsClicked() {
         output.onNext(Output.OpenDeveloperSettings)
     }
-}
-
-@ContributesTo(AppScope::class)
-interface SettingsBlocBindingModule {
-    @Provides
-    fun provideSettingsBlocFactory(factory: SettingsBlocImpl.ManagedFactory): SettingsBloc.Factory =
-        SettingsBloc.Factory { context, output ->
-            factory.create(context, output)
-        }
 }
