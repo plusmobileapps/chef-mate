@@ -69,6 +69,15 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
                     // Pin Android JVM bytecode level. iOS targets are unaffected.
                     compilerOptions.jvmTarget.set(JvmTarget.JVM_11)
 
+                    // Compose Multiplatform's resources system (strings.xml in
+                    // commonMain/composeResources/) bundles its compiled `.cvr` files into
+                    // the Android AAR via the Android asset/resource pipeline. The new
+                    // KMP plugin defaults `androidResources.enable` to `false` (vs `true`
+                    // for plain `com.android.library`), which silently drops those
+                    // resources and makes `stringResource(...)` throw MissingResourceException
+                    // at runtime. Re-enable it so consumers can resolve common strings.
+                    androidResources.enable = true
+
                     // Tests that previously lived in `androidUnitTest` now live in
                     // `androidHostTest` (host-side JVM tests); instrumented tests live in
                     // `androidDeviceTest`. Opt into the host-test compilation so existing
