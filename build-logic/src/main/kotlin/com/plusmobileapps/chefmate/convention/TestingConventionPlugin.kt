@@ -29,9 +29,6 @@ fun Project.applyTesting(enableDatabaseTesting: Boolean = false) {
 
         sourceSets.apply {
             val commonTest = getByName("commonTest")
-            val jvmTest = getByName("jvmTest")
-            val androidUnitTest = getByName("androidUnitTest")
-            val iosMain = getByName("iosMain")
 
             commonTest.dependencies {
                 implementation(libs.kotlin.test)
