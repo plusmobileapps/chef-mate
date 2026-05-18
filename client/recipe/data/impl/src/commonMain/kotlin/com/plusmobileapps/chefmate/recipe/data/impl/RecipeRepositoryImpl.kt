@@ -190,67 +190,22 @@ class RecipeRepositoryImpl(
         }
     }
 
-    private fun pushAddToRemote(localId: Long) {
+    private suspend fun pushAddToRemote(localId: Long) {
         val authState = authRepository.state.value
         if (authState !is AuthState.Authenticated) return
-        scope.launch {
-            try {
-                val entity = db.getById(localId).executeAsOneOrNull() ?: return@launch
-                val clientId =
-                    entity.clientId
-                        ?: Uuid.random().toString().also { newId ->
-                            db.updateClientId(clientId = newId, id = localId)
-                        }
-                syncingIds.update { it + localId }
-                try {
-                    val remoteRecipe =
-                        remoteDataSource.upsertRecipe(
-                            RemoteRecipe(
-                                ownerId = authState.user.userId,
-                                title = entity.title,
-                                description = entity.description,
-                                ingredients = entity.ingredients,
-                                directions = entity.directions,
-                                imageUrl = entity.imageUrl,
-                                sourceUrl = entity.sourceUrl,
-                                servings = entity.servings?.toInt(),
-                                prepTime = entity.prepTime?.toInt(),
-                                cookTime = entity.cookTime?.toInt(),
-                                totalTime = entity.totalTime?.toInt(),
-                                calories = entity.calories?.toInt(),
-                                starRating = entity.starRating?.toInt(),
-                                isFavorite = entity.isFavorite,
-                                createdAt = entity.createdAt,
-                                updatedAt = entity.updatedAt,
-                                clientId = clientId,
-                            )
-                        )
-                    db.updateRemoteId(remoteId = remoteRecipe.id, id = localId)
-                    remoteRecipe.id?.let { recipeRemoteId ->
-                        remoteDataSource.setRecipeCategories(
-                            recipeRemoteId,
-                            attachedCategoryRemoteIds(localId),
-                        )
+        try {
+            val entity =
+                withContext(ioContext) { db.getById(localId).executeAsOneOrNull() } ?: return
+            val clientId =
+                entity.clientId
+                    ?: Uuid.random().toString().also { newId ->
+                        withContext(ioContext) { db.updateClientId(clientId = newId, id = localId) }
                     }
-                } finally {
-                    syncingIds.update { it - localId }
-                }
-            } catch (_: Exception) {}
-        }
-    }
-
-    private fun pushUpdateToRemote(localId: Long) {
-        val authState = authRepository.state.value
-        if (authState !is AuthState.Authenticated) return
-        scope.launch {
+            syncingIds.update { it + localId }
             try {
-                val entity = db.getById(localId).executeAsOneOrNull() ?: return@launch
-                val remoteId = entity.remoteId ?: return@launch
-                syncingIds.update { it + localId }
-                try {
+                val remoteRecipe =
                     remoteDataSource.upsertRecipe(
                         RemoteRecipe(
-                            id = remoteId,
                             ownerId = authState.user.userId,
                             title = entity.title,
                             description = entity.description,
@@ -265,20 +220,62 @@ class RecipeRepositoryImpl(
                             calories = entity.calories?.toInt(),
                             starRating = entity.starRating?.toInt(),
                             isFavorite = entity.isFavorite,
+                            createdAt = entity.createdAt,
                             updatedAt = entity.updatedAt,
-                            clientId = entity.clientId,
+                            clientId = clientId,
                         )
                     )
+                withContext(ioContext) {
+                    db.updateRemoteId(remoteId = remoteRecipe.id, id = localId)
+                }
+                remoteRecipe.id?.let { recipeRemoteId ->
                     remoteDataSource.setRecipeCategories(
-                        remoteId,
+                        recipeRemoteId,
                         attachedCategoryRemoteIds(localId),
                     )
-                    db.clearDirty(localId)
-                } finally {
-                    syncingIds.update { it - localId }
                 }
-            } catch (_: Exception) {}
-        }
+            } finally {
+                syncingIds.update { it - localId }
+            }
+        } catch (_: Exception) {}
+    }
+
+    private suspend fun pushUpdateToRemote(localId: Long) {
+        val authState = authRepository.state.value
+        if (authState !is AuthState.Authenticated) return
+        try {
+            val entity =
+                withContext(ioContext) { db.getById(localId).executeAsOneOrNull() } ?: return
+            val remoteId = entity.remoteId ?: return
+            syncingIds.update { it + localId }
+            try {
+                remoteDataSource.upsertRecipe(
+                    RemoteRecipe(
+                        id = remoteId,
+                        ownerId = authState.user.userId,
+                        title = entity.title,
+                        description = entity.description,
+                        ingredients = entity.ingredients,
+                        directions = entity.directions,
+                        imageUrl = entity.imageUrl,
+                        sourceUrl = entity.sourceUrl,
+                        servings = entity.servings?.toInt(),
+                        prepTime = entity.prepTime?.toInt(),
+                        cookTime = entity.cookTime?.toInt(),
+                        totalTime = entity.totalTime?.toInt(),
+                        calories = entity.calories?.toInt(),
+                        starRating = entity.starRating?.toInt(),
+                        isFavorite = entity.isFavorite,
+                        updatedAt = entity.updatedAt,
+                        clientId = entity.clientId,
+                    )
+                )
+                remoteDataSource.setRecipeCategories(remoteId, attachedCategoryRemoteIds(localId))
+                withContext(ioContext) { db.clearDirty(localId) }
+            } finally {
+                syncingIds.update { it - localId }
+            }
+        } catch (_: Exception) {}
     }
 
     private suspend fun syncWithRemote(userId: String) = syncMutex.withLock {
