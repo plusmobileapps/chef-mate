@@ -6,6 +6,7 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.Columns
 
 @Inject
 @SingleIn(AppScope::class)
@@ -33,4 +34,36 @@ class SupabaseRecipeRemoteDataSource(private val supabaseClient: SupabaseClient)
             .from("recipes")
             .select { filter { eq("owner_id", ownerId) } }
             .decodeList<RemoteRecipe>()
+
+    override suspend fun setRecipeCategories(
+        recipeRemoteId: String,
+        categoryRemoteIds: Set<String>,
+    ) {
+        // Replace-all: drop all existing rows for the recipe, then insert the desired set. Two
+        // round-trips is fine for the small attachment counts typical per recipe; the PK
+        // (recipe_id, category_id) keeps the insert safe under retry.
+        supabaseClient.from("recipe_categories").delete {
+            filter { eq("recipe_id", recipeRemoteId) }
+        }
+        if (categoryRemoteIds.isEmpty()) return
+        supabaseClient.from("recipe_categories").upsert(
+            categoryRemoteIds.map { categoryId ->
+                RemoteRecipeCategory(recipeId = recipeRemoteId, categoryId = categoryId)
+            }
+        ) {
+            onConflict = "recipe_id,category_id"
+        }
+    }
+
+    override suspend fun fetchRecipeCategoryAttachments(ownerId: String): Map<String, Set<String>> {
+        // Inner-join to recipes so the ownerId filter applies across the FK.
+        val rows =
+            supabaseClient
+                .from("recipe_categories")
+                .select(Columns.raw("recipe_id, category_id, recipes!inner(owner_id)")) {
+                    filter { eq("recipes.owner_id", ownerId) }
+                }
+                .decodeList<RemoteRecipeCategory>()
+        return rows.groupBy { it.recipeId }.mapValues { (_, g) -> g.map { it.categoryId }.toSet() }
+    }
 }

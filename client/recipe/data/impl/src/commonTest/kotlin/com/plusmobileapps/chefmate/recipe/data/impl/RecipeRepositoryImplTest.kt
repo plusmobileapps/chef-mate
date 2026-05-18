@@ -32,13 +32,16 @@ class RecipeRepositoryImplTest {
     private val fakeAuth = FakeAuthenticationRepository()
     private val dateTimeUtil = FakeDateTimeUtil()
 
+    private val recipeRemote = RecordingRecipeRemote()
+
     private val recipeRepository =
         RecipeRepositoryImpl(
             db = db.recipeQueries,
             joinDb = db.recipeCategoryQueries,
+            categoryDb = db.categoryQueries,
             ioContext = testDispatcher,
             dateTimeUtil = dateTimeUtil,
-            remoteDataSource = NoopRecipeRemote(),
+            remoteDataSource = recipeRemote,
             authRepository = fakeAuth,
         )
 
@@ -106,6 +109,37 @@ class RecipeRepositoryImplTest {
         }
 
     @Test
+    fun createRecipe_when_authenticated_Then_pushes_join_rows_to_remote() =
+        runTest(testDispatcher) {
+            fakeAuth.setAuthenticated()
+            val custom = categoryRepository.createUserCategory("Weeknight")
+            // Stamp a remote id directly to simulate that the category's own remote push has
+            // already completed (otherwise the join row is filtered out as unsynced).
+            db.categoryQueries.updateRemoteId(remoteId = "cat-remote-1", id = custom.id)
+
+            recipeRepository.createRecipe(blankRecipe(title = "Tacos", categories = setOf(custom)))
+
+            val (_, categoryRemoteIds) = recipeRemote.attachmentCalls.last()
+            categoryRemoteIds shouldBe setOf("cat-remote-1")
+        }
+
+    @Test
+    fun updateRecipe_when_authenticated_Then_pushes_replaced_join_rows() =
+        runTest(testDispatcher) {
+            fakeAuth.setAuthenticated()
+            val a = categoryRepository.createUserCategory("A")
+            val b = categoryRepository.createUserCategory("B")
+            db.categoryQueries.updateRemoteId(remoteId = "cat-a", id = a.id)
+            db.categoryQueries.updateRemoteId(remoteId = "cat-b", id = b.id)
+
+            val created =
+                recipeRepository.createRecipe(blankRecipe(title = "Tacos", categories = setOf(a)))
+            recipeRepository.updateRecipe(created.copy(categories = setOf(b)))
+
+            recipeRemote.attachmentCalls.last().second shouldBe setOf("cat-b")
+        }
+
+    @Test
     fun getRecipes_with_OTHER_preset_includes_recipes_with_no_categories() =
         runTest(testDispatcher) {
             val breakfast = categoryRepository.materializeBuiltin(BuiltinCategory.BREAKFAST)
@@ -141,12 +175,31 @@ class RecipeRepositoryImplTest {
             updatedAt = Instant.DISTANT_PAST,
         )
 
-    private class NoopRecipeRemote : RecipeRemoteDataSource {
-        override suspend fun upsertRecipe(recipe: RemoteRecipe): RemoteRecipe = recipe
+    /**
+     * Records every join-row push the repo makes so tests can assert that recipe ↔ category
+     * attachments are synced to the remote alongside the recipe row itself.
+     */
+    private class RecordingRecipeRemote : RecipeRemoteDataSource {
+        val attachmentCalls: MutableList<Pair<String, Set<String>>> = mutableListOf()
+
+        override suspend fun upsertRecipe(recipe: RemoteRecipe): RemoteRecipe =
+            // Stamp a stable remote id derived from the client id so tests can correlate.
+            recipe.copy(id = recipe.id ?: "remote-${recipe.clientId.orEmpty()}")
 
         override suspend fun deleteRecipe(remoteId: String) = Unit
 
         override suspend fun fetchAllRecipes(ownerId: String): List<RemoteRecipe> = emptyList()
+
+        override suspend fun setRecipeCategories(
+            recipeRemoteId: String,
+            categoryRemoteIds: Set<String>,
+        ) {
+            attachmentCalls += recipeRemoteId to categoryRemoteIds
+        }
+
+        override suspend fun fetchRecipeCategoryAttachments(
+            ownerId: String
+        ): Map<String, Set<String>> = emptyMap()
     }
 
     private class NoopCategoryRemote : CategoryRemoteDataSource {

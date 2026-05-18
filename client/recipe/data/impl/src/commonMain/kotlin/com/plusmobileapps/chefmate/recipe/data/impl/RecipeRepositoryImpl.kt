@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.recipe.data.impl
 import app.cash.sqldelight.coroutines.asFlow
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
+import com.plusmobileapps.chefmate.database.CategoryQueries
 import com.plusmobileapps.chefmate.database.Recipe as DbRecipe
 import com.plusmobileapps.chefmate.database.RecipeCategoryQueries
 import com.plusmobileapps.chefmate.database.RecipeQueries
@@ -43,6 +44,7 @@ import kotlinx.coroutines.withContext
 class RecipeRepositoryImpl(
     private val db: RecipeQueries,
     private val joinDb: RecipeCategoryQueries,
+    private val categoryDb: CategoryQueries,
     @IO private val ioContext: CoroutineContext,
     private val dateTimeUtil: DateTimeUtil,
     private val remoteDataSource: RecipeRemoteDataSource,
@@ -213,6 +215,12 @@ class RecipeRepositoryImpl(
                             )
                         )
                     db.updateRemoteId(remoteId = remoteRecipe.id, id = localId)
+                    remoteRecipe.id?.let { recipeRemoteId ->
+                        remoteDataSource.setRecipeCategories(
+                            recipeRemoteId,
+                            attachedCategoryRemoteIds(localId),
+                        )
+                    }
                 } finally {
                     syncingIds.update { it - localId }
                 }
@@ -249,6 +257,10 @@ class RecipeRepositoryImpl(
                             updatedAt = entity.updatedAt,
                             clientId = entity.clientId,
                         )
+                    )
+                    remoteDataSource.setRecipeCategories(
+                        remoteId,
+                        attachedCategoryRemoteIds(localId),
                     )
                     db.clearDirty(localId)
                 } finally {
@@ -296,6 +308,12 @@ class RecipeRepositoryImpl(
                     withContext(ioContext) {
                         db.updateRemoteId(remoteId = remoteRecipe.id, id = recipe.id)
                     }
+                    remoteRecipe.id?.let { recipeRemoteId ->
+                        remoteDataSource.setRecipeCategories(
+                            recipeRemoteId,
+                            attachedCategoryRemoteIds(recipe.id),
+                        )
+                    }
                 } catch (_: Exception) {}
             }
 
@@ -324,6 +342,10 @@ class RecipeRepositoryImpl(
                             updatedAt = recipe.updatedAt,
                             clientId = recipe.clientId,
                         )
+                    )
+                    remoteDataSource.setRecipeCategories(
+                        remoteId,
+                        attachedCategoryRemoteIds(recipe.id),
                     )
                     withContext(ioContext) { db.clearDirty(recipe.id) }
                 } catch (_: Exception) {}
@@ -367,8 +389,49 @@ class RecipeRepositoryImpl(
                     }
                 }
             }
+
+            // Pull remote attachments and rebuild local join rows. Requires both the recipe and
+            // its categories to be present locally — if either is missing (e.g. category sync
+            // hasn't run yet), the row is skipped and will be picked up on the next sync.
+            val attachments = remoteDataSource.fetchRecipeCategoryAttachments(userId)
+            withContext(ioContext) {
+                for ((recipeRemoteId, categoryRemoteIds) in attachments) {
+                    val recipeLocalId =
+                        db.getByRemoteId(recipeRemoteId).executeAsOneOrNull()?.id ?: continue
+                    val desiredLocalIds =
+                        categoryRemoteIds
+                            .mapNotNull { categoryDb.getByRemoteId(it).executeAsOneOrNull()?.id }
+                            .toSet()
+                    val current =
+                        joinDb
+                            .getCategoriesForRecipe(recipeLocalId)
+                            .executeAsList()
+                            .map { it.id }
+                            .toSet()
+                    for (toAttach in desiredLocalIds - current) {
+                        joinDb.attach(recipeId = recipeLocalId, categoryId = toAttach)
+                    }
+                    for (toDetach in current - desiredLocalIds) {
+                        joinDb.detach(recipeId = recipeLocalId, categoryId = toDetach)
+                    }
+                }
+            }
         } catch (_: Exception) {}
     }
+
+    /**
+     * Looks up the remote IDs of the categories currently attached to [recipeLocalId]. Categories
+     * that haven't been remote-synced yet (no [remoteId]) are skipped — they'll be picked up on a
+     * future sync once their own push completes. Returns null if any DB access fails.
+     */
+    private suspend fun attachedCategoryRemoteIds(recipeLocalId: Long): Set<String> =
+        withContext(ioContext) {
+            joinDb
+                .getCategoriesForRecipe(recipeLocalId)
+                .executeAsList()
+                .mapNotNull { categoryDb.getById(it.id).executeAsOneOrNull()?.remoteId }
+                .toSet()
+        }
 
     /**
      * Diffs the desired [desired] category set against the current join rows for [recipeId] and
