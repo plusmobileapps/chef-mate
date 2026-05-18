@@ -291,6 +291,76 @@ class EditRecipeViewModelTest {
     }
 
     @Test
+    fun When_categories_changed_on_existing_recipe_Then_back_shows_discard_dialog() = runTest {
+        seedExistingRecipe(categories = emptySet())
+        val vm = createViewModel(recipeId = 99)
+
+        vm.attachBuiltin(BuiltinCategory.BREAKFAST)
+        vm.tryToClose()
+
+        vm.state.value.showDiscardChangesDialog shouldBe true
+    }
+
+    @Test
+    fun When_attached_category_renamed_Then_back_shows_discard_dialog() = runTest {
+        val existing = categoryRepository.createUserCategory("Weknight")
+        seedExistingRecipe(categories = setOf(existing))
+        val vm = createViewModel(recipeId = 99)
+
+        vm.renameUserCategory(existing.id, "Weeknight")
+        vm.tryToClose()
+
+        vm.state.value.showDiscardChangesDialog shouldBe true
+    }
+
+    @Test
+    fun When_attached_category_deleted_Then_back_shows_discard_dialog() = runTest {
+        val existing = categoryRepository.createUserCategory("Slow Cooker")
+        seedExistingRecipe(categories = setOf(existing))
+        val vm = createViewModel(recipeId = 99)
+
+        vm.deleteUserCategory(existing.id)
+        vm.tryToClose()
+
+        vm.state.value.showDiscardChangesDialog shouldBe true
+    }
+
+    @Test
+    fun When_no_changes_made_Then_back_skips_discard_dialog() = runTest {
+        seedExistingRecipe(categories = emptySet())
+        val vm = createViewModel(recipeId = 99)
+
+        vm.tryToClose()
+
+        vm.state.value.showDiscardChangesDialog shouldBe false
+    }
+
+    private fun seedExistingRecipe(categories: Set<Category>) {
+        recipes.value =
+            listOf(
+                Recipe(
+                    id = 99,
+                    title = "Existing",
+                    description = null,
+                    ingredients = "",
+                    directions = "",
+                    imageUrl = null,
+                    sourceUrl = null,
+                    servings = null,
+                    prepTime = null,
+                    cookTime = null,
+                    totalTime = null,
+                    calories = null,
+                    starRating = null,
+                    isFavorite = false,
+                    categories = categories,
+                    createdAt = Instant.DISTANT_PAST,
+                    updatedAt = Instant.DISTANT_PAST,
+                )
+            )
+    }
+
+    @Test
     fun When_attached_user_category_deleted_Then_removed_from_selection() = runTest {
         val vm = createViewModel()
         vm.createUserCategoryAndAttach("Weeknight")
