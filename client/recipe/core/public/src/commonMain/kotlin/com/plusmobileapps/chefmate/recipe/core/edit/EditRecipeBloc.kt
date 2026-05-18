@@ -3,6 +3,8 @@ package com.plusmobileapps.chefmate.recipe.core.edit
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
+import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.text.TextData
 import kotlinx.coroutines.flow.StateFlow
@@ -34,6 +36,11 @@ interface EditRecipeBloc : BackClickBloc {
 
     val starRating: StateFlow<Int?>
 
+    val categories: StateFlow<Set<Category>>
+
+    /** User-created categories from the local DB. Built-in presets are not included. */
+    val availableUserCategories: StateFlow<List<Category>>
+
     fun onTitleChanged(title: String)
 
     fun onDescriptionChanged(description: String)
@@ -57,6 +64,37 @@ interface EditRecipeBloc : BackClickBloc {
     fun onCaloriesChanged(calories: String)
 
     fun onStarRatingChanged(starRating: Int?)
+
+    /**
+     * Bulk replacement — used by the picker sheet when applying changes (currently unused but kept
+     * for parity).
+     */
+    fun onCategoriesChanged(categories: Set<Category>)
+
+    /** Materializes [builtin] if needed and adds it to the recipe's category set. */
+    fun onAttachBuiltin(builtin: BuiltinCategory)
+
+    /** Adds a user-created [category] to the recipe's category set. */
+    fun onAttachCategory(category: Category)
+
+    /** Removes [category] from the recipe's category set. */
+    fun onDetachCategory(category: Category)
+
+    /**
+     * Creates a new user category named [name] and attaches it to the current recipe. The local DB
+     * insert is offline-first; the new row appears in [availableUserCategories] as soon as it
+     * lands, and remote sync happens in the background.
+     */
+    fun onCreateUserCategory(name: String)
+
+    /** Renames a user-created category. Offline-first; remote sync happens in the background. */
+    fun onRenameCategory(id: Long, newName: String)
+
+    /**
+     * Deletes a user-created category. Detaches it from the current recipe in-memory; other recipes
+     * lose the attachment via the join table's cascade.
+     */
+    fun onDeleteCategory(id: Long)
 
     fun onDiscardChangesConfirmed()
 

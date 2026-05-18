@@ -7,6 +7,7 @@ import app.cash.turbine.test
 import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
+import com.plusmobileapps.chefmate.recipe.data.testing.FakeCategoryRepository
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
@@ -48,9 +49,12 @@ class RecipeListBlocImplTest {
         every { getBoolean("recipe_list_is_grid_view", false) } returns false
         every { getString("recipe_list_sort_option", "RECENTLY_ADDED") } returns "RECENTLY_ADDED"
         every { getString("recipe_list_active_filters", "") } returns ""
+        every { getString("recipe_list_active_categories", "") } returns ""
+        every { getString("recipe_list_active_user_categories", "") } returns ""
         every { putBoolean(any(), any()) } returns Unit
         every { putString(any(), any()) } returns Unit
     }
+    private val categoryRepository = FakeCategoryRepository()
 
     private val bloc =
         RecipeListBlocImpl(
@@ -60,6 +64,7 @@ class RecipeListBlocImplTest {
                 RecipeListViewModel(
                     mainContext = context.mainContext,
                     repository = repository,
+                    categoryRepository = categoryRepository,
                     cookingSessionRepository = cookingSessionRepository,
                     settings = settings,
                 )

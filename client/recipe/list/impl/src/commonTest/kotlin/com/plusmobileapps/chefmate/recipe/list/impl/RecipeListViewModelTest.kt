@@ -5,8 +5,11 @@ package com.plusmobileapps.chefmate.recipe.list.impl
 
 import app.cash.turbine.test
 import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
+import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
+import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
+import com.plusmobileapps.chefmate.recipe.data.testing.FakeCategoryRepository
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
@@ -36,13 +39,17 @@ class RecipeListViewModelTest {
         every { getBoolean("recipe_list_is_grid_view", false) } returns false
         every { getString("recipe_list_sort_option", "RECENTLY_ADDED") } returns "RECENTLY_ADDED"
         every { getString("recipe_list_active_filters", "") } returns ""
+        every { getString("recipe_list_active_categories", "") } returns ""
+        every { getString("recipe_list_active_user_categories", "") } returns ""
         every { putBoolean(any(), any()) } returns Unit
         every { putString(any(), any()) } returns Unit
     }
+    private val categoryRepository = FakeCategoryRepository()
     private val viewModel =
         RecipeListViewModel(
             mainContext = UnconfinedTestDispatcher(),
             repository = repository,
+            categoryRepository = categoryRepository,
             cookingSessionRepository = cookingSessionRepository,
             settings = settings,
         )
@@ -53,6 +60,7 @@ class RecipeListViewModelTest {
         isFavorite: Boolean = false,
         starRating: Int? = null,
         totalTime: Int? = null,
+        category: BuiltinCategory? = null,
         createdAt: Instant = Instant.fromEpochSeconds(id * 1000),
     ) =
         Recipe(
@@ -70,6 +78,10 @@ class RecipeListViewModelTest {
             calories = null,
             starRating = starRating,
             isFavorite = isFavorite,
+            categories =
+                category?.let {
+                    setOf(Category(id = it.ordinal + 1L, name = it.id, builtinId = it.id))
+                } ?: emptySet(),
             syncStatus = SyncStatus.NOT_SYNCED,
             createdAt = createdAt,
             updatedAt = createdAt,
@@ -221,11 +233,14 @@ class RecipeListViewModelTest {
             every { getString("recipe_list_sort_option", "RECENTLY_ADDED") } returns
                 "RECENTLY_ADDED"
             every { getString("recipe_list_active_filters", "") } returns ""
+            every { getString("recipe_list_active_categories", "") } returns ""
+            every { getString("recipe_list_active_user_categories", "") } returns ""
         }
         val vm =
             RecipeListViewModel(
                 mainContext = UnconfinedTestDispatcher(),
                 repository = FakeRecipeRepository(),
+                categoryRepository = FakeCategoryRepository(),
                 cookingSessionRepository = cookingSessionRepository,
                 settings = gridSettings,
             )
@@ -308,11 +323,14 @@ class RecipeListViewModelTest {
             every { getBoolean("recipe_list_is_grid_view", false) } returns false
             every { getString("recipe_list_sort_option", "RECENTLY_ADDED") } returns "TOP_RATED"
             every { getString("recipe_list_active_filters", "") } returns ""
+            every { getString("recipe_list_active_categories", "") } returns ""
+            every { getString("recipe_list_active_user_categories", "") } returns ""
         }
         val vm =
             RecipeListViewModel(
                 mainContext = UnconfinedTestDispatcher(),
                 repository = FakeRecipeRepository(),
+                categoryRepository = FakeCategoryRepository(),
                 cookingSessionRepository = cookingSessionRepository,
                 settings = sortSettings,
             )
@@ -332,11 +350,14 @@ class RecipeListViewModelTest {
             every { getString("recipe_list_sort_option", "RECENTLY_ADDED") } returns
                 "RECENTLY_ADDED"
             every { getString("recipe_list_active_filters", "") } returns "FAVORITES,RATED"
+            every { getString("recipe_list_active_categories", "") } returns ""
+            every { getString("recipe_list_active_user_categories", "") } returns ""
         }
         val vm =
             RecipeListViewModel(
                 mainContext = UnconfinedTestDispatcher(),
                 repository = FakeRecipeRepository(),
+                categoryRepository = FakeCategoryRepository(),
                 cookingSessionRepository = cookingSessionRepository,
                 settings = filterSettings,
             )
@@ -371,6 +392,8 @@ class RecipeListViewModelTest {
         viewModel.applySortAndFilters(
             RecipeSortOption.ALPHABETICAL_ASC,
             setOf(RecipeFilterOption.FAVORITES, RecipeFilterOption.RATED),
+            categories = emptySet(),
+            userCategoryIds = emptySet(),
         )
         val state = viewModel.state.value
         state.currentSort shouldBe RecipeSortOption.ALPHABETICAL_ASC
@@ -378,6 +401,165 @@ class RecipeListViewModelTest {
         state.displayRecipes.map { it.id } shouldBe listOf(1L)
         verify { settings.putString("recipe_list_sort_option", "ALPHABETICAL_ASC") }
         verify { settings.putString("recipe_list_active_filters", any()) }
+    }
+
+    // endregion
+
+    // region Category filter tests
+
+    @Test
+    fun When_no_category_filter_Then_all_recipes_shown() {
+        recipes.value =
+            listOf(
+                recipe(1, category = BuiltinCategory.BREAKFAST),
+                recipe(2, category = BuiltinCategory.DINNER),
+                recipe(3, category = null),
+            )
+        viewModel.state.value.activeCategories shouldBe emptySet()
+        viewModel.state.value.displayRecipes.size shouldBe 3
+    }
+
+    @Test
+    fun When_single_category_filter_Then_only_matching_shown() {
+        recipes.value =
+            listOf(
+                recipe(1, category = BuiltinCategory.BREAKFAST),
+                recipe(2, category = BuiltinCategory.DINNER),
+                recipe(3, category = null),
+            )
+        viewModel.applySortAndFilters(
+            RecipeSortOption.RECENTLY_ADDED,
+            filters = emptySet(),
+            categories = setOf(BuiltinCategory.BREAKFAST),
+            userCategoryIds = emptySet(),
+        )
+        viewModel.state.value.displayRecipes.map { it.id } shouldBe listOf(1L)
+    }
+
+    @Test
+    fun When_multi_category_filter_Then_union_shown() {
+        recipes.value =
+            listOf(
+                recipe(1, category = BuiltinCategory.BREAKFAST),
+                recipe(2, category = BuiltinCategory.LUNCH),
+                recipe(3, category = BuiltinCategory.DINNER),
+            )
+        viewModel.applySortAndFilters(
+            RecipeSortOption.RECENTLY_ADDED,
+            filters = emptySet(),
+            categories = setOf(BuiltinCategory.BREAKFAST, BuiltinCategory.LUNCH),
+            userCategoryIds = emptySet(),
+        )
+        viewModel.state.value.displayRecipes.map { it.id }.toSet() shouldBe setOf(1L, 2L)
+    }
+
+    @Test
+    fun When_filter_excludes_all_Then_empty_result() {
+        recipes.value =
+            listOf(
+                recipe(1, category = BuiltinCategory.BREAKFAST),
+                recipe(2, category = BuiltinCategory.LUNCH),
+            )
+        viewModel.applySortAndFilters(
+            RecipeSortOption.RECENTLY_ADDED,
+            filters = emptySet(),
+            categories = setOf(BuiltinCategory.DESSERT),
+            userCategoryIds = emptySet(),
+        )
+        viewModel.state.value.displayRecipes shouldBe emptyList()
+    }
+
+    @Test
+    fun When_OTHER_selected_Then_null_category_recipes_match() {
+        recipes.value =
+            listOf(
+                recipe(1, category = BuiltinCategory.BREAKFAST),
+                recipe(2, category = null),
+                recipe(3, category = BuiltinCategory.OTHER),
+            )
+        viewModel.applySortAndFilters(
+            RecipeSortOption.RECENTLY_ADDED,
+            filters = emptySet(),
+            categories = setOf(BuiltinCategory.OTHER),
+            userCategoryIds = emptySet(),
+        )
+        viewModel.state.value.displayRecipes.map { it.id }.toSet() shouldBe setOf(2L, 3L)
+    }
+
+    @Test
+    fun When_OTHER_not_selected_Then_null_category_recipes_excluded() {
+        recipes.value =
+            listOf(recipe(1, category = BuiltinCategory.BREAKFAST), recipe(2, category = null))
+        viewModel.applySortAndFilters(
+            RecipeSortOption.RECENTLY_ADDED,
+            filters = emptySet(),
+            categories = setOf(BuiltinCategory.BREAKFAST),
+            userCategoryIds = emptySet(),
+        )
+        viewModel.state.value.displayRecipes.map { it.id } shouldBe listOf(1L)
+    }
+
+    @Test
+    fun When_category_and_legacy_filter_combined_Then_both_applied() {
+        recipes.value =
+            listOf(
+                recipe(1, category = BuiltinCategory.DINNER, isFavorite = true),
+                recipe(2, category = BuiltinCategory.DINNER, isFavorite = false),
+                recipe(3, category = BuiltinCategory.LUNCH, isFavorite = true),
+            )
+        viewModel.applySortAndFilters(
+            RecipeSortOption.RECENTLY_ADDED,
+            filters = setOf(RecipeFilterOption.FAVORITES),
+            categories = setOf(BuiltinCategory.DINNER),
+            userCategoryIds = emptySet(),
+        )
+        viewModel.state.value.displayRecipes.map { it.id } shouldBe listOf(1L)
+    }
+
+    @Test
+    fun When_category_filter_applied_Then_persisted_to_settings() {
+        viewModel.applySortAndFilters(
+            RecipeSortOption.RECENTLY_ADDED,
+            filters = emptySet(),
+            categories = setOf(BuiltinCategory.DINNER, BuiltinCategory.LUNCH),
+            userCategoryIds = emptySet(),
+        )
+        verify { settings.putString("recipe_list_active_categories", any()) }
+    }
+
+    @Test
+    fun When_settings_has_active_categories_Then_initial_state_uses_them() {
+        val catSettings: Settings = mock {
+            every { getBoolean("recipe_list_is_grid_view", false) } returns false
+            every { getString("recipe_list_sort_option", "RECENTLY_ADDED") } returns
+                "RECENTLY_ADDED"
+            every { getString("recipe_list_active_filters", "") } returns ""
+            every { getString("recipe_list_active_categories", "") } returns "breakfast,dinner"
+            every { getString("recipe_list_active_user_categories", "") } returns ""
+        }
+        val vm =
+            RecipeListViewModel(
+                mainContext = UnconfinedTestDispatcher(),
+                repository = FakeRecipeRepository(),
+                categoryRepository = FakeCategoryRepository(),
+                cookingSessionRepository = cookingSessionRepository,
+                settings = catSettings,
+            )
+        vm.state.value.activeCategories shouldBe
+            setOf(BuiltinCategory.BREAKFAST, BuiltinCategory.DINNER)
+    }
+
+    @Test
+    fun When_clear_filters_Then_categories_also_cleared() {
+        viewModel.applySortAndFilters(
+            RecipeSortOption.RECENTLY_ADDED,
+            filters = setOf(RecipeFilterOption.FAVORITES),
+            categories = setOf(BuiltinCategory.DINNER),
+            userCategoryIds = emptySet(),
+        )
+        viewModel.clearFilters()
+        viewModel.state.value.activeFilters shouldBe emptySet()
+        viewModel.state.value.activeCategories shouldBe emptySet()
     }
 
     // endregion

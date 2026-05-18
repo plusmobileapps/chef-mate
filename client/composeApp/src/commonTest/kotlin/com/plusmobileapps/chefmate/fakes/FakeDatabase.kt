@@ -25,6 +25,11 @@ class FakeDatabase(private val delegate: Database = provideTestDatabase()) : Dat
             clientId = null,
             ownerId = null,
         )
+        val recipeId =
+            recipeQueries.lastInsertId().executeAsOne().MAX ?: error("Failed to get last insert id")
+        for (category in recipe.categories) {
+            recipeCategoryQueries.attach(recipeId = recipeId, categoryId = category.id)
+        }
     }
 
     fun addRecipes(recipes: Iterable<Recipe>) {

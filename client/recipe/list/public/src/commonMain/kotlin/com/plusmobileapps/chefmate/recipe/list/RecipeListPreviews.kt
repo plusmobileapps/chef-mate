@@ -2,6 +2,7 @@ package com.plusmobileapps.chefmate.recipe.list
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -75,6 +76,8 @@ private fun recipeListBloc(model: RecipeListBloc.Model): RecipeListBloc =
         override fun onApplySortAndFilters(
             sort: RecipeSortOption,
             filters: Set<RecipeFilterOption>,
+            categories: Set<BuiltinCategory>,
+            userCategoryIds: Set<Long>,
         ) = Unit
 
         override fun onBrowseRecipesClicked() = Unit
@@ -106,6 +109,16 @@ val previewRecipeListBlocCooking: RecipeListBloc =
             recipes = sampleRecipes,
             totalRecipeCount = sampleRecipes.size,
             cookingRecipeCount = 2,
+        )
+    )
+
+/** Recipe list with one active category filter — exercises the filter-icon badge indicator. */
+val previewRecipeListBlocCategoryFiltered: RecipeListBloc =
+    recipeListBloc(
+        RecipeListBloc.Model(
+            recipes = sampleRecipes,
+            totalRecipeCount = sampleRecipes.size,
+            activeCategories = setOf(BuiltinCategory.BREAKFAST),
         )
     )
 

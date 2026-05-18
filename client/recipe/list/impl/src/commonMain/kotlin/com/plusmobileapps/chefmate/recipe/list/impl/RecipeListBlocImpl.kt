@@ -5,6 +5,7 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
+import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
@@ -40,6 +41,9 @@ class RecipeListBlocImpl(
                 totalRecipeCount = it.recipes.size,
                 currentSort = it.currentSort,
                 activeFilters = it.activeFilters,
+                activeCategories = it.activeCategories,
+                activeUserCategoryIds = it.activeUserCategoryIds,
+                availableUserCategories = it.availableUserCategories,
                 isGridView = it.isGridView,
                 searchQuery = it.searchQuery,
                 isSearchActive = it.isSearchActive,
@@ -84,8 +88,13 @@ class RecipeListBlocImpl(
         viewModel.clearFilters()
     }
 
-    override fun onApplySortAndFilters(sort: RecipeSortOption, filters: Set<RecipeFilterOption>) {
-        viewModel.applySortAndFilters(sort, filters)
+    override fun onApplySortAndFilters(
+        sort: RecipeSortOption,
+        filters: Set<RecipeFilterOption>,
+        categories: Set<BuiltinCategory>,
+        userCategoryIds: Set<Long>,
+    ) {
+        viewModel.applySortAndFilters(sort, filters, categories, userCategoryIds)
     }
 
     override fun onBrowseRecipesClicked() {

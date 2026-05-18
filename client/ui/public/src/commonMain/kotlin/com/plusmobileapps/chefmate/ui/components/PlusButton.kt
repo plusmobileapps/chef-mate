@@ -24,13 +24,14 @@ fun PlusButton(
     text: TextData,
     variant: PlusButtonVariant = PlusButtonVariant.PRIMARY,
     isLoading: Boolean = false,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     Button(
         modifier = modifier,
         onClick = onClick,
-        enabled = !isLoading,
+        enabled = enabled && !isLoading,
         colors =
             when (variant) {
                 PlusButtonVariant.PRIMARY ->

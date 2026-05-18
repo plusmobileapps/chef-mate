@@ -20,6 +20,7 @@ data class Recipe(
     val calories: Int?,
     val starRating: Int?,
     val isFavorite: Boolean = false,
+    val categories: Set<Category> = emptySet(),
     val syncStatus: SyncStatus = SyncStatus.NOT_SYNCED,
     val createdAt: Instant,
     val updatedAt: Instant,
@@ -41,6 +42,7 @@ data class Recipe(
                 calories = null,
                 starRating = null,
                 isFavorite = false,
+                categories = emptySet(),
                 createdAt = Instant.DISTANT_PAST,
                 updatedAt = Instant.DISTANT_PAST,
             )
@@ -69,6 +71,10 @@ data class Recipe(
                 calories = 620,
                 starRating = 5,
                 isFavorite = true,
+                categories =
+                    setOf(
+                        Category(id = 1L, name = "Dinner", builtinId = BuiltinCategory.DINNER.id)
+                    ),
                 syncStatus = SyncStatus.SYNCED,
                 createdAt = Instant.DISTANT_PAST,
                 updatedAt = Instant.DISTANT_PAST,

@@ -1,1 +1,0 @@
-ALTER TABLE Grocery ADD COLUMN recipeName TEXT;

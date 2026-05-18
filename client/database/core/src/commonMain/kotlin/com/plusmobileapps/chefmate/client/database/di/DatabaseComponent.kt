@@ -2,11 +2,13 @@ package com.plusmobileapps.chefmate.client.database.di
 
 import com.plusmobileapps.chefmate.client.database.DriverFactory
 import com.plusmobileapps.chefmate.database.BrowserHistoryQueries
+import com.plusmobileapps.chefmate.database.CategoryQueries
 import com.plusmobileapps.chefmate.database.CookingSessionQueries
 import com.plusmobileapps.chefmate.database.Database
 import com.plusmobileapps.chefmate.database.GroceryListQueries
 import com.plusmobileapps.chefmate.database.GroceryQueries
 import com.plusmobileapps.chefmate.database.MealPlanQueries
+import com.plusmobileapps.chefmate.database.RecipeCategoryQueries
 import com.plusmobileapps.chefmate.database.RecipeQueries
 import com.plusmobileapps.chefmate.di.AppScope
 import dev.zacsweers.metro.ContributesTo
@@ -47,4 +49,13 @@ interface DatabaseComponent {
     @Provides
     fun providesCookingSessionQueries(database: Database): CookingSessionQueries =
         database.cookingSessionQueries
+
+    @SingleIn(AppScope::class)
+    @Provides
+    fun providesCategoryQueries(database: Database): CategoryQueries = database.categoryQueries
+
+    @SingleIn(AppScope::class)
+    @Provides
+    fun providesRecipeCategoryQueries(database: Database): RecipeCategoryQueries =
+        database.recipeCategoryQueries
 }

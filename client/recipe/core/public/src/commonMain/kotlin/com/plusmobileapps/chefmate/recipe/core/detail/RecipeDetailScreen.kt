@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -147,6 +149,9 @@ import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListScreen
+import com.plusmobileapps.chefmate.recipe.core.edit.pickerLabelRes
+import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
+import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
@@ -620,6 +625,15 @@ private fun RecipeDetailCompactContent(
             )
         }
 
+        if (recipe.categories.isNotEmpty()) {
+            item(key = "categories") {
+                RecipeCategoriesRow(
+                    categories = recipe.categories,
+                    modifier = Modifier.padding(horizontal = padding),
+                )
+            }
+        }
+
         // Description below hero
         recipe.description?.let { description ->
             item(key = "description") {
@@ -786,6 +800,9 @@ private fun ColumnScope.RecipeDetailLandscapeContent(
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                 )
             }
+            if (recipe.categories.isNotEmpty()) {
+                RecipeCategoriesRow(categories = recipe.categories)
+            }
             Text(
                 text =
                     stringResource(Res.string.recipe_detail_created) + " " + createdAt.localized(),
@@ -924,6 +941,9 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                 recipe.starRating?.let { rating ->
                     item(key = "star_rating") { StarRating(rating = rating) }
                 }
+                if (recipe.categories.isNotEmpty()) {
+                    item(key = "categories") { RecipeCategoriesRow(categories = recipe.categories) }
+                }
                 recipe.description?.let { description ->
                     item(key = "metadata_description") {
                         Text(
@@ -1052,6 +1072,41 @@ private fun DragHandle(onDrag: (Float) -> Unit, modifier: Modifier = Modifier) {
                         color = MaterialTheme.colorScheme.outlineVariant,
                         shape = MaterialTheme.shapes.small,
                     )
+        )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun RecipeCategoriesRow(categories: Set<Category>, modifier: Modifier = Modifier) {
+    if (categories.isEmpty()) return
+    FlowRow(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        categories.forEach { category ->
+            val label =
+                BuiltinCategory.fromId(category.builtinId)?.let {
+                    stringResource(it.pickerLabelRes())
+                } ?: category.name
+            CategoryChip(label = label)
+        }
+    }
+}
+
+@Composable
+private fun CategoryChip(label: String, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        shape = MaterialTheme.shapes.small,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
         )
     }
 }
@@ -1580,6 +1635,15 @@ private val previewBloc =
                                 6. Serve the sauce over the cooked spaghetti.
                                 """
                                     .trimIndent(),
+                            categories =
+                                setOf(
+                                    Category(
+                                        id = 1L,
+                                        name = "Dinner",
+                                        builtinId = BuiltinCategory.DINNER.id,
+                                    ),
+                                    Category(id = 100L, name = "Weeknight"),
+                                ),
                             createdAt = Instant.parse("2023-01-01T12:00:00Z"),
                             updatedAt = Instant.parse("2023-02-01T12:00:00Z"),
                         ),

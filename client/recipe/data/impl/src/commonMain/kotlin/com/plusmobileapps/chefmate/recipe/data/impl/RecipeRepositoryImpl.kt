@@ -3,10 +3,14 @@ package com.plusmobileapps.chefmate.recipe.data.impl
 import app.cash.sqldelight.coroutines.asFlow
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
+import com.plusmobileapps.chefmate.database.CategoryQueries
 import com.plusmobileapps.chefmate.database.Recipe as DbRecipe
+import com.plusmobileapps.chefmate.database.RecipeCategoryQueries
 import com.plusmobileapps.chefmate.database.RecipeQueries
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.IO
+import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
+import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
@@ -39,6 +43,8 @@ import kotlinx.coroutines.withContext
 @ContributesBinding(AppScope::class)
 class RecipeRepositoryImpl(
     private val db: RecipeQueries,
+    private val joinDb: RecipeCategoryQueries,
+    private val categoryDb: CategoryQueries,
     @IO private val ioContext: CoroutineContext,
     private val dateTimeUtil: DateTimeUtil,
     private val remoteDataSource: RecipeRemoteDataSource,
@@ -64,6 +70,13 @@ class RecipeRepositoryImpl(
                 items.map { it.toRecipe(syncing) }
             }
             .flowOn(ioContext)
+
+    override fun getRecipes(presets: Set<BuiltinCategory>?): Flow<List<Recipe>> =
+        if (presets.isNullOrEmpty()) {
+            getRecipes()
+        } else {
+            getRecipes().map { recipes -> recipes.filter { it.matchesPresetFilter(presets) } }
+        }
 
     override suspend fun createRecipe(recipe: Recipe): Recipe {
         val clientId = Uuid.random().toString()
@@ -92,6 +105,9 @@ class RecipeRepositoryImpl(
                     val id =
                         db.lastInsertId().executeAsOne().MAX
                             ?: error("Failed to get last insert id")
+                    for (category in recipe.categories) {
+                        joinDb.attach(recipeId = id, categoryId = category.id)
+                    }
                     db.getById(id).executeAsOne().toRecipe()
                 }
             }
@@ -121,6 +137,7 @@ class RecipeRepositoryImpl(
                         isFavorite = recipe.isFavorite,
                         updatedAt = now.toString(),
                     )
+                    syncJoinRowsForRecipe(recipe.id, recipe.categories)
                     recipe.copy(updatedAt = now)
                 }
             }
@@ -198,6 +215,12 @@ class RecipeRepositoryImpl(
                             )
                         )
                     db.updateRemoteId(remoteId = remoteRecipe.id, id = localId)
+                    remoteRecipe.id?.let { recipeRemoteId ->
+                        remoteDataSource.setRecipeCategories(
+                            recipeRemoteId,
+                            attachedCategoryRemoteIds(localId),
+                        )
+                    }
                 } finally {
                     syncingIds.update { it - localId }
                 }
@@ -234,6 +257,10 @@ class RecipeRepositoryImpl(
                             updatedAt = entity.updatedAt,
                             clientId = entity.clientId,
                         )
+                    )
+                    remoteDataSource.setRecipeCategories(
+                        remoteId,
+                        attachedCategoryRemoteIds(localId),
                     )
                     db.clearDirty(localId)
                 } finally {
@@ -281,6 +308,12 @@ class RecipeRepositoryImpl(
                     withContext(ioContext) {
                         db.updateRemoteId(remoteId = remoteRecipe.id, id = recipe.id)
                     }
+                    remoteRecipe.id?.let { recipeRemoteId ->
+                        remoteDataSource.setRecipeCategories(
+                            recipeRemoteId,
+                            attachedCategoryRemoteIds(recipe.id),
+                        )
+                    }
                 } catch (_: Exception) {}
             }
 
@@ -309,6 +342,10 @@ class RecipeRepositoryImpl(
                             updatedAt = recipe.updatedAt,
                             clientId = recipe.clientId,
                         )
+                    )
+                    remoteDataSource.setRecipeCategories(
+                        remoteId,
+                        attachedCategoryRemoteIds(recipe.id),
                     )
                     withContext(ioContext) { db.clearDirty(recipe.id) }
                 } catch (_: Exception) {}
@@ -352,7 +389,64 @@ class RecipeRepositoryImpl(
                     }
                 }
             }
+
+            // Pull remote attachments and rebuild local join rows. Requires both the recipe and
+            // its categories to be present locally — if either is missing (e.g. category sync
+            // hasn't run yet), the row is skipped and will be picked up on the next sync.
+            val attachments = remoteDataSource.fetchRecipeCategoryAttachments(userId)
+            withContext(ioContext) {
+                for ((recipeRemoteId, categoryRemoteIds) in attachments) {
+                    val recipeLocalId =
+                        db.getByRemoteId(recipeRemoteId).executeAsOneOrNull()?.id ?: continue
+                    val desiredLocalIds =
+                        categoryRemoteIds
+                            .mapNotNull { categoryDb.getByRemoteId(it).executeAsOneOrNull()?.id }
+                            .toSet()
+                    val current =
+                        joinDb
+                            .getCategoriesForRecipe(recipeLocalId)
+                            .executeAsList()
+                            .map { it.id }
+                            .toSet()
+                    for (toAttach in desiredLocalIds - current) {
+                        joinDb.attach(recipeId = recipeLocalId, categoryId = toAttach)
+                    }
+                    for (toDetach in current - desiredLocalIds) {
+                        joinDb.detach(recipeId = recipeLocalId, categoryId = toDetach)
+                    }
+                }
+            }
         } catch (_: Exception) {}
+    }
+
+    /**
+     * Looks up the remote IDs of the categories currently attached to [recipeLocalId]. Categories
+     * that haven't been remote-synced yet (no [remoteId]) are skipped — they'll be picked up on a
+     * future sync once their own push completes. Returns null if any DB access fails.
+     */
+    private suspend fun attachedCategoryRemoteIds(recipeLocalId: Long): Set<String> =
+        withContext(ioContext) {
+            joinDb
+                .getCategoriesForRecipe(recipeLocalId)
+                .executeAsList()
+                .mapNotNull { categoryDb.getById(it.id).executeAsOneOrNull()?.remoteId }
+                .toSet()
+        }
+
+    /**
+     * Diffs the desired [desired] category set against the current join rows for [recipeId] and
+     * applies the minimum number of attach/detach operations. Must be called inside a SQLDelight
+     * transaction so the diff can't see a partial mutation.
+     */
+    private fun syncJoinRowsForRecipe(recipeId: Long, desired: Set<Category>) {
+        val current = joinDb.getCategoriesForRecipe(recipeId).executeAsList().map { it.id }.toSet()
+        val want = desired.map { it.id }.toSet()
+        for (toAttach in want - current) {
+            joinDb.attach(recipeId = recipeId, categoryId = toAttach)
+        }
+        for (toDetach in current - want) {
+            joinDb.detach(recipeId = recipeId, categoryId = toDetach)
+        }
     }
 
     private fun DbRecipe.toRecipe(syncing: Set<Long> = emptySet()): Recipe {
@@ -362,6 +456,20 @@ class RecipeRepositoryImpl(
                 isDirty -> SyncStatus.NOT_SYNCED
                 remoteId != null -> SyncStatus.SYNCED
                 else -> SyncStatus.NOT_SYNCED
+            }
+        val attachedCategories =
+            joinDb.getCategoriesForRecipe(id).executeAsList().map {
+                Category(
+                    id = it.id,
+                    name = it.name,
+                    builtinId = it.builtinId,
+                    syncStatus =
+                        when {
+                            it.isDirty -> SyncStatus.NOT_SYNCED
+                            it.remoteId != null -> SyncStatus.SYNCED
+                            else -> SyncStatus.NOT_SYNCED
+                        },
+                )
             }
         return Recipe(
             id = id,
@@ -378,9 +486,16 @@ class RecipeRepositoryImpl(
             calories = calories?.toInt(),
             starRating = starRating?.toInt(),
             isFavorite = isFavorite,
+            categories = attachedCategories.toSet(),
             syncStatus = syncStatus,
             createdAt = Instant.parse(createdAt),
             updatedAt = Instant.parse(updatedAt),
         )
     }
+}
+
+internal fun Recipe.matchesPresetFilter(presets: Set<BuiltinCategory>): Boolean {
+    val recipeBuiltins = categories.mapNotNull { BuiltinCategory.fromId(it.builtinId) }.toSet()
+    if (recipeBuiltins.isEmpty()) return BuiltinCategory.OTHER in presets
+    return recipeBuiltins.any { it in presets }
 }

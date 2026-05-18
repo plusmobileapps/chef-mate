@@ -4,6 +4,9 @@ package com.plusmobileapps.chefmate.recipe.core.impl.edit
 
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.di.Main
+import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
+import com.plusmobileapps.chefmate.recipe.data.Category
+import com.plusmobileapps.chefmate.recipe.data.CategoryRepository
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
@@ -16,10 +19,12 @@ import kotlin.time.Instant
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -29,6 +34,7 @@ class EditRecipeViewModel(
     @Assisted extractedRecipe: ExtractedRecipeData?,
     @Main mainContext: CoroutineContext,
     private val repository: RecipeRepository,
+    private val categoryRepository: CategoryRepository,
 ) : ViewModel(mainContext) {
     private val _output = Channel<Output>(Channel.BUFFERED)
     val output: Flow<Output> = _output.receiveAsFlow()
@@ -70,6 +76,20 @@ class EditRecipeViewModel(
 
     private val _starRating = MutableStateFlow<Int?>(null)
     val starRating: StateFlow<Int?> = _starRating.asStateFlow()
+
+    private val _categories = MutableStateFlow<Set<Category>>(emptySet())
+    val categories: StateFlow<Set<Category>> = _categories.asStateFlow()
+
+    val availableUserCategories: StateFlow<List<Category>> =
+        categoryRepository
+            .observeUserCategories()
+            .stateIn(scope = scope, started = SharingStarted.Eagerly, initialValue = emptyList())
+
+    // Re-entrancy guard for [createUserCategoryAndAttach]; not exposed to the bloc because the
+    // picker UI doesn't need a loading flag (offline-first inserts are effectively instant, and
+    // routing a fast true→false transition through StateFlow could be conflated and leave the
+    // UI stuck on a spinner).
+    private val _isCreatingCategory = MutableStateFlow(false)
 
     init {
         when {
@@ -141,6 +161,78 @@ class EditRecipeViewModel(
         _starRating.value = value
     }
 
+    fun updateCategories(value: Set<Category>) {
+        _categories.value = value
+    }
+
+    fun attachBuiltin(builtin: BuiltinCategory) {
+        scope.launch {
+            val materialized = categoryRepository.materializeBuiltin(builtin)
+            _categories.update { it.upsertById(materialized) }
+        }
+    }
+
+    fun attachCategory(category: Category) {
+        _categories.update { it.upsertById(category) }
+    }
+
+    fun detachCategory(category: Category) {
+        _categories.update { current -> current.filterNot { it.id == category.id }.toSet() }
+    }
+
+    /** Renames a user-created category in place. The local DB write is offline-first. */
+    fun renameUserCategory(id: Long, newName: String) {
+        val trimmed = newName.trim()
+        if (trimmed.isBlank()) return
+        scope.launch {
+            val renamed = categoryRepository.renameCategory(id, trimmed)
+            _categories.update { current ->
+                if (current.any { it.id == id }) current.upsertById(renamed) else current
+            }
+        }
+    }
+
+    /**
+     * Deletes a user-created category. If the category was attached to this recipe, it's removed
+     * from the in-memory selection immediately so the chip disappears on save. Other recipes that
+     * referenced it lose their attachment via Supabase's ON DELETE CASCADE on recipe_categories.
+     */
+    fun deleteUserCategory(id: Long) {
+        scope.launch {
+            _categories.update { current -> current.filterNot { it.id == id }.toSet() }
+            categoryRepository.deleteCategory(id)
+        }
+    }
+
+    /**
+     * Creates a new user category and immediately attaches it to the recipe being edited. The local
+     * DB insert is synchronous (offline-first); the remote push is fire-and-forget inside the repo,
+     * so the new row appears in [availableUserCategories] right away and the picker dismisses its
+     * inline create field immediately on submit.
+     */
+    fun createUserCategoryAndAttach(name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isBlank() || _isCreatingCategory.value) return
+        scope.launch {
+            _isCreatingCategory.value = true
+            try {
+                val created = categoryRepository.createUserCategory(trimmed)
+                _categories.update { it.upsertById(created) }
+            } finally {
+                _isCreatingCategory.value = false
+            }
+        }
+    }
+
+    /**
+     * Adds [category] to the set, replacing any existing entry with the same id. Set's structural
+     * equality treats two Category snapshots with different `syncStatus` as distinct, which would
+     * let the same row appear twice when the background remote push mutates the underlying DB row
+     * between two attaches.
+     */
+    private fun Set<Category>.upsertById(category: Category): Set<Category> =
+        filterNot { it.id == category.id }.toSet() + category
+
     fun tryToClose() {
         val originalRecipe = _state.value.recipe
         val currentRecipe = currentRecipe()
@@ -196,6 +288,7 @@ class EditRecipeViewModel(
         _totalTime.value = recipe.totalTime?.toString().orEmpty()
         _calories.value = recipe.calories?.toString().orEmpty()
         _starRating.value = recipe.starRating
+        _categories.value = recipe.categories
         _state.update { it.copy(isLoading = false, recipe = recipe) }
     }
 
@@ -217,7 +310,8 @@ class EditRecipeViewModel(
                     currentRecipe.cookTime != null ||
                     currentRecipe.totalTime != null ||
                     currentRecipe.calories != null ||
-                    currentRecipe.starRating != null
+                    currentRecipe.starRating != null ||
+                    currentRecipe.categories.isNotEmpty()
         }
 
     private fun Recipe.isDirty(): Boolean =
@@ -232,7 +326,8 @@ class EditRecipeViewModel(
             cookTime?.toString().orEmpty() != _cookTime.value ||
             totalTime?.toString().orEmpty() != _totalTime.value ||
             calories?.toString().orEmpty() != _calories.value ||
-            starRating != _starRating.value
+            starRating != _starRating.value ||
+            categories != _categories.value
 
     private fun currentRecipe(): Recipe =
         Recipe(
@@ -250,6 +345,7 @@ class EditRecipeViewModel(
             calories = _calories.value.toIntOrNull(),
             starRating = _starRating.value,
             isFavorite = state.value.recipe?.isFavorite ?: false,
+            categories = _categories.value,
             createdAt = Instant.DISTANT_PAST,
             updatedAt = Instant.DISTANT_PAST,
         )
