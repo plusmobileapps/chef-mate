@@ -1,9 +1,8 @@
 package com.plusmobileapps.chefmate.convention
 
-import com.android.build.api.variant.LibraryAndroidComponentsExtension
-import com.android.build.gradle.LibraryExtension
+import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
+import com.android.build.api.variant.KotlinMultiplatformAndroidComponentsExtension
 import com.plusmobileapps.chefmate.libs
-import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
@@ -30,43 +29,52 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
 
             with(pluginManager) {
                 apply("org.jetbrains.kotlin.multiplatform")
-                apply("com.android.library")
+                // AGP 9: the new KMP-aware Android library plugin replaces
+                // `com.android.library` for multiplatform modules. It registers the
+                // Android target itself and exposes its DSL inside `kotlin { }`
+                // under the `android` extension.
+                apply("com.android.kotlin.multiplatform.library")
             }
 
             target.applyKtfmt()
 
+            // Defer namespace resolution until after the module's build.gradle.kts has
+            // evaluated. compileSdk, minSdk, withHostTest, and jvmTarget don't depend on
+            // user input and are safe to set eagerly, but `namespace` requires the
+            // per-module value from `plusLibrary { ... }`, which isn't available yet.
             val androidComponents =
-                extensions.getByType(LibraryAndroidComponentsExtension::class.java)
-
-            androidComponents.finalizeDsl {
-                extensions.configure<LibraryExtension> {
-                    // Use the configured namespace or fall back to the default
-                    namespace =
-                        plusLibraryExtension.namespace
-                            ?: throw IllegalStateException(
-                                """
+                extensions.getByType(KotlinMultiplatformAndroidComponentsExtension::class.java)
+            androidComponents.finalizeDsl { extension ->
+                extension.namespace =
+                    plusLibraryExtension.namespace
+                        ?: throw IllegalStateException(
+                            """
                     Please set the namespace for the module $name in the plusMobile extension in the module's build.gradle.kts file.
                     Example:
                     plusLibrary {
                         namespace = "com.plusmobileapps.chefmate.${project.name}"
                     }
                 """
-                                    .trimIndent()
-                            )
-                    compileSdk = libs.versions.android.compileSdk.get().toInt()
-
-                    compileOptions {
-                        sourceCompatibility = JavaVersion.VERSION_11
-                        targetCompatibility = JavaVersion.VERSION_11
-                    }
-
-                    defaultConfig { minSdk = libs.versions.android.minSdk.get().toInt() }
-                }
+                                .trimIndent()
+                        )
             }
 
             extensions.configure<KotlinMultiplatformExtension> {
-                // Configure Android target
-                androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
+                // Configure the Android library target via the new plugin's DSL,
+                // which is exposed on the Kotlin multiplatform extension as `android`.
+                extensions.configure<KotlinMultiplatformAndroidLibraryTarget>("android") {
+                    compileSdk = libs.versions.android.compileSdk.get().toInt()
+                    minSdk = libs.versions.android.minSdk.get().toInt()
+
+                    // Pin Android JVM bytecode level. iOS targets are unaffected.
+                    compilerOptions.jvmTarget.set(JvmTarget.JVM_11)
+
+                    // Tests that previously lived in `androidUnitTest` now live in
+                    // `androidHostTest` (host-side JVM tests); instrumented tests live in
+                    // `androidDeviceTest`. Opt into the host-test compilation so existing
+                    // test source sets continue to compile.
+                    withHostTest {}
+                }
 
                 // Configure iOS targets with explicit source set assignment
                 val iosArm64Target = iosArm64()
@@ -81,7 +89,7 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
                 }
 
                 // Configure JVM target
-                jvm()
+                jvm { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
 
                 // Remove once kotlin.time is stable in 2.3.0
                 compilerOptions.optIn.add("kotlin.time.ExperimentalTime")
