@@ -23,7 +23,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -32,6 +36,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -60,7 +65,17 @@ import chefmate.client.recipe.core.public.generated.resources.edit_recipe_catego
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_create_a11y
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_create_cancel_a11y
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_create_placeholder
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_delete
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_delete_confirm
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_delete_message
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_delete_title
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_dialog_cancel
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_more_a11y
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_picker_title
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_rename
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_rename_confirm
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_rename_placeholder
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_rename_title
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_save
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
@@ -82,6 +97,8 @@ internal fun CategoryPickerSheet(
     onAttachCategory: (Category) -> Unit,
     onDetachCategory: (Category) -> Unit,
     onCreateUserCategory: (String) -> Unit,
+    onRenameCategory: (id: Long, newName: String) -> Unit,
+    onDeleteCategory: (id: Long) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -96,6 +113,8 @@ internal fun CategoryPickerSheet(
                 onAttachCategory = onAttachCategory,
                 onDetachCategory = onDetachCategory,
                 onCreateUserCategory = onCreateUserCategory,
+                onRenameCategory = onRenameCategory,
+                onDeleteCategory = onDeleteCategory,
                 listBottomPadding = 88.dp,
             )
             ExtendedFloatingActionButton(
@@ -128,10 +147,14 @@ fun CategoryPickerContent(
     onAttachCategory: (Category) -> Unit,
     onDetachCategory: (Category) -> Unit,
     onCreateUserCategory: (String) -> Unit,
+    onRenameCategory: (id: Long, newName: String) -> Unit = { _, _ -> },
+    onDeleteCategory: (id: Long) -> Unit = {},
     modifier: Modifier = Modifier,
     listBottomPadding: Dp = 0.dp,
 ) {
     var createState: CategoryCreateState by remember { mutableStateOf(CategoryCreateState.Hidden) }
+    var renameTarget by remember { mutableStateOf<Category?>(null) }
+    var deleteTarget by remember { mutableStateOf<Category?>(null) }
 
     val attachedBuiltinIds: Set<String> = selectedCategories.mapNotNull { it.builtinId }.toSet()
 
@@ -202,9 +225,37 @@ fun CategoryPickerContent(
                         if (wantsAttached) onAttachCategory(category)
                         else onDetachCategory(category)
                     },
+                    trailing = {
+                        UserCategoryOverflowMenu(
+                            categoryName = category.name,
+                            onRenameClicked = { renameTarget = category },
+                            onDeleteClicked = { deleteTarget = category },
+                        )
+                    },
                 )
             }
         }
+    }
+
+    renameTarget?.let { target ->
+        RenameCategoryDialog(
+            initialName = target.name,
+            onConfirm = { newName ->
+                onRenameCategory(target.id, newName)
+                renameTarget = null
+            },
+            onDismiss = { renameTarget = null },
+        )
+    }
+    deleteTarget?.let { target ->
+        DeleteCategoryDialog(
+            categoryName = target.name,
+            onConfirm = {
+                onDeleteCategory(target.id)
+                deleteTarget = null
+            },
+            onDismiss = { deleteTarget = null },
+        )
     }
 }
 
@@ -301,6 +352,7 @@ private fun CategoryPickerRow(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     Row(
         modifier =
@@ -321,7 +373,109 @@ private fun CategoryPickerRow(
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.weight(1f).padding(start = ChefMateTheme.dimens.paddingSmall),
         )
+        // IconButton has its own clickable that consumes taps, so the parent toggleable doesn't
+        // fire when the user opens the overflow menu.
+        trailing?.invoke()
     }
+}
+
+@Composable
+private fun UserCategoryOverflowMenu(
+    categoryName: String,
+    onRenameClicked: () -> Unit,
+    onDeleteClicked: () -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { expanded = true }) {
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription =
+                    stringResource(Res.string.edit_recipe_field_category_more_a11y, categoryName),
+            )
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.edit_recipe_field_category_rename)) },
+                onClick = {
+                    expanded = false
+                    onRenameClicked()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.edit_recipe_field_category_delete)) },
+                onClick = {
+                    expanded = false
+                    onDeleteClicked()
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun RenameCategoryDialog(
+    initialName: String,
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var name by remember { mutableStateOf(initialName) }
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.edit_recipe_field_category_rename_title)) },
+        text = {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                placeholder = {
+                    Text(stringResource(Res.string.edit_recipe_field_category_rename_placeholder))
+                },
+                singleLine = true,
+                keyboardOptions =
+                    KeyboardOptions(imeAction = ImeAction.Done, autoCorrectEnabled = false),
+                keyboardActions =
+                    KeyboardActions(onDone = { if (name.isNotBlank()) onConfirm(name) }),
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(name) }, enabled = name.isNotBlank()) {
+                Text(stringResource(Res.string.edit_recipe_field_category_rename_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(Res.string.edit_recipe_field_category_dialog_cancel))
+            }
+        },
+    )
+}
+
+@Composable
+private fun DeleteCategoryDialog(
+    categoryName: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.edit_recipe_field_category_delete_title)) },
+        text = {
+            Text(stringResource(Res.string.edit_recipe_field_category_delete_message, categoryName))
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(stringResource(Res.string.edit_recipe_field_category_delete_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(Res.string.edit_recipe_field_category_dialog_cancel))
+            }
+        },
+    )
 }
 
 internal sealed interface CategoryCreateState {

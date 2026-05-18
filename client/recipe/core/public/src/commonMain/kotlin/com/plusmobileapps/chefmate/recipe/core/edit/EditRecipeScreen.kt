@@ -262,6 +262,8 @@ private fun RecipeCategoryField(bloc: EditRecipeBloc, modifier: Modifier = Modif
             onAttachCategory = bloc::onAttachCategory,
             onDetachCategory = bloc::onDetachCategory,
             onCreateUserCategory = bloc::onCreateUserCategory,
+            onRenameCategory = bloc::onRenameCategory,
+            onDeleteCategory = bloc::onDeleteCategory,
             onDismiss = { showSheet = false },
         )
     }
@@ -574,6 +576,10 @@ Salt for pasta water"""
         override fun onDetachCategory(category: com.plusmobileapps.chefmate.recipe.data.Category) {}
 
         override fun onCreateUserCategory(name: String) {}
+
+        override fun onRenameCategory(id: Long, newName: String) {}
+
+        override fun onDeleteCategory(id: Long) {}
 
         override fun onDiscardChangesConfirmed() {}
 

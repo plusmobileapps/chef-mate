@@ -269,6 +269,39 @@ class EditRecipeViewModelTest {
     }
 
     @Test
+    fun When_attached_user_category_renamed_Then_in_memory_set_reflects_new_name() = runTest {
+        val vm = createViewModel()
+        vm.createUserCategoryAndAttach("Weknight") // typo
+        val created = vm.categories.value.single()
+
+        vm.renameUserCategory(created.id, "Weeknight")
+
+        vm.categories.value.single().name shouldBe "Weeknight"
+    }
+
+    @Test
+    fun When_unattached_user_category_renamed_Then_selection_set_untouched() = runTest {
+        val vm = createViewModel()
+        // Seed a user category without attaching it.
+        val created = categoryRepository.createUserCategory("Slow Cooker")
+
+        vm.renameUserCategory(created.id, "Slow Cooker (Crockpot)")
+
+        vm.categories.value shouldBe emptySet()
+    }
+
+    @Test
+    fun When_attached_user_category_deleted_Then_removed_from_selection() = runTest {
+        val vm = createViewModel()
+        vm.createUserCategoryAndAttach("Weeknight")
+        val created = vm.categories.value.single()
+
+        vm.deleteUserCategory(created.id)
+
+        vm.categories.value shouldBe emptySet()
+    }
+
+    @Test
     fun When_category_detached_Then_no_longer_attached() = runTest {
         val dinnerCategory =
             Category(id = 1L, name = "Dinner", builtinId = BuiltinCategory.DINNER.id)

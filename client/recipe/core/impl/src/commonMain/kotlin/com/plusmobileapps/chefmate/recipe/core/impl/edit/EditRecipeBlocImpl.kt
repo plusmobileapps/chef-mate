@@ -152,6 +152,14 @@ class EditRecipeBlocImpl(
         viewModel.createUserCategoryAndAttach(name)
     }
 
+    override fun onRenameCategory(id: Long, newName: String) {
+        viewModel.renameUserCategory(id, newName)
+    }
+
+    override fun onDeleteCategory(id: Long) {
+        viewModel.deleteUserCategory(id)
+    }
+
     override fun onDiscardChangesConfirmed() {
         output.onNext(Output.Cancelled)
     }

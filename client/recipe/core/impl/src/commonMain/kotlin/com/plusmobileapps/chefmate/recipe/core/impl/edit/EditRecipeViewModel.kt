@@ -180,6 +180,30 @@ class EditRecipeViewModel(
         _categories.update { current -> current.filterNot { it.id == category.id }.toSet() }
     }
 
+    /** Renames a user-created category in place. The local DB write is offline-first. */
+    fun renameUserCategory(id: Long, newName: String) {
+        val trimmed = newName.trim()
+        if (trimmed.isBlank()) return
+        scope.launch {
+            val renamed = categoryRepository.renameCategory(id, trimmed)
+            _categories.update { current ->
+                if (current.any { it.id == id }) current.upsertById(renamed) else current
+            }
+        }
+    }
+
+    /**
+     * Deletes a user-created category. If the category was attached to this recipe, it's removed
+     * from the in-memory selection immediately so the chip disappears on save. Other recipes that
+     * referenced it lose their attachment via Supabase's ON DELETE CASCADE on recipe_categories.
+     */
+    fun deleteUserCategory(id: Long) {
+        scope.launch {
+            _categories.update { current -> current.filterNot { it.id == id }.toSet() }
+            categoryRepository.deleteCategory(id)
+        }
+    }
+
     /**
      * Creates a new user category and immediately attaches it to the recipe being edited. The local
      * DB insert is synchronous (offline-first); the remote push is fire-and-forget inside the repo,

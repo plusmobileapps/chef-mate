@@ -87,6 +87,15 @@ interface EditRecipeBloc : BackClickBloc {
      */
     fun onCreateUserCategory(name: String)
 
+    /** Renames a user-created category. Offline-first; remote sync happens in the background. */
+    fun onRenameCategory(id: Long, newName: String)
+
+    /**
+     * Deletes a user-created category. Detaches it from the current recipe in-memory; other recipes
+     * lose the attachment via the join table's cascade.
+     */
+    fun onDeleteCategory(id: Long)
+
     fun onDiscardChangesConfirmed()
 
     fun onDiscardChangesCancelled()
