@@ -35,29 +35,29 @@ val localProperties =
         }
     }
 
-// Read Supabase credentials from local.properties or environment variables
+// Read Supabase credentials from Gradle properties (e.g. ~/.gradle/gradle.properties) or env vars
 val supabaseUrl =
-    localProperties.getProperty("supabase.url")
+    (findProperty("supabase.url") as? String)
         ?: System.getenv("SUPABASE_URL")
         ?: "https://your-project-id.supabase.co"
 
 val supabaseKey =
-    localProperties.getProperty("supabase.key")
+    (findProperty("supabase.key") as? String)
         ?: System.getenv("SUPABASE_KEY")
         ?: "your-anon-public-key"
 
 val supabaseTestingUrl =
-    localProperties.getProperty("supabase.testing.url")
+    (findProperty("supabase.testing.url") as? String)
         ?: System.getenv("SUPABASE_TESTING_URL")
         ?: supabaseUrl
 
 val supabaseTestingKey =
-    localProperties.getProperty("supabase.testing.key")
+    (findProperty("supabase.testing.key") as? String)
         ?: System.getenv("SUPABASE_TESTING_KEY")
         ?: supabaseKey
 
 val bugsnagApiKey =
-    localProperties.getProperty("bugsnag.apiKey") ?: System.getenv("BUGSNAG_API_KEY") ?: ""
+    (findProperty("bugsnag.apiKey") as? String) ?: System.getenv("BUGSNAG_API_KEY") ?: ""
 
 // Collect test users by incrementing n until a pair is missing. Looked up in order:
 // 1. local.properties at the project root (chefmate.user.<n> / chefmate.user.password.<n>)
