@@ -95,14 +95,14 @@
     <string name="edit_recipe_field_category_create_a11y">Create new category</string>
     <string name="edit_recipe_field_category_create_cancel_a11y">Cancel new category</string>
     <string name="edit_recipe_field_category_save">Save</string>
-    <string name="edit_recipe_field_category_more_a11y">More actions for %1$s</string>
+    <string name="edit_recipe_field_category_more_a11y">More actions for {category}</string>
     <string name="edit_recipe_field_category_rename">Rename</string>
     <string name="edit_recipe_field_category_delete">Delete</string>
     <string name="edit_recipe_field_category_rename_title">Rename category</string>
     <string name="edit_recipe_field_category_rename_placeholder">Category name</string>
     <string name="edit_recipe_field_category_rename_confirm">Save</string>
     <string name="edit_recipe_field_category_delete_title">Delete category?</string>
-    <string name="edit_recipe_field_category_delete_message">%1$s will be removed from this and any other recipes using it.</string>
+    <string name="edit_recipe_field_category_delete_message">{category} will be removed from this and any other recipes using it.</string>
     <string name="edit_recipe_field_category_delete_confirm">Delete</string>
     <string name="edit_recipe_field_category_dialog_cancel">Cancel</string>
     <string name="edit_recipe_category_breakfast">Breakfast</string>

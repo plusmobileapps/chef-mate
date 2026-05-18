@@ -24,7 +24,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -36,7 +35,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -79,6 +77,13 @@ import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_save
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.PhraseModel
+import com.plusmobileapps.chefmate.text.ResourceString
+import com.plusmobileapps.chefmate.ui.components.PlusButton
+import com.plusmobileapps.chefmate.ui.components.PlusButtonVariant
+import com.plusmobileapps.chefmate.ui.components.PlusDialog
+import com.plusmobileapps.chefmate.ui.components.PlusDialogScaffold
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -391,7 +396,11 @@ private fun UserCategoryOverflowMenu(
             Icon(
                 imageVector = Icons.Default.MoreVert,
                 contentDescription =
-                    stringResource(Res.string.edit_recipe_field_category_more_a11y, categoryName),
+                    PhraseModel(
+                            Res.string.edit_recipe_field_category_more_a11y,
+                            "category" to FixedString(categoryName),
+                        )
+                        .localized(),
             )
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -422,10 +431,10 @@ private fun RenameCategoryDialog(
     var name by remember { mutableStateOf(initialName) }
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
-    AlertDialog(
+    PlusDialogScaffold(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(Res.string.edit_recipe_field_category_rename_title)) },
-        text = {
+        header = { Text(stringResource(Res.string.edit_recipe_field_category_rename_title)) },
+        content = {
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
@@ -440,14 +449,18 @@ private fun RenameCategoryDialog(
                 modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
             )
         },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(name) }, enabled = name.isNotBlank()) {
-                Text(stringResource(Res.string.edit_recipe_field_category_rename_confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(Res.string.edit_recipe_field_category_dialog_cancel))
+        footer = {
+            Row(horizontalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingNormal)) {
+                PlusButton(
+                    text = ResourceString(Res.string.edit_recipe_field_category_dialog_cancel),
+                    variant = PlusButtonVariant.SECONDARY,
+                    onClick = onDismiss,
+                )
+                PlusButton(
+                    text = ResourceString(Res.string.edit_recipe_field_category_rename_confirm),
+                    enabled = name.isNotBlank(),
+                    onClick = { onConfirm(name) },
+                )
             }
         },
     )
@@ -459,22 +472,17 @@ private fun DeleteCategoryDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
+    PlusDialog(
+        title = ResourceString(Res.string.edit_recipe_field_category_delete_title),
+        message =
+            PhraseModel(
+                Res.string.edit_recipe_field_category_delete_message,
+                "category" to FixedString(categoryName),
+            ),
+        confirmButtonText = ResourceString(Res.string.edit_recipe_field_category_delete_confirm),
+        dismissButtonText = ResourceString(Res.string.edit_recipe_field_category_dialog_cancel),
+        onConfirmClick = onConfirm,
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(Res.string.edit_recipe_field_category_delete_title)) },
-        text = {
-            Text(stringResource(Res.string.edit_recipe_field_category_delete_message, categoryName))
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(stringResource(Res.string.edit_recipe_field_category_delete_confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(Res.string.edit_recipe_field_category_dialog_cancel))
-            }
-        },
     )
 }
 
