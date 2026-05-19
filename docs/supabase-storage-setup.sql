@@ -1,8 +1,9 @@
 -- Supabase Storage setup for recipe photo uploads.
 -- Paste this into the Supabase SQL editor for each environment (dev, prod, ...).
+-- Idempotent: every `create policy` is preceded by `drop policy if exists`, so this
+-- file is safe to re-run when the setup changes.
 -- Notes:
 --   * storage.objects already has RLS enabled by default.
---   * `create policy` has no `if not exists`; drop a policy first if you need to re-run.
 --   * Every app session has a Supabase auth.uid() — anonymous sign-in is bootstrapped on
 --     app start (SupabaseAuthenticationRepository.kt), so the client always uploads under
 --     "<userId>/<uuid>.<ext>". There is no shared anonymous/ folder.
@@ -24,12 +25,14 @@ on conflict (id) do update set
   allowed_mime_types = excluded.allowed_mime_types;
 
 -- 2. Public read so Coil can load images via bucket.publicUrl(path).
+drop policy if exists "recipe_photos_public_read" on storage.objects;
 create policy "recipe_photos_public_read"
 on storage.objects for select
 to public
 using (bucket_id = 'recipe-photos');
 
 -- 3. Authenticated users (anon-signed-in OR upgraded) can only write inside their own folder.
+drop policy if exists "recipe_photos_owner_insert" on storage.objects;
 create policy "recipe_photos_owner_insert"
 on storage.objects for insert
 to authenticated
@@ -43,6 +46,7 @@ with check (
 -- user with a real auth.uid()) — drop it so the bucket is no longer write-open.
 drop policy if exists "recipe_photos_anon_insert" on storage.objects;
 
+drop policy if exists "recipe_photos_owner_update" on storage.objects;
 create policy "recipe_photos_owner_update"
 on storage.objects for update
 to authenticated
@@ -55,6 +59,7 @@ with check (
   and (storage.foldername(name))[1] = auth.uid()::text
 );
 
+drop policy if exists "recipe_photos_owner_delete" on storage.objects;
 create policy "recipe_photos_owner_delete"
 on storage.objects for delete
 to authenticated
