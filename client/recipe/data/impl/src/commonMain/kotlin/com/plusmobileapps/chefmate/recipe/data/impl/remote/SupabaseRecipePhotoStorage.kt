@@ -24,9 +24,13 @@ class SupabaseRecipePhotoStorage(
 ) : RecipePhotoStorage {
 
     override suspend fun uploadPhoto(bytes: ByteArray, fileExtension: String): String {
+        // Anonymous Supabase sessions still have an auth.uid(), so every upload lands in a
+        // per-user folder and is bound by the same owner_insert/update/delete RLS policies as
+        // a real user. If we ever land here without any session (cold-start race before the
+        // anonymous bootstrap completes), surface the error rather than dump to a shared folder.
         val ownerFolder =
             (authRepository.state.value as? AuthState.Authenticated)?.user?.userId
-                ?: ANONYMOUS_FOLDER
+                ?: error("Cannot upload photo: no Supabase session")
         val bucket = supabaseClient.storage.from(BUCKET_NAME)
         val sanitizedExtension = fileExtension.trimStart('.').lowercase().ifBlank { "jpg" }
         val path = "$ownerFolder/${Uuid.random()}.$sanitizedExtension"
@@ -50,6 +54,5 @@ class SupabaseRecipePhotoStorage(
 
     private companion object {
         const val BUCKET_NAME = "recipe-photos"
-        const val ANONYMOUS_FOLDER = "anonymous"
     }
 }

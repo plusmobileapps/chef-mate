@@ -33,6 +33,19 @@ class FakeAuthenticationRepository : AuthenticationRepository {
         _state.value = AuthState.Authenticated(user)
     }
 
+    fun setAnonymous(userId: String = "anon-test-id") {
+        _state.value =
+            AuthState.Authenticated(
+                ChefMateUser(
+                    userId = userId,
+                    userName = "Guest",
+                    userEmail = "",
+                    userProfileImageUrl = null,
+                    isAnonymous = true,
+                )
+            )
+    }
+
     override suspend fun signInWithEmailAndPassword(email: String, password: String): Result<Unit> =
         signInResult
 

@@ -3,7 +3,11 @@
 -- Notes:
 --   * storage.objects already has RLS enabled by default.
 --   * `create policy` has no `if not exists`; drop a policy first if you need to re-run.
---   * The client uploads under "<userId>/<uuid>.<ext>" (see SupabaseRecipePhotoStorage.kt).
+--   * Every app session has a Supabase auth.uid() — anonymous sign-in is bootstrapped on
+--     app start (SupabaseAuthenticationRepository.kt), so the client always uploads under
+--     "<userId>/<uuid>.<ext>". There is no shared anonymous/ folder.
+--   * IMPORTANT: enable Anonymous Sign-ins in the Supabase dashboard under
+--     Authentication → Providers → Anonymous Sign-ins for the bootstrap to succeed.
 
 -- 1. Create the bucket (public, 5 MB cap, image MIME types only).
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
@@ -25,7 +29,7 @@ on storage.objects for select
 to public
 using (bucket_id = 'recipe-photos');
 
--- 3. Authenticated users can only write inside their own "<userId>/" folder.
+-- 3. Authenticated users (anon-signed-in OR upgraded) can only write inside their own folder.
 create policy "recipe_photos_owner_insert"
 on storage.objects for insert
 to authenticated
@@ -34,17 +38,10 @@ with check (
   and (storage.foldername(name))[1] = auth.uid()::text
 );
 
--- 3a. Signed-out users can write into the shared "anonymous/" folder.
--- Note: this lets anyone with the anon key upload up to 5 MB at a time.
--- The bucket's file_size_limit + allowed_mime_types are the only abuse
--- guardrails; tighten or remove this policy if quota abuse becomes an issue.
-create policy "recipe_photos_anon_insert"
-on storage.objects for insert
-to anon
-with check (
-  bucket_id = 'recipe-photos'
-  and (storage.foldername(name))[1] = 'anonymous'
-);
+-- 3a. Previous setups installed a policy that let role 'anon' write into a shared
+-- 'anonymous/' folder. We no longer use it (every session is its own anon Supabase
+-- user with a real auth.uid()) — drop it so the bucket is no longer write-open.
+drop policy if exists "recipe_photos_anon_insert" on storage.objects;
 
 create policy "recipe_photos_owner_update"
 on storage.objects for update

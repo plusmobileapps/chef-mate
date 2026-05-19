@@ -1,5 +1,6 @@
 package com.plusmobileapps.chefmate.auth.data.impl
 
+import co.touchlab.kermit.Logger
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.auth.data.ChefMateUser
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.jsonPrimitive
 
 @Inject
 @SingleIn(AppScope::class)
@@ -37,7 +39,12 @@ class SupabaseAuthenticationRepository(
     override val state: StateFlow<AuthState> = _state.asStateFlow()
 
     init {
-        // Listen to auth state changes
+        // Listen to auth state changes. Whenever we land in NotAuthenticated (fresh install,
+        // explicit sign-out, expired refresh token, ...) bootstrap an anonymous Supabase session
+        // so every user always has an auth.uid() — that's what lets photo uploads, recipe upserts,
+        // and the per-user RLS policies work uniformly without a separate "signed-out" code path.
+        // The auth-anon-not-allowed state below stays Unauthenticated; the UI can decide what to
+        // show in the rare case where the bootstrap can't complete (e.g. cold-start while offline).
         scope.launch {
             supabaseClient.auth.sessionStatus.collect { sessionStatus ->
                 when (sessionStatus) {
@@ -46,7 +53,9 @@ class SupabaseAuthenticationRepository(
                         user?.let { _state.value = AuthState.Authenticated(it.toChefMateUser()) }
                     }
                     is SessionStatus.NotAuthenticated -> {
-                        _state.value = AuthState.Unauthenticated
+                        if (_state.value !is AuthState.AwaitingEmailVerification) {
+                            ensureAnonymousSession()
+                        }
                     }
                     is SessionStatus.Initializing,
                     is SessionStatus.RefreshFailure -> {
@@ -54,6 +63,16 @@ class SupabaseAuthenticationRepository(
                     }
                 }
             }
+        }
+    }
+
+    private suspend fun ensureAnonymousSession() {
+        try {
+            supabaseClient.auth.signInAnonymously()
+            // sessionStatus collector above will flip us into Authenticated.
+        } catch (t: Throwable) {
+            Logger.w(throwable = t, tag = TAG) { "Anonymous sign-in failed" }
+            _state.value = AuthState.Unauthenticated
         }
     }
 
@@ -73,6 +92,19 @@ class SupabaseAuthenticationRepository(
         password: String,
     ): Result<SignUpResult> {
         return try {
+            // If we're currently signed in anonymously, upgrade the existing account in-place via
+            // updateUser{} so the auth.uid() — and therefore every recipe/photo already attached
+            // to it — is preserved. Supabase still sends a confirmation email; the JWT loses
+            // is_anonymous after the user confirms.
+            if (supabaseClient.auth.currentUserOrNull()?.isAnonymousUser() == true) {
+                supabaseClient.auth.updateUser {
+                    this.email = email
+                    this.password = password
+                }
+                _state.value = AuthState.AwaitingEmailVerification(email)
+                return Result.success(SignUpResult.AwaitingEmailVerification)
+            }
+
             val result =
                 supabaseClient.auth.signUpWith(Email) {
                     this.email = email
@@ -170,5 +202,13 @@ class SupabaseAuthenticationRepository(
             userProfileImageUrl =
                 userMetadata?.get("avatar_url")?.toString()
                     ?: userMetadata?.get("picture")?.toString(),
+            isAnonymous = isAnonymousUser(),
         )
+
+    private fun UserInfo.isAnonymousUser(): Boolean =
+        appMetadata?.get("is_anonymous")?.jsonPrimitive?.content == "true"
+
+    private companion object {
+        const val TAG = "SupabaseAuthenticationRepository"
+    }
 }
