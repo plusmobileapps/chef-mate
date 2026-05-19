@@ -61,7 +61,7 @@ Configure these in **Settings → Secrets and variables → Actions → Reposito
 
 | Secret | Description |
 |---|---|
-| `RELEASE_TOKEN` | Personal Access Token with `repo` scope (or fine-grained with `contents: write` + `workflows: write`). Without this, `android-release`, `desktop-release`, and `ios-release` will **not** run after the tag is pushed, because the default `GITHUB_TOKEN` cannot trigger other workflows. |
+| `RELEASE_TOKEN` | Fine-grained PAT scoped to `Plus-Mobile-Apps/chef-mate` with **Contents: Read and write** + **Workflows: Read and write** (or a classic PAT with `repo` + `workflow`). Without this, `android-release`, `desktop-release`, and `ios-release` will **not** run after the tag is pushed, because the default `GITHUB_TOKEN` cannot trigger other workflows. See [Configuring `RELEASE_TOKEN`](#configuring-release_token) for the full creation/rotation walkthrough. |
 
 ### Required by existing workflows (already configured)
 
@@ -94,11 +94,57 @@ Configure these in **Settings → Secrets and variables → Actions → Reposito
 
 ## Configuring `RELEASE_TOKEN`
 
-1. Go to **GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens**.
-2. Create a token scoped to this repository with these permissions:
-   - **Contents**: Read and write (for creating tags)
-   - **Workflows**: Read and write (for triggering workflow runs)
-3. Add it as a repository secret named `RELEASE_TOKEN`.
+`RELEASE_TOKEN` is a Personal Access Token used by `build-release.yml` to push
+the `vX.Y.Z` tag. The push needs to come from a token (not `GITHUB_TOKEN`) so
+that the downstream `android-release` / `desktop-release` / `ios-release`
+workflows actually fire — GitHub deliberately does not let a workflow triggered
+by `GITHUB_TOKEN` trigger another workflow.
+
+### Creating the token
+
+1. Open <https://github.com/settings/personal-access-tokens> (Settings →
+   Developer settings → Personal access tokens → **Fine-grained tokens**).
+2. **Generate new token** with:
+   - **Token name**: `chef-mate RELEASE_TOKEN` (or similar)
+   - **Resource owner**: **`Plus-Mobile-Apps`** — this is the critical field.
+     The repo lives under the org, so a token issued under your personal
+     account will hit `403 Permission denied to <user>` when it tries to push
+     the tag, even with the right permissions.
+   - **Expiration**: pick a date you can commit to and put it on your calendar.
+     Max is one year. When it expires, repeat this whole section.
+   - **Repository access**: **Only select repositories** → `Plus-Mobile-Apps/chef-mate`.
+3. **Repository permissions** (leave everything else as "No access"):
+   - **Contents**: **Read and write** — needed to push the release tag.
+   - **Workflows**: **Read and write** — needed so the tag push can trigger the
+     other release workflows.
+   - **Metadata**: Read-only (auto-selected, can't be turned off).
+4. **Generate token** and copy the value immediately — you can't see it again.
+5. If the org has fine-grained PATs gated, the token will be in **Pending**
+   state until an org owner approves it under `Plus-Mobile-Apps` → Settings →
+   Personal access tokens → **Pending requests**.
+
+### Storing it
+
+6. Go to <https://github.com/Plus-Mobile-Apps/chef-mate/settings/secrets/actions>.
+7. If `RELEASE_TOKEN` already exists, click it → **Update secret** and paste the
+   new value. Otherwise click **New repository secret**, name it `RELEASE_TOKEN`,
+   paste the value, save.
+
+### Rotating (or reacting to a 403)
+
+If a tag-push step fails with `remote: Permission to ... denied to <user>` or
+`The requested URL returned error: 403`, the PAT has expired, been revoked, or
+lost access (e.g. after a repo transfer). Generate a new token following the
+steps above and update the secret. There's no need to change anything in
+`build-release.yml`.
+
+### Classic PAT alternative
+
+If the org disables fine-grained PATs, fall back to a classic token:
+**Settings → Developer settings → Tokens (classic)** → check the `repo` and
+`workflow` scopes → after generating, click **Configure SSO** on the token's
+page and authorize it for `Plus-Mobile-Apps`. Store as `RELEASE_TOKEN` the
+same way.
 
 ## Setting up Android signing
 
