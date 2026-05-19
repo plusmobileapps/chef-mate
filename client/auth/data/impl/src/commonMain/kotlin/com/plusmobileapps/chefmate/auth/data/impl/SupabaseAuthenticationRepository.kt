@@ -205,8 +205,14 @@ class SupabaseAuthenticationRepository(
             isAnonymous = isAnonymousUser(),
         )
 
-    private fun UserInfo.isAnonymousUser(): Boolean =
-        appMetadata?.get("is_anonymous")?.jsonPrimitive?.content == "true"
+    private fun UserInfo.isAnonymousUser(): Boolean {
+        // The JWT claim `is_anonymous` lives at the top level, but supabase-kt 3.2.6's UserInfo
+        // doesn't deserialize that field. What *is* available is appMetadata.provider, which
+        // Supabase sets to "anonymous" for anon sign-ins (alongside identities being empty).
+        val provider = appMetadata?.get("provider")?.jsonPrimitive?.content
+        if (provider == "anonymous") return true
+        return identities?.any { it.provider == "anonymous" } == true
+    }
 
     private companion object {
         const val TAG = "SupabaseAuthenticationRepository"
