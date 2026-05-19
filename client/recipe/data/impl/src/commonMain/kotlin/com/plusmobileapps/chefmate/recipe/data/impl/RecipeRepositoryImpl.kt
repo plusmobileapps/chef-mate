@@ -1,6 +1,7 @@
 package com.plusmobileapps.chefmate.recipe.data.impl
 
 import app.cash.sqldelight.coroutines.asFlow
+import co.touchlab.kermit.Logger
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.database.CategoryQueries
@@ -237,7 +238,9 @@ class RecipeRepositoryImpl(
             } finally {
                 syncingIds.update { it - localId }
             }
-        } catch (_: Exception) {}
+        } catch (t: Throwable) {
+            Logger.e(throwable = t, tag = TAG) { "pushAddToRemote failed (localId=$localId)" }
+        }
     }
 
     private suspend fun pushUpdateToRemote(localId: Long) {
@@ -275,7 +278,9 @@ class RecipeRepositoryImpl(
             } finally {
                 syncingIds.update { it - localId }
             }
-        } catch (_: Exception) {}
+        } catch (t: Throwable) {
+            Logger.e(throwable = t, tag = TAG) { "pushUpdateToRemote failed (localId=$localId)" }
+        }
     }
 
     private suspend fun syncWithRemote(userId: String) = syncMutex.withLock {
@@ -499,6 +504,10 @@ class RecipeRepositoryImpl(
             createdAt = Instant.parse(createdAt),
             updatedAt = Instant.parse(updatedAt),
         )
+    }
+
+    private companion object {
+        const val TAG = "RecipeRepositoryImpl"
     }
 }
 

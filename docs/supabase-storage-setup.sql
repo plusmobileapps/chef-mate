@@ -66,62 +66,22 @@ using (
   and (storage.foldername(name))[1] = auth.uid()::text
 );
 
--- 4. Cascade-delete the recipe's photo from storage when the recipe row is deleted.
--- Parses the storage path out of image_url; URLs pointing to other domains
--- (e.g. manually-typed image URLs) are left alone. `security definer` is needed
--- so the function runs as the owner role, which has delete rights on storage.objects.
-create or replace function public.delete_recipe_photo()
-returns trigger
-language plpgsql
-security definer
-set search_path = public, storage
-as $$
-declare
-  storage_path text;
-begin
-  if old.image_url is not null and old.image_url like '%/recipe-photos/%' then
-    storage_path := substring(old.image_url from '/recipe-photos/(.+)$');
-    if storage_path is not null and length(storage_path) > 0 then
-      delete from storage.objects
-      where bucket_id = 'recipe-photos' and name = storage_path;
-    end if;
-  end if;
-  return old;
-end;
-$$;
-
-drop trigger if exists recipes_delete_photo on public.recipes;
-create trigger recipes_delete_photo
-after delete on public.recipes
-for each row execute function public.delete_recipe_photo();
-
--- 4a. When a recipe's image_url is replaced, delete the previous photo from storage.
--- Mirrors the delete trigger so admin updates / other clients also clean up. The
--- client-side photo storage layer also calls deletePhoto() during updateRecipe, so
--- this is belt-and-suspenders for direct DB edits.
-create or replace function public.delete_replaced_recipe_photo()
-returns trigger
-language plpgsql
-security definer
-set search_path = public, storage
-as $$
-declare
-  storage_path text;
-begin
-  if old.image_url is not null and old.image_url like '%/recipe-photos/%' then
-    storage_path := substring(old.image_url from '/recipe-photos/(.+)$');
-    if storage_path is not null and length(storage_path) > 0 then
-      delete from storage.objects
-      where bucket_id = 'recipe-photos' and name = storage_path;
-    end if;
-  end if;
-  return new;
-end;
-$$;
+-- 4. Photo cleanup is handled client-side via the Storage REST API.
+-- Earlier revisions of this file installed AFTER DELETE / AFTER UPDATE triggers on
+-- public.recipes that ran `delete from storage.objects ...` inside `security definer`
+-- functions. Current Supabase rejects direct deletes from storage tables with
+-- "Direct deletion from storage tables is not allowed. Use the Storage API instead."
+-- (PostgrestRestException code 42501), which aborts the parent transaction — so the
+-- recipe row's own UPDATE/DELETE silently rolls back. The block below drops those
+-- triggers and functions on existing projects.
+--
+-- RecipeRepositoryImpl already calls RecipePhotoStorage.deletePhoto() during
+-- updateRecipe (photo swap) and deleteRecipe (recipe gone), which goes through the
+-- Storage REST API, so client-driven cleanup keeps working. Direct dashboard edits
+-- to image_url won't clean up the old object — accept that or re-introduce cleanup
+-- via supabase_functions.http_request once the project's http extension is enabled.
 
 drop trigger if exists recipes_update_photo on public.recipes;
-create trigger recipes_update_photo
-after update of image_url on public.recipes
-for each row
-when (old.image_url is distinct from new.image_url)
-execute function public.delete_replaced_recipe_photo();
+drop trigger if exists recipes_delete_photo on public.recipes;
+drop function if exists public.delete_replaced_recipe_photo();
+drop function if exists public.delete_recipe_photo();
