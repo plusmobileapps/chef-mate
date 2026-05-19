@@ -33,11 +33,14 @@ class SettingsViewModel(
             .onEach { authState ->
                 when (authState) {
                     is AuthState.Authenticated -> {
+                        val isAnonymous = authState.user.isAnonymous
                         val displayName =
-                            authState.user.userName.ifBlank { authState.user.userEmail }
+                            if (isAnonymous) null
+                            else authState.user.userName.ifBlank { authState.user.userEmail }
                         _state.value =
                             State(
                                 isAuthenticated = true,
+                                isAnonymous = isAnonymous,
                                 userName = displayName,
                                 emailAwaitingVerification = null,
                             )
@@ -46,6 +49,7 @@ class SettingsViewModel(
                         _state.value =
                             State(
                                 isAuthenticated = false,
+                                isAnonymous = false,
                                 userName = null,
                                 emailAwaitingVerification = null,
                             )
@@ -54,6 +58,7 @@ class SettingsViewModel(
                         _state.value =
                             State(
                                 isAuthenticated = false,
+                                isAnonymous = false,
                                 userName = null,
                                 emailAwaitingVerification = authState.email,
                             )
@@ -78,6 +83,7 @@ class SettingsViewModel(
 
     data class State(
         val isAuthenticated: Boolean = false,
+        val isAnonymous: Boolean = false,
         val userName: String? = null,
         val emailAwaitingVerification: String? = null,
         val showSignOutConfirmationDialog: Boolean = false,

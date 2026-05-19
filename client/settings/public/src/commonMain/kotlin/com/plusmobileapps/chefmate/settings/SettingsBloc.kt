@@ -26,6 +26,13 @@ interface SettingsBloc {
 
     data class Model(
         val isAuthenticated: Boolean = false,
+        /**
+         * True when the user is signed in via Supabase anonymous auth. Surfaced separately from
+         * [isAuthenticated] because the UI shows neither a greeting nor a Sign-Out row in this
+         * state — anonymous sessions have no credentials to come back to, so "Sign Out" would
+         * silently orphan their data instead of doing what users expect.
+         */
+        val isAnonymous: Boolean = false,
         val greeting: TextData? = null,
         val verificationMessage: TextData? = null,
         val showSignOutConfirmationDialog: Boolean = false,

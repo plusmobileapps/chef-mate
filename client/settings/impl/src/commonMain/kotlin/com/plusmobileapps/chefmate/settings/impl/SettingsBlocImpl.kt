@@ -31,6 +31,7 @@ class SettingsBlocImpl(
         viewModel.state.mapState {
             SettingsBloc.Model(
                 isAuthenticated = it.isAuthenticated,
+                isAnonymous = it.isAnonymous,
                 greeting = it.userName?.let { name -> createGreeting(name) },
                 verificationMessage =
                     it.emailAwaitingVerification?.let { email ->
