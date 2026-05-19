@@ -1,4 +1,4 @@
-git_url(ENV["MATCH_GIT_URL"] || "git@github.com:plusmobileapps/certificates.git")
+git_url(ENV["MATCH_GIT_URL"] || "git@github.com:Plus-Mobile-Apps/certificates.git")
 type("appstore")
 app_identifier(["com.plusmobileapps.chefmate.ChefMate", "com.plusmobileapps.chefmate.ChefMate.ShareExtension"])
 username("andrew@plusmobileapps.com")
