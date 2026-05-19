@@ -69,7 +69,7 @@ These are read by BuildKonfig at build time. See [buildconfig-setup.md](buildcon
 | Secret | Description |
 |--------|-------------|
 | `MATCH_PASSWORD` | Encryption password for the match certificates repository |
-| `MATCH_GIT_BASIC_AUTHORIZATION` | Base64-encoded `username:personal_access_token` for accessing the certificates repo |
+| `MATCH_GIT_BASIC_AUTHORIZATION` | Base64-encoded `username:personal_access_token` for read access to the certificates repo. See [Fastlane Match (iOS Certificates)](#fastlane-match-ios-certificates) for the creation/rotation walkthrough. |
 
 #### App Store Connect
 
@@ -226,21 +226,55 @@ Store the output as the `ANDROID_KEYSTORE_BASE64` secret.
 
 ### Fastlane Match (iOS Certificates)
 
-1. Create a **private** git repository to store encrypted certificates (e.g., `plusmobileapps/certificates`)
+The certificates repo (`Plus-Mobile-Apps/certificates`) is configured in
+`fastlane/Matchfile`. Match runs in `readonly: true` mode on CI, so the PAT
+behind `MATCH_GIT_BASIC_AUTHORIZATION` only needs read access.
+
+#### First-time setup
+
+1. Create a **private** git repository under the org to store encrypted
+   certificates (currently `Plus-Mobile-Apps/certificates`). If you move it,
+   update `fastlane/Matchfile`.
 2. Run match locally to generate and store certificates:
 
-```bash
-bundle exec fastlane match appstore
-```
+   ```bash
+   bundle exec fastlane match appstore
+   ```
 
-3. Set the `MATCH_PASSWORD` secret to the encryption password you chose
-4. Generate a personal access token with `repo` scope and base64-encode it:
+3. Set the `MATCH_PASSWORD` secret to the encryption password you chose.
 
-```bash
-echo -n "username:ghp_your_token_here" | base64
-```
+#### Creating / rotating `MATCH_GIT_BASIC_AUTHORIZATION`
 
-5. Store the result as `MATCH_GIT_BASIC_AUTHORIZATION`
+`MATCH_GIT_BASIC_AUTHORIZATION` is **not** the raw PAT — it's a base64-encoded
+`username:token` string that Fastlane passes as an HTTP Basic Auth header to
+clone the cert repo. Rotate it whenever the underlying PAT expires.
+
+1. Open <https://github.com/settings/personal-access-tokens> →
+   **Generate new token** (fine-grained) with:
+   - **Token name**: `chef-mate match certificates (read)`
+   - **Resource owner**: **`Plus-Mobile-Apps`** (the org owns the cert repo;
+     a personally-owned token will hit `403 Write access to repository not
+     granted` even on a clone).
+   - **Expiration**: pick a date and calendar it.
+   - **Repository access**: **Only select repositories** → `Plus-Mobile-Apps/certificates`.
+   - **Repository permissions** → **Contents: Read-only**, Metadata: Read-only.
+   Approve via org settings if pending.
+2. Base64-encode `username:token`. Use `printf`, not `echo` — a trailing
+   newline silently breaks Basic Auth:
+
+   ```bash
+   printf 'Plus-Mobile-Apps:<PAT>' | base64
+   ```
+
+   The username field is essentially decorative for fine-grained PATs; what
+   matters is that the token itself is valid.
+3. Paste the entire base64 string into the `MATCH_GIT_BASIC_AUTHORIZATION`
+   secret at
+   <https://github.com/Plus-Mobile-Apps/chef-mate/settings/secrets/actions>.
+
+If the `match` step fails with `Error cloning certificates git repo` or
+`The requested URL returned error: 403`, the PAT has expired, been revoked,
+or was issued under the wrong Resource owner. Regenerate and re-encode.
 
 ### App Store Connect API Key
 
