@@ -19,11 +19,16 @@ import io.github.jan.supabase.auth.providers.builtin.OTP
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.auth.user.UserInfo
 import kotlin.coroutines.CoroutineContext
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 @Inject
@@ -50,7 +55,11 @@ class SupabaseAuthenticationRepository(
                 when (sessionStatus) {
                     is SessionStatus.Authenticated -> {
                         val user = sessionStatus.session.user
-                        user?.let { _state.value = AuthState.Authenticated(it.toChefMateUser()) }
+                        val isAnon = isAnonymousJwt(sessionStatus.session.accessToken)
+                        user?.let {
+                            _state.value =
+                                AuthState.Authenticated(it.toChefMateUser(isAnonymous = isAnon))
+                        }
                     }
                     is SessionStatus.NotAuthenticated -> {
                         if (_state.value !is AuthState.AwaitingEmailVerification) {
@@ -96,7 +105,8 @@ class SupabaseAuthenticationRepository(
             // updateUser{} so the auth.uid() — and therefore every recipe/photo already attached
             // to it — is preserved. Supabase still sends a confirmation email; the JWT loses
             // is_anonymous after the user confirms.
-            if (supabaseClient.auth.currentUserOrNull()?.isAnonymousUser() == true) {
+            val currentSession = supabaseClient.auth.currentSessionOrNull()
+            if (currentSession != null && isAnonymousJwt(currentSession.accessToken)) {
                 supabaseClient.auth.updateUser {
                     this.email = email
                     this.password = password
@@ -190,7 +200,7 @@ class SupabaseAuthenticationRepository(
             Result.failure(e)
         }
 
-    private fun UserInfo.toChefMateUser(): ChefMateUser =
+    private fun UserInfo.toChefMateUser(isAnonymous: Boolean): ChefMateUser =
         ChefMateUser(
             userId = id,
             userName =
@@ -202,16 +212,30 @@ class SupabaseAuthenticationRepository(
             userProfileImageUrl =
                 userMetadata?.get("avatar_url")?.toString()
                     ?: userMetadata?.get("picture")?.toString(),
-            isAnonymous = isAnonymousUser(),
+            isAnonymous = isAnonymous,
         )
 
-    private fun UserInfo.isAnonymousUser(): Boolean {
-        // The JWT claim `is_anonymous` lives at the top level, but supabase-kt 3.2.6's UserInfo
-        // doesn't deserialize that field. What *is* available is appMetadata.provider, which
-        // Supabase sets to "anonymous" for anon sign-ins (alongside identities being empty).
-        val provider = appMetadata?.get("provider")?.jsonPrimitive?.content
-        if (provider == "anonymous") return true
-        return identities?.any { it.provider == "anonymous" } == true
+    /**
+     * Reads the `is_anonymous` claim from the JWT payload directly. supabase-kt 3.2.6's UserInfo
+     * doesn't deserialize that top-level claim into a property, and `appMetadata.provider` is
+     * `null` (not `"anonymous"`) in current Supabase versions — JWT inspection is the only reliable
+     * signal.
+     */
+    @OptIn(ExperimentalEncodingApi::class)
+    private fun isAnonymousJwt(accessToken: String): Boolean {
+        val payload = accessToken.split(".").getOrNull(1) ?: return false
+        return try {
+            // JWT uses base64url without padding; pad to a multiple of 4 before decoding.
+            val padded = payload + "=".repeat((4 - payload.length % 4) % 4)
+            val decoded = Base64.UrlSafe.decode(padded).decodeToString()
+            Json.parseToJsonElement(decoded)
+                .jsonObject["is_anonymous"]
+                ?.jsonPrimitive
+                ?.booleanOrNull == true
+        } catch (t: Throwable) {
+            Logger.w(throwable = t, tag = TAG) { "Failed to decode JWT for is_anonymous check" }
+            false
+        }
     }
 
     private companion object {
