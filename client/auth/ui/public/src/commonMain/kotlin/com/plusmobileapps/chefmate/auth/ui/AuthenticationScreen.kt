@@ -51,6 +51,11 @@ import chefmate.client.auth.ui.public.generated.resources.auth_button_forgot_pas
 import chefmate.client.auth.ui.public.generated.resources.auth_button_okay
 import chefmate.client.auth.ui.public.generated.resources.auth_button_sign_in
 import chefmate.client.auth.ui.public.generated.resources.auth_button_sign_up
+import chefmate.client.auth.ui.public.generated.resources.auth_discard_guest_cancel
+import chefmate.client.auth.ui.public.generated.resources.auth_discard_guest_confirm
+import chefmate.client.auth.ui.public.generated.resources.auth_discard_guest_message_one
+import chefmate.client.auth.ui.public.generated.resources.auth_discard_guest_message_other
+import chefmate.client.auth.ui.public.generated.resources.auth_discard_guest_title
 import chefmate.client.auth.ui.public.generated.resources.auth_label_confirm_password
 import chefmate.client.auth.ui.public.generated.resources.auth_label_email
 import chefmate.client.auth.ui.public.generated.resources.auth_label_password
@@ -63,6 +68,8 @@ import chefmate.client.auth.ui.public.generated.resources.auth_screen_title_sign
 import chefmate.client.auth.ui.public.generated.resources.auth_switch_to_sign_in
 import chefmate.client.auth.ui.public.generated.resources.auth_switch_to_sign_up
 import chefmate.client.auth.ui.public.generated.resources.auth_terms_of_use
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
@@ -108,6 +115,13 @@ fun AuthenticationScreen(bloc: AuthenticationBloc, modifier: Modifier = Modifier
                     onDismissError = bloc::onDismissError,
                     onUrlClicked = bloc::onUrlClicked,
                 )
+                model.pendingGuestDataDiscard?.let { pending ->
+                    DiscardGuestDataDialog(
+                        guestRecipeCount = pending.guestRecipeCount,
+                        onConfirm = bloc::onDiscardGuestDataConfirmed,
+                        onCancel = bloc::onDiscardGuestDataCancelled,
+                    )
+                }
                 if (model.isLoading) {
                     PlusLoadingDialog(
                         message =
@@ -276,6 +290,38 @@ private fun AuthenticationBody(
 
         Spacer(modifier = Modifier.height(120.dp))
     }
+}
+
+@Composable
+private fun DiscardGuestDataDialog(
+    guestRecipeCount: Int,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    val message: TextData =
+        if (guestRecipeCount == 1) {
+            ResourceString(Res.string.auth_discard_guest_message_one)
+        } else {
+            PhraseModel(
+                Res.string.auth_discard_guest_message_other,
+                "count" to FixedString(guestRecipeCount.toString()),
+            )
+        }
+    AlertDialog(
+        onDismissRequest = onCancel,
+        title = { Text(stringResource(Res.string.auth_discard_guest_title)) },
+        text = { Text(message.localized()) },
+        confirmButton = {
+            Button(onClick = onConfirm) {
+                Text(stringResource(Res.string.auth_discard_guest_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onCancel) {
+                Text(stringResource(Res.string.auth_discard_guest_cancel))
+            }
+        },
+    )
 }
 
 @Composable

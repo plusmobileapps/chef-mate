@@ -23,6 +23,8 @@ import com.plusmobileapps.chefmate.auth.data.SignUpResult
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc.Model.Mode.SignIn
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc.Model.Mode.SignUp
+import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc.Model.PendingGuestDataDiscard
+import com.plusmobileapps.chefmate.auth.usecase.SignInUseCase
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
@@ -44,6 +46,7 @@ class AuthenticationViewModel(
     @Assisted initialProps: AuthenticationBloc.Props,
     @Main mainContext: CoroutineContext,
     private val authRepository: AuthenticationRepository,
+    private val signInUseCase: SignInUseCase,
     private val emailUtil: EmailUtil,
 ) : ViewModel(mainContext) {
     private val _state =
@@ -142,25 +145,54 @@ class AuthenticationViewModel(
             return
         }
 
-        _state.value = _state.value.copy(isLoading = true, errorMessage = null, emailError = null)
-
+        // If the user is currently anonymous with guest data on this device, sign-in will
+        // discard it (their anon recipes get orphaned on the server, cleaned up by the
+        // periodic sweep). Gate behind an explicit confirmation so they don't lose recipes
+        // they didn't realize were "guest".
         scope.launch {
-            val result = authRepository.signInWithEmailAndPassword(email, password)
-            result.fold(
-                onSuccess = {
-                    _state.value = _state.value.copy(isLoading = false)
-                    output.send(Output.AuthenticationSuccess)
-                },
-                onFailure = { e ->
-                    Logger.e("Authentication failed", e)
-                    _state.value =
-                        _state.value.copy(
-                            isLoading = false,
-                            errorMessage = getSignInErrorMessage(e),
-                        )
-                },
-            )
+            val guestRecipeCount = signInUseCase.guestRecipesToDiscard()
+            if (guestRecipeCount > 0) {
+                _state.value =
+                    _state.value.copy(
+                        errorMessage = null,
+                        emailError = null,
+                        pendingGuestDataDiscard = PendingGuestDataDiscard(guestRecipeCount),
+                    )
+                return@launch
+            }
+            performSignIn(email, password)
         }
+    }
+
+    fun onDiscardGuestDataConfirmed() {
+        if (_state.value.pendingGuestDataDiscard == null) return
+        scope.launch { performSignIn(_email.value, _password.value) }
+    }
+
+    fun onDiscardGuestDataCancelled() {
+        _state.value = _state.value.copy(pendingGuestDataDiscard = null)
+    }
+
+    private suspend fun performSignIn(email: String, password: String) {
+        _state.value =
+            _state.value.copy(
+                isLoading = true,
+                errorMessage = null,
+                emailError = null,
+                pendingGuestDataDiscard = null,
+            )
+        val result = signInUseCase(email, password)
+        result.fold(
+            onSuccess = {
+                _state.value = _state.value.copy(isLoading = false)
+                output.send(Output.AuthenticationSuccess)
+            },
+            onFailure = { e ->
+                Logger.e("Authentication failed", e)
+                _state.value =
+                    _state.value.copy(isLoading = false, errorMessage = getSignInErrorMessage(e))
+            },
+        )
     }
 
     private fun signUp() {
@@ -373,6 +405,7 @@ class AuthenticationViewModel(
         val errorMessage: TextData? = null,
         val emailError: TextData? = null,
         val confirmPasswordError: TextData? = null,
+        val pendingGuestDataDiscard: PendingGuestDataDiscard? = null,
     )
 
     sealed class Output {

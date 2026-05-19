@@ -40,4 +40,11 @@
     <!-- Legal links -->
     <string name="auth_privacy_policy">Privacy Policy</string>
     <string name="auth_terms_of_use">Terms of Use</string>
+
+    <!-- Discard-guest-data confirmation -->
+    <string name="auth_discard_guest_title">Discard guest recipes?</string>
+    <string name="auth_discard_guest_message_one">You have 1 recipe saved as a guest. Signing in will delete it from this device.</string>
+    <string name="auth_discard_guest_message_other">You have {count} recipes saved as a guest. Signing in will delete them from this device.</string>
+    <string name="auth_discard_guest_confirm">Sign in anyway</string>
+    <string name="auth_discard_guest_cancel">Cancel</string>
 </resources>
