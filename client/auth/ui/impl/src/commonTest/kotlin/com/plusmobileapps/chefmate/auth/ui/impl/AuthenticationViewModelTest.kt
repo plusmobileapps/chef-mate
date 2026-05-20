@@ -10,6 +10,7 @@ import chefmate.client.auth.ui.impl.generated.resources.auth_error_sign_up_faile
 import com.plusmobileapps.chefmate.auth.data.SignUpResult
 import com.plusmobileapps.chefmate.auth.data.testing.FakeAuthenticationRepository
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
+import com.plusmobileapps.chefmate.auth.usecase.SignInUseCase
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.util.EmailUtil
@@ -40,6 +41,13 @@ class AuthenticationViewModelTest {
         }
     }
 
+    private class FakeSignInUseCase : SignInUseCase {
+        override suspend fun guestRecipesToDiscard(): Int = 0
+
+        override suspend fun invoke(email: String, password: String): Result<Unit> =
+            Result.success(Unit)
+    }
+
     private fun TestScope.viewModel(
         repo: FakeAuthenticationRepository = FakeAuthenticationRepository(),
         passwordValidator: PasswordValidator = FakePasswordValidator(),
@@ -49,6 +57,7 @@ class AuthenticationViewModelTest {
             initialProps = AuthenticationBloc.Props.SignUp,
             mainContext = UnconfinedTestDispatcher(testScheduler),
             authRepository = repo,
+            signInUseCase = FakeSignInUseCase(),
             emailUtil = emailUtil,
             passwordValidator = passwordValidator,
         )
