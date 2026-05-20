@@ -26,6 +26,15 @@ sealed class SignUpResult {
 
     data object AwaitingEmailVerification : SignUpResult()
 
+    /**
+     * Returned when a currently-anonymous user is upgraded to a real account via
+     * [AuthenticationRepository.signUpWithEmailAndPassword]. Supabase delivers a Change Email
+     * Address confirmation rather than a fresh Confirm Signup, so the caller must route to OTP
+     * verification with [OtpFlow.EmailChange] (not [OtpFlow.SignUp]) so the verify call uses the
+     * matching token type.
+     */
+    data object AwaitingEmailChange : SignUpResult()
+
     data object UserAlreadyExists : SignUpResult()
 }
 
@@ -33,4 +42,12 @@ sealed class SignUpResult {
 enum class OtpFlow {
     SignUp,
     PasswordlessSignIn,
+
+    /**
+     * Email-change confirmation used during anon-to-real account upgrades. Maps to
+     * `OtpType.Email.EMAIL_CHANGE` on the Supabase side so the verify call matches the token
+     * Supabase actually issued when [AuthenticationRepository.signUpWithEmailAndPassword] triggered
+     * `updateUser { email; password }`.
+     */
+    EmailChange,
 }

@@ -30,6 +30,7 @@
     <!-- OTP screen -->
     <string name="auth_otp_screen_title_signup">Verify your email</string>
     <string name="auth_otp_screen_title_passwordless">Sign in with code</string>
+    <string name="auth_otp_screen_title_email_change">Confirm your new email</string>
     <string name="auth_otp_instructions">We sent a code to {email}. Enter it below to continue.</string>
     <string name="auth_otp_label_code">Verification code</string>
     <string name="auth_otp_button_verify">Verify</string>

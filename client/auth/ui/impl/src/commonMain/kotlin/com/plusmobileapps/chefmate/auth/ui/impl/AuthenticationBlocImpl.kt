@@ -56,6 +56,8 @@ class AuthenticationBlocImpl(
                         output.onNext(Output.AuthenticationSuccess)
                     is AuthenticationViewModel.Output.EmailVerificationRequired ->
                         output.onNext(Output.EmailVerificationRequired(it.email))
+                    is AuthenticationViewModel.Output.EmailChangeRequired ->
+                        output.onNext(Output.EmailChangeRequired(it.email))
                     is AuthenticationViewModel.Output.PasswordlessOtpSent ->
                         output.onNext(Output.PasswordlessOtpSent(it.email))
                     is AuthenticationViewModel.Output.OpenUrl ->

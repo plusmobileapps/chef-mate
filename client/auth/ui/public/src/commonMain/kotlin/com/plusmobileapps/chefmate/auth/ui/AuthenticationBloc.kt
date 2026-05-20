@@ -66,6 +66,14 @@ interface AuthenticationBloc : BackClickBloc {
 
         data class EmailVerificationRequired(val email: String) : Output()
 
+        /**
+         * Fired when a currently-anonymous user signs up to upgrade their account. Routes to the
+         * OTP screen with [com.plusmobileapps.chefmate.auth.data.OtpFlow.EmailChange] because
+         * Supabase issues an email-change confirmation token (not a signup token) for the
+         * underlying `updateUser{}` call.
+         */
+        data class EmailChangeRequired(val email: String) : Output()
+
         data class PasswordlessOtpSent(val email: String) : Output()
 
         data class OpenUrl(val url: String) : Output()

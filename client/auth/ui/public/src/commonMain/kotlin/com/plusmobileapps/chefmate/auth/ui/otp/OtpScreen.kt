@@ -40,6 +40,7 @@ import chefmate.client.auth.ui.public.generated.resources.auth_otp_button_verify
 import chefmate.client.auth.ui.public.generated.resources.auth_otp_instructions
 import chefmate.client.auth.ui.public.generated.resources.auth_otp_label_code
 import chefmate.client.auth.ui.public.generated.resources.auth_otp_loading_verifying
+import chefmate.client.auth.ui.public.generated.resources.auth_otp_screen_title_email_change
 import chefmate.client.auth.ui.public.generated.resources.auth_otp_screen_title_passwordless
 import chefmate.client.auth.ui.public.generated.resources.auth_otp_screen_title_signup
 import com.plusmobileapps.chefmate.auth.data.OtpFlow
@@ -65,6 +66,7 @@ fun OtpScreen(bloc: OtpBloc, modifier: Modifier = Modifier) {
             OtpFlow.SignUp -> ResourceString(Res.string.auth_otp_screen_title_signup)
             OtpFlow.PasswordlessSignIn ->
                 ResourceString(Res.string.auth_otp_screen_title_passwordless)
+            OtpFlow.EmailChange -> ResourceString(Res.string.auth_otp_screen_title_email_change)
         }
 
     PlusHeaderContainer(

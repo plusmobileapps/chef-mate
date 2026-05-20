@@ -279,6 +279,10 @@ class AuthenticationViewModel(
                             _state.value = _state.value.copy(isLoading = false)
                             output.send(Output.EmailVerificationRequired(email))
                         }
+                        SignUpResult.AwaitingEmailChange -> {
+                            _state.value = _state.value.copy(isLoading = false)
+                            output.send(Output.EmailChangeRequired(email))
+                        }
                         SignUpResult.UserAlreadyExists -> {
                             _state.value =
                                 _state.value.copy(
@@ -472,6 +476,8 @@ class AuthenticationViewModel(
         data object AuthenticationSuccess : Output()
 
         data class EmailVerificationRequired(val email: String) : Output()
+
+        data class EmailChangeRequired(val email: String) : Output()
 
         data class PasswordlessOtpSent(val email: String) : Output()
 

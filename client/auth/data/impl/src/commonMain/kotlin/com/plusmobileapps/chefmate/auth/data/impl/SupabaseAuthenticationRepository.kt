@@ -112,7 +112,10 @@ class SupabaseAuthenticationRepository(
                     this.password = password
                 }
                 _state.value = AuthState.AwaitingEmailVerification(email)
-                return Result.success(SignUpResult.AwaitingEmailVerification)
+                // Distinct from AwaitingEmailVerification: updateUser{} triggers Supabase's
+                // Change Email Address template, so verification must route through
+                // OtpFlow.EmailChange → OtpType.Email.EMAIL_CHANGE.
+                return Result.success(SignUpResult.AwaitingEmailChange)
             }
 
             val result =
@@ -171,6 +174,11 @@ class SupabaseAuthenticationRepository(
                     supabaseClient.auth.resendEmail(type = OtpType.Email.SIGNUP, email = email)
                 OtpFlow.PasswordlessSignIn ->
                     supabaseClient.auth.signInWith(OTP) { this.email = email }
+                OtpFlow.EmailChange ->
+                    supabaseClient.auth.resendEmail(
+                        type = OtpType.Email.EMAIL_CHANGE,
+                        email = email,
+                    )
             }
             Result.success(Unit)
         } catch (e: Exception) {
@@ -181,6 +189,7 @@ class SupabaseAuthenticationRepository(
         when (this) {
             OtpFlow.SignUp -> OtpType.Email.SIGNUP
             OtpFlow.PasswordlessSignIn -> OtpType.Email.EMAIL
+            OtpFlow.EmailChange -> OtpType.Email.EMAIL_CHANGE
         }
 
     override suspend fun signOut() {
