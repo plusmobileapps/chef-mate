@@ -155,7 +155,186 @@ class RecipeRepositoryImplTest {
             }
         }
 
-    private fun blankRecipe(title: String, categories: Set<Category>) =
+    @Test
+    fun deleteRecipe_when_never_synced_Then_hard_deletes_locally_and_skips_remote() =
+        runTest(testDispatcher) {
+            val created = recipeRepository.createRecipe(blankRecipe(title = "Toast"))
+
+            recipeRepository.deleteRecipe(created.id)
+
+            db.recipeQueries.getById(created.id).executeAsOneOrNull() shouldBe null
+            recipeRemote.deleteCalls shouldBe emptyList()
+        }
+
+    @Test
+    fun deleteRecipe_when_remote_delete_fails_Then_tombstones_and_hides_from_queries() =
+        runTest(testDispatcher) {
+            fakeAuth.setAuthenticated()
+            val created = recipeRepository.createRecipe(blankRecipe(title = "Soup"))
+            val remoteId = db.recipeQueries.getById(created.id).executeAsOne().remoteId
+            checkNotNull(remoteId) {
+                "createRecipe should have stamped a remoteId when authenticated"
+            }
+            recipeRemote.deleteFailure = { RuntimeException("network") }
+
+            recipeRepository.deleteRecipe(created.id)
+
+            recipeRemote.deleteCalls shouldBe listOf(remoteId)
+            val row = db.recipeQueries.getById(created.id).executeAsOneOrNull()
+            row?.isPendingDelete shouldBe true
+            recipeRepository.getRecipes().test { awaitItem() shouldBe emptyList() }
+            recipeRepository.getRecipe(created.id).test { awaitItem() shouldBe null }
+        }
+
+    @Test
+    fun deleteRecipe_when_remote_delete_succeeds_Then_hard_deletes_locally() =
+        runTest(testDispatcher) {
+            fakeAuth.setAuthenticated()
+            val created = recipeRepository.createRecipe(blankRecipe(title = "Stew"))
+
+            recipeRepository.deleteRecipe(created.id)
+
+            db.recipeQueries.getById(created.id).executeAsOneOrNull() shouldBe null
+            recipeRemote.deleteCalls.size shouldBe 1
+        }
+
+    @Test
+    fun syncWithRemote_retries_pending_delete_and_clears_tombstone_when_remote_succeeds() =
+        runTest(testDispatcher) {
+            fakeAuth.setAuthenticated()
+            val created = recipeRepository.createRecipe(blankRecipe(title = "Chili"))
+            recipeRemote.deleteFailure = { RuntimeException("network") }
+            recipeRepository.deleteRecipe(created.id)
+            recipeRemote.deleteCalls.size shouldBe 1
+
+            recipeRemote.deleteFailure = null
+            recipeRepository.syncAllUnsynced()
+
+            db.recipeQueries.getById(created.id).executeAsOneOrNull() shouldBe null
+            recipeRemote.deleteCalls.size shouldBe 2
+        }
+
+    @Test
+    fun syncWithRemote_when_pending_delete_keeps_failing_Then_other_recipes_still_sync() =
+        runTest(testDispatcher) {
+            // Create a tombstoned row directly so we can keep the repo unauthenticated until
+            // we're ready to fire a single sync pass.
+            db.recipeQueries.create(
+                title = "Tombstoned",
+                description = null,
+                ingredients = null,
+                directions = null,
+                imageUrl = null,
+                sourceUrl = null,
+                servings = null,
+                prepTime = null,
+                cookTime = null,
+                totalTime = null,
+                calories = null,
+                starRating = null,
+                isFavorite = false,
+                createdAt = "now",
+                updatedAt = "now",
+                clientId = "tombstone-client",
+                ownerId = null,
+            )
+            val tombstoneId = db.recipeQueries.lastInsertId().executeAsOne().MAX!!
+            db.recipeQueries.updateRemoteId(remoteId = "remote-tombstone", id = tombstoneId)
+            db.recipeQueries.markPendingDelete(tombstoneId)
+
+            // And an unsynced recipe that should get pushed despite the failing tombstone.
+            db.recipeQueries.create(
+                title = "Fresh",
+                description = null,
+                ingredients = null,
+                directions = null,
+                imageUrl = null,
+                sourceUrl = null,
+                servings = null,
+                prepTime = null,
+                cookTime = null,
+                totalTime = null,
+                calories = null,
+                starRating = null,
+                isFavorite = false,
+                createdAt = "now",
+                updatedAt = "now",
+                clientId = "fresh-client",
+                ownerId = null,
+            )
+            val freshId = db.recipeQueries.lastInsertId().executeAsOne().MAX!!
+            recipeRemote.deleteFailure = { RuntimeException("network") }
+
+            fakeAuth.setAuthenticated() // triggers syncWithRemote via the init collector
+
+            db.recipeQueries.getById(tombstoneId).executeAsOne().isPendingDelete shouldBe true
+            recipeRemote.deleteCalls shouldBe listOf("remote-tombstone")
+            db.recipeQueries.getById(freshId).executeAsOne().remoteId shouldBe "remote-fresh-client"
+        }
+
+    @Test
+    fun syncWithRemote_pull_does_not_resurrect_tombstoned_recipe() =
+        runTest(testDispatcher) {
+            db.recipeQueries.create(
+                title = "Tombstoned",
+                description = null,
+                ingredients = null,
+                directions = null,
+                imageUrl = null,
+                sourceUrl = null,
+                servings = null,
+                prepTime = null,
+                cookTime = null,
+                totalTime = null,
+                calories = null,
+                starRating = null,
+                isFavorite = false,
+                createdAt = "now",
+                updatedAt = "now",
+                clientId = "tombstone-client",
+                ownerId = null,
+            )
+            val id = db.recipeQueries.lastInsertId().executeAsOne().MAX!!
+            db.recipeQueries.updateRemoteId(remoteId = "remote-1", id = id)
+            db.recipeQueries.markPendingDelete(id)
+            recipeRemote.deleteFailure = { RuntimeException("network") }
+            recipeRemote.fetchResult =
+                listOf(
+                    RemoteRecipe(
+                        id = "remote-1",
+                        ownerId = "test-id",
+                        title = "Tombstoned",
+                        clientId = "tombstone-client",
+                    )
+                )
+
+            fakeAuth.setAuthenticated()
+
+            // Pull saw the matching remote row, found the tombstoned local row via
+            // getByRemoteId, and skipped re-creation. Tombstone state is preserved.
+            db.recipeQueries.getById(id).executeAsOne().isPendingDelete shouldBe true
+            recipeRepository.getRecipes().test { awaitItem() shouldBe emptyList() }
+        }
+
+    @Test
+    fun deleteRecipe_when_unauthenticated_Then_tombstones_and_syncs_on_next_authentication() =
+        runTest(testDispatcher) {
+            val created = recipeRepository.createRecipe(blankRecipe(title = "Curry"))
+            // Pretend the recipe was previously synced even though we're now offline.
+            db.recipeQueries.updateRemoteId(remoteId = "remote-curry", id = created.id)
+
+            recipeRepository.deleteRecipe(created.id)
+
+            db.recipeQueries.getById(created.id).executeAsOne().isPendingDelete shouldBe true
+            recipeRemote.deleteCalls shouldBe emptyList()
+
+            fakeAuth.setAuthenticated() // init collector fires syncWithRemote → pushPendingDeletes
+
+            db.recipeQueries.getById(created.id).executeAsOneOrNull() shouldBe null
+            recipeRemote.deleteCalls shouldBe listOf("remote-curry")
+        }
+
+    private fun blankRecipe(title: String, categories: Set<Category> = emptySet()) =
         Recipe(
             id = -1,
             title = title,
@@ -183,14 +362,20 @@ class RecipeRepositoryImplTest {
      */
     private class RecordingRecipeRemote : RecipeRemoteDataSource {
         val attachmentCalls: MutableList<Pair<String, Set<String>>> = mutableListOf()
+        val deleteCalls: MutableList<String> = mutableListOf()
+        var deleteFailure: (() -> Throwable)? = null
+        var fetchResult: List<RemoteRecipe> = emptyList()
 
         override suspend fun upsertRecipe(recipe: RemoteRecipe): RemoteRecipe =
             // Stamp a stable remote id derived from the client id so tests can correlate.
             recipe.copy(id = recipe.id ?: "remote-${recipe.clientId.orEmpty()}")
 
-        override suspend fun deleteRecipe(remoteId: String) = Unit
+        override suspend fun deleteRecipe(remoteId: String) {
+            deleteCalls += remoteId
+            deleteFailure?.invoke()?.let { throw it }
+        }
 
-        override suspend fun fetchAllRecipes(ownerId: String): List<RemoteRecipe> = emptyList()
+        override suspend fun fetchAllRecipes(ownerId: String): List<RemoteRecipe> = fetchResult
 
         override suspend fun setRecipeCategories(
             recipeRemoteId: String,
