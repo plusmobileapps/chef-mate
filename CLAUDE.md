@@ -38,6 +38,7 @@ For iOS, open `/iosApp` in Xcode or use the IDE run configuration.
 
 - **Never `git push` without an explicit request from the user in the current message.** "Commit it" / "save this" / "go ahead" authorize a commit but not a push. The push is always a separate, user-requested action.
 - **Never bundle `git push` into the same Bash invocation as `git add` / `git commit`.** Run the commit on its own and stop. The user will issue a separate "push" instruction when they're ready.
+- **When opening a PR, split work into multiple commits by concern type so reviewers can step through them.** A typical order: refactors/renames first (no behavior change), then the feature or fix, then tests, then docs / strings / generated artifacts. One concern per commit, each with a conventional-commit subject (`refactor(recipe): …`, `feat(recipe): …`, `test(recipe): …`, `docs: …`). If a change is genuinely one concern, one commit is fine — don't manufacture splits.
 
 ## Architecture
 
@@ -103,6 +104,8 @@ Add strings at `client/<module>/src/commonMain/composeResources/values/strings.x
 
 ### Snapshot Testing
 
+**Rule: any change that touches a screen, composable, or shared UI component must add or update a snapshot test in the same commit/PR.** If a `<Feature>ScreenshotTest.kt` already covers the affected preview, refresh the reference with `./gradlew :client:ui:screenshot-test:updateDebugScreenshotTest` and visually inspect the diff before committing. If no snapshot exists for the screen yet, add one following the pattern below — including dark-mode and any meaningful state variants (empty, loading, error). CI only catches regressions of *existing* references, so missing coverage on new UI won't fail the build.
+
 Compose preview screenshot tests live in **`client/ui/screenshot-test`** — a plain Android library module (not KMP) that uses Google's `com.android.compose.screenshot` plugin. KMP modules can't host the `screenshotTest` source set with `com.android.library`, so all snapshot tests are centralized here and depend on the relevant feature `public` modules.
 
 **Pattern:**
@@ -120,6 +123,18 @@ Compose preview screenshot tests live in **`client/ui/screenshot-test`** — a p
 
 See `client/cook/public/.../CookModePreviews.kt` and `client/ui/screenshot-test/.../CookModeScreenshotTest.kt` for a worked example covering stacked, split, loading, empty, and dark variants.
 
+### Robot UI Tests
+
+**Rule: every new feature must ship with a multiplatform Compose UI test using the `impl-robots` pattern.** Robots wrap `ComposeUiTest` with domain-level vocabulary so test cases read as user flows, not semantics-tree lookups. They run on all client targets (Android, iOS, Desktop, Web) because they live in `commonMain`.
+
+**Pattern:**
+1. For a new feature `client/<feature>/<sub>/impl`, create a sibling module `client/<feature>/<sub>/impl-robots` with a `build.gradle.kts` that applies `kmpLibrary` + `compose`, exposes `api(compose.uiTest)`, and `implementation(projects.client.<feature>.<sub>.public)`. See `client/recipe/list/impl-robots/build.gradle.kts` for the minimal shape.
+2. Add `<Feature>Robot.kt` under `src/commonMain/kotlin/.../<feature>/robots/`. Take `ComposeUiTest` in the constructor. Scope every node lookup to a descendant of the screen's root test tag (`hasAnyAncestor(hasTestTag(<Feature>TestTags.SCREEN))`) so titles rendered on other screens don't satisfy matchers. Provide a factory extension (e.g. `fun ComposeUiTest.recipeList() = …`). Return `<Feature>Robot` from every action method for chaining.
+3. Add a test in `client/composeApp/src/commonTest/...` (or the feature's own test module) that runs through `runRootBlocTest { … }` and composes one or more robots into a user flow. Reference example: `client/composeApp/src/commonTest/.../RootNavigationUiTest.kt`.
+4. For async UI states, expose an `awaitDisplayed()` on the robot using `waitUntilExactlyOneExists` — see `client/recipe/core/impl-robots/.../RecipeDetailRobot.kt`.
+
+Robots are *not* unit tests of a BLoC — those still live in `impl/src/commonTest`. Robots cover the rendered screen and cross-screen navigation flows.
+
 ### Key Paths
 
 | Concern | Path |
@@ -132,4 +147,5 @@ See `client/cook/public/.../CookModePreviews.kt` and `client/ui/screenshot-test/
 | Reusable UI | `client/ui/public/` |
 | TextData | `client/text/public/` |
 | Snapshot tests | `client/ui/screenshot-test/` |
+| Robot UI tests | `client/<feature>/impl-robots/` |
 | Architecture docs | `docs/architecture.md` |
