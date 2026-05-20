@@ -123,7 +123,7 @@ fun EditRecipeScreen(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     }
 
     PlusHeaderContainer(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize().imePadding(),
         data = PlusHeaderData.Child(title = state.title, onBackClick = bloc::onBackClicked),
         verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingNormal),
         floatingActionButton = {
@@ -166,7 +166,7 @@ private fun LoadingIndicator(modifier: Modifier = Modifier) {
 @Composable
 private fun EditRecipeContent(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.fillMaxWidth().padding(ChefMateTheme.dimens.paddingNormal).imePadding(),
+        modifier = modifier.fillMaxWidth().padding(ChefMateTheme.dimens.paddingNormal),
         verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingNormal),
     ) {
         RecipeTitleField(bloc = bloc)

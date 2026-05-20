@@ -330,6 +330,12 @@ class GroceryListBlocTest {
     }
 
     @Test
+    fun When_browse_recipes_clicked_Then_open_recipes_output_emitted() = runTest {
+        bloc.onBrowseRecipesClicked()
+        output.lastValue shouldBe GroceryListBloc.Output.OpenRecipes
+    }
+
+    @Test
     fun When_items_have_recipe_name_Then_model_contains_recipe_name() = runTest {
         bloc.state.test {
             awaitItem() shouldBe GroceryListBloc.Model()

@@ -172,6 +172,9 @@ class BottomNavBlocImpl(
             is GroceryListBloc.Output.OpenDetail -> {
                 this.output.onNext(OpenGrocery(output.id))
             }
+            GroceryListBloc.Output.OpenRecipes -> {
+                onTabSelected(BottomNavBloc.Tab.RECIPES)
+            }
         }
     }
 

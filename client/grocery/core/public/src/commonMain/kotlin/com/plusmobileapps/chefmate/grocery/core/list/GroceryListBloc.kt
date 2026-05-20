@@ -48,6 +48,8 @@ interface GroceryListBloc {
 
     fun onListSelectorDismissed()
 
+    fun onBrowseRecipesClicked()
+
     data class GroceryGroup(val category: GroceryCategory, val items: List<GroceryItem>)
 
     enum class GrocerySort {
@@ -78,6 +80,8 @@ interface GroceryListBloc {
 
     sealed class Output {
         data class OpenDetail(val id: Long) : Output()
+
+        data object OpenRecipes : Output()
     }
 
     fun interface Factory {
