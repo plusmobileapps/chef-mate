@@ -34,6 +34,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 For iOS, open `/iosApp` in Xcode or use the IDE run configuration.
 
+## Git workflow
+
+- **Never `git push` without an explicit request from the user in the current message.** "Commit it" / "save this" / "go ahead" authorize a commit but not a push. The push is always a separate, user-requested action.
+- **Never bundle `git push` into the same Bash invocation as `git add` / `git commit`.** Run the commit on its own and stop. The user will issue a separate "push" instruction when they're ready.
+
 ## Architecture
 
 This is a Kotlin Multiplatform app targeting Android, iOS, Desktop (JVM), Web (WASM), and a Ktor server. All new code must be Kotlin.
@@ -87,6 +92,8 @@ Call `.localized()` inside Composables to resolve to a `String`. Expose `text` m
 ### Localized Strings
 
 Add strings at `client/<module>/src/commonMain/composeResources/values/strings.xml`. Rebuild to generate accessors. Import the `compose` plugin and `compose.components.resources` dependency in the module's `build.gradle.kts`.
+
+**Apostrophes and quotes.** Use the typographic curly glyphs (`’`, `‘`, `“`, `”`) directly in `strings.xml` — not ASCII straight quotes (`'`, `"`). The codebase convention is curly throughout (e.g., `auth_switch_to_sign_up: "Don’t have an account?"`), and curly glyphs don't need the XML backslash escape that ASCII apostrophes require (`You\'re` → `You’re`).
 
 ### Dependency Injection
 

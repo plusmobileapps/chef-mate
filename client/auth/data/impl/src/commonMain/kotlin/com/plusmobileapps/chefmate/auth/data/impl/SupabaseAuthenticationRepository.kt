@@ -1,5 +1,6 @@
 package com.plusmobileapps.chefmate.auth.data.impl
 
+import co.touchlab.kermit.Logger
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.auth.data.ChefMateUser
@@ -18,11 +19,17 @@ import io.github.jan.supabase.auth.providers.builtin.OTP
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.auth.user.UserInfo
 import kotlin.coroutines.CoroutineContext
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 @Inject
 @SingleIn(AppScope::class)
@@ -37,16 +44,27 @@ class SupabaseAuthenticationRepository(
     override val state: StateFlow<AuthState> = _state.asStateFlow()
 
     init {
-        // Listen to auth state changes
+        // Listen to auth state changes. Whenever we land in NotAuthenticated (fresh install,
+        // explicit sign-out, expired refresh token, ...) bootstrap an anonymous Supabase session
+        // so every user always has an auth.uid() — that's what lets photo uploads, recipe upserts,
+        // and the per-user RLS policies work uniformly without a separate "signed-out" code path.
+        // The auth-anon-not-allowed state below stays Unauthenticated; the UI can decide what to
+        // show in the rare case where the bootstrap can't complete (e.g. cold-start while offline).
         scope.launch {
             supabaseClient.auth.sessionStatus.collect { sessionStatus ->
                 when (sessionStatus) {
                     is SessionStatus.Authenticated -> {
                         val user = sessionStatus.session.user
-                        user?.let { _state.value = AuthState.Authenticated(it.toChefMateUser()) }
+                        val isAnon = isAnonymousJwt(sessionStatus.session.accessToken)
+                        user?.let {
+                            _state.value =
+                                AuthState.Authenticated(it.toChefMateUser(isAnonymous = isAnon))
+                        }
                     }
                     is SessionStatus.NotAuthenticated -> {
-                        _state.value = AuthState.Unauthenticated
+                        if (_state.value !is AuthState.AwaitingEmailVerification) {
+                            ensureAnonymousSession()
+                        }
                     }
                     is SessionStatus.Initializing,
                     is SessionStatus.RefreshFailure -> {
@@ -54,6 +72,16 @@ class SupabaseAuthenticationRepository(
                     }
                 }
             }
+        }
+    }
+
+    private suspend fun ensureAnonymousSession() {
+        try {
+            supabaseClient.auth.signInAnonymously()
+            // sessionStatus collector above will flip us into Authenticated.
+        } catch (t: Throwable) {
+            Logger.w(throwable = t, tag = TAG) { "Anonymous sign-in failed" }
+            _state.value = AuthState.Unauthenticated
         }
     }
 
@@ -73,6 +101,20 @@ class SupabaseAuthenticationRepository(
         password: String,
     ): Result<SignUpResult> {
         return try {
+            // If we're currently signed in anonymously, upgrade the existing account in-place via
+            // updateUser{} so the auth.uid() — and therefore every recipe/photo already attached
+            // to it — is preserved. Supabase still sends a confirmation email; the JWT loses
+            // is_anonymous after the user confirms.
+            val currentSession = supabaseClient.auth.currentSessionOrNull()
+            if (currentSession != null && isAnonymousJwt(currentSession.accessToken)) {
+                supabaseClient.auth.updateUser {
+                    this.email = email
+                    this.password = password
+                }
+                _state.value = AuthState.AwaitingEmailVerification(email)
+                return Result.success(SignUpResult.AwaitingEmailVerification)
+            }
+
             val result =
                 supabaseClient.auth.signUpWith(Email) {
                     this.email = email
@@ -158,7 +200,7 @@ class SupabaseAuthenticationRepository(
             Result.failure(e)
         }
 
-    private fun UserInfo.toChefMateUser(): ChefMateUser =
+    private fun UserInfo.toChefMateUser(isAnonymous: Boolean): ChefMateUser =
         ChefMateUser(
             userId = id,
             userName =
@@ -170,5 +212,33 @@ class SupabaseAuthenticationRepository(
             userProfileImageUrl =
                 userMetadata?.get("avatar_url")?.toString()
                     ?: userMetadata?.get("picture")?.toString(),
+            isAnonymous = isAnonymous,
         )
+
+    /**
+     * Reads the `is_anonymous` claim from the JWT payload directly. supabase-kt 3.2.6's UserInfo
+     * doesn't deserialize that top-level claim into a property, and `appMetadata.provider` is
+     * `null` (not `"anonymous"`) in current Supabase versions — JWT inspection is the only reliable
+     * signal.
+     */
+    @OptIn(ExperimentalEncodingApi::class)
+    private fun isAnonymousJwt(accessToken: String): Boolean {
+        val payload = accessToken.split(".").getOrNull(1) ?: return false
+        return try {
+            // JWT uses base64url without padding; pad to a multiple of 4 before decoding.
+            val padded = payload + "=".repeat((4 - payload.length % 4) % 4)
+            val decoded = Base64.UrlSafe.decode(padded).decodeToString()
+            Json.parseToJsonElement(decoded)
+                .jsonObject["is_anonymous"]
+                ?.jsonPrimitive
+                ?.booleanOrNull == true
+        } catch (t: Throwable) {
+            Logger.w(throwable = t, tag = TAG) { "Failed to decode JWT for is_anonymous check" }
+            false
+        }
+    }
+
+    private companion object {
+        const val TAG = "SupabaseAuthenticationRepository"
+    }
 }

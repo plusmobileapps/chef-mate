@@ -33,11 +33,22 @@ class SettingsViewModel(
             .onEach { authState ->
                 when (authState) {
                     is AuthState.Authenticated -> {
+                        val isAnonymous = authState.user.isAnonymous
+                        // Anon: no greeting at all. Real user: prefer userName, fall back to
+                        // email, and only set a non-null display name when at least one is
+                        // non-blank — otherwise the greeting renders as "Hello !" (the empty
+                        // string is truthy in the let { ... } we used previously).
                         val displayName =
-                            authState.user.userName.ifBlank { authState.user.userEmail }
+                            when {
+                                isAnonymous -> null
+                                authState.user.userName.isNotBlank() -> authState.user.userName
+                                authState.user.userEmail.isNotBlank() -> authState.user.userEmail
+                                else -> null
+                            }
                         _state.value =
                             State(
                                 isAuthenticated = true,
+                                isAnonymous = isAnonymous,
                                 userName = displayName,
                                 emailAwaitingVerification = null,
                             )
@@ -46,6 +57,7 @@ class SettingsViewModel(
                         _state.value =
                             State(
                                 isAuthenticated = false,
+                                isAnonymous = false,
                                 userName = null,
                                 emailAwaitingVerification = null,
                             )
@@ -54,6 +66,7 @@ class SettingsViewModel(
                         _state.value =
                             State(
                                 isAuthenticated = false,
+                                isAnonymous = false,
                                 userName = null,
                                 emailAwaitingVerification = authState.email,
                             )
@@ -78,6 +91,7 @@ class SettingsViewModel(
 
     data class State(
         val isAuthenticated: Boolean = false,
+        val isAnonymous: Boolean = false,
         val userName: String? = null,
         val emailAwaitingVerification: String? = null,
         val showSignOutConfirmationDialog: Boolean = false,

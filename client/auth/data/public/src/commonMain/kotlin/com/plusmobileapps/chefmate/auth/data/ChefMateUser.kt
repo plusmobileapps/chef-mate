@@ -5,4 +5,5 @@ data class ChefMateUser(
     val userName: String,
     val userEmail: String,
     val userProfileImageUrl: String?,
+    val isAnonymous: Boolean = false,
 )

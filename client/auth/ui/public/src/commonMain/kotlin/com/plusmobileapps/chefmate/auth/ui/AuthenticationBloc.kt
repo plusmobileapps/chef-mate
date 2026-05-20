@@ -31,17 +31,31 @@ interface AuthenticationBloc : BackClickBloc {
 
     fun onDismissError()
 
+    /** User confirmed the "you'll lose your guest recipes" dialog; proceed with sign-in. */
+    fun onDiscardGuestDataConfirmed()
+
+    /** User cancelled the "you'll lose your guest recipes" dialog; do nothing. */
+    fun onDiscardGuestDataCancelled()
+
     data class Model(
         val mode: Mode = Mode.SignIn,
         val isLoading: Boolean = false,
         val errorMessage: TextData? = null,
         val emailError: TextData? = null,
         val confirmPasswordError: TextData? = null,
+        /**
+         * When non-null, the user submitted Sign-In while currently anonymous and with guest
+         * recipes on this device. UI shows a confirmation dialog; sign-in is gated on
+         * [onDiscardGuestDataConfirmed].
+         */
+        val pendingGuestDataDiscard: PendingGuestDataDiscard? = null,
     ) {
         enum class Mode {
             SignIn,
             SignUp,
         }
+
+        data class PendingGuestDataDiscard(val guestRecipeCount: Int)
     }
 
     sealed class Output {

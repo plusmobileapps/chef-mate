@@ -39,6 +39,7 @@ class AuthenticationBlocImpl(
                 errorMessage = it.errorMessage,
                 emailError = it.emailError,
                 confirmPasswordError = it.confirmPasswordError,
+                pendingGuestDataDiscard = it.pendingGuestDataDiscard,
             )
         }
 
@@ -101,5 +102,13 @@ class AuthenticationBlocImpl(
 
     override fun onDismissError() {
         viewModel.onDismissError()
+    }
+
+    override fun onDiscardGuestDataConfirmed() {
+        viewModel.onDiscardGuestDataConfirmed()
+    }
+
+    override fun onDiscardGuestDataCancelled() {
+        viewModel.onDiscardGuestDataCancelled()
     }
 }

@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.recipe.core.impl.edit
 import chefmate.client.recipe.core.impl.generated.resources.Res
 import chefmate.client.recipe.core.impl.generated.resources.create_recipe
 import chefmate.client.recipe.core.impl.generated.resources.edit_recipe
+import chefmate.client.recipe.core.impl.generated.resources.edit_recipe_upload_failed
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
@@ -50,6 +51,8 @@ class EditRecipeBlocImpl(
                 isLoading = it.isLoading,
                 isSaving = it.isSaving,
                 showDiscardChangesDialog = it.showDiscardChangesDialog,
+                uploadError =
+                    it.uploadError?.let { ResourceString(Res.string.edit_recipe_upload_failed) },
             )
         }
     override val title: StateFlow<String> = viewModel.title
@@ -67,6 +70,7 @@ class EditRecipeBlocImpl(
     override val categories: StateFlow<Set<Category>> = viewModel.categories
     override val availableUserCategories: StateFlow<List<Category>> =
         viewModel.availableUserCategories
+    override val pendingPhotoBytes: StateFlow<ByteArray?> = viewModel.pendingPhotoBytes
 
     init {
         scope.launch {
@@ -170,6 +174,14 @@ class EditRecipeBlocImpl(
 
     override fun onSaveClicked() {
         viewModel.save()
+    }
+
+    override fun onPhotoPicked(bytes: ByteArray, fileExtension: String) {
+        viewModel.setPendingPhoto(bytes = bytes, fileExtension = fileExtension)
+    }
+
+    override fun onUploadErrorDismissed() {
+        viewModel.dismissUploadError()
     }
 
     override fun onBackClicked() {

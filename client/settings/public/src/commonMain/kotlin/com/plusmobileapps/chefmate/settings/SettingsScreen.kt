@@ -35,6 +35,7 @@ import chefmate.client.settings.public.generated.resources.greeting_authenticate
 import chefmate.client.settings.public.generated.resources.more
 import chefmate.client.settings.public.generated.resources.privacy_policy
 import chefmate.client.settings.public.generated.resources.settings
+import chefmate.client.settings.public.generated.resources.settings_guest_banner
 import chefmate.client.settings.public.generated.resources.sign_in
 import chefmate.client.settings.public.generated.resources.sign_out
 import chefmate.client.settings.public.generated.resources.sign_out_confirmation_cancel
@@ -71,23 +72,49 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
     PlusNavContainer(
         data = PlusHeaderData.Parent(title = Res.string.more.asTextData()),
         content = {
-            if (viewState.isAuthenticated) {
-                viewState.greeting?.let { greeting ->
-                    GreetingSection(greeting = greeting)
+            when {
+                // Anonymous Supabase session — they're authenticated under the hood (so cloud
+                // sync works) but have no credentials to come back to. Treat them as
+                // "signed out, with a hint they're using a guest account": show Sign In / Sign
+                // Up rows and hide Sign Out (which would silently orphan their data).
+                viewState.isAuthenticated && viewState.isAnonymous -> {
+                    GuestBanner()
                     HorizontalDivider()
-                }
-                SettingsRow(
-                    name = Res.string.sign_out.asTextData(),
-                    onClick = bloc::onSignOutClicked,
-                )
-            } else {
-                viewState.verificationMessage?.let { message ->
-                    EmailVerificationMessage(message = message)
+                    SettingsRow(
+                        name = Res.string.sign_in.asTextData(),
+                        onClick = bloc::onSignInClicked,
+                    )
                     HorizontalDivider()
+                    SettingsRow(
+                        name = Res.string.sign_up.asTextData(),
+                        onClick = bloc::onSignUpClicked,
+                    )
                 }
-                SettingsRow(name = Res.string.sign_in.asTextData(), onClick = bloc::onSignInClicked)
-                HorizontalDivider()
-                SettingsRow(name = Res.string.sign_up.asTextData(), onClick = bloc::onSignUpClicked)
+                viewState.isAuthenticated -> {
+                    viewState.greeting?.let { greeting ->
+                        GreetingSection(greeting = greeting)
+                        HorizontalDivider()
+                    }
+                    SettingsRow(
+                        name = Res.string.sign_out.asTextData(),
+                        onClick = bloc::onSignOutClicked,
+                    )
+                }
+                else -> {
+                    viewState.verificationMessage?.let { message ->
+                        EmailVerificationMessage(message = message)
+                        HorizontalDivider()
+                    }
+                    SettingsRow(
+                        name = Res.string.sign_in.asTextData(),
+                        onClick = bloc::onSignInClicked,
+                    )
+                    HorizontalDivider()
+                    SettingsRow(
+                        name = Res.string.sign_up.asTextData(),
+                        onClick = bloc::onSignUpClicked,
+                    )
+                }
             }
             HorizontalDivider()
             SettingsRow(
@@ -157,6 +184,23 @@ private fun EmailVerificationMessage(message: TextData, modifier: Modifier = Mod
             message.localized(),
             style = ChefMateTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSecondaryContainer,
+        )
+    }
+}
+
+@Composable
+private fun GuestBanner(modifier: Modifier = Modifier) {
+    Column(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.tertiaryContainer)
+                .padding(ChefMateTheme.dimens.paddingNormal)
+    ) {
+        Text(
+            Res.string.settings_guest_banner.asTextData().localized(),
+            style = ChefMateTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onTertiaryContainer,
         )
     }
 }
@@ -257,6 +301,34 @@ private val previewBlocAuthenticated =
         override fun onDeveloperSettingsClicked() = Unit
     }
 
+private val previewBlocAnonymous =
+    object : SettingsBloc {
+        override val state =
+            kotlinx.coroutines.flow.MutableStateFlow(
+                SettingsBloc.Model(
+                    isAuthenticated = true,
+                    isAnonymous = true,
+                    versionName = "1.4.3",
+                )
+            )
+
+        override fun onSignInClicked() = Unit
+
+        override fun onSignUpClicked() = Unit
+
+        override fun onSignOutClicked() = Unit
+
+        override fun onSignOutConfirmed() = Unit
+
+        override fun onSignOutDismissed() = Unit
+
+        override fun onUrlClicked(url: String) = Unit
+
+        override fun onAppSettingsClicked() = Unit
+
+        override fun onDeveloperSettingsClicked() = Unit
+    }
+
 @Preview(showBackground = true)
 @Composable
 internal fun SettingsScreenUnauthenticatedPreview() {
@@ -267,6 +339,12 @@ internal fun SettingsScreenUnauthenticatedPreview() {
 @Composable
 internal fun SettingsScreenAuthenticatedPreview() {
     ChefMateTheme { SettingsScreen(bloc = previewBlocAuthenticated) }
+}
+
+@Preview(showBackground = true)
+@Composable
+internal fun SettingsScreenAnonymousPreview() {
+    ChefMateTheme { SettingsScreen(bloc = previewBlocAnonymous) }
 }
 
 @Preview(showBackground = true)

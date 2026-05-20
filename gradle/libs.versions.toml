@@ -122,6 +122,7 @@ sqldelight-dialect-sqlite335 = { group = "app.cash.sqldelight", name = "sqlite-3
 supabase-client = { module = "io.github.jan-tennert.supabase:supabase-kt", version.ref = "supabase" }
 supabase-auth = { module = "io.github.jan-tennert.supabase:auth-kt", version.ref = "supabase" }
 supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt", version.ref = "supabase" }
+supabase-storage = { module = "io.github.jan-tennert.supabase:storage-kt", version.ref = "supabase" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 
 [plugins]

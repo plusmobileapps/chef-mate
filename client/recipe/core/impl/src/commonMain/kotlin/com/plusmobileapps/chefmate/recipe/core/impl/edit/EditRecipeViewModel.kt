@@ -2,6 +2,7 @@
 
 package com.plusmobileapps.chefmate.recipe.core.impl.edit
 
+import co.touchlab.kermit.Logger
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
@@ -9,6 +10,7 @@ import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.CategoryRepository
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.recipe.data.RecipePhotoStorage
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -35,6 +37,7 @@ class EditRecipeViewModel(
     @Main mainContext: CoroutineContext,
     private val repository: RecipeRepository,
     private val categoryRepository: CategoryRepository,
+    private val photoStorage: RecipePhotoStorage,
 ) : ViewModel(mainContext) {
     private val _output = Channel<Output>(Channel.BUFFERED)
     val output: Flow<Output> = _output.receiveAsFlow()
@@ -90,6 +93,10 @@ class EditRecipeViewModel(
     // routing a fast true→false transition through StateFlow could be conflated and leave the
     // UI stuck on a spinner).
     private val _isCreatingCategory = MutableStateFlow(false)
+
+    private val _pendingPhotoBytes = MutableStateFlow<ByteArray?>(null)
+    val pendingPhotoBytes: StateFlow<ByteArray?> = _pendingPhotoBytes.asStateFlow()
+    private var pendingPhotoExtension: String? = null
 
     init {
         when {
@@ -250,11 +257,39 @@ class EditRecipeViewModel(
         _state.update { it.copy(showDiscardChangesDialog = false) }
     }
 
+    fun setPendingPhoto(bytes: ByteArray, fileExtension: String) {
+        _pendingPhotoBytes.value = bytes
+        pendingPhotoExtension = fileExtension
+        _state.update { it.copy(uploadError = null) }
+    }
+
+    fun dismissUploadError() {
+        _state.update { it.copy(uploadError = null) }
+    }
+
     fun save() {
-        val originalRecipe = _state.value.recipe
-        val currentRecipe = currentRecipe()
-        _state.update { it.copy(isLoading = true) }
+        if (_state.value.isSaving) return
+        _state.update { it.copy(isSaving = true, uploadError = null) }
         scope.launch {
+            val pendingBytes = _pendingPhotoBytes.value
+            val pendingExt = pendingPhotoExtension
+            if (pendingBytes != null && pendingExt != null) {
+                try {
+                    val url =
+                        photoStorage.uploadPhoto(bytes = pendingBytes, fileExtension = pendingExt)
+                    _imageUrl.value = url
+                    _pendingPhotoBytes.value = null
+                    pendingPhotoExtension = null
+                } catch (t: Throwable) {
+                    Logger.e(throwable = t, tag = "EditRecipeViewModel") {
+                        "Failed to upload photo"
+                    }
+                    _state.update { it.copy(isSaving = false, uploadError = t) }
+                    return@launch
+                }
+            }
+            val originalRecipe = _state.value.recipe
+            val currentRecipe = currentRecipe()
             val savedRecipe =
                 if (originalRecipe != null) {
                     repository.updateRecipe(currentRecipe)
@@ -295,8 +330,9 @@ class EditRecipeViewModel(
     private fun shouldShowDiscardChangesDialog(
         originalRecipe: Recipe?,
         currentRecipe: Recipe,
-    ): Boolean =
-        when {
+    ): Boolean {
+        if (_pendingPhotoBytes.value != null) return true
+        return when {
             originalRecipe != null -> originalRecipe.isDirty()
             else ->
                 currentRecipe.title.isNotBlank() ||
@@ -313,6 +349,7 @@ class EditRecipeViewModel(
                     currentRecipe.starRating != null ||
                     currentRecipe.categories.isNotEmpty()
         }
+    }
 
     private fun Recipe.isDirty(): Boolean =
         title != _title.value ||
@@ -355,6 +392,7 @@ class EditRecipeViewModel(
         val isSaving: Boolean = false,
         val showDiscardChangesDialog: Boolean = false,
         val recipe: Recipe? = null,
+        val uploadError: Throwable? = null,
     )
 
     sealed class Output {

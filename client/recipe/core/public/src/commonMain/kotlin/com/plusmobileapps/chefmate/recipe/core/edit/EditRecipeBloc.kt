@@ -41,6 +41,8 @@ interface EditRecipeBloc : BackClickBloc {
     /** User-created categories from the local DB. Built-in presets are not included. */
     val availableUserCategories: StateFlow<List<Category>>
 
+    val pendingPhotoBytes: StateFlow<ByteArray?>
+
     fun onTitleChanged(title: String)
 
     fun onDescriptionChanged(description: String)
@@ -102,11 +104,16 @@ interface EditRecipeBloc : BackClickBloc {
 
     fun onSaveClicked()
 
+    fun onPhotoPicked(bytes: ByteArray, fileExtension: String)
+
+    fun onUploadErrorDismissed()
+
     data class Model(
         val title: TextData,
         val isLoading: Boolean,
         val isSaving: Boolean,
         val showDiscardChangesDialog: Boolean,
+        val uploadError: TextData? = null,
     )
 
     sealed class Output {

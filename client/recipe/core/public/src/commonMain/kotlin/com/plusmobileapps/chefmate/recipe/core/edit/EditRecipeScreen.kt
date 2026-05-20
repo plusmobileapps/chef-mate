@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
@@ -24,6 +26,7 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -31,10 +34,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.core.public.generated.resources.Res
@@ -78,14 +86,23 @@ import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_total_time
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_total_time_placeholder
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_save
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload_photo
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload_photo_dismiss
+import coil3.compose.AsyncImage
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import com.plusmobileapps.chefmate.util.cropImageToSquare
+import com.plusmobileapps.chefmate.util.decodeImageBitmap
+import com.plusmobileapps.chefmate.util.rememberImagePickerLauncher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -99,6 +116,10 @@ fun EditRecipeScreen(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
             onConfirm = bloc::onDiscardChangesConfirmed,
             onDismiss = bloc::onDiscardChangesCancelled,
         )
+    }
+
+    state.uploadError?.let { error ->
+        UploadErrorDialog(message = error.localized(), onDismiss = bloc::onUploadErrorDismissed)
     }
 
     PlusHeaderContainer(
@@ -152,6 +173,7 @@ private fun EditRecipeContent(bloc: EditRecipeBloc, modifier: Modifier = Modifie
         RecipeDescriptionField(bloc = bloc)
         RecipeCategoryField(bloc = bloc)
         RecipeStarRatingField(bloc = bloc)
+        RecipePhotoUploader(bloc = bloc)
         RecipeImageUrlField(bloc = bloc)
         RecipeSourceUrlField(bloc = bloc)
         RecipeServingsField(bloc = bloc)
@@ -324,6 +346,101 @@ private fun RecipeStarRatingField(bloc: EditRecipeBloc, modifier: Modifier = Mod
             }
         }
     }
+}
+
+private data class PendingCrop(val bytes: ByteArray, val bitmap: ImageBitmap)
+
+@Composable
+private fun RecipePhotoUploader(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
+    val imageUrl by bloc.imageUrl.collectAsState()
+    val pendingBytes by bloc.pendingPhotoBytes.collectAsState()
+    val scope = rememberCoroutineScope()
+    var pendingCrop by remember { mutableStateOf<PendingCrop?>(null) }
+    var isCropping by remember { mutableStateOf(false) }
+    val pickPhoto = rememberImagePickerLauncher { picked ->
+        if (picked != null) {
+            scope.launch {
+                val bitmap =
+                    runCatching {
+                            withContext(Dispatchers.Default) { decodeImageBitmap(picked.bytes) }
+                        }
+                        .getOrNull()
+                if (bitmap != null) {
+                    pendingCrop = PendingCrop(bytes = picked.bytes, bitmap = bitmap)
+                }
+            }
+        }
+    }
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
+    ) {
+        val previewModel: Any? = pendingBytes ?: imageUrl.takeIf { it.isNotBlank() }
+        if (previewModel != null) {
+            AsyncImage(
+                model = previewModel,
+                contentDescription = null,
+                modifier =
+                    Modifier.fillMaxWidth().aspectRatio(1f).clip(MaterialTheme.shapes.medium),
+                contentScale = ContentScale.Crop,
+            )
+        }
+        OutlinedButton(onClick = pickPhoto, modifier = Modifier.fillMaxWidth()) {
+            Icon(
+                imageVector = Icons.Filled.AddPhotoAlternate,
+                contentDescription = null,
+                modifier = Modifier.padding(end = ChefMateTheme.dimens.paddingSmall),
+            )
+            Text(stringResource(Res.string.edit_recipe_upload_photo))
+        }
+    }
+
+    pendingCrop?.let { crop ->
+        CropPhotoOverlay(
+            bitmap = crop.bitmap,
+            isProcessing = isCropping,
+            onCancel = { pendingCrop = null },
+            onConfirm = { srcX, srcY, srcSize ->
+                isCropping = true
+                scope.launch {
+                    try {
+                        val cropped =
+                            withContext(Dispatchers.Default) {
+                                cropImageToSquare(
+                                    bytes = crop.bytes,
+                                    srcX = srcX,
+                                    srcY = srcY,
+                                    srcSize = srcSize,
+                                )
+                            }
+                        bloc.onPhotoPicked(cropped, "jpg")
+                    } finally {
+                        isCropping = false
+                        pendingCrop = null
+                    }
+                }
+            },
+        )
+    }
+}
+
+@Composable
+private fun UploadErrorDialog(
+    message: String,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        text = { Text(message) },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(Res.string.edit_recipe_upload_photo_dismiss))
+            }
+        },
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -540,6 +657,7 @@ Salt for pasta water"""
         override val availableUserCategories:
             StateFlow<List<com.plusmobileapps.chefmate.recipe.data.Category>> =
             MutableStateFlow(emptyList())
+        override val pendingPhotoBytes: StateFlow<ByteArray?> = MutableStateFlow(null)
 
         override fun onTitleChanged(title: String) {}
 
@@ -586,6 +704,10 @@ Salt for pasta water"""
         override fun onDiscardChangesCancelled() {}
 
         override fun onSaveClicked() {}
+
+        override fun onPhotoPicked(bytes: ByteArray, fileExtension: String) {}
+
+        override fun onUploadErrorDismissed() {}
 
         override fun onBackClicked() {}
     }

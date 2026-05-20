@@ -9,6 +9,7 @@ kotlin {
             implementation(libs.supabase.client)
             implementation(libs.supabase.auth)
             implementation(libs.supabase.postgrest)
+            implementation(libs.supabase.storage)
         }
         jvmMain.dependencies { implementation(libs.ktor.client.cio) }
         androidMain.dependencies { implementation(libs.ktor.client.cio) }

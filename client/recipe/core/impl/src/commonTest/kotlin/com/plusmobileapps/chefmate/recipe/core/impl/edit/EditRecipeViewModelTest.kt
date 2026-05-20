@@ -8,6 +8,7 @@ import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeCategoryRepository
+import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipePhotoStorage
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
@@ -24,6 +25,7 @@ class EditRecipeViewModelTest {
     private val recipes = MutableStateFlow<List<Recipe>>(emptyList())
     private val repository = FakeRecipeRepository(recipes)
     private val categoryRepository = FakeCategoryRepository()
+    private val photoStorage = FakeRecipePhotoStorage()
     private val mainContext = UnconfinedTestDispatcher()
 
     private fun createViewModel(
@@ -36,6 +38,7 @@ class EditRecipeViewModelTest {
             mainContext = mainContext,
             repository = repository,
             categoryRepository = categoryRepository,
+            photoStorage = photoStorage,
         )
 
     @Test
@@ -404,6 +407,64 @@ class EditRecipeViewModelTest {
         vm.output.first().shouldBeFinished()
 
         recipes.value.first().categories shouldBe emptySet()
+    }
+
+    @Test
+    fun When_photo_picked_Then_bytes_are_held_and_no_upload_happens() {
+        val vm = createViewModel()
+
+        vm.setPendingPhoto(bytes = byteArrayOf(1, 2, 3), fileExtension = "jpg")
+
+        vm.pendingPhotoBytes.value?.toList() shouldBe listOf<Byte>(1, 2, 3)
+        vm.imageUrl.value shouldBe ""
+        photoStorage.uploads.size shouldBe 0
+    }
+
+    @Test
+    fun When_save_with_pending_photo_Then_photo_is_uploaded_before_recipe_save() = runTest {
+        photoStorage.nextResult = { "https://cdn.example.com/photo.jpg" }
+        val vm = createViewModel()
+        vm.updateTitle("With photo")
+        vm.setPendingPhoto(bytes = byteArrayOf(7, 7, 7), fileExtension = "png")
+
+        vm.save()
+        val output = vm.output.first()
+
+        output.shouldBeFinished()
+        photoStorage.uploads.size shouldBe 1
+        photoStorage.uploads.first().fileExtension shouldBe "png"
+        recipes.value.single().imageUrl shouldBe "https://cdn.example.com/photo.jpg"
+        vm.pendingPhotoBytes.value shouldBe null
+        vm.state.value.uploadError shouldBe null
+    }
+
+    @Test
+    fun When_save_upload_fails_Then_recipe_is_not_saved_and_error_is_surfaced() = runTest {
+        val failure = RuntimeException("network down")
+        photoStorage.nextResult = { throw failure }
+        val vm = createViewModel()
+        vm.updateTitle("Will not save")
+        vm.setPendingPhoto(bytes = byteArrayOf(0), fileExtension = "jpg")
+
+        vm.save()
+
+        recipes.value shouldBe emptyList()
+        vm.state.value.isSaving shouldBe false
+        vm.state.value.uploadError shouldBe failure
+        vm.pendingPhotoBytes.value?.toList() shouldBe listOf<Byte>(0)
+
+        vm.dismissUploadError()
+        vm.state.value.uploadError shouldBe null
+    }
+
+    @Test
+    fun When_only_photo_changed_Then_close_prompts_discard_dialog() {
+        val vm = createViewModel()
+        vm.setPendingPhoto(bytes = byteArrayOf(9), fileExtension = "jpg")
+
+        vm.tryToClose()
+
+        vm.state.value.showDiscardChangesDialog shouldBe true
     }
 
     private fun EditRecipeViewModel.Output.shouldBeFinished() {
