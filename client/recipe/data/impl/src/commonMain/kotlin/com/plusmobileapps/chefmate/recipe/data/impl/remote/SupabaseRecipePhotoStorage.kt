@@ -24,10 +24,16 @@ class SupabaseRecipePhotoStorage(
 ) : RecipePhotoStorage {
 
     override suspend fun uploadPhoto(bytes: ByteArray, fileExtension: String): String {
-        // Anonymous Supabase sessions still have an auth.uid(), so every upload lands in a
-        // per-user folder and is bound by the same owner_insert/update/delete RLS policies as
-        // a real user. If we ever land here without any session (cold-start race before the
-        // anonymous bootstrap completes), surface the error rather than dump to a shared folder.
+        // Lazily materialize a Supabase session before uploading. For first-time photo uploads
+        // by a user who's been local-only up to now, this signs them in anonymously; for users
+        // who already have a session (anon or real) this is a no-op. If ensureSession() fails
+        // (e.g. offline at first photo), surface that so save() can show the upload error.
+        authRepository.ensureSession().getOrElse {
+            throw IllegalStateException(
+                "Cannot upload photo: failed to acquire Supabase session",
+                it,
+            )
+        }
         val ownerFolder =
             (authRepository.state.value as? AuthState.Authenticated)?.user?.userId
                 ?: error("Cannot upload photo: no Supabase session")

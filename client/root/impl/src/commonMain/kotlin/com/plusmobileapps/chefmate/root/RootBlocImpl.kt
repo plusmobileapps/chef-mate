@@ -328,6 +328,10 @@ class RootBlocImpl(
                 navigation.bringToFront(
                     Configuration.OtpVerification(email = output.email, flow = OtpFlow.SignUp)
                 )
+            is AuthenticationBloc.Output.EmailChangeRequired ->
+                navigation.bringToFront(
+                    Configuration.OtpVerification(email = output.email, flow = OtpFlow.EmailChange)
+                )
             is AuthenticationBloc.Output.PasswordlessOtpSent ->
                 navigation.bringToFront(
                     Configuration.OtpVerification(

@@ -18,6 +18,10 @@ class FakeAuthenticationRepository : AuthenticationRepository {
     var sendSignInOtpResult: Result<Unit> = Result.success(Unit)
     var verifyEmailOtpResult: Result<Unit> = Result.success(Unit)
     var resendOtpResult: Result<Unit> = Result.success(Unit)
+    var ensureSessionResult: Result<Unit> = Result.success(Unit)
+
+    var ensureSessionCallCount: Int = 0
+        private set
 
     var lastVerifyOtpFlow: OtpFlow? = null
         private set
@@ -44,6 +48,13 @@ class FakeAuthenticationRepository : AuthenticationRepository {
                     isAnonymous = true,
                 )
             )
+    }
+
+    override suspend fun ensureSession(): Result<Unit> {
+        ensureSessionCallCount += 1
+        return ensureSessionResult.also { result ->
+            if (result.isSuccess && _state.value !is AuthState.Authenticated) setAnonymous()
+        }
     }
 
     override suspend fun signInWithEmailAndPassword(email: String, password: String): Result<Unit> =
