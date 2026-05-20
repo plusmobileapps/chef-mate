@@ -128,4 +128,8 @@ class GroceryListBlocImpl(
     override fun onListSelectorDismissed() {
         viewModel.onListSelectorDismissed()
     }
+
+    override fun onBrowseRecipesClicked() {
+        output.onNext(GroceryListBloc.Output.OpenRecipes)
+    }
 }

@@ -51,4 +51,8 @@
     <string name="grocery_category_baking">Baking</string>
     <string name="grocery_category_spices">Spices &amp; Seasonings</string>
     <string name="grocery_category_other">Other</string>
+    <string name="grocery_add_item_hint">Add an item…</string>
+    <string name="grocery_list_empty_title">Your grocery list is empty</string>
+    <string name="grocery_list_empty_description">Add items below, or pull ingredients in from one of your recipes.</string>
+    <string name="grocery_list_empty_browse_recipes">Browse my recipes</string>
 </resources>

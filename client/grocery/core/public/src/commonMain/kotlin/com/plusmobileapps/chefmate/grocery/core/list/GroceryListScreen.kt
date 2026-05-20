@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.outlined.CloudOff
+import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -66,9 +67,11 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import chefmate.client.grocery.core.public.generated.resources.Res
 import chefmate.client.grocery.core.public.generated.resources.grocery_add_item
+import chefmate.client.grocery.core.public.generated.resources.grocery_add_item_hint
 import chefmate.client.grocery.core.public.generated.resources.grocery_apply
 import chefmate.client.grocery.core.public.generated.resources.grocery_cancel
 import chefmate.client.grocery.core.public.generated.resources.grocery_clear_filters
@@ -93,6 +96,9 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_filter_no
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter_purchased
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter_unpurchased
 import chefmate.client.grocery.core.public.generated.resources.grocery_list
+import chefmate.client.grocery.core.public.generated.resources.grocery_list_empty_browse_recipes
+import chefmate.client.grocery.core.public.generated.resources.grocery_list_empty_description
+import chefmate.client.grocery.core.public.generated.resources.grocery_list_empty_title
 import chefmate.client.grocery.core.public.generated.resources.grocery_select_list
 import chefmate.client.grocery.core.public.generated.resources.grocery_sort_aisle
 import chefmate.client.grocery.core.public.generated.resources.grocery_sort_alphabetical
@@ -191,46 +197,58 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
                 onRefresh = bloc::onSyncClicked,
                 modifier = Modifier.weight(1f),
             ) {
-                GroceryGroupedList(
-                    groups =
-                        state.groupedItems.map { group ->
-                            GroceryDisplayGroup(
-                                category = group.category,
-                                items =
-                                    group.items.map { item ->
-                                        GroceryDisplayItem(
-                                            key = item.id,
-                                            displayName = item.displayName,
-                                            quantity = item.quantity,
-                                            isChecked = item.isChecked,
-                                            recipeName = item.recipeName,
-                                        )
-                                    },
-                            )
+                val showEmptyState =
+                    state.groupedItems.isEmpty() &&
+                        state.filter == GroceryListBloc.GroceryFilter.ALL &&
+                        state.recipeFilter == null &&
+                        !state.isSyncing
+                if (showEmptyState) {
+                    EmptyGroceryListState(
+                        onBrowseRecipesClicked = bloc::onBrowseRecipesClicked,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                } else {
+                    GroceryGroupedList(
+                        groups =
+                            state.groupedItems.map { group ->
+                                GroceryDisplayGroup(
+                                    category = group.category,
+                                    items =
+                                        group.items.map { item ->
+                                            GroceryDisplayItem(
+                                                key = item.id,
+                                                displayName = item.displayName,
+                                                quantity = item.quantity,
+                                                isChecked = item.isChecked,
+                                                recipeName = item.recipeName,
+                                            )
+                                        },
+                                )
+                            },
+                        onItemClick = { key ->
+                            itemLookup[key as Long]?.let { bloc.onGroceryItemClicked(it) }
                         },
-                    onItemClick = { key ->
-                        itemLookup[key as Long]?.let { bloc.onGroceryItemClicked(it) }
-                    },
-                    onCheckedChange = { key ->
-                        itemLookup[key as Long]?.let {
-                            bloc.onGroceryItemCheckedChange(it, !it.isChecked)
-                        }
-                    },
-                    modifier =
-                        Modifier.fillMaxSize().pointerInput(Unit) {
-                            detectTapGestures(onTap = { focusManager.clearFocus() })
+                        onCheckedChange = { key ->
+                            itemLookup[key as Long]?.let {
+                                bloc.onGroceryItemCheckedChange(it, !it.isChecked)
+                            }
                         },
-                    showHeaders = state.sort == GroceryListBloc.GrocerySort.AISLE,
-                    trailingContent = { displayItem ->
-                        val item = itemLookup[displayItem.key as Long]
-                        if (item != null) {
-                            GroceryItemTrailingContent(
-                                item = item,
-                                onDeleteClick = { bloc.onGroceryItemDelete(item) },
-                            )
-                        }
-                    },
-                )
+                        modifier =
+                            Modifier.fillMaxSize().pointerInput(Unit) {
+                                detectTapGestures(onTap = { focusManager.clearFocus() })
+                            },
+                        showHeaders = state.sort == GroceryListBloc.GrocerySort.AISLE,
+                        trailingContent = { displayItem ->
+                            val item = itemLookup[displayItem.key as Long]
+                            if (item != null) {
+                                GroceryItemTrailingContent(
+                                    item = item,
+                                    onDeleteClick = { bloc.onGroceryItemDelete(item) },
+                                )
+                            }
+                        },
+                    )
+                }
             }
             GroceryListInput(
                 name = bloc.newGroceryItemName,
@@ -573,6 +591,7 @@ private fun GroceryListInput(
             onValueChange = onNameChange,
             modifier = Modifier.weight(1f).onFocusChanged { isFocused = it.isFocused },
             singleLine = true,
+            placeholder = { Text(stringResource(Res.string.grocery_add_item_hint)) },
             keyboardOptions =
                 KeyboardOptions(
                     capitalization = KeyboardCapitalization.Sentences,
@@ -639,5 +658,40 @@ private fun GroceryItemTrailingContent(item: GroceryItem, onDeleteClick: () -> U
 
     IconButton(onClick = onDeleteClick) {
         Icon(Icons.Default.Delete, stringResource(Res.string.grocery_delete_item))
+    }
+}
+
+@Composable
+private fun EmptyGroceryListState(
+    onBrowseRecipesClicked: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.ShoppingCart,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text = stringResource(Res.string.grocery_list_empty_title),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = stringResource(Res.string.grocery_list_empty_description),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(24.dp))
+        Button(onClick = onBrowseRecipesClicked, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(Res.string.grocery_list_empty_browse_recipes))
+        }
     }
 }
