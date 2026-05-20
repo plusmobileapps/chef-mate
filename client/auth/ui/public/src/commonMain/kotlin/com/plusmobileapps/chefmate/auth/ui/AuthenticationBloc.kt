@@ -42,6 +42,7 @@ interface AuthenticationBloc : BackClickBloc {
         val isLoading: Boolean = false,
         val errorMessage: TextData? = null,
         val emailError: TextData? = null,
+        val passwordError: TextData? = null,
         val confirmPasswordError: TextData? = null,
         /**
          * When non-null, the user submitted Sign-In while currently anonymous and with guest

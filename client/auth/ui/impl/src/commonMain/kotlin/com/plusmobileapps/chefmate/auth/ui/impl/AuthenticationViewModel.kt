@@ -6,15 +6,22 @@ import chefmate.client.auth.ui.impl.generated.resources.auth_error_confirm_passw
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_email_required
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_invalid_credentials
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_invalid_email
+import chefmate.client.auth.ui.impl.generated.resources.auth_error_password_missing
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_password_required
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_password_reset_failed
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_password_reset_rate_limit
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_password_reset_user_not_found
+import chefmate.client.auth.ui.impl.generated.resources.auth_error_password_too_weak
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_passwords_do_not_match
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_send_otp_failed
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_send_otp_rate_limit
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_sign_up_failed
 import chefmate.client.auth.ui.impl.generated.resources.auth_error_user_already_exists
+import chefmate.client.auth.ui.impl.generated.resources.auth_password_req_digit
+import chefmate.client.auth.ui.impl.generated.resources.auth_password_req_lowercase
+import chefmate.client.auth.ui.impl.generated.resources.auth_password_req_min_length
+import chefmate.client.auth.ui.impl.generated.resources.auth_password_req_symbol
+import chefmate.client.auth.ui.impl.generated.resources.auth_password_req_uppercase
 import chefmate.client.auth.ui.impl.generated.resources.auth_success_password_reset_sent
 import co.touchlab.kermit.Logger
 import com.plusmobileapps.chefmate.ViewModel
@@ -26,9 +33,14 @@ import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc.Model.Mode.SignUp
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc.Model.PendingGuestDataDiscard
 import com.plusmobileapps.chefmate.auth.usecase.SignInUseCase
 import com.plusmobileapps.chefmate.di.Main
+import com.plusmobileapps.chefmate.text.JoinedTextData
+import com.plusmobileapps.chefmate.text.PhraseModel
+import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.util.EmailUtil
+import com.plusmobileapps.chefmate.util.PasswordValidator
+import com.plusmobileapps.chefmate.util.PasswordValidator.Requirement
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -40,6 +52,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.StringResource
 
 @AssistedInject
 class AuthenticationViewModel(
@@ -48,6 +61,7 @@ class AuthenticationViewModel(
     private val authRepository: AuthenticationRepository,
     private val signInUseCase: SignInUseCase,
     private val emailUtil: EmailUtil,
+    private val passwordValidator: PasswordValidator,
 ) : ViewModel(mainContext) {
     private val _state =
         MutableStateFlow(
@@ -86,9 +100,9 @@ class AuthenticationViewModel(
 
     fun onPasswordChanged(password: String) {
         _password.value = password
-        // Clear error when user starts typing
-        if (_state.value.errorMessage != null) {
-            _state.value = _state.value.copy(errorMessage = null)
+        // Clear errors when user starts typing
+        if (_state.value.errorMessage != null || _state.value.passwordError != null) {
+            _state.value = _state.value.copy(errorMessage = null, passwordError = null)
         }
     }
 
@@ -111,6 +125,7 @@ class AuthenticationViewModel(
                 mode = newMode,
                 errorMessage = null,
                 emailError = null,
+                passwordError = null,
                 confirmPasswordError = null,
             )
     }
@@ -218,6 +233,14 @@ class AuthenticationViewModel(
                 )
             return
         }
+        val passwordResult = passwordValidator.validate(password)
+        if (passwordResult is PasswordValidator.Result.Invalid) {
+            _state.value =
+                _state.value.copy(
+                    passwordError = buildPasswordRequirementsMessage(passwordResult.missing)
+                )
+            return
+        }
         if (confirmPassword.isBlank()) {
             _state.value =
                 _state.value.copy(
@@ -239,6 +262,7 @@ class AuthenticationViewModel(
                 isLoading = true,
                 errorMessage = null,
                 emailError = null,
+                passwordError = null,
                 confirmPasswordError = null,
             )
 
@@ -266,12 +290,11 @@ class AuthenticationViewModel(
                     }
                 },
                 onFailure = { e ->
+                    Logger.e("Sign up failed", e)
                     _state.value =
                         _state.value.copy(
                             isLoading = false,
-                            errorMessage =
-                                e.message?.asTextData()
-                                    ?: Res.string.auth_error_sign_up_failed.asTextData(),
+                            errorMessage = getSignUpErrorMessage(e),
                         )
                 },
             )
@@ -390,6 +413,42 @@ class AuthenticationViewModel(
         }
     }
 
+    /**
+     * Maps Supabase sign-up failures to a friendly dialog message. The Supabase password-complexity
+     * error looks like "Password should contain at least one character of each: ..." — we surface
+     * [auth_error_password_too_weak] for that case. Other failures fall back to the generic sign-up
+     * failed message rather than leaking the raw exception text to the user.
+     */
+    private fun getSignUpErrorMessage(e: Throwable): TextData {
+        val message = e.message?.lowercase() ?: ""
+        val isPasswordComplexity =
+            message.contains("password") &&
+                (message.contains("contain") || message.contains("character"))
+        return if (isPasswordComplexity) {
+            Res.string.auth_error_password_too_weak.asTextData()
+        } else {
+            Res.string.auth_error_sign_up_failed.asTextData()
+        }
+    }
+
+    private fun buildPasswordRequirementsMessage(missing: Set<Requirement>): TextData {
+        val parts =
+            Requirement.entries.filter { it in missing }.map { ResourceString(it.resource()) }
+        return PhraseModel(
+            Res.string.auth_error_password_missing,
+            "requirements" to JoinedTextData(parts),
+        )
+    }
+
+    private fun Requirement.resource(): StringResource =
+        when (this) {
+            Requirement.MinLength -> Res.string.auth_password_req_min_length
+            Requirement.Lowercase -> Res.string.auth_password_req_lowercase
+            Requirement.Uppercase -> Res.string.auth_password_req_uppercase
+            Requirement.Digit -> Res.string.auth_password_req_digit
+            Requirement.Symbol -> Res.string.auth_password_req_symbol
+        }
+
     private fun getOtpSendErrorMessage(e: Throwable): TextData {
         val message = e.message?.lowercase() ?: ""
         return when {
@@ -404,6 +463,7 @@ class AuthenticationViewModel(
         val isLoading: Boolean = false,
         val errorMessage: TextData? = null,
         val emailError: TextData? = null,
+        val passwordError: TextData? = null,
         val confirmPasswordError: TextData? = null,
         val pendingGuestDataDiscard: PendingGuestDataDiscard? = null,
     )

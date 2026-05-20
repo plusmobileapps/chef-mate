@@ -67,6 +67,28 @@ data class PhraseModel(val resource: StringResource, val args: Map<String, TextD
 }
 
 /**
+ * A text data model that joins a list of [TextData] parts at composition time using a separator and
+ * a distinct separator before the last item — e.g. `["a", "b", "c"]` with the defaults renders as
+ * `"a, b and c"`.
+ */
+data class JoinedTextData(
+    val parts: List<TextData>,
+    val separator: String = ", ",
+    val lastSeparator: String = " and ",
+) : TextData() {
+    @Composable
+    override fun localized(): String {
+        val resolved = parts.map { it.localized() }
+        return when (resolved.size) {
+            0 -> ""
+            1 -> resolved.first()
+            2 -> resolved[0] + lastSeparator + resolved[1]
+            else -> resolved.dropLast(1).joinToString(separator) + lastSeparator + resolved.last()
+        }
+    }
+}
+
+/**
  * A text data model that represents a plural string resource.
  *
  * Usage example:
