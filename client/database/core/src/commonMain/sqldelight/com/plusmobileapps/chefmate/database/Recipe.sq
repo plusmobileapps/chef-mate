@@ -20,11 +20,12 @@ CREATE TABLE Recipe (
     remoteId TEXT UNIQUE,
     clientId TEXT,
     isDirty INTEGER AS Boolean NOT NULL DEFAULT 0,
-    ownerId TEXT
+    ownerId TEXT,
+    isPendingDelete INTEGER AS Boolean NOT NULL DEFAULT 0
 );
 
 getAll:
-SELECT * FROM Recipe ORDER BY title DESC;
+SELECT * FROM Recipe WHERE isPendingDelete = 0 ORDER BY title DESC;
 
 getById:
 SELECT * FROM Recipe WHERE id = ?;
@@ -74,10 +75,16 @@ getByClientId:
 SELECT * FROM Recipe WHERE clientId = ?;
 
 getUnsynced:
-SELECT * FROM Recipe WHERE remoteId IS NULL;
+SELECT * FROM Recipe WHERE remoteId IS NULL AND isPendingDelete = 0;
 
 getDirty:
-SELECT * FROM Recipe WHERE isDirty = 1 AND remoteId IS NOT NULL;
+SELECT * FROM Recipe WHERE isDirty = 1 AND remoteId IS NOT NULL AND isPendingDelete = 0;
+
+markPendingDelete:
+UPDATE Recipe SET isPendingDelete = 1, isDirty = 0 WHERE id = ?;
+
+getPendingDeletes:
+SELECT * FROM Recipe WHERE isPendingDelete = 1 AND remoteId IS NOT NULL;
 
 updateRemoteId:
 UPDATE Recipe SET remoteId = ?, isDirty = 0 WHERE id = ?;

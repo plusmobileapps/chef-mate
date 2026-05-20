@@ -157,26 +157,31 @@ class RecipeRepositoryImpl(
         db.getById(id)
             .asFlow()
             .map { it.executeAsOneOrNull() }
-            .map { it?.toRecipe() }
+            .map { row -> row?.takeUnless { it.isPendingDelete }?.toRecipe() }
             .flowOn(ioContext)
 
     override suspend fun deleteRecipe(id: Long) {
-        val entity =
-            withContext(ioContext) {
-                val entity = db.getById(id).executeAsOneOrNull()
-                db.delete(id)
-                entity
+        val entity = withContext(ioContext) { db.getById(id).executeAsOneOrNull() } ?: return
+        val remoteId = entity.remoteId
+        val imageUrl = entity.imageUrl
+
+        if (remoteId == null) {
+            withContext(ioContext) { db.delete(id) }
+            if (!imageUrl.isNullOrBlank()) {
+                scope.launch { photoStorage.deletePhoto(imageUrl) }
             }
-        entity
-            ?.imageUrl
-            ?.takeIf { it.isNotBlank() }
-            ?.let { imageUrl -> scope.launch { photoStorage.deletePhoto(imageUrl) } }
-        entity?.remoteId?.let { remoteId ->
-            scope.launch {
-                try {
-                    remoteDataSource.deleteRecipe(remoteId)
-                } catch (_: Exception) {}
-            }
+            return
+        }
+
+        withContext(ioContext) { db.markPendingDelete(id) }
+
+        if (authRepository.state.value !is AuthState.Authenticated) return
+
+        try {
+            remoteDataSource.deleteRecipe(remoteId)
+            withContext(ioContext) { db.delete(id) }
+        } catch (_: Exception) {
+            // Leave the tombstone for pushPendingDeletes to retry on the next sync.
         }
     }
 
@@ -285,6 +290,17 @@ class RecipeRepositoryImpl(
 
     private suspend fun syncWithRemote(userId: String) = syncMutex.withLock {
         try {
+            // Retry remote deletes for any locally tombstoned recipes. Each is independent — a
+            // failure on one leaves the tombstone in place and continues with the rest of sync.
+            val pendingDeletes = withContext(ioContext) { db.getPendingDeletes().executeAsList() }
+            for (recipe in pendingDeletes) {
+                val remoteId = recipe.remoteId ?: continue
+                try {
+                    remoteDataSource.deleteRecipe(remoteId)
+                    withContext(ioContext) { db.delete(recipe.id) }
+                } catch (_: Exception) {}
+            }
+
             // Push unsynced recipes (no remoteId yet)
             val unsynced = withContext(ioContext) { db.getUnsynced().executeAsList() }
             for (recipe in unsynced) {
