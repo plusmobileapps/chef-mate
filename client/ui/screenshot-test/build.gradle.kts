@@ -24,6 +24,11 @@ android {
     experimentalProperties["android.experimental.enableScreenshotTest"] = true
 }
 
+// Absorbs the ~1-pixel-different antialiasing on FAB shadows / elevation edges that Mac arm64
+// and Linux x64 (CI) produce for the same Compose preview. Tight enough to still catch real
+// regressions (missing text, colour drift, layout shifts).
+@Suppress("UnstableApiUsage") screenshotTests { imageDifferenceThreshold = 0.001f }
+
 kotlin { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
 
 dependencies {
