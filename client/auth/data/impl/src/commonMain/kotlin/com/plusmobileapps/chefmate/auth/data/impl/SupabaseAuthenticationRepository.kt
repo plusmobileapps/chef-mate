@@ -44,12 +44,11 @@ class SupabaseAuthenticationRepository(
     override val state: StateFlow<AuthState> = _state.asStateFlow()
 
     init {
-        // Listen to auth state changes. Whenever we land in NotAuthenticated (fresh install,
-        // explicit sign-out, expired refresh token, ...) bootstrap an anonymous Supabase session
-        // so every user always has an auth.uid() — that's what lets photo uploads, recipe upserts,
-        // and the per-user RLS policies work uniformly without a separate "signed-out" code path.
-        // The auth-anon-not-allowed state below stays Unauthenticated; the UI can decide what to
-        // show in the rare case where the bootstrap can't complete (e.g. cold-start while offline).
+        // Mirror the Supabase session state into our AuthState. The NotAuthenticated branch no
+        // longer auto-bootstraps an anonymous session — callers that need a session call
+        // [ensureSession] lazily (currently only the photo upload path). Users who only ever
+        // create text recipes / grocery items never trigger a Supabase auth row and so never
+        // count toward MAU.
         scope.launch {
             supabaseClient.auth.sessionStatus.collect { sessionStatus ->
                 when (sessionStatus) {
@@ -63,7 +62,7 @@ class SupabaseAuthenticationRepository(
                     }
                     is SessionStatus.NotAuthenticated -> {
                         if (_state.value !is AuthState.AwaitingEmailVerification) {
-                            ensureAnonymousSession()
+                            _state.value = AuthState.Unauthenticated
                         }
                     }
                     is SessionStatus.Initializing,
@@ -75,13 +74,15 @@ class SupabaseAuthenticationRepository(
         }
     }
 
-    private suspend fun ensureAnonymousSession() {
-        try {
+    override suspend fun ensureSession(): Result<Unit> {
+        if (_state.value is AuthState.Authenticated) return Result.success(Unit)
+        return try {
             supabaseClient.auth.signInAnonymously()
-            // sessionStatus collector above will flip us into Authenticated.
+            // sessionStatus collector above flips us into Authenticated.
+            Result.success(Unit)
         } catch (t: Throwable) {
             Logger.w(throwable = t, tag = TAG) { "Anonymous sign-in failed" }
-            _state.value = AuthState.Unauthenticated
+            Result.failure(t)
         }
     }
 

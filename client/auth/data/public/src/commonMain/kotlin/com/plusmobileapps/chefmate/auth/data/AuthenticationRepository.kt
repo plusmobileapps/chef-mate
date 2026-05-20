@@ -6,6 +6,18 @@ import kotlinx.serialization.Serializable
 interface AuthenticationRepository {
     val state: StateFlow<AuthState>
 
+    /**
+     * Idempotently ensures a Supabase session exists. Returns immediately if already authenticated
+     * (anonymous or real). Otherwise lazily signs in anonymously — that's the only path callers
+     * have to materialize a session without going through email/password sign-in or sign-up.
+     *
+     * Callers should invoke this right before any operation that requires `auth.uid()` (currently
+     * only photo uploads). Pure-local operations — saving a text recipe, adding a grocery item —
+     * must not call this, so users who never trigger a remote operation never appear as anonymous
+     * Supabase users (and never count toward MAU).
+     */
+    suspend fun ensureSession(): Result<Unit>
+
     suspend fun signInWithEmailAndPassword(email: String, password: String): Result<Unit>
 
     suspend fun signUpWithEmailAndPassword(email: String, password: String): Result<SignUpResult>

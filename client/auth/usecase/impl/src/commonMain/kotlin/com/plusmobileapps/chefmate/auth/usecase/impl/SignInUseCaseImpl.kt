@@ -23,8 +23,15 @@ class SignInUseCaseImpl(
 ) : SignInUseCase {
 
     override suspend fun guestRecipesToDiscard(): Int {
-        val authState = authenticationRepository.state.value as? AuthState.Authenticated ?: return 0
-        if (!authState.user.isAnonymous) return 0
+        // A real signed-in user shouldn't have "guest" recipes — if they do, those came from
+        // someone else's anon session on this device and are still local-only data the user
+        // about to sign in didn't create. Skip the count in that case so we don't surprise
+        // them with a discard dialog.
+        val authState = authenticationRepository.state.value
+        if (authState is AuthState.Authenticated && !authState.user.isAnonymous) return 0
+        // Includes the "anonymous session exists" case AND the "no session yet, but the
+        // user has been creating local recipes" case. With deferred anon bootstrap (since
+        // photo upload became the only trigger), the latter is now reachable.
         return recipeRepository.getRecipes().first().size
     }
 
