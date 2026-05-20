@@ -9,6 +9,7 @@ kotlin {
             implementation(projects.client.util.public)
             implementation(projects.client.shared)
         }
+        commonTest.dependencies { implementation(libs.kotlin.test) }
     }
 }
 

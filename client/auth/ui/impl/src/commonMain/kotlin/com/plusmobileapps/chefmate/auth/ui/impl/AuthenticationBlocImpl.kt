@@ -38,6 +38,7 @@ class AuthenticationBlocImpl(
                 isLoading = it.isLoading,
                 errorMessage = it.errorMessage,
                 emailError = it.emailError,
+                passwordError = it.passwordError,
                 confirmPasswordError = it.confirmPasswordError,
                 pendingGuestDataDiscard = it.pendingGuestDataDiscard,
             )

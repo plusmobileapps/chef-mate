@@ -5,6 +5,13 @@
     <string name="auth_error_password_required">Password is required</string>
     <string name="auth_error_confirm_password_required">Please confirm your password</string>
     <string name="auth_error_passwords_do_not_match">Passwords do not match</string>
+    <string name="auth_error_password_missing">Password must include {requirements}.</string>
+    <string name="auth_password_req_min_length">at least 6 characters</string>
+    <string name="auth_password_req_lowercase">a lowercase letter</string>
+    <string name="auth_password_req_uppercase">an uppercase letter</string>
+    <string name="auth_password_req_digit">a number</string>
+    <string name="auth_password_req_symbol">a symbol</string>
+    <string name="auth_error_password_too_weak">That password isn\'t strong enough. Use a mix of uppercase and lowercase letters, numbers, and symbols, with at least 6 characters.</string>
     <string name="auth_error_authentication_failed">Authentication failed</string>
     <string name="auth_error_invalid_credentials">The email or password you entered is incorrect. Please try again.</string>
     <string name="auth_error_sign_up_failed">Sign up failed</string>

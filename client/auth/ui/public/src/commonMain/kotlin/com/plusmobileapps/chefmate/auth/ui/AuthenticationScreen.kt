@@ -215,6 +215,7 @@ private fun AuthenticationBody(
             modifier = Modifier.focusRequester(passwordFocusRequester),
             password = password,
             onPasswordChanged = onPasswordChanged,
+            error = model.passwordError,
             imeAction = if (isSignIn) ImeAction.Done else ImeAction.Next,
             onImeAction = {
                 if (isSignIn) {
