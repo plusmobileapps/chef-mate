@@ -74,6 +74,8 @@ include(":client:database:testing")
 
 include(":client:grocery:core:impl")
 
+include(":client:grocery:core:impl-robots")
+
 include(":client:grocery:core:public")
 
 include(":client:grocery:data:impl")
