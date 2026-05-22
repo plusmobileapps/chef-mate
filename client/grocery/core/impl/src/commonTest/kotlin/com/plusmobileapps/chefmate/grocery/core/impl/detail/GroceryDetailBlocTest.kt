@@ -4,6 +4,7 @@ package com.plusmobileapps.chefmate.grocery.core.impl.detail
 
 import app.cash.turbine.test
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
+import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.testing.TestBlocContext
@@ -57,6 +58,19 @@ class GroceryDetailBlocTest {
             bloc.models.test {
                 awaitItem() shouldBe
                     GroceryDetailBloc.Model.Loaded(item = groceryItem.copy(isChecked = true))
+            }
+        }
+    }
+
+    @Test
+    fun WHEN_aisle_changed_THEN_update_state_with_new_category() {
+        runTest {
+            bloc.onAisleChanged(GroceryCategory.DAIRY)
+            bloc.models.test {
+                awaitItem() shouldBe
+                    GroceryDetailBloc.Model.Loaded(
+                        item = groceryItem.copy(category = GroceryCategory.DAIRY)
+                    )
             }
         }
     }

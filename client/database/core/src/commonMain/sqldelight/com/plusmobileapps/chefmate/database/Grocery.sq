@@ -11,7 +11,8 @@ CREATE TABLE Grocery (
     clientId TEXT,
     isDirty INTEGER AS Boolean NOT NULL DEFAULT 0,
     listId INTEGER,
-    recipeName TEXT
+    recipeName TEXT,
+    aisle TEXT
 );
 
 create:
@@ -72,7 +73,7 @@ updateClientId:
 UPDATE Grocery SET clientId = ? WHERE id = ?;
 
 update:
-UPDATE Grocery SET name = ?, isChecked = ?, updatedAt = ?, isDirty = 1 WHERE id = ?;
+UPDATE Grocery SET name = ?, isChecked = ?, aisle = ?, updatedAt = ?, isDirty = 1 WHERE id = ?;
 
 getDirty:
 SELECT * FROM Grocery WHERE isDirty = 1 AND remoteId IS NOT NULL;
