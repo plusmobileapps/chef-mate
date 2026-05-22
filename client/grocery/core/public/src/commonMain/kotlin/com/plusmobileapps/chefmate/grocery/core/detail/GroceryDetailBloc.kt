@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.grocery.core.detail
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
@@ -13,6 +14,8 @@ interface GroceryDetailBloc : BackClickBloc, BlocScreen {
     fun onGroceryNameChanged(name: String)
 
     fun onGroceryCheckedChanged(isChecked: Boolean)
+
+    fun onAisleChanged(category: GroceryCategory)
 
     fun onSaveClicked()
 

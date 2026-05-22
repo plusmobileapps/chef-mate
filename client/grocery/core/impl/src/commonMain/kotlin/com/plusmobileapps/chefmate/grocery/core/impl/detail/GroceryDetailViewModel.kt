@@ -1,6 +1,7 @@
 package com.plusmobileapps.chefmate.grocery.core.impl.detail
 
 import com.plusmobileapps.chefmate.ViewModel
+import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import kotlin.coroutines.CoroutineContext
@@ -40,6 +41,11 @@ class GroceryDetailViewModel(
     fun onGroceryCheckedChanged(isChecked: Boolean) {
         _state.value =
             _state.value.copy(groceryItem = _state.value.groceryItem.copy(isChecked = isChecked))
+    }
+
+    fun onAisleChanged(category: GroceryCategory) {
+        _state.value =
+            _state.value.copy(groceryItem = _state.value.groceryItem.copy(category = category))
     }
 
     fun save() {

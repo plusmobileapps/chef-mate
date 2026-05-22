@@ -9,6 +9,7 @@ import com.plusmobileapps.chefmate.database.GroceryListQueries
 import com.plusmobileapps.chefmate.database.GroceryQueries
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.IO
+import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
@@ -236,6 +237,7 @@ class GroceryRepositoryImpl(
             queries.update(
                 name = item.name,
                 isChecked = item.isChecked,
+                aisle = item.category.name,
                 updatedAt = dateTimeUtil.now.toString(),
                 id = item.id,
             )
@@ -658,12 +660,14 @@ class GroceryRepositoryImpl(
                 else -> SyncStatus.NOT_SYNCED
             }
         val parsed = IngredientParser.parse(entity.name)
+        val storedAisle =
+            entity.aisle?.let { runCatching { GroceryCategory.valueOf(it) }.getOrNull() }
         return GroceryItem(
             id = entity.id,
             name = entity.name,
             displayName = parsed.name,
             quantity = parsed.quantity,
-            category = parsed.category,
+            category = storedAisle ?: parsed.category,
             isChecked = entity.isChecked,
             syncStatus = syncStatus,
             recipeName = entity.recipeName,

@@ -9,6 +9,7 @@ import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc.Output
 import com.plusmobileapps.chefmate.grocery.core.impl.detail.ui.GroceryDetailScreen
+import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
@@ -60,6 +61,10 @@ class GroceryDetailBlocImpl(
 
     override fun onGroceryCheckedChanged(isChecked: Boolean) {
         viewModel.onGroceryCheckedChanged(isChecked)
+    }
+
+    override fun onAisleChanged(category: GroceryCategory) {
+        viewModel.onAisleChanged(category)
     }
 
     override fun onSaveClicked() {
