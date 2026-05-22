@@ -34,6 +34,7 @@ import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -52,6 +53,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,6 +65,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -108,6 +111,8 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_sync_all
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_not_synced
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_synced
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_syncing
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailSheetContent
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.SyncStatus
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
@@ -116,6 +121,10 @@ import com.plusmobileapps.chefmate.ui.isIosPlatform
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.flow.StateFlow
 import org.jetbrains.compose.resources.stringResource
+
+object GroceryListTestTags {
+    const val SCREEN = "grocery_list_screen"
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -132,7 +141,7 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
     val focusManager = LocalFocusManager.current
 
     PlusNavContainer(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.testTag(GroceryListTestTags.SCREEN).fillMaxSize(),
         data = PlusHeaderData.None,
         scrollEnabled = false,
         content = {
@@ -296,6 +305,42 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
             onDeletePurchased = bloc::onDeletePurchasedConfirmed,
             onDeleteAll = bloc::onDeleteAllConfirmed,
         )
+    }
+
+    GroceryDetailSheet(bloc = bloc)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun GroceryDetailSheet(bloc: GroceryListBloc) {
+    val slot = bloc.childSlot.subscribeAsState()
+    val child = slot.value.child?.instance
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    var sheetChild by remember { mutableStateOf(child) }
+    if (child != null) {
+        sheetChild = child
+    }
+
+    LaunchedEffect(child) {
+        if (child == null && sheetChild != null) {
+            sheetState.hide()
+            sheetChild = null
+        }
+    }
+
+    val active = sheetChild
+    if (active != null) {
+        ModalBottomSheet(
+            onDismissRequest = bloc::onDismissSheet,
+            sheetState = sheetState,
+            dragHandle = { BottomSheetDefaults.DragHandle() },
+        ) {
+            when (active) {
+                is GroceryListBloc.Sheet.GroceryDetail ->
+                    GroceryDetailSheetContent(bloc = active.bloc)
+            }
+        }
     }
 }
 

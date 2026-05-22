@@ -1,9 +1,17 @@
 package com.plusmobileapps.chefmate.grocery.core.impl.list
 
+import com.arkivanov.decompose.router.slot.ChildSlot
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.childSlot
+import com.arkivanov.decompose.router.slot.dismiss
+import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.backhandler.BackCallback
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
+import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryFilter
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GrocerySort
@@ -15,6 +23,7 @@ import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.Provider
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.serialization.Serializable
 
 @AssistedInject
 @ContributesAssistedFactory(
@@ -25,9 +34,29 @@ class GroceryListBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<GroceryListBloc.Output>,
     viewModelFactory: Provider<GroceryListViewModel>,
+    private val groceryDetailFactory: GroceryDetailBloc.Factory,
 ) : GroceryListBloc, BlocContext by context {
 
     private val viewModel = instanceKeeper.getViewModel { viewModelFactory() }
+
+    private val sheetNavigation = SlotNavigation<SheetConfig>()
+    private val sheetRouter =
+        childSlot(
+            source = sheetNavigation,
+            serializer = SheetConfig.serializer(),
+            key = "GroceryListBloc_Sheet",
+            childFactory = ::createSheet,
+        )
+
+    override val childSlot: Value<ChildSlot<*, GroceryListBloc.Sheet>> = sheetRouter
+
+    private val sheetBackCallback =
+        BackCallback(isEnabled = sheetRouter.value.child != null) { sheetNavigation.dismiss() }
+
+    init {
+        backHandler.register(sheetBackCallback)
+        sheetRouter.subscribe { slot -> sheetBackCallback.isEnabled = slot.child != null }
+    }
 
     override val state: StateFlow<GroceryListBloc.Model> =
         viewModel.state.mapState {
@@ -70,7 +99,11 @@ class GroceryListBlocImpl(
     }
 
     override fun onGroceryItemClicked(item: GroceryItem) {
-        output.onNext(GroceryListBloc.Output.OpenDetail(item.id))
+        sheetNavigation.activate(SheetConfig.GroceryDetail(item.id))
+    }
+
+    override fun onDismissSheet() {
+        sheetNavigation.dismiss()
     }
 
     override fun onSyncClicked() {
@@ -131,5 +164,27 @@ class GroceryListBlocImpl(
 
     override fun onBrowseRecipesClicked() {
         output.onNext(GroceryListBloc.Output.OpenRecipes)
+    }
+
+    private fun createSheet(config: SheetConfig, context: BlocContext): GroceryListBloc.Sheet =
+        when (config) {
+            is SheetConfig.GroceryDetail ->
+                GroceryListBloc.Sheet.GroceryDetail(
+                    bloc =
+                        groceryDetailFactory.create(
+                            context = context,
+                            id = config.itemId,
+                            output = { detailOutput ->
+                                when (detailOutput) {
+                                    GroceryDetailBloc.Output.Finished -> sheetNavigation.dismiss()
+                                }
+                            },
+                        )
+                )
+        }
+
+    @Serializable
+    sealed class SheetConfig {
+        @Serializable data class GroceryDetail(val itemId: Long) : SheetConfig()
     }
 }

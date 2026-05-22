@@ -31,7 +31,6 @@ import com.plusmobileapps.chefmate.browser.BrowserRootScreen
 import com.plusmobileapps.chefmate.cook.CookModeScreen
 import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsScreen
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagsScreen
-import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavigationScreen
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootScreen
@@ -144,7 +143,6 @@ private fun com.arkivanov.decompose.Child<*, *>.saveableKey(): String =
 private fun RootChildContent(child: RootBloc.Child, onBack: () -> Unit) {
     when (child) {
         is RootBloc.Child.BottomNavigation -> BottomNavigationScreen(child.bloc)
-        is RootBloc.Child.GroceryDetail -> GroceryDetailScreen(child.bloc)
         is RootBloc.Child.RecipeRoot -> RecipeRootScreen(child.bloc)
         is RootBloc.Child.Authentication -> AuthenticationScreen(child.bloc)
         is RootBloc.Child.OtpVerification -> OtpScreen(child.bloc)

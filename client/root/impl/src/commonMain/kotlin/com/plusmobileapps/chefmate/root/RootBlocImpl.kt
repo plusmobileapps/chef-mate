@@ -19,14 +19,12 @@ import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.featureflag.FeatureFlags
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagsBloc
-import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc.Props.Detail
 import com.plusmobileapps.chefmate.root.RootBloc.Child.BottomNavigation
-import com.plusmobileapps.chefmate.root.RootBlocImpl.Configuration.GroceryDetail
 import com.plusmobileapps.chefmate.root.RootBlocImpl.Configuration.RecipeRoot
 import com.plusmobileapps.chefmate.settings.AppSettingsBloc
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
@@ -41,7 +39,6 @@ class RootBlocImpl(
     @Assisted context: BlocContext,
     private val bottomNav: BottomNavBloc.Factory,
     private val browserRootBlocFactory: BrowserRootBloc.Factory,
-    private val groceryDetail: GroceryDetailBloc.Factory,
     private val recipeRoot: RecipeRootBloc.Factory,
     private val mealPlannerRoot: MealPlannerRootBloc.Factory,
     private val authentication: AuthenticationBloc.Factory,
@@ -88,16 +85,6 @@ class RootBlocImpl(
             Configuration.BottomNavigation ->
                 BottomNavigation(
                     bottomNav.create(context = context, output = ::handleBottomNavOutput)
-                )
-
-            is Configuration.GroceryDetail ->
-                RootBloc.Child.GroceryDetail(
-                    bloc =
-                        groceryDetail.create(
-                            context = context,
-                            id = config.itemId,
-                            output = ::onDetailOutput,
-                        )
                 )
 
             is Configuration.RecipeRoot ->
@@ -200,10 +187,6 @@ class RootBlocImpl(
                 navigation.bringToFront(RecipeRoot(RecipeRootBloc.Props.Create))
             }
 
-            is BottomNavBloc.Output.OpenGrocery -> {
-                navigation.bringToFront(GroceryDetail(output.groceryId))
-            }
-
             is BottomNavBloc.Output.OpenRecipe -> {
                 navigation.bringToFront(RecipeRoot(Detail(output.recipeId)))
             }
@@ -278,12 +261,6 @@ class RootBlocImpl(
         }
     }
 
-    private fun onDetailOutput(output: GroceryDetailBloc.Output) {
-        when (output) {
-            GroceryDetailBloc.Output.Finished -> navigation.pop()
-        }
-    }
-
     private fun handleRecipeRootOutput(output: RecipeRootBloc.Output) {
         when (output) {
             RecipeRootBloc.Output.Finished -> navigation.pop()
@@ -354,8 +331,6 @@ class RootBlocImpl(
     @Serializable
     private sealed class Configuration {
         @Serializable data object BottomNavigation : Configuration()
-
-        @Serializable data class GroceryDetail(val itemId: Long) : Configuration()
 
         @Serializable data class RecipeRoot(val props: RecipeRootBloc.Props) : Configuration()
 

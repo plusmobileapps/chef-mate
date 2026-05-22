@@ -10,7 +10,6 @@ import com.plusmobileapps.chefmate.auth.ui.otp.OtpBloc
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
-import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
@@ -28,10 +27,8 @@ import kotlin.test.Test
 class RootBlocTest {
     val context = TestBlocContext.create()
     var bottomNavOutput: Consumer<BottomNavBloc.Output> = Consumer {}
-    var detailOutput: Consumer<GroceryDetailBloc.Output> = Consumer {}
     var recipeOutput: Consumer<RecipeRootBloc.Output> = Consumer {}
     var recipeProps: RecipeRootBloc.Props? = null
-    var groceryDetailId: Long? = null
     var appSettingsOutput: Consumer<AppSettingsBloc.Output> = Consumer {}
     var bottomNavOrderOutput: Consumer<BottomNavOrderBloc.Output> = Consumer {}
     var developerSettingsOutput:
@@ -60,11 +57,6 @@ class RootBlocTest {
             recipeRoot = { context, props, output ->
                 recipeOutput = output
                 recipeProps = props
-                mock()
-            },
-            groceryDetail = { _, id, output ->
-                groceryDetailId = id
-                detailOutput = output
                 mock()
             },
             mealPlannerRoot = MealPlannerRootBloc.Factory { _, _, _ -> mock() },
@@ -100,23 +92,6 @@ class RootBlocTest {
     fun When_initialized_Then_bottom_nav_is_shown() {
         rootBloc.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
         rootBloc.state.value.backStack.size shouldBe 0
-    }
-
-    @Test
-    fun When_bottom_nav_outputs_open_detail_Then_detail_is_shown() {
-        val itemId = 123L
-        bottomNavOutput.onNext(BottomNavBloc.Output.OpenGrocery(itemId))
-        rootBloc.instance() should instanceOf<RootBloc.Child.GroceryDetail>()
-        rootBloc.state.value.backStack.size shouldBe 1
-        groceryDetailId shouldBe itemId
-    }
-
-    @Test
-    fun Given_detail_When_detail_outputs_close_Then_bottom_nav_is_shown() {
-        bottomNavOutput.onNext(BottomNavBloc.Output.OpenGrocery(123L))
-        rootBloc.instance() should instanceOf<RootBloc.Child.GroceryDetail>()
-        detailOutput.onNext(GroceryDetailBloc.Output.Finished)
-        rootBloc.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
     }
 
     @Test

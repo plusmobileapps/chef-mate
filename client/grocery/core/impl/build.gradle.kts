@@ -1,4 +1,7 @@
-plugins { alias(libs.plugins.kmpLibrary) }
+plugins {
+    alias(libs.plugins.kmpLibrary)
+    alias(libs.plugins.kotlinSerialization)
+}
 
 kotlin {
     sourceSets {

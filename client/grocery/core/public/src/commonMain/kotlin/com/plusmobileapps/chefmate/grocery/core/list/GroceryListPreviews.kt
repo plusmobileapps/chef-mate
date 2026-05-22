@@ -2,6 +2,9 @@ package com.plusmobileapps.chefmate.grocery.core.list
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import com.arkivanov.decompose.router.slot.ChildSlot
+import com.arkivanov.decompose.value.MutableValue
+import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryFilter
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryGroup
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GrocerySort
@@ -60,6 +63,8 @@ private fun groceryListBloc(
     object : GroceryListBloc {
         override val state = MutableStateFlow(model)
         override val newGroceryItemName = MutableStateFlow(pendingInput)
+        override val childSlot: Value<ChildSlot<*, GroceryListBloc.Sheet>> =
+            MutableValue(ChildSlot<Any, GroceryListBloc.Sheet>(null))
 
         override fun onGroceryItemCheckedChange(item: GroceryItem, isChecked: Boolean) = Unit
 
@@ -70,6 +75,8 @@ private fun groceryListBloc(
         override fun saveGroceryItem() = Unit
 
         override fun onGroceryItemClicked(item: GroceryItem) = Unit
+
+        override fun onDismissSheet() = Unit
 
         override fun onSyncClicked() = Unit
 

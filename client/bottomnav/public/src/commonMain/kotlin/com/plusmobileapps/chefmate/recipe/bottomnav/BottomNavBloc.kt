@@ -53,8 +53,6 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc {
 
         object AddNewRecipe : Output()
 
-        data class OpenGrocery(val groceryId: Long) : Output()
-
         data object OpenSignIn : Output()
 
         data object OpenSignUp : Output()
