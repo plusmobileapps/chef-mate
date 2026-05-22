@@ -12,6 +12,7 @@ import com.plusmobileapps.chefmate.testing.TestConsumer
 import dev.mokkery.answering.returns
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
+import dev.mokkery.matcher.matches
 import dev.mokkery.mock
 import dev.mokkery.verifySuspend
 import io.kotest.matchers.shouldBe
@@ -41,12 +42,35 @@ class GroceryDetailBlocTest {
     }
 
     @Test
-    fun WHEN_grocery_name_changed_THEN_update_state_with_new_name() {
+    fun WHEN_grocery_name_changed_THEN_update_state_with_new_display_name() {
         runTest {
             bloc.onGroceryNameChanged("Bread")
             bloc.models.test {
                 awaitItem() shouldBe
-                    GroceryDetailBloc.Model.Loaded(item = groceryItem.copy(name = "Bread"))
+                    GroceryDetailBloc.Model.Loaded(item = groceryItem.copy(displayName = "Bread"))
+            }
+        }
+    }
+
+    @Test
+    fun WHEN_grocery_quantity_changed_THEN_update_state_with_new_quantity() {
+        runTest {
+            bloc.onGroceryQuantityChanged("2 cups")
+            bloc.models.test {
+                awaitItem() shouldBe
+                    GroceryDetailBloc.Model.Loaded(item = groceryItem.copy(quantity = "2 cups"))
+            }
+        }
+    }
+
+    @Test
+    fun WHEN_quantity_cleared_THEN_quantity_becomes_null() {
+        runTest {
+            bloc.onGroceryQuantityChanged("2 cups")
+            bloc.onGroceryQuantityChanged("")
+            bloc.models.test {
+                awaitItem() shouldBe
+                    GroceryDetailBloc.Model.Loaded(item = groceryItem.copy(quantity = null))
             }
         }
     }
@@ -76,21 +100,41 @@ class GroceryDetailBlocTest {
     }
 
     @Test
-    fun WHEN_save_clicked_THEN_update_repository_and_emit_finished_output() {
+    fun WHEN_save_clicked_THEN_persist_combined_name_and_emit_finished_output() {
+        runTest {
+            everySuspend { repository.updateGrocery(any()) } returns Unit
+
+            bloc.onGroceryQuantityChanged("2 cups")
+            bloc.onGroceryNameChanged("Flour")
+            bloc.onGroceryCheckedChanged(true)
+            bloc.onSaveClicked()
+
+            verifySuspend {
+                repository.updateGrocery(
+                    matches {
+                        it.name == "2 cups Flour" &&
+                            it.displayName == "Flour" &&
+                            it.quantity == "2 cups" &&
+                            it.isChecked
+                    }
+                )
+            }
+            testConsumer.lastValue shouldBe GroceryDetailBloc.Output.Finished
+        }
+    }
+
+    @Test
+    fun WHEN_save_clicked_with_no_quantity_THEN_persist_display_name_only() {
         runTest {
             everySuspend { repository.updateGrocery(any()) } returns Unit
 
             bloc.onGroceryNameChanged("Bread")
-            bloc.onGroceryCheckedChanged(true)
             bloc.onSaveClicked()
 
-            bloc.models.test {
-                awaitItem() shouldBe
-                    GroceryDetailBloc.Model.Loaded(
-                        groceryItem.copy(name = "Bread", isChecked = true)
-                    )
-                testConsumer.lastValue shouldBe GroceryDetailBloc.Output.Finished
+            verifySuspend {
+                repository.updateGrocery(matches { it.name == "Bread" && it.quantity == null })
             }
+            testConsumer.lastValue shouldBe GroceryDetailBloc.Output.Finished
         }
     }
 

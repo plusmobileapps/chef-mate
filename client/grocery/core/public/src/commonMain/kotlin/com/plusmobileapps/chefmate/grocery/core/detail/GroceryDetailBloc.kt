@@ -13,6 +13,8 @@ interface GroceryDetailBloc : BackClickBloc, BlocScreen {
 
     fun onGroceryNameChanged(name: String)
 
+    fun onGroceryQuantityChanged(quantity: String)
+
     fun onGroceryCheckedChanged(isChecked: Boolean)
 
     fun onAisleChanged(category: GroceryCategory)

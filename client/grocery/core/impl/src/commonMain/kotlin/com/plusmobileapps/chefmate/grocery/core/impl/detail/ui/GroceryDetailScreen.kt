@@ -6,9 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -19,7 +17,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,9 +30,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import chefmate.client.grocery.core.public.generated.resources.Res
-import chefmate.client.grocery.core.public.generated.resources.grocery_detail
 import chefmate.client.grocery.core.public.generated.resources.grocery_detail_aisle_label
 import chefmate.client.grocery.core.public.generated.resources.grocery_detail_name_label
+import chefmate.client.grocery.core.public.generated.resources.grocery_detail_quantity_label
+import chefmate.client.grocery.core.public.generated.resources.grocery_recipe_source
 import chefmate.client.grocery.core.public.generated.resources.purchased
 import chefmate.client.ui.public.generated.resources.Res as CommonRes
 import chefmate.client.ui.public.generated.resources.save
@@ -42,9 +41,8 @@ import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.grocery.core.displayName
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
-import com.plusmobileapps.chefmate.text.asTextData
-import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
-import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
@@ -54,44 +52,10 @@ object GroceryDetailTestTags {
     const val AISLE_DROPDOWN = "grocery_detail_aisle_dropdown"
 }
 
-@Composable
-fun GroceryDetailScreen(bloc: GroceryDetailBloc, modifier: Modifier = Modifier) {
-    val state = bloc.models.collectAsState()
-
-    PlusHeaderContainer(
-        modifier = modifier.fillMaxSize(),
-        data =
-            PlusHeaderData.Child(
-                title = Res.string.grocery_detail.asTextData(),
-                onBackClick = bloc::onBackClicked,
-            ),
-        verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingNormal),
-        floatingActionButton = {
-            ExtendedFloatingActionButton(onClick = bloc::onSaveClicked) {
-                Text(stringResource(CommonRes.string.save))
-            }
-        },
-    ) {
-        when (val model = state.value) {
-            is GroceryDetailBloc.Model.Loading -> {
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    PlusLoadingIndicator()
-                }
-            }
-            is GroceryDetailBloc.Model.Loaded -> GroceryDetailBody(model.item, bloc)
-        }
-    }
-}
-
-@Composable
-fun ColumnScope.GroceryDetailBody(item: GroceryItem, bloc: GroceryDetailBloc) {
-    GroceryDetailFields(item = item, bloc = bloc)
-}
-
 /**
- * Sheet-shaped detail body: the same editable fields rendered inside a [ModalBottomSheet], plus a
- * Save button that doubles as dismiss. Snapshot tests target this composable directly because the
- * Compose screenshot test plugin can't render [ModalBottomSheet] reliably.
+ * Sheet-shaped detail body for the bottom-sheet overlay rendered from `GroceryListScreen`. Snapshot
+ * tests target this directly because the Compose screenshot plugin can't render `ModalBottomSheet`
+ * reliably.
  */
 @Composable
 fun GroceryDetailSheetContent(bloc: GroceryDetailBloc, modifier: Modifier = Modifier) {
@@ -127,14 +91,36 @@ fun GroceryDetailSheetContent(bloc: GroceryDetailBloc, modifier: Modifier = Modi
 
 @Composable
 private fun GroceryDetailFields(item: GroceryItem, bloc: GroceryDetailBloc) {
-    OutlinedTextField(
+    Row(
         modifier = Modifier.fillMaxWidth(),
-        value = item.name,
-        onValueChange = bloc::onGroceryNameChanged,
-        label = { Text(stringResource(Res.string.grocery_detail_name_label)) },
-        singleLine = true,
-    )
+        horizontalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
+    ) {
+        OutlinedTextField(
+            modifier = Modifier.weight(1f),
+            value = item.quantity.orEmpty(),
+            onValueChange = bloc::onGroceryQuantityChanged,
+            label = { Text(stringResource(Res.string.grocery_detail_quantity_label)) },
+            singleLine = true,
+        )
+        OutlinedTextField(
+            modifier = Modifier.weight(2f),
+            value = item.displayName,
+            onValueChange = bloc::onGroceryNameChanged,
+            label = { Text(stringResource(Res.string.grocery_detail_name_label)) },
+            singleLine = true,
+        )
+    }
     AisleDropdown(selected = item.category, onSelected = bloc::onAisleChanged)
+    val recipeName = item.recipeName
+    if (recipeName != null) {
+        Text(
+            text =
+                PhraseModel(Res.string.grocery_recipe_source, "recipe" to FixedString(recipeName))
+                    .localized(),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
     Row(
         modifier =
             Modifier.fillMaxWidth().clickable { bloc.onGroceryCheckedChanged(!item.isChecked) },

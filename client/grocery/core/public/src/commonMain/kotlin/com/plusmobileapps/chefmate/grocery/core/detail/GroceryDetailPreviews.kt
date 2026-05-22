@@ -15,6 +15,8 @@ private fun groceryDetailBloc(item: GroceryItem): GroceryDetailBloc =
 
         override fun onGroceryNameChanged(name: String) = Unit
 
+        override fun onGroceryQuantityChanged(quantity: String) = Unit
+
         override fun onGroceryCheckedChanged(isChecked: Boolean) = Unit
 
         override fun onAisleChanged(category: GroceryCategory) = Unit
@@ -27,19 +29,25 @@ private fun groceryDetailBloc(item: GroceryItem): GroceryDetailBloc =
 private val sampleItem =
     GroceryItem(
         id = 1L,
-        name = "Whole milk",
+        name = "1 gal Whole milk",
         displayName = "Whole milk",
         quantity = "1 gal",
         category = GroceryCategory.DAIRY,
         isChecked = false,
     )
 
-/** Loaded detail sheet — exercises name field, aisle dropdown, and unchecked purchase row. */
+/**
+ * Loaded detail sheet — exercises quantity + name fields, aisle dropdown, unchecked purchase row.
+ */
 val previewGroceryDetailBlocLoaded: GroceryDetailBloc = groceryDetailBloc(sampleItem)
 
 /** Loaded + purchased — exercises the checked variant of the purchase row. */
 val previewGroceryDetailBlocPurchased: GroceryDetailBloc =
     groceryDetailBloc(sampleItem.copy(isChecked = true))
+
+/** Item linked to a recipe — exercises the "From: …" source line. */
+val previewGroceryDetailBlocFromRecipe: GroceryDetailBloc =
+    groceryDetailBloc(sampleItem.copy(recipeName = "Pancakes"))
 
 /** Loading state — exercises the spinner. */
 val previewGroceryDetailBlocLoading: GroceryDetailBloc =
@@ -48,6 +56,8 @@ val previewGroceryDetailBlocLoading: GroceryDetailBloc =
             MutableStateFlow<GroceryDetailBloc.Model>(GroceryDetailBloc.Model.Loading)
 
         override fun onGroceryNameChanged(name: String) = Unit
+
+        override fun onGroceryQuantityChanged(quantity: String) = Unit
 
         override fun onGroceryCheckedChanged(isChecked: Boolean) = Unit
 
@@ -68,6 +78,12 @@ internal fun GroceryDetailSheetLoadedPreview() {
 @Composable
 internal fun GroceryDetailSheetPurchasedPreview() {
     ChefMateTheme { GroceryDetailSheetContent(bloc = previewGroceryDetailBlocPurchased) }
+}
+
+@Preview(showBackground = true, heightDp = 500)
+@Composable
+internal fun GroceryDetailSheetFromRecipePreview() {
+    ChefMateTheme { GroceryDetailSheetContent(bloc = previewGroceryDetailBlocFromRecipe) }
 }
 
 @Preview(showBackground = true, heightDp = 300)

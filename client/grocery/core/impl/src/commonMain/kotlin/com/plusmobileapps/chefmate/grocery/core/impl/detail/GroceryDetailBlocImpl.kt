@@ -8,7 +8,7 @@ import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc.Output
-import com.plusmobileapps.chefmate.grocery.core.impl.detail.ui.GroceryDetailScreen
+import com.plusmobileapps.chefmate.grocery.core.impl.detail.ui.GroceryDetailSheetContent
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.mapState
@@ -59,6 +59,10 @@ class GroceryDetailBlocImpl(
         viewModel.onGroceryNameChanged(name)
     }
 
+    override fun onGroceryQuantityChanged(quantity: String) {
+        viewModel.onGroceryQuantityChanged(quantity)
+    }
+
     override fun onGroceryCheckedChanged(isChecked: Boolean) {
         viewModel.onGroceryCheckedChanged(isChecked)
     }
@@ -77,6 +81,6 @@ class GroceryDetailBlocImpl(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        GroceryDetailScreen(bloc = this, modifier = modifier)
+        GroceryDetailSheetContent(bloc = this, modifier = modifier)
     }
 }

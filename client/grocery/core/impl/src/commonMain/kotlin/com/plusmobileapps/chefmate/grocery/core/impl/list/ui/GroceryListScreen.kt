@@ -34,7 +34,6 @@ import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -90,6 +89,7 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_delete_it
 import chefmate.client.grocery.core.public.generated.resources.grocery_delete_items_title
 import chefmate.client.grocery.core.public.generated.resources.grocery_delete_list
 import chefmate.client.grocery.core.public.generated.resources.grocery_delete_purchased
+import chefmate.client.grocery.core.public.generated.resources.grocery_detail
 import chefmate.client.grocery.core.public.generated.resources.grocery_done
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter_all
@@ -119,8 +119,10 @@ import com.plusmobileapps.chefmate.grocery.core.list.GroceryGroupedList
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.SyncStatus
+import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
+import com.plusmobileapps.chefmate.ui.components.PlusSheetModal
 import com.plusmobileapps.chefmate.ui.isIosPlatform
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.flow.StateFlow
@@ -335,10 +337,11 @@ private fun GroceryDetailSheet(bloc: GroceryListBloc) {
 
     val active = sheetChild
     if (active != null) {
-        ModalBottomSheet(
+        PlusSheetModal(
             onDismissRequest = bloc::onDismissSheet,
             sheetState = sheetState,
-            dragHandle = { BottomSheetDefaults.DragHandle() },
+            title = Res.string.grocery_detail.asTextData(),
+            onCloseClick = bloc::onDismissSheet,
         ) {
             when (active) {
                 is GroceryListBloc.Sheet.GroceryDetail ->

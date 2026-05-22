@@ -10,6 +10,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailSheetContent
+import com.plusmobileapps.chefmate.grocery.core.detail.previewGroceryDetailBlocFromRecipe
 import com.plusmobileapps.chefmate.grocery.core.detail.previewGroceryDetailBlocLoaded
 import com.plusmobileapps.chefmate.grocery.core.detail.previewGroceryDetailBlocLoading
 import com.plusmobileapps.chefmate.grocery.core.detail.previewGroceryDetailBlocPurchased
@@ -46,6 +47,13 @@ fun GroceryDetailSheetLoadedDarkScreenshot() {
 @Composable
 fun GroceryDetailSheetPurchasedLightScreenshot() {
     GroceryDetailSheet(bloc = previewGroceryDetailBlocPurchased)
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 500)
+@Composable
+fun GroceryDetailSheetFromRecipeLightScreenshot() {
+    GroceryDetailSheet(bloc = previewGroceryDetailBlocFromRecipe)
 }
 
 @PreviewTest

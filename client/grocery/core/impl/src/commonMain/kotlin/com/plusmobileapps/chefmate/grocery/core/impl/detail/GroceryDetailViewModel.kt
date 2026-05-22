@@ -35,7 +35,15 @@ class GroceryDetailViewModel(
     }
 
     fun onGroceryNameChanged(name: String) {
-        _state.value = _state.value.copy(groceryItem = _state.value.groceryItem.copy(name = name))
+        _state.value =
+            _state.value.copy(groceryItem = _state.value.groceryItem.copy(displayName = name))
+    }
+
+    fun onGroceryQuantityChanged(quantity: String) {
+        _state.value =
+            _state.value.copy(
+                groceryItem = _state.value.groceryItem.copy(quantity = quantity.ifBlank { null })
+            )
     }
 
     fun onGroceryCheckedChanged(isChecked: Boolean) {
@@ -49,12 +57,19 @@ class GroceryDetailViewModel(
     }
 
     fun save() {
-        val groceryItem = _state.value.groceryItem
-        if (groceryItem.name.isBlank()) return
+        val item = _state.value.groceryItem
+        val combinedName = combineName(quantity = item.quantity, displayName = item.displayName)
+        if (combinedName.isBlank()) return
         scope.launch {
-            repository.updateGrocery(groceryItem)
+            repository.updateGrocery(item.copy(name = combinedName))
             output.send(Output.Finished)
         }
+    }
+
+    private fun combineName(quantity: String?, displayName: String): String {
+        val q = quantity?.trim().orEmpty()
+        val n = displayName.trim()
+        return if (q.isEmpty()) n else "$q $n".trim()
     }
 
     private fun loadGrocery(id: Long) {
