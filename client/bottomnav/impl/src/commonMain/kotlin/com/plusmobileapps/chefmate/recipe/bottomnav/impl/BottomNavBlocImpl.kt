@@ -26,7 +26,6 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.Meals
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.RecipeList
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.Settings
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenAppSettings
-import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenGrocery
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenSignIn
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenSignUp
 import com.plusmobileapps.chefmate.recipe.bottomnav.impl.ui.BottomNavigationScreen
@@ -203,9 +202,6 @@ class BottomNavBlocImpl(
 
     private fun handleGroceryListOutput(output: GroceryListBloc.Output) {
         when (output) {
-            is GroceryListBloc.Output.OpenDetail -> {
-                this.output.onNext(OpenGrocery(output.id))
-            }
             GroceryListBloc.Output.OpenRecipes -> {
                 onTabSelected(BottomNavBloc.Tab.RECIPES)
             }

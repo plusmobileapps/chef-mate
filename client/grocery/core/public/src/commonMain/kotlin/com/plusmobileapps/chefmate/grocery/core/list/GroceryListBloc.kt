@@ -1,7 +1,10 @@
 package com.plusmobileapps.chefmate.grocery.core.list
 
+import com.arkivanov.decompose.router.slot.ChildSlot
+import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
@@ -13,6 +16,8 @@ interface GroceryListBloc : BlocScreen {
 
     val newGroceryItemName: StateFlow<String>
 
+    val childSlot: Value<ChildSlot<*, Sheet>>
+
     fun onGroceryItemCheckedChange(item: GroceryItem, isChecked: Boolean)
 
     fun onGroceryItemDelete(item: GroceryItem)
@@ -22,6 +27,8 @@ interface GroceryListBloc : BlocScreen {
     fun saveGroceryItem()
 
     fun onGroceryItemClicked(item: GroceryItem)
+
+    fun onDismissSheet()
 
     fun onSyncClicked()
 
@@ -80,9 +87,11 @@ interface GroceryListBloc : BlocScreen {
     )
 
     sealed class Output {
-        data class OpenDetail(val id: Long) : Output()
-
         data object OpenRecipes : Output()
+    }
+
+    sealed class Sheet {
+        data class GroceryDetail(val bloc: GroceryDetailBloc) : Sheet()
     }
 
     fun interface Factory {
