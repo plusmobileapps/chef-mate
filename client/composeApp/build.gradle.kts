@@ -144,6 +144,7 @@ kotlin {
             implementation(projects.client.bottomnav.implRobots)
             implementation(projects.client.featureflag.testing)
             implementation(projects.client.recipe.categories.implRobots)
+            implementation(projects.client.grocery.core.implRobots)
             implementation(projects.client.recipe.core.implRobots)
             implementation(projects.client.recipe.list.implRobots)
             implementation(projects.client.settings.implRobots)
