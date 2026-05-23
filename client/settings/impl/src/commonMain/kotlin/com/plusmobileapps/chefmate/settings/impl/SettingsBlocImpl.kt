@@ -68,7 +68,7 @@ class SettingsBlocImpl(
     }
 
     override fun onAppSettingsClicked() {
-        output.onNext(Output.OpenAppSettings)
+        output.onNext(Output.OpenSettingsRoot)
     }
 
     override fun onDeveloperSettingsClicked() {

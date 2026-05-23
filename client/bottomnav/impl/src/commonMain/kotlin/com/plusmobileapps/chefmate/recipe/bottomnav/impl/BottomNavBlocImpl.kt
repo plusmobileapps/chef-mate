@@ -23,7 +23,7 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.GroceryL
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.Meals
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.RecipeList
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Child.Settings
-import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenAppSettings
+import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenSettingsRoot
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenSignIn
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenSignUp
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
@@ -187,7 +187,7 @@ class BottomNavBlocImpl(
         when (output) {
             SettingsBloc.Output.OpenSignIn -> OpenSignIn
             SettingsBloc.Output.OpenSignUp -> OpenSignUp
-            SettingsBloc.Output.OpenAppSettings -> OpenAppSettings
+            SettingsBloc.Output.OpenSettingsRoot -> OpenSettingsRoot
             SettingsBloc.Output.OpenDeveloperSettings -> BottomNavBloc.Output.OpenDeveloperSettings
             is SettingsBloc.Output.OpenUrl -> BottomNavBloc.Output.OpenUrl(output.url)
         }.let { this.output.onNext(it) }

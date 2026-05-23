@@ -57,7 +57,7 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc {
 
         data object OpenSignUp : Output()
 
-        data object OpenAppSettings : Output()
+        data object OpenSettingsRoot : Output()
 
         data object OpenDeveloperSettings : Output()
 

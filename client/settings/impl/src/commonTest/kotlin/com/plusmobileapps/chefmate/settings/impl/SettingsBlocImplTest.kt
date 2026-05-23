@@ -108,9 +108,9 @@ class SettingsBlocImplTest {
     }
 
     @Test
-    fun When_app_settings_clicked_Then_OpenAppSettings_output_emitted() {
+    fun When_app_settings_clicked_Then_OpenSettingsRoot_output_emitted() {
         bloc.onAppSettingsClicked()
-        output.lastValue shouldBe SettingsBloc.Output.OpenAppSettings
+        output.lastValue shouldBe SettingsBloc.Output.OpenSettingsRoot
     }
 
     @Test

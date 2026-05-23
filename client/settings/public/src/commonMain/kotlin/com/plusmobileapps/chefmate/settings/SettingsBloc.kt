@@ -45,7 +45,7 @@ interface SettingsBloc {
 
         data object OpenSignIn : Output()
 
-        data object OpenAppSettings : Output()
+        data object OpenSettingsRoot : Output()
 
         data object OpenDeveloperSettings : Output()
 
