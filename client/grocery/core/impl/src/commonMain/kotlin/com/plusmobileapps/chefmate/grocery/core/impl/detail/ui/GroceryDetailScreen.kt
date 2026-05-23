@@ -97,16 +97,16 @@ private fun GroceryDetailFields(item: GroceryItem, bloc: GroceryDetailBloc) {
     ) {
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
-            value = item.quantity.orEmpty(),
-            onValueChange = bloc::onGroceryQuantityChanged,
-            label = { Text(stringResource(Res.string.grocery_detail_quantity_label)) },
+            value = item.displayName,
+            onValueChange = bloc::onGroceryNameChanged,
+            label = { Text(stringResource(Res.string.grocery_detail_name_label)) },
             singleLine = true,
         )
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
-            value = item.displayName,
-            onValueChange = bloc::onGroceryNameChanged,
-            label = { Text(stringResource(Res.string.grocery_detail_name_label)) },
+            value = item.quantity.orEmpty(),
+            onValueChange = bloc::onGroceryQuantityChanged,
+            label = { Text(stringResource(Res.string.grocery_detail_quantity_label)) },
             singleLine = true,
         )
     }
