@@ -91,19 +91,19 @@ fun GroceryDetailSheetContent(bloc: GroceryDetailBloc, modifier: Modifier = Modi
 
 @Composable
 private fun GroceryDetailFields(item: GroceryItem, bloc: GroceryDetailBloc) {
-    Row(
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
+        verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
     ) {
         OutlinedTextField(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.fillMaxWidth(),
             value = item.quantity.orEmpty(),
             onValueChange = bloc::onGroceryQuantityChanged,
             label = { Text(stringResource(Res.string.grocery_detail_quantity_label)) },
             singleLine = true,
         )
         OutlinedTextField(
-            modifier = Modifier.weight(2f),
+            modifier = Modifier.fillMaxWidth(),
             value = item.displayName,
             onValueChange = bloc::onGroceryNameChanged,
             label = { Text(stringResource(Res.string.grocery_detail_name_label)) },
