@@ -19,8 +19,8 @@ create:
 INSERT INTO Grocery (name, isChecked, createdAt, updatedAt, clientId, listId, recipeName) VALUES (?, ?, ?, ?, ?, ?, ?);
 
 createWithRemoteId:
-INSERT INTO Grocery (name, isChecked, createdAt, updatedAt, remoteId, listRemoteId, clientId, listId, recipeName)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO Grocery (name, isChecked, createdAt, updatedAt, remoteId, listRemoteId, clientId, listId, recipeName, aisle)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(remoteId) DO UPDATE SET
     name = excluded.name,
     isChecked = excluded.isChecked,
@@ -28,7 +28,8 @@ ON CONFLICT(remoteId) DO UPDATE SET
     listRemoteId = excluded.listRemoteId,
     clientId = excluded.clientId,
     listId = excluded.listId,
-    recipeName = excluded.recipeName;
+    recipeName = excluded.recipeName,
+    aisle = excluded.aisle;
 
 readAll:
 SELECT * FROM Grocery ORDER BY name DESC;

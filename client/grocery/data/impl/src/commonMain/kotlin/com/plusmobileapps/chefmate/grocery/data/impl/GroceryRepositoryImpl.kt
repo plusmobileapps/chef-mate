@@ -374,6 +374,7 @@ class GroceryRepositoryImpl(
                                     updatedAt = match.updatedAt,
                                     clientId = clientId,
                                     recipeName = match.recipeName,
+                                    aisle = match.aisle,
                                 )
                             )
                         queries.updateRemoteId(
@@ -408,6 +409,7 @@ class GroceryRepositoryImpl(
                             updatedAt = entity.updatedAt,
                             clientId = entity.clientId,
                             recipeName = entity.recipeName,
+                            aisle = entity.aisle,
                         )
                     )
                     queries.clearDirty(localId)
@@ -525,6 +527,7 @@ class GroceryRepositoryImpl(
                                         updatedAt = item.updatedAt,
                                         clientId = clientId,
                                         recipeName = item.recipeName,
+                                        aisle = item.aisle,
                                     )
                                 )
                             withContext(ioContext) {
@@ -560,6 +563,7 @@ class GroceryRepositoryImpl(
                                     updatedAt = item.updatedAt,
                                     clientId = item.clientId,
                                     recipeName = item.recipeName,
+                                    aisle = item.aisle,
                                 )
                             )
                             withContext(ioContext) { queries.clearDirty(item.id) }
@@ -599,6 +603,7 @@ class GroceryRepositoryImpl(
                                 clientId = remoteItem.clientId,
                                 listId = list.id,
                                 recipeName = remoteItem.recipeName,
+                                aisle = remoteItem.aisle,
                             )
                         }
                     }

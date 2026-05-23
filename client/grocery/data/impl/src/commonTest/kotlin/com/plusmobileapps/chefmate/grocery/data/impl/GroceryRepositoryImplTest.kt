@@ -9,6 +9,7 @@ import com.plusmobileapps.chefmate.auth.data.ChefMateUser
 import com.plusmobileapps.chefmate.auth.data.testing.FakeAuthenticationRepository
 import com.plusmobileapps.chefmate.database.Database
 import com.plusmobileapps.chefmate.database.testing.createTestDatabase
+import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryItem
 import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryList
 import com.plusmobileapps.chefmate.grocery.data.testing.FakeGroceryRemoteDataSource
@@ -18,6 +19,7 @@ import kotlin.test.Test
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 
@@ -177,6 +179,7 @@ class GroceryRepositoryImplTest {
                         listId = remoteListId,
                         name = "Milk",
                         clientId = Uuid.random().toString(),
+                        aisle = GroceryCategory.DAIRY.name,
                     ),
                     RemoteGroceryItem(
                         id = "item-2",
@@ -197,11 +200,16 @@ class GroceryRepositoryImplTest {
                 )
             )
 
-            // Remote items should be pulled into the linked list
+            // Remote items should be pulled into the linked list — and the manual aisle override
+            // attached to "Milk" should round-trip even though the parser would also categorise
+            // it as DAIRY; the test exercises the wire path explicitly via Eggs (no override,
+            // parser fills in) and Milk (explicit override).
             repository.getGroceries().test {
                 val items = awaitItem()
                 items.size shouldBe 2
                 items.map { it.name }.toSet() shouldBe setOf("Milk", "Eggs")
+                val milk = items.first { it.name == "Milk" }
+                milk.category shouldBe GroceryCategory.DAIRY
             }
         }
 
@@ -224,6 +232,7 @@ class GroceryRepositoryImplTest {
                 clientId = "client-milk",
                 listId = localListId,
                 recipeName = null,
+                aisle = null,
             )
             db.groceryQueries.createWithRemoteId(
                 name = "Eggs",
@@ -235,6 +244,7 @@ class GroceryRepositoryImplTest {
                 clientId = "client-eggs",
                 listId = localListId,
                 recipeName = null,
+                aisle = null,
             )
 
             // Remote now only has Milk (Eggs was deleted on another device).
@@ -292,6 +302,7 @@ class GroceryRepositoryImplTest {
                 clientId = "client-milk",
                 listId = localListId,
                 recipeName = null,
+                aisle = null,
             )
             // Brand new local item — never pushed yet (no remoteId).
             repository.addGrocery(localListId, "Bread")
@@ -349,6 +360,7 @@ class GroceryRepositoryImplTest {
                 clientId = "client-chips",
                 listId = prunedLocalId,
                 recipeName = null,
+                aisle = null,
             )
 
             // Remote only has the kept list.
@@ -382,6 +394,32 @@ class GroceryRepositoryImplTest {
             db.groceryQueries.readAll().executeAsList().isEmpty() shouldBe true
         }
 
+    @Test
+    fun updateGrocery_pushes_aisle_to_remote() =
+        runTest(testDispatcher) {
+            // Authenticate first so push paths are exercised.
+            fakeAuth.setState(
+                AuthState.Authenticated(
+                    ChefMateUser(
+                        userId = "user-1",
+                        userName = "Test",
+                        userEmail = "test@test.com",
+                        userProfileImageUrl = null,
+                    )
+                )
+            )
+            val listId = repository.ensureDefaultList()
+            repository.addGrocery(listId, "Apples")
+
+            // The unsynced push (pushAddToRemote) already happened; updateGrocery exercises
+            // pushUpdateToRemote with the manual aisle override.
+            val item = repository.getGroceries(listId).first().first()
+            repository.updateGrocery(item.copy(category = GroceryCategory.MEAT))
+
+            val pushed = fakeRemote.remoteItems.values.flatten().first { it.name == "Apples" }
+            pushed.aisle shouldBe GroceryCategory.MEAT.name
+        }
+
     // ─── deleteAllGroceries ───────────────────────────────────────────────────
 
     @Test
@@ -412,6 +450,7 @@ class GroceryRepositoryImplTest {
                 clientId = "client-apple",
                 listId = listId,
                 recipeName = null,
+                aisle = null,
             )
             db.groceryQueries.createWithRemoteId(
                 name = "Bananas",
@@ -423,6 +462,7 @@ class GroceryRepositoryImplTest {
                 clientId = "client-banana",
                 listId = listId,
                 recipeName = null,
+                aisle = null,
             )
             fakeRemote.remoteItems[remoteListId] =
                 mutableListOf(
@@ -507,6 +547,7 @@ class GroceryRepositoryImplTest {
                 clientId = "client-milk",
                 listId = listId,
                 recipeName = null,
+                aisle = null,
             )
             db.groceryQueries.createWithRemoteId(
                 name = "Eggs",
@@ -518,6 +559,7 @@ class GroceryRepositoryImplTest {
                 clientId = "client-eggs",
                 listId = listId,
                 recipeName = null,
+                aisle = null,
             )
             fakeRemote.remoteItems[remoteListId] =
                 mutableListOf(
