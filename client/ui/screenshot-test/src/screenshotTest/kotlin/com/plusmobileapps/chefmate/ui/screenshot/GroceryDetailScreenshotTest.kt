@@ -1,10 +1,13 @@
 package com.plusmobileapps.chefmate.ui.screenshot
 
 import android.content.res.Configuration
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
@@ -14,6 +17,8 @@ import com.plusmobileapps.chefmate.grocery.core.detail.previewGroceryDetailBlocF
 import com.plusmobileapps.chefmate.grocery.core.detail.previewGroceryDetailBlocLoaded
 import com.plusmobileapps.chefmate.grocery.core.detail.previewGroceryDetailBlocLoading
 import com.plusmobileapps.chefmate.grocery.core.detail.previewGroceryDetailBlocPurchased
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.ui.components.PlusResponsiveModalDialogSurface
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
 // ModalBottomSheet doesn't render reliably under the Compose screenshot test plugin, so these
@@ -61,4 +66,46 @@ fun GroceryDetailSheetFromRecipeLightScreenshot() {
 @Composable
 fun GroceryDetailSheetLoadingLightScreenshot() {
     GroceryDetailSheet(bloc = previewGroceryDetailBlocLoading)
+}
+
+// ── EXPANDED-width dialog variant ──────────────────────────────────────────
+//
+// On windows ≥ 840dp wide, PlusResponsiveModal switches to a centered dialog. Dialog itself
+// doesn't snapshot reliably under the screenshot plugin, so we render
+// PlusResponsiveModalDialogSurface
+// directly inside a Box that fills the wide canvas.
+
+@Composable
+private fun GroceryDetailDialog(bloc: GroceryDetailBloc, darkTheme: Boolean = false) {
+    ChefMateTheme(darkTheme = darkTheme) {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                PlusResponsiveModalDialogSurface(
+                    title = FixedString("Grocery Detail"),
+                    onCloseClick = {},
+                ) {
+                    GroceryDetailSheetContent(bloc = bloc)
+                }
+            }
+        }
+    }
+}
+
+@PreviewTest
+@Preview(showBackground = true, widthDp = 1000, heightDp = 700)
+@Composable
+fun GroceryDetailDialogExpandedLightScreenshot() {
+    GroceryDetailDialog(bloc = previewGroceryDetailBlocLoaded)
+}
+
+@PreviewTest
+@Preview(
+    showBackground = true,
+    widthDp = 1000,
+    heightDp = 700,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Composable
+fun GroceryDetailDialogExpandedDarkScreenshot() {
+    GroceryDetailDialog(bloc = previewGroceryDetailBlocLoaded, darkTheme = true)
 }

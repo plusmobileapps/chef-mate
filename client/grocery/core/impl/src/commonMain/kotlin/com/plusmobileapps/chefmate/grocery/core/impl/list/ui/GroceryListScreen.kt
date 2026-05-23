@@ -122,7 +122,7 @@ import com.plusmobileapps.chefmate.grocery.data.SyncStatus
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
-import com.plusmobileapps.chefmate.ui.components.PlusSheetModal
+import com.plusmobileapps.chefmate.ui.components.PlusResponsiveModal
 import com.plusmobileapps.chefmate.ui.isIosPlatform
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.flow.StateFlow
@@ -337,7 +337,7 @@ private fun GroceryDetailSheet(bloc: GroceryListBloc) {
 
     val active = sheetChild
     if (active != null) {
-        PlusSheetModal(
+        PlusResponsiveModal(
             onDismissRequest = bloc::onDismissSheet,
             sheetState = sheetState,
             title = Res.string.grocery_detail.asTextData(),
