@@ -42,6 +42,7 @@ dependencies {
     implementation(project(":client:recipe:list:public"))
     implementation(project(":client:recipe:data:public"))
     implementation(project(":client:settings:public"))
+    implementation(project(":client:settings:root:public"))
 
     screenshotTestImplementation(libs.screenshot.validation.api)
     screenshotTestImplementation(libs.androidx.compose.ui.tooling)
