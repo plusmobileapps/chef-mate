@@ -120,6 +120,12 @@ include(":client:settings:impl")
 
 include(":client:settings:public")
 
+include(":client:settings:root:impl")
+
+include(":client:settings:root:impl-robots")
+
+include(":client:settings:root:public")
+
 include(":client:developer-settings:impl")
 
 include(":client:developer-settings:public")

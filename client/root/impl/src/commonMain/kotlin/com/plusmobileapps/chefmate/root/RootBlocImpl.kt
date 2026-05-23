@@ -20,13 +20,12 @@ import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.featureflag.FeatureFlags
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagsBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
-import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc.Props.Detail
 import com.plusmobileapps.chefmate.root.RootBloc.Child.BottomNavigation
 import com.plusmobileapps.chefmate.root.RootBlocImpl.Configuration.RecipeRoot
-import com.plusmobileapps.chefmate.settings.AppSettingsBloc
+import com.plusmobileapps.chefmate.settings.root.SettingsRootBloc
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
@@ -43,8 +42,7 @@ class RootBlocImpl(
     private val mealPlannerRoot: MealPlannerRootBloc.Factory,
     private val authentication: AuthenticationBloc.Factory,
     private val otpBloc: OtpBloc.Factory,
-    private val appSettings: AppSettingsBloc.Factory,
-    private val bottomNavOrder: BottomNavOrderBloc.Factory,
+    private val settingsRoot: SettingsRootBloc.Factory,
     private val developerSettings: DeveloperSettingsBloc.Factory,
     private val cookMode: CookModeBloc.Factory,
     private val featureFlags: FeatureFlags,
@@ -138,18 +136,10 @@ class RootBlocImpl(
                         )
                 )
 
-            Configuration.AppSettings ->
-                RootBloc.Child.AppSettings(
-                    bloc = appSettings.create(context = context, output = ::handleAppSettingsOutput)
-                )
-
-            Configuration.BottomNavOrder ->
-                RootBloc.Child.BottomNavOrder(
+            Configuration.SettingsRoot ->
+                RootBloc.Child.SettingsRoot(
                     bloc =
-                        bottomNavOrder.create(
-                            context = context,
-                            output = ::handleBottomNavOrderOutput,
-                        )
+                        settingsRoot.create(context = context, output = ::handleSettingsRootOutput)
                 )
 
             Configuration.DeveloperSettings ->
@@ -217,8 +207,8 @@ class RootBlocImpl(
                 navigation.bringToFront(Configuration.MealPlanner(output.props))
             }
 
-            BottomNavBloc.Output.OpenAppSettings -> {
-                navigation.bringToFront(Configuration.AppSettings)
+            BottomNavBloc.Output.OpenSettingsRoot -> {
+                navigation.bringToFront(Configuration.SettingsRoot)
             }
 
             BottomNavBloc.Output.OpenDeveloperSettings -> {
@@ -231,18 +221,9 @@ class RootBlocImpl(
         }
     }
 
-    private fun handleAppSettingsOutput(output: AppSettingsBloc.Output) {
+    private fun handleSettingsRootOutput(output: SettingsRootBloc.Output) {
         when (output) {
-            AppSettingsBloc.Output.Back -> navigation.pop()
-            AppSettingsBloc.Output.OpenBottomNavOrder -> {
-                navigation.bringToFront(Configuration.BottomNavOrder)
-            }
-        }
-    }
-
-    private fun handleBottomNavOrderOutput(output: BottomNavOrderBloc.Output) {
-        when (output) {
-            BottomNavOrderBloc.Output.Back -> navigation.pop()
+            SettingsRootBloc.Output.Back -> navigation.pop()
         }
     }
 
@@ -344,9 +325,7 @@ class RootBlocImpl(
 
         @Serializable data class MealPlanner(val props: MealPlannerRootBloc.Props) : Configuration()
 
-        @Serializable data object AppSettings : Configuration()
-
-        @Serializable data object BottomNavOrder : Configuration()
+        @Serializable data object SettingsRoot : Configuration()
 
         @Serializable data object DeveloperSettings : Configuration()
 

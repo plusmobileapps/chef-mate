@@ -15,6 +15,7 @@ kotlin {
             api(projects.client.recipe.core.public)
             api(projects.client.auth.ui.public)
             api(projects.client.settings.public)
+            api(projects.client.settings.root.public)
             api(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
             implementation(projects.client.ui.public)

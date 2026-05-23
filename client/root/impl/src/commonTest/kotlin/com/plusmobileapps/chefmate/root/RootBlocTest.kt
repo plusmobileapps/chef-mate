@@ -11,11 +11,10 @@ import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
-import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
-import com.plusmobileapps.chefmate.settings.AppSettingsBloc
+import com.plusmobileapps.chefmate.settings.root.SettingsRootBloc
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import dev.mokkery.MockMode
 import dev.mokkery.mock
@@ -29,8 +28,7 @@ class RootBlocTest {
     var bottomNavOutput: Consumer<BottomNavBloc.Output> = Consumer {}
     var recipeOutput: Consumer<RecipeRootBloc.Output> = Consumer {}
     var recipeProps: RecipeRootBloc.Props? = null
-    var appSettingsOutput: Consumer<AppSettingsBloc.Output> = Consumer {}
-    var bottomNavOrderOutput: Consumer<BottomNavOrderBloc.Output> = Consumer {}
+    var settingsRootOutput: Consumer<SettingsRootBloc.Output> = Consumer {}
     var developerSettingsOutput:
         Consumer<com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc.Output> =
         Consumer {}
@@ -69,12 +67,8 @@ class RootBlocTest {
                 otpOutput = output
                 mock()
             },
-            appSettings = { _, output ->
-                appSettingsOutput = output
-                mock()
-            },
-            bottomNavOrder = { _, output ->
-                bottomNavOrderOutput = output
+            settingsRoot = { _, output ->
+                settingsRootOutput = output
                 mock()
             },
             developerSettings = { _, output ->
@@ -134,34 +128,18 @@ class RootBlocTest {
     }
 
     @Test
-    fun When_bottom_nav_outputs_open_app_settings_Then_app_settings_is_shown() {
-        bottomNavOutput.onNext(BottomNavBloc.Output.OpenAppSettings)
-        rootBloc.instance() should instanceOf<RootBloc.Child.AppSettings>()
+    fun When_bottom_nav_outputs_open_settings_root_Then_settings_root_is_shown() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenSettingsRoot)
+        rootBloc.instance() should instanceOf<RootBloc.Child.SettingsRoot>()
         rootBloc.state.value.backStack.size shouldBe 1
     }
 
     @Test
-    fun Given_app_settings_When_back_outputted_Then_bottom_nav_is_shown() {
-        bottomNavOutput.onNext(BottomNavBloc.Output.OpenAppSettings)
-        rootBloc.instance() should instanceOf<RootBloc.Child.AppSettings>()
-        appSettingsOutput.onNext(AppSettingsBloc.Output.Back)
+    fun Given_settings_root_When_back_outputted_Then_bottom_nav_is_shown() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenSettingsRoot)
+        rootBloc.instance() should instanceOf<RootBloc.Child.SettingsRoot>()
+        settingsRootOutput.onNext(SettingsRootBloc.Output.Back)
         rootBloc.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
-    }
-
-    @Test
-    fun Given_app_settings_When_open_bottom_nav_order_Then_bottom_nav_order_shown() {
-        bottomNavOutput.onNext(BottomNavBloc.Output.OpenAppSettings)
-        appSettingsOutput.onNext(AppSettingsBloc.Output.OpenBottomNavOrder)
-        rootBloc.instance() should instanceOf<RootBloc.Child.BottomNavOrder>()
-        rootBloc.state.value.backStack.size shouldBe 2
-    }
-
-    @Test
-    fun Given_bottom_nav_order_When_back_outputted_Then_app_settings_is_shown() {
-        bottomNavOutput.onNext(BottomNavBloc.Output.OpenAppSettings)
-        appSettingsOutput.onNext(AppSettingsBloc.Output.OpenBottomNavOrder)
-        bottomNavOrderOutput.onNext(BottomNavOrderBloc.Output.Back)
-        rootBloc.instance() should instanceOf<RootBloc.Child.AppSettings>()
     }
 
     @Test

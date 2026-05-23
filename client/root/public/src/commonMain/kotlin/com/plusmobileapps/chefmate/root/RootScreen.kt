@@ -31,11 +31,10 @@ import com.plusmobileapps.chefmate.browser.BrowserRootScreen
 import com.plusmobileapps.chefmate.cook.CookModeScreen
 import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsScreen
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagsScreen
-import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavigationScreen
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootScreen
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootScreen
-import com.plusmobileapps.chefmate.settings.AppSettingsScreen
+import com.plusmobileapps.chefmate.settings.root.SettingsRootScreen
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.LocalAnimatedVisibilityScope
 import com.plusmobileapps.chefmate.ui.LocalSharedTransitionScope
@@ -155,8 +154,7 @@ private fun RootChildContent(child: RootBloc.Child, onBack: () -> Unit) {
                 content = { BrowserRootScreen(child.bloc, modifier = Modifier.weight(1f)) },
             )
         is RootBloc.Child.MealPlanner -> MealPlannerRootScreen(child.bloc)
-        is RootBloc.Child.AppSettings -> AppSettingsScreen(child.bloc)
-        is RootBloc.Child.BottomNavOrder -> BottomNavOrderScreen(child.bloc)
+        is RootBloc.Child.SettingsRoot -> SettingsRootScreen(child.bloc)
         is RootBloc.Child.DeveloperSettings -> DeveloperSettingsScreen(child.bloc)
         is RootBloc.Child.FeatureFlags -> FeatureFlagsScreen(child.bloc)
         is RootBloc.Child.CookMode -> CookModeScreen(child.bloc)

@@ -99,6 +99,7 @@ kotlin {
             api(projects.client.recipe.core.impl)
             api(projects.client.util.impl)
             api(projects.client.settings.impl)
+            api(projects.client.settings.root.impl)
             api(projects.client.developerSettings.impl)
             api(libs.kermit)
             implementation(libs.supabase.client)
@@ -137,6 +138,7 @@ kotlin {
             implementation(projects.client.grocery.core.implRobots)
             implementation(projects.client.recipe.core.implRobots)
             implementation(projects.client.recipe.list.implRobots)
+            implementation(projects.client.settings.root.implRobots)
         }
         val jvmTest by getting {
             dependencies {
