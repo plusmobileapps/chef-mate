@@ -43,7 +43,13 @@ class SettingsRootBlocImpl(
         childPanels(
             source = navigation,
             serializers = Pair(MainConfig.serializer(), DetailsConfig.serializer()),
-            initialPanels = { Panels(main = MainConfig.AppSettings) },
+            // Default the details slot to the first child entry (BottomNavOrder) so the
+            // tablet/expanded layout opens with the right pane populated rather than empty.
+            // On COMPACT the user lands on the detail and can press back to surface the master
+            // list, matching the rest of the app's stack-pop UX.
+            initialPanels = {
+                Panels(main = MainConfig.AppSettings, details = DetailsConfig.BottomNavOrder)
+            },
             key = "SettingsRootPanels",
             handleBackButton = true,
             mainFactory = { config, ctx ->

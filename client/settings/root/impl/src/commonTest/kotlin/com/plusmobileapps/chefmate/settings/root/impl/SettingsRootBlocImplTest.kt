@@ -43,10 +43,12 @@ class SettingsRootBlocImplTest {
         )
 
     @Test
-    fun initial_state_shows_main_only() {
+    fun initial_state_shows_main_with_default_bottom_nav_order_detail() {
         val panels = bloc.panels.value
         panels.main.instance should instanceOf<SettingsRootBloc.MainChild.AppSettings>()
-        panels.details shouldBe null
+        val details = panels.details
+        details.shouldNotBeNull()
+        details.instance should instanceOf<SettingsRootBloc.DetailsChild.BottomNavOrder>()
     }
 
     @Test
