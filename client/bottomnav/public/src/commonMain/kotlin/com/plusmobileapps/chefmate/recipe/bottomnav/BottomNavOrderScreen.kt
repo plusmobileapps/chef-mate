@@ -54,17 +54,30 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun BottomNavOrderScreen(bloc: BottomNavOrderBloc, modifier: Modifier = Modifier) {
+fun BottomNavOrderScreen(
+    bloc: BottomNavOrderBloc,
+    modifier: Modifier = Modifier,
+    // When false the header drops the back arrow — used when the screen is rendered as the always-
+    // visible detail pane inside a master-detail layout, where a back button would be misleading
+    // (the user can never "leave" the pane in that mode).
+    showBackButton: Boolean = true,
+) {
     val state by bloc.state.collectAsState()
+
+    val headerData =
+        if (showBackButton) {
+            PlusHeaderData.Child(
+                title = Res.string.bottom_nav_order_title.asTextData(),
+                onBackClick = bloc::onBack,
+            )
+        } else {
+            PlusHeaderData.Parent(title = Res.string.bottom_nav_order_title.asTextData())
+        }
 
     PlusHeaderContainer(
         modifier = modifier,
         scrollEnabled = false,
-        data =
-            PlusHeaderData.Child(
-                title = Res.string.bottom_nav_order_title.asTextData(),
-                onBackClick = bloc::onBack,
-            ),
+        data = headerData,
         floatingActionButton = {
             // Hide the Save FAB until something has actually been reordered. AnimatedVisibility
             // gives it a quick fade+scale entrance so the affordance doesn't pop in abruptly on

@@ -40,7 +40,13 @@ private fun CompactSettingsLayout(
     details: Child.Created<*, SettingsRootBloc.DetailsChild>?,
 ) {
     if (details != null) {
-        DetailsContent(details, Modifier.fillMaxSize().testTag(SettingsRootTestTags.DETAILS_PANE))
+        // COMPACT only ever shows one pane, so the detail keeps its back arrow so the user can
+        // surface the master list.
+        DetailsContent(
+            child = details,
+            showBackButton = true,
+            modifier = Modifier.fillMaxSize().testTag(SettingsRootTestTags.DETAILS_PANE),
+        )
     } else {
         MasterContent(main, Modifier.fillMaxSize().testTag(SettingsRootTestTags.MASTER_PANE))
     }
@@ -58,8 +64,11 @@ private fun DualSettingsLayout(
                 Modifier.weight(0.4f).fillMaxHeight().testTag(SettingsRootTestTags.MASTER_PANE),
         )
         if (details != null) {
+            // In dual layout the detail is always on-screen, so a back arrow would be misleading.
+            // Drop it (Parent header) so only the master keeps the back affordance.
             DetailsContent(
                 child = details,
+                showBackButton = false,
                 modifier =
                     Modifier.weight(0.6f).fillMaxHeight().testTag(SettingsRootTestTags.DETAILS_PANE),
             )
@@ -80,10 +89,15 @@ private fun MasterContent(
 @Composable
 private fun DetailsContent(
     child: Child.Created<*, SettingsRootBloc.DetailsChild>,
+    showBackButton: Boolean,
     modifier: Modifier = Modifier,
 ) {
     when (val instance = child.instance) {
         is SettingsRootBloc.DetailsChild.BottomNavOrder ->
-            BottomNavOrderScreen(instance.bloc, modifier)
+            BottomNavOrderScreen(
+                bloc = instance.bloc,
+                modifier = modifier,
+                showBackButton = showBackButton,
+            )
     }
 }
