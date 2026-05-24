@@ -61,6 +61,10 @@ fun BottomNavOrderScreen(
     // visible detail pane inside a master-detail layout, where a back button would be misleading
     // (the user can never "leave" the pane in that mode).
     showBackButton: Boolean = true,
+    // Defaults to the PlusHeaderContainer's standard centered-600dp content width. Pass
+    // `Dp.Unspecified` when the screen is rendered as a fixed-width pane (e.g. inside the
+    // settings master-detail layout) so the content fills the pane without internal whitespace.
+    maxContentWidth: androidx.compose.ui.unit.Dp = 600.dp,
 ) {
     val state by bloc.state.collectAsState()
 
@@ -77,6 +81,7 @@ fun BottomNavOrderScreen(
     PlusHeaderContainer(
         modifier = modifier,
         scrollEnabled = false,
+        maxContentWidth = maxContentWidth,
         data = headerData,
         floatingActionButton = {
             // Hide the Save FAB until something has actually been reordered. AnimatedVisibility

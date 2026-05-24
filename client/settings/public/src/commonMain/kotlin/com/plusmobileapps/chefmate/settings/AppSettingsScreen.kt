@@ -14,6 +14,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import chefmate.client.settings.public.generated.resources.Res
 import chefmate.client.settings.public.generated.resources.app_settings_bottom_nav_order
 import chefmate.client.settings.public.generated.resources.app_settings_browser_history_enabled
@@ -33,7 +35,14 @@ import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
 @Composable
-fun AppSettingsScreen(bloc: AppSettingsBloc, modifier: Modifier = Modifier) {
+fun AppSettingsScreen(
+    bloc: AppSettingsBloc,
+    modifier: Modifier = Modifier,
+    // Defaults to the PlusHeaderContainer's standard centered-600dp content width. Pass
+    // `Dp.Unspecified` when the screen is rendered as a fixed-width pane (e.g. inside the
+    // settings master-detail layout) so the content fills the pane without internal whitespace.
+    maxContentWidth: Dp = 600.dp,
+) {
     val state by bloc.state.collectAsState()
 
     if (state.showClearHistoryDialog) {
@@ -45,6 +54,7 @@ fun AppSettingsScreen(bloc: AppSettingsBloc, modifier: Modifier = Modifier) {
 
     PlusHeaderContainer(
         modifier = modifier,
+        maxContentWidth = maxContentWidth,
         data =
             PlusHeaderData.Child(
                 title = Res.string.app_settings_title.asTextData(),

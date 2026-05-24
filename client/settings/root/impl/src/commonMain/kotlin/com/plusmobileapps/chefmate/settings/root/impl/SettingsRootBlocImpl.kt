@@ -42,7 +42,10 @@ class SettingsRootBlocImpl(
     override val panels: Value<ChildPanels<*, MainChild, *, DetailsChild, *, *>> =
         childPanels(
             source = navigation,
-            serializers = Pair(MainConfig.serializer(), DetailsConfig.serializer()),
+            // Skip state persistence so every fresh open of SettingsRoot honours `initialPanels`.
+            // With persistence on, an old saved state (details = null) would override the default
+            // below and the right pane would render empty.
+            serializers = null,
             // Default the details slot to the first child entry (BottomNavOrder) so the
             // tablet/expanded layout opens with the right pane populated rather than empty.
             // On COMPACT the user lands on the detail and can press back to surface the master
