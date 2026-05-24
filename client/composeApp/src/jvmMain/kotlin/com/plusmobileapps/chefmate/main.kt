@@ -20,7 +20,6 @@ import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.backhandler.BackDispatcher
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import com.plusmobileapps.chefmate.buildconfig.BuildConfig
-import com.russhwolf.settings.Settings
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
@@ -40,7 +39,7 @@ fun main() {
     val backDispatcher = BackDispatcher()
     val appComponent = dev.zacsweers.metro.createGraph<JvmApplicationComponent>()
 
-    val settings = Settings()
+    val settings = appComponent.settings
     val initialSize =
         DpSize(
             settings.getFloatOrNull(KEY_WINDOW_WIDTH)?.dp ?: 1024.dp,
