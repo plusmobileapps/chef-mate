@@ -1,12 +1,15 @@
 package com.plusmobileapps.chefmate.cook
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
 
-interface CookModeBloc : BackClickBloc {
+interface CookModeBloc : BackClickBloc, BlocScreen {
     val state: StateFlow<Model>
 
     /**
@@ -22,6 +25,11 @@ interface CookModeBloc : BackClickBloc {
     fun onLayoutToggled()
 
     fun onKeepScreenOnToggled()
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        CookModeScreen(bloc = this, modifier = modifier)
+    }
 
     enum class LayoutMode {
         Stacked,
