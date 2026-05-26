@@ -425,6 +425,7 @@ class GroceryRepositoryImpl(
             // exist. Pulling first lets us link it to the remote list instead of
             // pushing a duplicate.
             val remoteLists = remoteDataSource.fetchGroceryLists(userId)
+            val remoteListIds = remoteLists.mapNotNull { it.id }.toSet()
             withContext(ioContext) {
                 for (remoteList in remoteLists) {
                     val remoteId = remoteList.id ?: continue
@@ -448,6 +449,19 @@ class GroceryRepositoryImpl(
                         }
                         listQueries.updateRemoteId(remoteId = remoteId, id = newId)
                     }
+                }
+
+                // Prune local lists that were deleted on another device.
+                // A local list with a remoteId that no longer appears in the
+                // fetched remote lists has been deleted remotely — drop it and
+                // its items locally so the deletion is reflected on this device.
+                val pruneLists =
+                    listQueries.getAll().executeAsList().filter {
+                        it.remoteId != null && it.remoteId !in remoteListIds
+                    }
+                for (list in pruneLists) {
+                    queries.deleteByListId(list.id)
+                    listQueries.delete(list.id)
                 }
             }
 
@@ -555,6 +569,7 @@ class GroceryRepositoryImpl(
 
                 // Pull remote items for this list
                 val remoteItems = remoteDataSource.fetchAllGroceryItems(listRemoteId)
+                val remoteItemIds = remoteItems.mapNotNull { it.id }.toSet()
                 withContext(ioContext) {
                     for (remoteItem in remoteItems) {
                         val remoteId = remoteItem.id ?: continue
@@ -584,6 +599,19 @@ class GroceryRepositoryImpl(
                                 recipeName = remoteItem.recipeName,
                             )
                         }
+                    }
+
+                    // Prune local items that were deleted on another device.
+                    // An item with a remoteId that no longer appears in the
+                    // fetched remote items has been deleted remotely. Items
+                    // without a remoteId (still pending initial push) are
+                    // preserved.
+                    val pruneItems =
+                        queries.readByListId(list.id).executeAsList().filter {
+                            it.remoteId != null && it.remoteId !in remoteItemIds
+                        }
+                    for (item in pruneItems) {
+                        queries.delete(item.id)
                     }
                 }
             }
