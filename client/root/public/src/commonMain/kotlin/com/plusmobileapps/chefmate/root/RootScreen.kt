@@ -130,25 +130,17 @@ private fun com.arkivanov.decompose.Child<*, *>.saveableKey(): String =
 
 @Composable
 private fun RootChildContent(child: RootBloc.Child, onBack: () -> Unit) {
-    when (child) {
-        is RootBloc.Child.BottomNavigation -> child.Content()
-        is RootBloc.Child.GroceryDetail -> child.Content()
-        is RootBloc.Child.RecipeRoot -> child.Content()
-        is RootBloc.Child.Authentication -> child.Content()
-        is RootBloc.Child.OtpVerification -> child.Content()
-        is RootBloc.Child.Browser ->
-            PlusHeaderContainer(
-                modifier = Modifier.fillMaxSize(),
-                data = PlusHeaderData.Modal(title = FixedString(""), onCloseClick = onBack),
-                scrollEnabled = false,
-                maxContentWidth = Dp.Unspecified,
-                content = { child.Content(modifier = Modifier.weight(1f)) },
-            )
-        is RootBloc.Child.MealPlanner -> child.Content()
-        is RootBloc.Child.AppSettings -> child.Content()
-        is RootBloc.Child.BottomNavOrder -> child.Content()
-        is RootBloc.Child.DeveloperSettings -> child.Content()
-        is RootBloc.Child.FeatureFlags -> child.Content()
-        is RootBloc.Child.CookMode -> child.Content()
+    // Browser is wrapped in a modal-style header container provided by the parent. Every other
+    // Child renders itself via the BlocScreen delegation on its variant.
+    if (child is RootBloc.Child.Browser) {
+        PlusHeaderContainer(
+            modifier = Modifier.fillMaxSize(),
+            data = PlusHeaderData.Modal(title = FixedString(""), onCloseClick = onBack),
+            scrollEnabled = false,
+            maxContentWidth = Dp.Unspecified,
+            content = { child.Content(modifier = Modifier.weight(1f)) },
+        )
+    } else {
+        child.Content()
     }
 }

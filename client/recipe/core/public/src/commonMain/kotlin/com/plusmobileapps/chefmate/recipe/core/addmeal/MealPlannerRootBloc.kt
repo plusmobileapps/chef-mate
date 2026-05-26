@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
 interface MealPlannerRootBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
     val routerState: Value<ChildStack<*, Child>>
 
-    sealed class Child {
+    sealed class Child : BlocScreen {
         data class RecipePicker(val bloc: RecipePickerBloc) : Child(), BlocScreen by bloc
 
         data class ChooseDate(val bloc: ChooseDateBloc) : Child(), BlocScreen by bloc

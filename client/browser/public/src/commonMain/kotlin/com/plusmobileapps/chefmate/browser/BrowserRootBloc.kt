@@ -12,7 +12,7 @@ interface BrowserRootBloc : BlocScreen {
 
     fun navigateToUrl(url: String)
 
-    sealed class Child {
+    sealed class Child : BlocScreen {
         data class Landing(val bloc: BrowserLandingBloc) : Child(), BlocScreen by bloc
 
         data class EditQuery(val bloc: BrowserEditQueryBloc) : Child(), BlocScreen by bloc
