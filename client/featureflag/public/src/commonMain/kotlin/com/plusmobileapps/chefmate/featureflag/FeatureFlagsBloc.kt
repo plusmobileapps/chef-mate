@@ -2,9 +2,10 @@ package com.plusmobileapps.chefmate.featureflag
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
 
-interface FeatureFlagsBloc {
+interface FeatureFlagsBloc : BlocScreen {
     val state: StateFlow<Model>
 
     fun onBack()

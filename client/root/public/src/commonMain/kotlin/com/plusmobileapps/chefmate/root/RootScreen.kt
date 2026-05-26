@@ -28,7 +28,6 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationScreen
 import com.plusmobileapps.chefmate.auth.ui.otp.OtpScreen
 import com.plusmobileapps.chefmate.browser.BrowserRootScreen
-import com.plusmobileapps.chefmate.featureflag.FeatureFlagsScreen
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavigationScreen
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootScreen
@@ -156,7 +155,7 @@ private fun RootChildContent(child: RootBloc.Child, onBack: () -> Unit) {
         is RootBloc.Child.AppSettings -> child.Content()
         is RootBloc.Child.BottomNavOrder -> child.Content()
         is RootBloc.Child.DeveloperSettings -> child.Content()
-        is RootBloc.Child.FeatureFlags -> FeatureFlagsScreen(child.bloc)
+        is RootBloc.Child.FeatureFlags -> child.Content()
         is RootBloc.Child.CookMode -> child.Content()
     }
 }

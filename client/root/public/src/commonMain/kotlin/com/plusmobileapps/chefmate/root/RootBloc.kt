@@ -45,7 +45,7 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
 
         data class DeveloperSettings(val bloc: DeveloperSettingsBloc) : Child(), BlocScreen by bloc
 
-        data class FeatureFlags(val bloc: FeatureFlagsBloc) : Child()
+        data class FeatureFlags(val bloc: FeatureFlagsBloc) : Child(), BlocScreen by bloc
 
         data class CookMode(val bloc: CookModeBloc) : Child(), BlocScreen by bloc
     }

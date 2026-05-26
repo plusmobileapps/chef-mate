@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.featureflag
+package com.plusmobileapps.chefmate.featureflag.impl.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,6 +33,10 @@ import chefmate.client.featureflag.public.generated.resources.feature_flags_reso
 import chefmate.client.featureflag.public.generated.resources.feature_flags_save
 import chefmate.client.featureflag.public.generated.resources.feature_flags_string_placeholder
 import chefmate.client.featureflag.public.generated.resources.feature_flags_title
+import com.plusmobileapps.chefmate.featureflag.BooleanFlag
+import com.plusmobileapps.chefmate.featureflag.FeatureFlagsBloc
+import com.plusmobileapps.chefmate.featureflag.Override
+import com.plusmobileapps.chefmate.featureflag.StringFlag
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.asTextData
