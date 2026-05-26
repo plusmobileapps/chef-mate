@@ -35,7 +35,7 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
 
         data class OtpVerification(val bloc: OtpBloc) : Child(), BlocScreen by bloc
 
-        data class Browser(val bloc: BrowserRootBloc) : Child()
+        data class Browser(val bloc: BrowserRootBloc) : Child(), BlocScreen by bloc
 
         data class MealPlanner(val bloc: MealPlannerRootBloc) : Child()
 

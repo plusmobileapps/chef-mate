@@ -1,9 +1,12 @@
 package com.plusmobileapps.chefmate.browser.impl
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.browser.createExtractionFailedMessage
+import com.plusmobileapps.chefmate.browser.impl.ui.BrowserScreen
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
@@ -82,5 +85,10 @@ class BrowserBlocImpl(
 
     override fun onAddressBarFocused() {
         viewModel.onAddressBarFocused()
+    }
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        BrowserScreen(bloc = this, modifier = modifier)
     }
 }

@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalSharedTransitionApi::class)
 
-package com.plusmobileapps.chefmate.browser
+package com.plusmobileapps.chefmate.browser.impl.ui
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import chefmate.client.browser.public.generated.resources.Res
 import chefmate.client.browser.public.generated.resources.browser_landing_hint
 import chefmate.client.browser.public.generated.resources.browser_landing_tagline
+import com.plusmobileapps.chefmate.browser.BrowserLandingBloc
 import org.jetbrains.compose.resources.stringResource
 
 @Composable

@@ -25,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.plusmobileapps.chefmate.browser.BrowserRootScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavigationScreen
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootScreen
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootScreen
@@ -146,7 +145,7 @@ private fun RootChildContent(child: RootBloc.Child, onBack: () -> Unit) {
                 data = PlusHeaderData.Modal(title = FixedString(""), onCloseClick = onBack),
                 scrollEnabled = false,
                 maxContentWidth = Dp.Unspecified,
-                content = { BrowserRootScreen(child.bloc, modifier = Modifier.weight(1f)) },
+                content = { child.Content(modifier = Modifier.weight(1f)) },
             )
         is RootBloc.Child.MealPlanner -> MealPlannerRootScreen(child.bloc)
         is RootBloc.Child.AppSettings -> child.Content()

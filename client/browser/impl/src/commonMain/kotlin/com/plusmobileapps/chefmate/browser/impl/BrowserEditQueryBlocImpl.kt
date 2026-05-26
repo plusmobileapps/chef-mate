@@ -1,9 +1,12 @@
 package com.plusmobileapps.chefmate.browser.impl
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.browser.BrowserEditQueryBloc
 import com.plusmobileapps.chefmate.browser.BrowserHistoryEntry
+import com.plusmobileapps.chefmate.browser.impl.ui.BrowserEditQueryScreen
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
@@ -52,5 +55,10 @@ class BrowserEditQueryBlocImpl(
 
     override fun onHistoryItemDeleteClicked(entry: BrowserHistoryEntry) {
         viewModel.deleteHistoryEntry(entry)
+    }
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        BrowserEditQueryScreen(bloc = this, modifier = modifier)
     }
 }

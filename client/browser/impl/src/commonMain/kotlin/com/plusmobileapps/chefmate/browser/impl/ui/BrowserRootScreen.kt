@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalSharedTransitionApi::class)
 
-package com.plusmobileapps.chefmate.browser
+package com.plusmobileapps.chefmate.browser.impl.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 
 @Composable
 fun BrowserRootScreen(bloc: BrowserRootBloc, modifier: Modifier = Modifier) {

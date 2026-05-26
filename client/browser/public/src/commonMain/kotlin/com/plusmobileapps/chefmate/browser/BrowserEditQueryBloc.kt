@@ -2,9 +2,10 @@ package com.plusmobileapps.chefmate.browser
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
 
-interface BrowserEditQueryBloc {
+interface BrowserEditQueryBloc : BlocScreen {
     val state: StateFlow<Model>
 
     fun onSearchTextChanged(text: String)

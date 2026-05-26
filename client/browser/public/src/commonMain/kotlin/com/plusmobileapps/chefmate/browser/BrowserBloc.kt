@@ -5,9 +5,10 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.text.TextData
+import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
 
-interface BrowserBloc {
+interface BrowserBloc : BlocScreen {
     val state: StateFlow<Model>
 
     val instanceKeeper: InstanceKeeper

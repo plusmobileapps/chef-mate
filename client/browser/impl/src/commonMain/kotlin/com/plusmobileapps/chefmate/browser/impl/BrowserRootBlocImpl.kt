@@ -2,6 +2,8 @@
 
 package com.plusmobileapps.chefmate.browser.impl
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.Cancellation
 import com.arkivanov.decompose.DelicateDecomposeApi
 import com.arkivanov.decompose.router.stack.ChildStack
@@ -20,6 +22,7 @@ import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.browser.BrowserEditQueryBloc
 import com.plusmobileapps.chefmate.browser.BrowserLandingBloc
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
+import com.plusmobileapps.chefmate.browser.impl.ui.BrowserRootScreen
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
@@ -76,6 +79,11 @@ class BrowserRootBlocImpl(
 
     override fun navigateToUrl(url: String) {
         navigation.replaceAll(Configuration.Browser(url))
+    }
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        BrowserRootScreen(bloc = this, modifier = modifier)
     }
 
     private fun observeCanGoBack() {
