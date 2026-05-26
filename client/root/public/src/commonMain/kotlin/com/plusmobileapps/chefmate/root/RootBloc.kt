@@ -43,7 +43,7 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
 
         data class BottomNavOrder(val bloc: BottomNavOrderBloc) : Child(), BlocScreen by bloc
 
-        data class DeveloperSettings(val bloc: DeveloperSettingsBloc) : Child()
+        data class DeveloperSettings(val bloc: DeveloperSettingsBloc) : Child(), BlocScreen by bloc
 
         data class FeatureFlags(val bloc: FeatureFlagsBloc) : Child()
 

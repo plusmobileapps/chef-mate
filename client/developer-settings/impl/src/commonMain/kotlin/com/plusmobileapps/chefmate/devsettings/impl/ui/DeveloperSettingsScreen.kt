@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.devsettings
+package com.plusmobileapps.chefmate.devsettings.impl.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -44,6 +44,8 @@ import chefmate.client.developer_settings.public.generated.resources.dev_signed_
 import chefmate.client.developer_settings.public.generated.resources.dev_user_label_format
 import chefmate.client.developer_settings.public.generated.resources.developer_settings
 import com.plusmobileapps.chefmate.Environment
+import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc
+import com.plusmobileapps.chefmate.devsettings.TestUser
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.TextData
@@ -318,4 +320,7 @@ val previewDeveloperSettingsBloc =
         override fun onSignInErrorDismissed() = Unit
 
         override fun onFeatureFlagsClicked() = Unit
+
+        @Composable
+        override fun Content(modifier: Modifier) = DeveloperSettingsScreen(this, modifier)
     }

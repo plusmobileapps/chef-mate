@@ -3,9 +3,10 @@ package com.plusmobileapps.chefmate.devsettings
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.Environment
+import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
 
-interface DeveloperSettingsBloc {
+interface DeveloperSettingsBloc : BlocScreen {
     val state: StateFlow<Model>
 
     fun onBack()
