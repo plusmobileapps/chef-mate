@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.recipe.core.edit
+package com.plusmobileapps.chefmate.recipe.core.impl.edit.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -89,6 +89,7 @@ import chefmate.client.recipe.core.public.generated.resources.edit_recipe_save
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload_photo
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload_photo_dismiss
 import coil3.compose.AsyncImage
+import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
@@ -710,6 +711,8 @@ Salt for pasta water"""
         override fun onUploadErrorDismissed() {}
 
         override fun onBackClicked() {}
+
+        @Composable override fun Content(modifier: Modifier) = EditRecipeScreen(this, modifier)
     }
 
 @Preview

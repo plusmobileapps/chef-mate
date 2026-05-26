@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.recipe.core.addgrocery
+package com.plusmobileapps.chefmate.recipe.core.impl.addgrocery.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,6 +30,7 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_groc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryDisplayGroup
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryDisplayItem
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryGroupedList
+import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData

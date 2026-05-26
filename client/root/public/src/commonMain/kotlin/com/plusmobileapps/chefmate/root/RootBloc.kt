@@ -29,7 +29,7 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
 
         data class GroceryDetail(val bloc: GroceryDetailBloc) : Child(), BlocScreen by bloc
 
-        data class RecipeRoot(val bloc: RecipeRootBloc) : Child()
+        data class RecipeRoot(val bloc: RecipeRootBloc) : Child(), BlocScreen by bloc
 
         data class Authentication(val bloc: AuthenticationBloc) : Child(), BlocScreen by bloc
 

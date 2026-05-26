@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.recipe.core.impl.addgrocery
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
@@ -7,6 +9,7 @@ import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc.Output
+import com.plusmobileapps.chefmate.recipe.core.impl.addgrocery.ui.AddRecipeToGroceryListScreen
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
@@ -68,5 +71,10 @@ class AddRecipeToGroceryListBlocImpl(
 
     override fun onBackClicked() {
         output.onNext(Output.Finished)
+    }
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        AddRecipeToGroceryListScreen(bloc = this, modifier = modifier)
     }
 }

@@ -4,7 +4,7 @@
     ExperimentalSharedTransitionApi::class,
 )
 
-package com.plusmobileapps.chefmate.recipe.core.detail
+package com.plusmobileapps.chefmate.recipe.core.impl.detail.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -148,8 +148,10 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListScreen
-import com.plusmobileapps.chefmate.recipe.core.edit.pickerLabelRes
+import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
+import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailTestTags
+import com.plusmobileapps.chefmate.recipe.core.impl.addgrocery.ui.AddRecipeToGroceryListScreen
+import com.plusmobileapps.chefmate.recipe.core.impl.edit.ui.pickerLabelRes
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.Recipe
@@ -1718,6 +1720,8 @@ private val previewBloc =
         override fun onBackClicked() {
             TODO("Not yet implemented")
         }
+
+        @Composable override fun Content(modifier: Modifier) = RecipeDetailScreen(this, modifier)
     }
 
 @Preview(heightDp = 1100)
