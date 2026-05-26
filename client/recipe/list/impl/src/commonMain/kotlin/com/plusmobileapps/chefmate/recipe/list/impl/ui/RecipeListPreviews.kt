@@ -1,9 +1,14 @@
-package com.plusmobileapps.chefmate.recipe.list
+package com.plusmobileapps.chefmate.recipe.list.impl.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
+import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
+import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
+import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
+import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -91,6 +96,8 @@ private fun recipeListBloc(model: RecipeListBloc.Model): RecipeListBloc =
         override fun onDoneCookingConfirmed() = Unit
 
         override fun onDoneCookingDismissed() = Unit
+
+        @Composable override fun Content(modifier: Modifier) = RecipeListScreen(this, modifier)
     }
 
 val previewRecipeListBloc: RecipeListBloc =

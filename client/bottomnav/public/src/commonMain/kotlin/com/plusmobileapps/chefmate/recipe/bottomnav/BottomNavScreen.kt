@@ -48,7 +48,6 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.GROCERIES
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.MEALS
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.RECIPES
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.SETTINGS
-import com.plusmobileapps.chefmate.recipe.list.RecipeListScreen
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.NavRailItem
 import com.plusmobileapps.chefmate.ui.components.PlusNavRailHeaderContainer
@@ -154,7 +153,7 @@ private fun BottomNavContentContainer(bloc: BottomNavBloc, modifier: Modifier = 
             is BottomNavBloc.Child.Browser -> BrowserRootScreen(instance.bloc)
             is BottomNavBloc.Child.GroceryList -> instance.Content()
             is BottomNavBloc.Child.Meals -> MealPlanScreen(instance.bloc)
-            is BottomNavBloc.Child.RecipeList -> RecipeListScreen(instance.bloc)
+            is BottomNavBloc.Child.RecipeList -> instance.Content()
             is BottomNavBloc.Child.Settings -> instance.Content()
         }
     }

@@ -9,9 +9,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
-import com.plusmobileapps.chefmate.recipe.list.RecipeListScreen
-import com.plusmobileapps.chefmate.recipe.list.previewRecipeListBloc
-import com.plusmobileapps.chefmate.recipe.list.previewRecipeListBlocCooking
+import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBloc
+import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocCooking
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
 // RecipeListScreen has no top-level Surface — in production its background comes from the app
@@ -21,7 +20,7 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 private fun RecipeListScreenshot(bloc: RecipeListBloc, darkTheme: Boolean = false) {
     ChefMateTheme(darkTheme = darkTheme) {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            RecipeListScreen(bloc = bloc)
+            bloc.Content()
         }
     }
 }
