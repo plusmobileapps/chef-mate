@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalDecomposeApi::class)
 
-package com.plusmobileapps.chefmate.recipe.bottomnav
+package com.plusmobileapps.chefmate.recipe.bottomnav.impl.ui
 
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
@@ -41,6 +41,7 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.plus
 import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.predictiveBackAnimation
 import com.arkivanov.decompose.extensions.compose.stack.animation.scale
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
+import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.BROWSER
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.GROCERIES
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.MEALS
@@ -61,8 +62,8 @@ private enum class NavigationLayout {
 }
 
 @Composable
-fun BottomNavigationScreen(bloc: BottomNavBloc) {
-    BoxWithConstraints {
+fun BottomNavigationScreen(bloc: BottomNavBloc, modifier: Modifier = Modifier) {
+    BoxWithConstraints(modifier = modifier) {
         val layout =
             when {
                 maxWidth < 600.dp -> NavigationLayout.BOTTOM
@@ -147,13 +148,7 @@ private fun BottomNavContentContainer(bloc: BottomNavBloc, modifier: Modifier = 
                 },
             ),
     ) { created ->
-        when (val instance = created.instance) {
-            is BottomNavBloc.Child.Browser -> instance.Content()
-            is BottomNavBloc.Child.GroceryList -> instance.Content()
-            is BottomNavBloc.Child.Meals -> instance.Content()
-            is BottomNavBloc.Child.RecipeList -> instance.Content()
-            is BottomNavBloc.Child.Settings -> instance.Content()
-        }
+        created.instance.Content()
     }
 }
 
@@ -176,7 +171,7 @@ private fun PlusBottomBar(state: BottomNavBloc.Model, onClick: (BottomNavBloc.Ta
     }
 }
 
-fun BottomNavBloc.Tab.getLabel(): StringResource =
+internal fun BottomNavBloc.Tab.getLabel(): StringResource =
     when (this) {
         RECIPES -> Res.string.tab_recipes
         GROCERIES -> Res.string.tab_grocery
@@ -185,7 +180,7 @@ fun BottomNavBloc.Tab.getLabel(): StringResource =
         SETTINGS -> Res.string.tab_more
     }
 
-fun BottomNavBloc.Tab.getIcon() =
+internal fun BottomNavBloc.Tab.getIcon() =
     when (this) {
         RECIPES -> Icons.AutoMirrored.Filled.List
         GROCERIES -> Icons.Default.ShoppingCart

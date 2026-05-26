@@ -48,8 +48,6 @@ import chefmate.client.bottomnav.public.generated.resources.bottom_nav_order_sav
 import chefmate.client.bottomnav.public.generated.resources.bottom_nav_order_title
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
-import com.plusmobileapps.chefmate.recipe.bottomnav.getIcon
-import com.plusmobileapps.chefmate.recipe.bottomnav.getLabel
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusFloatingActionButton
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
