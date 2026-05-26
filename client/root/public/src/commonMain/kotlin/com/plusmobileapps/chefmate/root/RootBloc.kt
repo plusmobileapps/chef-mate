@@ -27,7 +27,7 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
     sealed class Child {
         data class BottomNavigation(val bloc: BottomNavBloc) : Child()
 
-        data class GroceryDetail(val bloc: GroceryDetailBloc) : Child()
+        data class GroceryDetail(val bloc: GroceryDetailBloc) : Child(), BlocScreen by bloc
 
         data class RecipeRoot(val bloc: RecipeRootBloc) : Child()
 

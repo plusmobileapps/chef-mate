@@ -5,9 +5,10 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
+import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
 
-interface GroceryListBloc {
+interface GroceryListBloc : BlocScreen {
     val state: StateFlow<Model>
 
     val newGroceryItemName: StateFlow<String>

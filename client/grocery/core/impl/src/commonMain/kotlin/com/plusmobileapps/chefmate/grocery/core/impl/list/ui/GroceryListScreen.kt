@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.grocery.core.list
+package com.plusmobileapps.chefmate.grocery.core.impl.list.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
@@ -108,6 +108,10 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_sync_all
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_not_synced
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_synced
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_syncing
+import com.plusmobileapps.chefmate.grocery.core.list.GroceryDisplayGroup
+import com.plusmobileapps.chefmate.grocery.core.list.GroceryDisplayItem
+import com.plusmobileapps.chefmate.grocery.core.list.GroceryGroupedList
+import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.SyncStatus
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData

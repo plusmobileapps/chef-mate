@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package com.plusmobileapps.chefmate.grocery.core.detail
+package com.plusmobileapps.chefmate.grocery.core.impl.detail.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +23,7 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_detail
 import chefmate.client.grocery.core.public.generated.resources.purchased
 import chefmate.client.ui.public.generated.resources.Res as CommonRes
 import chefmate.client.ui.public.generated.resources.save
+import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
@@ -32,11 +33,11 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun GroceryDetailScreen(bloc: GroceryDetailBloc) {
+fun GroceryDetailScreen(bloc: GroceryDetailBloc, modifier: Modifier = Modifier) {
     val state = bloc.models.collectAsState()
 
     PlusHeaderContainer(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         data =
             PlusHeaderData.Child(
                 title = Res.string.grocery_detail.asTextData(),

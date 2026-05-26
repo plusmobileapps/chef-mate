@@ -42,7 +42,6 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback
 import com.arkivanov.decompose.extensions.compose.stack.animation.scale
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.plusmobileapps.chefmate.browser.BrowserRootScreen
-import com.plusmobileapps.chefmate.grocery.core.list.GroceryListScreen
 import com.plusmobileapps.chefmate.meal.core.MealPlanScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.BROWSER
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.GROCERIES
@@ -153,7 +152,7 @@ private fun BottomNavContentContainer(bloc: BottomNavBloc, modifier: Modifier = 
     ) { created ->
         when (val instance = created.instance) {
             is BottomNavBloc.Child.Browser -> BrowserRootScreen(instance.bloc)
-            is BottomNavBloc.Child.GroceryList -> GroceryListScreen(instance.bloc)
+            is BottomNavBloc.Child.GroceryList -> instance.Content()
             is BottomNavBloc.Child.Meals -> MealPlanScreen(instance.bloc)
             is BottomNavBloc.Child.RecipeList -> RecipeListScreen(instance.bloc)
             is BottomNavBloc.Child.Settings -> instance.Content()

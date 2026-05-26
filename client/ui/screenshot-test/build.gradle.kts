@@ -41,6 +41,7 @@ dependencies {
     implementation(project(":client:cook:public"))
     implementation(project(":client:cook:impl"))
     implementation(project(":client:grocery:core:public"))
+    implementation(project(":client:grocery:core:impl"))
     implementation(project(":client:recipe:core:public"))
     implementation(project(":client:recipe:list:public"))
     implementation(project(":client:recipe:data:public"))

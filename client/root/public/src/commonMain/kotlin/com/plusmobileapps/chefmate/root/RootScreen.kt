@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.Dp
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.plusmobileapps.chefmate.browser.BrowserRootScreen
-import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavigationScreen
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootScreen
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootScreen
@@ -137,7 +136,7 @@ private fun com.arkivanov.decompose.Child<*, *>.saveableKey(): String =
 private fun RootChildContent(child: RootBloc.Child, onBack: () -> Unit) {
     when (child) {
         is RootBloc.Child.BottomNavigation -> BottomNavigationScreen(child.bloc)
-        is RootBloc.Child.GroceryDetail -> GroceryDetailScreen(child.bloc)
+        is RootBloc.Child.GroceryDetail -> child.Content()
         is RootBloc.Child.RecipeRoot -> RecipeRootScreen(child.bloc)
         is RootBloc.Child.Authentication -> child.Content()
         is RootBloc.Child.OtpVerification -> child.Content()

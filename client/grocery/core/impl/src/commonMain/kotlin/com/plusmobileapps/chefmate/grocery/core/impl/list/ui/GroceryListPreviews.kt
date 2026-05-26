@@ -1,7 +1,9 @@
-package com.plusmobileapps.chefmate.grocery.core.list
+package com.plusmobileapps.chefmate.grocery.core.impl.list.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryFilter
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryGroup
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GrocerySort
@@ -102,6 +104,8 @@ private fun groceryListBloc(
         override fun onListSelectorDismissed() = Unit
 
         override fun onBrowseRecipesClicked() = Unit
+
+        @Composable override fun Content(modifier: Modifier) = GroceryListScreen(this, modifier)
     }
 
 /** Grocery list with items in two categories — exercises grouped rendering + sync badges. */
