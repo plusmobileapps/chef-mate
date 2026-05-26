@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.auth.ui.otp
+package com.plusmobileapps.chefmate.auth.ui.impl.otp.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,6 +44,7 @@ import chefmate.client.auth.ui.public.generated.resources.auth_otp_screen_title_
 import chefmate.client.auth.ui.public.generated.resources.auth_otp_screen_title_passwordless
 import chefmate.client.auth.ui.public.generated.resources.auth_otp_screen_title_signup
 import com.plusmobileapps.chefmate.auth.data.OtpFlow
+import com.plusmobileapps.chefmate.auth.ui.otp.OtpBloc
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.ResourceString

@@ -1,7 +1,9 @@
-package com.plusmobileapps.chefmate.auth.ui
+package com.plusmobileapps.chefmate.auth.ui.impl.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -42,6 +44,8 @@ private fun authBloc(
         override fun onDiscardGuestDataCancelled() = Unit
 
         override fun onBackClicked() = Unit
+
+        @Composable override fun Content(modifier: Modifier) = AuthenticationScreen(this, modifier)
     }
 
 private val previewPasswordRequirementsError: TextData =

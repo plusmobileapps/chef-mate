@@ -31,9 +31,9 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
 
         data class RecipeRoot(val bloc: RecipeRootBloc) : Child()
 
-        data class Authentication(val bloc: AuthenticationBloc) : Child()
+        data class Authentication(val bloc: AuthenticationBloc) : Child(), BlocScreen by bloc
 
-        data class OtpVerification(val bloc: OtpBloc) : Child()
+        data class OtpVerification(val bloc: OtpBloc) : Child(), BlocScreen by bloc
 
         data class Browser(val bloc: BrowserRootBloc) : Child()
 

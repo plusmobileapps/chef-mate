@@ -10,8 +10,12 @@ kotlin {
             implementation(projects.client.auth.ui.public)
             implementation(projects.client.auth.usecase.public)
             implementation(projects.client.util.public)
+            implementation(projects.client.text.public)
+            implementation(projects.client.ui.public)
             implementation(libs.arkivanov.decompose.core)
+            implementation(libs.arkivanov.decompose.compose.extensions)
             implementation(projects.client.shared)
+            implementation(compose.components.resources)
         }
         commonTest.dependencies { implementation(projects.client.auth.data.testing) }
     }
