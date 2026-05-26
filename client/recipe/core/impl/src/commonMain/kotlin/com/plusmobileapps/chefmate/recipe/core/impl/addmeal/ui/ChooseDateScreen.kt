@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalFoundationApi::class)
 
-package com.plusmobileapps.chefmate.recipe.core.addmeal
+package com.plusmobileapps.chefmate.recipe.core.impl.addmeal.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -49,6 +49,7 @@ import chefmate.client.recipe.core.public.generated.resources.add_meal_plan_snac
 import chefmate.client.recipe.core.public.generated.resources.add_meal_plan_today
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
 import com.plusmobileapps.chefmate.meal.data.MealType
+import com.plusmobileapps.chefmate.recipe.core.addmeal.ChooseDateBloc
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
@@ -61,7 +62,11 @@ import kotlinx.datetime.plus
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun ChooseDateScreen(bloc: ChooseDateBloc, showAsChild: Boolean, modifier: Modifier = Modifier) {
+fun ChooseDateScreen(
+    bloc: ChooseDateBloc,
+    showAsChild: Boolean = false,
+    modifier: Modifier = Modifier,
+) {
     val state by bloc.state.collectAsState()
 
     val headerData: PlusHeaderData =

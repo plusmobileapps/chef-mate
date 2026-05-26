@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.recipe.core.addmeal
+package com.plusmobileapps.chefmate.recipe.core.impl.addmeal.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -23,6 +23,7 @@ import chefmate.client.recipe.core.public.generated.resources.add_meal_plan_lunc
 import chefmate.client.recipe.core.public.generated.resources.add_meal_plan_save
 import chefmate.client.recipe.core.public.generated.resources.add_meal_plan_snacks
 import com.plusmobileapps.chefmate.meal.data.MealType
+import com.plusmobileapps.chefmate.recipe.core.addmeal.ChooseMealTypeBloc
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData

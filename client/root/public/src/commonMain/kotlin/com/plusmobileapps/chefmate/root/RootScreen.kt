@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.Dp
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavigationScreen
-import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootScreen
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootScreen
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.LocalAnimatedVisibilityScope
@@ -147,7 +146,7 @@ private fun RootChildContent(child: RootBloc.Child, onBack: () -> Unit) {
                 maxContentWidth = Dp.Unspecified,
                 content = { child.Content(modifier = Modifier.weight(1f)) },
             )
-        is RootBloc.Child.MealPlanner -> MealPlannerRootScreen(child.bloc)
+        is RootBloc.Child.MealPlanner -> child.Content()
         is RootBloc.Child.AppSettings -> child.Content()
         is RootBloc.Child.BottomNavOrder -> child.Content()
         is RootBloc.Child.DeveloperSettings -> child.Content()

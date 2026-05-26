@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.recipe.core.addmeal
+package com.plusmobileapps.chefmate.recipe.core.impl.addmeal.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement.spacedBy
@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.core.public.generated.resources.Res
 import chefmate.client.recipe.core.public.generated.resources.add_meal_plan_search_recipes
 import chefmate.client.recipe.core.public.generated.resources.add_meal_plan_select_recipe
+import com.plusmobileapps.chefmate.recipe.core.addmeal.RecipePickerBloc
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
@@ -35,7 +36,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun RecipePickerScreen(
     bloc: RecipePickerBloc,
-    onCloseClick: () -> Unit,
+    onCloseClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val state by bloc.state.collectAsState()
