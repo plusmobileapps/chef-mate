@@ -205,6 +205,183 @@ class GroceryRepositoryImplTest {
             }
         }
 
+    @Test
+    fun syncWithRemote_prunes_local_items_that_were_deleted_on_another_device() =
+        runTest(testDispatcher) {
+            // Local list already linked to a remote list with two synced items.
+            // Simulates a device that previously synced both items.
+            val localListId = repository.ensureDefaultList()
+            val remoteListId = "remote-list-prune"
+            val now = "2026-01-01T00:00:00"
+            db.groceryListQueries.updateRemoteId(remoteId = remoteListId, id = localListId)
+            db.groceryQueries.createWithRemoteId(
+                name = "Milk",
+                isChecked = false,
+                createdAt = now,
+                updatedAt = now,
+                remoteId = "remote-milk",
+                listRemoteId = remoteListId,
+                clientId = "client-milk",
+                listId = localListId,
+                recipeName = null,
+            )
+            db.groceryQueries.createWithRemoteId(
+                name = "Eggs",
+                isChecked = false,
+                createdAt = now,
+                updatedAt = now,
+                remoteId = "remote-eggs",
+                listRemoteId = remoteListId,
+                clientId = "client-eggs",
+                listId = localListId,
+                recipeName = null,
+            )
+
+            // Remote now only has Milk (Eggs was deleted on another device).
+            fakeRemote.remoteLists["user-1"] =
+                mutableListOf(
+                    RemoteGroceryList(
+                        id = remoteListId,
+                        name = "My Grocery List",
+                        ownerId = "user-1",
+                    )
+                )
+            fakeRemote.remoteItems[remoteListId] =
+                mutableListOf(
+                    RemoteGroceryItem(
+                        id = "remote-milk",
+                        listId = remoteListId,
+                        name = "Milk",
+                        clientId = "client-milk",
+                    )
+                )
+
+            fakeAuth.setState(
+                AuthState.Authenticated(
+                    ChefMateUser(
+                        userId = "user-1",
+                        userName = "Test",
+                        userEmail = "test@test.com",
+                        userProfileImageUrl = null,
+                    )
+                )
+            )
+
+            repository.getGroceries(localListId).test {
+                val items = awaitItem()
+                items.size shouldBe 1
+                items.first().name shouldBe "Milk"
+            }
+        }
+
+    @Test
+    fun syncWithRemote_preserves_local_items_with_no_remote_id_during_prune() =
+        runTest(testDispatcher) {
+            // Local list linked to remote with one synced item and one unsynced item.
+            val localListId = repository.ensureDefaultList()
+            val remoteListId = "remote-list-keep-unsynced"
+            val now = "2026-01-01T00:00:00"
+            db.groceryListQueries.updateRemoteId(remoteId = remoteListId, id = localListId)
+            db.groceryQueries.createWithRemoteId(
+                name = "Milk",
+                isChecked = false,
+                createdAt = now,
+                updatedAt = now,
+                remoteId = "remote-milk",
+                listRemoteId = remoteListId,
+                clientId = "client-milk",
+                listId = localListId,
+                recipeName = null,
+            )
+            // Brand new local item — never pushed yet (no remoteId).
+            repository.addGrocery(localListId, "Bread")
+
+            // Remote has neither item (synced item was deleted on another device).
+            fakeRemote.remoteLists["user-1"] =
+                mutableListOf(
+                    RemoteGroceryList(
+                        id = remoteListId,
+                        name = "My Grocery List",
+                        ownerId = "user-1",
+                    )
+                )
+            fakeRemote.remoteItems[remoteListId] = mutableListOf()
+
+            fakeAuth.setState(
+                AuthState.Authenticated(
+                    ChefMateUser(
+                        userId = "user-1",
+                        userName = "Test",
+                        userEmail = "test@test.com",
+                        userProfileImageUrl = null,
+                    )
+                )
+            )
+
+            // The unsynced "Bread" item should survive — the push earlier in the
+            // sync will create a remote for it. The previously-synced "Milk" is
+            // pruned because it no longer exists on the remote.
+            repository.getGroceries(localListId).test {
+                val items = awaitItem()
+                items.map { it.name }.toSet() shouldBe setOf("Bread")
+            }
+        }
+
+    @Test
+    fun syncWithRemote_prunes_local_list_that_was_deleted_on_another_device() =
+        runTest(testDispatcher) {
+            // Two local lists both linked to remote. One is removed from remote.
+            val keptLocalId = repository.ensureDefaultList()
+            val keptRemoteId = "remote-list-kept"
+            db.groceryListQueries.updateRemoteId(remoteId = keptRemoteId, id = keptLocalId)
+
+            val prunedLocalId = repository.createGroceryList("Party Supplies")
+            val prunedRemoteId = "remote-list-pruned"
+            db.groceryListQueries.updateRemoteId(remoteId = prunedRemoteId, id = prunedLocalId)
+            val now = "2026-01-01T00:00:00"
+            db.groceryQueries.createWithRemoteId(
+                name = "Chips",
+                isChecked = false,
+                createdAt = now,
+                updatedAt = now,
+                remoteId = "remote-chips",
+                listRemoteId = prunedRemoteId,
+                clientId = "client-chips",
+                listId = prunedLocalId,
+                recipeName = null,
+            )
+
+            // Remote only has the kept list.
+            fakeRemote.remoteLists["user-1"] =
+                mutableListOf(
+                    RemoteGroceryList(
+                        id = keptRemoteId,
+                        name = "My Grocery List",
+                        ownerId = "user-1",
+                    )
+                )
+            fakeRemote.remoteItems[keptRemoteId] = mutableListOf()
+
+            fakeAuth.setState(
+                AuthState.Authenticated(
+                    ChefMateUser(
+                        userId = "user-1",
+                        userName = "Test",
+                        userEmail = "test@test.com",
+                        userProfileImageUrl = null,
+                    )
+                )
+            )
+
+            repository.getGroceryLists().test {
+                val lists = awaitItem()
+                lists.size shouldBe 1
+                lists.first().name shouldBe "My Grocery List"
+            }
+            // Items belonging to the pruned list are gone too.
+            db.groceryQueries.readAll().executeAsList().isEmpty() shouldBe true
+        }
+
     // ─── deleteAllGroceries ───────────────────────────────────────────────────
 
     @Test
