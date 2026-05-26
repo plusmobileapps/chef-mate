@@ -36,6 +36,7 @@ dependencies {
     implementation(project(":client:text:public"))
     implementation(project(":client:auth:ui:public"))
     implementation(project(":client:bottomnav:public"))
+    implementation(project(":client:bottomnav:impl"))
     implementation(project(":client:cook:public"))
     implementation(project(":client:cook:impl"))
     implementation(project(":client:grocery:core:public"))

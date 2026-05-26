@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.recipe.bottomnav
+package com.plusmobileapps.chefmate.recipe.bottomnav.impl.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
@@ -46,6 +46,10 @@ import chefmate.client.bottomnav.public.generated.resources.Res
 import chefmate.client.bottomnav.public.generated.resources.bottom_nav_order_drag_handle_content_description
 import chefmate.client.bottomnav.public.generated.resources.bottom_nav_order_save
 import chefmate.client.bottomnav.public.generated.resources.bottom_nav_order_title
+import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
+import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
+import com.plusmobileapps.chefmate.recipe.bottomnav.getIcon
+import com.plusmobileapps.chefmate.recipe.bottomnav.getLabel
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusFloatingActionButton
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer

@@ -181,7 +181,7 @@ private fun PlusBottomBar(state: BottomNavBloc.Model, onClick: (BottomNavBloc.Ta
     }
 }
 
-internal fun BottomNavBloc.Tab.getLabel(): StringResource =
+fun BottomNavBloc.Tab.getLabel(): StringResource =
     when (this) {
         RECIPES -> Res.string.tab_recipes
         GROCERIES -> Res.string.tab_grocery
@@ -190,7 +190,7 @@ internal fun BottomNavBloc.Tab.getLabel(): StringResource =
         SETTINGS -> Res.string.tab_more
     }
 
-internal fun BottomNavBloc.Tab.getIcon() =
+fun BottomNavBloc.Tab.getIcon() =
     when (this) {
         RECIPES -> Icons.AutoMirrored.Filled.List
         GROCERIES -> Icons.Default.ShoppingCart
