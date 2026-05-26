@@ -39,7 +39,7 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
 
         data class MealPlanner(val bloc: MealPlannerRootBloc) : Child()
 
-        data class AppSettings(val bloc: AppSettingsBloc) : Child()
+        data class AppSettings(val bloc: AppSettingsBloc) : Child(), BlocScreen by bloc
 
         data class BottomNavOrder(val bloc: BottomNavOrderBloc) : Child(), BlocScreen by bloc
 

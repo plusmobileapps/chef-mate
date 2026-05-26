@@ -1,9 +1,11 @@
-package com.plusmobileapps.chefmate.settings
+package com.plusmobileapps.chefmate.settings.impl.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.arkivanov.essenty.backhandler.BackDispatcher
 import com.arkivanov.essenty.backhandler.BackHandler
+import com.plusmobileapps.chefmate.settings.AppSettingsBloc
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -23,6 +25,11 @@ private fun appSettingsBloc(model: AppSettingsBloc.Model): AppSettingsBloc =
         override fun onClearHistoryDismissed() = Unit
 
         override fun onBottomNavOrderClicked() = Unit
+
+        @Composable
+        override fun Content(modifier: Modifier) {
+            AppSettingsScreen(bloc = this, modifier = modifier)
+        }
     }
 
 val previewAppSettingsBloc: AppSettingsBloc =

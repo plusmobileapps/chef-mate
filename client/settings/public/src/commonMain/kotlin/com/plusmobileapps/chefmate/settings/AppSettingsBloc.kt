@@ -3,9 +3,10 @@ package com.plusmobileapps.chefmate.settings
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
 
-interface AppSettingsBloc : BackHandlerOwner {
+interface AppSettingsBloc : BackHandlerOwner, BlocScreen {
     val state: StateFlow<Model>
 
     fun onBack()

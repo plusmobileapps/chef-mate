@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.settings
+package com.plusmobileapps.chefmate.settings.impl.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +25,7 @@ import chefmate.client.settings.public.generated.resources.app_settings_clear_hi
 import chefmate.client.settings.public.generated.resources.app_settings_clear_history_dialog_title
 import chefmate.client.settings.public.generated.resources.app_settings_navigation_section
 import chefmate.client.settings.public.generated.resources.app_settings_title
+import com.plusmobileapps.chefmate.settings.AppSettingsBloc
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusDialog

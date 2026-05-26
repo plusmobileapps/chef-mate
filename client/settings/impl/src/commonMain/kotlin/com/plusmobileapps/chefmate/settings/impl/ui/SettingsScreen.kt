@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package com.plusmobileapps.chefmate.settings
+package com.plusmobileapps.chefmate.settings.impl.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -45,6 +45,7 @@ import chefmate.client.settings.public.generated.resources.sign_out_confirmation
 import chefmate.client.settings.public.generated.resources.sign_up
 import chefmate.client.settings.public.generated.resources.terms_of_use
 import chefmate.client.settings.public.generated.resources.version_label
+import com.plusmobileapps.chefmate.settings.SettingsBloc
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.TextData
@@ -267,6 +268,8 @@ private val previewBlocUnauthenticated =
         override fun onAppSettingsClicked() = Unit
 
         override fun onDeveloperSettingsClicked() = Unit
+
+        @Composable override fun Content(modifier: Modifier) = SettingsScreen(this, modifier)
     }
 
 private val previewBlocAuthenticated =
@@ -299,6 +302,8 @@ private val previewBlocAuthenticated =
         override fun onAppSettingsClicked() = Unit
 
         override fun onDeveloperSettingsClicked() = Unit
+
+        @Composable override fun Content(modifier: Modifier) = SettingsScreen(this, modifier)
     }
 
 private val previewBlocAnonymous =
@@ -327,6 +332,8 @@ private val previewBlocAnonymous =
         override fun onAppSettingsClicked() = Unit
 
         override fun onDeveloperSettingsClicked() = Unit
+
+        @Composable override fun Content(modifier: Modifier) = SettingsScreen(this, modifier)
     }
 
 @Preview(showBackground = true)
