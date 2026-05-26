@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package com.plusmobileapps.chefmate.cook
+package com.plusmobileapps.chefmate.cook.impl.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
@@ -45,6 +45,7 @@ import chefmate.client.cook.public.generated.resources.whats_cooking_delete_sele
 import chefmate.client.cook.public.generated.resources.whats_cooking_empty
 import chefmate.client.cook.public.generated.resources.whats_cooking_select
 import chefmate.client.cook.public.generated.resources.whats_cooking_title
+import com.plusmobileapps.chefmate.cook.WhatsCookingBloc
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
 import org.jetbrains.compose.resources.stringResource
 

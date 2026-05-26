@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 
-package com.plusmobileapps.chefmate.cook
+package com.plusmobileapps.chefmate.cook.impl.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -98,6 +98,8 @@ import chefmate.client.cook.public.generated.resources.cook_mode_layout_stacked
 import chefmate.client.cook.public.generated.resources.cook_mode_loading
 import chefmate.client.cook.public.generated.resources.cook_mode_no_active_recipe
 import chefmate.client.cook.public.generated.resources.cook_mode_whats_cooking
+import com.plusmobileapps.chefmate.cook.CookModeBloc
+import com.plusmobileapps.chefmate.cook.WhatsCookingBloc
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.KeepScreenOn

@@ -17,6 +17,7 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 import com.plusmobileapps.chefmate.settings.AppSettingsBloc
+import com.plusmobileapps.chefmate.ui.BlocScreen
 
 interface RootBloc : BackHandlerOwner, BackClickBloc {
     val state: Value<ChildStack<*, Child>>
@@ -46,7 +47,7 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
 
         data class FeatureFlags(val bloc: FeatureFlagsBloc) : Child()
 
-        data class CookMode(val bloc: CookModeBloc) : Child()
+        data class CookMode(val bloc: CookModeBloc) : Child(), BlocScreen by bloc
     }
 
     fun interface Factory {

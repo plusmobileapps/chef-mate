@@ -160,6 +160,6 @@ private fun RootChildContent(child: RootBloc.Child, onBack: () -> Unit) {
         is RootBloc.Child.BottomNavOrder -> BottomNavOrderScreen(child.bloc)
         is RootBloc.Child.DeveloperSettings -> DeveloperSettingsScreen(child.bloc)
         is RootBloc.Child.FeatureFlags -> FeatureFlagsScreen(child.bloc)
-        is RootBloc.Child.CookMode -> child.bloc.Content()
+        is RootBloc.Child.CookMode -> child.Content()
     }
 }
