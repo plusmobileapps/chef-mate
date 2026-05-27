@@ -33,5 +33,13 @@ object FeatureFlagRegistry {
             description = "Optional banner copy shown on the home screen. Empty hides the banner.",
         )
 
-    val all: List<FeatureFlag<*>> = listOf(CookModeV2, HomeBannerText)
+    object AiChat :
+        BooleanFlag(
+            key = "ai_chat",
+            defaultValue = false,
+            description =
+                "Show the AI Chat entry in the More tab and enable the Gemini chat screen.",
+        )
+
+    val all: List<FeatureFlag<*>> = listOf(CookModeV2, HomeBannerText, AiChat)
 }
