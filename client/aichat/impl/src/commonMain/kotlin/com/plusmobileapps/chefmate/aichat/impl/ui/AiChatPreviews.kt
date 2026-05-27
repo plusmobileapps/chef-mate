@@ -20,6 +20,8 @@ private fun aiChatBloc(model: AiChatBloc.Model, input: String = ""): AiChatBloc 
 
         override fun onClearClick() = Unit
 
+        override fun onAddRecipeClick() = Unit
+
         override fun onBackClicked() = Unit
 
         @Composable
@@ -62,8 +64,19 @@ private val sampleConversation =
 /** Empty conversation — used to verify the welcome state renders. */
 val previewAiChatBlocEmpty: AiChatBloc = aiChatBloc(AiChatBloc.Model())
 
-/** Populated conversation — alternating user / model bubbles. */
-val previewAiChatBloc: AiChatBloc = aiChatBloc(AiChatBloc.Model(messages = sampleConversation))
+/** Populated conversation — alternating user / model bubbles. Shows the Add Recipe pill. */
+val previewAiChatBloc: AiChatBloc =
+    aiChatBloc(AiChatBloc.Model(messages = sampleConversation, canAddRecipe = true))
+
+/** Same as [previewAiChatBloc] but with the pill in its loading state. */
+val previewAiChatBlocExtracting: AiChatBloc =
+    aiChatBloc(
+        AiChatBloc.Model(
+            messages = sampleConversation,
+            canAddRecipe = true,
+            isExtractingRecipe = true,
+        )
+    )
 
 /** Streaming response — last model bubble is mid-stream and shows the progress indicator. */
 val previewAiChatBlocStreaming: AiChatBloc =
@@ -86,6 +99,7 @@ val previewAiChatBlocError: AiChatBloc =
     aiChatBloc(
         AiChatBloc.Model(
             messages = sampleConversation,
+            canAddRecipe = true,
             error = FixedString("Gemini API key missing. Set gemini.key in gradle properties."),
         )
     )

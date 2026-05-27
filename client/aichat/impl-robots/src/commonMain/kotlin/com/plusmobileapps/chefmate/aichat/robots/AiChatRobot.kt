@@ -10,6 +10,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.waitUntilExactlyOneExists
 import com.plusmobileapps.chefmate.aichat.AiChatTestTags
 
 /**
@@ -34,6 +35,15 @@ class AiChatRobot(private val test: ComposeUiTest) {
 
     fun assertMessageShown(text: String): AiChatRobot = apply {
         test.onNode(hasText(text, substring = true) and onScreen).assertIsDisplayed()
+    }
+
+    /**
+     * Waits for the Add Recipe pill to appear (i.e. at least one finished model reply exists) and
+     * then taps it.
+     */
+    fun tapAddRecipe(): AiChatRobot = apply {
+        test.waitUntilExactlyOneExists(hasTestTag(AiChatTestTags.ADD_RECIPE_PILL) and onScreen)
+        test.onNode(hasTestTag(AiChatTestTags.ADD_RECIPE_PILL) and onScreen).performClick()
     }
 }
 

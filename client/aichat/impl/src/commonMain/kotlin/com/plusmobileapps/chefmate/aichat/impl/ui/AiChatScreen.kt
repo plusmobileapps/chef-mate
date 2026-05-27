@@ -25,9 +25,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -55,10 +58,12 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import chefmate.client.aichat.public.generated.resources.Res
+import chefmate.client.aichat.public.generated.resources.aichat_add_recipe
 import chefmate.client.aichat.public.generated.resources.aichat_clear
 import chefmate.client.aichat.public.generated.resources.aichat_done
 import chefmate.client.aichat.public.generated.resources.aichat_empty_description
 import chefmate.client.aichat.public.generated.resources.aichat_empty_title
+import chefmate.client.aichat.public.generated.resources.aichat_extracting_recipe
 import chefmate.client.aichat.public.generated.resources.aichat_input_hint
 import chefmate.client.aichat.public.generated.resources.aichat_role_gemini
 import chefmate.client.aichat.public.generated.resources.aichat_role_you
@@ -113,6 +118,14 @@ fun AiChatScreen(bloc: AiChatBloc, modifier: Modifier = Modifier) {
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     )
                 }
+            }
+            if (state.canAddRecipe) {
+                AddRecipePill(
+                    isLoading = state.isExtractingRecipe,
+                    onClick = bloc::onAddRecipeClick,
+                    modifier =
+                        Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, bottom = 4.dp),
+                )
             }
             AiChatInput(
                 inputText = bloc.inputText,
@@ -189,6 +202,38 @@ private fun MessageBubble(message: ChatMessage, modifier: Modifier = Modifier) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun AddRecipePill(isLoading: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.End) {
+        AssistChip(
+            onClick = onClick,
+            enabled = !isLoading,
+            modifier = Modifier.testTag(AiChatTestTags.ADD_RECIPE_PILL),
+            label = {
+                Text(
+                    text =
+                        if (isLoading) stringResource(Res.string.aichat_extracting_recipe)
+                        else stringResource(Res.string.aichat_add_recipe)
+                )
+            },
+            leadingIcon = {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(AssistChipDefaults.IconSize),
+                        strokeWidth = 2.dp,
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.NoteAdd,
+                        contentDescription = null,
+                        modifier = Modifier.size(AssistChipDefaults.IconSize),
+                    )
+                }
+            },
+        )
     }
 }
 

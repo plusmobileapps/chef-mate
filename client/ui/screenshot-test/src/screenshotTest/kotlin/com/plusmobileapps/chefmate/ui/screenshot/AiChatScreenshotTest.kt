@@ -12,6 +12,7 @@ import com.plusmobileapps.chefmate.aichat.AiChatBloc
 import com.plusmobileapps.chefmate.aichat.impl.ui.previewAiChatBloc
 import com.plusmobileapps.chefmate.aichat.impl.ui.previewAiChatBlocEmpty
 import com.plusmobileapps.chefmate.aichat.impl.ui.previewAiChatBlocError
+import com.plusmobileapps.chefmate.aichat.impl.ui.previewAiChatBlocExtracting
 import com.plusmobileapps.chefmate.aichat.impl.ui.previewAiChatBlocStreaming
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
@@ -64,4 +65,11 @@ fun AiChatStreamingLightScreenshot() {
 @Composable
 fun AiChatErrorLightScreenshot() {
     AiChatScreenshot(bloc = previewAiChatBlocError)
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+fun AiChatExtractingPillLightScreenshot() {
+    AiChatScreenshot(bloc = previewAiChatBlocExtracting)
 }
