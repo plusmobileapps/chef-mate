@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.Dp
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.LocalAnimatedVisibilityScope
 import com.plusmobileapps.chefmate.ui.LocalSharedTransitionScope
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
@@ -141,6 +142,6 @@ private fun RootChildContent(child: RootBloc.Child, onBack: () -> Unit) {
             content = { child.Content(modifier = Modifier.weight(1f)) },
         )
     } else {
-        child.Content(Modifier)
+        child.Content()
     }
 }

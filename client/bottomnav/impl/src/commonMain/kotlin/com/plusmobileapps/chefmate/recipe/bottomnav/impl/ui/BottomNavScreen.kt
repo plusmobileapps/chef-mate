@@ -48,6 +48,7 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.MEALS
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.RECIPES
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.SETTINGS
 import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.components.NavRailItem
 import com.plusmobileapps.chefmate.ui.components.PlusNavRailHeaderContainer
 import com.plusmobileapps.chefmate.ui.fadeScalePredictiveBackAnimatable
@@ -148,7 +149,7 @@ private fun BottomNavContentContainer(bloc: BottomNavBloc, modifier: Modifier = 
                 },
             ),
     ) { created ->
-        created.instance.Content(Modifier)
+        created.instance.Content()
     }
 }
 

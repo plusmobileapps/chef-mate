@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
+import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.backAnimation
 
 @Composable
@@ -18,6 +19,6 @@ fun RecipeRootScreen(recipeRootBloc: RecipeRootBloc, modifier: Modifier = Modifi
                 onBack = recipeRootBloc::onBackClicked,
             ),
     ) { child ->
-        child.instance.Content(Modifier)
+        child.instance.Content()
     }
 }

@@ -6,3 +6,5 @@ import androidx.compose.ui.Modifier
 interface BlocScreen {
     @Composable fun Content(modifier: Modifier)
 }
+
+@Composable fun BlocScreen.Content() = Content(Modifier)

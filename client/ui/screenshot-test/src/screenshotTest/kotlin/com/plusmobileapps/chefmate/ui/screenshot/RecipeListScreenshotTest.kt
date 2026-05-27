@@ -20,7 +20,7 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 private fun RecipeListScreenshot(bloc: RecipeListBloc, darkTheme: Boolean = false) {
     ChefMateTheme(darkTheme = darkTheme) {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            bloc.Content(Modifier)
+            bloc.Content()
         }
     }
 }

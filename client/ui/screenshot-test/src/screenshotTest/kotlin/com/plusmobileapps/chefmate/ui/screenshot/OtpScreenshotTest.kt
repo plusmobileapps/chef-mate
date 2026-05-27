@@ -2,7 +2,6 @@ package com.plusmobileapps.chefmate.ui.screenshot
 
 import android.content.res.Configuration
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.auth.ui.impl.otp.ui.previewOtpBlocCountdown
@@ -16,47 +15,47 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 @Preview(showBackground = true, heightDp = 900)
 @Composable
 fun OtpSignUpLightScreenshot() {
-    ChefMateTheme { previewOtpBlocSignUp.Content(Modifier) }
+    ChefMateTheme { previewOtpBlocSignUp.Content() }
 }
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 900, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun OtpSignUpDarkScreenshot() {
-    ChefMateTheme(darkTheme = true) { previewOtpBlocSignUp.Content(Modifier) }
+    ChefMateTheme(darkTheme = true) { previewOtpBlocSignUp.Content() }
 }
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 900)
 @Composable
 fun OtpPasswordlessLightScreenshot() {
-    ChefMateTheme { previewOtpBlocPasswordless.Content(Modifier) }
+    ChefMateTheme { previewOtpBlocPasswordless.Content() }
 }
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 900, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun OtpPasswordlessDarkScreenshot() {
-    ChefMateTheme(darkTheme = true) { previewOtpBlocPasswordless.Content(Modifier) }
+    ChefMateTheme(darkTheme = true) { previewOtpBlocPasswordless.Content() }
 }
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 900)
 @Composable
 fun OtpLoadingScreenshot() {
-    ChefMateTheme { previewOtpBlocLoading.Content(Modifier) }
+    ChefMateTheme { previewOtpBlocLoading.Content() }
 }
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 900)
 @Composable
 fun OtpErrorScreenshot() {
-    ChefMateTheme { previewOtpBlocError.Content(Modifier) }
+    ChefMateTheme { previewOtpBlocError.Content() }
 }
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 900)
 @Composable
 fun OtpResendCountdownScreenshot() {
-    ChefMateTheme { previewOtpBlocCountdown.Content(Modifier) }
+    ChefMateTheme { previewOtpBlocCountdown.Content() }
 }

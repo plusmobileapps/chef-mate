@@ -32,7 +32,7 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 fun RecipeListCategoryFilteredLightScreenshot() {
     ChefMateTheme {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            previewRecipeListBlocCategoryFiltered.Content(Modifier)
+            previewRecipeListBlocCategoryFiltered.Content()
         }
     }
 }
@@ -43,7 +43,7 @@ fun RecipeListCategoryFilteredLightScreenshot() {
 fun RecipeListCategoryFilteredDarkScreenshot() {
     ChefMateTheme(darkTheme = true) {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            previewRecipeListBlocCategoryFiltered.Content(Modifier)
+            previewRecipeListBlocCategoryFiltered.Content()
         }
     }
 }

@@ -2,7 +2,6 @@ package com.plusmobileapps.chefmate.ui.screenshot
 
 import android.content.res.Configuration
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.recipe.bottomnav.impl.ui.previewBottomNavOrderBloc
@@ -13,14 +12,14 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 @Preview(showBackground = true)
 @Composable
 fun BottomNavOrderLightScreenshot() {
-    ChefMateTheme { previewBottomNavOrderBloc.Content(Modifier) }
+    ChefMateTheme { previewBottomNavOrderBloc.Content() }
 }
 
 @PreviewTest
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun BottomNavOrderDarkScreenshot() {
-    ChefMateTheme(darkTheme = true) { previewBottomNavOrderBloc.Content(Modifier) }
+    ChefMateTheme(darkTheme = true) { previewBottomNavOrderBloc.Content() }
 }
 
 // Locks in the dirty-state visual: a non-default order with the Save button rendered enabled.
@@ -28,5 +27,5 @@ fun BottomNavOrderDarkScreenshot() {
 @Preview(showBackground = true)
 @Composable
 fun BottomNavOrderReorderedDirtyScreenshot() {
-    ChefMateTheme { previewBottomNavOrderDirtyBloc.Content(Modifier) }
+    ChefMateTheme { previewBottomNavOrderDirtyBloc.Content() }
 }

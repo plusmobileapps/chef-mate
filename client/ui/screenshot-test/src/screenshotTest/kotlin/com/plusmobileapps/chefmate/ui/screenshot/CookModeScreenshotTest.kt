@@ -2,7 +2,6 @@ package com.plusmobileapps.chefmate.ui.screenshot
 
 import android.content.res.Configuration
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.cook.impl.ui.previewCookBlocEmpty
@@ -18,28 +17,28 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 @Preview(showBackground = true, heightDp = 1100)
 @Composable
 fun CookModePhonePortraitLightScreenshot() {
-    ChefMateTheme { previewCookBlocStacked.Content(Modifier) }
+    ChefMateTheme { previewCookBlocStacked.Content() }
 }
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 1100, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun CookModePhonePortraitDarkScreenshot() {
-    ChefMateTheme(darkTheme = true) { previewCookBlocStacked.Content(Modifier) }
+    ChefMateTheme(darkTheme = true) { previewCookBlocStacked.Content() }
 }
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 1100)
 @Composable
 fun CookModeLoadingScreenshot() {
-    ChefMateTheme { previewCookBlocLoading.Content(Modifier) }
+    ChefMateTheme { previewCookBlocLoading.Content() }
 }
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 1100)
 @Composable
 fun CookModeEmptyScreenshot() {
-    ChefMateTheme { previewCookBlocEmpty.Content(Modifier) }
+    ChefMateTheme { previewCookBlocEmpty.Content() }
 }
 
 // Long-title regression for issue #149: header must ellipsis after two lines so the floating
@@ -48,7 +47,7 @@ fun CookModeEmptyScreenshot() {
 @Preview(showBackground = true, heightDp = 1100)
 @Composable
 fun CookModeLongTitleScreenshot() {
-    ChefMateTheme { previewCookBlocLongTitle.Content(Modifier) }
+    ChefMateTheme { previewCookBlocLongTitle.Content() }
 }
 
 // ── Phone landscape (580 × 360 dp, COMPACT width → mobile layout, compact height) ──
@@ -57,7 +56,7 @@ fun CookModeLongTitleScreenshot() {
 @Preview(showBackground = true, widthDp = 580, heightDp = 360)
 @Composable
 fun CookModePhoneLandscapeLightScreenshot() {
-    ChefMateTheme { previewCookBlocStacked.Content(Modifier) }
+    ChefMateTheme { previewCookBlocStacked.Content() }
 }
 
 @PreviewTest
@@ -69,7 +68,7 @@ fun CookModePhoneLandscapeLightScreenshot() {
 )
 @Composable
 fun CookModePhoneLandscapeDarkScreenshot() {
-    ChefMateTheme(darkTheme = true) { previewCookBlocStacked.Content(Modifier) }
+    ChefMateTheme(darkTheme = true) { previewCookBlocStacked.Content() }
 }
 
 // ── Tablet (800 × 1100 dp, MEDIUM width → tablet layout with split body) ───
@@ -78,7 +77,7 @@ fun CookModePhoneLandscapeDarkScreenshot() {
 @Preview(showBackground = true, widthDp = 800, heightDp = 1100)
 @Composable
 fun CookModeTabletLightScreenshot() {
-    ChefMateTheme { previewCookBlocSplit.Content(Modifier) }
+    ChefMateTheme { previewCookBlocSplit.Content() }
 }
 
 @PreviewTest
@@ -90,7 +89,7 @@ fun CookModeTabletLightScreenshot() {
 )
 @Composable
 fun CookModeTabletDarkScreenshot() {
-    ChefMateTheme(darkTheme = true) { previewCookBlocSplit.Content(Modifier) }
+    ChefMateTheme(darkTheme = true) { previewCookBlocSplit.Content() }
 }
 
 // ── Tablet/large phone landscape (1000 × 460 dp, EXPANDED width, compact height) ──
@@ -103,7 +102,7 @@ fun CookModeTabletDarkScreenshot() {
 @Preview(showBackground = true, widthDp = 1000, heightDp = 460)
 @Composable
 fun CookModeSplitLandscapeLightScreenshot() {
-    ChefMateTheme { previewCookBlocSplit.Content(Modifier) }
+    ChefMateTheme { previewCookBlocSplit.Content() }
 }
 
 @PreviewTest
@@ -115,12 +114,12 @@ fun CookModeSplitLandscapeLightScreenshot() {
 )
 @Composable
 fun CookModeSplitLandscapeDarkScreenshot() {
-    ChefMateTheme(darkTheme = true) { previewCookBlocSplit.Content(Modifier) }
+    ChefMateTheme(darkTheme = true) { previewCookBlocSplit.Content() }
 }
 
 @PreviewTest
 @Preview(showBackground = true, widthDp = 1000, heightDp = 460)
 @Composable
 fun CookModeStackedLandscapeWideScreenshot() {
-    ChefMateTheme { previewCookBlocStacked.Content(Modifier) }
+    ChefMateTheme { previewCookBlocStacked.Content() }
 }
