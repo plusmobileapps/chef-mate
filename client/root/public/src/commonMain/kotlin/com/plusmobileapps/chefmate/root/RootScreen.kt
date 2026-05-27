@@ -141,6 +141,6 @@ private fun RootChildContent(child: RootBloc.Child, onBack: () -> Unit) {
             content = { child.Content(modifier = Modifier.weight(1f)) },
         )
     } else {
-        child.Content()
+        child.Content(Modifier)
     }
 }

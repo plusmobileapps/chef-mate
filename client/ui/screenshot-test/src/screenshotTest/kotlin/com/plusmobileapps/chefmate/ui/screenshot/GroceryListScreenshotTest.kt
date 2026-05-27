@@ -19,7 +19,7 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 private fun GroceryListScreenshot(bloc: GroceryListBloc, darkTheme: Boolean = false) {
     ChefMateTheme(darkTheme = darkTheme) {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            bloc.Content()
+            bloc.Content(Modifier)
         }
     }
 }

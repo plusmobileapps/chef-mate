@@ -2,6 +2,7 @@ package com.plusmobileapps.chefmate.ui.screenshot
 
 import android.content.res.Configuration
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.auth.ui.impl.ui.previewAuthBlocSignUp
@@ -13,26 +14,26 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 @Preview(showBackground = true, heightDp = 900)
 @Composable
 fun AuthenticationSignUpLightScreenshot() {
-    ChefMateTheme { previewAuthBlocSignUp.Content() }
+    ChefMateTheme { previewAuthBlocSignUp.Content(Modifier) }
 }
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 900)
 @Composable
 fun AuthenticationSignUpWithPasswordErrorScreenshot() {
-    ChefMateTheme { previewAuthBlocSignUpWithPasswordError.Content() }
+    ChefMateTheme { previewAuthBlocSignUpWithPasswordError.Content(Modifier) }
 }
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 900, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun AuthenticationSignUpWithPasswordErrorDarkScreenshot() {
-    ChefMateTheme(darkTheme = true) { previewAuthBlocSignUpWithPasswordError.Content() }
+    ChefMateTheme(darkTheme = true) { previewAuthBlocSignUpWithPasswordError.Content(Modifier) }
 }
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 900)
 @Composable
 fun AuthenticationSignUpWithDialogErrorScreenshot() {
-    ChefMateTheme { previewAuthBlocSignUpWithDialogError.Content() }
+    ChefMateTheme { previewAuthBlocSignUpWithDialogError.Content(Modifier) }
 }

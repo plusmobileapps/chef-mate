@@ -2,6 +2,7 @@ package com.plusmobileapps.chefmate.ui.screenshot
 
 import android.content.res.Configuration
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.settings.impl.ui.previewAppSettingsBloc
@@ -15,12 +16,12 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 @Preview(showBackground = true)
 @Composable
 fun AppSettingsLightScreenshot() {
-    ChefMateTheme { previewAppSettingsBloc.Content() }
+    ChefMateTheme { previewAppSettingsBloc.Content(Modifier) }
 }
 
 @PreviewTest
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun AppSettingsDarkScreenshot() {
-    ChefMateTheme(darkTheme = true) { previewAppSettingsBloc.Content() }
+    ChefMateTheme(darkTheme = true) { previewAppSettingsBloc.Content(Modifier) }
 }
