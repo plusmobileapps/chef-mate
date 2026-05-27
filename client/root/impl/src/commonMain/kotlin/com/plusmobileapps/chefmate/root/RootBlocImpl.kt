@@ -138,6 +138,8 @@ class RootBlocImpl(
                             output = { _ -> navigation.pop() },
                             initialUrl = config.url,
                             showControls = false,
+                            presentation =
+                                BrowserRootBloc.Presentation.Modal(onClose = { navigation.pop() }),
                         )
                 )
 

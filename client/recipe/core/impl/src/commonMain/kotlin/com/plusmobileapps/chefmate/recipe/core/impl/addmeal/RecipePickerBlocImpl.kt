@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.recipe.core.impl.addmeal
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
@@ -7,6 +9,7 @@ import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.addmeal.RecipePickerBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.RecipePickerBloc.Output
+import com.plusmobileapps.chefmate.recipe.core.impl.addmeal.ui.RecipePickerScreen
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
@@ -43,5 +46,10 @@ class RecipePickerBlocImpl(
 
     override fun onRecipeSelected(item: RecipePickerBloc.RecipePickerItem) {
         output.onNext(Output.RecipeSelected(recipeId = item.id))
+    }
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        RecipePickerScreen(bloc = this, modifier = modifier)
     }
 }

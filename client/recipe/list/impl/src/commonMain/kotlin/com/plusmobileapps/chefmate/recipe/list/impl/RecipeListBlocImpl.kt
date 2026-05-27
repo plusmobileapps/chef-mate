@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.recipe.list.impl
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
@@ -12,6 +14,7 @@ import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc.Output
 import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
+import com.plusmobileapps.chefmate.recipe.list.impl.ui.RecipeListScreen
 import com.plusmobileapps.chefmate.util.TimeFormatterUtil
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
@@ -121,6 +124,11 @@ class RecipeListBlocImpl(
 
     override fun onDoneCookingDismissed() {
         viewModel.dismissDoneCookingDialog()
+    }
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        RecipeListScreen(bloc = this, modifier = modifier)
     }
 
     private fun Recipe.toRecipeListItem(): RecipeListItem =

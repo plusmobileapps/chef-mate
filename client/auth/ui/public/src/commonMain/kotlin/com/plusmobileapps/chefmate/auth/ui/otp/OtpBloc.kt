@@ -5,10 +5,11 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.auth.data.OtpFlow
 import com.plusmobileapps.chefmate.text.TextData
+import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 
-interface OtpBloc : BackClickBloc {
+interface OtpBloc : BackClickBloc, BlocScreen {
     val models: StateFlow<Model>
     val code: StateFlow<String>
 

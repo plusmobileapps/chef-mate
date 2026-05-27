@@ -2,8 +2,9 @@ package com.plusmobileapps.chefmate.browser
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.ui.BlocScreen
 
-interface BrowserLandingBloc {
+interface BrowserLandingBloc : BlocScreen {
     fun onSearchFieldFocused()
 
     sealed class Output {

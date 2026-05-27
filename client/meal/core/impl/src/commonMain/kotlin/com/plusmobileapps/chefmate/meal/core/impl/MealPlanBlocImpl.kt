@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.meal.core.impl
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
@@ -7,6 +9,7 @@ import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.meal.core.MealPlanBloc
 import com.plusmobileapps.chefmate.meal.core.MealPlanBloc.Output
+import com.plusmobileapps.chefmate.meal.core.impl.ui.MealPlanScreen
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.text.FixedString
@@ -94,5 +97,10 @@ class MealPlanBlocImpl(
 
     override fun onSyncClicked() {
         viewModel.onSyncClicked()
+    }
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        MealPlanScreen(bloc = this, modifier = modifier)
     }
 }

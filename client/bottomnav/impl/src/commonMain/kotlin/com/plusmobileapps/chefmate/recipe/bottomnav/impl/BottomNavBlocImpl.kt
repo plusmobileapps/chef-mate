@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.recipe.bottomnav.impl
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.Cancellation
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
@@ -27,6 +29,7 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenApp
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenGrocery
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenSignIn
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Output.OpenSignUp
+import com.plusmobileapps.chefmate.recipe.bottomnav.impl.ui.BottomNavigationScreen
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.settings.SettingsBloc
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
@@ -81,6 +84,11 @@ class BottomNavBlocImpl(
 
     override fun onBackClicked() {
         navigation.pop()
+    }
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        BottomNavigationScreen(bloc = this, modifier = modifier)
     }
 
     override fun handleSharedUrl(url: String) {

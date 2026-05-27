@@ -1,0 +1,148 @@
+package com.plusmobileapps.chefmate.recipe.list.impl.ui
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
+import com.plusmobileapps.chefmate.recipe.data.SyncStatus
+import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
+import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
+import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
+import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import kotlinx.coroutines.flow.MutableStateFlow
+
+private val sampleRecipes =
+    listOf(
+        RecipeListItem(
+            id = 1L,
+            title = "Pasta Carbonara",
+            description = "A classic Roman pasta with eggs, cheese, and cured pork.",
+            imageUrl = null,
+            starRating = 5,
+            totalTime = 25,
+            formattedTotalTime = FixedString("25 min"),
+            servings = 2,
+            calories = 620,
+            isFavorite = true,
+            syncStatus = SyncStatus.SYNCED,
+        ),
+        RecipeListItem(
+            id = 2L,
+            title = "Caesar Salad",
+            description = "Crisp romaine, parmesan, and a creamy anchovy dressing.",
+            imageUrl = null,
+            starRating = 4,
+            totalTime = 15,
+            formattedTotalTime = FixedString("15 min"),
+            servings = 4,
+            calories = 320,
+            isFavorite = false,
+            syncStatus = SyncStatus.SYNCED,
+        ),
+        RecipeListItem(
+            id = 3L,
+            title = "Sourdough Pancakes",
+            description = "Tangy, fluffy pancakes that use up your starter discard.",
+            imageUrl = null,
+            starRating = 3,
+            totalTime = 30,
+            formattedTotalTime = FixedString("30 min"),
+            servings = 4,
+            calories = 280,
+            isFavorite = false,
+            syncStatus = SyncStatus.NOT_SYNCED,
+        ),
+    )
+
+private fun recipeListBloc(model: RecipeListBloc.Model): RecipeListBloc =
+    object : RecipeListBloc {
+        override val state = MutableStateFlow(model)
+
+        override fun onRecipeClicked(recipe: RecipeListItem) = Unit
+
+        override fun onAddRecipeClicked() = Unit
+
+        override fun onDeleteRecipe(recipe: RecipeListItem) = Unit
+
+        override fun onToggleFavorite(recipe: RecipeListItem) = Unit
+
+        override fun onSortOptionSelected(option: RecipeSortOption) = Unit
+
+        override fun onFilterToggled(filter: RecipeFilterOption) = Unit
+
+        override fun onToggleViewMode() = Unit
+
+        override fun onSearchQueryChanged(query: String) = Unit
+
+        override fun onClearFilters() = Unit
+
+        override fun onApplySortAndFilters(
+            sort: RecipeSortOption,
+            filters: Set<RecipeFilterOption>,
+            categories: Set<BuiltinCategory>,
+            userCategoryIds: Set<Long>,
+        ) = Unit
+
+        override fun onBrowseRecipesClicked() = Unit
+
+        override fun onSyncClicked() = Unit
+
+        override fun onContinueCookingClicked() = Unit
+
+        override fun onDoneCookingClicked() = Unit
+
+        override fun onDoneCookingConfirmed() = Unit
+
+        override fun onDoneCookingDismissed() = Unit
+
+        @Composable override fun Content(modifier: Modifier) = RecipeListScreen(this, modifier)
+    }
+
+val previewRecipeListBloc: RecipeListBloc =
+    recipeListBloc(
+        RecipeListBloc.Model(recipes = sampleRecipes, totalRecipeCount = sampleRecipes.size)
+    )
+
+/**
+ * Recipe list with an active cooking session — exercises the Continue/Done Cooking FAB stack, which
+ * previously double-applied safe-area insets and rendered off the bottom edge of its container (see
+ * fix for issue #150).
+ */
+val previewRecipeListBlocCooking: RecipeListBloc =
+    recipeListBloc(
+        RecipeListBloc.Model(
+            recipes = sampleRecipes,
+            totalRecipeCount = sampleRecipes.size,
+            cookingRecipeCount = 2,
+        )
+    )
+
+/** Recipe list with one active category filter — exercises the filter-icon badge indicator. */
+val previewRecipeListBlocCategoryFiltered: RecipeListBloc =
+    recipeListBloc(
+        RecipeListBloc.Model(
+            recipes = sampleRecipes,
+            totalRecipeCount = sampleRecipes.size,
+            activeCategories = setOf(BuiltinCategory.BREAKFAST),
+        )
+    )
+
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+internal fun RecipeListPreview() {
+    ChefMateTheme { RecipeListScreen(bloc = previewRecipeListBloc) }
+}
+
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+internal fun RecipeListCookingPreview() {
+    ChefMateTheme { RecipeListScreen(bloc = previewRecipeListBlocCooking) }
+}
+
+@Preview(showBackground = true, heightDp = 1100, widthDp = 800)
+@Composable
+internal fun RecipeListCookingTabletPreview() {
+    ChefMateTheme { RecipeListScreen(bloc = previewRecipeListBlocCooking) }
+}

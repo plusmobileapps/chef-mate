@@ -6,17 +6,18 @@ import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.serialization.Serializable
 
-interface MealPlannerRootBloc : BackHandlerOwner, BackClickBloc {
+interface MealPlannerRootBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
     val routerState: Value<ChildStack<*, Child>>
 
-    sealed class Child {
-        data class RecipePicker(val bloc: RecipePickerBloc) : Child()
+    sealed class Child : BlocScreen {
+        data class RecipePicker(val bloc: RecipePickerBloc) : Child(), BlocScreen by bloc
 
-        data class ChooseDate(val bloc: ChooseDateBloc) : Child()
+        data class ChooseDate(val bloc: ChooseDateBloc) : Child(), BlocScreen by bloc
 
-        data class ChooseMealType(val bloc: ChooseMealTypeBloc) : Child()
+        data class ChooseMealType(val bloc: ChooseMealTypeBloc) : Child(), BlocScreen by bloc
     }
 
     sealed class Output {

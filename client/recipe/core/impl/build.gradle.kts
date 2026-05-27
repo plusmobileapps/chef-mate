@@ -9,13 +9,17 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.client.recipe.data.public)
             implementation(projects.client.recipe.core.public)
+            implementation(projects.client.ui.public)
             implementation(libs.arkivanov.decompose.core)
+            implementation(libs.arkivanov.decompose.compose.extensions)
             implementation(projects.client.shared)
             implementation(libs.kotlinx.serialization.json)
             implementation(projects.client.text.public)
             implementation(projects.client.grocery.data.public)
+            implementation(projects.client.grocery.core.public)
             implementation(projects.client.meal.data.public)
             implementation(projects.client.util.public)
+            implementation(compose.components.resources)
         }
         commonTest.dependencies {
             implementation(projects.client.util.testing)

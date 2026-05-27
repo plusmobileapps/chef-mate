@@ -10,10 +10,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
-import com.plusmobileapps.chefmate.recipe.list.RecipeListScreen
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
-import com.plusmobileapps.chefmate.recipe.list.SortFilterSheetContent
-import com.plusmobileapps.chefmate.recipe.list.previewRecipeListBlocCategoryFiltered
+import com.plusmobileapps.chefmate.recipe.list.impl.ui.SortFilterSheetContent
+import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocCategoryFiltered
+import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
 // Snapshot coverage for the category filter feature:
@@ -33,7 +33,7 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 fun RecipeListCategoryFilteredLightScreenshot() {
     ChefMateTheme {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            RecipeListScreen(bloc = previewRecipeListBlocCategoryFiltered)
+            previewRecipeListBlocCategoryFiltered.Content()
         }
     }
 }
@@ -44,7 +44,7 @@ fun RecipeListCategoryFilteredLightScreenshot() {
 fun RecipeListCategoryFilteredDarkScreenshot() {
     ChefMateTheme(darkTheme = true) {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            RecipeListScreen(bloc = previewRecipeListBlocCategoryFiltered)
+            previewRecipeListBlocCategoryFiltered.Content()
         }
     }
 }

@@ -4,10 +4,11 @@ import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
+import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.LocalDate
 
-interface ChooseDateBloc : BackClickBloc {
+interface ChooseDateBloc : BackClickBloc, BlocScreen {
     val state: StateFlow<Model>
 
     fun onDaySelected(date: LocalDate)

@@ -8,10 +8,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
+import com.plusmobileapps.chefmate.grocery.core.impl.list.ui.previewGroceryListBloc
+import com.plusmobileapps.chefmate.grocery.core.impl.list.ui.previewGroceryListBlocEmpty
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
-import com.plusmobileapps.chefmate.grocery.core.list.GroceryListScreen
-import com.plusmobileapps.chefmate.grocery.core.list.previewGroceryListBloc
-import com.plusmobileapps.chefmate.grocery.core.list.previewGroceryListBlocEmpty
+import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
 // GroceryListScreen has no top-level Surface — its background comes from the app shell in
@@ -20,7 +20,7 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 private fun GroceryListScreenshot(bloc: GroceryListBloc, darkTheme: Boolean = false) {
     ChefMateTheme(darkTheme = darkTheme) {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            GroceryListScreen(bloc = bloc)
+            bloc.Content()
         }
     }
 }

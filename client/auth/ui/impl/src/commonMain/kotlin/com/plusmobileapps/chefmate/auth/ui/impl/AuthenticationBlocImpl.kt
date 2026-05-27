@@ -1,9 +1,12 @@
 package com.plusmobileapps.chefmate.auth.ui.impl
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc.Output
+import com.plusmobileapps.chefmate.auth.ui.impl.ui.AuthenticationScreen
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
@@ -113,5 +116,10 @@ class AuthenticationBlocImpl(
 
     override fun onDiscardGuestDataCancelled() {
         viewModel.onDiscardGuestDataCancelled()
+    }
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        AuthenticationScreen(bloc = this, modifier = modifier)
     }
 }

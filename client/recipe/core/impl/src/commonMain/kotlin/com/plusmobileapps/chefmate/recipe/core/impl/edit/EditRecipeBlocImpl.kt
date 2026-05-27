@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.recipe.core.impl.edit
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import chefmate.client.recipe.core.impl.generated.resources.Res
 import chefmate.client.recipe.core.impl.generated.resources.create_recipe
 import chefmate.client.recipe.core.impl.generated.resources.edit_recipe
@@ -11,6 +13,7 @@ import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc.Output
+import com.plusmobileapps.chefmate.recipe.core.impl.edit.ui.EditRecipeScreen
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
@@ -186,5 +189,10 @@ class EditRecipeBlocImpl(
 
     override fun onBackClicked() {
         viewModel.tryToClose()
+    }
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        EditRecipeScreen(bloc = this, modifier = modifier)
     }
 }

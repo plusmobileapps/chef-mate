@@ -4,9 +4,10 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
+import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
 
-interface RecipeListBloc {
+interface RecipeListBloc : BlocScreen {
     val state: StateFlow<Model>
 
     fun onRecipeClicked(recipe: RecipeListItem)

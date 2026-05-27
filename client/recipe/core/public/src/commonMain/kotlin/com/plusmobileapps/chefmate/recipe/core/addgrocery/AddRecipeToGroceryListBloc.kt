@@ -4,9 +4,10 @@ import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
+import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
 
-interface AddRecipeToGroceryListBloc : BackClickBloc {
+interface AddRecipeToGroceryListBloc : BackClickBloc, BlocScreen {
     val state: StateFlow<Model>
 
     fun onIngredientToggled(ingredient: Int)

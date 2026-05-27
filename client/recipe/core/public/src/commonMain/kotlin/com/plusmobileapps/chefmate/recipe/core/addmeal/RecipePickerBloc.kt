@@ -2,9 +2,10 @@ package com.plusmobileapps.chefmate.recipe.core.addmeal
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
 
-interface RecipePickerBloc {
+interface RecipePickerBloc : BlocScreen {
     val state: StateFlow<Model>
 
     fun onSearchQueryChanged(query: String)

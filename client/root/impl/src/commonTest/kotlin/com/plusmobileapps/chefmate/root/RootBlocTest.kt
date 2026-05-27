@@ -55,6 +55,7 @@ class RootBlocTest {
                         output: Consumer<BrowserRootBloc.Output>,
                         initialUrl: String?,
                         showControls: Boolean,
+                        presentation: BrowserRootBloc.Presentation,
                     ): BrowserRootBloc = mock(MockMode.autoUnit)
                 },
             recipeRoot = { context, props, output ->

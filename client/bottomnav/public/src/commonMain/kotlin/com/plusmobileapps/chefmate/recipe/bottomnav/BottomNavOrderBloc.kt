@@ -2,9 +2,10 @@ package com.plusmobileapps.chefmate.recipe.bottomnav
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
 
-interface BottomNavOrderBloc {
+interface BottomNavOrderBloc : BlocScreen {
     val state: StateFlow<Model>
 
     fun onMove(from: Int, to: Int)

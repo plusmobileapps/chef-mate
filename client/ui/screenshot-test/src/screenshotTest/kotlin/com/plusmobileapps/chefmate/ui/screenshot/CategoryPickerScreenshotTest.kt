@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
-import com.plusmobileapps.chefmate.recipe.core.edit.CategoryPickerContent
+import com.plusmobileapps.chefmate.recipe.core.impl.edit.ui.CategoryPickerContent
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme

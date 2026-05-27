@@ -22,26 +22,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.Dp
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.plusmobileapps.chefmate.auth.ui.AuthenticationScreen
-import com.plusmobileapps.chefmate.auth.ui.otp.OtpScreen
-import com.plusmobileapps.chefmate.browser.BrowserRootScreen
-import com.plusmobileapps.chefmate.cook.CookModeScreen
-import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsScreen
-import com.plusmobileapps.chefmate.featureflag.FeatureFlagsScreen
-import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailScreen
-import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderScreen
-import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavigationScreen
-import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootScreen
-import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootScreen
-import com.plusmobileapps.chefmate.settings.AppSettingsScreen
-import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.LocalAnimatedVisibilityScope
 import com.plusmobileapps.chefmate.ui.LocalSharedTransitionScope
-import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
-import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
 @Composable
@@ -129,7 +114,7 @@ fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
                         if (isSharedTransitionParticipant) this else null,
                 ) {
                     saveableStateHolder.SaveableStateProvider(activeChild.saveableKey()) {
-                        RootChildContent(activeChild.instance, rootBloc::onBackClicked)
+                        activeChild.instance.Content()
                     }
                 }
             }
@@ -139,28 +124,3 @@ fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
 
 private fun com.arkivanov.decompose.Child<*, *>.saveableKey(): String =
     "${configuration::class.simpleName}_${key.hashCode()}"
-
-@Composable
-private fun RootChildContent(child: RootBloc.Child, onBack: () -> Unit) {
-    when (child) {
-        is RootBloc.Child.BottomNavigation -> BottomNavigationScreen(child.bloc)
-        is RootBloc.Child.GroceryDetail -> GroceryDetailScreen(child.bloc)
-        is RootBloc.Child.RecipeRoot -> RecipeRootScreen(child.bloc)
-        is RootBloc.Child.Authentication -> AuthenticationScreen(child.bloc)
-        is RootBloc.Child.OtpVerification -> OtpScreen(child.bloc)
-        is RootBloc.Child.Browser ->
-            PlusHeaderContainer(
-                modifier = Modifier.fillMaxSize(),
-                data = PlusHeaderData.Modal(title = FixedString(""), onCloseClick = onBack),
-                scrollEnabled = false,
-                maxContentWidth = Dp.Unspecified,
-                content = { BrowserRootScreen(child.bloc, modifier = Modifier.weight(1f)) },
-            )
-        is RootBloc.Child.MealPlanner -> MealPlannerRootScreen(child.bloc)
-        is RootBloc.Child.AppSettings -> AppSettingsScreen(child.bloc)
-        is RootBloc.Child.BottomNavOrder -> BottomNavOrderScreen(child.bloc)
-        is RootBloc.Child.DeveloperSettings -> DeveloperSettingsScreen(child.bloc)
-        is RootBloc.Child.FeatureFlags -> FeatureFlagsScreen(child.bloc)
-        is RootBloc.Child.CookMode -> CookModeScreen(child.bloc)
-    }
-}

@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.recipe.core.impl.addmeal
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
@@ -8,6 +10,7 @@ import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.meal.data.MealType
 import com.plusmobileapps.chefmate.recipe.core.addmeal.ChooseMealTypeBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.ChooseMealTypeBloc.Output
+import com.plusmobileapps.chefmate.recipe.core.impl.addmeal.ui.ChooseMealTypeScreen
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
@@ -63,5 +66,10 @@ class ChooseMealTypeBlocImpl(
 
     override fun onBackClicked() {
         output.onNext(Output.Back)
+    }
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        ChooseMealTypeScreen(bloc = this, modifier = modifier)
     }
 }

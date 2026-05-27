@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.kmpLibrary)
+    alias(libs.plugins.compose)
     alias(libs.plugins.kotlinSerialization)
 }
 
@@ -10,11 +11,14 @@ kotlin {
             implementation(projects.client.meal.data.public)
             implementation(projects.client.recipe.core.public)
             implementation(projects.client.recipe.data.public)
+            implementation(projects.client.ui.public)
             implementation(libs.arkivanov.decompose.core)
+            implementation(libs.arkivanov.decompose.compose.extensions)
             implementation(libs.kotlinx.serialization.json)
             implementation(projects.client.shared)
             implementation(projects.client.text.public)
             implementation(projects.client.util.public)
+            implementation(compose.components.resources)
         }
         commonTest.dependencies { implementation(projects.client.util.testing) }
     }

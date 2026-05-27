@@ -1,11 +1,14 @@
 package com.plusmobileapps.chefmate.grocery.core.impl.detail
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc.Output
+import com.plusmobileapps.chefmate.grocery.core.impl.detail.ui.GroceryDetailScreen
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
@@ -65,5 +68,10 @@ class GroceryDetailBlocImpl(
 
     override fun onBackClicked() {
         output.onNext(Output.Finished)
+    }
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        GroceryDetailScreen(bloc = this, modifier = modifier)
     }
 }

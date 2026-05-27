@@ -13,9 +13,10 @@ import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.settings.SettingsBloc
+import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
 
-interface BottomNavBloc : BackHandlerOwner, BackClickBloc {
+interface BottomNavBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
     val state: StateFlow<Model>
 
     val content: Value<ChildStack<*, Child>>
@@ -34,16 +35,16 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc {
         SETTINGS,
     }
 
-    sealed class Child {
-        data class RecipeList(val bloc: RecipeListBloc) : Child()
+    sealed class Child : BlocScreen {
+        data class RecipeList(val bloc: RecipeListBloc) : Child(), BlocScreen by bloc
 
-        data class GroceryList(val bloc: GroceryListBloc) : Child()
+        data class GroceryList(val bloc: GroceryListBloc) : Child(), BlocScreen by bloc
 
-        data class Meals(val bloc: MealPlanBloc) : Child()
+        data class Meals(val bloc: MealPlanBloc) : Child(), BlocScreen by bloc
 
-        data class Browser(val bloc: BrowserRootBloc) : Child()
+        data class Browser(val bloc: BrowserRootBloc) : Child(), BlocScreen by bloc
 
-        data class Settings(val bloc: SettingsBloc) : Child()
+        data class Settings(val bloc: SettingsBloc) : Child(), BlocScreen by bloc
     }
 
     sealed class Output {

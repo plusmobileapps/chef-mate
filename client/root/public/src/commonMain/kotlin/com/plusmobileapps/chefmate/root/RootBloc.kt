@@ -17,36 +17,37 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 import com.plusmobileapps.chefmate.settings.AppSettingsBloc
+import com.plusmobileapps.chefmate.ui.BlocScreen
 
 interface RootBloc : BackHandlerOwner, BackClickBloc {
     val state: Value<ChildStack<*, Child>>
 
     fun handleSharedUrl(url: String)
 
-    sealed class Child {
-        data class BottomNavigation(val bloc: BottomNavBloc) : Child()
+    sealed class Child : BlocScreen {
+        data class BottomNavigation(val bloc: BottomNavBloc) : Child(), BlocScreen by bloc
 
-        data class GroceryDetail(val bloc: GroceryDetailBloc) : Child()
+        data class GroceryDetail(val bloc: GroceryDetailBloc) : Child(), BlocScreen by bloc
 
-        data class RecipeRoot(val bloc: RecipeRootBloc) : Child()
+        data class RecipeRoot(val bloc: RecipeRootBloc) : Child(), BlocScreen by bloc
 
-        data class Authentication(val bloc: AuthenticationBloc) : Child()
+        data class Authentication(val bloc: AuthenticationBloc) : Child(), BlocScreen by bloc
 
-        data class OtpVerification(val bloc: OtpBloc) : Child()
+        data class OtpVerification(val bloc: OtpBloc) : Child(), BlocScreen by bloc
 
-        data class Browser(val bloc: BrowserRootBloc) : Child()
+        data class Browser(val bloc: BrowserRootBloc) : Child(), BlocScreen by bloc
 
-        data class MealPlanner(val bloc: MealPlannerRootBloc) : Child()
+        data class MealPlanner(val bloc: MealPlannerRootBloc) : Child(), BlocScreen by bloc
 
-        data class AppSettings(val bloc: AppSettingsBloc) : Child()
+        data class AppSettings(val bloc: AppSettingsBloc) : Child(), BlocScreen by bloc
 
-        data class BottomNavOrder(val bloc: BottomNavOrderBloc) : Child()
+        data class BottomNavOrder(val bloc: BottomNavOrderBloc) : Child(), BlocScreen by bloc
 
-        data class DeveloperSettings(val bloc: DeveloperSettingsBloc) : Child()
+        data class DeveloperSettings(val bloc: DeveloperSettingsBloc) : Child(), BlocScreen by bloc
 
-        data class FeatureFlags(val bloc: FeatureFlagsBloc) : Child()
+        data class FeatureFlags(val bloc: FeatureFlagsBloc) : Child(), BlocScreen by bloc
 
-        data class CookMode(val bloc: CookModeBloc) : Child()
+        data class CookMode(val bloc: CookModeBloc) : Child(), BlocScreen by bloc
     }
 
     fun interface Factory {

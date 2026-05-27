@@ -1,9 +1,12 @@
 package com.plusmobileapps.chefmate.grocery.core.impl.list
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
+import com.plusmobileapps.chefmate.grocery.core.impl.list.ui.GroceryListScreen
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryFilter
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GrocerySort
@@ -131,5 +134,10 @@ class GroceryListBlocImpl(
 
     override fun onBrowseRecipesClicked() {
         output.onNext(GroceryListBloc.Output.OpenRecipes)
+    }
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        GroceryListScreen(bloc = this, modifier = modifier)
     }
 }

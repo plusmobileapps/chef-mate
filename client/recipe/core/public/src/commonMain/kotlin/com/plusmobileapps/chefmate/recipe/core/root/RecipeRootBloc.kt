@@ -10,15 +10,16 @@ import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.serialization.Serializable
 
-interface RecipeRootBloc : BackHandlerOwner, BackClickBloc {
+interface RecipeRootBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
     val routerState: Value<ChildStack<*, Child>>
 
-    sealed class Child {
-        data class Detail(val bloc: RecipeDetailBloc) : Child()
+    sealed class Child : BlocScreen {
+        data class Detail(val bloc: RecipeDetailBloc) : Child(), BlocScreen by bloc
 
-        data class Edit(val bloc: EditRecipeBloc) : Child()
+        data class Edit(val bloc: EditRecipeBloc) : Child(), BlocScreen by bloc
     }
 
     sealed class Output {
