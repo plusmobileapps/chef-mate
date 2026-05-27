@@ -4,9 +4,10 @@ import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.text.TextData
+import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
 
-interface AiChatBloc : BackClickBloc {
+interface AiChatBloc : BackClickBloc, BlocScreen {
     val state: StateFlow<Model>
 
     val inputText: StateFlow<String>

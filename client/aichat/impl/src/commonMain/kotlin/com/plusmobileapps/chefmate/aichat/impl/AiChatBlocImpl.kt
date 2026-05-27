@@ -1,8 +1,11 @@
 package com.plusmobileapps.chefmate.aichat.impl
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.aichat.AiChatBloc
+import com.plusmobileapps.chefmate.aichat.impl.ui.AiChatScreen
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
@@ -39,5 +42,10 @@ class AiChatBlocImpl(
 
     override fun onBackClicked() {
         output.onNext(AiChatBloc.Output.Back)
+    }
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        AiChatScreen(bloc = this, modifier = modifier)
     }
 }

@@ -24,7 +24,6 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.plusmobileapps.chefmate.aichat.AiChatScreen
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.LocalAnimatedVisibilityScope
 import com.plusmobileapps.chefmate.ui.LocalSharedTransitionScope
@@ -115,10 +114,7 @@ fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
                         if (isSharedTransitionParticipant) this else null,
                 ) {
                     saveableStateHolder.SaveableStateProvider(activeChild.saveableKey()) {
-                        when (val child = activeChild.instance) {
-                            is RootBloc.Child.AiChat -> AiChatScreen(child.bloc)
-                            else -> child.Content()
-                        }
+                        activeChild.instance.Content()
                     }
                 }
             }

@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.aichat
+package com.plusmobileapps.chefmate.aichat.impl.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
@@ -65,6 +65,9 @@ import chefmate.client.aichat.public.generated.resources.aichat_role_you
 import chefmate.client.aichat.public.generated.resources.aichat_send
 import chefmate.client.aichat.public.generated.resources.aichat_title
 import com.mikepenz.markdown.m3.Markdown
+import com.plusmobileapps.chefmate.aichat.AiChatBloc
+import com.plusmobileapps.chefmate.aichat.AiChatTestTags
+import com.plusmobileapps.chefmate.aichat.ChatMessage
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData

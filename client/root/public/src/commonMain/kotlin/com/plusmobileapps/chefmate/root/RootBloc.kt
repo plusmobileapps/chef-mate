@@ -50,7 +50,7 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
 
         data class CookMode(val bloc: CookModeBloc) : Child(), BlocScreen by bloc
 
-        data class AiChat(val bloc: AiChatBloc) : Child()
+        data class AiChat(val bloc: AiChatBloc) : Child(), BlocScreen by bloc
     }
 
     fun interface Factory {

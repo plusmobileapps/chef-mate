@@ -12,9 +12,10 @@ kotlin {
             api(projects.client.shared)
             api(projects.client.ui.public)
             implementation(compose.components.resources)
-            implementation(libs.multiplatform.markdown.renderer.m3)
         }
     }
 }
+
+compose { resources { publicResClass = true } }
 
 plusLibrary { namespace = "com.plusmobileapps.chefmate.aichat" }
