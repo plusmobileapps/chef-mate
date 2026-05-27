@@ -4,6 +4,7 @@ package com.plusmobileapps.chefmate.root
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.aichat.AiChatBloc
 import com.plusmobileapps.chefmate.auth.data.OtpFlow
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
 import com.plusmobileapps.chefmate.auth.ui.otp.OtpBloc
@@ -40,6 +41,7 @@ class RootBlocTest {
     var authOutput: Consumer<AuthenticationBloc.Output> = Consumer {}
     var otpOutput: Consumer<OtpBloc.Output> = Consumer {}
     var otpProps: OtpBloc.Props? = null
+    var aiChatOutput: Consumer<AiChatBloc.Output> = Consumer {}
 
     val rootBloc =
         RootBlocImpl(
@@ -93,7 +95,10 @@ class RootBlocTest {
             cookMode = CookModeBloc.Factory { _, _, _ -> mock() },
             featureFlags = FakeFeatureFlags(),
             featureFlagsBlocFactory = { _, _ -> mock() },
-            aiChat = { _, _ -> mock() },
+            aiChat = { _, output ->
+                aiChatOutput = output
+                mock()
+            },
         )
 
     fun RootBloc.instance(): RootBloc.Child = state.value.active.instance
@@ -271,5 +276,31 @@ class RootBlocTest {
 
         recipeOutput.onNext(RecipeRootBloc.Output.Finished)
         rootBloc.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
+    }
+
+    @Test
+    fun When_aichat_outputs_AddAsRecipe_Then_recipe_root_shown_with_extracted_props() {
+        val extracted =
+            ExtractedRecipeData(
+                title = "Chat-extracted",
+                description = "From Gemini",
+                ingredients = listOf("eggs", "flour"),
+                directions = listOf("whisk", "cook"),
+                imageUrl = null,
+                sourceUrl = "",
+                servings = 2,
+                prepTime = 5,
+                cookTime = 10,
+                totalTime = 15,
+                calories = null,
+            )
+
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenAiChat)
+        rootBloc.instance() should instanceOf<RootBloc.Child.AiChat>()
+
+        aiChatOutput.onNext(AiChatBloc.Output.AddAsRecipe(extracted))
+
+        rootBloc.instance() should instanceOf<RootBloc.Child.RecipeRoot>()
+        recipeProps shouldBe RecipeRootBloc.Props.CreateFromExtracted(extracted)
     }
 }

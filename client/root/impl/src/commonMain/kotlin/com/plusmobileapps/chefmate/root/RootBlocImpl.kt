@@ -330,6 +330,10 @@ class RootBlocImpl(
     private fun handleAiChatOutput(output: AiChatBloc.Output) {
         when (output) {
             AiChatBloc.Output.Back -> navigation.pop()
+            is AiChatBloc.Output.AddAsRecipe ->
+                navigation.bringToFront(
+                    RecipeRoot(RecipeRootBloc.Props.CreateFromExtracted(output.extracted))
+                )
         }
     }
 

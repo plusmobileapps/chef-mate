@@ -13,6 +13,8 @@ import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.Provider
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 @AssistedInject
 @ContributesAssistedFactory(scope = AppScope::class, assistedFactory = AiChatBloc.Factory::class)
@@ -23,6 +25,13 @@ class AiChatBlocImpl(
 ) : AiChatBloc, BlocContext by context {
 
     private val viewModel = instanceKeeper.getViewModel { viewModelFactory() }
+    private val scope = createScope()
+
+    init {
+        viewModel.extractedRecipe
+            .onEach { output.onNext(AiChatBloc.Output.AddAsRecipe(it)) }
+            .launchIn(scope)
+    }
 
     override val state: StateFlow<AiChatBloc.Model> = viewModel.state
 
@@ -38,6 +47,10 @@ class AiChatBlocImpl(
 
     override fun onClearClick() {
         viewModel.clear()
+    }
+
+    override fun onAddRecipeClick() {
+        viewModel.extractRecipe()
     }
 
     override fun onBackClicked() {

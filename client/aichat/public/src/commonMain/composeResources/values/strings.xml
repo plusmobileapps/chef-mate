@@ -4,6 +4,9 @@
     <string name="aichat_input_hint">Ask anything…</string>
     <string name="aichat_send">Send</string>
     <string name="aichat_clear">Clear conversation</string>
+    <string name="aichat_add_recipe">Add recipe</string>
+    <string name="aichat_extracting_recipe">Extracting recipe…</string>
+    <string name="aichat_error_extract_recipe">Couldn’t pull a recipe from that reply. Try asking Gemini to be more specific.</string>
     <string name="aichat_done">Done</string>
     <string name="aichat_empty_title">Start a conversation</string>
     <string name="aichat_empty_description">Ask Gemini about recipes, ingredients, or anything else.</string>

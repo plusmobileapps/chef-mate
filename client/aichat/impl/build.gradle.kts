@@ -10,6 +10,7 @@ kotlin {
             implementation(projects.client.aichat.public)
             implementation(projects.client.shared)
             implementation(projects.client.database.core)
+            implementation(projects.client.recipe.data.public)
             implementation(projects.client.text.public)
             implementation(projects.client.ui.public)
             implementation(libs.arkivanov.decompose.core)

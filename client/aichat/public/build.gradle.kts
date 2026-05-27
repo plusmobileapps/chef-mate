@@ -6,6 +6,7 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
+            api(projects.client.recipe.data.public)
             api(projects.client.text.public)
             api(libs.arkivanov.decompose.core)
             api(libs.kotlin.coroutines.core)
