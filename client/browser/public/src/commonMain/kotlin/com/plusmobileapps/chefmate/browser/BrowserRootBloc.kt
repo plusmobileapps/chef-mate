@@ -24,12 +24,19 @@ interface BrowserRootBloc : BlocScreen {
         data class RecipeExtracted(val extracted: ExtractedRecipeData) : Output()
     }
 
+    sealed class Presentation {
+        data object Embedded : Presentation()
+
+        data class Modal(val onClose: () -> Unit) : Presentation()
+    }
+
     interface Factory {
         fun create(
             context: BlocContext,
             output: Consumer<Output>,
             initialUrl: String? = null,
             showControls: Boolean = true,
+            presentation: Presentation = Presentation.Embedded,
         ): BrowserRootBloc
     }
 }

@@ -22,15 +22,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.Dp
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.LocalAnimatedVisibilityScope
 import com.plusmobileapps.chefmate.ui.LocalSharedTransitionScope
-import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
-import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
 @Composable
@@ -118,7 +114,7 @@ fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
                         if (isSharedTransitionParticipant) this else null,
                 ) {
                     saveableStateHolder.SaveableStateProvider(activeChild.saveableKey()) {
-                        RootChildContent(activeChild.instance, rootBloc::onBackClicked)
+                        activeChild.instance.Content()
                     }
                 }
             }
@@ -128,20 +124,3 @@ fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
 
 private fun com.arkivanov.decompose.Child<*, *>.saveableKey(): String =
     "${configuration::class.simpleName}_${key.hashCode()}"
-
-@Composable
-private fun RootChildContent(child: RootBloc.Child, onBack: () -> Unit) {
-    // Browser is wrapped in a modal-style header container provided by the parent. Every other
-    // Child renders itself via the BlocScreen delegation on its variant.
-    if (child is RootBloc.Child.Browser) {
-        PlusHeaderContainer(
-            modifier = Modifier.fillMaxSize(),
-            data = PlusHeaderData.Modal(title = FixedString(""), onCloseClick = onBack),
-            scrollEnabled = false,
-            maxContentWidth = Dp.Unspecified,
-            content = { child.Content(modifier = Modifier.weight(1f)) },
-        )
-    } else {
-        child.Content()
-    }
-}

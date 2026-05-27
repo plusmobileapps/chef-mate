@@ -4,6 +4,7 @@ package com.plusmobileapps.chefmate.browser.impl
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import com.arkivanov.decompose.Cancellation
 import com.arkivanov.decompose.DelicateDecomposeApi
 import com.arkivanov.decompose.router.stack.ChildStack
@@ -24,6 +25,9 @@ import com.plusmobileapps.chefmate.browser.BrowserLandingBloc
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.browser.impl.ui.BrowserRootScreen
 import com.plusmobileapps.chefmate.di.AppScope
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
+import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
@@ -41,6 +45,7 @@ class BrowserRootBlocImpl(
     @Assisted private val output: Consumer<BrowserRootBloc.Output>,
     @Assisted private val initialUrl: String?,
     @Assisted private val showControls: Boolean,
+    @Assisted private val presentation: BrowserRootBloc.Presentation,
     private val browserBlocFactory: BrowserBloc.Factory,
     private val landingBlocFactory: BrowserLandingBloc.Factory,
     private val editQueryBlocFactory: BrowserEditQueryBloc.Factory,
@@ -83,7 +88,22 @@ class BrowserRootBlocImpl(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        BrowserRootScreen(bloc = this, modifier = modifier)
+        when (val p = presentation) {
+            BrowserRootBloc.Presentation.Embedded ->
+                BrowserRootScreen(bloc = this, modifier = modifier)
+            is BrowserRootBloc.Presentation.Modal ->
+                PlusHeaderContainer(
+                    modifier = modifier,
+                    data =
+                        PlusHeaderData.Modal(
+                            title = FixedString(""),
+                            onCloseClick = p.onClose,
+                        ),
+                    scrollEnabled = false,
+                    maxContentWidth = Dp.Unspecified,
+                    content = { BrowserRootScreen(bloc = this@BrowserRootBlocImpl) },
+                )
+        }
     }
 
     private fun observeCanGoBack() {

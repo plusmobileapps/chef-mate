@@ -39,6 +39,7 @@ class BrowserRootBlocImplTest {
             output = output,
             initialUrl = initialUrl,
             showControls = showControls,
+            presentation = BrowserRootBloc.Presentation.Embedded,
             browserBlocFactory =
                 object : BrowserBloc.Factory {
                     override fun create(
