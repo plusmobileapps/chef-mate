@@ -1,0 +1,23 @@
+CREATE TABLE AiChatMessage (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    role TEXT NOT NULL,
+    content TEXT NOT NULL,
+    createdAt INTEGER NOT NULL,
+    isStreaming INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX idx_ai_chat_message_created_at ON AiChatMessage(createdAt);
+
+getAll:
+SELECT * FROM AiChatMessage ORDER BY createdAt ASC, id ASC;
+
+insertMessage:
+INSERT INTO AiChatMessage(role, content, createdAt, isStreaming)
+VALUES (?, ?, ?, ?)
+RETURNING id;
+
+updateContent:
+UPDATE AiChatMessage SET content = ?, isStreaming = ? WHERE id = ?;
+
+deleteAll:
+DELETE FROM AiChatMessage;
