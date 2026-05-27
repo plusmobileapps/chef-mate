@@ -93,6 +93,7 @@ class RootBlocTest {
             cookMode = CookModeBloc.Factory { _, _, _ -> mock() },
             featureFlags = FakeFeatureFlags(),
             featureFlagsBlocFactory = { _, _ -> mock() },
+            aiChat = { _, _ -> mock() },
         )
 
     fun RootBloc.instance(): RootBloc.Child = state.value.active.instance

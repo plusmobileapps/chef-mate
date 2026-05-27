@@ -75,6 +75,8 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             api(projects.client.shared)
+            api(projects.client.aichat.impl)
+            api(projects.client.aichat.public)
             api(projects.client.auth.data.impl)
             api(projects.client.auth.data.public)
             api(projects.client.auth.ui.impl)

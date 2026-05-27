@@ -6,6 +6,7 @@ package com.plusmobileapps.chefmate.settings.impl
 import app.cash.turbine.test
 import com.plusmobileapps.chefmate.auth.data.testing.FakeAuthenticationRepository
 import com.plusmobileapps.chefmate.auth.usecase.SignOutUseCase
+import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
 import com.plusmobileapps.chefmate.settings.SettingsBloc
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
@@ -20,6 +21,7 @@ class SettingsBlocImplTest {
     private val output = TestConsumer<SettingsBloc.Output>()
     private val authRepository = FakeAuthenticationRepository()
     private val signOutUseCase = SignOutUseCase { authRepository.signOut() }
+    private val featureFlags = FakeFeatureFlags()
 
     private val bloc by lazy {
         SettingsBlocImpl(
@@ -30,6 +32,7 @@ class SettingsBlocImplTest {
                     mainContext = context.mainContext,
                     authenticationRepository = authRepository,
                     signOutUseCase = signOutUseCase,
+                    featureFlags = featureFlags,
                 )
             },
         )
@@ -111,6 +114,12 @@ class SettingsBlocImplTest {
     fun When_app_settings_clicked_Then_OpenAppSettings_output_emitted() {
         bloc.onAppSettingsClicked()
         output.lastValue shouldBe SettingsBloc.Output.OpenAppSettings
+    }
+
+    @Test
+    fun When_ai_chat_clicked_Then_OpenAiChat_output_emitted() {
+        bloc.onAiChatClicked()
+        output.lastValue shouldBe SettingsBloc.Output.OpenAiChat
     }
 
     @Test

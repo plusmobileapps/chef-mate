@@ -62,6 +62,8 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
 
         data object OpenAppSettings : Output()
 
+        data object OpenAiChat : Output()
+
         data object OpenDeveloperSettings : Output()
 
         data class OpenUrl(val url: String) : Output()

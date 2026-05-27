@@ -5,6 +5,9 @@ import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.auth.usecase.SignOutUseCase
 import com.plusmobileapps.chefmate.di.Main
+import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
+import com.plusmobileapps.chefmate.featureflag.FeatureFlags
+import com.plusmobileapps.chefmate.featureflag.isEnabled
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,12 +23,23 @@ class SettingsViewModel(
     @Main mainContext: CoroutineContext,
     private val authenticationRepository: AuthenticationRepository,
     private val signOutUseCase: SignOutUseCase,
+    featureFlags: FeatureFlags,
 ) : ViewModel(mainContext) {
     private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state.asStateFlow()
 
+    private val aiChatEnabled: StateFlow<Boolean> =
+        featureFlags.isEnabled(FeatureFlagRegistry.AiChat)
+
     init {
         observeAuthState()
+        observeAiChatFlag()
+    }
+
+    private fun observeAiChatFlag() {
+        aiChatEnabled
+            .onEach { enabled -> _state.update { it.copy(isAiChatEnabled = enabled) } }
+            .launchIn(scope)
     }
 
     private fun observeAuthState() {
@@ -95,5 +109,6 @@ class SettingsViewModel(
         val userName: String? = null,
         val emailAwaitingVerification: String? = null,
         val showSignOutConfirmationDialog: Boolean = false,
+        val isAiChatEnabled: Boolean = false,
     )
 }

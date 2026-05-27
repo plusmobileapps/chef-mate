@@ -200,6 +200,7 @@ class BottomNavBlocImpl(
             SettingsBloc.Output.OpenSignIn -> OpenSignIn
             SettingsBloc.Output.OpenSignUp -> OpenSignUp
             SettingsBloc.Output.OpenAppSettings -> OpenAppSettings
+            SettingsBloc.Output.OpenAiChat -> BottomNavBloc.Output.OpenAiChat
             SettingsBloc.Output.OpenDeveloperSettings -> BottomNavBloc.Output.OpenDeveloperSettings
             is SettingsBloc.Output.OpenUrl -> BottomNavBloc.Output.OpenUrl(output.url)
         }.let { this.output.onNext(it) }
