@@ -7,6 +7,7 @@ import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.auth.ui.impl.ui.previewAuthBlocSignUp
 import com.plusmobileapps.chefmate.auth.ui.impl.ui.previewAuthBlocSignUpWithDialogError
 import com.plusmobileapps.chefmate.auth.ui.impl.ui.previewAuthBlocSignUpWithPasswordError
+import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
 @PreviewTest

@@ -13,6 +13,7 @@ import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.SortFilterSheetContent
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocCategoryFiltered
+import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
 // Snapshot coverage for the category filter feature:

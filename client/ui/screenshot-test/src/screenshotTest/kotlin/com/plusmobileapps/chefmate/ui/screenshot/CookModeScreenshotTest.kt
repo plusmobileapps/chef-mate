@@ -9,6 +9,7 @@ import com.plusmobileapps.chefmate.cook.impl.ui.previewCookBlocLoading
 import com.plusmobileapps.chefmate.cook.impl.ui.previewCookBlocLongTitle
 import com.plusmobileapps.chefmate.cook.impl.ui.previewCookBlocSplit
 import com.plusmobileapps.chefmate.cook.impl.ui.previewCookBlocStacked
+import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
 // ── Phone portrait (360 × 1100 dp, COMPACT width → mobile layout) ──────────
