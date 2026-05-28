@@ -6,6 +6,8 @@ package com.plusmobileapps.chefmate.settings.impl
 import app.cash.turbine.test
 import com.plusmobileapps.chefmate.auth.data.testing.FakeAuthenticationRepository
 import com.plusmobileapps.chefmate.auth.usecase.SignOutUseCase
+import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
+import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
 import com.plusmobileapps.chefmate.settings.SettingsBloc
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
@@ -20,6 +22,7 @@ class SettingsBlocImplTest {
     private val output = TestConsumer<SettingsBloc.Output>()
     private val authRepository = FakeAuthenticationRepository()
     private val signOutUseCase = SignOutUseCase { authRepository.signOut() }
+    private val featureFlags = FakeFeatureFlags()
 
     private val bloc by lazy {
         SettingsBlocImpl(
@@ -30,6 +33,7 @@ class SettingsBlocImplTest {
                     mainContext = context.mainContext,
                     authenticationRepository = authRepository,
                     signOutUseCase = signOutUseCase,
+                    featureFlags = featureFlags,
                 )
             },
         )
@@ -114,12 +118,60 @@ class SettingsBlocImplTest {
     }
 
     @Test
+    fun When_ai_chat_clicked_Then_OpenAiChat_output_emitted() {
+        bloc.onAiChatClicked()
+        output.lastValue shouldBe SettingsBloc.Output.OpenAiChat
+    }
+
+    @Test
     fun When_authenticated_Then_state_reflects_authenticated() = runTest {
         bloc.state.test {
             awaitItem().isAuthenticated shouldBe false
 
             authRepository.setAuthenticated()
             awaitItem().isAuthenticated shouldBe true
+        }
+    }
+
+    @Test
+    fun When_ai_chat_flag_off_Then_isAiChatEnabled_is_false() = runTest {
+        // Flag defaults to off — the row should be hidden.
+        bloc.state.value.isAiChatEnabled shouldBe false
+    }
+
+    @Test
+    fun When_ai_chat_flag_on_Then_isAiChatEnabled_is_true() = runTest {
+        featureFlags.set(FeatureFlagRegistry.AiChat, true)
+
+        bloc.state.test {
+            // The flag observer pushes the initial value during the first emission; if it's not
+            // captured by the time the bloc is first observed, await the next emission.
+            val initial = awaitItem()
+            if (initial.isAiChatEnabled) {
+                // already reflects the flag
+            } else {
+                awaitItem().isAiChatEnabled shouldBe true
+            }
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun When_ai_chat_flag_flips_off_Then_isAiChatEnabled_flips_off() = runTest {
+        featureFlags.set(FeatureFlagRegistry.AiChat, true)
+
+        bloc.state.test {
+            // Drain the initial true emission(s).
+            var enabled = awaitItem().isAiChatEnabled
+            while (!enabled) {
+                enabled = awaitItem().isAiChatEnabled
+            }
+            enabled shouldBe true
+
+            featureFlags.set(FeatureFlagRegistry.AiChat, false)
+
+            awaitItem().isAiChatEnabled shouldBe false
+            cancelAndIgnoreRemainingEvents()
         }
     }
 }

@@ -75,6 +75,8 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             api(projects.client.shared)
+            api(projects.client.aichat.impl)
+            api(projects.client.aichat.public)
             api(projects.client.auth.data.impl)
             api(projects.client.auth.data.public)
             api(projects.client.auth.ui.impl)
@@ -134,8 +136,12 @@ kotlin {
             implementation(projects.client.testing)
             implementation(projects.client.database.testing)
             implementation(projects.client.auth.data.testing)
+            implementation(projects.client.aichat.implRobots)
+            implementation(projects.client.bottomnav.implRobots)
+            implementation(projects.client.featureflag.testing)
             implementation(projects.client.recipe.core.implRobots)
             implementation(projects.client.recipe.list.implRobots)
+            implementation(projects.client.settings.implRobots)
         }
         val jvmTest by getting {
             dependencies {

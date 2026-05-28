@@ -9,6 +9,7 @@ kotlin {
             implementation(projects.client.root.public)
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
+            implementation(projects.client.aichat.public)
             implementation(projects.client.bottomnav.public)
             implementation(projects.client.browser.public)
             implementation(projects.client.cook.public)

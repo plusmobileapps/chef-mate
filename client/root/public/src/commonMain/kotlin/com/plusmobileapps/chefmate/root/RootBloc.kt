@@ -5,6 +5,7 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
+import com.plusmobileapps.chefmate.aichat.AiChatBloc
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
 import com.plusmobileapps.chefmate.auth.ui.otp.OtpBloc
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
@@ -48,6 +49,8 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
         data class FeatureFlags(val bloc: FeatureFlagsBloc) : Child(), BlocScreen by bloc
 
         data class CookMode(val bloc: CookModeBloc) : Child(), BlocScreen by bloc
+
+        data class AiChat(val bloc: AiChatBloc) : Child(), BlocScreen by bloc
     }
 
     fun interface Factory {

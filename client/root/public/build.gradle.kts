@@ -6,6 +6,7 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
+            api(projects.client.aichat.public)
             api(projects.client.bottomnav.public)
             api(projects.client.browser.public)
             api(projects.client.cook.public)

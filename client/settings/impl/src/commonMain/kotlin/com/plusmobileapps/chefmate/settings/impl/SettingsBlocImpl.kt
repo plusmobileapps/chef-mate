@@ -42,6 +42,7 @@ class SettingsBlocImpl(
                     },
                 showSignOutConfirmationDialog = it.showSignOutConfirmationDialog,
                 isDebugBuild = isDebugBuild,
+                isAiChatEnabled = it.isAiChatEnabled,
                 versionName = BuildConfig.VERSION_NAME,
             )
         }
@@ -72,6 +73,10 @@ class SettingsBlocImpl(
 
     override fun onAppSettingsClicked() {
         output.onNext(Output.OpenAppSettings)
+    }
+
+    override fun onAiChatClicked() {
+        output.onNext(Output.OpenAiChat)
     }
 
     override fun onDeveloperSettingsClicked() {

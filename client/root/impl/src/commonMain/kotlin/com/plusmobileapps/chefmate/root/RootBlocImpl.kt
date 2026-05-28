@@ -10,6 +10,7 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
+import com.plusmobileapps.chefmate.aichat.AiChatBloc
 import com.plusmobileapps.chefmate.auth.data.OtpFlow
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
 import com.plusmobileapps.chefmate.auth.ui.otp.OtpBloc
@@ -52,6 +53,7 @@ class RootBlocImpl(
     private val cookMode: CookModeBloc.Factory,
     private val featureFlags: FeatureFlags,
     private val featureFlagsBlocFactory: FeatureFlagsBloc.Factory,
+    private val aiChat: AiChatBloc.Factory,
 ) : RootBloc, BlocContext by context {
 
     init {
@@ -194,6 +196,11 @@ class RootBlocImpl(
                             output = ::handleCookModeOutput,
                         )
                 )
+
+            Configuration.AiChat ->
+                RootBloc.Child.AiChat(
+                    bloc = aiChat.create(context = context, output = ::handleAiChatOutput)
+                )
         }
 
     private fun handleBottomNavOutput(output: BottomNavBloc.Output) {
@@ -238,6 +245,10 @@ class RootBlocImpl(
 
             BottomNavBloc.Output.OpenAppSettings -> {
                 navigation.bringToFront(Configuration.AppSettings)
+            }
+
+            BottomNavBloc.Output.OpenAiChat -> {
+                navigation.bringToFront(Configuration.AiChat)
             }
 
             BottomNavBloc.Output.OpenDeveloperSettings -> {
@@ -316,6 +327,16 @@ class RootBlocImpl(
         }
     }
 
+    private fun handleAiChatOutput(output: AiChatBloc.Output) {
+        when (output) {
+            AiChatBloc.Output.Back -> navigation.pop()
+            is AiChatBloc.Output.AddAsRecipe ->
+                navigation.bringToFront(
+                    RecipeRoot(RecipeRootBloc.Props.CreateFromExtracted(output.extracted))
+                )
+        }
+    }
+
     private fun handleMealPlannerOutput(output: MealPlannerRootBloc.Output) {
         when (output) {
             MealPlannerRootBloc.Output.Finished -> navigation.pop()
@@ -380,5 +401,7 @@ class RootBlocImpl(
         @Serializable data object FeatureFlags : Configuration()
 
         @Serializable data class CookMode(val recipeId: Long) : Configuration()
+
+        @Serializable data object AiChat : Configuration()
     }
 }

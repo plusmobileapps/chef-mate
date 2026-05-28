@@ -23,6 +23,8 @@ interface SettingsBloc : BlocScreen {
 
     fun onAppSettingsClicked()
 
+    fun onAiChatClicked()
+
     fun onDeveloperSettingsClicked()
 
     data class Model(
@@ -38,6 +40,7 @@ interface SettingsBloc : BlocScreen {
         val verificationMessage: TextData? = null,
         val showSignOutConfirmationDialog: Boolean = false,
         val isDebugBuild: Boolean = false,
+        val isAiChatEnabled: Boolean = false,
         val versionName: String = "",
     )
 
@@ -47,6 +50,8 @@ interface SettingsBloc : BlocScreen {
         data object OpenSignIn : Output()
 
         data object OpenAppSettings : Output()
+
+        data object OpenAiChat : Output()
 
         data object OpenDeveloperSettings : Output()
 

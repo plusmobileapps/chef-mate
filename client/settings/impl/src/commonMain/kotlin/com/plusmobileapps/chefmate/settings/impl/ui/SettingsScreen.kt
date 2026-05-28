@@ -25,6 +25,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,6 +36,7 @@ import chefmate.client.settings.public.generated.resources.greeting_authenticate
 import chefmate.client.settings.public.generated.resources.more
 import chefmate.client.settings.public.generated.resources.privacy_policy
 import chefmate.client.settings.public.generated.resources.settings
+import chefmate.client.settings.public.generated.resources.settings_ai_chat
 import chefmate.client.settings.public.generated.resources.settings_guest_banner
 import chefmate.client.settings.public.generated.resources.sign_in
 import chefmate.client.settings.public.generated.resources.sign_out
@@ -46,6 +48,7 @@ import chefmate.client.settings.public.generated.resources.sign_up
 import chefmate.client.settings.public.generated.resources.terms_of_use
 import chefmate.client.settings.public.generated.resources.version_label
 import com.plusmobileapps.chefmate.settings.SettingsBloc
+import com.plusmobileapps.chefmate.settings.SettingsTestTags
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.TextData
@@ -71,6 +74,7 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
     }
 
     PlusNavContainer(
+        modifier = modifier.testTag(SettingsTestTags.SCREEN),
         data = PlusHeaderData.Parent(title = Res.string.more.asTextData()),
         content = {
             when {
@@ -122,6 +126,13 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
                 name = Res.string.settings.asTextData(),
                 onClick = bloc::onAppSettingsClicked,
             )
+            if (viewState.isAiChatEnabled) {
+                HorizontalDivider()
+                SettingsRow(
+                    name = Res.string.settings_ai_chat.asTextData(),
+                    onClick = bloc::onAiChatClicked,
+                )
+            }
             HorizontalDivider()
             SettingsRow(
                 name = Res.string.privacy_policy.asTextData(),
@@ -132,7 +143,9 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
             HorizontalDivider()
             SettingsRow(
                 name = Res.string.terms_of_use.asTextData(),
-                onClick = { bloc.onUrlClicked("https://chefmate.plusmobileapps.com/terms-of-use/") },
+                onClick = {
+                    bloc.onUrlClicked("https://chefmate.plusmobileapps.com/terms-of-use/")
+                },
             )
             HorizontalDivider()
             SettingsRow(
@@ -267,6 +280,8 @@ private val previewBlocUnauthenticated =
 
         override fun onAppSettingsClicked() = Unit
 
+        override fun onAiChatClicked() = Unit
+
         override fun onDeveloperSettingsClicked() = Unit
 
         @Composable override fun Content(modifier: Modifier) = SettingsScreen(this, modifier)
@@ -301,6 +316,8 @@ private val previewBlocAuthenticated =
 
         override fun onAppSettingsClicked() = Unit
 
+        override fun onAiChatClicked() = Unit
+
         override fun onDeveloperSettingsClicked() = Unit
 
         @Composable override fun Content(modifier: Modifier) = SettingsScreen(this, modifier)
@@ -330,6 +347,8 @@ private val previewBlocAnonymous =
         override fun onUrlClicked(url: String) = Unit
 
         override fun onAppSettingsClicked() = Unit
+
+        override fun onAiChatClicked() = Unit
 
         override fun onDeveloperSettingsClicked() = Unit
 
