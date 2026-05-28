@@ -38,6 +38,7 @@ import chefmate.client.grocery.core.public.generated.resources.purchased
 import chefmate.client.ui.public.generated.resources.Res as CommonRes
 import chefmate.client.ui.public.generated.resources.save
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
+import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailTestTags
 import com.plusmobileapps.chefmate.grocery.core.displayName
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
@@ -46,11 +47,6 @@ import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
-
-object GroceryDetailTestTags {
-    const val SHEET = "grocery_detail_sheet"
-    const val AISLE_DROPDOWN = "grocery_detail_aisle_dropdown"
-}
 
 /**
  * Sheet-shaped detail body for the bottom-sheet overlay rendered from `GroceryListScreen`. Snapshot

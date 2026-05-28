@@ -1,8 +1,9 @@
-package com.plusmobileapps.chefmate.grocery.core.detail
+package com.plusmobileapps.chefmate.grocery.core.impl.detail.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.plusmobileapps.chefmate.BackClickBloc
+import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -24,6 +25,9 @@ private fun groceryDetailBloc(item: GroceryItem): GroceryDetailBloc =
         override fun onSaveClicked() = Unit
 
         override fun onBackClicked() = Unit
+
+        @Composable
+        override fun Content(modifier: Modifier) = GroceryDetailSheetContent(this, modifier)
     }
 
 private val sampleItem =
@@ -51,7 +55,7 @@ val previewGroceryDetailBlocFromRecipe: GroceryDetailBloc =
 
 /** Loading state — exercises the spinner. */
 val previewGroceryDetailBlocLoading: GroceryDetailBloc =
-    object : GroceryDetailBloc, BackClickBloc {
+    object : GroceryDetailBloc {
         override val models =
             MutableStateFlow<GroceryDetailBloc.Model>(GroceryDetailBloc.Model.Loading)
 
@@ -66,6 +70,9 @@ val previewGroceryDetailBlocLoading: GroceryDetailBloc =
         override fun onSaveClicked() = Unit
 
         override fun onBackClicked() = Unit
+
+        @Composable
+        override fun Content(modifier: Modifier) = GroceryDetailSheetContent(this, modifier)
     }
 
 @Preview(showBackground = true, heightDp = 500)

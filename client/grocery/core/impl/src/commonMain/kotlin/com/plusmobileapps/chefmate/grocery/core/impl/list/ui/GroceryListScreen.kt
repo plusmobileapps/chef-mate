@@ -117,6 +117,7 @@ import com.plusmobileapps.chefmate.grocery.core.list.GroceryDisplayGroup
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryDisplayItem
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryGroupedList
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
+import com.plusmobileapps.chefmate.grocery.core.list.GroceryListTestTags
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.SyncStatus
 import com.plusmobileapps.chefmate.text.asTextData
@@ -127,10 +128,6 @@ import com.plusmobileapps.chefmate.ui.isIosPlatform
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.flow.StateFlow
 import org.jetbrains.compose.resources.stringResource
-
-object GroceryListTestTags {
-    const val SCREEN = "grocery_list_screen"
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
