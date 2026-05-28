@@ -6,6 +6,7 @@ package com.plusmobileapps.chefmate.settings.impl
 import app.cash.turbine.test
 import com.plusmobileapps.chefmate.auth.data.testing.FakeAuthenticationRepository
 import com.plusmobileapps.chefmate.auth.usecase.SignOutUseCase
+import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
 import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
 import com.plusmobileapps.chefmate.settings.SettingsBloc
 import com.plusmobileapps.chefmate.testing.TestBlocContext
@@ -129,6 +130,48 @@ class SettingsBlocImplTest {
 
             authRepository.setAuthenticated()
             awaitItem().isAuthenticated shouldBe true
+        }
+    }
+
+    @Test
+    fun When_ai_chat_flag_off_Then_isAiChatEnabled_is_false() = runTest {
+        // Flag defaults to off — the row should be hidden.
+        bloc.state.value.isAiChatEnabled shouldBe false
+    }
+
+    @Test
+    fun When_ai_chat_flag_on_Then_isAiChatEnabled_is_true() = runTest {
+        featureFlags.set(FeatureFlagRegistry.AiChat, true)
+
+        bloc.state.test {
+            // The flag observer pushes the initial value during the first emission; if it's not
+            // captured by the time the bloc is first observed, await the next emission.
+            val initial = awaitItem()
+            if (initial.isAiChatEnabled) {
+                // already reflects the flag
+            } else {
+                awaitItem().isAiChatEnabled shouldBe true
+            }
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun When_ai_chat_flag_flips_off_Then_isAiChatEnabled_flips_off() = runTest {
+        featureFlags.set(FeatureFlagRegistry.AiChat, true)
+
+        bloc.state.test {
+            // Drain the initial true emission(s).
+            var enabled = awaitItem().isAiChatEnabled
+            while (!enabled) {
+                enabled = awaitItem().isAiChatEnabled
+            }
+            enabled shouldBe true
+
+            featureFlags.set(FeatureFlagRegistry.AiChat, false)
+
+            awaitItem().isAiChatEnabled shouldBe false
+            cancelAndIgnoreRemainingEvents()
         }
     }
 }
