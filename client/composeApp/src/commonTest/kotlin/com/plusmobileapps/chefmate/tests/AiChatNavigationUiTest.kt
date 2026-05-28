@@ -3,14 +3,13 @@
 package com.plusmobileapps.chefmate.tests
 
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.waitUntilExactlyOneExists
 import com.plusmobileapps.chefmate.aichat.robots.aiChat
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
 import com.plusmobileapps.chefmate.harness.runRootBlocTest
+import com.plusmobileapps.chefmate.recipe.bottomnav.robots.bottomNav
+import com.plusmobileapps.chefmate.recipe.core.robots.editRecipe
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.chefmate.settings.robots.more
 import kotlin.test.Test
 
 @OptIn(ExperimentalTestApi::class)
@@ -38,23 +37,15 @@ class AiChatNavigationUiTest {
             component.fakeGeminiClient.deltas = listOf("Try lemon-roasted chicken thighs!")
             component.fakeGeminiRecipeExtractor.response = extractedRecipe
 
-            // Open More → AI Chat.
-            waitUntilExactlyOneExists(hasText("More"))
-            onNode(hasText("More")).performClick()
-            waitUntilExactlyOneExists(hasText("AI Chat"))
-            onNode(hasText("AI Chat")).performClick()
+            bottomNav().clickMoreTab()
+            more().awaitDisplayed().clickAiChatRow()
 
-            // Send a message; the fake gemini replies with one canned delta.
             aiChat()
                 .typeMessage("What can I do with chicken thighs?")
                 .tapSend()
                 .awaitMessageShown("Try lemon-roasted chicken thighs!")
+                .tapAddRecipe()
 
-            // Pill becomes available once the model reply is finished.
-            aiChat().tapAddRecipe()
-
-            // Land on the Edit Recipe screen pre-filled with Gemini's extracted recipe.
-            waitUntilExactlyOneExists(hasText(extractedRecipe.title))
-            onNode(hasText(extractedRecipe.title)).assertIsDisplayed()
+            editRecipe().awaitDisplayed().assertTitleShown(extractedRecipe.title)
         }
 }
