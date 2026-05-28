@@ -136,6 +136,8 @@ kotlin {
             implementation(projects.client.testing)
             implementation(projects.client.database.testing)
             implementation(projects.client.auth.data.testing)
+            implementation(projects.client.aichat.implRobots)
+            implementation(projects.client.featureflag.testing)
             implementation(projects.client.recipe.core.implRobots)
             implementation(projects.client.recipe.list.implRobots)
         }

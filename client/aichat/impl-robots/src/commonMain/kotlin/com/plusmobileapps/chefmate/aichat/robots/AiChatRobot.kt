@@ -37,6 +37,11 @@ class AiChatRobot(private val test: ComposeUiTest) {
         test.onNode(hasText(text, substring = true) and onScreen).assertIsDisplayed()
     }
 
+    /** Waits for a message containing [text] to appear, then returns. */
+    fun awaitMessageShown(text: String): AiChatRobot = apply {
+        test.waitUntilExactlyOneExists(hasText(text, substring = true) and onScreen)
+    }
+
     /**
      * Waits for the Add Recipe pill to appear (i.e. at least one finished model reply exists) and
      * then taps it.
