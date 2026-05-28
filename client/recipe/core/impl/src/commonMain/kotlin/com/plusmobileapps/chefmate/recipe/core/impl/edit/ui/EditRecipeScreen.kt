@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.core.public.generated.resources.Res
@@ -90,6 +91,7 @@ import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload_photo_dismiss
 import coil3.compose.AsyncImage
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
+import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeTestTags
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
@@ -124,7 +126,7 @@ fun EditRecipeScreen(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     }
 
     PlusHeaderContainer(
-        modifier = modifier.fillMaxSize().imePadding(),
+        modifier = modifier.fillMaxSize().imePadding().testTag(EditRecipeTestTags.SCREEN),
         data = PlusHeaderData.Child(title = state.title, onBackClick = bloc::onBackClicked),
         verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingNormal),
         floatingActionButton = {

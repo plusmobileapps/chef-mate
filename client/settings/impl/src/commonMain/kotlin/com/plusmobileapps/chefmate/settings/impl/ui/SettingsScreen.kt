@@ -25,6 +25,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
@@ -47,6 +48,7 @@ import chefmate.client.settings.public.generated.resources.sign_up
 import chefmate.client.settings.public.generated.resources.terms_of_use
 import chefmate.client.settings.public.generated.resources.version_label
 import com.plusmobileapps.chefmate.settings.SettingsBloc
+import com.plusmobileapps.chefmate.settings.SettingsTestTags
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.TextData
@@ -72,6 +74,7 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
     }
 
     PlusNavContainer(
+        modifier = modifier.testTag(SettingsTestTags.SCREEN),
         data = PlusHeaderData.Parent(title = Res.string.more.asTextData()),
         content = {
             when {

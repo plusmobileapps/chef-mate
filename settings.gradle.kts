@@ -60,6 +60,8 @@ include(":client:browser:testing")
 
 include(":client:bottomnav:impl")
 
+include(":client:bottomnav:impl-robots")
+
 include(":client:bottomnav:public")
 
 include(":client:composeApp")
@@ -121,6 +123,8 @@ include(":client:root:impl")
 include(":client:root:public")
 
 include(":client:settings:impl")
+
+include(":client:settings:impl-robots")
 
 include(":client:settings:public")
 
