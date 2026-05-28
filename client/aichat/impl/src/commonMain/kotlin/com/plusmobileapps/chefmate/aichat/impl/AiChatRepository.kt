@@ -6,10 +6,10 @@ import com.plusmobileapps.chefmate.aichat.ChatMessage
 import com.plusmobileapps.chefmate.database.AiChatMessageQueries
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.IO
+import com.plusmobileapps.chefmate.util.DateTimeUtil
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlin.coroutines.CoroutineContext
-import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -21,6 +21,7 @@ import kotlinx.coroutines.withContext
 class AiChatRepository(
     private val queries: AiChatMessageQueries,
     private val geminiClient: GeminiClient,
+    private val dateTimeUtil: DateTimeUtil,
     @IO private val ioContext: CoroutineContext,
 ) {
 
@@ -41,7 +42,7 @@ class AiChatRepository(
         val trimmed = text.trim()
         if (trimmed.isEmpty()) return
 
-        val now = Clock.System.now().toEpochMilliseconds()
+        val now = dateTimeUtil.now.toEpochMilliseconds()
 
         // Insert the user message in its own transaction so SQLDelight's observer fires before
         // the network round-trip starts. The model row is deferred until the first delta arrives
@@ -85,7 +86,7 @@ class AiChatRepository(
                                 .insertMessage(
                                     role = ROLE_MODEL,
                                     content = content,
-                                    createdAt = Clock.System.now().toEpochMilliseconds(),
+                                    createdAt = dateTimeUtil.now.toEpochMilliseconds(),
                                     isStreaming = 1L,
                                 )
                                 .executeAsOne()
@@ -113,7 +114,7 @@ class AiChatRepository(
                         .insertMessage(
                             role = ROLE_MODEL,
                             content = errorContent,
-                            createdAt = Clock.System.now().toEpochMilliseconds(),
+                            createdAt = dateTimeUtil.now.toEpochMilliseconds(),
                             isStreaming = 0L,
                         )
                         .executeAsOne()

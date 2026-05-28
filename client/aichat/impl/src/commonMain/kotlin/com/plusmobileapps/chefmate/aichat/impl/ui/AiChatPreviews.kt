@@ -6,6 +6,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.plusmobileapps.chefmate.aichat.AiChatBloc
 import com.plusmobileapps.chefmate.aichat.ChatMessage
 import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -107,23 +108,23 @@ val previewAiChatBlocError: AiChatBloc =
 @Preview(showBackground = true, heightDp = 900)
 @Composable
 internal fun AiChatScreenPreview() {
-    ChefMateTheme { previewAiChatBloc.Content(Modifier) }
+    ChefMateTheme { previewAiChatBloc.Content() }
 }
 
 @Preview(showBackground = true, heightDp = 900)
 @Composable
 internal fun AiChatScreenEmptyPreview() {
-    ChefMateTheme { previewAiChatBlocEmpty.Content(Modifier) }
+    ChefMateTheme { previewAiChatBlocEmpty.Content() }
 }
 
 @Preview(showBackground = true, heightDp = 900)
 @Composable
 internal fun AiChatScreenStreamingPreview() {
-    ChefMateTheme { previewAiChatBlocStreaming.Content(Modifier) }
+    ChefMateTheme { previewAiChatBlocStreaming.Content() }
 }
 
 @Preview(showBackground = true, heightDp = 900)
 @Composable
 internal fun AiChatScreenErrorPreview() {
-    ChefMateTheme { previewAiChatBlocError.Content(Modifier) }
+    ChefMateTheme { previewAiChatBlocError.Content() }
 }

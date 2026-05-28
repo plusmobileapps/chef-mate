@@ -14,13 +14,14 @@ import com.plusmobileapps.chefmate.aichat.impl.ui.previewAiChatBlocEmpty
 import com.plusmobileapps.chefmate.aichat.impl.ui.previewAiChatBlocError
 import com.plusmobileapps.chefmate.aichat.impl.ui.previewAiChatBlocExtracting
 import com.plusmobileapps.chefmate.aichat.impl.ui.previewAiChatBlocStreaming
+import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
 @Composable
 private fun AiChatScreenshot(bloc: AiChatBloc, darkTheme: Boolean = false) {
     ChefMateTheme(darkTheme = darkTheme) {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            bloc.Content(Modifier)
+            bloc.Content()
         }
     }
 }

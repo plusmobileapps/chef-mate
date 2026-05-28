@@ -1,19 +1,19 @@
 package com.plusmobileapps.chefmate.aichat.impl
 
 import com.plusmobileapps.chefmate.aichat.ChatMessage
+import com.plusmobileapps.chefmate.aichat.impl.di.GeminiHttpClient
 import com.plusmobileapps.chefmate.buildconfig.BuildConfig
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -30,18 +30,22 @@ class GeminiExtractionException(message: String, cause: Throwable? = null) :
  * structured-output (`responseSchema` + `responseMimeType=application/json`). Used by the "Add
  * recipe" pill so the user lands in the existing Edit Recipe → CreateFromExtracted flow.
  */
+interface GeminiRecipeExtractor {
+    suspend fun extract(history: List<ChatMessage>): ExtractedRecipeData
+}
+
 @Inject
 @SingleIn(AppScope::class)
-class GeminiRecipeExtractor {
+@ContributesBinding(AppScope::class)
+class RealGeminiRecipeExtractor(@GeminiHttpClient private val httpClient: HttpClient) :
+    GeminiRecipeExtractor {
 
     private val json = Json {
         ignoreUnknownKeys = true
         encodeDefaults = false
     }
 
-    private val httpClient = HttpClient { install(ContentNegotiation) { json(json) } }
-
-    suspend fun extract(history: List<ChatMessage>): ExtractedRecipeData {
+    override suspend fun extract(history: List<ChatMessage>): ExtractedRecipeData {
         val apiKey = BuildConfig.GEMINI_API_KEY
         if (apiKey.isBlank()) throw GeminiExtractionException("MISSING_API_KEY")
 

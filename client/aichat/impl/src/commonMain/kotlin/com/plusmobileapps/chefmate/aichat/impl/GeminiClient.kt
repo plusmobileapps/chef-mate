@@ -1,13 +1,13 @@
 package com.plusmobileapps.chefmate.aichat.impl
 
 import com.plusmobileapps.chefmate.aichat.ChatMessage
+import com.plusmobileapps.chefmate.aichat.impl.di.GeminiHttpClient
 import com.plusmobileapps.chefmate.buildconfig.BuildConfig
 import com.plusmobileapps.chefmate.di.AppScope
+import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.sse.SSE
 import io.ktor.client.plugins.sse.sse
 import io.ktor.client.request.headers
 import io.ktor.client.request.setBody
@@ -15,7 +15,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
@@ -23,21 +22,25 @@ import kotlinx.serialization.json.Json
 
 class GeminiException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 
+/**
+ * Streams Gemini's reply for the current chat history. Emits text deltas as Server-Sent Events
+ * arrive so the UI can render the response progressively.
+ */
+interface GeminiClient {
+    fun streamReply(history: List<ChatMessage>): Flow<String>
+}
+
 @Inject
 @SingleIn(AppScope::class)
-class GeminiClient {
+@ContributesBinding(AppScope::class)
+class RealGeminiClient(@GeminiHttpClient private val httpClient: HttpClient) : GeminiClient {
 
     private val json = Json {
         ignoreUnknownKeys = true
         encodeDefaults = false
     }
 
-    private val httpClient = HttpClient {
-        install(SSE)
-        install(ContentNegotiation) { json(json) }
-    }
-
-    fun streamReply(history: List<ChatMessage>): Flow<String> = flow {
+    override fun streamReply(history: List<ChatMessage>): Flow<String> = flow {
         val apiKey = BuildConfig.GEMINI_API_KEY
         if (apiKey.isBlank()) {
             throw GeminiException("MISSING_API_KEY")
