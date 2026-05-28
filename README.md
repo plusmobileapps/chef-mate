@@ -82,3 +82,4 @@ in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and r
 * [Mokkery](https://mokkery.dev/) - mocking library
 * [Turbine](https://github.com/cashapp/turbine) - coroutines testing library
 * [Compose Preview Screenshot Testing](https://developer.android.com/studio/preview/compose-screenshot-testing) - snapshot tests for `@Preview` composables (see `client/ui/screenshot-test/` and `CLAUDE.md` for the workflow)
+* [Compose testing](https://kotlinlang.org/docs/multiplatform/compose-test.html) - official KMP Compose UI testing docs
