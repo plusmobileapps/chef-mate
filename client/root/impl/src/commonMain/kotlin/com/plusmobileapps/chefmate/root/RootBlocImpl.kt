@@ -262,10 +262,6 @@ class RootBlocImpl(
                 navigation.bringToFront(Configuration.AiChat)
             }
 
-            BottomNavBloc.Output.OpenImportRecipes -> {
-                navigation.bringToFront(Configuration.ImportRecipes)
-            }
-
             BottomNavBloc.Output.OpenDeveloperSettings -> {
                 navigation.bringToFront(Configuration.DeveloperSettings)
             }
@@ -281,6 +277,9 @@ class RootBlocImpl(
             AppSettingsBloc.Output.Back -> navigation.pop()
             AppSettingsBloc.Output.OpenBottomNavOrder -> {
                 navigation.bringToFront(Configuration.BottomNavOrder)
+            }
+            AppSettingsBloc.Output.OpenImportRecipes -> {
+                navigation.bringToFront(Configuration.ImportRecipes)
             }
         }
     }

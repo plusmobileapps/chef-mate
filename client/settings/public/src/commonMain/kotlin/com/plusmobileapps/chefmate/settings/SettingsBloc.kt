@@ -25,8 +25,6 @@ interface SettingsBloc : BlocScreen {
 
     fun onAiChatClicked()
 
-    fun onImportRecipesClicked()
-
     fun onDeveloperSettingsClicked()
 
     data class Model(
@@ -54,8 +52,6 @@ interface SettingsBloc : BlocScreen {
         data object OpenAppSettings : Output()
 
         data object OpenAiChat : Output()
-
-        data object OpenImportRecipes : Output()
 
         data object OpenDeveloperSettings : Output()
 

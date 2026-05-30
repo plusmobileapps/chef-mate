@@ -33,7 +33,6 @@ import chefmate.client.settings.public.generated.resources.Res
 import chefmate.client.settings.public.generated.resources.about
 import chefmate.client.settings.public.generated.resources.developer_settings
 import chefmate.client.settings.public.generated.resources.greeting_authenticated
-import chefmate.client.settings.public.generated.resources.import_recipes
 import chefmate.client.settings.public.generated.resources.more
 import chefmate.client.settings.public.generated.resources.privacy_policy
 import chefmate.client.settings.public.generated.resources.settings
@@ -134,11 +133,6 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
                     onClick = bloc::onAiChatClicked,
                 )
             }
-            HorizontalDivider()
-            SettingsRow(
-                name = Res.string.import_recipes.asTextData(),
-                onClick = bloc::onImportRecipesClicked,
-            )
             HorizontalDivider()
             SettingsRow(
                 name = Res.string.privacy_policy.asTextData(),
@@ -288,8 +282,6 @@ private val previewBlocUnauthenticated =
 
         override fun onAiChatClicked() = Unit
 
-        override fun onImportRecipesClicked() = Unit
-
         override fun onDeveloperSettingsClicked() = Unit
 
         @Composable override fun Content(modifier: Modifier) = SettingsScreen(this, modifier)
@@ -326,8 +318,6 @@ private val previewBlocAuthenticated =
 
         override fun onAiChatClicked() = Unit
 
-        override fun onImportRecipesClicked() = Unit
-
         override fun onDeveloperSettingsClicked() = Unit
 
         @Composable override fun Content(modifier: Modifier) = SettingsScreen(this, modifier)
@@ -359,8 +349,6 @@ private val previewBlocAnonymous =
         override fun onAppSettingsClicked() = Unit
 
         override fun onAiChatClicked() = Unit
-
-        override fun onImportRecipesClicked() = Unit
 
         override fun onDeveloperSettingsClicked() = Unit
 
