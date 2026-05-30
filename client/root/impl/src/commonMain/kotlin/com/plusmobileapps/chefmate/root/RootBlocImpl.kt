@@ -26,6 +26,7 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc.Props.Detail
+import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc
 import com.plusmobileapps.chefmate.root.RootBloc.Child.BottomNavigation
 import com.plusmobileapps.chefmate.root.RootBlocImpl.Configuration.GroceryDetail
 import com.plusmobileapps.chefmate.root.RootBlocImpl.Configuration.RecipeRoot
@@ -48,6 +49,7 @@ class RootBlocImpl(
     private val authentication: AuthenticationBloc.Factory,
     private val otpBloc: OtpBloc.Factory,
     private val appSettings: AppSettingsBloc.Factory,
+    private val importRecipes: ImportRecipesBloc.Factory,
     private val bottomNavOrder: BottomNavOrderBloc.Factory,
     private val developerSettings: DeveloperSettingsBloc.Factory,
     private val cookMode: CookModeBloc.Factory,
@@ -160,6 +162,15 @@ class RootBlocImpl(
                     bloc = appSettings.create(context = context, output = ::handleAppSettingsOutput)
                 )
 
+            Configuration.ImportRecipes ->
+                RootBloc.Child.ImportRecipes(
+                    bloc =
+                        importRecipes.create(
+                            context = context,
+                            output = ::handleImportRecipesOutput,
+                        )
+                )
+
             Configuration.BottomNavOrder ->
                 RootBloc.Child.BottomNavOrder(
                     bloc =
@@ -251,6 +262,10 @@ class RootBlocImpl(
                 navigation.bringToFront(Configuration.AiChat)
             }
 
+            BottomNavBloc.Output.OpenImportRecipes -> {
+                navigation.bringToFront(Configuration.ImportRecipes)
+            }
+
             BottomNavBloc.Output.OpenDeveloperSettings -> {
                 navigation.bringToFront(Configuration.DeveloperSettings)
             }
@@ -267,6 +282,12 @@ class RootBlocImpl(
             AppSettingsBloc.Output.OpenBottomNavOrder -> {
                 navigation.bringToFront(Configuration.BottomNavOrder)
             }
+        }
+    }
+
+    private fun handleImportRecipesOutput(output: ImportRecipesBloc.Output) {
+        when (output) {
+            ImportRecipesBloc.Output.Back -> navigation.pop()
         }
     }
 
@@ -393,6 +414,8 @@ class RootBlocImpl(
         @Serializable data class MealPlanner(val props: MealPlannerRootBloc.Props) : Configuration()
 
         @Serializable data object AppSettings : Configuration()
+
+        @Serializable data object ImportRecipes : Configuration()
 
         @Serializable data object BottomNavOrder : Configuration()
 

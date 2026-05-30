@@ -112,6 +112,12 @@ include(":client:recipe:data:public")
 
 include(":client:recipe:data:testing")
 
+include(":client:recipe:importer:impl")
+
+include(":client:recipe:importer:impl-robots")
+
+include(":client:recipe:importer:public")
+
 include(":client:recipe:list:impl")
 
 include(":client:recipe:list:impl-robots")

@@ -79,6 +79,10 @@ class SettingsBlocImpl(
         output.onNext(Output.OpenAiChat)
     }
 
+    override fun onImportRecipesClicked() {
+        output.onNext(Output.OpenImportRecipes)
+    }
+
     override fun onDeveloperSettingsClicked() {
         output.onNext(Output.OpenDeveloperSettings)
     }
