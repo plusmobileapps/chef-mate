@@ -36,6 +36,7 @@ import com.plusmobileapps.chefmate.recipe.importer.generated.resources.import_re
 import com.plusmobileapps.chefmate.recipe.importer.generated.resources.import_recipes_done_button
 import com.plusmobileapps.chefmate.recipe.importer.generated.resources.import_recipes_done_headline
 import com.plusmobileapps.chefmate.recipe.importer.generated.resources.import_recipes_empty_body
+import com.plusmobileapps.chefmate.recipe.importer.generated.resources.import_recipes_empty_format_hint
 import com.plusmobileapps.chefmate.recipe.importer.generated.resources.import_recipes_empty_headline
 import com.plusmobileapps.chefmate.recipe.importer.generated.resources.import_recipes_import_button
 import com.plusmobileapps.chefmate.recipe.importer.generated.resources.import_recipes_parsing
@@ -108,6 +109,13 @@ private fun EmptyContent(onChooseFile: () -> Unit) {
         Text(
             Res.string.import_recipes_empty_body.asTextData().localized(),
             style = ChefMateTheme.typography.bodyMedium,
+            color = ChefMateTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(ChefMateTheme.dimens.paddingSmall))
+        Text(
+            Res.string.import_recipes_empty_format_hint.asTextData().localized(),
+            style = ChefMateTheme.typography.bodySmall,
             color = ChefMateTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )

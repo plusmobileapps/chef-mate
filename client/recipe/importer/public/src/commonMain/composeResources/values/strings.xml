@@ -2,6 +2,7 @@
     <string name="import_recipes_title">Import Recipes</string>
     <string name="import_recipes_empty_headline">Import a recipe archive</string>
     <string name="import_recipes_empty_body">Choose a .zip export of recipes and we’ll convert them into Chef Mate recipes.</string>
+    <string name="import_recipes_empty_format_hint">The archive should hold one web page (.html) per recipe with structured recipe data embedded in it — the format produced by apps like Paprika. Any recipe photos bundled in the .zip are imported too.</string>
     <string name="import_recipes_choose_file">Choose ZIP file</string>
     <string name="import_recipes_parsing">Reading archive…</string>
     <string name="import_recipes_review_headline">Select recipes to import</string>
