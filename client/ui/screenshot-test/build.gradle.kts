@@ -48,6 +48,7 @@ dependencies {
     implementation(project(":client:recipe:core:impl"))
     implementation(project(":client:recipe:list:public"))
     implementation(project(":client:recipe:list:impl"))
+    implementation(project(":client:recipe:importer:public"))
     implementation(project(":client:recipe:data:public"))
     implementation(project(":client:settings:public"))
     implementation(project(":client:settings:impl"))

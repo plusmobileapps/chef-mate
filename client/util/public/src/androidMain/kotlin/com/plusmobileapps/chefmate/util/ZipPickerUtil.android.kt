@@ -1,0 +1,39 @@
+@file:Suppress("ktlint:standard:filename")
+
+package com.plusmobileapps.chefmate.util
+
+import android.provider.OpenableColumns
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.platform.LocalContext
+
+@Composable
+actual fun rememberZipPickerLauncher(onResult: (PickedFile?) -> Unit): () -> Unit {
+    val context = LocalContext.current
+    val currentOnResult = rememberUpdatedState(onResult)
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri == null) {
+                currentOnResult.value(null)
+                return@rememberLauncherForActivityResult
+            }
+            val resolver = context.contentResolver
+            val bytes = resolver.openInputStream(uri)?.use { it.readBytes() }
+            if (bytes == null) {
+                currentOnResult.value(null)
+                return@rememberLauncherForActivityResult
+            }
+            val fileName =
+                resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use {
+                    cursor ->
+                    if (cursor.moveToFirst()) cursor.getString(0) else null
+                } ?: uri.lastPathSegment ?: "import.zip"
+            currentOnResult.value(PickedFile(bytes = bytes, fileName = fileName))
+        }
+    return remember(launcher) {
+        { launcher.launch(arrayOf("application/zip", "application/x-zip-compressed", "*/*")) }
+    }
+}

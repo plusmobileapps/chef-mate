@@ -1,0 +1,19 @@
+<resources>
+    <string name="import_recipes_title">Import Recipes</string>
+    <string name="import_recipes_empty_headline">Import a recipe archive</string>
+    <string name="import_recipes_empty_body">Choose a .zip export of recipes and we’ll convert them into Chef Mate recipes.</string>
+    <string name="import_recipes_empty_format_hint">The archive should hold one web page (.html) per recipe with structured recipe data embedded in it — the format produced by apps like Paprika. Any recipe photos bundled in the .zip are imported too.</string>
+    <string name="import_recipes_choose_file">Choose ZIP file</string>
+    <string name="import_recipes_parsing">Reading archive…</string>
+    <string name="import_recipes_review_headline">Select recipes to import</string>
+    <string name="import_recipes_select_all">Select all</string>
+    <string name="import_recipes_deselect_all">Deselect all</string>
+    <string name="import_recipes_import_button">Import {count}</string>
+    <string name="import_recipes_importing">Importing…</string>
+    <string name="import_recipes_item_subtitle">{ingredients} ingredients · {steps} steps</string>
+    <string name="import_recipes_none_found">No recipes were found in that archive.</string>
+    <string name="import_recipes_parse_failed">We couldn’t read that file. Make sure it’s a valid recipe export.</string>
+    <string name="import_recipes_done_headline">Imported {count} recipes</string>
+    <string name="import_recipes_done_button">Done</string>
+    <string name="import_recipes_start_over">Import another archive</string>
+</resources>

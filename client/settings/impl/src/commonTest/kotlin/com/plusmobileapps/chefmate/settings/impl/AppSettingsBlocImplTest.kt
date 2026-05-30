@@ -99,4 +99,11 @@ class AppSettingsBlocImplTest {
         bloc.onBottomNavOrderClicked()
         output.lastValue shouldBe AppSettingsBloc.Output.OpenBottomNavOrder
     }
+
+    @Test
+    fun When_import_recipes_clicked_Then_open_import_recipes_output_emitted() {
+        val bloc = createBloc()
+        bloc.onImportRecipesClicked()
+        output.lastValue shouldBe AppSettingsBloc.Output.OpenImportRecipes
+    }
 }

@@ -17,6 +17,7 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc
 import com.plusmobileapps.chefmate.settings.AppSettingsBloc
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import dev.mokkery.MockMode
@@ -34,6 +35,7 @@ class RootBlocTest {
     var recipeProps: RecipeRootBloc.Props? = null
     var groceryDetailId: Long? = null
     var appSettingsOutput: Consumer<AppSettingsBloc.Output> = Consumer {}
+    var importRecipesOutput: Consumer<ImportRecipesBloc.Output> = Consumer {}
     var bottomNavOrderOutput: Consumer<BottomNavOrderBloc.Output> = Consumer {}
     var developerSettingsOutput:
         Consumer<com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc.Output> =
@@ -82,6 +84,10 @@ class RootBlocTest {
             },
             appSettings = { _, output ->
                 appSettingsOutput = output
+                mock()
+            },
+            importRecipes = { _, output ->
+                importRecipesOutput = output
                 mock()
             },
             bottomNavOrder = { _, output ->

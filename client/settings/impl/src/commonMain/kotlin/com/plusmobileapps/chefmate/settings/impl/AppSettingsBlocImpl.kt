@@ -54,6 +54,10 @@ class AppSettingsBlocImpl(
         output.onNext(Output.OpenBottomNavOrder)
     }
 
+    override fun onImportRecipesClicked() {
+        output.onNext(Output.OpenImportRecipes)
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         AppSettingsScreen(bloc = this, modifier = modifier)

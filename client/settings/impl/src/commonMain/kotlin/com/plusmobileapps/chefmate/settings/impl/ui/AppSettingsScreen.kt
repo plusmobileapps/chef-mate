@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import chefmate.client.settings.public.generated.resources.Res
+import chefmate.client.settings.public.generated.resources.app_settings_backup_section
 import chefmate.client.settings.public.generated.resources.app_settings_bottom_nav_order
 import chefmate.client.settings.public.generated.resources.app_settings_browser_history_enabled
 import chefmate.client.settings.public.generated.resources.app_settings_browser_section
@@ -25,6 +26,7 @@ import chefmate.client.settings.public.generated.resources.app_settings_clear_hi
 import chefmate.client.settings.public.generated.resources.app_settings_clear_history_dialog_title
 import chefmate.client.settings.public.generated.resources.app_settings_navigation_section
 import chefmate.client.settings.public.generated.resources.app_settings_title
+import chefmate.client.settings.public.generated.resources.import_recipes
 import com.plusmobileapps.chefmate.settings.AppSettingsBloc
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
@@ -68,6 +70,12 @@ fun AppSettingsScreen(bloc: AppSettingsBloc, modifier: Modifier = Modifier) {
             SettingsRow(
                 name = Res.string.app_settings_clear_history.asTextData(),
                 onClick = bloc::onClearHistoryClicked,
+            )
+            HorizontalDivider()
+            SectionHeader(name = Res.string.app_settings_backup_section.asTextData())
+            SettingsRow(
+                name = Res.string.import_recipes.asTextData(),
+                onClick = bloc::onImportRecipesClicked,
             )
         },
     )

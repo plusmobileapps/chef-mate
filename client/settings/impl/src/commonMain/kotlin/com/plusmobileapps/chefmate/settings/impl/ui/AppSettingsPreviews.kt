@@ -26,6 +26,8 @@ private fun appSettingsBloc(model: AppSettingsBloc.Model): AppSettingsBloc =
 
         override fun onBottomNavOrderClicked() = Unit
 
+        override fun onImportRecipesClicked() = Unit
+
         @Composable
         override fun Content(modifier: Modifier) {
             AppSettingsScreen(bloc = this, modifier = modifier)
