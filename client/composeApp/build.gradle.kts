@@ -28,7 +28,15 @@ plugins {
     alias(libs.plugins.metro)
     alias(libs.plugins.compose)
     alias(libs.plugins.plusKtfmt)
+    alias(libs.plugins.conveyor)
 }
+
+// Top-level project version is read by Hydraulic Conveyor (`printConveyorConfig`
+// task) when generating cross-platform desktop installers. Keep this in sync
+// with `android.defaultConfig.versionName` below and with
+// `compose.desktop.application.nativeDistributions.packageVersion`.
+// scripts/bump-version.sh keeps all three aligned.
+version = "1.6.0"
 
 kotlin {
     androidTarget {
@@ -224,6 +232,32 @@ android {
 dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4.android)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // ── Hydraulic Conveyor cross-platform inputs ──────────────────────────
+    // The Conveyor Gradle plugin creates these configurations. Each one feeds
+    // the package built for the corresponding OS/arch. Local `./gradlew run`
+    // and the existing compose.desktop `package*` tasks are unaffected — they
+    // keep using the host-classified deps declared above in kotlin.jvmMain.
+    //
+    // Compose Desktop ships per-platform aggregator artifacts that pull in
+    // Skiko natives with the right classifier; we just declare one per target.
+    macAmd64(compose.desktop.macos_x64)
+    macAarch64(compose.desktop.macos_arm64)
+    linuxAmd64(compose.desktop.linux_x64)
+    windowsAmd64(compose.desktop.windows_x64)
+
+    // JavaFX is required at runtime for the Compose Desktop browser WebView
+    // (see client/browser/public/src/jvmMain/.../PlatformWebView.jvm.kt).
+    // The host-classified versions in kotlin.jvmMain cover local dev; these
+    // fan out the native classifiers Conveyor needs for cross-compilation.
+    val fxVersion = libs.versions.openjfx.get()
+    val fxModules = listOf("base", "controls", "graphics", "media", "swing", "web")
+    fxModules.forEach { mod ->
+        macAmd64("org.openjfx:javafx-$mod:$fxVersion:mac")
+        macAarch64("org.openjfx:javafx-$mod:$fxVersion:mac-aarch64")
+        linuxAmd64("org.openjfx:javafx-$mod:$fxVersion:linux")
+        windowsAmd64("org.openjfx:javafx-$mod:$fxVersion:win")
+    }
 }
 
 compose.desktop {
