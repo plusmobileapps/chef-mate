@@ -62,6 +62,9 @@ sed_inplace "s/versionCode = [0-9]*/versionCode = ${TEST_BUILD}/" "${GRADLE_COPY
 # Android versionName
 sed_inplace "s/versionName = \"[^\"]*\"/versionName = \"${TEST_VERSION}\"/" "${GRADLE_COPY}"
 
+# Top-level Gradle project version (read by Hydraulic Conveyor).
+sed_inplace "s/^version = \"[^\"]*\"/version = \"${TEST_VERSION}\"/" "${GRADLE_COPY}"
+
 # Desktop packageVersion — first occurrence (generic/JVM)
 awk -v new="${TEST_VERSION}" '
     /packageVersion[[:space:]]*=/ && !done {
@@ -100,6 +103,7 @@ check() {
 
 ACTUAL_VCODE=$(sed -n 's/.*versionCode = \([0-9]*\).*/\1/p' "${GRADLE_COPY}")
 ACTUAL_VNAME=$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' "${GRADLE_COPY}")
+ACTUAL_GRADLE_VERSION=$(sed -n 's/^version = "\([^"]*\)".*/\1/p' "${GRADLE_COPY}" | head -1)
 ACTUAL_PKG_VERSIONS=$(sed -n 's/.*packageVersion = "\([^"]*\)".*/\1/p' "${GRADLE_COPY}")
 ACTUAL_PKG_FIRST=$(printf '%s\n' "${ACTUAL_PKG_VERSIONS}" | head -1)
 ACTUAL_PKG_LAST=$(printf '%s\n' "${ACTUAL_PKG_VERSIONS}" | tail -1)
@@ -112,6 +116,7 @@ printf '\nTest: bump to version \033[1m%s\033[0m (build \033[1m%s\033[0m)\n\n' \
 printf "Checking %s:\n" "${GRADLE_COPY}"
 check "versionCode" "${TEST_BUILD}" "${ACTUAL_VCODE}"
 check "versionName" "${TEST_VERSION}" "${ACTUAL_VNAME}"
+check "top-level gradle version (Conveyor)" "${TEST_VERSION}" "${ACTUAL_GRADLE_VERSION}"
 check "packageVersion (JVM/generic, first occurrence)" "${TEST_VERSION}" "${ACTUAL_PKG_FIRST}"
 check "packageVersion (macOS, last occurrence)" "${EXPECTED_MAC_VERSION}" "${ACTUAL_PKG_LAST}"
 

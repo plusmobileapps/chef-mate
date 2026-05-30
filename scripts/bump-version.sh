@@ -24,6 +24,9 @@ read_ios_version() { sed -n 's/MARKETING_VERSION=\(.*\)/\1/p' "$XCCONFIG_FILE"; 
 read_desktop_version()     { sed -n 's/.*packageVersion = "\([^"]*\)".*/\1/p' "$GRADLE_FILE" | head -1; }
 read_desktop_mac_version() { sed -n 's/.*packageVersion = "\([^"]*\)".*/\1/p' "$GRADLE_FILE" | tail -1; }
 
+# Top-level Gradle `version = "..."` — read by Hydraulic Conveyor.
+read_gradle_project_version() { sed -n 's/^version = "\([^"]*\)".*/\1/p' "$GRADLE_FILE" | head -1; }
+
 show_current() {
     bold "Current versions:"
     echo ""
@@ -33,6 +36,7 @@ show_current() {
     printf "  %-18s  %-14s  %s\n" "iOS"               "$(read_ios_version)"          "$(read_ios_build)"
     printf "  %-18s  %-14s  %s\n" "Desktop"           "$(read_desktop_version)"      "—"
     printf "  %-18s  %-14s  %s\n" "Desktop (macOS)"   "$(read_desktop_mac_version)"  "—"
+    printf "  %-18s  %-14s  %s\n" "Conveyor (gradle)" "$(read_gradle_project_version)" "—"
     echo ""
 }
 
@@ -68,6 +72,11 @@ apply_versions() {
 
     # Android versionName
     sed -i '' "s/versionName = \"[^\"]*\"/versionName = \"${new_version}\"/" "$GRADLE_FILE"
+
+    # Top-level Gradle project version (read by Hydraulic Conveyor).
+    # Anchored to start-of-line so we only match the project-level declaration,
+    # not packageVersion / versionName / versionCode lines further down.
+    sed -i '' "s/^version = \"[^\"]*\"/version = \"${new_version}\"/" "$GRADLE_FILE"
 
     # Desktop packageVersion (generic — first occurrence)
     # Use awk to only replace the first match

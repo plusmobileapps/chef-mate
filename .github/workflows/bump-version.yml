@@ -98,6 +98,11 @@ jobs:
           # Android versionName
           sed -i "s/versionName = \"[^\"]*\"/versionName = \"${NEW_VERSION}\"/" "$GRADLE_FILE"
 
+          # Top-level Gradle project version (read by Hydraulic Conveyor).
+          # Anchored to start-of-line so only the project-level declaration
+          # matches — not packageVersion / versionName.
+          sed -i "s/^version = \"[^\"]*\"/version = \"${NEW_VERSION}\"/" "$GRADLE_FILE"
+
           # Desktop packageVersion — first occurrence (generic/JVM)
           awk -v new="$NEW_VERSION" '
             /packageVersion[[:space:]]*=/ && !done {
@@ -163,6 +168,7 @@ jobs:
             echo "| iOS | \`CURRENT_PROJECT_VERSION\` | \`${OLD_BUILD}\` | \`${NEW_BUILD}\` |"
             echo "| Desktop (JVM) | \`packageVersion\` | \`${OLD_VERSION}\` | \`${NEW_VERSION}\` |"
             echo "| Desktop (macOS) | \`packageVersion\` | — | \`${MAC_VERSION}\` |"
+            echo "| Desktop (Conveyor) | top-level \`version\` | \`${OLD_VERSION}\` | \`${NEW_VERSION}\` |"
             echo ""
             echo "After merging this PR (**squash merge recommended**), the \`build-release\` workflow"
             echo "will detect the bump commit on \`main\`, create a \`v${NEW_VERSION}\` git tag, build the"
