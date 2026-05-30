@@ -2,6 +2,10 @@
 
 package com.plusmobileapps.chefmate.recipe.importer.impl
 
+import chefmate.client.recipe.importer.`public`.generated.resources.Res
+import chefmate.client.recipe.importer.`public`.generated.resources.import_recipes_item_subtitle
+import chefmate.client.recipe.importer.`public`.generated.resources.import_recipes_none_found
+import chefmate.client.recipe.importer.`public`.generated.resources.import_recipes_parse_failed
 import co.touchlab.kermit.Logger
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.di.IO
@@ -12,10 +16,6 @@ import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc.ImportItem
 import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc.Model
 import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc.Phase
-import com.plusmobileapps.chefmate.recipe.importer.generated.resources.Res
-import com.plusmobileapps.chefmate.recipe.importer.generated.resources.import_recipes_item_subtitle
-import com.plusmobileapps.chefmate.recipe.importer.generated.resources.import_recipes_none_found
-import com.plusmobileapps.chefmate.recipe.importer.generated.resources.import_recipes_parse_failed
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.asTextData

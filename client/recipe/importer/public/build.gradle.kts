@@ -16,14 +16,6 @@ kotlin {
     }
 }
 
-compose {
-    resources {
-        publicResClass = true
-        // The default package derived from the module path (…recipe.import.public…) contains the
-        // `import` hard keyword, which can't appear in a Kotlin import statement. Pin an explicit
-        // keyword-free package for the generated Res class.
-        packageOfResClass = "com.plusmobileapps.chefmate.recipe.importer.generated.resources"
-    }
-}
+compose { resources { publicResClass = true } }
 
 plusLibrary { namespace = "com.plusmobileapps.chefmate.recipe.importer" }
