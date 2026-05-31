@@ -146,7 +146,6 @@ import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
-import com.plusmobileapps.chefmate.ui.sharedBoundsBy
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
@@ -797,7 +796,6 @@ private fun RecipeGridItem(
             imageUrl = recipe.imageUrl,
             contentDescription = recipe.title,
             modifier = Modifier.fillMaxWidth().aspectRatio(1.2f),
-            sharedElementKey = "recipe-image-${recipe.id}",
         )
         Column(
             modifier = Modifier.padding(12.dp),
@@ -809,7 +807,6 @@ private fun RecipeGridItem(
                 minLines = 2,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.sharedBoundsBy("recipe-title-${recipe.id}"),
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -866,7 +863,6 @@ private fun RecipeListItemContent(
             imageUrl = recipe.imageUrl,
             contentDescription = recipe.title,
             modifier = Modifier.size(80.dp),
-            sharedElementKey = "recipe-image-${recipe.id}",
         )
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(
@@ -879,7 +875,7 @@ private fun RecipeListItemContent(
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f).sharedBoundsBy("recipe-title-${recipe.id}"),
+                    modifier = Modifier.weight(1f),
                 )
                 SyncStatusIcon(syncStatus = recipe.syncStatus)
                 if (recipe.isFavorite) {
