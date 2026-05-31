@@ -7,6 +7,8 @@ import app.cash.turbine.test
 import chefmate.client.meal.core.public.generated.resources.Res
 import chefmate.client.meal.core.public.generated.resources.meal_plan_added_to_cook_mode_multiple
 import chefmate.client.meal.core.public.generated.resources.meal_plan_added_to_cook_mode_single
+import chefmate.client.meal.core.public.generated.resources.meal_plan_replaced_cook_mode_multiple
+import chefmate.client.meal.core.public.generated.resources.meal_plan_replaced_cook_mode_single
 import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
 import com.plusmobileapps.chefmate.meal.core.MealPlanBloc
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
@@ -24,7 +26,6 @@ import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import dev.mokkery.verifySuspend
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import kotlin.test.Test
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -48,6 +49,7 @@ class MealPlanBlocTest {
     val cookingSessionRepository: CookingSessionRepository = mock {
         every { observeRecipeIds() } returns flowOf(emptyList())
         everySuspend { start(any()) } returns Unit
+        everySuspend { replaceAll(any()) } returns Unit
         everySuspend { markSelected(any()) } returns Unit
         everySuspend { stop(any()) } returns Unit
         everySuspend { stopAll() } returns Unit
@@ -234,7 +236,7 @@ class MealPlanBlocTest {
     }
 
     @Test
-    fun WHEN_replace_cook_mode_confirmed_THEN_session_cleared_then_recipes_started_and_snackbar_shown() =
+    fun WHEN_replace_cook_mode_confirmed_THEN_repository_replace_all_called_with_distinct_ids_and_snackbar_uses_replaced_copy() =
         runTest {
             val meals =
                 listOf(
@@ -262,12 +264,40 @@ class MealPlanBlocTest {
             bloc.state.test {
                 val state = awaitItem()
                 state.pendingReplaceCookMode shouldBe null
-                state.snackbarMessage shouldNotBe null
+                state.snackbarMessage shouldBe
+                    PhraseModel(
+                        Res.string.meal_plan_replaced_cook_mode_multiple,
+                        "count" to FixedString("2"),
+                    )
             }
-            verifySuspend { cookingSessionRepository.stopAll() }
-            verifySuspend { cookingSessionRepository.start(10) }
-            verifySuspend { cookingSessionRepository.start(20) }
-            verifySuspend { cookingSessionRepository.markSelected(10) }
+            verifySuspend { cookingSessionRepository.replaceAll(listOf(10L, 20L)) }
+        }
+
+    @Test
+    fun WHEN_replace_cook_mode_confirmed_with_single_recipe_THEN_snackbar_uses_recipe_title() =
+        runTest {
+            val meals =
+                listOf(
+                    MealPlanItem(
+                        id = 1,
+                        recipeId = 10,
+                        recipeTitle = "Pancakes",
+                        recipeImageUrl = null,
+                        date = "2026-04-17",
+                        mealType = MealType.BREAKFAST,
+                    )
+                )
+
+            bloc.onReplaceCookModeClicked(meals)
+            bloc.onReplaceCookModeConfirmed()
+
+            bloc.state.test {
+                awaitItem().snackbarMessage shouldBe
+                    PhraseModel(
+                        Res.string.meal_plan_replaced_cook_mode_single,
+                        "name" to FixedString("Pancakes"),
+                    )
+            }
         }
 
     @Test
