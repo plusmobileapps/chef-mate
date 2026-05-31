@@ -15,6 +15,7 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
+import com.plusmobileapps.chefmate.recipe.categories.RecipeCategoriesBloc
 import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc
 import com.plusmobileapps.chefmate.settings.AppSettingsBloc
 import com.plusmobileapps.chefmate.settings.root.SettingsRootBloc
@@ -36,6 +37,7 @@ class SettingsRootBlocImpl(
     private val appSettings: AppSettingsBloc.Factory,
     private val bottomNavOrder: BottomNavOrderBloc.Factory,
     private val importRecipes: ImportRecipesBloc.Factory,
+    private val recipeCategories: RecipeCategoriesBloc.Factory,
 ) : SettingsRootBloc, BlocContext by context {
 
     private val navigation = StackNavigation<Configuration>()
@@ -85,6 +87,15 @@ class SettingsRootBlocImpl(
                             output = ::handleImportRecipesOutput,
                         )
                 )
+
+            Configuration.RecipeCategories ->
+                SettingsRootBloc.Child.RecipeCategories(
+                    bloc =
+                        recipeCategories.create(
+                            context = context,
+                            output = ::handleRecipeCategoriesOutput,
+                        )
+                )
         }
 
     private fun handleAppSettingsOutput(output: AppSettingsBloc.Output) {
@@ -94,6 +105,8 @@ class SettingsRootBlocImpl(
                 navigation.bringToFront(Configuration.BottomNavOrder)
             AppSettingsBloc.Output.OpenImportRecipes ->
                 navigation.bringToFront(Configuration.ImportRecipes)
+            AppSettingsBloc.Output.OpenRecipeCategories ->
+                navigation.bringToFront(Configuration.RecipeCategories)
         }
     }
 
@@ -109,6 +122,12 @@ class SettingsRootBlocImpl(
         }
     }
 
+    private fun handleRecipeCategoriesOutput(output: RecipeCategoriesBloc.Output) {
+        when (output) {
+            RecipeCategoriesBloc.Output.Back -> navigation.pop()
+        }
+    }
+
     @Serializable
     private sealed class Configuration {
         @Serializable data object AppSettings : Configuration()
@@ -116,5 +135,7 @@ class SettingsRootBlocImpl(
         @Serializable data object BottomNavOrder : Configuration()
 
         @Serializable data object ImportRecipes : Configuration()
+
+        @Serializable data object RecipeCategories : Configuration()
     }
 }

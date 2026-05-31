@@ -23,6 +23,8 @@ interface AppSettingsBloc : BackHandlerOwner, BlocScreen {
 
     fun onImportRecipesClicked()
 
+    fun onRecipeCategoriesClicked()
+
     data class Model(
         val isHistoryEnabled: Boolean = true,
         val showClearHistoryDialog: Boolean = false,
@@ -34,6 +36,8 @@ interface AppSettingsBloc : BackHandlerOwner, BlocScreen {
         data object OpenBottomNavOrder : Output()
 
         data object OpenImportRecipes : Output()
+
+        data object OpenRecipeCategories : Output()
     }
 
     fun interface Factory {
