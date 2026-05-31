@@ -81,6 +81,13 @@ See `docs/architecture.md` for full annotated examples of both patterns.
 - Screen composables use the `Screen` suffix (e.g., `RecipeListScreen.kt`) and live in the feature's `public` module.
 - Reusable components live in `client/ui/public`, prefixed with `Plus` (e.g., `PlusHeaderContainer`).
 
+### Navigation Animations & Shared Elements
+
+- Navigation (root and per-feature) renders a Decompose `ChildStack` with `Children` + `predictiveBackAnimation`. Use the shared `backAnimation` helper in `client/ui/public/.../BackAnimation.kt` (a `predictiveBackAnimation` with a `slide` fallback). `RootScreen` inlines `predictiveBackAnimation` directly because it varies the fallback by child type (modal screens slide vertically). **Predictive back is the priority** — the system back gesture/animation must keep working across the whole stack.
+- **Never wrap root navigation in `SharedTransitionLayout` + `AnimatedContent`.** Doing so replaces Decompose's `Children` and disables predictive back — that combination was removed for exactly this reason.
+- Shared-element transitions are only for **self-contained, in-screen morphs** that own their own navigation and do not cross the root stack. Two examples exist: the recipe-detail full-screen image (`RecipeDetailScreen` wraps its *own* `SharedTransitionLayout` around an inner `AnimatedContent`) and the browser address bar (`BrowserRootScreen`). Each provides its scope locally, so predictive back elsewhere is unaffected.
+- To add a shared element: wrap the owning screen in a local `SharedTransitionLayout`, provide `LocalSharedTransitionScope` from it, and use the `sharedElementBy` helpers + the `Local*VisibilityScope` composition locals in `client/ui/public/.../SharedTransitionScopes.kt`. Do **not** hoist the scope to the root.
+
 ### TextData
 
 Use `TextData` (sealed class) for all display strings to separate domain from UI:

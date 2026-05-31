@@ -351,6 +351,12 @@ All UI is written using Compose Multiplatform to share the same UI across all of
 
 All reusable components for the project exist in `client/ui/public` module typically prefixing every component with `Plus`. `PlusHeaderContainer` is the most common component used at the base of every screen's `@Composable`.
 
+### Navigation Animations & Shared Elements
+
+Navigation screens are rendered from a Decompose `ChildStack` with `Children` + `predictiveBackAnimation`, so the system predictive-back gesture and animation work across the whole stack. The shared `backAnimation` helper (`client/ui/public/.../BackAnimation.kt`) wraps `predictiveBackAnimation` with a `slide` fallback; `RootScreen` inlines it so modal children (Browser, Meal Planner, Cook Mode) can slide vertically instead.
+
+Predictive back takes priority over cross-screen morphs. A root-level `SharedTransitionLayout` + `AnimatedContent` would replace `Children` and disable predictive back, so it is intentionally **not** used. Shared-element transitions are scoped to **self-contained, in-screen morphs** that own their navigation and never cross the root stack — for example the recipe-detail full-screen image (`RecipeDetailScreen` hosts its own local `SharedTransitionLayout`) and the browser address bar (`BrowserRootScreen`). The helpers and composition locals for these live in `client/ui/public/.../SharedTransitionScopes.kt`; provide `LocalSharedTransitionScope` from a `SharedTransitionLayout` *inside the owning screen*, never from the root.
+
 ### Localized Strings
 
 All strings are localized using Compose Multiplatform resources. To localize strings in a given feature module, import the following dependency in the feature module `build.gradle.kts`: 
