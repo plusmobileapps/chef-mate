@@ -27,6 +27,7 @@ class CategoryRepositoryImplTest {
     private val repository =
         CategoryRepositoryImpl(
             db = db.categoryQueries,
+            recipeCategoryQueries = db.recipeCategoryQueries,
             ioContext = testDispatcher,
             remoteDataSource = fakeRemote,
             authRepository = fakeAuth,
