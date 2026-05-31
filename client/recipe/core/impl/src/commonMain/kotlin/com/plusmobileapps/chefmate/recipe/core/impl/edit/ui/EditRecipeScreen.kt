@@ -47,16 +47,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.core.public.generated.resources.Res
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_ai
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_appetizer
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_breakfast
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_dessert
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_dinner
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_drink
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_lunch
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_other
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_side
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_snack
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_discard_cancel
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_discard_confirm
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_discard_message
@@ -91,6 +81,7 @@ import chefmate.client.recipe.core.public.generated.resources.edit_recipe_save
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload_photo
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload_photo_dismiss
 import coil3.compose.AsyncImage
+import com.plusmobileapps.chefmate.recipe.categories.pickerLabelRes
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeTestTags
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
@@ -107,7 +98,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -298,22 +288,8 @@ private fun RecipeCategoryField(bloc: EditRecipeBloc, modifier: Modifier = Modif
 @Composable
 private fun com.plusmobileapps.chefmate.recipe.data.Category.displayLabel(): String {
     val builtin = BuiltinCategory.fromId(builtinId)
-    return if (builtin != null) stringResource(builtin.fieldLabelRes()) else name
+    return if (builtin != null) stringResource(builtin.pickerLabelRes()) else name
 }
-
-private fun BuiltinCategory.fieldLabelRes(): StringResource =
-    when (this) {
-        BuiltinCategory.BREAKFAST -> Res.string.edit_recipe_category_breakfast
-        BuiltinCategory.LUNCH -> Res.string.edit_recipe_category_lunch
-        BuiltinCategory.DINNER -> Res.string.edit_recipe_category_dinner
-        BuiltinCategory.APPETIZER -> Res.string.edit_recipe_category_appetizer
-        BuiltinCategory.SIDE -> Res.string.edit_recipe_category_side
-        BuiltinCategory.DESSERT -> Res.string.edit_recipe_category_dessert
-        BuiltinCategory.SNACK -> Res.string.edit_recipe_category_snack
-        BuiltinCategory.DRINK -> Res.string.edit_recipe_category_drink
-        BuiltinCategory.OTHER -> Res.string.edit_recipe_category_other
-        BuiltinCategory.AI -> Res.string.edit_recipe_category_ai
-    }
 
 @Composable
 private fun RecipeStarRatingField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {

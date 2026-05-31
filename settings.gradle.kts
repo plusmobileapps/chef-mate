@@ -100,6 +100,12 @@ include(":client:meal:data:public")
 
 include(":client:meal:data:testing")
 
+include(":client:recipe:categories:impl")
+
+include(":client:recipe:categories:impl-robots")
+
+include(":client:recipe:categories:public")
+
 include(":client:recipe:core:impl")
 
 include(":client:recipe:core:impl-robots")
