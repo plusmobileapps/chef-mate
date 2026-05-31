@@ -119,7 +119,20 @@ fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
 
     Box(modifier = modifier.fillMaxSize()) {
         PlusNavContainer(
-            data = PlusHeaderData.Parent(title = Res.string.meal_plan_title.asTextData()),
+            data =
+                PlusHeaderData.Parent(
+                    title = Res.string.meal_plan_title.asTextData(),
+                    trailingAccessory =
+                        PlusHeaderData.TrailingAccessory.Custom {
+                            IconButton(onClick = bloc::onAddMealClicked) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription =
+                                        stringResource(Res.string.meal_plan_add_meal),
+                                )
+                            }
+                        },
+                ),
             scrollEnabled = false,
             content = {
                 Column(modifier = Modifier.fillMaxSize()) {
@@ -185,22 +198,12 @@ fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
             },
         )
 
-        Column(
-            modifier =
-                Modifier.align(Alignment.BottomEnd).padding(ChefMateTheme.dimens.paddingNormal),
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = spacedBy(ChefMateTheme.dimens.paddingSmall),
-        ) {
-            if (state.cookingRecipeCount > 0) {
-                CookingSessionFabStack(
-                    onContinueClicked = bloc::onContinueCookingClicked,
-                    onDoneCookingClicked = bloc::onDoneCookingClicked,
-                )
-            }
-            ExtendedFloatingActionButton(onClick = bloc::onAddMealClicked) {
-                Icon(Icons.Default.Add, contentDescription = null)
-                Text(stringResource(Res.string.meal_plan_add_meal))
-            }
+        if (state.cookingRecipeCount > 0) {
+            CookingSessionFabStack(
+                onContinueClicked = bloc::onContinueCookingClicked,
+                onDoneCookingClicked = bloc::onDoneCookingClicked,
+                modifier = Modifier.align(Alignment.BottomEnd),
+            )
         }
 
         if (state.showDoneCookingDialog) {
@@ -219,7 +222,7 @@ private fun CookingSessionFabStack(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier.padding(ChefMateTheme.dimens.paddingNormal),
         horizontalAlignment = Alignment.End,
         verticalArrangement = spacedBy(ChefMateTheme.dimens.paddingSmall),
     ) {
