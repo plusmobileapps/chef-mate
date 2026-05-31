@@ -7,6 +7,7 @@ import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.meal.core.impl.ui.previewMealPlanBloc
 import com.plusmobileapps.chefmate.meal.core.impl.ui.previewMealPlanBlocCooking
 import com.plusmobileapps.chefmate.meal.core.impl.ui.previewMealPlanBlocEmpty
+import com.plusmobileapps.chefmate.meal.core.impl.ui.previewMealPlanBlocWeek
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
@@ -36,4 +37,12 @@ fun MealPlanCookingSessionScreenshot() {
 @Composable
 fun MealPlanEmptyScreenshot() {
     ChefMateTheme { previewMealPlanBlocEmpty.Content() }
+}
+
+// Week view — locks in that section headers do NOT carry the replace/add cook-mode buttons.
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+fun MealPlanWeekViewScreenshot() {
+    ChefMateTheme { previewMealPlanBlocWeek.Content() }
 }

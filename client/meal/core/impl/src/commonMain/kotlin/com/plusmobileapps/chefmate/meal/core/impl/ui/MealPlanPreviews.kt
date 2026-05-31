@@ -74,7 +74,13 @@ private fun mealPlanBloc(model: MealPlanBloc.Model): MealPlanBloc =
 
         override fun onReplaceCookModeClicked(meals: List<MealPlanItem>) = Unit
 
+        override fun onReplaceCookModeConfirmed() = Unit
+
+        override fun onReplaceCookModeDismissed() = Unit
+
         override fun onAddToCookModeClicked(meals: List<MealPlanItem>) = Unit
+
+        override fun onSnackbarShown() = Unit
 
         override fun onContinueCookingClicked() = Unit
 
@@ -119,6 +125,26 @@ val previewMealPlanBlocEmpty: MealPlanBloc =
             viewMode = MealPlanBloc.ViewMode.DAY,
             dateLabel = FixedString("Apr 17, 2026"),
             dayMeals = MealPlanBloc.DayMeals(),
+        )
+    )
+
+/**
+ * Week view — section headers should NOT show the cook-mode buttons, since a week-day group mixes
+ * meal types and isn't a meaningful "queue this for cooking" unit.
+ */
+val previewMealPlanBlocWeek: MealPlanBloc =
+    mealPlanBloc(
+        MealPlanBloc.Model(
+            isLoading = false,
+            viewMode = MealPlanBloc.ViewMode.WEEK,
+            dateLabel = FixedString("Apr 12 - Apr 18, 2026"),
+            weekMeals =
+                listOf(
+                    MealPlanBloc.DayGroup(
+                        dateLabel = FixedString("Fri, Apr 17"),
+                        meals = sampleDayMeals.breakfast + sampleDayMeals.lunch,
+                    )
+                ),
         )
     )
 
