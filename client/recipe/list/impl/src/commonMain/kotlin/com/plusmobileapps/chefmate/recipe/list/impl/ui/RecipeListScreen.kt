@@ -86,6 +86,7 @@ import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.list.public.generated.resources.Res
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_add_recipe
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_apply
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_ai
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_appetizer
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_breakfast
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_dessert
@@ -594,6 +595,7 @@ private fun BuiltinCategory.labelRes(): StringResource =
         BuiltinCategory.SNACK -> Res.string.recipe_list_category_snack
         BuiltinCategory.DRINK -> Res.string.recipe_list_category_drink
         BuiltinCategory.OTHER -> Res.string.recipe_list_category_other
+        BuiltinCategory.AI -> Res.string.recipe_list_category_ai
     }
 
 // region Search

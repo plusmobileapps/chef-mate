@@ -297,5 +297,6 @@ class CategoryRepositoryImpl(
             BuiltinCategory.SNACK -> "Snack"
             BuiltinCategory.DRINK -> "Drink"
             BuiltinCategory.OTHER -> "Other"
+            BuiltinCategory.AI -> "AI"
         }
 }

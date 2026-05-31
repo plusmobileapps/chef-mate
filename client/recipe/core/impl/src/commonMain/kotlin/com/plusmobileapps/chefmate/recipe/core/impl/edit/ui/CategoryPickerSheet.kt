@@ -51,6 +51,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.core.public.generated.resources.Res
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_ai
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_appetizer
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_breakfast
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_dessert
@@ -513,4 +514,5 @@ internal fun BuiltinCategory.pickerLabelRes(): StringResource =
         BuiltinCategory.SNACK -> Res.string.edit_recipe_category_snack
         BuiltinCategory.DRINK -> Res.string.edit_recipe_category_drink
         BuiltinCategory.OTHER -> Res.string.edit_recipe_category_other
+        BuiltinCategory.AI -> Res.string.edit_recipe_category_ai
     }
