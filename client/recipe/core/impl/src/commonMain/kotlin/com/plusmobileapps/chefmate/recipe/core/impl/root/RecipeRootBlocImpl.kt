@@ -47,7 +47,13 @@ class RecipeRootBlocImpl(
                     is RecipeRootBloc.Props.Create ->
                         listOf(Configuration.Edit(recipeId = null, extracted = null))
                     is RecipeRootBloc.Props.CreateFromExtracted ->
-                        listOf(Configuration.Edit(recipeId = null, extracted = props.extracted))
+                        listOf(
+                            Configuration.Edit(
+                                recipeId = null,
+                                extracted = props.extracted,
+                                fromAi = props.fromAi,
+                            )
+                        )
                 }
             },
             handleBackButton = true,
@@ -84,6 +90,7 @@ class RecipeRootBlocImpl(
                             context = context,
                             recipeId = config.recipeId,
                             extractedRecipe = config.extracted,
+                            fromAi = config.fromAi,
                             output = ::handleEditOutput,
                         )
                 )
@@ -139,6 +146,10 @@ class RecipeRootBlocImpl(
         @Serializable data class Detail(val recipeId: Long) : Configuration()
 
         @Serializable
-        data class Edit(val recipeId: Long?, val extracted: ExtractedRecipeData?) : Configuration()
+        data class Edit(
+            val recipeId: Long?,
+            val extracted: ExtractedRecipeData?,
+            val fromAi: Boolean = false,
+        ) : Configuration()
     }
 }

@@ -34,6 +34,7 @@ import kotlinx.coroutines.launch
 class EditRecipeViewModel(
     @Assisted private val recipeId: Long?,
     @Assisted extractedRecipe: ExtractedRecipeData?,
+    @Assisted fromAi: Boolean,
     @Main mainContext: CoroutineContext,
     private val repository: RecipeRepository,
     private val categoryRepository: CategoryRepository,
@@ -116,6 +117,7 @@ class EditRecipeViewModel(
                 _cookTime.value = extractedRecipe.cookTime?.toString().orEmpty()
                 _totalTime.value = extractedRecipe.totalTime?.toString().orEmpty()
                 _calories.value = extractedRecipe.calories?.toString().orEmpty()
+                if (fromAi) attachBuiltin(BuiltinCategory.AI)
             }
         }
     }
@@ -403,6 +405,10 @@ class EditRecipeViewModel(
 
     @AssistedFactory
     fun interface Factory {
-        fun create(recipeId: Long?, extractedRecipe: ExtractedRecipeData?): EditRecipeViewModel
+        fun create(
+            recipeId: Long?,
+            extractedRecipe: ExtractedRecipeData?,
+            fromAi: Boolean,
+        ): EditRecipeViewModel
     }
 }
