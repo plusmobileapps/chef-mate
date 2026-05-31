@@ -1,9 +1,14 @@
 package com.plusmobileapps.chefmate.ui.screenshot
 
 import android.content.res.Configuration
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
+import com.plusmobileapps.chefmate.meal.core.MealPlanBloc
 import com.plusmobileapps.chefmate.meal.core.impl.ui.previewMealPlanBloc
 import com.plusmobileapps.chefmate.meal.core.impl.ui.previewMealPlanBlocCooking
 import com.plusmobileapps.chefmate.meal.core.impl.ui.previewMealPlanBlocEmpty
@@ -11,32 +16,44 @@ import com.plusmobileapps.chefmate.meal.core.impl.ui.previewMealPlanBlocWeek
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
+// MealPlanScreen uses PlusNavContainer which paints no top-level Surface — in production its
+// background comes from the app shell. Wrap each test in one so dark snapshots actually render
+// dark instead of inheriting the default white screenshot canvas.
+@Composable
+private fun MealPlanScreenshot(bloc: MealPlanBloc, darkTheme: Boolean = false) {
+    ChefMateTheme(darkTheme = darkTheme) {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            bloc.Content()
+        }
+    }
+}
+
 @PreviewTest
 @Preview(showBackground = true, heightDp = 1100)
 @Composable
 fun MealPlanLightScreenshot() {
-    ChefMateTheme { previewMealPlanBloc.Content() }
+    MealPlanScreenshot(bloc = previewMealPlanBloc)
 }
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 1100, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun MealPlanDarkScreenshot() {
-    ChefMateTheme(darkTheme = true) { previewMealPlanBloc.Content() }
+    MealPlanScreenshot(bloc = previewMealPlanBloc, darkTheme = true)
 }
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 1100)
 @Composable
 fun MealPlanCookingSessionScreenshot() {
-    ChefMateTheme { previewMealPlanBlocCooking.Content() }
+    MealPlanScreenshot(bloc = previewMealPlanBlocCooking)
 }
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 1100)
 @Composable
 fun MealPlanEmptyScreenshot() {
-    ChefMateTheme { previewMealPlanBlocEmpty.Content() }
+    MealPlanScreenshot(bloc = previewMealPlanBlocEmpty)
 }
 
 // Week view — locks in that section headers do NOT carry the replace/add cook-mode buttons.
@@ -44,5 +61,5 @@ fun MealPlanEmptyScreenshot() {
 @Preview(showBackground = true, heightDp = 1100)
 @Composable
 fun MealPlanWeekViewScreenshot() {
-    ChefMateTheme { previewMealPlanBlocWeek.Content() }
+    MealPlanScreenshot(bloc = previewMealPlanBlocWeek)
 }
