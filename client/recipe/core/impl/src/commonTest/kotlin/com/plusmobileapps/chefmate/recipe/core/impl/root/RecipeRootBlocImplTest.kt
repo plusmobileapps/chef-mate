@@ -23,6 +23,7 @@ class RecipeRootBlocImplTest {
     private var editOutput: Consumer<EditRecipeBloc.Output> = Consumer {}
     private var lastEditRecipeId: Long? = null
     private var lastEditExtractedRecipe: ExtractedRecipeData? = null
+    private var lastEditFromAi: Boolean? = null
 
     private fun createBloc(
         props: RecipeRootBloc.Props = RecipeRootBloc.Props.Detail(1L)
@@ -43,9 +44,10 @@ class RecipeRootBlocImplTest {
                     }
                 },
             editBloc =
-                EditRecipeBloc.Factory { _, recipeId, extractedRecipe, output ->
+                EditRecipeBloc.Factory { _, recipeId, extractedRecipe, fromAi, output ->
                     lastEditRecipeId = recipeId
                     lastEditExtractedRecipe = extractedRecipe
+                    lastEditFromAi = fromAi
                     editOutput = output
                     mock()
                 },
@@ -106,6 +108,14 @@ class RecipeRootBlocImplTest {
         bloc.routerState.value.active.instance.shouldBeInstanceOf<RecipeRootBloc.Child.Edit>()
         lastEditRecipeId shouldBe null
         lastEditExtractedRecipe shouldBe extracted
+        lastEditFromAi shouldBe false
+    }
+
+    @Test
+    fun When_created_with_create_from_extracted_from_ai_Then_edit_child_seeded_with_from_ai() {
+        val extracted = sampleExtractedRecipe()
+        createBloc(RecipeRootBloc.Props.CreateFromExtracted(extracted, fromAi = true))
+        lastEditFromAi shouldBe true
     }
 
     @Test
