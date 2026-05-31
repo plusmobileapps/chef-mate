@@ -4,6 +4,9 @@
 package com.plusmobileapps.chefmate.meal.core.impl
 
 import app.cash.turbine.test
+import chefmate.client.meal.core.public.generated.resources.Res
+import chefmate.client.meal.core.public.generated.resources.meal_plan_added_to_cook_mode_multiple
+import chefmate.client.meal.core.public.generated.resources.meal_plan_added_to_cook_mode_single
 import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
 import com.plusmobileapps.chefmate.meal.core.MealPlanBloc
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
@@ -12,6 +15,7 @@ import com.plusmobileapps.chefmate.meal.data.MealType
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
 import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.util.testing.FakeDateTimeUtil
 import dev.mokkery.answering.returns
 import dev.mokkery.every
@@ -20,6 +24,7 @@ import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import dev.mokkery.verifySuspend
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlin.test.Test
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -210,7 +215,111 @@ class MealPlanBlocTest {
     }
 
     @Test
-    fun WHEN_replace_cook_mode_clicked_THEN_session_stopped_then_recipes_started() = runTest {
+    fun WHEN_replace_cook_mode_clicked_THEN_confirmation_pending_and_session_untouched() = runTest {
+        val meals =
+            listOf(
+                MealPlanItem(
+                    id = 1,
+                    recipeId = 10,
+                    recipeTitle = "Pancakes",
+                    recipeImageUrl = null,
+                    date = "2026-04-17",
+                    mealType = MealType.BREAKFAST,
+                )
+            )
+
+        bloc.onReplaceCookModeClicked(meals)
+
+        bloc.state.test { awaitItem().pendingReplaceCookMode shouldBe meals }
+    }
+
+    @Test
+    fun WHEN_replace_cook_mode_confirmed_THEN_session_cleared_then_recipes_started_and_snackbar_shown() =
+        runTest {
+            val meals =
+                listOf(
+                    MealPlanItem(
+                        id = 1,
+                        recipeId = 10,
+                        recipeTitle = "Pancakes",
+                        recipeImageUrl = null,
+                        date = "2026-04-17",
+                        mealType = MealType.BREAKFAST,
+                    ),
+                    MealPlanItem(
+                        id = 2,
+                        recipeId = 20,
+                        recipeTitle = "Eggs",
+                        recipeImageUrl = null,
+                        date = "2026-04-17",
+                        mealType = MealType.BREAKFAST,
+                    ),
+                )
+
+            bloc.onReplaceCookModeClicked(meals)
+            bloc.onReplaceCookModeConfirmed()
+
+            bloc.state.test {
+                val state = awaitItem()
+                state.pendingReplaceCookMode shouldBe null
+                state.snackbarMessage shouldNotBe null
+            }
+            verifySuspend { cookingSessionRepository.stopAll() }
+            verifySuspend { cookingSessionRepository.start(10) }
+            verifySuspend { cookingSessionRepository.start(20) }
+            verifySuspend { cookingSessionRepository.markSelected(10) }
+        }
+
+    @Test
+    fun WHEN_replace_cook_mode_dismissed_THEN_dialog_dismissed_without_clearing() = runTest {
+        val meals =
+            listOf(
+                MealPlanItem(
+                    id = 1,
+                    recipeId = 10,
+                    recipeTitle = "Pancakes",
+                    recipeImageUrl = null,
+                    date = "2026-04-17",
+                    mealType = MealType.BREAKFAST,
+                )
+            )
+
+        bloc.onReplaceCookModeClicked(meals)
+        bloc.onReplaceCookModeDismissed()
+
+        bloc.state.test { awaitItem().pendingReplaceCookMode shouldBe null }
+    }
+
+    @Test
+    fun WHEN_add_to_cook_mode_single_recipe_THEN_snackbar_uses_recipe_title() = runTest {
+        val meals =
+            listOf(
+                MealPlanItem(
+                    id = 1,
+                    recipeId = 10,
+                    recipeTitle = "Pancakes",
+                    recipeImageUrl = null,
+                    date = "2026-04-17",
+                    mealType = MealType.BREAKFAST,
+                )
+            )
+
+        bloc.onAddToCookModeClicked(meals)
+
+        bloc.state.test {
+            val message = awaitItem().snackbarMessage
+            message shouldBe
+                PhraseModel(
+                    Res.string.meal_plan_added_to_cook_mode_single,
+                    "name" to FixedString("Pancakes"),
+                )
+        }
+        verifySuspend { cookingSessionRepository.start(10) }
+        verifySuspend { cookingSessionRepository.markSelected(10) }
+    }
+
+    @Test
+    fun WHEN_add_to_cook_mode_multiple_recipes_THEN_snackbar_uses_count() = runTest {
         val meals =
             listOf(
                 MealPlanItem(
@@ -231,17 +340,21 @@ class MealPlanBlocTest {
                 ),
             )
 
-        bloc.onReplaceCookModeClicked(meals)
+        bloc.onAddToCookModeClicked(meals)
 
-        verifySuspend { cookingSessionRepository.stopAll() }
-        verifySuspend { cookingSessionRepository.start(10) }
-        verifySuspend { cookingSessionRepository.start(20) }
-        verifySuspend { cookingSessionRepository.markSelected(10) }
+        bloc.state.test {
+            val message = awaitItem().snackbarMessage
+            message shouldBe
+                PhraseModel(
+                    Res.string.meal_plan_added_to_cook_mode_multiple,
+                    "count" to FixedString("2"),
+                )
+        }
     }
 
     @Test
-    fun WHEN_add_to_cook_mode_clicked_THEN_recipes_started_without_clearing() = runTest {
-        val meals =
+    fun WHEN_snackbar_shown_THEN_message_cleared() = runTest {
+        bloc.onAddToCookModeClicked(
             listOf(
                 MealPlanItem(
                     id = 1,
@@ -252,11 +365,10 @@ class MealPlanBlocTest {
                     mealType = MealType.BREAKFAST,
                 )
             )
+        )
+        bloc.onSnackbarShown()
 
-        bloc.onAddToCookModeClicked(meals)
-
-        verifySuspend { cookingSessionRepository.start(10) }
-        verifySuspend { cookingSessionRepository.markSelected(10) }
+        bloc.state.test { awaitItem().snackbarMessage shouldBe null }
     }
 
     @Test
