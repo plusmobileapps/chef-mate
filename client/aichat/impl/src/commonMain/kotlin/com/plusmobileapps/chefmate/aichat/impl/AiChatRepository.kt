@@ -2,11 +2,13 @@ package com.plusmobileapps.chefmate.aichat.impl
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import com.plusmobileapps.chefmate.aichat.AiChatLocalDataCleaner
 import com.plusmobileapps.chefmate.aichat.ChatMessage
 import com.plusmobileapps.chefmate.database.AiChatMessageQueries
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.util.DateTimeUtil
+import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlin.coroutines.CoroutineContext
@@ -18,12 +20,13 @@ import kotlinx.coroutines.withContext
 @OptIn(ExperimentalTime::class)
 @Inject
 @SingleIn(AppScope::class)
+@ContributesBinding(AppScope::class)
 class AiChatRepository(
     private val queries: AiChatMessageQueries,
     private val geminiClient: GeminiClient,
     private val dateTimeUtil: DateTimeUtil,
     @IO private val ioContext: CoroutineContext,
-) {
+) : AiChatLocalDataCleaner {
 
     fun observeMessages(): Flow<List<ChatMessage>> =
         queries.getAll().asFlow().mapToList(ioContext).map { rows ->
@@ -126,7 +129,9 @@ class AiChatRepository(
         }
     }
 
-    suspend fun clearHistory() {
+    suspend fun clearHistory() = clearLocalData()
+
+    override suspend fun clearLocalData() {
         withContext(ioContext) { queries.deleteAll() }
     }
 

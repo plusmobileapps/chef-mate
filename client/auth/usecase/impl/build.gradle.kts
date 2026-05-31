@@ -5,6 +5,7 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.client.auth.usecase.public)
             implementation(projects.client.shared)
+            implementation(projects.client.aichat.public)
             implementation(projects.client.auth.data.public)
             implementation(projects.client.grocery.data.public)
             implementation(projects.client.meal.data.public)

@@ -1,11 +1,13 @@
 package com.plusmobileapps.chefmate.auth.usecase.impl
 
+import com.plusmobileapps.chefmate.aichat.AiChatLocalDataCleaner
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.auth.usecase.SignInUseCase
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.meal.data.MealPlanRepository
+import com.plusmobileapps.chefmate.recipe.data.CategoryRepository
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -20,6 +22,8 @@ class SignInUseCaseImpl(
     private val groceryRepository: GroceryRepository,
     private val mealPlanRepository: MealPlanRepository,
     private val recipeRepository: RecipeRepository,
+    private val categoryRepository: CategoryRepository,
+    private val aiChatLocalDataCleaner: AiChatLocalDataCleaner,
 ) : SignInUseCase {
 
     override suspend fun guestRecipesToDiscard(): Int {
@@ -41,8 +45,10 @@ class SignInUseCaseImpl(
         // and the real account's pull. Mirrors the order in SignOutUseCaseImpl.
         mealPlanRepository.clearLocalData()
         recipeRepository.clearLocalData()
+        categoryRepository.clearLocalData()
         groceryRepository.clearLocalData()
         groceryRepository.ensureDefaultList()
+        aiChatLocalDataCleaner.clearLocalData()
         return authenticationRepository.signInWithEmailAndPassword(email, password)
     }
 }
