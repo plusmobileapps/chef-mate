@@ -29,4 +29,10 @@
     <string name="meal_plan_done_cooking_message">This will clear all recipes from cook mode.</string>
     <string name="meal_plan_done_cooking_confirm">Done</string>
     <string name="meal_plan_done_cooking_cancel">Cancel</string>
+    <string name="meal_plan_replace_cook_mode_title">Replace cook mode?</string>
+    <string name="meal_plan_replace_cook_mode_message">This will clear the current recipes from cook mode and add these instead.</string>
+    <string name="meal_plan_replace_cook_mode_confirm">Replace</string>
+    <string name="meal_plan_replace_cook_mode_cancel">Cancel</string>
+    <string name="meal_plan_added_to_cook_mode_single">{name} added to cook mode</string>
+    <string name="meal_plan_added_to_cook_mode_multiple">{count} recipes added to cook mode</string>
 </resources>

@@ -35,7 +35,13 @@ interface MealPlanBloc : BlocScreen {
 
     fun onReplaceCookModeClicked(meals: List<MealPlanItem>)
 
+    fun onReplaceCookModeConfirmed()
+
+    fun onReplaceCookModeDismissed()
+
     fun onAddToCookModeClicked(meals: List<MealPlanItem>)
+
+    fun onSnackbarShown()
 
     fun onContinueCookingClicked()
 
@@ -56,6 +62,8 @@ interface MealPlanBloc : BlocScreen {
         val mealToDelete: MealPlanItem? = null,
         val cookingRecipeCount: Int = 0,
         val showDoneCookingDialog: Boolean = false,
+        val pendingReplaceCookMode: List<MealPlanItem>? = null,
+        val snackbarMessage: TextData? = null,
     )
 
     data class DayMeals(

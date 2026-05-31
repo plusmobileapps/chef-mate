@@ -44,12 +44,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -78,6 +82,10 @@ import chefmate.client.meal.core.public.generated.resources.meal_plan_lunch
 import chefmate.client.meal.core.public.generated.resources.meal_plan_month
 import chefmate.client.meal.core.public.generated.resources.meal_plan_no_meals
 import chefmate.client.meal.core.public.generated.resources.meal_plan_replace_cook_mode
+import chefmate.client.meal.core.public.generated.resources.meal_plan_replace_cook_mode_cancel
+import chefmate.client.meal.core.public.generated.resources.meal_plan_replace_cook_mode_confirm
+import chefmate.client.meal.core.public.generated.resources.meal_plan_replace_cook_mode_message
+import chefmate.client.meal.core.public.generated.resources.meal_plan_replace_cook_mode_title
 import chefmate.client.meal.core.public.generated.resources.meal_plan_snacks
 import chefmate.client.meal.core.public.generated.resources.meal_plan_sync_not_synced
 import chefmate.client.meal.core.public.generated.resources.meal_plan_sync_synced
@@ -105,6 +113,18 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarText = state.snackbarMessage?.localized()
+
+    LaunchedEffect(snackbarText) {
+        if (snackbarText != null) {
+            try {
+                snackbarHostState.showSnackbar(snackbarText)
+            } finally {
+                bloc.onSnackbarShown()
+            }
+        }
+    }
 
     state.mealToDelete?.let {
         PlusDialog(
@@ -114,6 +134,17 @@ fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
             dismissButtonText = ResourceString(Res.string.meal_plan_delete_cancel),
             onConfirmClick = bloc::onDeleteMealConfirmed,
             onDismissRequest = bloc::onDeleteMealDismissed,
+        )
+    }
+
+    if (state.pendingReplaceCookMode != null) {
+        PlusDialog(
+            title = ResourceString(Res.string.meal_plan_replace_cook_mode_title),
+            message = ResourceString(Res.string.meal_plan_replace_cook_mode_message),
+            confirmButtonText = ResourceString(Res.string.meal_plan_replace_cook_mode_confirm),
+            dismissButtonText = ResourceString(Res.string.meal_plan_replace_cook_mode_cancel),
+            onConfirmClick = bloc::onReplaceCookModeConfirmed,
+            onDismissRequest = bloc::onReplaceCookModeDismissed,
         )
     }
 
@@ -177,8 +208,6 @@ fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
                                         weekMeals = state.weekMeals.orEmpty(),
                                         onMealClicked = bloc::onMealClicked,
                                         onDeleteClicked = bloc::onDeleteMealClicked,
-                                        onReplaceCookMode = bloc::onReplaceCookModeClicked,
-                                        onAddToCookMode = bloc::onAddToCookModeClicked,
                                         modifier = Modifier.fillMaxSize(),
                                     )
                                 MealPlanBloc.ViewMode.MONTH ->
@@ -212,6 +241,11 @@ fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
                 onDismiss = bloc::onDoneCookingDismissed,
             )
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp),
+        )
     }
 }
 
@@ -660,8 +694,6 @@ private fun WeekView(
     weekMeals: List<MealPlanBloc.DayGroup>,
     onMealClicked: (MealPlanItem) -> Unit,
     onDeleteClicked: (MealPlanItem) -> Unit,
-    onReplaceCookMode: (List<MealPlanItem>) -> Unit,
-    onAddToCookMode: (List<MealPlanItem>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (weekMeals.isEmpty() || weekMeals.all { it.meals.isEmpty() }) {
@@ -677,12 +709,7 @@ private fun WeekView(
         weekMeals.forEach { dayGroup ->
             if (dayGroup.meals.isNotEmpty()) {
                 stickyHeader(key = "week_${dayGroup.dateLabel}") {
-                    MealSectionHeader(
-                        title = dayGroup.dateLabel.localized(),
-                        meals = dayGroup.meals,
-                        onReplaceCookMode = onReplaceCookMode,
-                        onAddToCookMode = onAddToCookMode,
-                    )
+                    MealSectionHeader(title = dayGroup.dateLabel.localized())
                 }
                 items(dayGroup.meals, key = { it.id }) { meal ->
                     WeekMealItem(
@@ -699,10 +726,10 @@ private fun WeekView(
 @Composable
 private fun MealSectionHeader(
     title: String,
-    meals: List<MealPlanItem>,
-    onReplaceCookMode: (List<MealPlanItem>) -> Unit,
-    onAddToCookMode: (List<MealPlanItem>) -> Unit,
     modifier: Modifier = Modifier,
+    meals: List<MealPlanItem>? = null,
+    onReplaceCookMode: ((List<MealPlanItem>) -> Unit)? = null,
+    onAddToCookMode: ((List<MealPlanItem>) -> Unit)? = null,
 ) {
     Row(
         modifier =
@@ -722,19 +749,23 @@ private fun MealSectionHeader(
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.weight(1f),
         )
-        IconButton(onClick = { onReplaceCookMode(meals) }) {
-            Icon(
-                imageVector = Icons.Default.Sync,
-                contentDescription = stringResource(Res.string.meal_plan_replace_cook_mode),
-                tint = MaterialTheme.colorScheme.primary,
-            )
+        if (meals != null && onReplaceCookMode != null) {
+            IconButton(onClick = { onReplaceCookMode(meals) }) {
+                Icon(
+                    imageVector = Icons.Default.Sync,
+                    contentDescription = stringResource(Res.string.meal_plan_replace_cook_mode),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
-        IconButton(onClick = { onAddToCookMode(meals) }) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.PlaylistAdd,
-                contentDescription = stringResource(Res.string.meal_plan_add_to_cook_mode),
-                tint = MaterialTheme.colorScheme.primary,
-            )
+        if (meals != null && onAddToCookMode != null) {
+            IconButton(onClick = { onAddToCookMode(meals) }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.PlaylistAdd,
+                    contentDescription = stringResource(Res.string.meal_plan_add_to_cook_mode),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
     }
 }

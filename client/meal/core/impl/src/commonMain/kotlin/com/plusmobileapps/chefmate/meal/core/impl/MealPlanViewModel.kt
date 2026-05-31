@@ -1,5 +1,8 @@
 package com.plusmobileapps.chefmate.meal.core.impl
 
+import chefmate.client.meal.core.public.generated.resources.Res
+import chefmate.client.meal.core.public.generated.resources.meal_plan_added_to_cook_mode_multiple
+import chefmate.client.meal.core.public.generated.resources.meal_plan_added_to_cook_mode_single
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
 import com.plusmobileapps.chefmate.di.Main
@@ -8,6 +11,8 @@ import com.plusmobileapps.chefmate.meal.data.MealPlanItem
 import com.plusmobileapps.chefmate.meal.data.MealPlanRepository
 import com.plusmobileapps.chefmate.meal.data.MealType
 import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.PhraseModel
+import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.util.DateTimeUtil
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
@@ -118,33 +123,55 @@ class MealPlanViewModel(
         }
     }
 
-    /**
-     * Returns the recipe id to navigate cook mode to (the first recipe in the section), or null if
-     * the section is empty.
-     */
-    fun replaceCookMode(meals: List<MealPlanItem>): Long? {
+    fun requestReplaceCookMode(meals: List<MealPlanItem>) {
+        if (meals.isEmpty()) return
+        _state.update { it.copy(pendingReplaceCookMode = meals) }
+    }
+
+    fun confirmReplaceCookMode() {
+        val meals = _state.value.pendingReplaceCookMode ?: return
+        _state.update {
+            it.copy(pendingReplaceCookMode = null, snackbarMessage = addedToCookModeMessage(meals))
+        }
         val recipeIds = meals.map { it.recipeId }.distinct()
-        if (recipeIds.isEmpty()) return null
         scope.launch {
             cookingSessionRepository.stopAll()
             recipeIds.forEach { cookingSessionRepository.start(it) }
             cookingSessionRepository.markSelected(recipeIds.first())
         }
-        return recipeIds.first()
     }
 
-    /**
-     * Returns the recipe id to navigate cook mode to (the first recipe in the section), or null if
-     * the section is empty.
-     */
-    fun addToCookMode(meals: List<MealPlanItem>): Long? {
+    fun dismissReplaceCookMode() {
+        _state.update { it.copy(pendingReplaceCookMode = null) }
+    }
+
+    fun addToCookMode(meals: List<MealPlanItem>) {
         val recipeIds = meals.map { it.recipeId }.distinct()
-        if (recipeIds.isEmpty()) return null
+        if (recipeIds.isEmpty()) return
+        _state.update { it.copy(snackbarMessage = addedToCookModeMessage(meals)) }
         scope.launch {
             recipeIds.forEach { cookingSessionRepository.start(it) }
             cookingSessionRepository.markSelected(recipeIds.first())
         }
-        return recipeIds.first()
+    }
+
+    fun clearSnackbar() {
+        _state.update { it.copy(snackbarMessage = null) }
+    }
+
+    private fun addedToCookModeMessage(meals: List<MealPlanItem>): TextData {
+        val uniqueByRecipe = meals.distinctBy { it.recipeId }
+        return if (uniqueByRecipe.size == 1) {
+            PhraseModel(
+                Res.string.meal_plan_added_to_cook_mode_single,
+                "name" to FixedString(uniqueByRecipe.first().recipeTitle),
+            )
+        } else {
+            PhraseModel(
+                Res.string.meal_plan_added_to_cook_mode_multiple,
+                "count" to FixedString(uniqueByRecipe.size.toString()),
+            )
+        }
     }
 
     fun showDoneCookingDialog() {
@@ -259,5 +286,7 @@ class MealPlanViewModel(
         val mealToDelete: MealPlanItem? = null,
         val cookingRecipeIds: List<Long> = emptyList(),
         val showDoneCookingDialog: Boolean = false,
+        val pendingReplaceCookMode: List<MealPlanItem>? = null,
+        val snackbarMessage: TextData? = null,
     )
 }

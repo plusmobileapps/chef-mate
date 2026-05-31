@@ -58,6 +58,8 @@ class MealPlanBlocImpl(
                 mealToDelete = it.mealToDelete,
                 cookingRecipeCount = it.cookingRecipeIds.size,
                 showDoneCookingDialog = it.showDoneCookingDialog,
+                pendingReplaceCookMode = it.pendingReplaceCookMode,
+                snackbarMessage = it.snackbarMessage,
             )
         }
 
@@ -102,11 +104,23 @@ class MealPlanBlocImpl(
     }
 
     override fun onReplaceCookModeClicked(meals: List<MealPlanItem>) {
-        viewModel.replaceCookMode(meals)
+        viewModel.requestReplaceCookMode(meals)
+    }
+
+    override fun onReplaceCookModeConfirmed() {
+        viewModel.confirmReplaceCookMode()
+    }
+
+    override fun onReplaceCookModeDismissed() {
+        viewModel.dismissReplaceCookMode()
     }
 
     override fun onAddToCookModeClicked(meals: List<MealPlanItem>) {
         viewModel.addToCookMode(meals)
+    }
+
+    override fun onSnackbarShown() {
+        viewModel.clearSnackbar()
     }
 
     override fun onContinueCookingClicked() {
