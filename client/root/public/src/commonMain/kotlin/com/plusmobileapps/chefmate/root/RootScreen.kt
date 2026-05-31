@@ -38,6 +38,7 @@ fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
                                 slide()
                             }
                         },
+                    isModal = { it.isModal() },
                 ),
         ) { child ->
             child.instance.Content()

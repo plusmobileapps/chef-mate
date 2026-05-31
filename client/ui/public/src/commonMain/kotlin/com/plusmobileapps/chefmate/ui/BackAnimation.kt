@@ -7,4 +7,5 @@ expect fun <C : Any, T : Any> backAnimation(
     backHandler: BackHandler,
     onBack: () -> Unit,
     fallbackAnimation: StackAnimation<C, T>? = null,
+    isModal: (T) -> Boolean = { false },
 ): StackAnimation<C, T>

@@ -13,6 +13,7 @@ actual fun <C : Any, T : Any> backAnimation(
     backHandler: BackHandler,
     onBack: () -> Unit,
     fallbackAnimation: StackAnimation<C, T>?,
+    @Suppress("UNUSED_PARAMETER") isModal: (T) -> Boolean,
 ): StackAnimation<C, T> =
     predictiveBackAnimation(
         backHandler = backHandler,
