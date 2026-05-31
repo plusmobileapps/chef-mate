@@ -17,7 +17,7 @@ actual fun <C : Any, T : Any> backAnimation(
 ): StackAnimation<C, T> =
     predictiveBackAnimation(
         backHandler = backHandler,
-        fallbackAnimation = stackAnimation(slide()),
+        fallbackAnimation = fallbackAnimation ?: stackAnimation(slide()),
         selector = { backEvent, _, _ -> androidPredictiveBackAnimatableV1(backEvent) },
         onBack = onBack,
     )
