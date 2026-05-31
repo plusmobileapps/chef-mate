@@ -52,6 +52,8 @@ dependencies {
     implementation(project(":client:recipe:data:public"))
     implementation(project(":client:settings:public"))
     implementation(project(":client:settings:impl"))
+    implementation(project(":client:settings:root:public"))
+    implementation(libs.arkivanov.decompose.core)
 
     screenshotTestImplementation(libs.screenshot.validation.api)
     screenshotTestImplementation(libs.androidx.compose.ui.tooling)
