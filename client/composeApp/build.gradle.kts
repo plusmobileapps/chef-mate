@@ -144,6 +144,7 @@ kotlin {
             implementation(projects.client.recipe.core.implRobots)
             implementation(projects.client.recipe.list.implRobots)
             implementation(projects.client.settings.implRobots)
+            implementation(projects.client.settings.root.implRobots)
         }
         val jvmTest by getting {
             dependencies {
