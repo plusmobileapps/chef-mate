@@ -21,11 +21,11 @@ import com.arkivanov.essenty.backhandler.BackHandler
 actual fun <C : Any, T : Any> backAnimation(
     backHandler: BackHandler,
     onBack: () -> Unit,
-    animator: StackAnimator?,
+    fallbackAnimation: StackAnimation<C, T>?,
 ): StackAnimation<C, T> =
     predictiveBackAnimation(
         backHandler = backHandler,
-        fallbackAnimation = stackAnimation(animator ?: iosLikeSlide()),
+        fallbackAnimation = fallbackAnimation ?: stackAnimation(iosLikeSlide()),
         selector = { initialBackEvent, _, _ ->
             predictiveBackAnimatable(
                 initialBackEvent = initialBackEvent,
