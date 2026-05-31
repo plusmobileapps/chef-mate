@@ -134,6 +134,10 @@ include(":client:settings:impl-robots")
 
 include(":client:settings:public")
 
+include(":client:settings:root:public")
+
+include(":client:settings:root:impl")
+
 include(":client:developer-settings:impl")
 
 include(":client:developer-settings:public")
