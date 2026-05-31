@@ -141,9 +141,20 @@ fun AiChatScreen(bloc: AiChatBloc, modifier: Modifier = Modifier) {
 @Composable
 private fun MessageList(messages: List<ChatMessage>, modifier: Modifier = Modifier) {
     val listState = rememberLazyListState()
-    LaunchedEffect(messages.size, messages.lastOrNull()?.content?.length) {
+    val lastIndex = messages.lastIndex
+    val isStreaming = messages.lastOrNull()?.isStreaming == true
+    // A newly appended message animates into view.
+    LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.lastIndex)
+            listState.animateScrollToItem(lastIndex)
+        }
+    }
+    // While the last message streams, jump to the bottom instantly on each
+    // delta. Animating here would restart the scroll animation many times per
+    // second, which is what makes the chat stutter as the response loads in.
+    LaunchedEffect(messages.lastOrNull()?.content?.length) {
+        if (isStreaming && messages.isNotEmpty()) {
+            listState.scrollToItem(lastIndex)
         }
     }
     LazyColumn(
