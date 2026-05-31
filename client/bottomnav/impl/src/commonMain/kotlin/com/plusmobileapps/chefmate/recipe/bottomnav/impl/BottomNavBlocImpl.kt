@@ -192,6 +192,8 @@ class BottomNavBlocImpl(
                 this.output.onNext(BottomNavBloc.Output.OpenRecipe(output.recipeId))
             is MealPlanBloc.Output.OpenMealPlanner ->
                 this.output.onNext(BottomNavBloc.Output.OpenMealPlanner(output.props))
+            is MealPlanBloc.Output.OpenCookMode ->
+                this.output.onNext(BottomNavBloc.Output.OpenCookMode(output.recipeId))
         }
     }
 

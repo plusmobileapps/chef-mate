@@ -33,6 +33,18 @@ interface MealPlanBloc : BlocScreen {
 
     fun onSyncClicked()
 
+    fun onReplaceCookModeClicked(meals: List<MealPlanItem>)
+
+    fun onAddToCookModeClicked(meals: List<MealPlanItem>)
+
+    fun onContinueCookingClicked()
+
+    fun onDoneCookingClicked()
+
+    fun onDoneCookingConfirmed()
+
+    fun onDoneCookingDismissed()
+
     data class Model(
         val isLoading: Boolean = true,
         val isSyncing: Boolean = false,
@@ -42,6 +54,8 @@ interface MealPlanBloc : BlocScreen {
         val weekMeals: List<DayGroup>? = null,
         val monthModel: MonthModel? = null,
         val mealToDelete: MealPlanItem? = null,
+        val cookingRecipeCount: Int = 0,
+        val showDoneCookingDialog: Boolean = false,
     )
 
     data class DayMeals(
@@ -70,6 +84,8 @@ interface MealPlanBloc : BlocScreen {
         data class OpenRecipe(val recipeId: Long) : Output()
 
         data class OpenMealPlanner(val props: MealPlannerRootBloc.Props) : Output()
+
+        data class OpenCookMode(val recipeId: Long) : Output()
     }
 
     fun interface Factory {

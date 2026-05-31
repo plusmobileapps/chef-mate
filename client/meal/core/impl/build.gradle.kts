@@ -7,6 +7,7 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
+            implementation(projects.client.cook.public)
             implementation(projects.client.meal.core.public)
             implementation(projects.client.meal.data.public)
             implementation(projects.client.recipe.core.public)

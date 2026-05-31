@@ -1,6 +1,7 @@
 package com.plusmobileapps.chefmate.meal.core.impl
 
 import com.plusmobileapps.chefmate.ViewModel
+import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.meal.core.MealPlanBloc
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
@@ -25,6 +26,7 @@ import kotlinx.datetime.plus
 class MealPlanViewModel(
     @Main mainContext: CoroutineContext,
     private val repository: MealPlanRepository,
+    private val cookingSessionRepository: CookingSessionRepository,
     private val dateTimeUtil: DateTimeUtil,
 ) : ViewModel(mainContext) {
 
@@ -37,6 +39,11 @@ class MealPlanViewModel(
         val today = dateTimeUtil.today()
         _state.update { it.copy(currentDate = today, selectedMonthDay = today) }
         observeMeals()
+        scope.launch {
+            cookingSessionRepository.observeRecipeIds().collect { ids ->
+                _state.update { it.copy(cookingRecipeIds = ids) }
+            }
+        }
     }
 
     fun selectViewMode(mode: MealPlanBloc.ViewMode) {
@@ -109,6 +116,48 @@ class MealPlanViewModel(
                 _state.update { it.copy(isSyncing = false) }
             }
         }
+    }
+
+    /**
+     * Returns the recipe id to navigate cook mode to (the first recipe in the section), or null if
+     * the section is empty.
+     */
+    fun replaceCookMode(meals: List<MealPlanItem>): Long? {
+        val recipeIds = meals.map { it.recipeId }.distinct()
+        if (recipeIds.isEmpty()) return null
+        scope.launch {
+            cookingSessionRepository.stopAll()
+            recipeIds.forEach { cookingSessionRepository.start(it) }
+            cookingSessionRepository.markSelected(recipeIds.first())
+        }
+        return recipeIds.first()
+    }
+
+    /**
+     * Returns the recipe id to navigate cook mode to (the first recipe in the section), or null if
+     * the section is empty.
+     */
+    fun addToCookMode(meals: List<MealPlanItem>): Long? {
+        val recipeIds = meals.map { it.recipeId }.distinct()
+        if (recipeIds.isEmpty()) return null
+        scope.launch {
+            recipeIds.forEach { cookingSessionRepository.start(it) }
+            cookingSessionRepository.markSelected(recipeIds.first())
+        }
+        return recipeIds.first()
+    }
+
+    fun showDoneCookingDialog() {
+        _state.update { it.copy(showDoneCookingDialog = true) }
+    }
+
+    fun dismissDoneCookingDialog() {
+        _state.update { it.copy(showDoneCookingDialog = false) }
+    }
+
+    fun confirmDoneCooking() {
+        _state.update { it.copy(showDoneCookingDialog = false) }
+        scope.launch { cookingSessionRepository.stopAll() }
     }
 
     fun getDateLabel(): String {
@@ -208,5 +257,7 @@ class MealPlanViewModel(
         val selectedMonthDay: LocalDate = LocalDate(2000, 1, 1),
         val meals: List<MealPlanItem> = emptyList(),
         val mealToDelete: MealPlanItem? = null,
+        val cookingRecipeIds: List<Long> = emptyList(),
+        val showDoneCookingDialog: Boolean = false,
     )
 }
