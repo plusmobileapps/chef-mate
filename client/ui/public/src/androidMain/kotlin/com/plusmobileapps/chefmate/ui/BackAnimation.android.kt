@@ -7,7 +7,7 @@ import androidx.compose.ui.layout.layout
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.stack.animation.StackAnimation
 import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.PredictiveBackAnimatable
-import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.androidPredictiveBackAnimatableV1
+import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.androidPredictiveBackAnimatableV2
 import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.predictiveBackAnimatable
 import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.predictiveBackAnimation
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
@@ -28,7 +28,7 @@ actual fun <C : Any, T : Any> backAnimation(
             if (isModal(exitChild.instance) || isModal(enterChild.instance)) {
                 verticalPredictiveBackAnimatable(backEvent)
             } else {
-                androidPredictiveBackAnimatableV1(backEvent)
+                androidPredictiveBackAnimatableV2(backEvent)
             }
         },
         onBack = onBack,
