@@ -18,7 +18,8 @@ enum class BuiltinCategory(val id: String) {
     DESSERT("dessert"),
     SNACK("snack"),
     DRINK("drink"),
-    OTHER("other");
+    OTHER("other"),
+    AI("ai");
 
     companion object {
         fun fromId(id: String?): BuiltinCategory? = id?.let { value ->

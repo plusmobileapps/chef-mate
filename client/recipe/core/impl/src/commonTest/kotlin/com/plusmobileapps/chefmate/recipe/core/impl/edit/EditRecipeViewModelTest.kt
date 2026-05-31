@@ -31,10 +31,12 @@ class EditRecipeViewModelTest {
     private fun createViewModel(
         recipeId: Long? = null,
         extractedRecipe: ExtractedRecipeData? = null,
+        fromAi: Boolean = false,
     ) =
         EditRecipeViewModel(
             recipeId = recipeId,
             extractedRecipe = extractedRecipe,
+            fromAi = fromAi,
             mainContext = mainContext,
             repository = repository,
             categoryRepository = categoryRepository,
@@ -193,6 +195,53 @@ class EditRecipeViewModelTest {
         recipes.value.first().title shouldBe "From Web"
         recipes.value.first().ingredients shouldBe "flour"
         recipes.value.first().sourceUrl shouldBe "https://example.com/recipe"
+    }
+
+    @Test
+    fun When_extracted_from_ai_Then_ai_category_attached_and_saved() = runTest {
+        val extracted =
+            ExtractedRecipeData(
+                title = "From AI",
+                description = null,
+                ingredients = listOf("flour"),
+                directions = listOf("mix"),
+                imageUrl = null,
+                sourceUrl = "",
+                servings = null,
+                prepTime = null,
+                cookTime = null,
+                totalTime = null,
+                calories = null,
+            )
+        val vm = createViewModel(extractedRecipe = extracted, fromAi = true)
+
+        vm.categories.value.singleOrNull()?.builtinId shouldBe BuiltinCategory.AI.id
+
+        vm.save()
+        vm.output.first().shouldBeFinished()
+
+        recipes.value.first().categories.singleOrNull()?.builtinId shouldBe BuiltinCategory.AI.id
+    }
+
+    @Test
+    fun When_extracted_not_from_ai_Then_no_ai_category() = runTest {
+        val extracted =
+            ExtractedRecipeData(
+                title = "From Web",
+                description = null,
+                ingredients = listOf("flour"),
+                directions = listOf("mix"),
+                imageUrl = null,
+                sourceUrl = "https://example.com/recipe",
+                servings = null,
+                prepTime = null,
+                cookTime = null,
+                totalTime = null,
+                calories = null,
+            )
+        val vm = createViewModel(extractedRecipe = extracted, fromAi = false)
+
+        vm.categories.value shouldBe emptySet()
     }
 
     @Test

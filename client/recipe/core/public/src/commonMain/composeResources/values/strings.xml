@@ -119,6 +119,7 @@
     <string name="edit_recipe_category_snack">Snack</string>
     <string name="edit_recipe_category_drink">Drink</string>
     <string name="edit_recipe_category_other">Other</string>
+    <string name="edit_recipe_category_ai">AI</string>
     <string name="edit_recipe_discard_title">Discard Changes?</string>
     <string name="edit_recipe_discard_message">You have unsaved changes. Are you sure you want to discard them?</string>
     <string name="edit_recipe_discard_confirm">Discard</string>

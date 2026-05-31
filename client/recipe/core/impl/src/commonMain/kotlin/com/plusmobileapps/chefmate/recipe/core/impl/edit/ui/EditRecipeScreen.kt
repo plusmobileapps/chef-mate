@@ -47,6 +47,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.core.public.generated.resources.Res
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_ai
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_appetizer
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_breakfast
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_dessert
@@ -311,6 +312,7 @@ private fun BuiltinCategory.fieldLabelRes(): StringResource =
         BuiltinCategory.SNACK -> Res.string.edit_recipe_category_snack
         BuiltinCategory.DRINK -> Res.string.edit_recipe_category_drink
         BuiltinCategory.OTHER -> Res.string.edit_recipe_category_other
+        BuiltinCategory.AI -> Res.string.edit_recipe_category_ai
     }
 
 @Composable

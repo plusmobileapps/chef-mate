@@ -313,7 +313,9 @@ class RootBlocImpl(
             AiChatBloc.Output.Back -> navigation.pop()
             is AiChatBloc.Output.AddAsRecipe ->
                 navigation.bringToFront(
-                    RecipeRoot(RecipeRootBloc.Props.CreateFromExtracted(output.extracted))
+                    RecipeRoot(
+                        RecipeRootBloc.Props.CreateFromExtracted(output.extracted, fromAi = true)
+                    )
                 )
         }
     }

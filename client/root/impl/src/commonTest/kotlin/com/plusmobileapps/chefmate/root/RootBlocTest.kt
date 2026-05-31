@@ -279,6 +279,6 @@ class RootBlocTest {
         aiChatOutput.onNext(AiChatBloc.Output.AddAsRecipe(extracted))
 
         rootBloc.instance() should instanceOf<RootBloc.Child.RecipeRoot>()
-        recipeProps shouldBe RecipeRootBloc.Props.CreateFromExtracted(extracted)
+        recipeProps shouldBe RecipeRootBloc.Props.CreateFromExtracted(extracted, fromAi = true)
     }
 }

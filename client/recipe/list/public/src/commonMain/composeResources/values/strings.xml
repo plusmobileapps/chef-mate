@@ -49,6 +49,7 @@
     <string name="recipe_list_category_snack">Snack</string>
     <string name="recipe_list_category_drink">Drink</string>
     <string name="recipe_list_category_other">Other</string>
+    <string name="recipe_list_category_ai">AI</string>
 
     <!-- Empty States -->
     <string name="recipe_list_empty_title">No recipes yet</string>
