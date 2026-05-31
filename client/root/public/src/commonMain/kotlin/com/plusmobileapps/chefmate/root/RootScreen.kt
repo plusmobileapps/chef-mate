@@ -1,126 +1,63 @@
-@file:OptIn(ExperimentalDecomposeApi::class, ExperimentalSharedTransitionApi::class)
+@file:OptIn(ExperimentalDecomposeApi::class)
 
 package com.plusmobileapps.chefmate.root
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionLayout
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import com.arkivanov.decompose.ExperimentalDecomposeApi
+import com.arkivanov.decompose.extensions.compose.stack.Children
+import com.arkivanov.decompose.extensions.compose.stack.animation.StackAnimator
+import com.arkivanov.decompose.extensions.compose.stack.animation.isFront
+import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.predictiveBackAnimation
+import com.arkivanov.decompose.extensions.compose.stack.animation.slide
+import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
+import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimator
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.plusmobileapps.chefmate.ui.Content
-import com.plusmobileapps.chefmate.ui.LocalAnimatedVisibilityScope
-import com.plusmobileapps.chefmate.ui.LocalSharedTransitionScope
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
 @Composable
 fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
     val stack by rootBloc.state.subscribeAsState()
-    val saveableStateHolder = rememberSaveableStateHolder()
-    val previousKeys = remember { mutableSetOf<String>() }
-
-    DisposableEffect(stack) {
-        val currentKeys = stack.items.mapTo(HashSet()) { it.saveableKey() }
-        previousKeys.forEach { key ->
-            if (key !in currentKeys) saveableStateHolder.removeState(key)
-        }
-        previousKeys.clear()
-        previousKeys.addAll(currentKeys)
-        onDispose {}
-    }
-
     ChefMateTheme {
-        SharedTransitionLayout(modifier = modifier.fillMaxSize()) {
-            AnimatedContent(
-                targetState = stack.active,
-                // contentKey doubles as the key for AnimatedContent's internal
-                // SaveableStateHolder, which Bundle-validates the key on Android. The default
-                // Decompose Child.key is the Configuration data object, which is not
-                // Bundle-serializable — pass our derived String instead.
-                contentKey = { it.saveableKey() },
-                transitionSpec = {
-                    val current = targetState.instance
-                    val previous = initialState.instance
-                    val isVertical =
-                        current is RootBloc.Child.Browser ||
-                            previous is RootBloc.Child.Browser ||
-                            current is RootBloc.Child.MealPlanner ||
-                            previous is RootBloc.Child.MealPlanner ||
-                            current is RootBloc.Child.CookMode ||
-                            previous is RootBloc.Child.CookMode
-                    val items = stack.items
-                    val initialIndex = items.indexOfFirst { it.key == initialState.key }
-                    val targetIndex = items.indexOfFirst { it.key == targetState.key }
-                    val isForward = if (initialIndex < 0) false else targetIndex > initialIndex
-                    val spec = tween<androidx.compose.ui.unit.IntOffset>(durationMillis = 300)
-                    val floatSpec = tween<Float>(durationMillis = 300)
-
-                    if (isVertical) {
-                        if (isForward) {
-                            // Modal slides up over the background. The background must stay alive
-                            // (via fadeOut) for the full duration so it's visible behind the
-                            // incoming screen; z-index puts the modal on top.
-                            ContentTransform(
-                                targetContentEnter = slideInVertically(spec) { it },
-                                initialContentExit = fadeOut(floatSpec),
-                                targetContentZIndex = 1f,
-                            )
-                        } else {
-                            // Modal slides back down. The background should sit underneath while
-                            // the modal exits; negative z-index keeps the modal on top.
-                            ContentTransform(
-                                targetContentEnter = EnterTransition.None,
-                                initialContentExit = slideOutVertically(spec) { it },
-                                targetContentZIndex = -1f,
-                            )
-                        }
-                    } else {
-                        if (isForward) {
-                            slideInHorizontally(spec) { it } togetherWith
-                                slideOutHorizontally(spec) { -it / 4 }
-                        } else {
-                            slideInHorizontally(spec) { -it / 4 } togetherWith
-                                slideOutHorizontally(spec) { it }
-                        }
-                    }
-                },
-                label = "root-stack",
-            ) { activeChild ->
-                // Only BottomNavigation and RecipeRoot participate in shared element transitions
-                // (recipe image/title morph). All other screens get a null AnimatedVisibilityScope
-                // so SharedTransitionLayout never intercepts their enter/exit timing.
-                val isSharedTransitionParticipant =
-                    activeChild.instance is RootBloc.Child.BottomNavigation ||
-                        activeChild.instance is RootBloc.Child.RecipeRoot
-                CompositionLocalProvider(
-                    LocalSharedTransitionScope provides this@SharedTransitionLayout,
-                    LocalAnimatedVisibilityScope provides
-                        if (isSharedTransitionParticipant) this else null,
-                ) {
-                    saveableStateHolder.SaveableStateProvider(activeChild.saveableKey()) {
-                        activeChild.instance.Content()
-                    }
-                }
-            }
+        Children(
+            modifier = modifier.fillMaxSize(),
+            stack = stack,
+            animation =
+                predictiveBackAnimation(
+                    backHandler = rootBloc.backHandler,
+                    fallbackAnimation =
+                        stackAnimation { child, otherChild, _ ->
+                            if (child.instance.isModal() || otherChild.instance.isModal()) {
+                                verticalSlide()
+                            } else {
+                                slide()
+                            }
+                        },
+                    onBack = rootBloc::onBackClicked,
+                ),
+        ) { child ->
+            child.instance.Content()
         }
     }
 }
 
-private fun com.arkivanov.decompose.Child<*, *>.saveableKey(): String =
-    "${configuration::class.simpleName}_${key.hashCode()}"
+// Screens that slide up/down over the stack rather than horizontally.
+private fun RootBloc.Child.isModal(): Boolean =
+    this is RootBloc.Child.Browser ||
+        this is RootBloc.Child.MealPlanner ||
+        this is RootBloc.Child.CookMode
+
+private fun verticalSlide(): StackAnimator = stackAnimator { factor, direction, content ->
+    content(Modifier.offsetYFactor(if (direction.isFront) factor else 0f))
+}
+
+private fun Modifier.offsetYFactor(factor: Float): Modifier = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    layout(placeable.width, placeable.height) {
+        placeable.placeRelative(x = 0, y = (placeable.height.toFloat() * factor).toInt())
+    }
+}

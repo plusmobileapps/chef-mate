@@ -21,11 +21,9 @@ fun RecipeImage(
     imageUrl: String?,
     contentDescription: String?,
     modifier: Modifier = Modifier,
-    sharedElementKey: String? = null,
     secondarySharedElementKey: String? = null,
     onClick: (() -> Unit)? = null,
 ) {
-    val sharedModifier = Modifier.sharedElementBy(sharedElementKey)
     val secondarySharedModifier =
         Modifier.sharedElementBy(
             key = secondarySharedElementKey,
@@ -44,7 +42,6 @@ fun RecipeImage(
             contentDescription = contentDescription,
             modifier =
                 modifier
-                    .then(sharedModifier)
                     .then(secondarySharedModifier)
                     .clip(MaterialTheme.shapes.medium)
                     .then(clickModifier),
@@ -54,7 +51,6 @@ fun RecipeImage(
         Box(
             modifier =
                 modifier
-                    .then(sharedModifier)
                     .then(secondarySharedModifier)
                     .clip(MaterialTheme.shapes.medium)
                     .background(MaterialTheme.colorScheme.surfaceVariant),
