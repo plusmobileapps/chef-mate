@@ -17,31 +17,43 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.SoupKitchen
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.outlined.CloudOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -51,7 +63,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import chefmate.client.meal.core.public.generated.resources.Res
 import chefmate.client.meal.core.public.generated.resources.meal_plan_add_meal
+import chefmate.client.meal.core.public.generated.resources.meal_plan_add_to_cook_mode
 import chefmate.client.meal.core.public.generated.resources.meal_plan_breakfast
+import chefmate.client.meal.core.public.generated.resources.meal_plan_continue_cooking
 import chefmate.client.meal.core.public.generated.resources.meal_plan_day
 import chefmate.client.meal.core.public.generated.resources.meal_plan_delete
 import chefmate.client.meal.core.public.generated.resources.meal_plan_delete_cancel
@@ -59,9 +73,19 @@ import chefmate.client.meal.core.public.generated.resources.meal_plan_delete_con
 import chefmate.client.meal.core.public.generated.resources.meal_plan_delete_message
 import chefmate.client.meal.core.public.generated.resources.meal_plan_delete_title
 import chefmate.client.meal.core.public.generated.resources.meal_plan_dinner
+import chefmate.client.meal.core.public.generated.resources.meal_plan_done_cooking
+import chefmate.client.meal.core.public.generated.resources.meal_plan_done_cooking_cancel
+import chefmate.client.meal.core.public.generated.resources.meal_plan_done_cooking_confirm
+import chefmate.client.meal.core.public.generated.resources.meal_plan_done_cooking_message
+import chefmate.client.meal.core.public.generated.resources.meal_plan_done_cooking_title
 import chefmate.client.meal.core.public.generated.resources.meal_plan_lunch
 import chefmate.client.meal.core.public.generated.resources.meal_plan_month
 import chefmate.client.meal.core.public.generated.resources.meal_plan_no_meals
+import chefmate.client.meal.core.public.generated.resources.meal_plan_replace_cook_mode
+import chefmate.client.meal.core.public.generated.resources.meal_plan_replace_cook_mode_cancel
+import chefmate.client.meal.core.public.generated.resources.meal_plan_replace_cook_mode_confirm
+import chefmate.client.meal.core.public.generated.resources.meal_plan_replace_cook_mode_message
+import chefmate.client.meal.core.public.generated.resources.meal_plan_replace_cook_mode_title
 import chefmate.client.meal.core.public.generated.resources.meal_plan_snacks
 import chefmate.client.meal.core.public.generated.resources.meal_plan_sync_not_synced
 import chefmate.client.meal.core.public.generated.resources.meal_plan_sync_synced
@@ -89,6 +113,18 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarText = state.snackbarMessage?.localized()
+
+    LaunchedEffect(snackbarText) {
+        if (snackbarText != null) {
+            try {
+                snackbarHostState.showSnackbar(snackbarText)
+            } finally {
+                bloc.onSnackbarShown()
+            }
+        }
+    }
 
     state.mealToDelete?.let {
         PlusDialog(
@@ -101,16 +137,41 @@ fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
         )
     }
 
+    if (state.pendingReplaceCookMode != null) {
+        PlusDialog(
+            title = ResourceString(Res.string.meal_plan_replace_cook_mode_title),
+            message = ResourceString(Res.string.meal_plan_replace_cook_mode_message),
+            confirmButtonText = ResourceString(Res.string.meal_plan_replace_cook_mode_confirm),
+            dismissButtonText = ResourceString(Res.string.meal_plan_replace_cook_mode_cancel),
+            onConfirmClick = bloc::onReplaceCookModeConfirmed,
+            onDismissRequest = bloc::onReplaceCookModeDismissed,
+        )
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         PlusNavContainer(
-            data = PlusHeaderData.Parent(title = Res.string.meal_plan_title.asTextData()),
+            data =
+                PlusHeaderData.Parent(
+                    title = Res.string.meal_plan_title.asTextData(),
+                    trailingAccessory =
+                        PlusHeaderData.TrailingAccessory.Custom {
+                            IconButton(onClick = bloc::onAddMealClicked) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription =
+                                        stringResource(Res.string.meal_plan_add_meal),
+                                )
+                            }
+                        },
+                ),
             scrollEnabled = false,
             content = {
                 Column(modifier = Modifier.fillMaxSize()) {
                     ViewModeSegmentedControl(
                         selectedMode = state.viewMode,
                         onModeSelected = bloc::onViewModeSelected,
-                        modifier = Modifier.padding(horizontal = ChefMateTheme.dimens.paddingNormal),
+                        modifier =
+                            Modifier.padding(horizontal = ChefMateTheme.dimens.paddingNormal),
                     )
 
                     DateNavigationRow(
@@ -138,6 +199,8 @@ fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
                                         dayMeals = state.dayMeals,
                                         onMealClicked = bloc::onMealClicked,
                                         onDeleteClicked = bloc::onDeleteMealClicked,
+                                        onReplaceCookMode = bloc::onReplaceCookModeClicked,
+                                        onAddToCookMode = bloc::onAddToCookModeClicked,
                                         modifier = Modifier.fillMaxSize(),
                                     )
                                 MealPlanBloc.ViewMode.WEEK ->
@@ -153,6 +216,8 @@ fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
                                         onDaySelected = bloc::onMonthDaySelected,
                                         onMealClicked = bloc::onMealClicked,
                                         onDeleteClicked = bloc::onDeleteMealClicked,
+                                        onReplaceCookMode = bloc::onReplaceCookModeClicked,
+                                        onAddToCookMode = bloc::onAddToCookModeClicked,
                                         modifier = Modifier.fillMaxSize(),
                                     )
                             }
@@ -162,15 +227,85 @@ fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
             },
         )
 
+        if (state.cookingRecipeCount > 0) {
+            CookingSessionFabStack(
+                onContinueClicked = bloc::onContinueCookingClicked,
+                onDoneCookingClicked = bloc::onDoneCookingClicked,
+                modifier = Modifier.align(Alignment.BottomEnd),
+            )
+        }
+
+        if (state.showDoneCookingDialog) {
+            DoneCookingDialog(
+                onConfirm = bloc::onDoneCookingConfirmed,
+                onDismiss = bloc::onDoneCookingDismissed,
+            )
+        }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp),
+        )
+    }
+}
+
+@Composable
+private fun CookingSessionFabStack(
+    onContinueClicked: () -> Unit,
+    onDoneCookingClicked: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.padding(ChefMateTheme.dimens.paddingNormal),
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = spacedBy(ChefMateTheme.dimens.paddingSmall),
+    ) {
         ExtendedFloatingActionButton(
-            onClick = bloc::onAddMealClicked,
-            modifier =
-                Modifier.align(Alignment.BottomEnd).padding(ChefMateTheme.dimens.paddingNormal),
+            onClick = onDoneCookingClicked,
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            elevation = FloatingActionButtonDefaults.loweredElevation(),
         ) {
-            Icon(Icons.Default.Add, contentDescription = null)
-            Text(stringResource(Res.string.meal_plan_add_meal))
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = stringResource(Res.string.meal_plan_done_cooking),
+                style = MaterialTheme.typography.labelLarge,
+            )
+        }
+        ExtendedFloatingActionButton(
+            onClick = onContinueClicked,
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        ) {
+            Icon(imageVector = Icons.Default.SoupKitchen, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(text = stringResource(Res.string.meal_plan_continue_cooking))
         }
     }
+}
+
+@Composable
+private fun DoneCookingDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.meal_plan_done_cooking_title)) },
+        text = { Text(stringResource(Res.string.meal_plan_done_cooking_message)) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(stringResource(Res.string.meal_plan_done_cooking_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(Res.string.meal_plan_done_cooking_cancel))
+            }
+        },
+    )
 }
 
 @Composable
@@ -229,6 +364,8 @@ private fun MonthView(
     onDaySelected: (LocalDate) -> Unit,
     onMealClicked: (MealPlanItem) -> Unit,
     onDeleteClicked: (MealPlanItem) -> Unit,
+    onReplaceCookMode: (List<MealPlanItem>) -> Unit,
+    onAddToCookMode: (List<MealPlanItem>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (monthModel == null) {
@@ -274,7 +411,12 @@ private fun MonthView(
         } else if (dayMeals != null) {
             if (dayMeals.breakfast.isNotEmpty()) {
                 stickyHeader(key = "month_breakfast") {
-                    MealSectionHeader(stringResource(Res.string.meal_plan_breakfast))
+                    MealSectionHeader(
+                        title = stringResource(Res.string.meal_plan_breakfast),
+                        meals = dayMeals.breakfast,
+                        onReplaceCookMode = onReplaceCookMode,
+                        onAddToCookMode = onAddToCookMode,
+                    )
                 }
                 items(dayMeals.breakfast, key = { it.id }) { meal ->
                     MealItemCard(
@@ -286,7 +428,12 @@ private fun MonthView(
             }
             if (dayMeals.lunch.isNotEmpty()) {
                 stickyHeader(key = "month_lunch") {
-                    MealSectionHeader(stringResource(Res.string.meal_plan_lunch))
+                    MealSectionHeader(
+                        title = stringResource(Res.string.meal_plan_lunch),
+                        meals = dayMeals.lunch,
+                        onReplaceCookMode = onReplaceCookMode,
+                        onAddToCookMode = onAddToCookMode,
+                    )
                 }
                 items(dayMeals.lunch, key = { it.id }) { meal ->
                     MealItemCard(
@@ -298,7 +445,12 @@ private fun MonthView(
             }
             if (dayMeals.dinner.isNotEmpty()) {
                 stickyHeader(key = "month_dinner") {
-                    MealSectionHeader(stringResource(Res.string.meal_plan_dinner))
+                    MealSectionHeader(
+                        title = stringResource(Res.string.meal_plan_dinner),
+                        meals = dayMeals.dinner,
+                        onReplaceCookMode = onReplaceCookMode,
+                        onAddToCookMode = onAddToCookMode,
+                    )
                 }
                 items(dayMeals.dinner, key = { it.id }) { meal ->
                     MealItemCard(
@@ -310,7 +462,12 @@ private fun MonthView(
             }
             if (dayMeals.snacks.isNotEmpty()) {
                 stickyHeader(key = "month_snacks") {
-                    MealSectionHeader(stringResource(Res.string.meal_plan_snacks))
+                    MealSectionHeader(
+                        title = stringResource(Res.string.meal_plan_snacks),
+                        meals = dayMeals.snacks,
+                        onReplaceCookMode = onReplaceCookMode,
+                        onAddToCookMode = onAddToCookMode,
+                    )
                 }
                 items(dayMeals.snacks, key = { it.id }) { meal ->
                     MealItemCard(
@@ -436,6 +593,8 @@ private fun DayView(
     dayMeals: MealPlanBloc.DayMeals?,
     onMealClicked: (MealPlanItem) -> Unit,
     onDeleteClicked: (MealPlanItem) -> Unit,
+    onReplaceCookMode: (List<MealPlanItem>) -> Unit,
+    onAddToCookMode: (List<MealPlanItem>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (dayMeals == null) {
@@ -461,7 +620,12 @@ private fun DayView(
     ) {
         if (dayMeals.breakfast.isNotEmpty()) {
             stickyHeader(key = "breakfast") {
-                MealSectionHeader(stringResource(Res.string.meal_plan_breakfast))
+                MealSectionHeader(
+                    title = stringResource(Res.string.meal_plan_breakfast),
+                    meals = dayMeals.breakfast,
+                    onReplaceCookMode = onReplaceCookMode,
+                    onAddToCookMode = onAddToCookMode,
+                )
             }
             items(dayMeals.breakfast, key = { it.id }) { meal ->
                 MealItemCard(
@@ -473,7 +637,12 @@ private fun DayView(
         }
         if (dayMeals.lunch.isNotEmpty()) {
             stickyHeader(key = "lunch") {
-                MealSectionHeader(stringResource(Res.string.meal_plan_lunch))
+                MealSectionHeader(
+                    title = stringResource(Res.string.meal_plan_lunch),
+                    meals = dayMeals.lunch,
+                    onReplaceCookMode = onReplaceCookMode,
+                    onAddToCookMode = onAddToCookMode,
+                )
             }
             items(dayMeals.lunch, key = { it.id }) { meal ->
                 MealItemCard(
@@ -485,7 +654,12 @@ private fun DayView(
         }
         if (dayMeals.dinner.isNotEmpty()) {
             stickyHeader(key = "dinner") {
-                MealSectionHeader(stringResource(Res.string.meal_plan_dinner))
+                MealSectionHeader(
+                    title = stringResource(Res.string.meal_plan_dinner),
+                    meals = dayMeals.dinner,
+                    onReplaceCookMode = onReplaceCookMode,
+                    onAddToCookMode = onAddToCookMode,
+                )
             }
             items(dayMeals.dinner, key = { it.id }) { meal ->
                 MealItemCard(
@@ -497,7 +671,12 @@ private fun DayView(
         }
         if (dayMeals.snacks.isNotEmpty()) {
             stickyHeader(key = "snacks") {
-                MealSectionHeader(stringResource(Res.string.meal_plan_snacks))
+                MealSectionHeader(
+                    title = stringResource(Res.string.meal_plan_snacks),
+                    meals = dayMeals.snacks,
+                    onReplaceCookMode = onReplaceCookMode,
+                    onAddToCookMode = onAddToCookMode,
+                )
             }
             items(dayMeals.snacks, key = { it.id }) { meal ->
                 MealItemCard(
@@ -530,7 +709,7 @@ private fun WeekView(
         weekMeals.forEach { dayGroup ->
             if (dayGroup.meals.isNotEmpty()) {
                 stickyHeader(key = "week_${dayGroup.dateLabel}") {
-                    MealSectionHeader(dayGroup.dateLabel.localized())
+                    MealSectionHeader(title = dayGroup.dateLabel.localized())
                 }
                 items(dayGroup.meals, key = { it.id }) { meal ->
                     WeekMealItem(
@@ -545,12 +724,14 @@ private fun WeekView(
 }
 
 @Composable
-private fun MealSectionHeader(title: String, modifier: Modifier = Modifier) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleSmall,
-        fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.primary,
+private fun MealSectionHeader(
+    title: String,
+    modifier: Modifier = Modifier,
+    meals: List<MealPlanItem>? = null,
+    onReplaceCookMode: ((List<MealPlanItem>) -> Unit)? = null,
+    onAddToCookMode: ((List<MealPlanItem>) -> Unit)? = null,
+) {
+    Row(
         modifier =
             modifier
                 .fillMaxWidth()
@@ -559,7 +740,34 @@ private fun MealSectionHeader(title: String, modifier: Modifier = Modifier) {
                     horizontal = ChefMateTheme.dimens.paddingNormal,
                     vertical = ChefMateTheme.dimens.paddingSmall,
                 ),
-    )
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.weight(1f),
+        )
+        if (meals != null && onReplaceCookMode != null) {
+            IconButton(onClick = { onReplaceCookMode(meals) }) {
+                Icon(
+                    imageVector = Icons.Default.Sync,
+                    contentDescription = stringResource(Res.string.meal_plan_replace_cook_mode),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
+        if (meals != null && onAddToCookMode != null) {
+            IconButton(onClick = { onAddToCookMode(meals) }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.PlaylistAdd,
+                    contentDescription = stringResource(Res.string.meal_plan_add_to_cook_mode),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
+    }
 }
 
 @Composable

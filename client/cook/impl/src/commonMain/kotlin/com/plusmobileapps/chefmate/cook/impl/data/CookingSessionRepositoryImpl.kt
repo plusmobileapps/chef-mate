@@ -28,6 +28,17 @@ class CookingSessionRepositoryImpl(
         withContext(ioContext) { queries.start(recipeId) }
     }
 
+    override suspend fun replaceAll(recipeIds: List<Long>) {
+        if (recipeIds.isEmpty()) return
+        withContext(ioContext) {
+            queries.transaction {
+                queries.deleteAll()
+                recipeIds.forEach { queries.start(it) }
+                queries.markSelected(recipeIds.first())
+            }
+        }
+    }
+
     override suspend fun markSelected(recipeId: Long) {
         withContext(ioContext) { queries.markSelected(recipeId) }
     }

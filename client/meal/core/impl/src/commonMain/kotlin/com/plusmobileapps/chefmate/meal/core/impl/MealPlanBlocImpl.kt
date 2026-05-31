@@ -56,6 +56,10 @@ class MealPlanBlocImpl(
                         null
                     },
                 mealToDelete = it.mealToDelete,
+                cookingRecipeCount = it.cookingRecipeIds.size,
+                showDoneCookingDialog = it.showDoneCookingDialog,
+                pendingReplaceCookMode = it.pendingReplaceCookMode,
+                snackbarMessage = it.snackbarMessage,
             )
         }
 
@@ -97,6 +101,44 @@ class MealPlanBlocImpl(
 
     override fun onSyncClicked() {
         viewModel.onSyncClicked()
+    }
+
+    override fun onReplaceCookModeClicked(meals: List<MealPlanItem>) {
+        viewModel.requestReplaceCookMode(meals)
+    }
+
+    override fun onReplaceCookModeConfirmed() {
+        viewModel.confirmReplaceCookMode()
+    }
+
+    override fun onReplaceCookModeDismissed() {
+        viewModel.dismissReplaceCookMode()
+    }
+
+    override fun onAddToCookModeClicked(meals: List<MealPlanItem>) {
+        viewModel.addToCookMode(meals)
+    }
+
+    override fun onSnackbarShown() {
+        viewModel.clearSnackbar()
+    }
+
+    override fun onContinueCookingClicked() {
+        viewModel.state.value.cookingRecipeIds.firstOrNull()?.let { recipeId ->
+            output.onNext(Output.OpenCookMode(recipeId))
+        }
+    }
+
+    override fun onDoneCookingClicked() {
+        viewModel.showDoneCookingDialog()
+    }
+
+    override fun onDoneCookingConfirmed() {
+        viewModel.confirmDoneCooking()
+    }
+
+    override fun onDoneCookingDismissed() {
+        viewModel.dismissDoneCookingDialog()
     }
 
     @Composable
