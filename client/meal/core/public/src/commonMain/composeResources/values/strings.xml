@@ -35,4 +35,6 @@
     <string name="meal_plan_replace_cook_mode_cancel">Cancel</string>
     <string name="meal_plan_added_to_cook_mode_single">{name} added to cook mode</string>
     <string name="meal_plan_added_to_cook_mode_multiple">{count} recipes added to cook mode</string>
+    <string name="meal_plan_replaced_cook_mode_single">Cook mode replaced with {name}</string>
+    <string name="meal_plan_replaced_cook_mode_multiple">Cook mode replaced with {count} recipes</string>
 </resources>

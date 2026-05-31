@@ -3,6 +3,8 @@ package com.plusmobileapps.chefmate.meal.core.impl
 import chefmate.client.meal.core.public.generated.resources.Res
 import chefmate.client.meal.core.public.generated.resources.meal_plan_added_to_cook_mode_multiple
 import chefmate.client.meal.core.public.generated.resources.meal_plan_added_to_cook_mode_single
+import chefmate.client.meal.core.public.generated.resources.meal_plan_replaced_cook_mode_multiple
+import chefmate.client.meal.core.public.generated.resources.meal_plan_replaced_cook_mode_single
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
 import com.plusmobileapps.chefmate.di.Main
@@ -26,6 +28,7 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
+import org.jetbrains.compose.resources.StringResource
 
 @Inject
 class MealPlanViewModel(
@@ -131,14 +134,10 @@ class MealPlanViewModel(
     fun confirmReplaceCookMode() {
         val meals = _state.value.pendingReplaceCookMode ?: return
         _state.update {
-            it.copy(pendingReplaceCookMode = null, snackbarMessage = addedToCookModeMessage(meals))
+            it.copy(pendingReplaceCookMode = null, snackbarMessage = replacedCookModeMessage(meals))
         }
         val recipeIds = meals.map { it.recipeId }.distinct()
-        scope.launch {
-            cookingSessionRepository.stopAll()
-            recipeIds.forEach { cookingSessionRepository.start(it) }
-            cookingSessionRepository.markSelected(recipeIds.first())
-        }
+        scope.launch { cookingSessionRepository.replaceAll(recipeIds) }
     }
 
     fun dismissReplaceCookMode() {
@@ -159,18 +158,30 @@ class MealPlanViewModel(
         _state.update { it.copy(snackbarMessage = null) }
     }
 
-    private fun addedToCookModeMessage(meals: List<MealPlanItem>): TextData {
+    private fun addedToCookModeMessage(meals: List<MealPlanItem>): TextData =
+        cookModeMessage(
+            meals,
+            single = Res.string.meal_plan_added_to_cook_mode_single,
+            multiple = Res.string.meal_plan_added_to_cook_mode_multiple,
+        )
+
+    private fun replacedCookModeMessage(meals: List<MealPlanItem>): TextData =
+        cookModeMessage(
+            meals,
+            single = Res.string.meal_plan_replaced_cook_mode_single,
+            multiple = Res.string.meal_plan_replaced_cook_mode_multiple,
+        )
+
+    private fun cookModeMessage(
+        meals: List<MealPlanItem>,
+        single: StringResource,
+        multiple: StringResource,
+    ): TextData {
         val uniqueByRecipe = meals.distinctBy { it.recipeId }
         return if (uniqueByRecipe.size == 1) {
-            PhraseModel(
-                Res.string.meal_plan_added_to_cook_mode_single,
-                "name" to FixedString(uniqueByRecipe.first().recipeTitle),
-            )
+            PhraseModel(single, "name" to FixedString(uniqueByRecipe.first().recipeTitle))
         } else {
-            PhraseModel(
-                Res.string.meal_plan_added_to_cook_mode_multiple,
-                "count" to FixedString(uniqueByRecipe.size.toString()),
-            )
+            PhraseModel(multiple, "count" to FixedString(uniqueByRecipe.size.toString()))
         }
     }
 
