@@ -43,7 +43,7 @@ class SettingsRootBlocImplTest {
                 importRecipesOutput = output
                 mock()
             },
-            exportRecipes = { _, output ->
+            exportRecipes = { _, _, output ->
                 exportRecipesOutput = output
                 mock()
             },

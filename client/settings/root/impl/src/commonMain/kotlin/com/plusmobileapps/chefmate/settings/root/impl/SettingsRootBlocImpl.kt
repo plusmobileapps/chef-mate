@@ -95,6 +95,7 @@ class SettingsRootBlocImpl(
                     bloc =
                         exportRecipes.create(
                             context = context,
+                            props = ExportRecipesBloc.Props.All,
                             output = ::handleExportRecipesOutput,
                         )
                 )

@@ -5,6 +5,7 @@ package com.plusmobileapps.chefmate.recipe.exporter.impl
 
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
+import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc
 import com.plusmobileapps.chefmate.recipe.exporter.impl.ExportRecipesViewModel.Stage
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -28,8 +29,9 @@ class ExportRecipesViewModelTest {
     private val repository = FakeRecipeRepository(seededRecipes)
     private val dispatcher = UnconfinedTestDispatcher()
 
-    private fun createViewModel() =
+    private fun createViewModel(props: ExportRecipesBloc.Props = ExportRecipesBloc.Props.All) =
         ExportRecipesViewModel(
+            props = props,
             mainContext = dispatcher,
             ioContext = dispatcher,
             repository = repository,
@@ -42,6 +44,21 @@ class ExportRecipesViewModelTest {
         val review = vm.state.value.stage.shouldBeInstanceOf<Stage.Review>()
         review.items.map { it.title } shouldBe listOf("Garlic Noodles", "Lentil Curry")
         review.items.all { it.selected } shouldBe true
+    }
+
+    @Test
+    fun When_props_selected_Then_only_matching_recipes_shown() {
+        val vm = createViewModel(props = ExportRecipesBloc.Props.Selected(recipeIds = setOf(2L)))
+
+        val review = vm.state.value.stage.shouldBeInstanceOf<Stage.Review>()
+        review.items.map { it.title } shouldBe listOf("Lentil Curry")
+        review.items.all { it.selected } shouldBe true
+    }
+
+    @Test
+    fun When_props_selected_excludes_everything_Then_empty_stage_shown() {
+        val vm = createViewModel(props = ExportRecipesBloc.Props.Selected(recipeIds = setOf(9999L)))
+        vm.state.value.stage shouldBe Stage.Empty
     }
 
     @Test

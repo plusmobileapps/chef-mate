@@ -13,11 +13,11 @@ import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc.Model
 import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc.Output
 import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc.PendingSave
 import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc.Phase
+import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc.Props
 import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesScreen
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.Provider
 import kotlinx.coroutines.flow.StateFlow
 
 @AssistedInject
@@ -27,11 +27,12 @@ import kotlinx.coroutines.flow.StateFlow
 )
 class ExportRecipesBlocImpl(
     @Assisted context: BlocContext,
+    @Assisted private val props: Props,
     @Assisted private val output: Consumer<Output>,
-    viewModelFactory: Provider<ExportRecipesViewModel>,
+    viewModelFactory: ExportRecipesViewModel.Factory,
 ) : ExportRecipesBloc, BlocContext by context {
 
-    private val viewModel = instanceKeeper.getViewModel { viewModelFactory() }
+    private val viewModel = instanceKeeper.getViewModel { viewModelFactory.create(props) }
 
     override val state: StateFlow<Model> = viewModel.state.mapState { it.toBlocModel() }
 
