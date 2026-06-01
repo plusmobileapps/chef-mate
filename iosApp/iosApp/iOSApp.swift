@@ -12,10 +12,23 @@ struct iOSApp: App {
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     var backDispatcher: BackDispatcher = BackDispatcherKt.BackDispatcher()
+    private var launchDeepLinkUrl: String?
 
     override init() {
         super.init()
         BugsnagStartup_iosKt.initializeBugsnag()
+    }
+
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        if let url = launchOptions?[.url] as? URL,
+           url.scheme == "chefmate",
+           url.host != "import" {
+            launchDeepLinkUrl = url.absoluteString
+        }
+        return true
     }
 
     lazy var root: RootBloc = RootBlocProvider.shared.buildRootBloc(
@@ -25,6 +38,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             instanceKeeper: nil,
             backHandler: backDispatcher
         ),
-        application: UIApplication.shared
+        application: UIApplication.shared,
+        deepLinkUrl: launchDeepLinkUrl
     )
 }

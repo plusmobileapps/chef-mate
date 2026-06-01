@@ -20,6 +20,7 @@ import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.backhandler.BackDispatcher
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import com.plusmobileapps.chefmate.buildconfig.BuildConfig
+import com.plusmobileapps.chefmate.root.DeepLink
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
@@ -31,7 +32,8 @@ private const val KEY_WINDOW_Y = "window.y"
 private const val KEY_WINDOW_PLACEMENT = "window.placement"
 
 @OptIn(ExperimentalTime::class, FlowPreview::class)
-fun main() {
+fun main(args: Array<String>) {
+    val deepLink = DeepLink.parse(args.firstOrNull())
     // Initialize Bugsnag + Kermit logging for JVM
     BugsnagInitializer().initialize(BuildConfig.BUGSNAG_API_KEY)
     // Only initialize the lifecycle outside the application block
@@ -68,6 +70,7 @@ fun main() {
                 componentContext =
                     DefaultComponentContext(lifecycle = lifecycle, backHandler = backDispatcher),
                 applicationComponent = appComponent,
+                deepLink = deepLink,
             )
 
         val windowState =

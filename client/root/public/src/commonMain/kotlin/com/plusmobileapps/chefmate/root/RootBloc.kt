@@ -51,6 +51,6 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
     }
 
     fun interface Factory {
-        fun create(context: BlocContext): RootBloc
+        fun create(context: BlocContext, deepLink: DeepLink): RootBloc
     }
 }

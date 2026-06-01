@@ -39,6 +39,7 @@ import kotlinx.serialization.Serializable
 @ContributesAssistedFactory(scope = AppScope::class, assistedFactory = RootBloc.Factory::class)
 class RootBlocImpl(
     @Assisted context: BlocContext,
+    @Assisted deepLink: DeepLink,
     private val bottomNav: BottomNavBloc.Factory,
     private val browserRootBlocFactory: BrowserRootBloc.Factory,
     private val groceryDetail: GroceryDetailBloc.Factory,
@@ -58,17 +59,45 @@ class RootBlocImpl(
         createScope().launch { featureFlags.refresh() }
     }
 
+    private val initialBottomNavTab: BottomNavBloc.Tab? =
+        when (deepLink) {
+            DeepLink.Groceries -> BottomNavBloc.Tab.GROCERIES
+            DeepLink.MealPlanner -> BottomNavBloc.Tab.MEALS
+            else -> null
+        }
+
     private val navigation = StackNavigation<Configuration>()
 
     private val stack =
         childStack(
             source = navigation,
             serializer = Configuration.serializer(),
-            initialStack = { listOf(Configuration.BottomNavigation) },
+            initialStack = { initialStackFor(deepLink) },
             handleBackButton = true,
             key = "RootRouter",
             childFactory = ::createChild,
         )
+
+    private fun initialStackFor(deepLink: DeepLink): List<Configuration> =
+        when (deepLink) {
+            DeepLink.None,
+            DeepLink.Groceries,
+            DeepLink.MealPlanner -> listOf(Configuration.BottomNavigation)
+            is DeepLink.RecipeDetail ->
+                listOf(Configuration.BottomNavigation, RecipeRoot(Detail(deepLink.recipeId)))
+            DeepLink.AppSettings ->
+                listOf(Configuration.BottomNavigation, Configuration.SettingsRoot)
+            DeepLink.SignIn ->
+                listOf(
+                    Configuration.BottomNavigation,
+                    Configuration.Authentication(AuthenticationBloc.Props.SignIn),
+                )
+            DeepLink.SignUp ->
+                listOf(
+                    Configuration.BottomNavigation,
+                    Configuration.Authentication(AuthenticationBloc.Props.SignUp),
+                )
+        }
 
     override val state: Value<ChildStack<*, RootBloc.Child>> = stack
 
@@ -87,7 +116,11 @@ class RootBlocImpl(
         when (config) {
             Configuration.BottomNavigation ->
                 BottomNavigation(
-                    bottomNav.create(context = context, output = ::handleBottomNavOutput)
+                    bottomNav.create(
+                        context = context,
+                        output = ::handleBottomNavOutput,
+                        initialTab = initialBottomNavTab,
+                    )
                 )
 
             is Configuration.GroceryDetail ->
