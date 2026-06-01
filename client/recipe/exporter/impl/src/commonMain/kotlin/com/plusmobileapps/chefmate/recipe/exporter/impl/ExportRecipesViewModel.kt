@@ -10,12 +10,9 @@ import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
-import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc.ExportItem
-import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc.Model
-import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc.PendingSave
-import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc.Phase
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
+import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
@@ -34,15 +31,15 @@ class ExportRecipesViewModel(
     private val repository: RecipeRepository,
 ) : ViewModel(mainContext) {
 
-    private val _state = MutableStateFlow(Model())
-    val state: StateFlow<Model> = _state.asStateFlow()
+    private val _state = MutableStateFlow(State())
+    val state: StateFlow<State> = _state.asStateFlow()
 
-    // Recipes loaded from the repository, keyed by [ExportItem.id] (recipe.id.toString()) so we
-    // can look up the underlying [Recipe] when the user clicks Export.
+    // Recipes loaded from the repository, keyed by [Item.id] (recipe.id.toString()) so we can look
+    // up the underlying [Recipe] when the user clicks Export.
     private var loadedRecipes: Map<String, Recipe> = emptyMap()
 
-    // Increments on each generated archive so the screen's LaunchedEffect keys flip even when
-    // the user re-exports the same selection.
+    // Increments on each generated archive so the screen's LaunchedEffect keys flip even when the
+    // user re-exports the same selection.
     private var saveToken: Long = 0L
 
     init {
@@ -50,7 +47,7 @@ class ExportRecipesViewModel(
     }
 
     private fun loadRecipes() {
-        _state.value = Model(Phase.Loading)
+        _state.value = State(stage = Stage.Loading)
         scope.launch {
             val recipes =
                 try {
@@ -58,43 +55,46 @@ class ExportRecipesViewModel(
                 } catch (t: Throwable) {
                     Logger.e(throwable = t, tag = TAG) { "Failed to load recipes for export" }
                     _state.value =
-                        Model(Phase.Error(Res.string.export_recipes_generate_failed.asTextData()))
+                        State(
+                            stage =
+                                Stage.Error(Res.string.export_recipes_generate_failed.asTextData())
+                        )
                     return@launch
                 }
             if (recipes.isEmpty()) {
-                _state.value = Model(Phase.Empty)
+                _state.value = State(stage = Stage.Empty)
                 return@launch
             }
             loadedRecipes = recipes.associateBy { it.id.toString() }
             val items = recipes.map { it.toItem(selected = true) }
-            _state.value = Model(Phase.Review(items))
+            _state.value = State(stage = Stage.Review(items))
         }
     }
 
     fun onRecipeToggled(id: String) {
         updateReview { review ->
             review.copy(
-                recipes =
-                    review.recipes.map { if (it.id == id) it.copy(selected = !it.selected) else it }
+                items =
+                    review.items.map { if (it.id == id) it.copy(selected = !it.selected) else it }
             )
         }
     }
 
     fun onToggleSelectAll() {
         updateReview { review ->
-            val selectAll = review.recipes.any { !it.selected }
-            review.copy(recipes = review.recipes.map { it.copy(selected = selectAll) })
+            val selectAll = review.items.any { !it.selected }
+            review.copy(items = review.items.map { it.copy(selected = selectAll) })
         }
     }
 
     fun onExportClicked() {
-        val review = _state.value.phase as? Phase.Review ?: return
+        val review = _state.value.stage as? Stage.Review ?: return
         if (review.isExporting) return
         val selected =
-            review.recipes.filter { it.selected }.mapNotNull { item -> loadedRecipes[item.id] }
+            review.items.filter { it.selected }.mapNotNull { item -> loadedRecipes[item.id] }
         if (selected.isEmpty()) return
 
-        _state.value = _state.value.copy(phase = review.copy(isExporting = true))
+        _state.value = _state.value.copy(stage = review.copy(isExporting = true))
         scope.launch {
             val archive =
                 try {
@@ -102,16 +102,19 @@ class ExportRecipesViewModel(
                 } catch (t: Throwable) {
                     Logger.e(throwable = t, tag = TAG) { "Failed to build export archive" }
                     _state.value =
-                        Model(Phase.Error(Res.string.export_recipes_generate_failed.asTextData()))
+                        State(
+                            stage =
+                                Stage.Error(Res.string.export_recipes_generate_failed.asTextData())
+                        )
                     return@launch
                 }
             saveToken += 1
             val fileName = exportFileName(count = selected.size)
             _state.value =
-                Model(
-                    phase = review.copy(isExporting = true),
+                State(
+                    stage = review.copy(isExporting = true),
                     pendingSave =
-                        PendingSave(token = saveToken, fileName = fileName, archive = archive),
+                        PendingArchive(token = saveToken, fileName = fileName, archive = archive),
                 )
         }
     }
@@ -119,15 +122,15 @@ class ExportRecipesViewModel(
     fun onSaveCompleted(saved: Boolean) {
         val previous = _state.value
         previous.pendingSave ?: return
-        val review = previous.phase as? Phase.Review
+        val review = previous.stage as? Stage.Review
         _state.value =
             if (saved) {
-                val exportedCount = review?.recipes?.count { it.selected } ?: 0
-                Model(phase = Phase.Done(exportedCount))
+                val exportedCount = review?.items?.count { it.selected } ?: 0
+                State(stage = Stage.Done(exportedCount))
             } else {
-                // Cancel vs. write-failure look the same from the user's seat — bounce them to
-                // an error state with a "Try again" affordance that re-runs `loadRecipes()`.
-                Model(Phase.Error(Res.string.export_recipes_save_cancelled.asTextData()))
+                // Cancel vs. write-failure look the same from the user's seat — bounce them to an
+                // error state with a "Try again" affordance that re-runs `loadRecipes()`.
+                State(stage = Stage.Error(Res.string.export_recipes_save_cancelled.asTextData()))
             }
     }
 
@@ -135,15 +138,15 @@ class ExportRecipesViewModel(
         loadRecipes()
     }
 
-    private inline fun updateReview(transform: (Phase.Review) -> Phase.Review) {
-        _state.update { model ->
-            val review = model.phase as? Phase.Review ?: return@update model
-            model.copy(phase = transform(review))
+    private inline fun updateReview(transform: (Stage.Review) -> Stage.Review) {
+        _state.update { state ->
+            val review = state.stage as? Stage.Review ?: return@update state
+            state.copy(stage = transform(review))
         }
     }
 
-    private fun Recipe.toItem(selected: Boolean): ExportItem =
-        ExportItem(
+    private fun Recipe.toItem(selected: Boolean): Item =
+        Item(
             id = id.toString(),
             title = title,
             subtitle =
@@ -163,6 +166,34 @@ class ExportRecipesViewModel(
         val noun = if (count == 1) "recipe" else "recipes"
         return "chef-mate-$count-$noun.zip"
     }
+
+    data class State(val stage: Stage = Stage.Loading, val pendingSave: PendingArchive? = null)
+
+    sealed interface Stage {
+        data object Loading : Stage
+
+        data object Empty : Stage
+
+        data class Review(val items: List<Item>, val isExporting: Boolean = false) : Stage
+
+        data class Done(val exportedCount: Int) : Stage
+
+        data class Error(val message: TextData) : Stage
+    }
+
+    data class Item(
+        val id: String,
+        val title: String,
+        val subtitle: TextData,
+        val hasImage: Boolean,
+        val selected: Boolean,
+    )
+
+    /**
+     * VM-owned counterpart to the BLoC's `PendingSave`. Kept separate so the VM doesn't reference
+     * the public BLoC contract; the BLoC adapts this into its own `PendingSave` when mapping state.
+     */
+    class PendingArchive(val token: Long, val fileName: String, val archive: ByteArray)
 
     private companion object {
         const val TAG = "ExportRecipesViewModel"

@@ -5,7 +5,7 @@ package com.plusmobileapps.chefmate.recipe.exporter.impl
 
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
-import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc.Phase
+import com.plusmobileapps.chefmate.recipe.exporter.impl.ExportRecipesViewModel.Stage
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -36,19 +36,19 @@ class ExportRecipesViewModelTest {
         )
 
     @Test
-    fun When_recipes_loaded_Then_review_phase_lists_them_pre_selected() {
+    fun When_recipes_loaded_Then_review_stage_lists_them_pre_selected() {
         val vm = createViewModel()
 
-        val review = vm.state.value.phase.shouldBeInstanceOf<Phase.Review>()
-        review.recipes.map { it.title } shouldBe listOf("Garlic Noodles", "Lentil Curry")
-        review.recipes.all { it.selected } shouldBe true
+        val review = vm.state.value.stage.shouldBeInstanceOf<Stage.Review>()
+        review.items.map { it.title } shouldBe listOf("Garlic Noodles", "Lentil Curry")
+        review.items.all { it.selected } shouldBe true
     }
 
     @Test
-    fun When_no_recipes_Then_empty_phase_shown() {
+    fun When_no_recipes_Then_empty_stage_shown() {
         seededRecipes.value = emptyList()
         val vm = createViewModel()
-        vm.state.value.phase shouldBe Phase.Empty
+        vm.state.value.stage shouldBe Stage.Empty
     }
 
     @Test
@@ -69,7 +69,7 @@ class ExportRecipesViewModelTest {
     }
 
     @Test
-    fun When_save_succeeds_Then_done_phase_shown_with_exported_count() {
+    fun When_save_succeeds_Then_done_stage_shown_with_exported_count() {
         val vm = createViewModel()
         vm.onExportClicked()
         val initiallyPending = vm.state.value.pendingSave
@@ -77,19 +77,19 @@ class ExportRecipesViewModelTest {
 
         vm.onSaveCompleted(saved = true)
 
-        val done = vm.state.value.phase.shouldBeInstanceOf<Phase.Done>()
+        val done = vm.state.value.stage.shouldBeInstanceOf<Stage.Done>()
         done.exportedCount shouldBe 2
         vm.state.value.pendingSave shouldBe null
     }
 
     @Test
-    fun When_save_cancelled_Then_error_phase_shown() {
+    fun When_save_cancelled_Then_error_stage_shown() {
         val vm = createViewModel()
         vm.onExportClicked()
 
         vm.onSaveCompleted(saved = false)
 
-        vm.state.value.phase.shouldBeInstanceOf<Phase.Error>()
+        vm.state.value.stage.shouldBeInstanceOf<Stage.Error>()
         vm.state.value.pendingSave shouldBe null
     }
 
@@ -98,11 +98,11 @@ class ExportRecipesViewModelTest {
         val vm = createViewModel()
         vm.onExportClicked()
         vm.onSaveCompleted(saved = false)
-        vm.state.value.phase.shouldBeInstanceOf<Phase.Error>()
+        vm.state.value.stage.shouldBeInstanceOf<Stage.Error>()
 
         vm.onStartOver()
 
-        vm.state.value.phase.shouldBeInstanceOf<Phase.Review>()
+        vm.state.value.stage.shouldBeInstanceOf<Stage.Review>()
     }
 
     private fun recipe(id: Long, title: String): Recipe =

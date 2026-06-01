@@ -6,8 +6,13 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
+import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc
+import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc.ExportItem
+import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc.Model
 import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc.Output
+import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc.PendingSave
+import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc.Phase
 import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesScreen
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
@@ -28,7 +33,7 @@ class ExportRecipesBlocImpl(
 
     private val viewModel = instanceKeeper.getViewModel { viewModelFactory() }
 
-    override val state: StateFlow<ExportRecipesBloc.Model> = viewModel.state
+    override val state: StateFlow<Model> = viewModel.state.mapState { it.toBlocModel() }
 
     override fun onRecipeToggled(id: String) = viewModel.onRecipeToggled(id)
 
@@ -48,4 +53,33 @@ class ExportRecipesBlocImpl(
     override fun Content(modifier: Modifier) {
         ExportRecipesScreen(bloc = this, modifier = modifier)
     }
+
+    private fun ExportRecipesViewModel.State.toBlocModel(): Model =
+        Model(
+            phase =
+                when (val stage = stage) {
+                    ExportRecipesViewModel.Stage.Loading -> Phase.Loading
+                    ExportRecipesViewModel.Stage.Empty -> Phase.Empty
+                    is ExportRecipesViewModel.Stage.Review ->
+                        Phase.Review(
+                            recipes = stage.items.map { it.toExportItem() },
+                            isExporting = stage.isExporting,
+                        )
+                    is ExportRecipesViewModel.Stage.Done -> Phase.Done(stage.exportedCount)
+                    is ExportRecipesViewModel.Stage.Error -> Phase.Error(stage.message)
+                },
+            pendingSave =
+                pendingSave?.let {
+                    PendingSave(token = it.token, fileName = it.fileName, archive = it.archive)
+                },
+        )
+
+    private fun ExportRecipesViewModel.Item.toExportItem(): ExportItem =
+        ExportItem(
+            id = id,
+            title = title,
+            subtitle = subtitle,
+            hasImage = hasImage,
+            selected = selected,
+        )
 }
