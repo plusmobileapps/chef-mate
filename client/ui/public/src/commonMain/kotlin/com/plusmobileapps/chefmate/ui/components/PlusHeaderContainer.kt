@@ -108,6 +108,7 @@ fun PlusHeaderContainer(
                         maxContentWidth = maxContentWidth,
                         topPadding = topPadding,
                         applyHorizontalInsets = applyContentInsets,
+                        horizontalAlignment = horizontalAlignment,
                         content = content,
                     )
                     BottomBarBox(
@@ -156,6 +157,7 @@ fun PlusHeaderContainer(
                         scrollState = scrollState,
                         maxContentWidth = maxContentWidth,
                         applyHorizontalInsets = true,
+                        horizontalAlignment = horizontalAlignment,
                         content = content,
                     )
                     BottomBarBox(
@@ -216,6 +218,7 @@ private fun ScrollingContent(
     maxContentWidth: Dp,
     topPadding: Dp = 0.dp,
     applyHorizontalInsets: Boolean = true,
+    horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     content: @Composable (ColumnScope.() -> Unit),
 ) {
     val baseModifier =
@@ -223,7 +226,8 @@ private fun ScrollingContent(
     val insetModifier =
         if (applyHorizontalInsets) baseModifier.scaffoldContentInsetPadding() else baseModifier
     Column(
-        modifier = if (scrollEnabled) insetModifier.verticalScroll(scrollState) else insetModifier
+        modifier = if (scrollEnabled) insetModifier.verticalScroll(scrollState) else insetModifier,
+        horizontalAlignment = horizontalAlignment,
     ) {
         content()
         if (scrollEnabled) {
