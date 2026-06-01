@@ -13,6 +13,7 @@ import com.plusmobileapps.chefmate.DefaultBlocContext
 import com.plusmobileapps.chefmate.di.TestApplicationComponent
 import com.plusmobileapps.chefmate.di.createTestApplicationComponent
 import com.plusmobileapps.chefmate.fixtures.TestRecipes
+import com.plusmobileapps.chefmate.root.DeepLink
 import com.plusmobileapps.chefmate.root.RootBloc
 import kotlinx.coroutines.test.TestResult
 
@@ -23,10 +24,13 @@ import kotlinx.coroutines.test.TestResult
  * ready to be passed into `App(rootBloc = …)`.
  */
 fun TestApplicationComponent.createRootBloc(
-    lifecycle: LifecycleRegistry = LifecycleRegistry().apply { resume() }
+    lifecycle: LifecycleRegistry = LifecycleRegistry().apply { resume() },
+    deepLink: DeepLink = DeepLink.None,
 ): RootBloc =
     rootBlocFactory.create(
-        DefaultBlocContext(componentContext = DefaultComponentContext(lifecycle = lifecycle))
+        context =
+            DefaultBlocContext(componentContext = DefaultComponentContext(lifecycle = lifecycle)),
+        deepLink = deepLink,
     )
 
 /**

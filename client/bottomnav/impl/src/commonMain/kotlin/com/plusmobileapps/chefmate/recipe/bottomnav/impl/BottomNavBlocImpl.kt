@@ -44,6 +44,7 @@ import kotlinx.serialization.Serializable
 class BottomNavBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<BottomNavBloc.Output>,
+    @Assisted initialTab: BottomNavBloc.Tab?,
     viewModelFactory: Provider<BottomNavViewModel>,
     private val browser: BrowserRootBloc.Factory,
     private val groceryList: GroceryListBloc.Factory,
@@ -65,13 +66,24 @@ class BottomNavBlocImpl(
         childStack(
             source = navigation,
             serializer = Configuration.serializer(),
-            initialStack = { listOf(Configuration.Recipe) },
+            initialStack = { listOf(initialTab.toInitialConfiguration()) },
             handleBackButton = true,
             key = "BottomNavRouter",
             childFactory = ::createChild,
         )
 
+    private fun BottomNavBloc.Tab?.toInitialConfiguration(): Configuration =
+        when (this) {
+            null,
+            BottomNavBloc.Tab.RECIPES -> Configuration.Recipe
+            BottomNavBloc.Tab.GROCERIES -> Configuration.Grocery
+            BottomNavBloc.Tab.MEALS -> Configuration.Meals
+            BottomNavBloc.Tab.BROWSER -> Configuration.Browser
+            BottomNavBloc.Tab.SETTINGS -> Configuration.Settings
+        }
+
     init {
+        initialTab?.let(viewModel::selectTab)
         observeRouter()
     }
 

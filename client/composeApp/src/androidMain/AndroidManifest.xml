@@ -30,6 +30,16 @@
 
                 <data android:mimeType="text/plain" />
             </intent-filter>
+
+            <!-- chefmate:// deeplinks (dev convenience) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="chefmate" />
+            </intent-filter>
         </activity>
     </application>
 

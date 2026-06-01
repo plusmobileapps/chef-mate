@@ -37,15 +37,22 @@ class RootBlocTest {
         Consumer<com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc.Output> =
         Consumer {}
     var authOutput: Consumer<AuthenticationBloc.Output> = Consumer {}
+    var authProps: AuthenticationBloc.Props? = null
     var otpOutput: Consumer<OtpBloc.Output> = Consumer {}
     var otpProps: OtpBloc.Props? = null
     var aiChatOutput: Consumer<AiChatBloc.Output> = Consumer {}
+    var bottomNavInitialTab: BottomNavBloc.Tab? = null
 
-    val rootBloc =
+    fun createRoot(
+        deepLink: DeepLink = DeepLink.None,
+        context: BlocContext = TestBlocContext.create(),
+    ): RootBlocImpl =
         RootBlocImpl(
             context = context,
-            bottomNav = { context, output ->
+            deepLink = deepLink,
+            bottomNav = { _, output, initialTab ->
                 bottomNavOutput = output
+                bottomNavInitialTab = initialTab
                 mock()
             },
             browserRootBlocFactory =
@@ -58,7 +65,7 @@ class RootBlocTest {
                         presentation: BrowserRootBloc.Presentation,
                     ): BrowserRootBloc = mock(MockMode.autoUnit)
                 },
-            recipeRoot = { context, props, output ->
+            recipeRoot = { _, props, output ->
                 recipeOutput = output
                 recipeProps = props
                 mock()
@@ -69,7 +76,8 @@ class RootBlocTest {
                 mock()
             },
             mealPlannerRoot = MealPlannerRootBloc.Factory { _, _, _ -> mock() },
-            authentication = { _, _, output ->
+            authentication = { _, props, output ->
+                authProps = props
                 authOutput = output
                 mock()
             },
@@ -94,6 +102,8 @@ class RootBlocTest {
                 mock()
             },
         )
+
+    val rootBloc = createRoot(context = context)
 
     fun RootBloc.instance(): RootBloc.Child = state.value.active.instance
 
@@ -280,5 +290,52 @@ class RootBlocTest {
 
         rootBloc.instance() should instanceOf<RootBloc.Child.RecipeRoot>()
         recipeProps shouldBe RecipeRootBloc.Props.CreateFromExtracted(extracted, fromAi = true)
+    }
+
+    @Test
+    fun Given_recipe_detail_deeplink_When_initialized_Then_recipe_root_is_on_top() {
+        val root = createRoot(DeepLink.RecipeDetail(recipeId = 42L))
+        root.instance() should instanceOf<RootBloc.Child.RecipeRoot>()
+        root.state.value.backStack.size shouldBe 1
+        recipeProps shouldBe RecipeRootBloc.Props.Detail(recipeId = 42L)
+    }
+
+    @Test
+    fun Given_groceries_deeplink_When_initialized_Then_bottom_nav_uses_groceries_tab() {
+        val root = createRoot(DeepLink.Groceries)
+        root.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
+        root.state.value.backStack.size shouldBe 0
+        bottomNavInitialTab shouldBe BottomNavBloc.Tab.GROCERIES
+    }
+
+    @Test
+    fun Given_meal_planner_deeplink_When_initialized_Then_bottom_nav_uses_meals_tab() {
+        val root = createRoot(DeepLink.MealPlanner)
+        root.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
+        root.state.value.backStack.size shouldBe 0
+        bottomNavInitialTab shouldBe BottomNavBloc.Tab.MEALS
+    }
+
+    @Test
+    fun Given_app_settings_deeplink_When_initialized_Then_settings_root_is_on_top() {
+        val root = createRoot(DeepLink.AppSettings)
+        root.instance() should instanceOf<RootBloc.Child.SettingsRoot>()
+        root.state.value.backStack.size shouldBe 1
+    }
+
+    @Test
+    fun Given_sign_in_deeplink_When_initialized_Then_authentication_shown_with_sign_in_props() {
+        val root = createRoot(DeepLink.SignIn)
+        root.instance() should instanceOf<RootBloc.Child.Authentication>()
+        root.state.value.backStack.size shouldBe 1
+        authProps shouldBe AuthenticationBloc.Props.SignIn
+    }
+
+    @Test
+    fun Given_sign_up_deeplink_When_initialized_Then_authentication_shown_with_sign_up_props() {
+        val root = createRoot(DeepLink.SignUp)
+        root.instance() should instanceOf<RootBloc.Child.Authentication>()
+        root.state.value.backStack.size shouldBe 1
+        authProps shouldBe AuthenticationBloc.Props.SignUp
     }
 }

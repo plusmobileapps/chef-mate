@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.arkivanov.decompose.defaultComponentContext
+import com.plusmobileapps.chefmate.root.DeepLink
 import com.plusmobileapps.chefmate.root.RootBloc
 
 class MainActivity : ComponentActivity() {
@@ -20,6 +21,7 @@ class MainActivity : ComponentActivity() {
             buildRootBloc(
                 componentContext = defaultComponentContext(),
                 applicationComponent = appComponent,
+                deepLink = parseDeepLink(intent),
             )
         setContent { App(rootBloc) }
 
@@ -29,6 +31,12 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleShareIntent(intent)
+    }
+
+    private fun parseDeepLink(intent: Intent?): DeepLink {
+        if (intent?.action != Intent.ACTION_VIEW) return DeepLink.None
+        val data = intent.data?.toString() ?: return DeepLink.None
+        return DeepLink.parse(data)
     }
 
     private fun handleShareIntent(intent: Intent) {

@@ -74,6 +74,6 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
     }
 
     fun interface Factory {
-        fun create(context: BlocContext, output: Consumer<Output>): BottomNavBloc
+        fun create(context: BlocContext, output: Consumer<Output>, initialTab: Tab?): BottomNavBloc
     }
 }
