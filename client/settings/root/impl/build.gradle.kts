@@ -11,6 +11,7 @@ kotlin {
             implementation(projects.client.settings.public)
             implementation(projects.client.bottomnav.public)
             implementation(projects.client.recipe.categories.public)
+            implementation(projects.client.recipe.exporter.public)
             implementation(projects.client.recipe.importer.public)
             implementation(projects.client.ui.public)
             implementation(projects.client.shared)

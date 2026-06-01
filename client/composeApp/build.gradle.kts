@@ -100,6 +100,7 @@ kotlin {
             api(projects.client.recipe.data.impl)
             api(projects.client.recipe.list.impl)
             api(projects.client.recipe.core.impl)
+            api(projects.client.recipe.exporter.impl)
             api(projects.client.recipe.importer.impl)
             api(projects.client.util.impl)
             api(projects.client.settings.impl)

@@ -16,6 +16,7 @@
     <string name="settings">Settings</string>
     <string name="settings_ai_chat">AI Chat</string>
     <string name="import_recipes">Import Recipes</string>
+    <string name="export_recipes">Export Recipes</string>
     <string name="app_settings_title">Settings</string>
     <string name="app_settings_browser_section">Browser</string>
     <string name="app_settings_browser_history_enabled">Save browsing history</string>
