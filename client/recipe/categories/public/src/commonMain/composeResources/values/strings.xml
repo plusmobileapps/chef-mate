@@ -42,4 +42,6 @@
     <string name="recipe_categories_bulk_delete_message_other">{count} categories will be removed from any recipes using them.</string>
     <string name="recipe_categories_empty_user">No custom categories yet — tap the + button to add one.</string>
     <string name="recipe_categories_built_in_label">Built-in</string>
+    <string name="recipe_categories_section_user">Your categories</string>
+    <string name="recipe_categories_section_builtin">Built-in</string>
 </resources>

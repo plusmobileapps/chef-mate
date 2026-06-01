@@ -28,11 +28,11 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -65,6 +65,8 @@ import chefmate.client.recipe.categories.public.generated.resources.recipe_categ
 import chefmate.client.recipe.categories.public.generated.resources.recipe_categories_recipe_count_one
 import chefmate.client.recipe.categories.public.generated.resources.recipe_categories_recipe_count_other
 import chefmate.client.recipe.categories.public.generated.resources.recipe_categories_recipe_count_zero
+import chefmate.client.recipe.categories.public.generated.resources.recipe_categories_section_builtin
+import chefmate.client.recipe.categories.public.generated.resources.recipe_categories_section_user
 import chefmate.client.recipe.categories.public.generated.resources.recipe_categories_select_mode_a11y
 import chefmate.client.recipe.categories.public.generated.resources.recipe_categories_selection_count
 import chefmate.client.recipe.categories.public.generated.resources.recipe_categories_selection_delete_a11y
@@ -193,20 +195,6 @@ internal fun RecipeCategoriesContent(
         // CreateFieldRow) so content doesn't stretch edge-to-edge.
         maxContentWidth = Dp.Unspecified,
         horizontalAlignment = Alignment.CenterHorizontally,
-        // FAB is hidden in selection mode (the trash icon in the bar handles delete) and while
-        // the inline create field is open (the keyboard's Done action is the submit affordance).
-        floatingActionButton = {
-            val createOpen = model.createState is CreateState.Editing
-            if (!model.selectionMode && !createOpen) {
-                FloatingActionButton(onClick = handlers.onCreateClicked) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription =
-                            stringResource(Res.string.recipe_categories_create_a11y),
-                    )
-                }
-            }
-        },
         content = {
             CreateFieldRow(
                 createState = model.createState,
@@ -214,19 +202,17 @@ internal fun RecipeCategoriesContent(
                 onSubmit = handlers.onCreateSubmitted,
                 onCancel = handlers.onCreateCancelled,
             )
-            if (model.categories.isEmpty() && !model.isLoading) {
-                EmptyMessage()
-            } else {
-                CategoryList(
-                    items = model.categories,
-                    selectedIds = model.selectedIds,
-                    selectionMode = model.selectionMode,
-                    onCategoryClicked = handlers.onCategoryClicked,
-                    onCategoryLongClicked = handlers.onCategoryLongClicked,
-                    onRenameRequested = handlers.onRenameRequested,
-                    onDeleteRequested = handlers.onDeleteRequested,
-                )
-            }
+            CategoryList(
+                items = model.categories,
+                selectedIds = model.selectedIds,
+                selectionMode = model.selectionMode,
+                createOpen = model.createState is CreateState.Editing,
+                onCategoryClicked = handlers.onCategoryClicked,
+                onCategoryLongClicked = handlers.onCategoryLongClicked,
+                onRenameRequested = handlers.onRenameRequested,
+                onDeleteRequested = handlers.onDeleteRequested,
+                onCreateClicked = handlers.onCreateClicked,
+            )
         },
     )
 
@@ -333,21 +319,69 @@ private fun CreateFieldRow(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CategoryList(
     items: List<CategoryItem>,
     selectedIds: Set<Long>,
     selectionMode: Boolean,
+    createOpen: Boolean,
     onCategoryClicked: (CategoryItem) -> Unit,
     onCategoryLongClicked: (CategoryItem) -> Unit,
     onRenameRequested: (CategoryItem) -> Unit,
     onDeleteRequested: (CategoryItem) -> Unit,
+    onCreateClicked: () -> Unit,
 ) {
+    // Partition once per render; the upstream flow already sorts by name, and stable LazyColumn
+    // keys mean reorder-on-create animates cleanly.
+    val (userItems, builtinItems) = items.partition { !it.isBuiltin }
+
     LazyColumn(
         modifier = Modifier.fillMaxWidth().fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        items(items, key = { it.rowKey() }) { item ->
+        stickyHeader(key = "header-user") {
+            SectionHeader(
+                title = stringResource(Res.string.recipe_categories_section_user),
+                trailing = {
+                    // Hide the create affordance during selection mode (the trash icon in the bar
+                    // owns destructive flow) and while the inline create field is already open.
+                    if (!selectionMode && !createOpen) {
+                        IconButton(onClick = onCreateClicked) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription =
+                                    stringResource(Res.string.recipe_categories_create_a11y),
+                            )
+                        }
+                    }
+                },
+            )
+        }
+        if (userItems.isEmpty()) {
+            item(key = "user-empty") {
+                EmptyUserSectionHint()
+            }
+        } else {
+            items(userItems, key = { it.rowKey() }) { item ->
+                CategoryRow(
+                    item = item,
+                    selected = item.id in selectedIds,
+                    selectionMode = selectionMode,
+                    onClick = { onCategoryClicked(item) },
+                    onLongClick = { onCategoryLongClicked(item) },
+                    onRenameClicked = { onRenameRequested(item) },
+                    onDeleteClicked = { onDeleteRequested(item) },
+                )
+            }
+        }
+        stickyHeader(key = "header-builtin") {
+            SectionHeader(
+                title = stringResource(Res.string.recipe_categories_section_builtin),
+                trailing = {},
+            )
+        }
+        items(builtinItems, key = { it.rowKey() }) { item ->
             CategoryRow(
                 item = item,
                 selected = item.id in selectedIds,
@@ -358,6 +392,50 @@ private fun CategoryList(
                 onDeleteClicked = { onDeleteRequested(item) },
             )
         }
+    }
+}
+
+@Composable
+private fun SectionHeader(title: String, trailing: @Composable () -> Unit) {
+    Surface(
+        modifier =
+            Modifier.widthIn(max = PlusHeaderContainerDefaults.MaxContentWidth).fillMaxWidth(),
+        color = ChefMateTheme.colorScheme.background,
+    ) {
+        Row(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .heightIn(min = 48.dp)
+                    .padding(start = ChefMateTheme.dimens.paddingNormal),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = title,
+                style = ChefMateTheme.typography.titleSmall,
+                color = ChefMateTheme.colorScheme.primary,
+                modifier = Modifier.weight(1f),
+            )
+            trailing()
+        }
+    }
+}
+
+@Composable
+private fun EmptyUserSectionHint() {
+    Box(
+        modifier =
+            Modifier.widthIn(max = PlusHeaderContainerDefaults.MaxContentWidth)
+                .fillMaxWidth()
+                .padding(
+                    horizontal = ChefMateTheme.dimens.paddingNormal,
+                    vertical = ChefMateTheme.dimens.paddingSmall,
+                )
+    ) {
+        Text(
+            text = stringResource(Res.string.recipe_categories_empty_user),
+            style = MaterialTheme.typography.bodyMedium,
+            color = ChefMateTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -461,23 +539,6 @@ private fun CategoryRowOverflowMenu(
                 },
             )
         }
-    }
-}
-
-@Composable
-private fun EmptyMessage() {
-    Box(
-        modifier =
-            Modifier.widthIn(max = PlusHeaderContainerDefaults.MaxContentWidth)
-                .fillMaxWidth()
-                .padding(ChefMateTheme.dimens.paddingNormal),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = stringResource(Res.string.recipe_categories_empty_user),
-            style = MaterialTheme.typography.bodyMedium,
-            color = ChefMateTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
 
