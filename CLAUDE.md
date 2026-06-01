@@ -56,6 +56,7 @@ The `plusLibrary` extension in each module's `build.gradle.kts` controls convent
 - `enableDi = true` — sets up Metro (kotlin-inject) dependency injection
 - `enableTesting = true` — adds test dependencies (mokkery, turbine, kotest, coroutines-test)
 - `enableDatabaseTesting = true` — adds `client/database/testing` (in-memory SQLDelight) to test dependencies and links sqlite3 for iOS. Use this when tests need a real database via `createTestDatabase()`. Requires `enableTesting = true`.
+- `uiTest = true` — adds `compose.uiTest` as an `api` dependency on `commonMain`. Used by `impl-robots` modules that expose reusable Compose UI test robots. Requires the `compose` plugin to also be applied.
 
 ### BLoC Pattern (Decompose)
 
@@ -135,7 +136,7 @@ See `client/cook/public/.../CookModePreviews.kt` and `client/ui/screenshot-test/
 **Rule: every new feature must ship with a multiplatform Compose UI test using the `impl-robots` pattern.** Robots wrap `ComposeUiTest` with domain-level vocabulary so test cases read as user flows, not semantics-tree lookups. They run on all client targets (Android, iOS, Desktop, Web) because they live in `commonMain`.
 
 **Pattern:**
-1. For a new feature `client/<feature>/<sub>/impl`, create a sibling module `client/<feature>/<sub>/impl-robots` with a `build.gradle.kts` that applies `kmpLibrary` + `compose`, exposes `api(compose.uiTest)`, and `implementation(projects.client.<feature>.<sub>.public)`. See `client/recipe/list/impl-robots/build.gradle.kts` for the minimal shape.
+1. For a new feature `client/<feature>/<sub>/impl`, create a sibling module `client/<feature>/<sub>/impl-robots` with a `build.gradle.kts` that applies `kmpLibrary` + `compose`, sets `plusLibrary { uiTest = true }` (which wires the `compose.uiTest` `api` dependency), and adds `implementation(projects.client.<feature>.<sub>.public)`. See `client/recipe/list/impl-robots/build.gradle.kts` for the minimal shape.
 2. Add `<Feature>Robot.kt` under `src/commonMain/kotlin/.../<feature>/robots/`. Take `ComposeUiTest` in the constructor. Scope every node lookup to a descendant of the screen's root test tag (`hasAnyAncestor(hasTestTag(<Feature>TestTags.SCREEN))`) so titles rendered on other screens don't satisfy matchers. Provide a factory extension (e.g. `fun ComposeUiTest.recipeList() = …`). Return `<Feature>Robot` from every action method for chaining.
 3. Add a test in `client/composeApp/src/commonTest/...` (or the feature's own test module) that runs through `runRootBlocTest { … }` and composes one or more robots into a user flow. Reference example: `client/composeApp/src/commonTest/.../RootNavigationUiTest.kt`.
 4. For async UI states, expose an `awaitDisplayed()` on the robot using `waitUntilExactlyOneExists` — see `client/recipe/core/impl-robots/.../RecipeDetailRobot.kt`.

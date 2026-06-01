@@ -289,17 +289,16 @@ plugins {
 }
 
 kotlin {
-    sourceSets {
-        commonMain.dependencies {
-            @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
-            api(compose.uiTest)
-            implementation(projects.client.recipe.list.public)
-        }
-    }
+    sourceSets { commonMain.dependencies { implementation(projects.client.recipe.list.public) } }
 }
 
-plusLibrary { namespace = "com.plusmobileapps.chefmate.recipe.list.robots" }
+plusLibrary {
+    namespace = "com.plusmobileapps.chefmate.recipe.list.robots"
+    uiTest = true
+}
 ```
+
+`uiTest = true` is what wires the `compose.uiTest` `api` dependency into `commonMain` — no manual `@OptIn(ExperimentalComposeLibrary::class)` needed.
 
 **Robot class** — takes `ComposeUiTest` in its constructor; an entry-point extension on `ComposeUiTest` is the only way tests construct it:
 
