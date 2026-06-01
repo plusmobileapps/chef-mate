@@ -263,13 +263,17 @@ private fun CreateFieldRow(
     onCancel: () -> Unit,
 ) {
     AnimatedContent(
-        targetState = createState is CreateState.Editing,
+        targetState = createState,
+        // Animate only on the Hidden ↔ Editing flip — without a stable key the outgoing slot
+        // would re-derive its state from the outer composition after the transition starts and
+        // crash trying to cast Hidden to Editing.
+        contentKey = { it is CreateState.Editing },
         transitionSpec = { fadeIn() togetherWith fadeOut() },
-    ) { editing ->
-        if (editing) {
+    ) { state ->
+        if (state is CreateState.Editing) {
             val focusRequester = remember { FocusRequester() }
             LaunchedEffect(Unit) { focusRequester.requestFocus() }
-            val text = (createState as CreateState.Editing).text
+            val text = state.text
             Row(
                 modifier =
                     Modifier.fillMaxWidth()
