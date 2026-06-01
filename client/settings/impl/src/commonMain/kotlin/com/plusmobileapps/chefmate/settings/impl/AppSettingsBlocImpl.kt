@@ -58,6 +58,10 @@ class AppSettingsBlocImpl(
         output.onNext(Output.OpenImportRecipes)
     }
 
+    override fun onRecipeCategoriesClicked() {
+        output.onNext(Output.OpenRecipeCategories)
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         AppSettingsScreen(bloc = this, modifier = modifier)

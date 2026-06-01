@@ -27,6 +27,8 @@
     <string name="app_settings_navigation_section">Navigation</string>
     <string name="app_settings_bottom_nav_order">Bottom navigation order</string>
     <string name="app_settings_backup_section">Backup</string>
+    <string name="app_settings_recipes_section">Recipes</string>
+    <string name="app_settings_recipe_categories">Categories</string>
     <string name="developer_settings">Developer Settings</string>
     <string name="version_label">Version {version}</string>
 </resources>

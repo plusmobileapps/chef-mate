@@ -1,0 +1,47 @@
+<resources>
+    <!-- Built-in category labels (rendered wherever categories are listed) -->
+    <string name="recipe_category_breakfast">Breakfast</string>
+    <string name="recipe_category_lunch">Lunch</string>
+    <string name="recipe_category_dinner">Dinner</string>
+    <string name="recipe_category_appetizer">Appetizer</string>
+    <string name="recipe_category_side">Side</string>
+    <string name="recipe_category_dessert">Dessert</string>
+    <string name="recipe_category_snack">Snack</string>
+    <string name="recipe_category_drink">Drink</string>
+    <string name="recipe_category_other">Other</string>
+    <string name="recipe_category_ai">AI</string>
+
+    <!-- Shared rename/delete dialogs (used by both the picker sheet and the management screen) -->
+    <string name="category_more_a11y">More actions for {category}</string>
+    <string name="category_rename">Rename</string>
+    <string name="category_delete">Delete</string>
+    <string name="category_rename_title">Rename category</string>
+    <string name="category_rename_placeholder">Category name</string>
+    <string name="category_rename_confirm">Save</string>
+    <string name="category_delete_title">Delete category?</string>
+    <string name="category_delete_message">{category} will be removed from this and any other recipes using it.</string>
+    <string name="category_delete_confirm">Delete</string>
+    <string name="category_dialog_cancel">Cancel</string>
+
+    <!-- Recipe Categories management screen (Settings → Recipes → Categories) -->
+    <string name="recipe_categories_title">Categories</string>
+    <string name="recipe_categories_back">Back</string>
+    <string name="recipe_categories_create_a11y">Create category</string>
+    <string name="recipe_categories_create_placeholder">New category name</string>
+    <string name="recipe_categories_create_cancel_a11y">Cancel</string>
+    <string name="recipe_categories_recipe_count_one">1 recipe</string>
+    <string name="recipe_categories_recipe_count_other">{count} recipes</string>
+    <string name="recipe_categories_recipe_count_zero">No recipes</string>
+    <string name="recipe_categories_select_mode_a11y">Select categories</string>
+    <string name="recipe_categories_selection_empty_title">Select categories</string>
+    <string name="recipe_categories_selection_count">{count} selected</string>
+    <string name="recipe_categories_selection_close_a11y">Exit selection mode</string>
+    <string name="recipe_categories_selection_delete_a11y">Delete selected categories</string>
+    <string name="recipe_categories_bulk_delete_title">Delete selected categories?</string>
+    <string name="recipe_categories_bulk_delete_message_one">1 category will be removed from any recipes using it.</string>
+    <string name="recipe_categories_bulk_delete_message_other">{count} categories will be removed from any recipes using them.</string>
+    <string name="recipe_categories_empty_user">No custom categories yet — tap the + button to add one.</string>
+    <string name="recipe_categories_built_in_label">Built-in</string>
+    <string name="recipe_categories_section_user">Your categories</string>
+    <string name="recipe_categories_section_builtin">Built-in</string>
+</resources>

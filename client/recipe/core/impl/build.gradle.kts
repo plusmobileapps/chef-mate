@@ -9,6 +9,7 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.client.recipe.data.public)
             implementation(projects.client.recipe.core.public)
+            implementation(projects.client.recipe.categories.public)
             implementation(projects.client.ui.public)
             implementation(libs.arkivanov.decompose.core)
             implementation(libs.arkivanov.decompose.compose.extensions)

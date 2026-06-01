@@ -50,43 +50,24 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import chefmate.client.recipe.categories.public.generated.resources.Res as CategoriesRes
+import chefmate.client.recipe.categories.public.generated.resources.category_delete
+import chefmate.client.recipe.categories.public.generated.resources.category_more_a11y
+import chefmate.client.recipe.categories.public.generated.resources.category_rename
 import chefmate.client.recipe.core.public.generated.resources.Res
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_ai
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_appetizer
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_breakfast
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_dessert
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_dinner
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_drink
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_lunch
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_other
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_side
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_category_snack
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_create_a11y
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_create_cancel_a11y
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_create_placeholder
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_delete
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_delete_confirm
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_delete_message
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_delete_title
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_dialog_cancel
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_more_a11y
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_picker_title
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_rename
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_rename_confirm
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_rename_placeholder
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_rename_title
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category_save
+import com.plusmobileapps.chefmate.recipe.categories.DeleteCategoryDialog
+import com.plusmobileapps.chefmate.recipe.categories.RenameCategoryDialog
+import com.plusmobileapps.chefmate.recipe.categories.pickerLabelRes
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
-import com.plusmobileapps.chefmate.text.ResourceString
-import com.plusmobileapps.chefmate.ui.components.PlusButton
-import com.plusmobileapps.chefmate.ui.components.PlusButtonVariant
-import com.plusmobileapps.chefmate.ui.components.PlusDialog
-import com.plusmobileapps.chefmate.ui.components.PlusDialogScaffold
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -398,7 +379,7 @@ private fun UserCategoryOverflowMenu(
                 imageVector = Icons.Default.MoreVert,
                 contentDescription =
                     PhraseModel(
-                            Res.string.edit_recipe_field_category_more_a11y,
+                            CategoriesRes.string.category_more_a11y,
                             "category" to FixedString(categoryName),
                         )
                         .localized(),
@@ -406,14 +387,14 @@ private fun UserCategoryOverflowMenu(
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             DropdownMenuItem(
-                text = { Text(stringResource(Res.string.edit_recipe_field_category_rename)) },
+                text = { Text(stringResource(CategoriesRes.string.category_rename)) },
                 onClick = {
                     expanded = false
                     onRenameClicked()
                 },
             )
             DropdownMenuItem(
-                text = { Text(stringResource(Res.string.edit_recipe_field_category_delete)) },
+                text = { Text(stringResource(CategoriesRes.string.category_delete)) },
                 onClick = {
                     expanded = false
                     onDeleteClicked()
@@ -421,70 +402,6 @@ private fun UserCategoryOverflowMenu(
             )
         }
     }
-}
-
-@Composable
-private fun RenameCategoryDialog(
-    initialName: String,
-    onConfirm: (String) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    var name by remember { mutableStateOf(initialName) }
-    val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(Unit) { focusRequester.requestFocus() }
-    PlusDialogScaffold(
-        onDismissRequest = onDismiss,
-        header = { Text(stringResource(Res.string.edit_recipe_field_category_rename_title)) },
-        content = {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                placeholder = {
-                    Text(stringResource(Res.string.edit_recipe_field_category_rename_placeholder))
-                },
-                singleLine = true,
-                keyboardOptions =
-                    KeyboardOptions(imeAction = ImeAction.Done, autoCorrectEnabled = false),
-                keyboardActions =
-                    KeyboardActions(onDone = { if (name.isNotBlank()) onConfirm(name) }),
-                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
-            )
-        },
-        footer = {
-            Row(horizontalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingNormal)) {
-                PlusButton(
-                    text = ResourceString(Res.string.edit_recipe_field_category_dialog_cancel),
-                    variant = PlusButtonVariant.SECONDARY,
-                    onClick = onDismiss,
-                )
-                PlusButton(
-                    text = ResourceString(Res.string.edit_recipe_field_category_rename_confirm),
-                    enabled = name.isNotBlank(),
-                    onClick = { onConfirm(name) },
-                )
-            }
-        },
-    )
-}
-
-@Composable
-private fun DeleteCategoryDialog(
-    categoryName: String,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-) {
-    PlusDialog(
-        title = ResourceString(Res.string.edit_recipe_field_category_delete_title),
-        message =
-            PhraseModel(
-                Res.string.edit_recipe_field_category_delete_message,
-                "category" to FixedString(categoryName),
-            ),
-        confirmButtonText = ResourceString(Res.string.edit_recipe_field_category_delete_confirm),
-        dismissButtonText = ResourceString(Res.string.edit_recipe_field_category_dialog_cancel),
-        onConfirmClick = onConfirm,
-        onDismissRequest = onDismiss,
-    )
 }
 
 internal sealed interface CategoryCreateState {
@@ -501,18 +418,4 @@ private fun CategoryCreateState.headerKey(): Int =
     when (this) {
         CategoryCreateState.Hidden -> 0
         is CategoryCreateState.Editing -> 1
-    }
-
-internal fun BuiltinCategory.pickerLabelRes(): StringResource =
-    when (this) {
-        BuiltinCategory.BREAKFAST -> Res.string.edit_recipe_category_breakfast
-        BuiltinCategory.LUNCH -> Res.string.edit_recipe_category_lunch
-        BuiltinCategory.DINNER -> Res.string.edit_recipe_category_dinner
-        BuiltinCategory.APPETIZER -> Res.string.edit_recipe_category_appetizer
-        BuiltinCategory.SIDE -> Res.string.edit_recipe_category_side
-        BuiltinCategory.DESSERT -> Res.string.edit_recipe_category_dessert
-        BuiltinCategory.SNACK -> Res.string.edit_recipe_category_snack
-        BuiltinCategory.DRINK -> Res.string.edit_recipe_category_drink
-        BuiltinCategory.OTHER -> Res.string.edit_recipe_category_other
-        BuiltinCategory.AI -> Res.string.edit_recipe_category_ai
     }

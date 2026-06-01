@@ -29,3 +29,8 @@ ORDER BY Category.name ASC;
 
 getRecipeIdsForCategory:
 SELECT recipeId FROM RecipeCategory WHERE categoryId = ?;
+
+countByCategory:
+SELECT categoryId, COUNT(*) AS recipeCount
+FROM RecipeCategory
+GROUP BY categoryId;

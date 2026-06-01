@@ -25,6 +25,8 @@ import chefmate.client.settings.public.generated.resources.app_settings_clear_hi
 import chefmate.client.settings.public.generated.resources.app_settings_clear_history_dialog_message
 import chefmate.client.settings.public.generated.resources.app_settings_clear_history_dialog_title
 import chefmate.client.settings.public.generated.resources.app_settings_navigation_section
+import chefmate.client.settings.public.generated.resources.app_settings_recipe_categories
+import chefmate.client.settings.public.generated.resources.app_settings_recipes_section
 import chefmate.client.settings.public.generated.resources.app_settings_title
 import chefmate.client.settings.public.generated.resources.import_recipes
 import com.plusmobileapps.chefmate.settings.AppSettingsBloc
@@ -70,6 +72,12 @@ fun AppSettingsScreen(bloc: AppSettingsBloc, modifier: Modifier = Modifier) {
             SettingsRow(
                 name = Res.string.app_settings_clear_history.asTextData(),
                 onClick = bloc::onClearHistoryClicked,
+            )
+            HorizontalDivider()
+            SectionHeader(name = Res.string.app_settings_recipes_section.asTextData())
+            SettingsRow(
+                name = Res.string.app_settings_recipe_categories.asTextData(),
+                onClick = bloc::onRecipeCategoriesClicked,
             )
             HorizontalDivider()
             SectionHeader(name = Res.string.app_settings_backup_section.asTextData())

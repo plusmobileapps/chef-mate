@@ -28,6 +28,8 @@ private fun appSettingsBloc(model: AppSettingsBloc.Model): AppSettingsBloc =
 
         override fun onImportRecipesClicked() = Unit
 
+        override fun onRecipeCategoriesClicked() = Unit
+
         @Composable
         override fun Content(modifier: Modifier) {
             AppSettingsScreen(bloc = this, modifier = modifier)

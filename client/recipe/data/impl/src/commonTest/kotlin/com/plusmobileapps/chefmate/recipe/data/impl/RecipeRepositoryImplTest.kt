@@ -50,6 +50,7 @@ class RecipeRepositoryImplTest {
     private val categoryRepository =
         CategoryRepositoryImpl(
             db = db.categoryQueries,
+            recipeCategoryQueries = db.recipeCategoryQueries,
             ioContext = testDispatcher,
             remoteDataSource = NoopCategoryRemote(),
             authRepository = fakeAuth,

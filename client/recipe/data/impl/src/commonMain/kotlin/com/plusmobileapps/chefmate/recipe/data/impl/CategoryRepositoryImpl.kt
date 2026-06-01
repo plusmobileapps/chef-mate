@@ -5,11 +5,13 @@ import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.database.Category as DbCategory
 import com.plusmobileapps.chefmate.database.CategoryQueries
+import com.plusmobileapps.chefmate.database.RecipeCategoryQueries
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.CategoryRepository
+import com.plusmobileapps.chefmate.recipe.data.CategoryWithCount
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.recipe.data.impl.remote.CategoryRemoteDataSource
 import com.plusmobileapps.chefmate.recipe.data.impl.remote.RemoteCategory
@@ -22,6 +24,7 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -35,6 +38,7 @@ import kotlinx.coroutines.withContext
 @ContributesBinding(AppScope::class)
 class CategoryRepositoryImpl(
     private val db: CategoryQueries,
+    private val recipeCategoryQueries: RecipeCategoryQueries,
     @IO private val ioContext: CoroutineContext,
     private val remoteDataSource: CategoryRemoteDataSource,
     private val authRepository: AuthenticationRepository,
@@ -61,6 +65,21 @@ class CategoryRepositoryImpl(
             .asFlow()
             .map { it.executeAsList().map { row -> row.toCategory() } }
             .flowOn(ioContext)
+
+    override fun observeCategoriesWithCounts(): Flow<List<CategoryWithCount>> {
+        val concreteFlow = observeUserCategories()
+        val countsFlow =
+            recipeCategoryQueries
+                .countByCategory()
+                .asFlow()
+                .map { query ->
+                    query.executeAsList().associate { row -> row.categoryId to row.recipeCount }
+                }
+                .flowOn(ioContext)
+        return concreteFlow.combine(countsFlow) { concrete, counts ->
+            mergeWithBuiltins(concrete, counts)
+        }
+    }
 
     override suspend fun findBuiltin(builtin: BuiltinCategory): Category? {
         val ownerId = authRepository.state.value.userIdOrNull()
@@ -280,6 +299,36 @@ class CategoryRepositoryImpl(
         )
 
     private fun AuthState.userIdOrNull(): String? = (this as? AuthState.Authenticated)?.user?.userId
+
+    /**
+     * Joins persisted categories with their recipe counts and synthesizes a placeholder row for
+     * every [BuiltinCategory] preset that hasn't been materialized yet, so the management screen
+     * always shows the full preset list.
+     */
+    private fun mergeWithBuiltins(
+        concrete: List<Category>,
+        counts: Map<Long, Long>,
+    ): List<CategoryWithCount> {
+        val materializedBuiltinIds = concrete.mapNotNull { it.builtinId }.toSet()
+        val syntheticBuiltins =
+            BuiltinCategory.entries
+                .filter { it.id !in materializedBuiltinIds }
+                .map { builtin ->
+                    CategoryWithCount(
+                        category =
+                            Category(
+                                id = 0L,
+                                name = builtin.canonicalName(),
+                                builtinId = builtin.id,
+                            ),
+                        recipeCount = 0,
+                    )
+                }
+        val concreteWithCounts = concrete.map { category ->
+            CategoryWithCount(category = category, recipeCount = counts[category.id]?.toInt() ?: 0)
+        }
+        return (concreteWithCounts + syntheticBuiltins).sortedBy { it.category.name.lowercase() }
+    }
 
     /**
      * The English-language fallback name stored on the row. UI should resolve presets via

@@ -55,6 +55,15 @@ import chefmate.client.ui.public.generated.resources.close
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
 
+object PlusHeaderContainerDefaults {
+    /**
+     * Default cap applied to the content column. Exposed so callers that opt out (passing
+     * `Dp.Unspecified` to keep the scroll surface full-width on wide windows) can still cap
+     * individual rows at the same width for visual consistency.
+     */
+    val MaxContentWidth: Dp = 600.dp
+}
+
 @Composable
 fun PlusHeaderContainer(
     data: PlusHeaderData,
@@ -62,7 +71,7 @@ fun PlusHeaderContainer(
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     scrollEnabled: Boolean = true,
-    maxContentWidth: Dp = 600.dp,
+    maxContentWidth: Dp = PlusHeaderContainerDefaults.MaxContentWidth,
     snackbarHost: @Composable () -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
     floatingToolbar: (@Composable () -> Unit)? = null,
@@ -99,6 +108,7 @@ fun PlusHeaderContainer(
                         maxContentWidth = maxContentWidth,
                         topPadding = topPadding,
                         applyHorizontalInsets = applyContentInsets,
+                        horizontalAlignment = horizontalAlignment,
                         content = content,
                     )
                     BottomBarBox(
@@ -147,6 +157,7 @@ fun PlusHeaderContainer(
                         scrollState = scrollState,
                         maxContentWidth = maxContentWidth,
                         applyHorizontalInsets = true,
+                        horizontalAlignment = horizontalAlignment,
                         content = content,
                     )
                     BottomBarBox(
@@ -207,6 +218,7 @@ private fun ScrollingContent(
     maxContentWidth: Dp,
     topPadding: Dp = 0.dp,
     applyHorizontalInsets: Boolean = true,
+    horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     content: @Composable (ColumnScope.() -> Unit),
 ) {
     val baseModifier =
@@ -214,7 +226,8 @@ private fun ScrollingContent(
     val insetModifier =
         if (applyHorizontalInsets) baseModifier.scaffoldContentInsetPadding() else baseModifier
     Column(
-        modifier = if (scrollEnabled) insetModifier.verticalScroll(scrollState) else insetModifier
+        modifier = if (scrollEnabled) insetModifier.verticalScroll(scrollState) else insetModifier,
+        horizontalAlignment = horizontalAlignment,
     ) {
         content()
         if (scrollEnabled) {
