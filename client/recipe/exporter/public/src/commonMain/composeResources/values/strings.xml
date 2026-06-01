@@ -1,0 +1,18 @@
+<resources>
+    <string name="export_recipes_title">Export Recipes</string>
+    <string name="export_recipes_loading">Loading your recipes…</string>
+    <string name="export_recipes_empty_headline">No recipes to export</string>
+    <string name="export_recipes_empty_body">Save a recipe to ChefMate first, then come back here to bundle it up.</string>
+    <string name="export_recipes_review_headline">Select recipes to export</string>
+    <string name="export_recipes_select_all">Select all</string>
+    <string name="export_recipes_deselect_all">Deselect all</string>
+    <string name="export_recipes_export_button">Export {count}</string>
+    <string name="export_recipes_generating">Building archive…</string>
+    <string name="export_recipes_item_subtitle">{ingredients} ingredients · {steps} steps</string>
+    <string name="export_recipes_done_headline">Exported {count} recipes</string>
+    <string name="export_recipes_done_button">Done</string>
+    <string name="export_recipes_start_over">Export again</string>
+    <string name="export_recipes_save_cancelled">Save was cancelled. Try again whenever you’re ready.</string>
+    <string name="export_recipes_save_failed">We couldn’t save that archive. Please try again.</string>
+    <string name="export_recipes_generate_failed">We couldn’t build the archive. Please try again.</string>
+</resources>

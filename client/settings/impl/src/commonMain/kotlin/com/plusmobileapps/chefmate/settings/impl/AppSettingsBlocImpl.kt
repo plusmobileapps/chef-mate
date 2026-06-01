@@ -58,6 +58,10 @@ class AppSettingsBlocImpl(
         output.onNext(Output.OpenImportRecipes)
     }
 
+    override fun onExportRecipesClicked() {
+        output.onNext(Output.OpenExportRecipes)
+    }
+
     override fun onRecipeCategoriesClicked() {
         output.onNext(Output.OpenRecipeCategories)
     }

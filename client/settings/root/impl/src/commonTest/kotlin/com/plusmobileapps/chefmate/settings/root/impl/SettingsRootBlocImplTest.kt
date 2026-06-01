@@ -5,6 +5,7 @@ package com.plusmobileapps.chefmate.settings.root.impl
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
 import com.plusmobileapps.chefmate.recipe.categories.RecipeCategoriesBloc
+import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc
 import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc
 import com.plusmobileapps.chefmate.settings.AppSettingsBloc
 import com.plusmobileapps.chefmate.settings.root.SettingsRootBloc
@@ -21,6 +22,7 @@ class SettingsRootBlocImplTest {
     var appSettingsOutput: Consumer<AppSettingsBloc.Output> = Consumer {}
     var bottomNavOrderOutput: Consumer<BottomNavOrderBloc.Output> = Consumer {}
     var importRecipesOutput: Consumer<ImportRecipesBloc.Output> = Consumer {}
+    var exportRecipesOutput: Consumer<ExportRecipesBloc.Output> = Consumer {}
     var recipeCategoriesOutput: Consumer<RecipeCategoriesBloc.Output> = Consumer {}
 
     var rootOutput: SettingsRootBloc.Output? = null
@@ -39,6 +41,10 @@ class SettingsRootBlocImplTest {
             },
             importRecipes = { _, output ->
                 importRecipesOutput = output
+                mock()
+            },
+            exportRecipes = { _, output ->
+                exportRecipesOutput = output
                 mock()
             },
             recipeCategories = { _, output ->
@@ -80,6 +86,20 @@ class SettingsRootBlocImplTest {
     fun Given_import_recipes_When_it_outputs_back_Then_app_settings_is_shown() {
         appSettingsOutput.onNext(AppSettingsBloc.Output.OpenImportRecipes)
         importRecipesOutput.onNext(ImportRecipesBloc.Output.Back)
+        bloc.instance() should instanceOf<SettingsRootBloc.Child.AppSettings>()
+    }
+
+    @Test
+    fun When_app_settings_opens_export_recipes_Then_export_recipes_is_shown() {
+        appSettingsOutput.onNext(AppSettingsBloc.Output.OpenExportRecipes)
+        bloc.instance() should instanceOf<SettingsRootBloc.Child.ExportRecipes>()
+        bloc.routerState.value.backStack.size shouldBe 1
+    }
+
+    @Test
+    fun Given_export_recipes_When_it_outputs_back_Then_app_settings_is_shown() {
+        appSettingsOutput.onNext(AppSettingsBloc.Output.OpenExportRecipes)
+        exportRecipesOutput.onNext(ExportRecipesBloc.Output.Back)
         bloc.instance() should instanceOf<SettingsRootBloc.Child.AppSettings>()
     }
 

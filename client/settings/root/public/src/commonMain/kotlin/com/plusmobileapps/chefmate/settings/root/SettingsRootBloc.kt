@@ -8,6 +8,7 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
 import com.plusmobileapps.chefmate.recipe.categories.RecipeCategoriesBloc
+import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc
 import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc
 import com.plusmobileapps.chefmate.settings.AppSettingsBloc
 import com.plusmobileapps.chefmate.ui.BlocScreen
@@ -19,6 +20,8 @@ interface SettingsRootBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
         data class AppSettings(val bloc: AppSettingsBloc) : Child(), BlocScreen by bloc
 
         data class BottomNavOrder(val bloc: BottomNavOrderBloc) : Child(), BlocScreen by bloc
+
+        data class ExportRecipes(val bloc: ExportRecipesBloc) : Child(), BlocScreen by bloc
 
         data class ImportRecipes(val bloc: ImportRecipesBloc) : Child(), BlocScreen by bloc
 

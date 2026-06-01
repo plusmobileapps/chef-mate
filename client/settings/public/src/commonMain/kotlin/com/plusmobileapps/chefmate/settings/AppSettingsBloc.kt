@@ -23,6 +23,8 @@ interface AppSettingsBloc : BackHandlerOwner, BlocScreen {
 
     fun onImportRecipesClicked()
 
+    fun onExportRecipesClicked()
+
     fun onRecipeCategoriesClicked()
 
     data class Model(
@@ -36,6 +38,8 @@ interface AppSettingsBloc : BackHandlerOwner, BlocScreen {
         data object OpenBottomNavOrder : Output()
 
         data object OpenImportRecipes : Output()
+
+        data object OpenExportRecipes : Output()
 
         data object OpenRecipeCategories : Output()
     }

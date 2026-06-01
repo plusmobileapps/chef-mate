@@ -28,6 +28,7 @@ import chefmate.client.settings.public.generated.resources.app_settings_navigati
 import chefmate.client.settings.public.generated.resources.app_settings_recipe_categories
 import chefmate.client.settings.public.generated.resources.app_settings_recipes_section
 import chefmate.client.settings.public.generated.resources.app_settings_title
+import chefmate.client.settings.public.generated.resources.export_recipes
 import chefmate.client.settings.public.generated.resources.import_recipes
 import com.plusmobileapps.chefmate.settings.AppSettingsBloc
 import com.plusmobileapps.chefmate.text.TextData
@@ -84,6 +85,11 @@ fun AppSettingsScreen(bloc: AppSettingsBloc, modifier: Modifier = Modifier) {
             SettingsRow(
                 name = Res.string.import_recipes.asTextData(),
                 onClick = bloc::onImportRecipesClicked,
+            )
+            HorizontalDivider()
+            SettingsRow(
+                name = Res.string.export_recipes.asTextData(),
+                onClick = bloc::onExportRecipesClicked,
             )
         },
     )
