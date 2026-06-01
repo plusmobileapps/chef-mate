@@ -262,7 +262,7 @@ class RecipeListBlocImplTest {
     }
 
     @Test
-    fun When_export_clicked_with_selection_Then_OpenExportRecipes_carries_ids_and_exits_mode() =
+    fun When_export_clicked_with_selection_Then_OpenExportRecipes_carries_ids_and_selection_persists() =
         runTest {
             bloc.state.test {
                 awaitItem()
@@ -276,12 +276,32 @@ class RecipeListBlocImplTest {
                 awaitItem()
 
                 bloc.onExportClicked()
-                val after = awaitItem()
-                after.isSelectionMode shouldBe false
-                after.selectedRecipeIds shouldBe emptySet()
+                // No new emission expected — selection mode and the picked ids stay put so the
+                // user can come back to the same selection if they bail out of the exporter.
+                expectNoEvents()
             }
             output.lastValue shouldBe RecipeListBloc.Output.OpenExportRecipes(setOf(1L, 2L))
+            bloc.state.value.isSelectionMode shouldBe true
+            bloc.state.value.selectedRecipeIds shouldBe setOf(1L, 2L)
         }
+
+    @Test
+    fun When_export_finished_called_after_selection_Then_selection_mode_exits() = runTest {
+        bloc.state.test {
+            awaitItem()
+            recipes.value = listOf(recipe(1), recipe(2))
+            awaitItem()
+            bloc.onEnterSelectionMode()
+            awaitItem()
+            bloc.onToggleRecipeSelected(listItem(id = 1))
+            awaitItem()
+
+            bloc.onExportFinished()
+            val after = awaitItem()
+            after.isSelectionMode shouldBe false
+            after.selectedRecipeIds shouldBe emptySet()
+        }
+    }
 
     @Test
     fun When_toggle_select_all_visible_Then_selects_all_then_clears() = runTest {

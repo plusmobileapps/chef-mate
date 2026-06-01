@@ -56,7 +56,7 @@ class RootBlocTest {
             bottomNav = { _, output, initialTab ->
                 bottomNavOutput = output
                 bottomNavInitialTab = initialTab
-                mock()
+                mock(MockMode.autoUnit)
             },
             browserRootBlocFactory =
                 object : BrowserRootBloc.Factory {
@@ -366,5 +366,21 @@ class RootBlocTest {
         bottomNavOutput.onNext(BottomNavBloc.Output.OpenExportRecipes(recipeIds = null))
         exportRecipesOutput.onNext(ExportRecipesBloc.Output.Back)
         rootBloc.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
+    }
+
+    @Test
+    fun Given_export_recipes_When_finished_Then_bottom_nav_is_shown_and_notified() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenExportRecipes(recipeIds = setOf(1L)))
+        val bottomNavChild =
+            rootBloc.state.value.items
+                .map { it.instance }
+                .filterIsInstance<RootBloc.Child.BottomNavigation>()
+                .first()
+                .bloc
+
+        exportRecipesOutput.onNext(ExportRecipesBloc.Output.Finished)
+
+        rootBloc.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
+        dev.mokkery.verify { bottomNavChild.onExportFinished() }
     }
 }
