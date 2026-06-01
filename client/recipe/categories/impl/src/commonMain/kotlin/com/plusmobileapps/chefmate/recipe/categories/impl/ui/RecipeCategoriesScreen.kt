@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
@@ -84,6 +86,7 @@ import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
+import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainerDefaults
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
@@ -282,6 +285,8 @@ private fun CreateFieldRow(
             Row(
                 modifier =
                     Modifier.fillMaxWidth()
+                        .wrapContentWidth(Alignment.CenterHorizontally)
+                        .widthIn(max = PlusHeaderContainerDefaults.MaxContentWidth)
                         .padding(
                             start = ChefMateTheme.dimens.paddingNormal,
                             end = ChefMateTheme.dimens.paddingSmall,
@@ -335,7 +340,10 @@ private fun CategoryList(
     onRenameRequested: (CategoryItem) -> Unit,
     onDeleteRequested: (CategoryItem) -> Unit,
 ) {
-    LazyColumn(modifier = Modifier.fillMaxWidth().fillMaxSize()) {
+    LazyColumn(
+        modifier = Modifier.fillMaxWidth().fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         items(items, key = { it.rowKey() }) { item ->
             CategoryRow(
                 item = item,
@@ -365,6 +373,7 @@ private fun CategoryRow(
     Row(
         modifier =
             Modifier.fillMaxWidth()
+                .widthIn(max = PlusHeaderContainerDefaults.MaxContentWidth)
                 .heightIn(min = 64.dp)
                 .combinedClickable(
                     enabled = item.isEditable || !selectionMode,
@@ -453,7 +462,11 @@ private fun CategoryRowOverflowMenu(
 @Composable
 private fun EmptyMessage() {
     Box(
-        modifier = Modifier.fillMaxWidth().padding(ChefMateTheme.dimens.paddingNormal),
+        modifier =
+            Modifier.fillMaxWidth()
+                .wrapContentWidth(Alignment.CenterHorizontally)
+                .widthIn(max = PlusHeaderContainerDefaults.MaxContentWidth)
+                .padding(ChefMateTheme.dimens.paddingNormal),
         contentAlignment = Alignment.Center,
     ) {
         Text(
