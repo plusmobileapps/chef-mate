@@ -227,6 +227,80 @@ class RecipeListBlocImplTest {
     }
 
     @Test
+    fun When_export_clicked_outside_selection_mode_Then_OpenExportRecipes_with_null_ids() {
+        bloc.onExportClicked()
+        output.lastValue shouldBe RecipeListBloc.Output.OpenExportRecipes(recipeIds = null)
+    }
+
+    @Test
+    fun When_enter_selection_mode_Then_state_flips_with_empty_selection() = runTest {
+        bloc.state.test {
+            awaitItem().isSelectionMode shouldBe false
+            bloc.onEnterSelectionMode()
+            val next = awaitItem()
+            next.isSelectionMode shouldBe true
+            next.selectedRecipeIds shouldBe emptySet()
+        }
+    }
+
+    @Test
+    fun When_recipe_clicked_in_selection_mode_Then_toggles_selection_no_navigation() = runTest {
+        bloc.state.test {
+            awaitItem() // initial
+            recipes.value = listOf(recipe(1))
+            awaitItem() // recipes loaded
+            bloc.onEnterSelectionMode()
+            awaitItem() // entered selection mode
+
+            bloc.onRecipeClicked(listItem(id = 1))
+            awaitItem().selectedRecipeIds shouldBe setOf(1L)
+
+            bloc.onRecipeClicked(listItem(id = 1))
+            awaitItem().selectedRecipeIds shouldBe emptySet()
+        }
+        output.values shouldBe emptyList()
+    }
+
+    @Test
+    fun When_export_clicked_with_selection_Then_OpenExportRecipes_carries_ids_and_exits_mode() =
+        runTest {
+            bloc.state.test {
+                awaitItem()
+                recipes.value = listOf(recipe(1), recipe(2))
+                awaitItem()
+                bloc.onEnterSelectionMode()
+                awaitItem()
+                bloc.onToggleRecipeSelected(listItem(id = 1))
+                awaitItem()
+                bloc.onToggleRecipeSelected(listItem(id = 2))
+                awaitItem()
+
+                bloc.onExportClicked()
+                val after = awaitItem()
+                after.isSelectionMode shouldBe false
+                after.selectedRecipeIds shouldBe emptySet()
+            }
+            output.lastValue shouldBe RecipeListBloc.Output.OpenExportRecipes(setOf(1L, 2L))
+        }
+
+    @Test
+    fun When_toggle_select_all_visible_Then_selects_all_then_clears() = runTest {
+        bloc.state.test {
+            awaitItem()
+            recipes.value = listOf(recipe(1), recipe(2), recipe(3))
+            awaitItem()
+            bloc.onEnterSelectionMode()
+            awaitItem()
+
+            bloc.onToggleSelectAllVisible()
+            awaitItem().selectedRecipeIds shouldBe setOf(1L, 2L, 3L)
+
+            bloc.onToggleSelectAllVisible()
+            awaitItem().selectedRecipeIds shouldBe emptySet()
+        }
+    }
+
+    @Test
     fun When_recipes_loaded_Then_totalRecipeCount_reflects_unfiltered_count() = runTest {
         bloc.state.test {
             awaitItem()

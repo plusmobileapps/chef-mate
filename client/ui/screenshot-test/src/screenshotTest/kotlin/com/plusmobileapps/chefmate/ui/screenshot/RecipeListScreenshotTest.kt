@@ -11,6 +11,8 @@ import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocCooking
+import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocSelectionMode
+import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocSelectionModeEmpty
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
@@ -64,3 +66,26 @@ fun RecipeListCookingPhonePortraitDarkScreenshot() {
 // uses Modifier.align(BottomEnd) + 16.dp padding regardless of canvas size — there's no
 // responsive-layout branching to cover, and the FAB shadow rendered slightly differently
 // across Mac arm64 / Linux x64 (1–2 px subpixel AA), causing CI flakiness.
+
+// ── Multi-select mode ──────────────────────────────────────────────────────
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+fun RecipeListSelectionLightScreenshot() {
+    RecipeListScreenshot(bloc = previewRecipeListBlocSelectionMode)
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun RecipeListSelectionDarkScreenshot() {
+    RecipeListScreenshot(bloc = previewRecipeListBlocSelectionMode, darkTheme = true)
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+fun RecipeListSelectionEmptyScreenshot() {
+    RecipeListScreenshot(bloc = previewRecipeListBlocSelectionModeEmpty)
+}

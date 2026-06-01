@@ -97,6 +97,16 @@ private fun recipeListBloc(model: RecipeListBloc.Model): RecipeListBloc =
 
         override fun onDoneCookingDismissed() = Unit
 
+        override fun onEnterSelectionMode() = Unit
+
+        override fun onExitSelectionMode() = Unit
+
+        override fun onToggleRecipeSelected(recipe: RecipeListItem) = Unit
+
+        override fun onToggleSelectAllVisible() = Unit
+
+        override fun onExportClicked() = Unit
+
         @Composable override fun Content(modifier: Modifier) = RecipeListScreen(this, modifier)
     }
 
@@ -129,6 +139,28 @@ val previewRecipeListBlocCategoryFiltered: RecipeListBloc =
         )
     )
 
+/** Recipe list in multi-select mode with two recipes picked — exercises the selection top bar. */
+val previewRecipeListBlocSelectionMode: RecipeListBloc =
+    recipeListBloc(
+        RecipeListBloc.Model(
+            recipes = sampleRecipes,
+            totalRecipeCount = sampleRecipes.size,
+            isSelectionMode = true,
+            selectedRecipeIds = setOf(1L, 3L),
+        )
+    )
+
+/** Multi-select mode with no recipes picked — locks in the disabled export icon state. */
+val previewRecipeListBlocSelectionModeEmpty: RecipeListBloc =
+    recipeListBloc(
+        RecipeListBloc.Model(
+            recipes = sampleRecipes,
+            totalRecipeCount = sampleRecipes.size,
+            isSelectionMode = true,
+            selectedRecipeIds = emptySet(),
+        )
+    )
+
 @Preview(showBackground = true, heightDp = 1100)
 @Composable
 internal fun RecipeListPreview() {
@@ -145,4 +177,10 @@ internal fun RecipeListCookingPreview() {
 @Composable
 internal fun RecipeListCookingTabletPreview() {
     ChefMateTheme { RecipeListScreen(bloc = previewRecipeListBlocCooking) }
+}
+
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+internal fun RecipeListSelectionPreview() {
+    ChefMateTheme { RecipeListScreen(bloc = previewRecipeListBlocSelectionMode) }
 }
