@@ -41,21 +41,21 @@ private val sampleItems =
             id = "1",
             title = "Marcella Hazan Bolognese",
             subtitle = FixedString("15 ingredients · 5 steps"),
-            hasImage = true,
+            imageUrl = null,
             selected = true,
         ),
         ExportItem(
             id = "2",
             title = "Meatloaf",
             subtitle = FixedString("16 ingredients · 7 steps"),
-            hasImage = true,
+            imageUrl = null,
             selected = true,
         ),
         ExportItem(
             id = "3",
             title = "How to Cook Tempeh",
             subtitle = FixedString("5 ingredients · 3 steps"),
-            hasImage = false,
+            imageUrl = null,
             selected = false,
         ),
     )
@@ -66,6 +66,9 @@ val previewExportRecipesEmptyBloc: ExportRecipesBloc = exportRecipesBloc(Model(P
 
 val previewExportRecipesReviewBloc: ExportRecipesBloc =
     exportRecipesBloc(Model(Phase.Review(recipes = sampleItems)))
+
+val previewExportRecipesReviewNoSelectionBloc: ExportRecipesBloc =
+    exportRecipesBloc(Model(Phase.Review(recipes = sampleItems.map { it.copy(selected = false) })))
 
 val previewExportRecipesExportingBloc: ExportRecipesBloc =
     exportRecipesBloc(Model(Phase.Review(recipes = sampleItems, isExporting = true)))

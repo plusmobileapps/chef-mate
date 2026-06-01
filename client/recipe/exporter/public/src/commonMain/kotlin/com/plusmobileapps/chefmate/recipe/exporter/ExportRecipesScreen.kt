@@ -1,5 +1,10 @@
 package com.plusmobileapps.chefmate.recipe.exporter
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,10 +16,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistAddCheck
-import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
@@ -49,6 +55,7 @@ import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
+import com.plusmobileapps.chefmate.ui.components.RecipeImage
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import com.plusmobileapps.chefmate.util.rememberZipSaveLauncher
 
@@ -62,6 +69,13 @@ fun ExportRecipesScreen(bloc: ExportRecipesBloc, modifier: Modifier = Modifier) 
         saveZip(pending.fileName, pending.archive)
     }
 
+    val reviewPhase = state.phase as? Phase.Review
+    val selectedCount = reviewPhase?.recipes?.count { it.selected } ?: 0
+    // FAB is anchored to the screen container so it animates independently of the recipe list as
+    // the user toggles selections. Visibility is driven by "review phase + at least one selected"
+    // so the action morphs in only once the export becomes meaningful.
+    val showFab = reviewPhase != null && selectedCount > 0
+
     PlusHeaderContainer(
         modifier = modifier.testTag(ExportRecipesTestTags.SCREEN),
         data =
@@ -69,6 +83,19 @@ fun ExportRecipesScreen(bloc: ExportRecipesBloc, modifier: Modifier = Modifier) 
                 title = Res.string.export_recipes_title.asTextData(),
                 onBackClick = bloc::onBack,
             ),
+        floatingActionButton = {
+            AnimatedVisibility(
+                visible = showFab,
+                enter = scaleIn() + fadeIn(),
+                exit = scaleOut() + fadeOut(),
+            ) {
+                ExportFab(
+                    selectedCount = selectedCount,
+                    isExporting = reviewPhase?.isExporting == true,
+                    onClick = bloc::onExportClicked,
+                )
+            }
+        },
         content = {
             when (val phase = state.phase) {
                 Phase.Loading ->
@@ -81,7 +108,6 @@ fun ExportRecipesScreen(bloc: ExportRecipesBloc, modifier: Modifier = Modifier) 
                         phase = phase,
                         onToggle = bloc::onRecipeToggled,
                         onToggleSelectAll = bloc::onToggleSelectAll,
-                        onExport = bloc::onExportClicked,
                     )
                 is Phase.Done ->
                     DoneContent(
@@ -97,6 +123,33 @@ fun ExportRecipesScreen(bloc: ExportRecipesBloc, modifier: Modifier = Modifier) 
             }
         },
     )
+}
+
+@Composable
+private fun ExportFab(selectedCount: Int, isExporting: Boolean, onClick: () -> Unit) {
+    ExtendedFloatingActionButton(
+        onClick = { if (!isExporting) onClick() },
+        modifier = Modifier.testTag(ExportRecipesTestTags.EXPORT_BUTTON),
+    ) {
+        if (isExporting) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                color = ChefMateTheme.colorScheme.onPrimaryContainer,
+            )
+            Spacer(Modifier.size(ChefMateTheme.dimens.paddingSmall))
+            Text(Res.string.export_recipes_generating.asTextData().localized())
+        } else {
+            Icon(Icons.Default.FileDownload, contentDescription = null)
+            Spacer(Modifier.size(ChefMateTheme.dimens.paddingSmall))
+            Text(
+                PhraseModel(
+                        resource = Res.string.export_recipes_export_button,
+                        "count" to FixedString(selectedCount.toString()),
+                    )
+                    .localized()
+            )
+        }
+    }
 }
 
 @Composable
@@ -137,7 +190,6 @@ private fun ReviewContent(
     phase: Phase.Review,
     onToggle: (String) -> Unit,
     onToggleSelectAll: () -> Unit,
-    onExport: () -> Unit,
 ) {
     val selectedCount = phase.recipes.count { it.selected }
     val allSelected = phase.recipes.isNotEmpty() && selectedCount == phase.recipes.size
@@ -174,33 +226,6 @@ private fun ReviewContent(
         ReviewRow(item = item, enabled = !phase.isExporting, onToggle = { onToggle(item.id) })
     }
     HorizontalDivider()
-
-    Spacer(Modifier.height(ChefMateTheme.dimens.paddingNormal))
-    Button(
-        onClick = onExport,
-        enabled = selectedCount > 0 && !phase.isExporting,
-        modifier =
-            Modifier.fillMaxWidth()
-                .padding(horizontal = ChefMateTheme.dimens.paddingNormal)
-                .testTag(ExportRecipesTestTags.EXPORT_BUTTON),
-    ) {
-        if (phase.isExporting) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                CircularProgressIndicator(modifier = Modifier.size(20.dp))
-                Spacer(Modifier.size(ChefMateTheme.dimens.paddingSmall))
-                Text(Res.string.export_recipes_generating.asTextData().localized())
-            }
-        } else {
-            Text(
-                PhraseModel(
-                        resource = Res.string.export_recipes_export_button,
-                        "count" to FixedString(selectedCount.toString()),
-                    )
-                    .localized()
-            )
-        }
-    }
-    Spacer(Modifier.height(ChefMateTheme.dimens.paddingNormal))
 }
 
 @Composable
@@ -227,11 +252,12 @@ private fun ReviewRow(item: ExportRecipesBloc.ExportItem, enabled: Boolean, onTo
                 color = ChefMateTheme.colorScheme.onSurfaceVariant,
             )
         }
-        if (item.hasImage) {
-            Icon(
-                Icons.Default.Image,
+        if (item.imageUrl != null) {
+            Spacer(Modifier.size(ChefMateTheme.dimens.paddingSmall))
+            RecipeImage(
+                imageUrl = item.imageUrl,
                 contentDescription = null,
-                tint = ChefMateTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(48.dp),
             )
         }
     }

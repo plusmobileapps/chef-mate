@@ -46,7 +46,7 @@ interface ExportRecipesBloc : BackHandlerOwner, BlocScreen {
         val id: String,
         val title: String,
         val subtitle: TextData,
-        val hasImage: Boolean,
+        val imageUrl: String?,
         val selected: Boolean,
     )
 

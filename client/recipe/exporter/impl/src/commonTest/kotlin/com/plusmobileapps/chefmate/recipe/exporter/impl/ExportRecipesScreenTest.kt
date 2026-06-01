@@ -79,7 +79,7 @@ class ExportRecipesScreenTest {
                     id = id,
                     title = title,
                     subtitle = FixedString("1 ingredient · 1 step"),
-                    hasImage = false,
+                    imageUrl = null,
                     selected = true,
                 )
         }

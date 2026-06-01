@@ -79,7 +79,7 @@ class ExportRecipesBlocImpl(
             id = id,
             title = title,
             subtitle = subtitle,
-            hasImage = hasImage,
+            imageUrl = imageUrl,
             selected = selected,
         )
 }

@@ -155,7 +155,7 @@ class ExportRecipesViewModel(
                     "ingredients" to FixedString(ingredients.lineCount().toString()),
                     "steps" to FixedString(directions.lineCount().toString()),
                 ),
-            hasImage = !imageUrl.isNullOrBlank(),
+            imageUrl = imageUrl?.takeIf { it.isNotBlank() },
             selected = selected,
         )
 
@@ -185,7 +185,7 @@ class ExportRecipesViewModel(
         val id: String,
         val title: String,
         val subtitle: TextData,
-        val hasImage: Boolean,
+        val imageUrl: String?,
         val selected: Boolean,
     )
 

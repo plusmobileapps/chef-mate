@@ -10,6 +10,7 @@ import com.plusmobileapps.chefmate.recipe.exporter.previewExportRecipesErrorBloc
 import com.plusmobileapps.chefmate.recipe.exporter.previewExportRecipesExportingBloc
 import com.plusmobileapps.chefmate.recipe.exporter.previewExportRecipesLoadingBloc
 import com.plusmobileapps.chefmate.recipe.exporter.previewExportRecipesReviewBloc
+import com.plusmobileapps.chefmate.recipe.exporter.previewExportRecipesReviewNoSelectionBloc
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
@@ -32,6 +33,15 @@ fun ExportRecipesEmptyScreenshot() {
 @Composable
 fun ExportRecipesReviewScreenshot() {
     ChefMateTheme { previewExportRecipesReviewBloc.Content() }
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+fun ExportRecipesReviewNoSelectionScreenshot() {
+    // FAB is gated on "at least one selected" — this snapshot locks in that the action chip is
+    // absent when nothing is picked, complementing the standard review shot above.
+    ChefMateTheme { previewExportRecipesReviewNoSelectionBloc.Content() }
 }
 
 @PreviewTest
