@@ -16,4 +16,11 @@ open class PlusLibraryExtension {
      * commonTest and links sqlite3 for iOS test binaries. Requires [enableTesting] to also be true.
      */
     var enableDatabaseTesting: Boolean = false
+
+    /**
+     * Flag to enable the Compose UI test dependency. When true, adds `compose.uiTest` as an `api`
+     * dependency on `commonMain`. Intended for `impl-robots` modules that expose reusable Compose
+     * UI test robots. Requires the `compose` plugin to also be applied on the module.
+     */
+    var uiTest: Boolean = false
 }

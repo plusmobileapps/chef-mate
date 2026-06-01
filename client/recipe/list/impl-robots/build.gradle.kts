@@ -4,12 +4,10 @@ plugins {
 }
 
 kotlin {
-    sourceSets {
-        commonMain.dependencies {
-            @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class) api(compose.uiTest)
-            implementation(projects.client.recipe.list.public)
-        }
-    }
+    sourceSets { commonMain.dependencies { implementation(projects.client.recipe.list.public) } }
 }
 
-plusLibrary { namespace = "com.plusmobileapps.chefmate.recipe.list.robots" }
+plusLibrary {
+    namespace = "com.plusmobileapps.chefmate.recipe.list.robots"
+    uiTest = true
+}
