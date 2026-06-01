@@ -272,6 +272,11 @@ private fun CreateFieldRow(
 ) {
     AnimatedContent(
         targetState = createState,
+        // Cap the AnimatedContent itself rather than the inner Row — the column's
+        // `horizontalAlignment = CenterHorizontally` centers AnimatedContent based on its own
+        // measured width, not its children's.
+        modifier =
+            Modifier.widthIn(max = PlusHeaderContainerDefaults.MaxContentWidth).fillMaxWidth(),
         // Animate only on the Hidden ↔ Editing flip — without a stable key the outgoing slot
         // would re-derive its state from the outer composition after the transition starts and
         // crash trying to cast Hidden to Editing.
@@ -284,8 +289,7 @@ private fun CreateFieldRow(
             val text = state.text
             Row(
                 modifier =
-                    Modifier.widthIn(max = PlusHeaderContainerDefaults.MaxContentWidth)
-                        .fillMaxWidth()
+                    Modifier.fillMaxWidth()
                         .padding(
                             start = ChefMateTheme.dimens.paddingNormal,
                             end = ChefMateTheme.dimens.paddingSmall,
