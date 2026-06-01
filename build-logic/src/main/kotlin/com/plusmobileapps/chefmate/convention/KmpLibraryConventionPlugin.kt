@@ -7,6 +7,8 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.create
+import org.jetbrains.compose.ComposePlugin
+import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
@@ -24,6 +26,10 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
 
                 if (plusLibraryExtension.enableTesting) {
                     applyTesting(enableDatabaseTesting = plusLibraryExtension.enableDatabaseTesting)
+                }
+
+                if (plusLibraryExtension.uiTest) {
+                    applyUiTest()
                 }
             }
 
@@ -130,5 +136,13 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalComposeLibrary::class)
+private fun Project.applyUiTest() {
+    extensions.configure<KotlinMultiplatformExtension> {
+        val compose = ComposePlugin.Dependencies(project)
+        sourceSets.getByName("commonMain").dependencies { api(compose.uiTest) }
     }
 }
