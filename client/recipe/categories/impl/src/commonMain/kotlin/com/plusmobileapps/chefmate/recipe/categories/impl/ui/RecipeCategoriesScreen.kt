@@ -46,6 +46,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.categories.public.generated.resources.Res
 import chefmate.client.recipe.categories.public.generated.resources.category_delete
@@ -185,6 +186,10 @@ internal fun RecipeCategoriesContent(
         // Disable the container's outer vertical scroll so the inner LazyColumn (which itself
         // scrolls) doesn't sit under infinite-height constraints — Compose throws on that nesting.
         scrollEnabled = false,
+        // Let the LazyColumn span the full window width. Otherwise the container caps content at
+        // 600dp and centers it, leaving wide-screen pointer events on the side gutters dead — the
+        // wheel only scrolls when the cursor is inside the 600dp band.
+        maxContentWidth = Dp.Unspecified,
         // FAB is hidden in selection mode (the trash icon in the bar handles delete) and while
         // the inline create field is open (the keyboard's Done action is the submit affordance).
         floatingActionButton = {
