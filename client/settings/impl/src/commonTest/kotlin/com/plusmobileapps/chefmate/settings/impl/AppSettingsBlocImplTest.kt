@@ -106,4 +106,11 @@ class AppSettingsBlocImplTest {
         bloc.onImportRecipesClicked()
         output.lastValue shouldBe AppSettingsBloc.Output.OpenImportRecipes
     }
+
+    @Test
+    fun When_export_recipes_clicked_Then_open_export_recipes_output_emitted() {
+        val bloc = createBloc()
+        bloc.onExportRecipesClicked()
+        output.lastValue shouldBe AppSettingsBloc.Output.OpenExportRecipes
+    }
 }
