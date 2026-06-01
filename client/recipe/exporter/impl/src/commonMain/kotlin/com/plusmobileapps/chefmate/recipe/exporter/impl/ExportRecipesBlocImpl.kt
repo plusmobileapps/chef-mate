@@ -47,7 +47,8 @@ class ExportRecipesBlocImpl(
     override fun onStartOver() = viewModel.onStartOver()
 
     override fun onBack() {
-        output.onNext(Output.Back)
+        val isFromDone = viewModel.state.value.stage is ExportRecipesViewModel.Stage.Done
+        output.onNext(if (isFromDone) Output.Finished else Output.Back)
     }
 
     @Composable

@@ -152,7 +152,13 @@ class RecipeListBlocImpl(
         val state = viewModel.state.value
         val ids = if (state.isSelectionMode) state.selectedRecipeIds else null
         output.onNext(Output.OpenExportRecipes(ids))
-        if (state.isSelectionMode) viewModel.exitSelectionMode()
+        // Selection mode persists across the trip to the exporter so the user can come back to the
+        // same picks if they bail out. It only clears via [onExportFinished] when the exporter
+        // signals a successful save.
+    }
+
+    override fun onExportFinished() {
+        viewModel.exitSelectionMode()
     }
 
     @Composable

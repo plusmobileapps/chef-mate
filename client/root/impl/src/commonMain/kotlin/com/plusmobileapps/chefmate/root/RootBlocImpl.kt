@@ -305,6 +305,16 @@ class RootBlocImpl(
     private fun handleExportRecipesOutput(output: ExportRecipesBloc.Output) {
         when (output) {
             ExportRecipesBloc.Output.Back -> navigation.pop()
+            ExportRecipesBloc.Output.Finished -> {
+                navigation.pop()
+                // Tell the recipe list to drop multi-select mode now that the archive was written.
+                stack.value.items
+                    .map { it.instance }
+                    .filterIsInstance<RootBloc.Child.BottomNavigation>()
+                    .firstOrNull()
+                    ?.bloc
+                    ?.onExportFinished()
+            }
         }
     }
 

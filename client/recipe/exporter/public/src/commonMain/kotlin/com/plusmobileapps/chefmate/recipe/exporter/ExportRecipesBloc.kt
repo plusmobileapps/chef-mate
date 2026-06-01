@@ -74,7 +74,15 @@ interface ExportRecipesBloc : BackHandlerOwner, BlocScreen {
     }
 
     sealed class Output {
+        /** User backed out of the exporter from any stage other than [Phase.Done]. */
         data object Back : Output()
+
+        /**
+         * User left the exporter from the [Phase.Done] screen — the archive was actually written.
+         * Distinct from [Back] so the parent navigator can react (e.g. clear the recipe-list
+         * selection that launched the export).
+         */
+        data object Finished : Output()
     }
 
     /**

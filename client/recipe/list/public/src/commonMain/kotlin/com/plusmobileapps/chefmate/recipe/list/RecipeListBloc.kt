@@ -57,6 +57,14 @@ interface RecipeListBloc : BlocScreen {
 
     fun onExportClicked()
 
+    /**
+     * Called by the parent navigator after the exporter signals a successful save. Drops the screen
+     * out of multi-select mode so the user lands back on a clean list. A *cancelled* trip to the
+     * exporter (back/dismiss with nothing exported) does **not** call this — the selection is
+     * preserved so the user can try again.
+     */
+    fun onExportFinished()
+
     data class Model(
         val recipes: List<RecipeListItem> = emptyList(),
         val totalRecipeCount: Int = 0,

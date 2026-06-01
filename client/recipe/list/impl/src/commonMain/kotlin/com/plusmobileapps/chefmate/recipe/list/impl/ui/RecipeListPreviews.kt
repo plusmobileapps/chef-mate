@@ -107,6 +107,8 @@ private fun recipeListBloc(model: RecipeListBloc.Model): RecipeListBloc =
 
         override fun onExportClicked() = Unit
 
+        override fun onExportFinished() = Unit
+
         @Composable override fun Content(modifier: Modifier) = RecipeListScreen(this, modifier)
     }
 
