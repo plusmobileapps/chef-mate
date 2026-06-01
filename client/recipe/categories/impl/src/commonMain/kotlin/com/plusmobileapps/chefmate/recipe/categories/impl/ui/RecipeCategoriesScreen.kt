@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
@@ -189,10 +188,11 @@ internal fun RecipeCategoriesContent(
         // Disable the container's outer vertical scroll so the inner LazyColumn (which itself
         // scrolls) doesn't sit under infinite-height constraints — Compose throws on that nesting.
         scrollEnabled = false,
-        // Let the LazyColumn span the full window width. Otherwise the container caps content at
-        // 600dp and centers it, leaving wide-screen pointer events on the side gutters dead — the
-        // wheel only scrolls when the cursor is inside the 600dp band.
+        // Let the LazyColumn span the full window width so the scroll wheel responds anywhere on
+        // wide windows. Individual rows still cap themselves at MaxContentWidth (see CategoryRow /
+        // CreateFieldRow) so content doesn't stretch edge-to-edge.
         maxContentWidth = Dp.Unspecified,
+        horizontalAlignment = Alignment.CenterHorizontally,
         // FAB is hidden in selection mode (the trash icon in the bar handles delete) and while
         // the inline create field is open (the keyboard's Done action is the submit affordance).
         floatingActionButton = {
@@ -284,9 +284,8 @@ private fun CreateFieldRow(
             val text = state.text
             Row(
                 modifier =
-                    Modifier.fillMaxWidth()
-                        .wrapContentWidth(Alignment.CenterHorizontally)
-                        .widthIn(max = PlusHeaderContainerDefaults.MaxContentWidth)
+                    Modifier.widthIn(max = PlusHeaderContainerDefaults.MaxContentWidth)
+                        .fillMaxWidth()
                         .padding(
                             start = ChefMateTheme.dimens.paddingNormal,
                             end = ChefMateTheme.dimens.paddingSmall,
@@ -372,8 +371,10 @@ private fun CategoryRow(
     val rowAlpha = if (selectionMode && !item.isEditable) 0.4f else 1f
     Row(
         modifier =
-            Modifier.fillMaxWidth()
-                .widthIn(max = PlusHeaderContainerDefaults.MaxContentWidth)
+            // widthIn must come before fillMaxWidth — fillMaxWidth pins min=max=parent first,
+            // and a later widthIn can't shrink it.
+            Modifier.widthIn(max = PlusHeaderContainerDefaults.MaxContentWidth)
+                .fillMaxWidth()
                 .heightIn(min = 64.dp)
                 .combinedClickable(
                     enabled = item.isEditable || !selectionMode,
@@ -463,9 +464,8 @@ private fun CategoryRowOverflowMenu(
 private fun EmptyMessage() {
     Box(
         modifier =
-            Modifier.fillMaxWidth()
-                .wrapContentWidth(Alignment.CenterHorizontally)
-                .widthIn(max = PlusHeaderContainerDefaults.MaxContentWidth)
+            Modifier.widthIn(max = PlusHeaderContainerDefaults.MaxContentWidth)
+                .fillMaxWidth()
                 .padding(ChefMateTheme.dimens.paddingNormal),
         contentAlignment = Alignment.Center,
     ) {
