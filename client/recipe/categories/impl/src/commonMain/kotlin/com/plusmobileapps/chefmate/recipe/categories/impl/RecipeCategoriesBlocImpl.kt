@@ -70,6 +70,10 @@ class RecipeCategoriesBlocImpl(
         viewModel.enterSelectionWith(item)
     }
 
+    override fun onSelectModeClicked() {
+        viewModel.enterSelectionMode()
+    }
+
     override fun onCancelSelection() {
         viewModel.cancelSelection()
     }

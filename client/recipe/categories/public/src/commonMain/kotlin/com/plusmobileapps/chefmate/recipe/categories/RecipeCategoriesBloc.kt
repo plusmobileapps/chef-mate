@@ -14,6 +14,8 @@ interface RecipeCategoriesBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
 
     fun onCategoryLongClicked(item: CategoryItem)
 
+    fun onSelectModeClicked()
+
     fun onCancelSelection()
 
     fun onCreateClicked()

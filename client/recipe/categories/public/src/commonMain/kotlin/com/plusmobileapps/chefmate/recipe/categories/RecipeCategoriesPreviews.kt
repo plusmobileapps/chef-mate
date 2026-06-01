@@ -22,6 +22,8 @@ private fun bloc(model: Model): RecipeCategoriesBloc =
 
         override fun onCategoryLongClicked(item: CategoryItem) = Unit
 
+        override fun onSelectModeClicked() = Unit
+
         override fun onCancelSelection() = Unit
 
         override fun onCreateClicked() = Unit
@@ -96,6 +98,20 @@ val previewRecipeCategoriesBlocSelectionMode: RecipeCategoriesBloc =
             isLoading = false,
             selectionMode = true,
             selectedIds = setOf(1L, 2L),
+        )
+    )
+
+/**
+ * Selection mode just entered via the header button — no rows picked yet. Confirms the header
+ * renders "Select categories" and hides the trash icon until the user picks at least one row.
+ */
+val previewRecipeCategoriesBlocSelectionEmpty: RecipeCategoriesBloc =
+    bloc(
+        Model(
+            categories = sampleItems,
+            isLoading = false,
+            selectionMode = true,
+            selectedIds = emptySet(),
         )
     )
 

@@ -56,6 +56,25 @@ class RecipeCategoriesViewModelTest {
     }
 
     @Test
+    fun enter_selection_mode_via_header_button_starts_with_no_selection() {
+        val vm = createViewModel()
+        vm.enterSelectionMode()
+        vm.state.value.selectionMode shouldBe true
+        vm.state.value.selectedIds shouldBe emptySet()
+    }
+
+    @Test
+    fun deselecting_last_item_keeps_selection_mode_active() {
+        val vm = createViewModel()
+        val family = vm.state.value.categories.first { it.name == "Family" }
+        vm.enterSelectionWith(family)
+        vm.toggleSelection(family)
+        // Header button stays available; explicit cancel is required to exit selection.
+        vm.state.value.selectionMode shouldBe true
+        vm.state.value.selectedIds shouldBe emptySet()
+    }
+
+    @Test
     fun long_press_on_builtin_row_is_a_no_op() {
         val vm = createViewModel()
         val breakfast =

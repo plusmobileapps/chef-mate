@@ -20,12 +20,14 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -61,8 +63,10 @@ import chefmate.client.recipe.categories.public.generated.resources.recipe_categ
 import chefmate.client.recipe.categories.public.generated.resources.recipe_categories_recipe_count_one
 import chefmate.client.recipe.categories.public.generated.resources.recipe_categories_recipe_count_other
 import chefmate.client.recipe.categories.public.generated.resources.recipe_categories_recipe_count_zero
+import chefmate.client.recipe.categories.public.generated.resources.recipe_categories_select_mode_a11y
 import chefmate.client.recipe.categories.public.generated.resources.recipe_categories_selection_count
 import chefmate.client.recipe.categories.public.generated.resources.recipe_categories_selection_delete_a11y
+import chefmate.client.recipe.categories.public.generated.resources.recipe_categories_selection_empty_title
 import chefmate.client.recipe.categories.public.generated.resources.recipe_categories_title
 import com.plusmobileapps.chefmate.recipe.categories.DeleteCategoryDialog
 import com.plusmobileapps.chefmate.recipe.categories.RecipeCategoriesBloc
@@ -93,6 +97,7 @@ internal data class RecipeCategoriesHandlers(
     val onBackClicked: () -> Unit,
     val onCategoryClicked: (CategoryItem) -> Unit,
     val onCategoryLongClicked: (CategoryItem) -> Unit,
+    val onSelectModeClicked: () -> Unit,
     val onCancelSelection: () -> Unit,
     val onCreateClicked: () -> Unit,
     val onCreateCancelled: () -> Unit,
@@ -114,6 +119,7 @@ private fun blocHandlers(bloc: RecipeCategoriesBloc): RecipeCategoriesHandlers =
         onBackClicked = bloc::onBackClicked,
         onCategoryClicked = bloc::onCategoryClicked,
         onCategoryLongClicked = bloc::onCategoryLongClicked,
+        onSelectModeClicked = bloc::onSelectModeClicked,
         onCancelSelection = bloc::onCancelSelection,
         onCreateClicked = bloc::onCreateClicked,
         onCreateCancelled = bloc::onCreateCancelled,
@@ -140,18 +146,25 @@ internal fun RecipeCategoriesContent(
         if (model.selectionMode) {
             PlusHeaderData.Modal(
                 title =
-                    PhraseModel(
-                        Res.string.recipe_categories_selection_count,
-                        "count" to FixedString(model.selectedCount.toString()),
-                    ),
+                    if (model.selectedCount == 0)
+                        Res.string.recipe_categories_selection_empty_title.asTextData()
+                    else
+                        PhraseModel(
+                            Res.string.recipe_categories_selection_count,
+                            "count" to FixedString(model.selectedCount.toString()),
+                        ),
                 onCloseClick = handlers.onCancelSelection,
+                // Hide the trash until at least one row is selected — a disabled-looking icon
+                // without feedback is more confusing than nothing.
                 trailingAccessory =
-                    PlusHeaderData.TrailingAccessory.Icon(
-                        icon = Icons.Default.Delete,
-                        contentDesc =
-                            Res.string.recipe_categories_selection_delete_a11y.asTextData(),
-                        onClick = handlers.onBulkDeleteRequested,
-                    ),
+                    if (model.selectedCount == 0) null
+                    else
+                        PlusHeaderData.TrailingAccessory.Icon(
+                            icon = Icons.Default.Delete,
+                            contentDesc =
+                                Res.string.recipe_categories_selection_delete_a11y.asTextData(),
+                            onClick = handlers.onBulkDeleteRequested,
+                        ),
             )
         } else {
             PlusHeaderData.Child(
@@ -159,9 +172,9 @@ internal fun RecipeCategoriesContent(
                 onBackClick = handlers.onBackClicked,
                 trailingAccessory =
                     PlusHeaderData.TrailingAccessory.Icon(
-                        icon = Icons.Default.Add,
-                        contentDesc = Res.string.recipe_categories_create_a11y.asTextData(),
-                        onClick = handlers.onCreateClicked,
+                        icon = Icons.Default.Checklist,
+                        contentDesc = Res.string.recipe_categories_select_mode_a11y.asTextData(),
+                        onClick = handlers.onSelectModeClicked,
                     ),
             )
         }
@@ -172,6 +185,20 @@ internal fun RecipeCategoriesContent(
         // Disable the container's outer vertical scroll so the inner LazyColumn (which itself
         // scrolls) doesn't sit under infinite-height constraints — Compose throws on that nesting.
         scrollEnabled = false,
+        // FAB is hidden in selection mode (the trash icon in the bar handles delete) and while
+        // the inline create field is open (the keyboard's Done action is the submit affordance).
+        floatingActionButton = {
+            val createOpen = model.createState is CreateState.Editing
+            if (!model.selectionMode && !createOpen) {
+                FloatingActionButton(onClick = handlers.onCreateClicked) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription =
+                            stringResource(Res.string.recipe_categories_create_a11y),
+                    )
+                }
+            }
+        },
         content = {
             CreateFieldRow(
                 createState = model.createState,

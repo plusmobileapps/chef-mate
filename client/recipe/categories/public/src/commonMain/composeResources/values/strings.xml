@@ -32,6 +32,8 @@
     <string name="recipe_categories_recipe_count_one">1 recipe</string>
     <string name="recipe_categories_recipe_count_other">{count} recipes</string>
     <string name="recipe_categories_recipe_count_zero">No recipes</string>
+    <string name="recipe_categories_select_mode_a11y">Select categories</string>
+    <string name="recipe_categories_selection_empty_title">Select categories</string>
     <string name="recipe_categories_selection_count">{count} selected</string>
     <string name="recipe_categories_selection_close_a11y">Exit selection mode</string>
     <string name="recipe_categories_selection_delete_a11y">Delete selected categories</string>

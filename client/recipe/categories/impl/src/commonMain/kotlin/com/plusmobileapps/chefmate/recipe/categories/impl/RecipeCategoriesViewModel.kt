@@ -37,7 +37,6 @@ class RecipeCategoriesViewModel(
                         categories = mapped,
                         isLoading = false,
                         selectedIds = cleanedSelection,
-                        selectionMode = current.selectionMode && cleanedSelection.isNotEmpty(),
                     )
                 }
             }
@@ -50,7 +49,9 @@ class RecipeCategoriesViewModel(
             val nextSelection =
                 if (item.id in current.selectedIds) current.selectedIds - item.id
                 else current.selectedIds + item.id
-            current.copy(selectedIds = nextSelection, selectionMode = nextSelection.isNotEmpty())
+            // Stay in selection mode even at 0 selected — the user explicitly entered it via
+            // the header button or long-press, and exits it via the close icon.
+            current.copy(selectedIds = nextSelection)
         }
     }
 
@@ -59,6 +60,10 @@ class RecipeCategoriesViewModel(
         _state.update { current ->
             current.copy(selectionMode = true, selectedIds = current.selectedIds + item.id)
         }
+    }
+
+    fun enterSelectionMode() {
+        _state.update { it.copy(selectionMode = true) }
     }
 
     fun cancelSelection() {

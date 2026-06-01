@@ -9,6 +9,7 @@ import com.plusmobileapps.chefmate.recipe.categories.previewRecipeCategoriesBloc
 import com.plusmobileapps.chefmate.recipe.categories.previewRecipeCategoriesBlocBulkDeleteDialog
 import com.plusmobileapps.chefmate.recipe.categories.previewRecipeCategoriesBlocCreating
 import com.plusmobileapps.chefmate.recipe.categories.previewRecipeCategoriesBlocEmptyUser
+import com.plusmobileapps.chefmate.recipe.categories.previewRecipeCategoriesBlocSelectionEmpty
 import com.plusmobileapps.chefmate.recipe.categories.previewRecipeCategoriesBlocSelectionMode
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
@@ -31,6 +32,13 @@ fun RecipeCategoriesDarkScreenshot() {
 @Composable
 fun RecipeCategoriesSelectionModeScreenshot() {
     ChefMateTheme { RecipeCategoriesScreen(bloc = previewRecipeCategoriesBlocSelectionMode) }
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+fun RecipeCategoriesSelectionEmptyScreenshot() {
+    ChefMateTheme { RecipeCategoriesScreen(bloc = previewRecipeCategoriesBlocSelectionEmpty) }
 }
 
 @PreviewTest
