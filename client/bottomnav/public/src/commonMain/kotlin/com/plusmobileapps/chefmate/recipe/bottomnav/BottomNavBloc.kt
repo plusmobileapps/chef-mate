@@ -71,6 +71,12 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
         data class OpenMealPlanner(val props: MealPlannerRootBloc.Props) : Output()
 
         data class OpenCookMode(val recipeId: Long) : Output()
+
+        /**
+         * Forwarded from the recipe list's overflow menu. [recipeIds] is null when the user picked
+         * "Export all recipes" and a non-empty set when they exported a multi-select.
+         */
+        data class OpenExportRecipes(val recipeIds: Set<Long>?) : Output()
     }
 
     fun interface Factory {

@@ -47,6 +47,16 @@ interface RecipeListBloc : BlocScreen {
 
     fun onDoneCookingDismissed()
 
+    fun onEnterSelectionMode()
+
+    fun onExitSelectionMode()
+
+    fun onToggleRecipeSelected(recipe: RecipeListItem)
+
+    fun onToggleSelectAllVisible()
+
+    fun onExportClicked()
+
     data class Model(
         val recipes: List<RecipeListItem> = emptyList(),
         val totalRecipeCount: Int = 0,
@@ -64,6 +74,8 @@ interface RecipeListBloc : BlocScreen {
         val isSearchActive: Boolean = false,
         val cookingRecipeCount: Int = 0,
         val showDoneCookingDialog: Boolean = false,
+        val isSelectionMode: Boolean = false,
+        val selectedRecipeIds: Set<Long> = emptySet(),
     ) {
         /** Total number of active filter chips: legacy filters + preset + user category filters. */
         val totalActiveFilterCount: Int
@@ -78,6 +90,13 @@ interface RecipeListBloc : BlocScreen {
         object OpenBrowser : Output()
 
         data class OpenCookMode(val recipeId: Long) : Output()
+
+        /**
+         * Open the recipe-exporter screen. [recipeIds] is null when the user picked "Export all
+         * recipes" from the overflow menu, and a non-empty set when they launched export from
+         * selection mode.
+         */
+        data class OpenExportRecipes(val recipeIds: Set<Long>?) : Output()
     }
 
     interface Factory {

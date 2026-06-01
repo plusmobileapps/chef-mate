@@ -198,6 +198,38 @@ class RecipeListViewModel(
         }
     }
 
+    fun enterSelectionMode() {
+        _state.update { it.copy(isSelectionMode = true, selectedRecipeIds = emptySet()) }
+    }
+
+    fun exitSelectionMode() {
+        _state.update { it.copy(isSelectionMode = false, selectedRecipeIds = emptySet()) }
+    }
+
+    fun toggleRecipeSelected(recipeId: Long) {
+        _state.update {
+            val next =
+                if (recipeId in it.selectedRecipeIds) it.selectedRecipeIds - recipeId
+                else it.selectedRecipeIds + recipeId
+            it.copy(selectedRecipeIds = next)
+        }
+    }
+
+    /**
+     * Selects every recipe currently visible; if all are already selected, clears the selection.
+     */
+    fun toggleSelectAllVisible() {
+        _state.update { state ->
+            val visibleIds = state.displayRecipes.map { it.id }.toSet()
+            val allVisibleSelected =
+                visibleIds.isNotEmpty() && state.selectedRecipeIds.containsAll(visibleIds)
+            val next =
+                if (allVisibleSelected) state.selectedRecipeIds - visibleIds
+                else state.selectedRecipeIds + visibleIds
+            state.copy(selectedRecipeIds = next)
+        }
+    }
+
     data class State(
         val isLoading: Boolean = true,
         val isSyncing: Boolean = false,
@@ -211,6 +243,8 @@ class RecipeListViewModel(
         val searchQuery: String = "",
         val cookingRecipeIds: List<Long> = emptyList(),
         val showDoneCookingDialog: Boolean = false,
+        val isSelectionMode: Boolean = false,
+        val selectedRecipeIds: Set<Long> = emptySet(),
     ) {
         val isSearchActive: Boolean
             get() = searchQuery.isNotBlank()
