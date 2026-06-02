@@ -19,7 +19,7 @@ private fun aiChatBloc(model: AiChatBloc.Model, input: String = ""): AiChatBloc 
 
         override fun onSendClick() = Unit
 
-        override fun onClearClick() = Unit
+        override fun onHistoryClick() = Unit
 
         override fun onAddRecipeClick() = Unit
 
