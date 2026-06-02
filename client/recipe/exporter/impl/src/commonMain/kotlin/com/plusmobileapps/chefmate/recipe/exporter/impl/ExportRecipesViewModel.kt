@@ -10,11 +10,14 @@ import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
+import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
-import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,8 +27,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@Inject
+@AssistedInject
 class ExportRecipesViewModel(
+    @Assisted private val props: ExportRecipesBloc.Props,
     @Main mainContext: CoroutineContext,
     @IO private val ioContext: CoroutineContext,
     private val repository: RecipeRepository,
@@ -61,12 +65,17 @@ class ExportRecipesViewModel(
                         )
                     return@launch
                 }
-            if (recipes.isEmpty()) {
+            val scoped =
+                when (val p = props) {
+                    is ExportRecipesBloc.Props.All -> recipes
+                    is ExportRecipesBloc.Props.Selected -> recipes.filter { it.id in p.recipeIds }
+                }
+            if (scoped.isEmpty()) {
                 _state.value = State(stage = Stage.Empty)
                 return@launch
             }
-            loadedRecipes = recipes.associateBy { it.id.toString() }
-            val items = recipes.map { it.toItem(selected = true) }
+            loadedRecipes = scoped.associateBy { it.id.toString() }
+            val items = scoped.map { it.toItem(selected = true) }
             _state.value = State(stage = Stage.Review(items))
         }
     }
@@ -194,6 +203,11 @@ class ExportRecipesViewModel(
      * the public BLoC contract; the BLoC adapts this into its own `PendingSave` when mapping state.
      */
     class PendingArchive(val token: Long, val fileName: String, val archive: ByteArray)
+
+    @AssistedFactory
+    fun interface Factory {
+        fun create(props: ExportRecipesBloc.Props): ExportRecipesViewModel
+    }
 
     private companion object {
         const val TAG = "ExportRecipesViewModel"

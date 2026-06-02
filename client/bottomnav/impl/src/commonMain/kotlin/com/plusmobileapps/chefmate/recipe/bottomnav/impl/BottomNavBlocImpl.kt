@@ -114,6 +114,17 @@ class BottomNavBlocImpl(
         viewModel.selectTab(BottomNavBloc.Tab.BROWSER)
     }
 
+    override fun onExportFinished() {
+        // The recipe-list child stays cached in the bottom-nav stack while the user is on the
+        // exporter, so its bloc is still alive and ready to hear "you can drop selection mode now".
+        stack.value.items
+            .map { it.instance }
+            .filterIsInstance<RecipeList>()
+            .firstOrNull()
+            ?.bloc
+            ?.onExportFinished()
+    }
+
     override fun onTabSelected(tab: BottomNavBloc.Tab) {
         val configuration =
             when (tab) {
@@ -175,6 +186,9 @@ class BottomNavBlocImpl(
             }
             is RecipeListBloc.Output.OpenCookMode -> {
                 this.output.onNext(BottomNavBloc.Output.OpenCookMode(output.recipeId))
+            }
+            is RecipeListBloc.Output.OpenExportRecipes -> {
+                this.output.onNext(BottomNavBloc.Output.OpenExportRecipes(output.recipeIds))
             }
         }
     }

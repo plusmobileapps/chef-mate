@@ -52,11 +52,17 @@ class RecipeListBlocImpl(
                 isSearchActive = it.isSearchActive,
                 cookingRecipeCount = it.cookingRecipeIds.size,
                 showDoneCookingDialog = it.showDoneCookingDialog,
+                isSelectionMode = it.isSelectionMode,
+                selectedRecipeIds = it.selectedRecipeIds,
             )
         }
 
     override fun onRecipeClicked(recipe: RecipeListItem) {
-        output.onNext(Output.OpenRecipe(recipe.id))
+        if (viewModel.state.value.isSelectionMode) {
+            viewModel.toggleRecipeSelected(recipe.id)
+        } else {
+            output.onNext(Output.OpenRecipe(recipe.id))
+        }
     }
 
     override fun onAddRecipeClicked() {
@@ -124,6 +130,35 @@ class RecipeListBlocImpl(
 
     override fun onDoneCookingDismissed() {
         viewModel.dismissDoneCookingDialog()
+    }
+
+    override fun onEnterSelectionMode() {
+        viewModel.enterSelectionMode()
+    }
+
+    override fun onExitSelectionMode() {
+        viewModel.exitSelectionMode()
+    }
+
+    override fun onToggleRecipeSelected(recipe: RecipeListItem) {
+        viewModel.toggleRecipeSelected(recipe.id)
+    }
+
+    override fun onToggleSelectAllVisible() {
+        viewModel.toggleSelectAllVisible()
+    }
+
+    override fun onExportClicked() {
+        val state = viewModel.state.value
+        val ids = if (state.isSelectionMode) state.selectedRecipeIds else null
+        output.onNext(Output.OpenExportRecipes(ids))
+        // Selection mode persists across the trip to the exporter so the user can come back to the
+        // same picks if they bail out. It only clears via [onExportFinished] when the exporter
+        // signals a successful save.
+    }
+
+    override fun onExportFinished() {
+        viewModel.exitSelectionMode()
     }
 
     @Composable

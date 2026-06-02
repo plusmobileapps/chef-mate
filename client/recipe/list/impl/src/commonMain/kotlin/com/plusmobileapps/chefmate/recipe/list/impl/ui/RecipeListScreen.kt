@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.recipe.list.impl.ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,14 +32,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SoupKitchen
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.AccessTime
+import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.LocalFireDepartment
@@ -52,6 +57,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
@@ -62,6 +69,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -117,10 +125,18 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_rated
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_item_calories
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_item_servings
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_export_all
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_select
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_more_actions
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_search
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_clear
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_empty
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_placeholder
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_selection_count
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_selection_deselect_all
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_selection_exit
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_selection_export
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_selection_select_all
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort_a_to_z
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort_and_filter
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort_by
@@ -173,69 +189,122 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
             }
     }
 
-    Box(modifier = modifier.fillMaxSize().testTag(RecipeListTestTags.SCREEN)) {
-        PlusNavContainer(
-            modifier = modifier.fillMaxSize(),
-            data =
-                PlusHeaderData.Parent(
-                    title = Res.string.recipe_list_title.asTextData(),
-                    trailingAccessory =
-                        PlusHeaderData.TrailingAccessory.Custom {
-                            IconButton(
-                                onClick = {
-                                    showSearchBar = !showSearchBar
-                                    if (!showSearchBar) bloc.onSearchQueryChanged("")
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription =
-                                        stringResource(Res.string.recipe_list_search),
-                                )
+    val headerData =
+        if (state.isSelectionMode) {
+            PlusHeaderData.Parent(
+                title =
+                    PhraseModel(
+                        Res.string.recipe_list_selection_count,
+                        "count" to FixedString(state.selectedRecipeIds.size.toString()),
+                    ),
+                trailingAccessory =
+                    PlusHeaderData.TrailingAccessory.Custom {
+                        val allSelected =
+                            state.recipes.isNotEmpty() &&
+                                state.recipes.all { it.id in state.selectedRecipeIds }
+                        IconButton(onClick = bloc::onToggleSelectAllVisible) {
+                            Icon(
+                                imageVector =
+                                    if (allSelected) Icons.Default.CheckCircle
+                                    else Icons.Outlined.Circle,
+                                contentDescription =
+                                    stringResource(
+                                        if (allSelected) {
+                                            Res.string.recipe_list_selection_deselect_all
+                                        } else {
+                                            Res.string.recipe_list_selection_select_all
+                                        }
+                                    ),
+                            )
+                        }
+                        IconButton(
+                            onClick = bloc::onExportClicked,
+                            enabled = state.selectedRecipeIds.isNotEmpty(),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FileDownload,
+                                contentDescription =
+                                    stringResource(Res.string.recipe_list_selection_export),
+                            )
+                        }
+                        IconButton(onClick = bloc::onExitSelectionMode) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription =
+                                    stringResource(Res.string.recipe_list_selection_exit),
+                            )
+                        }
+                    },
+            )
+        } else {
+            PlusHeaderData.Parent(
+                title = Res.string.recipe_list_title.asTextData(),
+                trailingAccessory =
+                    PlusHeaderData.TrailingAccessory.Custom {
+                        IconButton(
+                            onClick = {
+                                showSearchBar = !showSearchBar
+                                if (!showSearchBar) bloc.onSearchQueryChanged("")
                             }
-                            IconButton(onClick = bloc::onToggleViewMode) {
-                                Icon(
-                                    imageVector =
-                                        if (state.isGridView) Icons.AutoMirrored.Filled.ViewList
-                                        else Icons.Default.GridView,
-                                    contentDescription =
-                                        stringResource(
-                                            if (state.isGridView) {
-                                                Res.string.recipe_list_view_list
-                                            } else {
-                                                Res.string.recipe_list_view_grid
-                                            }
-                                        ),
-                                )
-                            }
-                            IconButton(onClick = { showSortFilterSheet = true }) {
-                                val filterCount = state.totalActiveFilterCount
-                                if (filterCount > 0) {
-                                    BadgedBox(badge = { Badge { Text("$filterCount") } }) {
-                                        Icon(
-                                            imageVector = Icons.Default.FilterList,
-                                            contentDescription =
-                                                stringResource(Res.string.recipe_list_filter),
-                                            tint = MaterialTheme.colorScheme.primary,
-                                        )
-                                    }
-                                } else {
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = stringResource(Res.string.recipe_list_search),
+                            )
+                        }
+                        IconButton(onClick = bloc::onToggleViewMode) {
+                            Icon(
+                                imageVector =
+                                    if (state.isGridView) Icons.AutoMirrored.Filled.ViewList
+                                    else Icons.Default.GridView,
+                                contentDescription =
+                                    stringResource(
+                                        if (state.isGridView) {
+                                            Res.string.recipe_list_view_list
+                                        } else {
+                                            Res.string.recipe_list_view_grid
+                                        }
+                                    ),
+                            )
+                        }
+                        IconButton(onClick = { showSortFilterSheet = true }) {
+                            val filterCount = state.totalActiveFilterCount
+                            if (filterCount > 0) {
+                                BadgedBox(badge = { Badge { Text("$filterCount") } }) {
                                     Icon(
                                         imageVector = Icons.Default.FilterList,
                                         contentDescription =
                                             stringResource(Res.string.recipe_list_filter),
+                                        tint = MaterialTheme.colorScheme.primary,
                                     )
                                 }
-                            }
-                            IconButton(onClick = bloc::onAddRecipeClicked) {
+                            } else {
                                 Icon(
-                                    imageVector = Icons.Default.Add,
+                                    imageVector = Icons.Default.FilterList,
                                     contentDescription =
-                                        stringResource(Res.string.recipe_list_add_recipe),
+                                        stringResource(Res.string.recipe_list_filter),
                                 )
                             }
-                        },
-                ),
+                        }
+                        IconButton(onClick = bloc::onAddRecipeClicked) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription =
+                                    stringResource(Res.string.recipe_list_add_recipe),
+                            )
+                        }
+                        OverflowMenu(
+                            onSelectClicked = bloc::onEnterSelectionMode,
+                            onExportAllClicked = bloc::onExportClicked,
+                        )
+                    },
+            )
+        }
+
+    Box(modifier = modifier.fillMaxSize().testTag(RecipeListTestTags.SCREEN)) {
+        PlusNavContainer(
+            modifier = modifier.fillMaxSize(),
+            data = headerData,
             scrollEnabled = false,
             content = {
                 AnimatedVisibility(
@@ -284,6 +353,8 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                                 state = gridState,
                                 bottomContentPadding =
                                     if (state.cookingRecipeCount > 0) FabStackReserve else 0.dp,
+                                isSelectionMode = state.isSelectionMode,
+                                selectedRecipeIds = state.selectedRecipeIds,
                             )
                         }
                         else -> {
@@ -294,6 +365,8 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                                 state = listState,
                                 bottomContentPadding =
                                     if (state.cookingRecipeCount > 0) FabStackReserve else 0.dp,
+                                isSelectionMode = state.isSelectionMode,
+                                selectedRecipeIds = state.selectedRecipeIds,
                             )
                         }
                     }
@@ -390,6 +463,37 @@ private fun DoneCookingDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
             }
         },
     )
+}
+
+@Composable
+private fun OverflowMenu(onSelectClicked: () -> Unit, onExportAllClicked: () -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { expanded = true }) {
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = stringResource(Res.string.recipe_list_more_actions),
+            )
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.recipe_list_menu_select)) },
+                leadingIcon = { Icon(Icons.Default.Check, contentDescription = null) },
+                onClick = {
+                    expanded = false
+                    onSelectClicked()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.recipe_list_menu_export_all)) },
+                leadingIcon = { Icon(Icons.Default.FileDownload, contentDescription = null) },
+                onClick = {
+                    expanded = false
+                    onExportAllClicked()
+                },
+            )
+        }
+    }
 }
 
 // region Sort & Filter Bottom Sheet
@@ -760,6 +864,8 @@ private fun RecipeGrid(
     modifier: Modifier = Modifier,
     state: LazyGridState = rememberLazyGridState(),
     bottomContentPadding: androidx.compose.ui.unit.Dp = 0.dp,
+    isSelectionMode: Boolean = false,
+    selectedRecipeIds: Set<Long> = emptySet(),
 ) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 160.dp),
@@ -777,7 +883,12 @@ private fun RecipeGrid(
     ) {
         items(recipes.size, key = { recipes[it].id }) { index ->
             val recipe = recipes[index]
-            RecipeGridItem(recipe = recipe, onClick = { onRecipeClicked(recipe) })
+            RecipeGridItem(
+                recipe = recipe,
+                onClick = { onRecipeClicked(recipe) },
+                isSelectionMode = isSelectionMode,
+                isSelected = recipe.id in selectedRecipeIds,
+            )
         }
     }
 }
@@ -787,18 +898,35 @@ private fun RecipeGridItem(
     recipe: RecipeListItem,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    isSelectionMode: Boolean = false,
+    isSelected: Boolean = false,
 ) {
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         colors =
-            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+            CardDefaults.cardColors(
+                containerColor =
+                    if (isSelectionMode && isSelected) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainerLow
+                    }
+            ),
     ) {
-        RecipeImage(
-            imageUrl = recipe.imageUrl,
-            contentDescription = recipe.title,
-            modifier = Modifier.fillMaxWidth().aspectRatio(1.2f),
-        )
+        Box {
+            RecipeImage(
+                imageUrl = recipe.imageUrl,
+                contentDescription = recipe.title,
+                modifier = Modifier.fillMaxWidth().aspectRatio(1.2f),
+            )
+            if (isSelectionMode) {
+                SelectionBadge(
+                    isSelected = isSelected,
+                    modifier = Modifier.align(Alignment.TopEnd).padding(6.dp),
+                )
+            }
+        }
         Column(
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -822,6 +950,30 @@ private fun RecipeGridItem(
     }
 }
 
+/**
+ * Filled-circle checkmark when selected, hollow circle when not — small enough to overlay a recipe
+ * image without overpowering it.
+ */
+@Composable
+private fun SelectionBadge(isSelected: Boolean, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier.size(24.dp),
+        shape = androidx.compose.foundation.shape.CircleShape,
+        color =
+            if (isSelected) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+    ) {
+        Icon(
+            imageVector = if (isSelected) Icons.Default.Check else Icons.Outlined.Circle,
+            contentDescription = null,
+            tint =
+                if (isSelected) MaterialTheme.colorScheme.onPrimary
+                else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(2.dp),
+        )
+    }
+}
+
 // endregion
 
 // region List View
@@ -833,6 +985,8 @@ private fun RecipeList(
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState(),
     bottomContentPadding: androidx.compose.ui.unit.Dp = 0.dp,
+    isSelectionMode: Boolean = false,
+    selectedRecipeIds: Set<Long> = emptySet(),
 ) {
     LazyColumn(
         state = state,
@@ -841,7 +995,12 @@ private fun RecipeList(
     ) {
         items(recipes.size, key = { recipes[it].id }) { index ->
             val recipe = recipes[index]
-            RecipeListItemContent(recipe = recipe, onClick = { onRecipeClicked(recipe) })
+            RecipeListItemContent(
+                recipe = recipe,
+                onClick = { onRecipeClicked(recipe) },
+                isSelectionMode = isSelectionMode,
+                isSelected = recipe.id in selectedRecipeIds,
+            )
         }
     }
 }
@@ -855,12 +1014,32 @@ private fun RecipeListItemContent(
     recipe: RecipeListItem,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    isSelectionMode: Boolean = false,
+    isSelected: Boolean = false,
 ) {
+    val background =
+        if (isSelectionMode && isSelected) MaterialTheme.colorScheme.primaryContainer
+        else androidx.compose.ui.graphics.Color.Transparent
     Row(
-        modifier = modifier.fillMaxWidth().clickable(onClick = onClick).padding(16.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .background(background)
+                .padding(16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        if (isSelectionMode) {
+            Icon(
+                imageVector = if (isSelected) Icons.Default.CheckCircle else Icons.Outlined.Circle,
+                contentDescription = null,
+                tint =
+                    if (isSelected) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(24.dp),
+            )
+        }
         RecipeImage(
             imageUrl = recipe.imageUrl,
             contentDescription = recipe.title,

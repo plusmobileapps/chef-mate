@@ -6,6 +6,7 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.serialization.Serializable
 
 interface ExportRecipesBloc : BackHandlerOwner, BlocScreen {
     val state: StateFlow<Model>
@@ -73,10 +74,31 @@ interface ExportRecipesBloc : BackHandlerOwner, BlocScreen {
     }
 
     sealed class Output {
+        /** User backed out of the exporter from any stage other than [Phase.Done]. */
         data object Back : Output()
+
+        /**
+         * User left the exporter from the [Phase.Done] screen — the archive was actually written.
+         * Distinct from [Back] so the parent navigator can react (e.g. clear the recipe-list
+         * selection that launched the export).
+         */
+        data object Finished : Output()
+    }
+
+    /**
+     * Controls which recipes the bloc loads:
+     * - [All] loads every recipe in the local cache pre-selected (the Settings → Backup flow).
+     * - [Selected] restricts the review list to the given ids — used when the user multi-selects on
+     *   the recipe list and launches export from the overflow menu.
+     */
+    @Serializable
+    sealed class Props {
+        @Serializable data object All : Props()
+
+        @Serializable data class Selected(val recipeIds: Set<Long>) : Props()
     }
 
     fun interface Factory {
-        fun create(context: BlocContext, output: Consumer<Output>): ExportRecipesBloc
+        fun create(context: BlocContext, props: Props, output: Consumer<Output>): ExportRecipesBloc
     }
 }

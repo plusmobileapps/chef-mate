@@ -64,6 +64,16 @@
     <string name="recipe_sync_syncing">Syncing</string>
     <string name="recipe_sync_synced">Synced</string>
 
+    <!-- Overflow Menu / Selection Mode -->
+    <string name="recipe_list_more_actions">More actions</string>
+    <string name="recipe_list_menu_select">Select recipes</string>
+    <string name="recipe_list_menu_export_all">Export all recipes</string>
+    <string name="recipe_list_selection_count">{count} selected</string>
+    <string name="recipe_list_selection_exit">Exit selection</string>
+    <string name="recipe_list_selection_select_all">Select all</string>
+    <string name="recipe_list_selection_deselect_all">Deselect all</string>
+    <string name="recipe_list_selection_export">Export selected</string>
+
     <!-- Cooking Session -->
     <string name="recipe_list_continue_cooking">Continue cooking</string>
     <string name="recipe_list_done_cooking">Done cooking</string>

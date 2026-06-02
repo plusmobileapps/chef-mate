@@ -359,9 +359,7 @@ private fun CategoryList(
             )
         }
         if (userItems.isEmpty()) {
-            item(key = "user-empty") {
-                EmptyUserSectionHint()
-            }
+            item(key = "user-empty") { EmptyUserSectionHint() }
         } else {
             items(userItems, key = { it.rowKey() }) { item ->
                 CategoryRow(

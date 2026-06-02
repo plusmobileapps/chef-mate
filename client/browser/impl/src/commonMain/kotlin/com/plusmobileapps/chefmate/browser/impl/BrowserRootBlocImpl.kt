@@ -94,11 +94,7 @@ class BrowserRootBlocImpl(
             is BrowserRootBloc.Presentation.Modal ->
                 PlusHeaderContainer(
                     modifier = modifier,
-                    data =
-                        PlusHeaderData.Modal(
-                            title = FixedString(""),
-                            onCloseClick = p.onClose,
-                        ),
+                    data = PlusHeaderData.Modal(title = FixedString(""), onCloseClick = p.onClose),
                     scrollEnabled = false,
                     maxContentWidth = Dp.Unspecified,
                     content = { BrowserRootScreen(bloc = this@BrowserRootBlocImpl) },

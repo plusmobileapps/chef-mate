@@ -95,6 +95,7 @@ class SettingsRootBlocImpl(
                     bloc =
                         exportRecipes.create(
                             context = context,
+                            props = ExportRecipesBloc.Props.All,
                             output = ::handleExportRecipesOutput,
                         )
                 )
@@ -137,7 +138,10 @@ class SettingsRootBlocImpl(
 
     private fun handleExportRecipesOutput(output: ExportRecipesBloc.Output) {
         when (output) {
-            ExportRecipesBloc.Output.Back -> navigation.pop()
+            // Settings hosts the exporter without any list-side selection, so success and cancel
+            // both just pop back to the Backup screen.
+            ExportRecipesBloc.Output.Back,
+            ExportRecipesBloc.Output.Finished -> navigation.pop()
         }
     }
 

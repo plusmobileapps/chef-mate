@@ -25,6 +25,12 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
 
     fun handleSharedUrl(url: String)
 
+    /**
+     * Called by the root navigator after a launched-from-list export completes successfully.
+     * Forwards to the recipe-list child so it can drop multi-select mode.
+     */
+    fun onExportFinished()
+
     data class Model(val selectedTab: Tab = Tab.RECIPES, val tabs: List<Tab> = Tab.entries)
 
     enum class Tab {
@@ -71,6 +77,12 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
         data class OpenMealPlanner(val props: MealPlannerRootBloc.Props) : Output()
 
         data class OpenCookMode(val recipeId: Long) : Output()
+
+        /**
+         * Forwarded from the recipe list's overflow menu. [recipeIds] is null when the user picked
+         * "Export all recipes" and a non-empty set when they exported a multi-select.
+         */
+        data class OpenExportRecipes(val recipeIds: Set<Long>?) : Output()
     }
 
     fun interface Factory {

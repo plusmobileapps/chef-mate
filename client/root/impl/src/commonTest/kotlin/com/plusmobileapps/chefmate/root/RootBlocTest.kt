@@ -16,6 +16,7 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc
 import com.plusmobileapps.chefmate.settings.root.SettingsRootBloc
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import dev.mokkery.MockMode
@@ -41,6 +42,8 @@ class RootBlocTest {
     var otpOutput: Consumer<OtpBloc.Output> = Consumer {}
     var otpProps: OtpBloc.Props? = null
     var aiChatOutput: Consumer<AiChatBloc.Output> = Consumer {}
+    var exportRecipesOutput: Consumer<ExportRecipesBloc.Output> = Consumer {}
+    var exportRecipesProps: ExportRecipesBloc.Props? = null
     var bottomNavInitialTab: BottomNavBloc.Tab? = null
 
     fun createRoot(
@@ -53,7 +56,7 @@ class RootBlocTest {
             bottomNav = { _, output, initialTab ->
                 bottomNavOutput = output
                 bottomNavInitialTab = initialTab
-                mock()
+                mock(MockMode.autoUnit)
             },
             browserRootBlocFactory =
                 object : BrowserRootBloc.Factory {
@@ -99,6 +102,11 @@ class RootBlocTest {
             featureFlagsBlocFactory = { _, _ -> mock() },
             aiChat = { _, output ->
                 aiChatOutput = output
+                mock()
+            },
+            exportRecipes = { _, props, output ->
+                exportRecipesProps = props
+                exportRecipesOutput = output
                 mock()
             },
         )
@@ -337,5 +345,42 @@ class RootBlocTest {
         root.instance() should instanceOf<RootBloc.Child.Authentication>()
         root.state.value.backStack.size shouldBe 1
         authProps shouldBe AuthenticationBloc.Props.SignUp
+    }
+
+    @Test
+    fun When_bottom_nav_outputs_export_all_Then_export_recipes_is_shown_with_All_props() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenExportRecipes(recipeIds = null))
+        rootBloc.instance() should instanceOf<RootBloc.Child.ExportRecipes>()
+        exportRecipesProps shouldBe ExportRecipesBloc.Props.All
+    }
+
+    @Test
+    fun When_bottom_nav_outputs_export_selection_Then_export_recipes_uses_Selected_props() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenExportRecipes(recipeIds = setOf(1L, 2L)))
+        rootBloc.instance() should instanceOf<RootBloc.Child.ExportRecipes>()
+        exportRecipesProps shouldBe ExportRecipesBloc.Props.Selected(setOf(1L, 2L))
+    }
+
+    @Test
+    fun Given_export_recipes_When_back_Then_bottom_nav_is_shown() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenExportRecipes(recipeIds = null))
+        exportRecipesOutput.onNext(ExportRecipesBloc.Output.Back)
+        rootBloc.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
+    }
+
+    @Test
+    fun Given_export_recipes_When_finished_Then_bottom_nav_is_shown_and_notified() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenExportRecipes(recipeIds = setOf(1L)))
+        val bottomNavChild =
+            rootBloc.state.value.items
+                .map { it.instance }
+                .filterIsInstance<RootBloc.Child.BottomNavigation>()
+                .first()
+                .bloc
+
+        exportRecipesOutput.onNext(ExportRecipesBloc.Output.Finished)
+
+        rootBloc.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
+        dev.mokkery.verify { bottomNavChild.onExportFinished() }
     }
 }

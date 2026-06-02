@@ -25,6 +25,7 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc.Props.Detail
+import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc
 import com.plusmobileapps.chefmate.root.RootBloc.Child.BottomNavigation
 import com.plusmobileapps.chefmate.root.RootBlocImpl.Configuration.GroceryDetail
 import com.plusmobileapps.chefmate.root.RootBlocImpl.Configuration.RecipeRoot
@@ -53,6 +54,7 @@ class RootBlocImpl(
     private val featureFlags: FeatureFlags,
     private val featureFlagsBlocFactory: FeatureFlagsBloc.Factory,
     private val aiChat: AiChatBloc.Factory,
+    private val exportRecipes: ExportRecipesBloc.Factory,
 ) : RootBloc, BlocContext by context {
 
     init {
@@ -224,6 +226,18 @@ class RootBlocImpl(
                 RootBloc.Child.AiChat(
                     bloc = aiChat.create(context = context, output = ::handleAiChatOutput)
                 )
+
+            is Configuration.ExportRecipes ->
+                RootBloc.Child.ExportRecipes(
+                    bloc =
+                        exportRecipes.create(
+                            context = context,
+                            props =
+                                config.recipeIds?.let { ExportRecipesBloc.Props.Selected(it) }
+                                    ?: ExportRecipesBloc.Props.All,
+                            output = ::handleExportRecipesOutput,
+                        )
+                )
         }
 
     private fun handleBottomNavOutput(output: BottomNavBloc.Output) {
@@ -280,6 +294,26 @@ class RootBlocImpl(
 
             is BottomNavBloc.Output.OpenCookMode -> {
                 navigation.bringToFront(Configuration.CookMode(output.recipeId))
+            }
+
+            is BottomNavBloc.Output.OpenExportRecipes -> {
+                navigation.bringToFront(Configuration.ExportRecipes(output.recipeIds))
+            }
+        }
+    }
+
+    private fun handleExportRecipesOutput(output: ExportRecipesBloc.Output) {
+        when (output) {
+            ExportRecipesBloc.Output.Back -> navigation.pop()
+            ExportRecipesBloc.Output.Finished -> {
+                navigation.pop()
+                // Tell the recipe list to drop multi-select mode now that the archive was written.
+                stack.value.items
+                    .map { it.instance }
+                    .filterIsInstance<RootBloc.Child.BottomNavigation>()
+                    .firstOrNull()
+                    ?.bloc
+                    ?.onExportFinished()
             }
         }
     }
@@ -417,5 +451,7 @@ class RootBlocImpl(
         @Serializable data class CookMode(val recipeId: Long) : Configuration()
 
         @Serializable data object AiChat : Configuration()
+
+        @Serializable data class ExportRecipes(val recipeIds: Set<Long>?) : Configuration()
     }
 }
