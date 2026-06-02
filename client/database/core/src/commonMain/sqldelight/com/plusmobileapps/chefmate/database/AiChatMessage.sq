@@ -1,5 +1,6 @@
 CREATE TABLE AiChatMessage (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    conversationId INTEGER NOT NULL REFERENCES AiChatConversation(id) ON DELETE CASCADE,
     role TEXT NOT NULL,
     content TEXT NOT NULL,
     createdAt INTEGER NOT NULL,
@@ -7,13 +8,14 @@ CREATE TABLE AiChatMessage (
 );
 
 CREATE INDEX idx_ai_chat_message_created_at ON AiChatMessage(createdAt);
+CREATE INDEX idx_ai_chat_message_conversation ON AiChatMessage(conversationId);
 
-getAll:
-SELECT * FROM AiChatMessage ORDER BY createdAt ASC, id ASC;
+getAllForConversation:
+SELECT * FROM AiChatMessage WHERE conversationId = ? ORDER BY createdAt ASC, id ASC;
 
 insertMessage:
-INSERT INTO AiChatMessage(role, content, createdAt, isStreaming)
-VALUES (?, ?, ?, ?)
+INSERT INTO AiChatMessage(conversationId, role, content, createdAt, isStreaming)
+VALUES (?, ?, ?, ?, ?)
 RETURNING id;
 
 updateContent:

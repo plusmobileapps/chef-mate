@@ -1,0 +1,36 @@
+CREATE TABLE AiChatConversation (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    title TEXT,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL
+);
+
+CREATE INDEX idx_ai_chat_conversation_updated_at ON AiChatConversation(updatedAt);
+
+-- Insert a single legacy conversation iff any pre-existing messages need a parent.
+INSERT INTO AiChatConversation (title, createdAt, updatedAt)
+SELECT NULL, COALESCE(MIN(createdAt), 0), COALESCE(MAX(createdAt), 0)
+FROM AiChatMessage
+HAVING COUNT(*) > 0;
+
+-- Rebuild AiChatMessage with the new conversationId column. SQLite can't ADD COLUMN with a
+-- foreign-key reference, so we copy through a temp table.
+CREATE TABLE AiChatMessage_new (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    conversationId INTEGER NOT NULL REFERENCES AiChatConversation(id) ON DELETE CASCADE,
+    role TEXT NOT NULL,
+    content TEXT NOT NULL,
+    createdAt INTEGER NOT NULL,
+    isStreaming INTEGER NOT NULL DEFAULT 0
+);
+
+INSERT INTO AiChatMessage_new (id, conversationId, role, content, createdAt, isStreaming)
+SELECT id, (SELECT id FROM AiChatConversation ORDER BY id ASC LIMIT 1), role, content, createdAt, isStreaming
+FROM AiChatMessage;
+
+DROP INDEX IF EXISTS idx_ai_chat_message_created_at;
+DROP TABLE AiChatMessage;
+ALTER TABLE AiChatMessage_new RENAME TO AiChatMessage;
+
+CREATE INDEX idx_ai_chat_message_created_at ON AiChatMessage(createdAt);
+CREATE INDEX idx_ai_chat_message_conversation ON AiChatMessage(conversationId);

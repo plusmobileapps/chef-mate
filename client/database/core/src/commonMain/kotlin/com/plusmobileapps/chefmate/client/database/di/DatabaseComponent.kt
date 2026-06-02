@@ -1,6 +1,7 @@
 package com.plusmobileapps.chefmate.client.database.di
 
 import com.plusmobileapps.chefmate.client.database.DriverFactory
+import com.plusmobileapps.chefmate.database.AiChatConversationQueries
 import com.plusmobileapps.chefmate.database.AiChatMessageQueries
 import com.plusmobileapps.chefmate.database.BrowserHistoryQueries
 import com.plusmobileapps.chefmate.database.CategoryQueries
@@ -64,4 +65,9 @@ interface DatabaseComponent {
     @Provides
     fun providesAiChatMessageQueries(database: Database): AiChatMessageQueries =
         database.aiChatMessageQueries
+
+    @SingleIn(AppScope::class)
+    @Provides
+    fun providesAiChatConversationQueries(database: Database): AiChatConversationQueries =
+        database.aiChatConversationQueries
 }
