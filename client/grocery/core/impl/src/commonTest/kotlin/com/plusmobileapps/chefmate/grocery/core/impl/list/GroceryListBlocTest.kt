@@ -4,6 +4,8 @@
 package com.plusmobileapps.chefmate.grocery.core.impl.list
 
 import app.cash.turbine.test
+import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryGroup
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
@@ -13,12 +15,14 @@ import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
 import com.russhwolf.settings.MapSettings
+import dev.mokkery.MockMode
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.everySuspend
 import dev.mokkery.mock
 import dev.mokkery.verifySuspend
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlin.test.Test
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -38,6 +42,14 @@ class GroceryListBlocTest {
         everySuspend { ensureDefaultList() } returns 1L
     }
 
+    var detailItemId: Long? = null
+    var detailOutput: Consumer<GroceryDetailBloc.Output> = Consumer {}
+    val groceryDetailFactory = GroceryDetailBloc.Factory { _, id, output ->
+        detailItemId = id
+        detailOutput = output
+        mock(MockMode.autoUnit)
+    }
+
     val bloc =
         GroceryListBlocImpl(
             context = context,
@@ -49,6 +61,7 @@ class GroceryListBlocTest {
                     settings = settings,
                 )
             },
+            groceryDetailFactory = groceryDetailFactory,
         )
 
     @Test
@@ -333,6 +346,35 @@ class GroceryListBlocTest {
     fun When_browse_recipes_clicked_Then_open_recipes_output_emitted() = runTest {
         bloc.onBrowseRecipesClicked()
         output.lastValue shouldBe GroceryListBloc.Output.OpenRecipes
+    }
+
+    @Test
+    fun When_item_clicked_Then_detail_sheet_slot_activated() = runTest {
+        val item = GroceryItem(id = 42, name = "Apples", isChecked = false)
+        bloc.childSlot.value.child shouldBe null
+        bloc.onGroceryItemClicked(item)
+        bloc.childSlot.value.child?.instance.let {
+            (it as GroceryListBloc.Sheet.GroceryDetail).bloc shouldBe it.bloc
+        }
+        detailItemId shouldBe 42L
+    }
+
+    @Test
+    fun When_detail_finishes_Then_sheet_slot_dismissed() = runTest {
+        val item = GroceryItem(id = 7, name = "Milk", isChecked = false)
+        bloc.onGroceryItemClicked(item)
+        bloc.childSlot.value.child shouldNotBe null
+        detailOutput.onNext(GroceryDetailBloc.Output.Finished)
+        bloc.childSlot.value.child shouldBe null
+    }
+
+    @Test
+    fun When_dismiss_sheet_called_Then_slot_dismissed() = runTest {
+        val item = GroceryItem(id = 9, name = "Cheese", isChecked = false)
+        bloc.onGroceryItemClicked(item)
+        bloc.childSlot.value.child shouldNotBe null
+        bloc.onDismissSheet()
+        bloc.childSlot.value.child shouldBe null
     }
 
     @Test
