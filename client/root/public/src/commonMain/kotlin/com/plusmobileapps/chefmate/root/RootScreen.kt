@@ -3,6 +3,7 @@
 package com.plusmobileapps.chefmate.root
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -23,25 +24,30 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
     val stack by rootBloc.state.subscribeAsState()
     ChefMateTheme {
-        Children(
-            modifier = modifier.fillMaxSize(),
-            stack = stack,
-            animation =
-                backAnimation(
-                    backHandler = rootBloc.backHandler,
-                    onBack = rootBloc::onBackClicked,
-                    fallbackAnimation =
-                        stackAnimation { child, otherChild, _ ->
-                            if (child.instance.isModal() || otherChild.instance.isModal()) {
-                                verticalSlide()
-                            } else {
-                                slide()
-                            }
-                        },
-                    isModal = { it.isModal() },
-                ),
-        ) { child ->
-            child.instance.Content()
+        // Surface paints the theme background behind the navigation stack so the
+        // Android predictive-back gesture reveals the themed color (white in light,
+        // black in dark) instead of the Activity's hardcoded light window background.
+        Surface(modifier = modifier.fillMaxSize()) {
+            Children(
+                modifier = Modifier.fillMaxSize(),
+                stack = stack,
+                animation =
+                    backAnimation(
+                        backHandler = rootBloc.backHandler,
+                        onBack = rootBloc::onBackClicked,
+                        fallbackAnimation =
+                            stackAnimation { child, otherChild, _ ->
+                                if (child.instance.isModal() || otherChild.instance.isModal()) {
+                                    verticalSlide()
+                                } else {
+                                    slide()
+                                }
+                            },
+                        isModal = { it.isModal() },
+                    ),
+            ) { child ->
+                child.instance.Content()
+            }
         }
     }
 }
