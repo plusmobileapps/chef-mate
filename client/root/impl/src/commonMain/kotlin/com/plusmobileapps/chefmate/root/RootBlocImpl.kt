@@ -10,7 +10,7 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
-import com.plusmobileapps.chefmate.aichat.AiChatBloc
+import com.plusmobileapps.chefmate.aichat.AiChatRootBloc
 import com.plusmobileapps.chefmate.auth.data.OtpFlow
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
 import com.plusmobileapps.chefmate.auth.ui.otp.OtpBloc
@@ -50,7 +50,7 @@ class RootBlocImpl(
     private val cookMode: CookModeBloc.Factory,
     private val featureFlags: FeatureFlags,
     private val featureFlagsBlocFactory: FeatureFlagsBloc.Factory,
-    private val aiChat: AiChatBloc.Factory,
+    private val aiChat: AiChatRootBloc.Factory,
     private val exportRecipes: ExportRecipesBloc.Factory,
 ) : RootBloc, BlocContext by context {
 
@@ -352,10 +352,10 @@ class RootBlocImpl(
         }
     }
 
-    private fun handleAiChatOutput(output: AiChatBloc.Output) {
+    private fun handleAiChatOutput(output: AiChatRootBloc.Output) {
         when (output) {
-            AiChatBloc.Output.Back -> navigation.pop()
-            is AiChatBloc.Output.AddAsRecipe ->
+            AiChatRootBloc.Output.Finished -> navigation.pop()
+            is AiChatRootBloc.Output.AddAsRecipe ->
                 navigation.bringToFront(
                     RecipeRoot(
                         RecipeRootBloc.Props.CreateFromExtracted(output.extracted, fromAi = true)

@@ -7,6 +7,7 @@ import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.serialization.Serializable
 
 interface AiChatBloc : BackClickBloc, BlocScreen {
     val state: StateFlow<Model>
@@ -17,7 +18,7 @@ interface AiChatBloc : BackClickBloc, BlocScreen {
 
     fun onSendClick()
 
-    fun onClearClick()
+    fun onHistoryClick()
 
     fun onAddRecipeClick()
 
@@ -29,13 +30,24 @@ interface AiChatBloc : BackClickBloc, BlocScreen {
         val error: TextData? = null,
     )
 
+    @Serializable
+    sealed class Props {
+        /** A fresh chat — the conversation row is created lazily on first send. */
+        @Serializable data object NewConversation : Props()
+
+        /** Reopening an existing conversation by id. */
+        @Serializable data class ExistingConversation(val conversationId: Long) : Props()
+    }
+
     sealed class Output {
         data object Back : Output()
+
+        data object OpenHistory : Output()
 
         data class AddAsRecipe(val extracted: ExtractedRecipeData) : Output()
     }
 
     fun interface Factory {
-        fun create(context: BlocContext, output: Consumer<Output>): AiChatBloc
+        fun create(context: BlocContext, props: Props, output: Consumer<Output>): AiChatBloc
     }
 }
