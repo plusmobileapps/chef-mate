@@ -4,6 +4,7 @@
 package com.plusmobileapps.chefmate.aichat.impl
 
 import app.cash.turbine.test
+import com.plusmobileapps.chefmate.aichat.AiChatBloc
 import com.plusmobileapps.chefmate.aichat.AiChatExtractionError
 import com.plusmobileapps.chefmate.aichat.AiChatNoApiKeyError
 import com.plusmobileapps.chefmate.aichat.ChatMessage
@@ -34,15 +35,17 @@ class AiChatViewModelTest {
 
     private val repository =
         AiChatRepository(
-            queries = db.aiChatMessageQueries,
+            messageQueries = db.aiChatMessageQueries,
+            conversationQueries = db.aiChatConversationQueries,
             geminiClient = geminiClient,
             dateTimeUtil = dateTimeUtil,
             ioContext = dispatcher,
         )
 
-    private val viewModel =
+    private fun newViewModel(props: AiChatBloc.Props = AiChatBloc.Props.NewConversation) =
         AiChatViewModel(
             mainContext = dispatcher,
+            props = props,
             repository = repository,
             recipeExtractor = recipeExtractor,
         )
@@ -50,7 +53,7 @@ class AiChatViewModelTest {
     @Test
     fun canAddRecipe_is_false_initially() =
         runTest(dispatcher) {
-            viewModel.state.test {
+            newViewModel().state.test {
                 awaitItem().canAddRecipe shouldBe false
                 cancelAndIgnoreRemainingEvents()
             }
@@ -60,6 +63,7 @@ class AiChatViewModelTest {
     fun canAddRecipe_becomes_true_after_finished_model_reply() =
         runTest(dispatcher) {
             everySuspend { geminiClient.streamReply(any()) } returns flow { emit("answer") }
+            val viewModel = newViewModel()
 
             viewModel.onInputChange("hi")
             viewModel.send()
@@ -91,6 +95,7 @@ class AiChatViewModelTest {
                     calories = null,
                 )
             everySuspend { recipeExtractor.extract(any()) } returns extracted
+            val viewModel = newViewModel()
 
             viewModel.onInputChange("hi")
             viewModel.send()
@@ -107,6 +112,8 @@ class AiChatViewModelTest {
     @Test
     fun extractRecipe_no_ops_when_no_model_reply_exists() =
         runTest(dispatcher) {
+            val viewModel = newViewModel()
+
             viewModel.extractRecipe()
 
             viewModel.state.value.isExtractingRecipe shouldBe false
@@ -119,6 +126,7 @@ class AiChatViewModelTest {
             everySuspend { geminiClient.streamReply(any()) } returns flow { emit("ok") }
             everySuspend { recipeExtractor.extract(any()) } throws
                 GeminiExtractionException("MISSING_API_KEY")
+            val viewModel = newViewModel()
 
             viewModel.onInputChange("hi")
             viewModel.send()
@@ -133,6 +141,7 @@ class AiChatViewModelTest {
             everySuspend { geminiClient.streamReply(any()) } returns flow { emit("ok") }
             everySuspend { recipeExtractor.extract(any()) } throws
                 GeminiExtractionException("MALFORMED_JSON")
+            val viewModel = newViewModel()
 
             viewModel.onInputChange("hi")
             viewModel.send()
@@ -145,11 +154,32 @@ class AiChatViewModelTest {
     fun send_clears_input_and_marks_isSending() =
         runTest(dispatcher) {
             everySuspend { geminiClient.streamReply(any()) } returns emptyFlow()
+            val viewModel = newViewModel()
             viewModel.onInputChange("hello")
 
             viewModel.send()
 
             viewModel.inputText.value shouldBe ""
             viewModel.state.value.isSending shouldBe false
+        }
+
+    @Test
+    fun existing_conversation_props_loads_history() =
+        runTest(dispatcher) {
+            // First conversation is created via repository, then a separate viewModel reopens it.
+            everySuspend { geminiClient.streamReply(any()) } returns flow { emit("model reply") }
+            val seedViewModel = newViewModel()
+            seedViewModel.onInputChange("hi")
+            seedViewModel.send()
+            val conversationId = db.aiChatConversationQueries.observeAll().executeAsOne().id
+
+            val reopened =
+                newViewModel(AiChatBloc.Props.ExistingConversation(conversationId = conversationId))
+
+            reopened.state.test {
+                val state = expectMostRecentItem()
+                state.messages.size shouldBe 2
+                state.messages.first().role shouldBe ChatMessage.Role.USER
+            }
         }
 }

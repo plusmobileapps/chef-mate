@@ -4,7 +4,7 @@ package com.plusmobileapps.chefmate.root
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
-import com.plusmobileapps.chefmate.aichat.AiChatBloc
+import com.plusmobileapps.chefmate.aichat.AiChatRootBloc
 import com.plusmobileapps.chefmate.auth.data.OtpFlow
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
 import com.plusmobileapps.chefmate.auth.ui.otp.OtpBloc
@@ -38,7 +38,7 @@ class RootBlocTest {
     var authProps: AuthenticationBloc.Props? = null
     var otpOutput: Consumer<OtpBloc.Output> = Consumer {}
     var otpProps: OtpBloc.Props? = null
-    var aiChatOutput: Consumer<AiChatBloc.Output> = Consumer {}
+    var aiChatOutput: Consumer<AiChatRootBloc.Output> = Consumer {}
     var exportRecipesOutput: Consumer<ExportRecipesBloc.Output> = Consumer {}
     var exportRecipesProps: ExportRecipesBloc.Props? = null
     var bottomNavInitialTab: BottomNavBloc.Tab? = null
@@ -269,7 +269,7 @@ class RootBlocTest {
         bottomNavOutput.onNext(BottomNavBloc.Output.OpenAiChat)
         rootBloc.instance() should instanceOf<RootBloc.Child.AiChat>()
 
-        aiChatOutput.onNext(AiChatBloc.Output.AddAsRecipe(extracted))
+        aiChatOutput.onNext(AiChatRootBloc.Output.AddAsRecipe(extracted))
 
         rootBloc.instance() should instanceOf<RootBloc.Child.RecipeRoot>()
         recipeProps shouldBe RecipeRootBloc.Props.CreateFromExtracted(extracted, fromAi = true)
