@@ -3,7 +3,7 @@
     <string name="aichat_title">AI Chat</string>
     <string name="aichat_input_hint">Ask anything…</string>
     <string name="aichat_send">Send</string>
-    <string name="aichat_clear">Clear conversation</string>
+    <string name="aichat_history">Conversation history</string>
     <string name="aichat_add_recipe">Add recipe</string>
     <string name="aichat_extracting_recipe">Extracting recipe…</string>
     <string name="aichat_error_extract_recipe">Couldn’t pull a recipe from that reply. Try asking Gemini to be more specific.</string>
@@ -14,4 +14,17 @@
     <string name="aichat_error_generic">Something went wrong. Try again.</string>
     <string name="aichat_role_you">You</string>
     <string name="aichat_role_gemini">Gemini</string>
+    <string name="aichat_history_title">History</string>
+    <string name="aichat_history_new_conversation">New conversation</string>
+    <string name="aichat_history_delete_all">Delete all conversations</string>
+    <string name="aichat_history_delete_conversation">Delete conversation</string>
+    <string name="aichat_history_empty_title">No conversations yet</string>
+    <string name="aichat_history_empty_description">Conversations you start will show up here.</string>
+    <string name="aichat_history_untitled">Untitled conversation</string>
+    <string name="aichat_history_delete_all_dialog_title">Delete all conversations?</string>
+    <string name="aichat_history_delete_all_dialog_message">This permanently deletes every chat with Gemini.</string>
+    <string name="aichat_history_delete_dialog_title">Delete conversation?</string>
+    <string name="aichat_history_delete_dialog_message">This permanently deletes this chat.</string>
+    <string name="aichat_history_dialog_confirm">Delete</string>
+    <string name="aichat_history_dialog_cancel">Cancel</string>
 </resources>
