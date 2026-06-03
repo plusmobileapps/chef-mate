@@ -1,0 +1,59 @@
+package com.plusmobileapps.chefmate.recipebook.edit.impl
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import com.plusmobileapps.chefmate.BlocContext
+import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.di.AppScope
+import com.plusmobileapps.chefmate.getViewModel
+import com.plusmobileapps.chefmate.mapState
+import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookBloc
+import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookBloc.Model
+import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookBloc.Output
+import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookBloc.Props
+import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookScreen
+import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedInject
+import kotlinx.coroutines.flow.StateFlow
+
+@AssistedInject
+@ContributesAssistedFactory(
+    scope = AppScope::class,
+    assistedFactory = EditRecipeBookBloc.Factory::class,
+)
+class EditRecipeBookBlocImpl(
+    @Assisted context: BlocContext,
+    @Assisted private val props: Props,
+    @Assisted private val output: Consumer<Output>,
+    viewModelFactory: EditRecipeBookViewModel.Factory,
+) : EditRecipeBookBloc, BlocContext by context {
+
+    private val viewModel = instanceKeeper.getViewModel {
+        viewModelFactory.create(props) { output.onNext(Output.Finished) }
+    }
+
+    override val state: StateFlow<Model> = viewModel.state.mapState { it.toBlocModel() }
+
+    override fun onNameChanged(name: String) = viewModel.onNameChanged(name)
+
+    override fun onSaveClicked() = viewModel.onSaveClicked()
+
+    override fun onCloseClicked() {
+        output.onNext(Output.Finished)
+    }
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        EditRecipeBookScreen(bloc = this, modifier = modifier)
+    }
+
+    private fun EditRecipeBookViewModel.State.toBlocModel(): Model =
+        Model(
+            title = title,
+            name = name,
+            isCreate = isCreate,
+            isSaving = isSaving,
+            nameError = nameError,
+        )
+}
