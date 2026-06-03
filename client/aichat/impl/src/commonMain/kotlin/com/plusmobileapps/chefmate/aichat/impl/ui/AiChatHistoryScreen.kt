@@ -18,7 +18,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -55,8 +54,10 @@ import com.plusmobileapps.chefmate.aichat.AiChatConversation
 import com.plusmobileapps.chefmate.aichat.AiChatHistoryBloc
 import com.plusmobileapps.chefmate.aichat.AiChatHistoryTestTags
 import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
+import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -110,48 +111,30 @@ fun AiChatHistoryScreen(bloc: AiChatHistoryBloc, modifier: Modifier = Modifier) 
     )
 
     if (pendingDeleteAll) {
-        AlertDialog(
+        PlusDialog(
+            title = Res.string.aichat_history_delete_all_dialog_title.asTextData(),
+            message = Res.string.aichat_history_delete_all_dialog_message.asTextData(),
+            confirmButtonText = Res.string.aichat_history_dialog_confirm.asTextData(),
+            dismissButtonText = Res.string.aichat_history_dialog_cancel.asTextData(),
+            onConfirmClick = {
+                pendingDeleteAll = false
+                bloc.onDeleteAllClick()
+            },
             onDismissRequest = { pendingDeleteAll = false },
-            title = { Text(stringResource(Res.string.aichat_history_delete_all_dialog_title)) },
-            text = { Text(stringResource(Res.string.aichat_history_delete_all_dialog_message)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        pendingDeleteAll = false
-                        bloc.onDeleteAllClick()
-                    }
-                ) {
-                    Text(stringResource(Res.string.aichat_history_dialog_confirm))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { pendingDeleteAll = false }) {
-                    Text(stringResource(Res.string.aichat_history_dialog_cancel))
-                }
-            },
         )
     }
 
     pendingDeleteId?.let { id ->
-        AlertDialog(
+        PlusDialog(
+            title = Res.string.aichat_history_delete_dialog_title.asTextData(),
+            message = Res.string.aichat_history_delete_dialog_message.asTextData(),
+            confirmButtonText = Res.string.aichat_history_dialog_confirm.asTextData(),
+            dismissButtonText = Res.string.aichat_history_dialog_cancel.asTextData(),
+            onConfirmClick = {
+                pendingDeleteId = null
+                bloc.onDeleteConversationClick(id)
+            },
             onDismissRequest = { pendingDeleteId = null },
-            title = { Text(stringResource(Res.string.aichat_history_delete_dialog_title)) },
-            text = { Text(stringResource(Res.string.aichat_history_delete_dialog_message)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        pendingDeleteId = null
-                        bloc.onDeleteConversationClick(id)
-                    }
-                ) {
-                    Text(stringResource(Res.string.aichat_history_dialog_confirm))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { pendingDeleteId = null }) {
-                    Text(stringResource(Res.string.aichat_history_dialog_cancel))
-                }
-            },
         )
     }
 }
@@ -166,7 +149,7 @@ private fun ConversationList(
 ) {
     LazyColumn(
         modifier = modifier.testTag(AiChatHistoryTestTags.LIST),
-        contentPadding = PaddingValues(vertical = 8.dp),
+        contentPadding = PaddingValues(vertical = ChefMateTheme.dimens.paddingSmall),
     ) {
         item("new-conversation") {
             ListItem(
@@ -244,7 +227,10 @@ private fun ConversationRow(
 @Composable
 private fun EmptyState(onNewConversationClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.padding(horizontal = 32.dp).testTag(AiChatHistoryTestTags.EMPTY_STATE),
+        modifier =
+            modifier
+                .padding(horizontal = ChefMateTheme.dimens.paddingExtraLarge)
+                .testTag(AiChatHistoryTestTags.EMPTY_STATE),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -254,19 +240,19 @@ private fun EmptyState(onNewConversationClick: () -> Unit, modifier: Modifier = 
             modifier = Modifier.size(48.dp),
             tint = MaterialTheme.colorScheme.primary,
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(ChefMateTheme.dimens.paddingNormal))
         Text(
             text = stringResource(Res.string.aichat_history_empty_title),
             style = MaterialTheme.typography.titleMedium,
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(ChefMateTheme.dimens.paddingSmall))
         Text(
             text = stringResource(Res.string.aichat_history_empty_description),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(ChefMateTheme.dimens.paddingLarge))
         TextButton(
             onClick = onNewConversationClick,
             modifier = Modifier.testTag(AiChatHistoryTestTags.NEW_CONVERSATION_BUTTON),
@@ -276,7 +262,7 @@ private fun EmptyState(onNewConversationClick: () -> Unit, modifier: Modifier = 
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
             )
-            Spacer(Modifier.size(8.dp))
+            Spacer(Modifier.size(ChefMateTheme.dimens.paddingSmall))
             Text(stringResource(Res.string.aichat_history_new_conversation))
         }
     }
