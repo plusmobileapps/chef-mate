@@ -24,6 +24,7 @@ class FakeDatabase(private val delegate: Database = provideTestDatabase()) : Dat
             updatedAt = recipe.updatedAt.toString(),
             clientId = null,
             ownerId = null,
+            recipeBookId = recipe.recipeBookId,
         )
         val recipeId =
             recipeQueries.lastInsertId().executeAsOne().MAX ?: error("Failed to get last insert id")
