@@ -343,6 +343,44 @@ class GroceryListBlocTest {
     }
 
     @Test
+    fun When_clear_filters_clicked_Then_filters_reset_but_sort_preserved() = runTest {
+        val items =
+            listOf(
+                GroceryItem(
+                    id = 1,
+                    name = "Flour",
+                    displayName = "Flour",
+                    category = GroceryCategory.BAKING,
+                    isChecked = false,
+                    recipeName = "Chocolate Cake",
+                ),
+                GroceryItem(
+                    id = 2,
+                    name = "Salt",
+                    displayName = "Salt",
+                    category = GroceryCategory.SPICES,
+                    isChecked = true,
+                ),
+            )
+        groceries.emit(items)
+        // Apply a sort + a purchase filter + a recipe filter that together hide everything.
+        bloc.onApplySortAndFilter(
+            GroceryListBloc.GrocerySort.ALPHABETICAL,
+            GroceryListBloc.GroceryFilter.UNPURCHASED,
+            recipeFilter = "Chocolate Cake",
+        )
+        bloc.onClearFiltersClicked()
+        bloc.state.test {
+            val result = awaitItem()
+            result.filter shouldBe GroceryListBloc.GroceryFilter.ALL
+            result.recipeFilter shouldBe null
+            // Sort is intentionally preserved — it never causes an empty filtered list.
+            result.sort shouldBe GroceryListBloc.GrocerySort.ALPHABETICAL
+            result.groupedItems.flatMap { it.items }.size shouldBe 2
+        }
+    }
+
+    @Test
     fun When_browse_recipes_clicked_Then_open_recipes_output_emitted() = runTest {
         bloc.onBrowseRecipesClicked()
         output.lastValue shouldBe GroceryListBloc.Output.OpenRecipes

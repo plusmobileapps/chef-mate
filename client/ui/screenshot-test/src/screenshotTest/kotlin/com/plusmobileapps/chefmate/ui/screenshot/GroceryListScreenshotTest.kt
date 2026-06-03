@@ -10,6 +10,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.grocery.core.impl.list.ui.previewGroceryListBloc
 import com.plusmobileapps.chefmate.grocery.core.impl.list.ui.previewGroceryListBlocEmpty
+import com.plusmobileapps.chefmate.grocery.core.impl.list.ui.previewGroceryListBlocFilteredEmpty
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -55,4 +56,20 @@ fun GroceryListEmptyPhonePortraitLightScreenshot() {
 @Composable
 fun GroceryListEmptyPhonePortraitDarkScreenshot() {
     GroceryListScreenshot(bloc = previewGroceryListBlocEmpty, darkTheme = true)
+}
+
+// ── Filtered empty state — "Clear filters" + "Browse my recipes" recovery CTAs ──
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+fun GroceryListFilteredEmptyPhonePortraitLightScreenshot() {
+    GroceryListScreenshot(bloc = previewGroceryListBlocFilteredEmpty)
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun GroceryListFilteredEmptyPhonePortraitDarkScreenshot() {
+    GroceryListScreenshot(bloc = previewGroceryListBlocFilteredEmpty, darkTheme = true)
 }

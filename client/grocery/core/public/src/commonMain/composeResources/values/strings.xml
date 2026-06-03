@@ -58,4 +58,7 @@
     <string name="grocery_list_empty_title">Your grocery list is empty</string>
     <string name="grocery_list_empty_description">Add items below, or pull ingredients in from one of your recipes.</string>
     <string name="grocery_list_empty_browse_recipes">Browse my recipes</string>
+    <string name="grocery_list_filtered_empty_title">No items match your filters</string>
+    <string name="grocery_list_filtered_empty_description">Nothing here matches the filters you’ve applied. Clear them to see everything, or pull in ingredients from one of your recipes.</string>
+    <string name="grocery_list_filtered_empty_clear_filters">Clear filters</string>
 </resources>

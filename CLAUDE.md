@@ -39,6 +39,10 @@ For iOS, open `/iosApp` in Xcode or use the IDE run configuration.
 - **Never `git push` without an explicit request from the user in the current message.** "Commit it" / "save this" / "go ahead" authorize a commit but not a push. The push is always a separate, user-requested action.
 - **Never bundle `git push` into the same Bash invocation as `git add` / `git commit`.** Run the commit on its own and stop. The user will issue a separate "push" instruction when they're ready.
 - **When opening a PR, split work into multiple commits by concern type so reviewers can step through them.** A typical order: refactors/renames first (no behavior change), then the feature or fix, then tests, then docs / strings / generated artifacts. One concern per commit, each with a conventional-commit subject (`refactor(recipe): …`, `feat(recipe): …`, `test(recipe): …`, `docs: …`). If a change is genuinely one concern, one commit is fine — don't manufacture splits.
+- **For feature work, split commits along the testing layers (see Architecture below):**
+  1. **One commit per BLoC, bundling that BLoC's unit tests with it.** Each BLoC (interface + impl + ViewModel) ships in the same commit as its `impl/src/commonTest` unit tests. If a PR touches several BLoCs, give each its own commit.
+  2. **Snapshots in their own commit.** The `<Feature>Previews.kt` previews, the `screenshot-test` `@PreviewTest` wrappers, and the recorded reference PNGs go together in a single dedicated commit, separate from the BLoC logic.
+  3. **Automation tests last.** Robot UI tests and the `impl-robots` modules that back them (the `<Feature>Robot.kt` classes and the `runRootBlocTest { … }` flow tests) come in the final commit.
 
 ## Architecture
 

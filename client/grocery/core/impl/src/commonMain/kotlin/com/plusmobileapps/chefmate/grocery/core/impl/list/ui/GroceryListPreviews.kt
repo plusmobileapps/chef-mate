@@ -98,6 +98,8 @@ private fun groceryListBloc(
             recipeFilter: String?,
         ) = Unit
 
+        override fun onClearFiltersClicked() = Unit
+
         override fun onDeleteClicked() = Unit
 
         override fun onDeleteDismissed() = Unit
@@ -132,6 +134,23 @@ val previewGroceryListBloc: GroceryListBloc =
 val previewGroceryListBlocEmpty: GroceryListBloc =
     groceryListBloc(GroceryListBloc.Model(lists = listOf(sampleList), selectedList = sampleList))
 
+/**
+ * Empty list because the active filter matched nothing — exercises the filtered-empty state with
+ * its "Clear filters" + "Browse my recipes" recovery CTAs. Distinct from
+ * [previewGroceryListBlocEmpty], which only renders when no filter is applied.
+ */
+val previewGroceryListBlocFilteredEmpty: GroceryListBloc =
+    groceryListBloc(
+        GroceryListBloc.Model(
+            groupedItems = emptyList(),
+            filter = GroceryFilter.PURCHASED,
+            availableRecipes = listOf("Pancakes"),
+            hasNoRecipeItems = true,
+            lists = listOf(sampleList),
+            selectedList = sampleList,
+        )
+    )
+
 @Preview(showBackground = true, heightDp = 1100)
 @Composable
 internal fun GroceryListPreview() {
@@ -142,4 +161,10 @@ internal fun GroceryListPreview() {
 @Composable
 internal fun GroceryListEmptyPreview() {
     ChefMateTheme { GroceryListScreen(bloc = previewGroceryListBlocEmpty) }
+}
+
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+internal fun GroceryListFilteredEmptyPreview() {
+    ChefMateTheme { GroceryListScreen(bloc = previewGroceryListBlocFilteredEmpty) }
 }
