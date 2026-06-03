@@ -81,6 +81,8 @@ See `docs/architecture.md` for full annotated examples of both patterns.
 - All UI is Compose Multiplatform, shared across all client targets.
 - Screen composables use the `Screen` suffix (e.g., `RecipeListScreen.kt`) and live in the feature's `public` module.
 - Reusable components live in `client/ui/public`, prefixed with `Plus` (e.g., `PlusHeaderContainer`).
+- **Prefer a shared `Plus*` component over a raw Material composable when one exists.** For example, use `PlusDialog` instead of Material `AlertDialog`. Check `client/ui/public/.../components` before reaching for a Material primitive.
+- **Spacing/sizing dimensions should come from the theme (`ChefMateTheme.dimens`), not hardcoded `.dp` literals.** Use the closest `AppDimensions` token (`paddingExtraSmall` 4, `paddingSmall` 8, `paddingNormal` 16, `paddingLarge` 24, `paddingExtraLarge` 32, `rowHeight` 56, `fabClearance` 88). Only fall back to a raw `.dp` literal when the value is genuinely off-spec (no matching token); if an off-spec value recurs, add a token to `AppDimensions` instead.
 
 ### Navigation Animations & Shared Elements
 
