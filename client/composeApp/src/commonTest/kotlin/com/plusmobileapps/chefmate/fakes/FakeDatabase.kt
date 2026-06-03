@@ -6,6 +6,10 @@ import com.plusmobileapps.chefmate.recipe.data.Recipe
 class FakeDatabase(private val delegate: Database = provideTestDatabase()) : Database by delegate {
 
     fun addRecipe(recipe: Recipe) {
+        // Every recipe belongs to a book. Production assigns one via createRecipe / the migration;
+        // this fixture inserts rows directly, so it files them under a seeded default book — the
+        // same book RecipeBookRepository resolves on startup — so the book-scoped list shows them.
+        val bookId = recipe.recipeBookId ?: ensureDefaultBookId()
         recipeQueries.create(
             title = recipe.title,
             description = recipe.description,
@@ -24,7 +28,7 @@ class FakeDatabase(private val delegate: Database = provideTestDatabase()) : Dat
             updatedAt = recipe.updatedAt.toString(),
             clientId = null,
             ownerId = null,
-            recipeBookId = recipe.recipeBookId,
+            recipeBookId = bookId,
         )
         val recipeId =
             recipeQueries.lastInsertId().executeAsOne().MAX ?: error("Failed to get last insert id")
@@ -43,5 +47,25 @@ class FakeDatabase(private val delegate: Database = provideTestDatabase()) : Dat
 
     fun clearRecipes() {
         recipeQueries.deleteAll()
+    }
+
+    private fun ensureDefaultBookId(): Long {
+        recipeBookQueries.getDefault().executeAsOneOrNull()?.let {
+            return it.id
+        }
+        recipeBookQueries.create(
+            name = "My Recipes",
+            isDefault = true,
+            createdAt = DEFAULT_TIMESTAMP,
+            updatedAt = DEFAULT_TIMESTAMP,
+            clientId = null,
+            ownerId = null,
+        )
+        return recipeBookQueries.lastInsertId().executeAsOne().MAX
+            ?: error("Failed to get last insert id")
+    }
+
+    private companion object {
+        const val DEFAULT_TIMESTAMP = "2024-01-01T00:00:00Z"
     }
 }
