@@ -16,6 +16,7 @@ import com.plusmobileapps.chefmate.recipe.data.impl.remote.RecipeRemoteDataSourc
 import com.plusmobileapps.chefmate.recipe.data.impl.remote.RemoteCategory
 import com.plusmobileapps.chefmate.recipe.data.impl.remote.RemoteRecipe
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipePhotoStorage
+import com.plusmobileapps.chefmate.recipebook.data.testing.FakeRecipeBookRepository
 import com.plusmobileapps.chefmate.util.testing.FakeDateTimeUtil
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
@@ -23,6 +24,7 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 
@@ -35,11 +37,15 @@ class RecipeRepositoryImplTest {
 
     private val recipeRemote = RecordingRecipeRemote()
 
+    private val fakeBooks = FakeRecipeBookRepository(MutableStateFlow(emptyList()))
+
     private val recipeRepository =
         RecipeRepositoryImpl(
             db = db.recipeQueries,
             joinDb = db.recipeCategoryQueries,
             categoryDb = db.categoryQueries,
+            recipeBookDb = db.recipeBookQueries,
+            recipeBookRepository = fakeBooks,
             ioContext = testDispatcher,
             dateTimeUtil = dateTimeUtil,
             remoteDataSource = recipeRemote,
@@ -238,6 +244,7 @@ class RecipeRepositoryImplTest {
                 updatedAt = "now",
                 clientId = "tombstone-client",
                 ownerId = null,
+                recipeBookId = null,
             )
             val tombstoneId = db.recipeQueries.lastInsertId().executeAsOne().MAX!!
             db.recipeQueries.updateRemoteId(remoteId = "remote-tombstone", id = tombstoneId)
@@ -262,6 +269,7 @@ class RecipeRepositoryImplTest {
                 updatedAt = "now",
                 clientId = "fresh-client",
                 ownerId = null,
+                recipeBookId = null,
             )
             val freshId = db.recipeQueries.lastInsertId().executeAsOne().MAX!!
             recipeRemote.deleteFailure = { RuntimeException("network") }
@@ -294,6 +302,7 @@ class RecipeRepositoryImplTest {
                 updatedAt = "now",
                 clientId = "tombstone-client",
                 ownerId = null,
+                recipeBookId = null,
             )
             val id = db.recipeQueries.lastInsertId().executeAsOne().MAX!!
             db.recipeQueries.updateRemoteId(remoteId = "remote-1", id = id)
@@ -334,6 +343,45 @@ class RecipeRepositoryImplTest {
             db.recipeQueries.getById(created.id).executeAsOneOrNull() shouldBe null
             recipeRemote.deleteCalls shouldBe listOf("remote-curry")
         }
+
+    @Test
+    fun getRecipes_by_book_only_returns_that_books_recipes() =
+        runTest(testDispatcher) {
+            val bookA = createBook("a")
+            val bookB = createBook("b")
+
+            fakeBooks.setActiveBook(bookA)
+            recipeRepository.createRecipe(blankRecipe(title = "In A"))
+            fakeBooks.setActiveBook(bookB)
+            recipeRepository.createRecipe(blankRecipe(title = "In B"))
+
+            recipeRepository.getRecipes(bookA).test {
+                awaitItem().map { it.title } shouldBe listOf("In A")
+            }
+        }
+
+    @Test
+    fun createRecipe_assigns_the_active_book() =
+        runTest(testDispatcher) {
+            val book = createBook("active")
+            fakeBooks.setActiveBook(book)
+
+            val created = recipeRepository.createRecipe(blankRecipe(title = "Stamped"))
+
+            created.recipeBookId shouldBe book
+        }
+
+    private fun createBook(clientId: String): Long {
+        db.recipeBookQueries.create(
+            name = clientId,
+            isDefault = false,
+            createdAt = "now",
+            updatedAt = "now",
+            clientId = clientId,
+            ownerId = null,
+        )
+        return db.recipeBookQueries.lastInsertId().executeAsOne().MAX!!
+    }
 
     private fun blankRecipe(title: String, categories: Set<Category> = emptySet()) =
         Recipe(

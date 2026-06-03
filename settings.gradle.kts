@@ -140,6 +140,18 @@ include(":client:recipe:list:impl-robots")
 
 include(":client:recipe:list:public")
 
+include(":client:recipebook:data:impl")
+
+include(":client:recipebook:data:public")
+
+include(":client:recipebook:data:testing")
+
+include(":client:recipebook:edit:impl")
+
+include(":client:recipebook:edit:impl-robots")
+
+include(":client:recipebook:edit:public")
+
 include(":client:root:impl")
 
 include(":client:root:public")

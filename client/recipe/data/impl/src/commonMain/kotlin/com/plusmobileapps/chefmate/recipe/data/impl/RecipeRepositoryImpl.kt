@@ -6,6 +6,7 @@ import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.database.CategoryQueries
 import com.plusmobileapps.chefmate.database.Recipe as DbRecipe
+import com.plusmobileapps.chefmate.database.RecipeBookQueries
 import com.plusmobileapps.chefmate.database.RecipeCategoryQueries
 import com.plusmobileapps.chefmate.database.RecipeQueries
 import com.plusmobileapps.chefmate.di.AppScope
@@ -18,6 +19,7 @@ import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.recipe.data.impl.remote.RecipeRemoteDataSource
 import com.plusmobileapps.chefmate.recipe.data.impl.remote.RemoteRecipe
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBookRepository
 import com.plusmobileapps.chefmate.util.DateTimeUtil
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -47,6 +49,8 @@ class RecipeRepositoryImpl(
     private val db: RecipeQueries,
     private val joinDb: RecipeCategoryQueries,
     private val categoryDb: CategoryQueries,
+    private val recipeBookDb: RecipeBookQueries,
+    private val recipeBookRepository: RecipeBookRepository,
     @IO private val ioContext: CoroutineContext,
     private val dateTimeUtil: DateTimeUtil,
     private val remoteDataSource: RecipeRemoteDataSource,
@@ -81,10 +85,22 @@ class RecipeRepositoryImpl(
             getRecipes().map { recipes -> recipes.filter { it.matchesPresetFilter(presets) } }
         }
 
+    override fun getRecipes(recipeBookId: Long): Flow<List<Recipe>> =
+        combine(db.getAllForBook(recipeBookId).asFlow().map { it.executeAsList() }, syncingIds) {
+                items,
+                syncing ->
+                items.map { it.toRecipe(syncing) }
+            }
+            .flowOn(ioContext)
+
     override suspend fun createRecipe(recipe: Recipe): Recipe {
         val clientId = Uuid.random().toString()
         val result =
             withContext(ioContext) {
+                val bookId =
+                    recipe.recipeBookId
+                        ?: recipeBookRepository.activeBookId.value
+                        ?: recipeBookDb.getDefault().executeAsOneOrNull()?.id
                 db.transactionWithResult {
                     db.create(
                         title = recipe.title,
@@ -104,6 +120,7 @@ class RecipeRepositoryImpl(
                         updatedAt = dateTimeUtil.now.toString(),
                         clientId = clientId,
                         ownerId = null,
+                        recipeBookId = bookId,
                     )
                     val id =
                         db.lastInsertId().executeAsOne().MAX
@@ -229,6 +246,7 @@ class RecipeRepositoryImpl(
                             createdAt = entity.createdAt,
                             updatedAt = entity.updatedAt,
                             clientId = clientId,
+                            recipeBookId = bookRemoteId(entity.recipeBookId),
                         )
                     )
                 withContext(ioContext) {
@@ -276,6 +294,7 @@ class RecipeRepositoryImpl(
                         isFavorite = entity.isFavorite,
                         updatedAt = entity.updatedAt,
                         clientId = entity.clientId,
+                        recipeBookId = bookRemoteId(entity.recipeBookId),
                     )
                 )
                 remoteDataSource.setRecipeCategories(remoteId, attachedCategoryRemoteIds(localId))
@@ -332,6 +351,7 @@ class RecipeRepositoryImpl(
                                 createdAt = recipe.createdAt,
                                 updatedAt = recipe.updatedAt,
                                 clientId = clientId,
+                                recipeBookId = bookRemoteId(recipe.recipeBookId),
                             )
                         )
                     withContext(ioContext) {
@@ -370,6 +390,7 @@ class RecipeRepositoryImpl(
                             isFavorite = recipe.isFavorite,
                             updatedAt = recipe.updatedAt,
                             clientId = recipe.clientId,
+                            recipeBookId = bookRemoteId(recipe.recipeBookId),
                         )
                     )
                     remoteDataSource.setRecipeCategories(
@@ -395,6 +416,10 @@ class RecipeRepositoryImpl(
                     if (matchedByClientId != null) {
                         db.updateRemoteId(remoteId = remoteId, id = matchedByClientId.id)
                     } else {
+                        val localBookId =
+                            remote.recipeBookId?.let {
+                                recipeBookDb.getByRemoteId(it).executeAsOneOrNull()?.id
+                            } ?: recipeBookDb.getDefault().executeAsOneOrNull()?.id
                         db.createWithRemoteId(
                             title = remote.title,
                             description = remote.description,
@@ -414,8 +439,14 @@ class RecipeRepositoryImpl(
                             remoteId = remoteId,
                             clientId = remote.clientId,
                             ownerId = userId,
+                            recipeBookId = localBookId,
                         )
                     }
+                }
+                // Any recipe still without a book (older server rows, or books that hadn't
+                // synced yet) lands on the local default so it stays visible in the list.
+                recipeBookDb.getDefault().executeAsOneOrNull()?.let { defaultBook ->
+                    db.assignAllWithoutBook(defaultBook.id)
                 }
             }
 
@@ -453,6 +484,17 @@ class RecipeRepositoryImpl(
      * that haven't been remote-synced yet (no [remoteId]) are skipped — they'll be picked up on a
      * future sync once their own push completes. Returns null if any DB access fails.
      */
+    /**
+     * Translates a local recipe-book id to its remote id for the wire. Returns null when the book
+     * hasn't been remote-synced yet (no [remoteId]) — the recipe pushes without a book reference
+     * and picks one up on a later sync once the book's own push completes, mirroring how attached
+     * category remote ids are resolved.
+     */
+    private suspend fun bookRemoteId(localBookId: Long?): String? =
+        withContext(ioContext) {
+            localBookId?.let { recipeBookDb.getById(it).executeAsOneOrNull()?.remoteId }
+        }
+
     private suspend fun attachedCategoryRemoteIds(recipeLocalId: Long): Set<String> =
         withContext(ioContext) {
             joinDb
@@ -516,6 +558,7 @@ class RecipeRepositoryImpl(
             starRating = starRating?.toInt(),
             isFavorite = isFavorite,
             categories = attachedCategories.toSet(),
+            recipeBookId = recipeBookId,
             syncStatus = syncStatus,
             createdAt = Instant.parse(createdAt),
             updatedAt = Instant.parse(updatedAt),

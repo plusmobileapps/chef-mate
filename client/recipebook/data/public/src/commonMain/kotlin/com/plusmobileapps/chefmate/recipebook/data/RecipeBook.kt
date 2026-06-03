@@ -1,0 +1,46 @@
+@file:OptIn(ExperimentalTime::class)
+
+package com.plusmobileapps.chefmate.recipebook.data
+
+import com.plusmobileapps.chefmate.recipe.data.SyncStatus
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
+
+data class RecipeBook(
+    val id: Long,
+    val name: String,
+    /** The single "My Recipes" book every user starts with. New recipes default here. */
+    val isDefault: Boolean = false,
+    val syncStatus: SyncStatus = SyncStatus.NOT_SYNCED,
+    val createdAt: Instant,
+    val updatedAt: Instant,
+) {
+    companion object {
+        val Empty =
+            RecipeBook(
+                id = -1,
+                name = "",
+                isDefault = false,
+                createdAt = Instant.DISTANT_PAST,
+                updatedAt = Instant.DISTANT_PAST,
+            )
+
+        /** Populated sample for @Preview composables and screenshot tests. */
+        val Sample =
+            RecipeBook(
+                id = 1L,
+                name = "My Recipes",
+                isDefault = true,
+                syncStatus = SyncStatus.SYNCED,
+                createdAt = Instant.DISTANT_PAST,
+                updatedAt = Instant.DISTANT_PAST,
+            )
+
+        val Samples: List<RecipeBook> =
+            listOf(
+                Sample,
+                Sample.copy(id = 2L, name = "Weeknight Dinners", isDefault = false),
+                Sample.copy(id = 3L, name = "Holiday Baking", isDefault = false),
+            )
+    }
+}
