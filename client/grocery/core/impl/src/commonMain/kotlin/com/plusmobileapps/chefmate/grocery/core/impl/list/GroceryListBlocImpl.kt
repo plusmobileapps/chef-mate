@@ -141,6 +141,10 @@ class GroceryListBlocImpl(
         viewModel.onApplySortAndFilter(sort, filter, recipeFilter)
     }
 
+    override fun onClearFiltersClicked() {
+        viewModel.onClearFiltersClicked()
+    }
+
     override fun onDeleteClicked() {
         viewModel.onDeleteClicked()
     }

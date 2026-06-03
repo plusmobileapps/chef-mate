@@ -45,6 +45,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -102,6 +103,9 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_list
 import chefmate.client.grocery.core.public.generated.resources.grocery_list_empty_browse_recipes
 import chefmate.client.grocery.core.public.generated.resources.grocery_list_empty_description
 import chefmate.client.grocery.core.public.generated.resources.grocery_list_empty_title
+import chefmate.client.grocery.core.public.generated.resources.grocery_list_filtered_empty_clear_filters
+import chefmate.client.grocery.core.public.generated.resources.grocery_list_filtered_empty_description
+import chefmate.client.grocery.core.public.generated.resources.grocery_list_filtered_empty_title
 import chefmate.client.grocery.core.public.generated.resources.grocery_select_list
 import chefmate.client.grocery.core.public.generated.resources.grocery_sort_aisle
 import chefmate.client.grocery.core.public.generated.resources.grocery_sort_alphabetical
@@ -209,13 +213,19 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
                 onRefresh = bloc::onSyncClicked,
                 modifier = Modifier.weight(1f),
             ) {
-                val showEmptyState =
-                    state.groupedItems.isEmpty() &&
-                        state.filter == GroceryListBloc.GroceryFilter.ALL &&
-                        state.recipeFilter == null &&
-                        !state.isSyncing
+                val hasNoItems = state.groupedItems.isEmpty()
+                val filtersApplied =
+                    state.filter != GroceryListBloc.GroceryFilter.ALL || state.recipeFilter != null
+                val showEmptyState = hasNoItems && !filtersApplied && !state.isSyncing
+                val showFilteredEmptyState = hasNoItems && filtersApplied && !state.isSyncing
                 if (showEmptyState) {
                     EmptyGroceryListState(
+                        onBrowseRecipesClicked = bloc::onBrowseRecipesClicked,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                } else if (showFilteredEmptyState) {
+                    FilteredEmptyGroceryListState(
+                        onClearFiltersClicked = bloc::onClearFiltersClicked,
                         onBrowseRecipesClicked = bloc::onBrowseRecipesClicked,
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -715,8 +725,13 @@ private fun EmptyGroceryListState(
     onBrowseRecipesClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val dimens = ChefMateTheme.dimens
     Column(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 32.dp),
+        modifier =
+            modifier
+                .testTag(GroceryListTestTags.EMPTY_STATE)
+                .fillMaxWidth()
+                .padding(horizontal = dimens.paddingExtraLarge),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -726,20 +741,79 @@ private fun EmptyGroceryListState(
             modifier = Modifier.size(64.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(dimens.paddingNormal))
         Text(
             text = stringResource(Res.string.grocery_list_empty_title),
             style = MaterialTheme.typography.titleMedium,
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(dimens.paddingSmall))
         Text(
             text = stringResource(Res.string.grocery_list_empty_description),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
-        Spacer(Modifier.height(24.dp))
-        Button(onClick = onBrowseRecipesClicked, modifier = Modifier.fillMaxWidth()) {
+        Spacer(Modifier.height(dimens.paddingLarge))
+        Button(
+            onClick = onBrowseRecipesClicked,
+            modifier = Modifier.testTag(GroceryListTestTags.BROWSE_RECIPES_BUTTON).fillMaxWidth(),
+        ) {
+            Text(stringResource(Res.string.grocery_list_empty_browse_recipes))
+        }
+    }
+}
+
+/**
+ * Shown when the list has items but the active purchase/recipe filters leave nothing visible. Lets
+ * the user recover by clearing filters (primary) or jumping to recipes (secondary) instead of
+ * staring at a blank screen.
+ */
+@Composable
+private fun FilteredEmptyGroceryListState(
+    onClearFiltersClicked: () -> Unit,
+    onBrowseRecipesClicked: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val dimens = ChefMateTheme.dimens
+    Column(
+        modifier =
+            modifier
+                .testTag(GroceryListTestTags.FILTERED_EMPTY_STATE)
+                .fillMaxWidth()
+                .padding(horizontal = dimens.paddingExtraLarge),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Default.FilterList,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(dimens.paddingNormal))
+        Text(
+            text = stringResource(Res.string.grocery_list_filtered_empty_title),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Spacer(Modifier.height(dimens.paddingSmall))
+        Text(
+            text = stringResource(Res.string.grocery_list_filtered_empty_description),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(dimens.paddingLarge))
+        Button(
+            onClick = onClearFiltersClicked,
+            modifier = Modifier.testTag(GroceryListTestTags.CLEAR_FILTERS_BUTTON).fillMaxWidth(),
+        ) {
+            Text(stringResource(Res.string.grocery_list_filtered_empty_clear_filters))
+        }
+        Spacer(Modifier.height(dimens.paddingSmall))
+        OutlinedButton(
+            onClick = onBrowseRecipesClicked,
+            modifier = Modifier.testTag(GroceryListTestTags.BROWSE_RECIPES_BUTTON).fillMaxWidth(),
+        ) {
             Text(stringResource(Res.string.grocery_list_empty_browse_recipes))
         }
     }

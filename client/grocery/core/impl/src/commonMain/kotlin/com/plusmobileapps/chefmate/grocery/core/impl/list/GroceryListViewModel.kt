@@ -217,6 +217,17 @@ class GroceryListViewModel(
         _state.update { it.copy(sort = sort, filter = filter, recipeFilter = recipeFilter) }
     }
 
+    /**
+     * Resets the purchase and recipe filters to their defaults while preserving the chosen sort
+     * order (sort never removes items, so it can't be the cause of an empty filtered list).
+     */
+    fun onClearFiltersClicked() {
+        _filter.value = GroceryFilter.ALL
+        _recipeFilter.value = null
+        filterPref = GroceryFilter.ALL.name
+        _state.update { it.copy(filter = GroceryFilter.ALL, recipeFilter = null) }
+    }
+
     fun onDeleteClicked() {
         _state.update { it.copy(showDeleteDialog = true) }
     }

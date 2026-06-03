@@ -44,6 +44,8 @@ interface GroceryListBloc : BlocScreen {
 
     fun onApplySortAndFilter(sort: GrocerySort, filter: GroceryFilter, recipeFilter: String? = null)
 
+    fun onClearFiltersClicked()
+
     fun onDeleteClicked()
 
     fun onDeleteDismissed()
