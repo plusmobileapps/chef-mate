@@ -1,5 +1,6 @@
 package com.plusmobileapps.chefmate.di
 
+import com.plusmobileapps.chefmate.database.AiChatConversationQueries
 import com.plusmobileapps.chefmate.database.AiChatMessageQueries
 import com.plusmobileapps.chefmate.database.BrowserHistoryQueries
 import com.plusmobileapps.chefmate.database.CategoryQueries
@@ -50,4 +51,8 @@ abstract class BaseTestApplicationComponent : TestApplicationComponent {
     @Provides
     fun providesAiChatMessageQueries(database: Database): AiChatMessageQueries =
         database.aiChatMessageQueries
+
+    @Provides
+    fun providesAiChatConversationQueries(database: Database): AiChatConversationQueries =
+        database.aiChatConversationQueries
 }

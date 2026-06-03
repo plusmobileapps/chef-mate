@@ -1,10 +1,13 @@
 package com.plusmobileapps.chefmate.aichat.impl.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,7 +32,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -44,6 +47,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -51,6 +55,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -60,11 +65,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import chefmate.client.aichat.public.generated.resources.Res
 import chefmate.client.aichat.public.generated.resources.aichat_add_recipe
-import chefmate.client.aichat.public.generated.resources.aichat_clear
 import chefmate.client.aichat.public.generated.resources.aichat_done
 import chefmate.client.aichat.public.generated.resources.aichat_empty_description
 import chefmate.client.aichat.public.generated.resources.aichat_empty_title
 import chefmate.client.aichat.public.generated.resources.aichat_extracting_recipe
+import chefmate.client.aichat.public.generated.resources.aichat_history
 import chefmate.client.aichat.public.generated.resources.aichat_input_hint
 import chefmate.client.aichat.public.generated.resources.aichat_role_gemini
 import chefmate.client.aichat.public.generated.resources.aichat_role_you
@@ -78,6 +83,7 @@ import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.isIosPlatform
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import org.jetbrains.compose.resources.stringResource
 
@@ -92,11 +98,17 @@ fun AiChatScreen(bloc: AiChatBloc, modifier: Modifier = Modifier) {
                 title = Res.string.aichat_title.asTextData(),
                 onBackClick = bloc::onBackClicked,
                 trailingAccessory =
-                    PlusHeaderData.TrailingAccessory.Icon(
-                        icon = Icons.Default.DeleteSweep,
-                        contentDesc = Res.string.aichat_clear.asTextData(),
-                        onClick = bloc::onClearClick,
-                    ),
+                    PlusHeaderData.TrailingAccessory.Custom {
+                        IconButton(
+                            onClick = bloc::onHistoryClick,
+                            modifier = Modifier.testTag(AiChatTestTags.HISTORY_BUTTON),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.History,
+                                contentDescription = stringResource(Res.string.aichat_history),
+                            )
+                        }
+                    },
             ),
         scrollEnabled = false,
         content = {
@@ -163,7 +175,9 @@ private fun MessageList(messages: List<ChatMessage>, modifier: Modifier = Modifi
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        items(messages, key = { it.id }) { message -> MessageBubble(message = message) }
+        items(messages, key = { it.id }) { message ->
+            MessageBubble(message = message, modifier = Modifier.animateItem())
+        }
     }
 }
 
@@ -179,43 +193,104 @@ private fun MessageBubble(message: ChatMessage, modifier: Modifier = Modifier) {
     val roleLabel =
         if (isUser) stringResource(Res.string.aichat_role_you)
         else stringResource(Res.string.aichat_role_gemini)
-    Column(modifier = modifier.fillMaxWidth(), horizontalAlignment = alignment) {
-        Text(
-            text = roleLabel,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
-        )
-        Surface(
-            color = bubbleColor,
-            contentColor = contentColor,
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.widthIn(max = 520.dp),
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.Bottom,
+
+    // Skip the entrance + typewriter animations under @Preview / screenshot tests so a single
+    // captured frame renders the final, fully-revealed state deterministically.
+    val inspection = LocalInspectionMode.current
+
+    // A model response that begins streaming this session is spelled out left to right,
+    // line by line. History (already-complete) messages and user messages render in full.
+    val typewriter = remember { !isUser && message.isStreaming }
+    val displayContent =
+        rememberRevealedContent(content = message.content, enabled = typewriter && !inspection)
+    val isTyping = typewriter && displayContent.length < message.content.length
+
+    // Slide + fade each bubble into the chat log as it is appended.
+    val appearance = remember { MutableTransitionState(inspection).apply { targetState = true } }
+
+    AnimatedVisibility(
+        visibleState = appearance,
+        modifier = modifier.fillMaxWidth(),
+        enter = fadeIn(tween(350)) + slideInVertically(tween(350)) { it / 3 },
+    ) {
+        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = alignment) {
+            Text(
+                text = roleLabel,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+            )
+            Surface(
+                color = bubbleColor,
+                contentColor = contentColor,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.widthIn(max = 520.dp),
             ) {
-                val displayText =
-                    if (message.isStreaming && message.content.isEmpty()) "…" else message.content
-                if (isUser) {
-                    Text(text = displayText, style = MaterialTheme.typography.bodyLarge)
-                } else {
-                    Markdown(content = displayText, modifier = Modifier.weight(1f, fill = false))
-                }
-                if (message.isStreaming && message.content.isNotEmpty()) {
-                    Spacer(modifier = Modifier.size(6.dp))
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(10.dp),
-                        strokeWidth = 1.5.dp,
-                        color = contentColor,
-                    )
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.Bottom,
+                ) {
+                    // While streaming with nothing revealed yet, show a thinking placeholder.
+                    val displayText =
+                        if (displayContent.isEmpty() && message.isStreaming) "…" else displayContent
+                    if (isUser) {
+                        Text(text = displayText, style = MaterialTheme.typography.bodyLarge)
+                    } else {
+                        Markdown(
+                            content = displayText,
+                            modifier = Modifier.weight(1f, fill = false),
+                        )
+                    }
+                    if ((message.isStreaming || isTyping) && displayContent.isNotEmpty()) {
+                        Spacer(modifier = Modifier.size(6.dp))
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(10.dp),
+                            strokeWidth = 1.5.dp,
+                            color = contentColor,
+                        )
+                    }
                 }
             }
         }
     }
 }
+
+/**
+ * Progressively reveals [content] one character at a time so a streamed response is spelled out
+ * left to right. The reveal keeps its own pace independent of how fast deltas arrive — when the
+ * model races ahead the display lags behind and catches up, speeding up only when the backlog
+ * grows. Once the message stops streaming the reveal finishes the remaining text and stops.
+ *
+ * When [enabled] is false the full [content] is returned immediately (history + user messages).
+ */
+@Composable
+private fun rememberRevealedContent(content: String, enabled: Boolean): String {
+    if (!enabled) return content
+    var revealed by remember { mutableIntStateOf(0) }
+    // Re-key on [content] so each streamed delta resumes the reveal from where it left off and the
+    // effect terminates once caught up — no idle-blocking poll loop, which keeps UI tests honest.
+    LaunchedEffect(content) {
+        while (revealed < content.length) {
+            revealed = (revealed + 1).coerceAtMost(content.length)
+            delay(revealDelayMillis(content.length - revealed))
+        }
+    }
+    return content.take(revealed)
+}
+
+/**
+ * Per-character delay for the typewriter reveal. A steady, readable cadence for short bursts that
+ * shortens as the backlog grows so the display never falls too far behind a fast stream.
+ */
+private fun revealDelayMillis(backlog: Int): Long =
+    when {
+        backlog > 320 -> 3L
+        backlog > 160 -> 6L
+        backlog > 80 -> 10L
+        backlog > 24 -> 16L
+        else -> 24L
+    }
 
 @Composable
 private fun AddRecipePill(isLoading: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {

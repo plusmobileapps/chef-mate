@@ -11,7 +11,6 @@ import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
-import dev.zacsweers.metro.Provider
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -20,11 +19,12 @@ import kotlinx.coroutines.flow.onEach
 @ContributesAssistedFactory(scope = AppScope::class, assistedFactory = AiChatBloc.Factory::class)
 class AiChatBlocImpl(
     @Assisted context: BlocContext,
+    @Assisted props: AiChatBloc.Props,
     @Assisted private val output: Consumer<AiChatBloc.Output>,
-    viewModelFactory: Provider<AiChatViewModel>,
+    viewModelFactory: AiChatViewModel.Factory,
 ) : AiChatBloc, BlocContext by context {
 
-    private val viewModel = instanceKeeper.getViewModel { viewModelFactory() }
+    private val viewModel = instanceKeeper.getViewModel { viewModelFactory.create(props) }
     private val scope = createScope()
 
     init {
@@ -45,8 +45,8 @@ class AiChatBlocImpl(
         viewModel.send()
     }
 
-    override fun onClearClick() {
-        viewModel.clear()
+    override fun onHistoryClick() {
+        output.onNext(AiChatBloc.Output.OpenHistory)
     }
 
     override fun onAddRecipeClick() {

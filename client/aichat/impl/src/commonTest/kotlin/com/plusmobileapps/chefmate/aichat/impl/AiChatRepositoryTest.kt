@@ -26,31 +26,36 @@ class AiChatRepositoryTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private val db = createTestDatabase()
-    private val queries = db.aiChatMessageQueries
+    private val messageQueries = db.aiChatMessageQueries
+    private val conversationQueries = db.aiChatConversationQueries
     private val dateTimeUtil = FakeDateTimeUtil(fakeNow = Instant.fromEpochMilliseconds(1_000_000L))
     private val geminiClient = mock<GeminiClient>()
 
     private val repository =
         AiChatRepository(
-            queries = queries,
+            messageQueries = messageQueries,
+            conversationQueries = conversationQueries,
             geminiClient = geminiClient,
             dateTimeUtil = dateTimeUtil,
             ioContext = testDispatcher,
         )
 
     @Test
-    fun sendMessage_inserts_user_row_with_no_model_row_when_stream_is_empty() =
+    fun sendMessage_creates_conversation_and_inserts_user_row_when_stream_is_empty() =
         runTest(testDispatcher) {
-            // Verifies that the user row is persisted independently of any model reply, and that
-            // no empty model placeholder leaks into the DB when the stream produces no deltas.
+            // Verifies that a fresh conversation is created lazily with the user's first message,
+            // and that no empty model placeholder leaks into the DB when the stream produces no
+            // deltas.
             every { geminiClient.streamReply(any()) } returns emptyFlow()
 
-            repository.sendMessage("hello gemini")
+            val conversationId =
+                repository.sendMessage(conversationId = null, text = "hello gemini")
 
-            val rows = queries.getAll().executeAsList()
+            val rows = messageQueries.getAllForConversation(conversationId!!).executeAsList()
             rows shouldHaveSize 1
             rows.first().role shouldBe "user"
             rows.first().content shouldBe "hello gemini"
+            conversationQueries.observeAll().executeAsList() shouldHaveSize 1
             verify { geminiClient.streamReply(any()) }
         }
 
@@ -64,13 +69,26 @@ class AiChatRepositoryTest {
                     emit("world!")
                 }
 
-            repository.sendMessage("hi")
+            val conversationId = repository.sendMessage(conversationId = null, text = "hi")!!
 
-            val rows = queries.getAll().executeAsList()
+            val rows = messageQueries.getAllForConversation(conversationId).executeAsList()
             rows.map { it.role } shouldBe listOf("user", "model")
             val model = rows.last()
             model.content shouldBe "Hello, world!"
             model.isStreaming shouldBe 0L
+        }
+
+    @Test
+    fun sendMessage_appends_to_existing_conversation() =
+        runTest(testDispatcher) {
+            every { geminiClient.streamReply(any()) } returns flow { emit("hi") }
+            val first = repository.sendMessage(conversationId = null, text = "hello")!!
+
+            val second = repository.sendMessage(conversationId = first, text = "again")
+
+            second shouldBe first
+            messageQueries.getAllForConversation(first).executeAsList() shouldHaveSize 4
+            conversationQueries.observeAll().executeAsList() shouldHaveSize 1
         }
 
     @Test
@@ -79,9 +97,9 @@ class AiChatRepositoryTest {
             dateTimeUtil.fakeNow = Instant.fromEpochMilliseconds(42L)
             every { geminiClient.streamReply(any()) } returns flow { emit("ok") }
 
-            repository.sendMessage("ping")
+            val id = repository.sendMessage(conversationId = null, text = "ping")!!
 
-            val rows = queries.getAll().executeAsList()
+            val rows = messageQueries.getAllForConversation(id).executeAsList()
             rows.first().createdAt shouldBe 42L
             rows.last().createdAt shouldBe 42L
         }
@@ -92,9 +110,13 @@ class AiChatRepositoryTest {
             every { geminiClient.streamReply(any()) } returns
                 flow { throw GeminiException("MISSING_API_KEY") }
 
-            assertFailsWith<GeminiException> { repository.sendMessage("hi") }
+            assertFailsWith<GeminiException> {
+                repository.sendMessage(conversationId = null, text = "hi")
+            }
 
-            val rows = queries.getAll().executeAsList()
+            val all = conversationQueries.observeAll().executeAsList()
+            all shouldHaveSize 1
+            val rows = messageQueries.getAllForConversation(all.first().id).executeAsList()
             rows shouldHaveSize 2
             rows.last().role shouldBe "model"
             rows.last().content shouldBe "MISSING_API_KEY"
@@ -102,20 +124,33 @@ class AiChatRepositoryTest {
         }
 
     @Test
-    fun sendMessage_skips_blank_text() =
+    fun sendMessage_skips_blank_text_and_creates_no_conversation() =
         runTest(testDispatcher) {
-            repository.sendMessage("   ")
-            queries.getAll().executeAsList() shouldBe emptyList()
+            repository.sendMessage(conversationId = null, text = "   ") shouldBe null
+            conversationQueries.observeAll().executeAsList() shouldBe emptyList()
         }
 
     @Test
-    fun clearHistory_removes_every_row() =
+    fun deleteConversation_cascades_to_messages() =
         runTest(testDispatcher) {
             every { geminiClient.streamReply(any()) } returns flow { emit("hi") }
-            repository.sendMessage("first")
+            val id = repository.sendMessage(conversationId = null, text = "first")!!
 
-            repository.clearHistory()
+            repository.deleteConversation(id)
 
-            queries.getAll().executeAsList() shouldBe emptyList()
+            conversationQueries.observeAll().executeAsList() shouldBe emptyList()
+            messageQueries.getAllForConversation(id).executeAsList() shouldBe emptyList()
+        }
+
+    @Test
+    fun deleteAllConversations_removes_every_row() =
+        runTest(testDispatcher) {
+            every { geminiClient.streamReply(any()) } returns flow { emit("hi") }
+            repository.sendMessage(conversationId = null, text = "one")
+            repository.sendMessage(conversationId = null, text = "two")
+
+            repository.deleteAllConversations()
+
+            conversationQueries.observeAll().executeAsList() shouldBe emptyList()
         }
 }

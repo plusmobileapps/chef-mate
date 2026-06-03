@@ -29,8 +29,8 @@ class AiChatRobot(private val test: ComposeUiTest) {
         test.onNode(hasTestTag(AiChatTestTags.SEND_BUTTON) and onScreen).performClick()
     }
 
-    fun tapClear(): AiChatRobot = apply {
-        test.onNode(hasTestTag(AiChatTestTags.CLEAR_BUTTON) and onScreen).performClick()
+    fun tapHistory(): AiChatRobot = apply {
+        test.onNode(hasTestTag(AiChatTestTags.HISTORY_BUTTON) and onScreen).performClick()
     }
 
     fun assertMessageShown(text: String): AiChatRobot = apply {

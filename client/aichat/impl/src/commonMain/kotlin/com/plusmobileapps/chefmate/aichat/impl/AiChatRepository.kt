@@ -2,8 +2,10 @@ package com.plusmobileapps.chefmate.aichat.impl
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import com.plusmobileapps.chefmate.aichat.AiChatConversation
 import com.plusmobileapps.chefmate.aichat.AiChatLocalDataCleaner
 import com.plusmobileapps.chefmate.aichat.ChatMessage
+import com.plusmobileapps.chefmate.database.AiChatConversationQueries
 import com.plusmobileapps.chefmate.database.AiChatMessageQueries
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.IO
@@ -22,14 +24,28 @@ import kotlinx.coroutines.withContext
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
 class AiChatRepository(
-    private val queries: AiChatMessageQueries,
+    private val messageQueries: AiChatMessageQueries,
+    private val conversationQueries: AiChatConversationQueries,
     private val geminiClient: GeminiClient,
     private val dateTimeUtil: DateTimeUtil,
     @IO private val ioContext: CoroutineContext,
 ) : AiChatLocalDataCleaner {
 
-    fun observeMessages(): Flow<List<ChatMessage>> =
-        queries.getAll().asFlow().mapToList(ioContext).map { rows ->
+    fun observeConversations(): Flow<List<AiChatConversation>> =
+        conversationQueries.observeAll().asFlow().mapToList(ioContext).map { rows ->
+            rows.map {
+                AiChatConversation(
+                    id = it.id,
+                    title = it.title,
+                    createdAt = it.createdAt,
+                    updatedAt = it.updatedAt,
+                )
+            }
+        }
+
+    fun observeMessages(conversationId: Long): Flow<List<ChatMessage>> =
+        messageQueries.getAllForConversation(conversationId).asFlow().mapToList(ioContext).map {
+            rows ->
             rows.map {
                 ChatMessage(
                     id = it.id,
@@ -41,29 +57,61 @@ class AiChatRepository(
             }
         }
 
-    suspend fun sendMessage(text: String) {
+    /**
+     * Sends [text] in [conversationId]. If [conversationId] is null a new conversation is created
+     * (with [text] used as its title) before the user row is inserted. Returns the id of the
+     * conversation the message was sent into.
+     *
+     * [onConversationStarted] is invoked with the active conversation id as soon as the user row is
+     * persisted — before the (potentially long) model stream begins. Callers observing messages by
+     * conversation id should switch to it here so a freshly created conversation's first user
+     * message appears immediately instead of only after the reply finishes streaming.
+     */
+    suspend fun sendMessage(
+        conversationId: Long?,
+        text: String,
+        onConversationStarted: (Long) -> Unit = {},
+    ): Long? {
         val trimmed = text.trim()
-        if (trimmed.isEmpty()) return
+        if (trimmed.isEmpty()) return conversationId
 
         val now = dateTimeUtil.now.toEpochMilliseconds()
+
+        val activeConversationId: Long =
+            withContext(ioContext) {
+                conversationId
+                    ?: conversationQueries
+                        .insertConversation(
+                            title = trimmed.take(TITLE_MAX_LENGTH),
+                            createdAt = now,
+                            updatedAt = now,
+                        )
+                        .executeAsOne()
+            }
 
         // Insert the user message in its own transaction so SQLDelight's observer fires before
         // the network round-trip starts. The model row is deferred until the first delta arrives
         // so an empty placeholder doesn't appear during the network wait.
         withContext(ioContext) {
-            queries
+            messageQueries
                 .insertMessage(
+                    conversationId = activeConversationId,
                     role = ROLE_USER,
                     content = trimmed,
                     createdAt = now,
                     isStreaming = 0L,
                 )
                 .executeAsOne()
+            conversationQueries.touchConversation(updatedAt = now, id = activeConversationId)
         }
+
+        // The user row is committed; let the caller start observing this conversation now so the
+        // message shows up before the model reply streams back.
+        onConversationStarted(activeConversationId)
 
         val historyMessages =
             withContext(ioContext) {
-                queries.getAll().executeAsList().map {
+                messageQueries.getAllForConversation(activeConversationId).executeAsList().map {
                     ChatMessage(
                         id = it.id,
                         role =
@@ -85,8 +133,9 @@ class AiChatRepository(
                     val id = modelId
                     if (id == null) {
                         modelId =
-                            queries
+                            messageQueries
                                 .insertMessage(
+                                    conversationId = activeConversationId,
                                     role = ROLE_MODEL,
                                     content = content,
                                     createdAt = dateTimeUtil.now.toEpochMilliseconds(),
@@ -94,16 +143,20 @@ class AiChatRepository(
                                 )
                                 .executeAsOne()
                     } else {
-                        queries.updateContent(content = content, isStreaming = 1L, id = id)
+                        messageQueries.updateContent(content = content, isStreaming = 1L, id = id)
                     }
                 }
             }
             modelId?.let { id ->
                 withContext(ioContext) {
-                    queries.updateContent(
+                    messageQueries.updateContent(
                         content = accumulated.toString(),
                         isStreaming = 0L,
                         id = id,
+                    )
+                    conversationQueries.touchConversation(
+                        updatedAt = dateTimeUtil.now.toEpochMilliseconds(),
+                        id = activeConversationId,
                     )
                 }
             }
@@ -113,8 +166,9 @@ class AiChatRepository(
             withContext(ioContext) {
                 val id = modelId
                 if (id == null) {
-                    queries
+                    messageQueries
                         .insertMessage(
+                            conversationId = activeConversationId,
                             role = ROLE_MODEL,
                             content = errorContent,
                             createdAt = dateTimeUtil.now.toEpochMilliseconds(),
@@ -122,21 +176,27 @@ class AiChatRepository(
                         )
                         .executeAsOne()
                 } else {
-                    queries.updateContent(content = errorContent, isStreaming = 0L, id = id)
+                    messageQueries.updateContent(content = errorContent, isStreaming = 0L, id = id)
                 }
             }
             throw e
         }
+        return activeConversationId
     }
 
-    suspend fun clearHistory() = clearLocalData()
+    suspend fun deleteConversation(conversationId: Long) {
+        withContext(ioContext) { conversationQueries.deleteConversation(conversationId) }
+    }
+
+    suspend fun deleteAllConversations() = clearLocalData()
 
     override suspend fun clearLocalData() {
-        withContext(ioContext) { queries.deleteAll() }
+        withContext(ioContext) { conversationQueries.deleteAllConversations() }
     }
 
     companion object {
         private const val ROLE_USER = "user"
         private const val ROLE_MODEL = "model"
+        private const val TITLE_MAX_LENGTH = 120
     }
 }
