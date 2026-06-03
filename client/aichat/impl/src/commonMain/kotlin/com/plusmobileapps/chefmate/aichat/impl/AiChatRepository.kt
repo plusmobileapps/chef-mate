@@ -61,8 +61,17 @@ class AiChatRepository(
      * Sends [text] in [conversationId]. If [conversationId] is null a new conversation is created
      * (with [text] used as its title) before the user row is inserted. Returns the id of the
      * conversation the message was sent into.
+     *
+     * [onConversationStarted] is invoked with the active conversation id as soon as the user row is
+     * persisted — before the (potentially long) model stream begins. Callers observing messages by
+     * conversation id should switch to it here so a freshly created conversation's first user
+     * message appears immediately instead of only after the reply finishes streaming.
      */
-    suspend fun sendMessage(conversationId: Long?, text: String): Long? {
+    suspend fun sendMessage(
+        conversationId: Long?,
+        text: String,
+        onConversationStarted: (Long) -> Unit = {},
+    ): Long? {
         val trimmed = text.trim()
         if (trimmed.isEmpty()) return conversationId
 
@@ -95,6 +104,10 @@ class AiChatRepository(
                 .executeAsOne()
             conversationQueries.touchConversation(updatedAt = now, id = activeConversationId)
         }
+
+        // The user row is committed; let the caller start observing this conversation now so the
+        // message shows up before the model reply streams back.
+        onConversationStarted(activeConversationId)
 
         val historyMessages =
             withContext(ioContext) {

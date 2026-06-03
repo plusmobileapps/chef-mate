@@ -103,9 +103,11 @@ class AiChatViewModel(
         scope.launch {
             _isSending.value = true
             try {
-                val newId = repository.sendMessage(_conversationId.value, message)
-                if (newId != null && _conversationId.value == null) {
-                    _conversationId.value = newId
+                repository.sendMessage(_conversationId.value, message) { startedId ->
+                    // Publish the conversation id as soon as the user message is persisted so the
+                    // message list switches to observing it immediately, rather than waiting for
+                    // the whole reply to stream back.
+                    if (_conversationId.value == null) _conversationId.value = startedId
                 }
             } catch (e: GeminiException) {
                 _error.value =

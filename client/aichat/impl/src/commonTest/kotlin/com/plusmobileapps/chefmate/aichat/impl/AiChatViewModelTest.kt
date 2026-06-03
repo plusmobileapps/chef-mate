@@ -19,6 +19,7 @@ import dev.mokkery.mock
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 import kotlin.time.ExperimentalTime
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
@@ -161,6 +162,27 @@ class AiChatViewModelTest {
 
             viewModel.inputText.value shouldBe ""
             viewModel.state.value.isSending shouldBe false
+        }
+
+    @Test
+    fun new_conversation_shows_user_message_before_reply_finishes() =
+        runTest(dispatcher) {
+            // The stream suspends before emitting, so the model reply is still in flight while we
+            // assert. The user message must already be visible by then.
+            val gate = CompletableDeferred<Unit>()
+            everySuspend { geminiClient.streamReply(any()) } returns flow { gate.await() }
+            val viewModel = newViewModel()
+
+            viewModel.onInputChange("hello there")
+            viewModel.send()
+
+            val state = viewModel.state.value
+            state.isSending shouldBe true
+            state.messages.size shouldBe 1
+            state.messages.first().role shouldBe ChatMessage.Role.USER
+            state.messages.first().content shouldBe "hello there"
+
+            gate.complete(Unit)
         }
 
     @Test
