@@ -13,6 +13,7 @@ kotlin {
             implementation(projects.client.ui.public)
             implementation(projects.client.recipe.data.public)
             api(projects.client.text.public)
+            api(projects.client.recipebook.data.public)
         }
     }
 }

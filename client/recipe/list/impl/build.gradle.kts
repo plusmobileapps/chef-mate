@@ -13,6 +13,7 @@ kotlin {
             implementation(libs.arkivanov.decompose.compose.extensions)
             implementation(projects.client.shared)
             implementation(projects.client.recipe.data.public)
+            implementation(projects.client.recipebook.data.public)
             implementation(projects.client.cook.public)
             implementation(projects.client.util.public)
             implementation(projects.client.featureflag.public)
@@ -22,6 +23,7 @@ kotlin {
         commonTest.dependencies {
             implementation(projects.client.recipe.data.testing)
             implementation(projects.client.featureflag.testing)
+            implementation(projects.client.recipebook.data.testing)
         }
     }
 }

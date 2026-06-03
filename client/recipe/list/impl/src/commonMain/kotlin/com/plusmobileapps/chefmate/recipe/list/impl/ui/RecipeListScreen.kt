@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -32,13 +33,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SoupKitchen
@@ -127,6 +132,11 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_rated
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_item_calories
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_item_servings
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_create
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_edit
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_picker_title
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_selector
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_collaborate
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_export_all
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_select
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_more_actions
@@ -171,7 +181,10 @@ import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusDialogScaffold
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
+import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
+import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
+import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import com.plusmobileapps.chefmate.util.rememberImagePickerLauncher
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
@@ -199,6 +212,7 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
             }
     }
 
+    PlusResponsiveContainer { windowSizeClass ->
     val headerData =
         if (state.isSelectionMode) {
             PlusHeaderData.Parent(
@@ -248,7 +262,34 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
             )
         } else {
             PlusHeaderData.Parent(
-                title = Res.string.recipe_list_title.asTextData(),
+                // The book selector stands in for the title when a book is active, so the static
+                // "Recipes" title is suppressed to avoid a cramped double-title in the app bar.
+                title =
+                    if (state.activeBook != null) FixedString("")
+                    else Res.string.recipe_list_title.asTextData(),
+                leading =
+                    state.activeBook?.let { activeBook ->
+                        {
+                            BookSelector(
+                                activeBookName = activeBook.name,
+                                isPickerOpen = state.isBookPickerOpen,
+                                onClick = bloc::onBookSelectorClicked,
+                            ) {
+                                // The dropdown is anchored to the selector on tablet/desktop widths.
+                                if (windowSizeClass != WindowSizeClass.COMPACT) {
+                                    BookPickerDropdown(
+                                        expanded = state.isBookPickerOpen,
+                                        books = state.recipeBooks,
+                                        activeBookId = state.activeBook?.id,
+                                        onDismiss = bloc::onBookPickerDismissed,
+                                        onBookSelected = bloc::onBookSelected,
+                                        onEditBook = bloc::onEditBookClicked,
+                                        onCreateBook = bloc::onCreateBookClicked,
+                                    )
+                                }
+                            }
+                        }
+                    },
                 trailingAccessory =
                     PlusHeaderData.TrailingAccessory.Custom {
                         IconButton(
@@ -304,6 +345,7 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                         OverflowMenu(
                             onSelectClicked = bloc::onEnterSelectionMode,
                             onExportAllClicked = bloc::onExportClicked,
+                            onCollaborateClicked = bloc::onCollaborateClicked,
                         )
                     },
             )
@@ -424,6 +466,19 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                 onDismissRequest = bloc::onScanErrorDismissed,
             )
         }
+
+        // On phone widths the book picker is a bottom sheet rather than an anchored dropdown.
+        if (state.isBookPickerOpen && windowSizeClass == WindowSizeClass.COMPACT) {
+            BookPickerSheet(
+                books = state.recipeBooks,
+                activeBookId = state.activeBook?.id,
+                onDismiss = bloc::onBookPickerDismissed,
+                onBookSelected = bloc::onBookSelected,
+                onEditBook = bloc::onEditBookClicked,
+                onCreateBook = bloc::onCreateBookClicked,
+            )
+        }
+    }
     }
 }
 
@@ -568,7 +623,11 @@ private fun DoneCookingDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun OverflowMenu(onSelectClicked: () -> Unit, onExportAllClicked: () -> Unit) {
+private fun OverflowMenu(
+    onSelectClicked: () -> Unit,
+    onExportAllClicked: () -> Unit,
+    onCollaborateClicked: () -> Unit,
+) {
     var expanded by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { expanded = true }) {
@@ -594,7 +653,160 @@ private fun OverflowMenu(onSelectClicked: () -> Unit, onExportAllClicked: () -> 
                     onExportAllClicked()
                 },
             )
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.recipe_list_menu_collaborate)) },
+                leadingIcon = { Icon(Icons.Default.Group, contentDescription = null) },
+                onClick = {
+                    expanded = false
+                    onCollaborateClicked()
+                },
+            )
         }
+    }
+}
+
+@Composable
+private fun BookSelector(
+    activeBookName: String?,
+    isPickerOpen: Boolean,
+    onClick: () -> Unit,
+    dropdown: @Composable () -> Unit,
+) {
+    Box {
+        Row(
+            modifier =
+                Modifier.clickable(onClick = onClick)
+                    .padding(
+                        horizontal = ChefMateTheme.dimens.paddingSmall,
+                        vertical = ChefMateTheme.dimens.paddingExtraSmall,
+                    )
+                    .testTag(RecipeListTestTags.BOOK_SELECTOR)
+                    .semantics { contentDescription = activeBookName ?: "" },
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = activeBookName.orEmpty(),
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.widthIn(max = 160.dp),
+            )
+            Icon(
+                imageVector =
+                    if (isPickerOpen) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
+                contentDescription = stringResource(Res.string.recipe_list_book_selector),
+            )
+        }
+        dropdown()
+    }
+}
+
+@Composable
+private fun BookPickerDropdown(
+    expanded: Boolean,
+    books: List<com.plusmobileapps.chefmate.recipebook.data.RecipeBook>,
+    activeBookId: Long?,
+    onDismiss: () -> Unit,
+    onBookSelected: (Long) -> Unit,
+    onEditBook: (Long) -> Unit,
+    onCreateBook: () -> Unit,
+) {
+    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+        books.forEach { book ->
+            DropdownMenuItem(
+                text = { Text(book.name) },
+                onClick = { onBookSelected(book.id) },
+                leadingIcon = {
+                    if (book.id == activeBookId) {
+                        Icon(Icons.Default.Check, contentDescription = null)
+                    } else {
+                        Spacer(modifier = Modifier.size(24.dp))
+                    }
+                },
+                trailingIcon = {
+                    IconButton(onClick = { onEditBook(book.id) }) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = stringResource(Res.string.recipe_list_book_edit),
+                        )
+                    }
+                },
+            )
+        }
+        DropdownMenuItem(
+            text = { Text(stringResource(Res.string.recipe_list_book_create)) },
+            leadingIcon = { Icon(Icons.Default.Add, contentDescription = null) },
+            onClick = onCreateBook,
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BookPickerSheet(
+    books: List<com.plusmobileapps.chefmate.recipebook.data.RecipeBook>,
+    activeBookId: Long?,
+    onDismiss: () -> Unit,
+    onBookSelected: (Long) -> Unit,
+    onEditBook: (Long) -> Unit,
+    onCreateBook: () -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        Column(modifier = Modifier.fillMaxWidth().navigationBarsPadding()) {
+            Text(
+                text = stringResource(Res.string.recipe_list_book_picker_title),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(ChefMateTheme.dimens.paddingNormal),
+            )
+            books.forEach { book ->
+                Row(
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .clickable { onBookSelected(book.id) }
+                            .padding(
+                                horizontal = ChefMateTheme.dimens.paddingNormal,
+                                vertical = ChefMateTheme.dimens.paddingSmall,
+                            ),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector =
+                            if (book.id == activeBookId) Icons.Default.Check
+                            else Icons.Outlined.Circle,
+                        contentDescription = null,
+                    )
+                    Spacer(modifier = Modifier.width(ChefMateTheme.dimens.paddingNormal))
+                    Text(text = book.name, modifier = Modifier.weight(1f))
+                    IconButton(onClick = { onEditBook(book.id) }) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = stringResource(Res.string.recipe_list_book_edit),
+                        )
+                    }
+                }
+            }
+            DropdownRowCreate(onCreateBook = onCreateBook)
+            Spacer(modifier = Modifier.height(ChefMateTheme.dimens.paddingNormal))
+        }
+    }
+}
+
+@Composable
+private fun DropdownRowCreate(onCreateBook: () -> Unit) {
+    Row(
+        modifier =
+            Modifier.fillMaxWidth()
+                .clickable(onClick = onCreateBook)
+                .padding(
+                    horizontal = ChefMateTheme.dimens.paddingNormal,
+                    vertical = ChefMateTheme.dimens.paddingSmall,
+                ),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(imageVector = Icons.Default.Add, contentDescription = null)
+        Spacer(modifier = Modifier.width(ChefMateTheme.dimens.paddingNormal))
+        Text(text = stringResource(Res.string.recipe_list_book_create))
     }
 }
 

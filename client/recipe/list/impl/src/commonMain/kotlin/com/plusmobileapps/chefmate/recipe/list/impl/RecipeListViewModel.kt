@@ -21,6 +21,8 @@ import com.plusmobileapps.chefmate.recipe.data.RecipeImageExtractor
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBookRepository
 import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.util.mimeTypeForImageExtension
@@ -29,6 +31,7 @@ import com.russhwolf.settings.boolean
 import com.russhwolf.settings.string
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +39,9 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -46,6 +51,7 @@ import kotlinx.coroutines.launch
 class RecipeListViewModel(
     @Main mainContext: CoroutineContext,
     private val repository: RecipeRepository,
+    private val recipeBookRepository: RecipeBookRepository,
     private val categoryRepository: CategoryRepository,
     private val cookingSessionRepository: CookingSessionRepository,
     private val imageExtractor: RecipeImageExtractor,
@@ -111,12 +117,32 @@ class RecipeListViewModel(
         scanFromPhotoEnabled
             .onEach { enabled -> _state.update { it.copy(isScanFromPhotoEnabled = enabled) } }
             .launchIn(scope)
+        scope.launch { observeRecipeBooks() }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun observeRecipes() {
-        repository.getRecipes().collect { recipes ->
-            _state.update { it.copy(isLoading = false, recipes = recipes) }
-        }
+        recipeBookRepository.activeBookId
+            .flatMapLatest { bookId ->
+                if (bookId == null) repository.getRecipes() else repository.getRecipes(bookId)
+            }
+            .collect { recipes -> _state.update { it.copy(isLoading = false, recipes = recipes) } }
+    }
+
+    private suspend fun observeRecipeBooks() {
+        combine(recipeBookRepository.getRecipeBooks(), recipeBookRepository.activeBookId) {
+                books,
+                activeId ->
+                books to activeId
+            }
+            .collect { (books, activeId) ->
+                _state.update { state ->
+                    state.copy(
+                        recipeBooks = books,
+                        activeBook = books.firstOrNull { it.id == activeId } ?: books.firstOrNull(),
+                    )
+                }
+            }
     }
 
     private suspend fun observeCookingSession() {
@@ -279,6 +305,19 @@ class RecipeListViewModel(
         _state.update { it.copy(scanError = null) }
     }
 
+    fun openBookPicker() {
+        _state.update { it.copy(isBookPickerOpen = true) }
+    }
+
+    fun dismissBookPicker() {
+        _state.update { it.copy(isBookPickerOpen = false) }
+    }
+
+    fun selectBook(bookId: Long) {
+        _state.update { it.copy(isBookPickerOpen = false) }
+        scope.launch { recipeBookRepository.setActiveBook(bookId) }
+    }
+
     fun enterSelectionMode() {
         _state.update { it.copy(isSelectionMode = true, selectedRecipeIds = emptySet()) }
     }
@@ -329,6 +368,9 @@ class RecipeListViewModel(
         val isScanning: Boolean = false,
         val scanError: TextData? = null,
         val isScanFromPhotoEnabled: Boolean = false,
+        val recipeBooks: List<RecipeBook> = emptyList(),
+        val activeBook: RecipeBook? = null,
+        val isBookPickerOpen: Boolean = false,
     ) {
         val isSearchActive: Boolean
             get() = searchQuery.isNotBlank()

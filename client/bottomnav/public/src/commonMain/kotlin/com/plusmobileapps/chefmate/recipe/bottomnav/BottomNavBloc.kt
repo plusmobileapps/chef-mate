@@ -90,6 +90,12 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
          * "Export all recipes" and a non-empty set when they exported a multi-select.
          */
         data class OpenExportRecipes(val recipeIds: Set<Long>?) : Output()
+
+        /**
+         * Open the create/edit recipe-book modal. [bookId] is null to create a new book and set to
+         * an existing book's id to rename it (the "Collaborate" and per-row edit actions).
+         */
+        data class OpenEditRecipeBook(val bookId: Long?) : Output()
     }
 
     fun interface Factory {

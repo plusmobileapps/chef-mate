@@ -9,6 +9,7 @@ import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.collections.immutable.persistentListOf
@@ -114,12 +115,29 @@ private fun recipeListBloc(model: RecipeListBloc.Model): RecipeListBloc =
 
         override fun onExportFinished() = Unit
 
+        override fun onBookSelectorClicked() = Unit
+
+        override fun onBookPickerDismissed() = Unit
+
+        override fun onBookSelected(bookId: Long) = Unit
+
+        override fun onCreateBookClicked() = Unit
+
+        override fun onEditBookClicked(bookId: Long) = Unit
+
+        override fun onCollaborateClicked() = Unit
+
         @Composable override fun Content(modifier: Modifier) = RecipeListScreen(this, modifier)
     }
 
 val previewRecipeListBloc: RecipeListBloc =
     recipeListBloc(
-        RecipeListBloc.Model(recipes = sampleRecipes, totalRecipeCount = sampleRecipes.size)
+        RecipeListBloc.Model(
+            recipes = sampleRecipes,
+            totalRecipeCount = sampleRecipes.size,
+            recipeBooks = RecipeBook.Samples,
+            activeBook = RecipeBook.Sample,
+        )
     )
 
 /**

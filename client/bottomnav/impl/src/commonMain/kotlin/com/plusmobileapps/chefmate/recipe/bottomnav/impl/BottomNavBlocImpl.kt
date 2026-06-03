@@ -198,6 +198,9 @@ class BottomNavBlocImpl(
                     )
                 )
             }
+            is RecipeListBloc.Output.OpenEditRecipeBook -> {
+                this.output.onNext(BottomNavBloc.Output.OpenEditRecipeBook(output.bookId))
+            }
         }
     }
 
