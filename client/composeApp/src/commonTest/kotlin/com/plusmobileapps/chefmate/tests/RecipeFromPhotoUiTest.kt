@@ -22,13 +22,18 @@ import kotlin.test.Test
 class RecipeFromPhotoUiTest {
 
     @Test
-    fun add_menu_offers_scan_from_photo_and_create_opens_editor() = runRootBlocTest { component ->
-        component.testFeatureFlags.set(FeatureFlagRegistry.ScanRecipeFromPhoto, true)
+    fun add_menu_offers_scan_from_photo_and_create_opens_editor() =
+        runRootBlocTest(
+            // Seed the flag before the list composes so the add button is in chooser mode on the
+            // first frame; flipping it inside the block would race the initial composition.
+            beforeContent = {
+                it.testFeatureFlags.set(FeatureFlagRegistry.ScanRecipeFromPhoto, true)
+            }
+        ) {
+            recipeList().openAddMenu().assertScanFromPhotoShown().tapCreateRecipe()
 
-        recipeList().openAddMenu().assertScanFromPhotoShown().tapCreateRecipe()
-
-        editRecipe().awaitDisplayed()
-    }
+            editRecipe().awaitDisplayed()
+        }
 
     @Test
     fun add_button_opens_editor_directly_when_scan_flag_disabled() = runRootBlocTest {
