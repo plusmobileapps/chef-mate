@@ -125,14 +125,21 @@ class AiChatRepository(
 
         var modelId: Long? = null
         val accumulated = StringBuilder()
+        // Persisting every token re-runs the message query and recomposes the whole chat per token,
+        // which makes the streaming reply flash. Coalesce in-flight updates to at most one write
+        // per
+        // [STREAM_WRITE_INTERVAL_MS]; the user-facing typewriter smooths the larger jumps, and the
+        // final flush below always persists the complete content.
+        var lastWriteAt = 0L
         try {
             geminiClient.streamReply(historyMessages).collect { delta ->
                 accumulated.append(delta)
                 val content = accumulated.toString()
-                withContext(ioContext) {
-                    val id = modelId
-                    if (id == null) {
-                        modelId =
+                val id = modelId
+                if (id == null) {
+                    // Insert the row on the first delta so the reply bubble appears immediately.
+                    modelId =
+                        withContext(ioContext) {
                             messageQueries
                                 .insertMessage(
                                     conversationId = activeConversationId,
@@ -142,8 +149,19 @@ class AiChatRepository(
                                     isStreaming = 1L,
                                 )
                                 .executeAsOne()
-                    } else {
-                        messageQueries.updateContent(content = content, isStreaming = 1L, id = id)
+                        }
+                    lastWriteAt = dateTimeUtil.now.toEpochMilliseconds()
+                } else {
+                    val now = dateTimeUtil.now.toEpochMilliseconds()
+                    if (now - lastWriteAt >= STREAM_WRITE_INTERVAL_MS) {
+                        withContext(ioContext) {
+                            messageQueries.updateContent(
+                                content = content,
+                                isStreaming = 1L,
+                                id = id,
+                            )
+                        }
+                        lastWriteAt = now
                     }
                 }
             }
@@ -198,5 +216,7 @@ class AiChatRepository(
         private const val ROLE_USER = "user"
         private const val ROLE_MODEL = "model"
         private const val TITLE_MAX_LENGTH = 120
+        /** Minimum gap between in-flight streaming writes, to coalesce per-token DB churn. */
+        private const val STREAM_WRITE_INTERVAL_MS = 100L
     }
 }
