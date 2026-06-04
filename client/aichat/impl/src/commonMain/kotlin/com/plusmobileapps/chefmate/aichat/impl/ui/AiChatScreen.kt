@@ -153,36 +153,65 @@ fun AiChatScreen(bloc: AiChatBloc, modifier: Modifier = Modifier) {
 @Composable
 private fun MessageList(messages: List<ChatMessage>, modifier: Modifier = Modifier) {
     val listState = rememberLazyListState()
-    val lastIndex = messages.lastIndex
-    val isStreaming = messages.lastOrNull()?.isStreaming == true
-    // A newly appended message animates into view.
-    LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(lastIndex)
+    val inspection = LocalInspectionMode.current
+    val last = messages.lastOrNull()
+
+    // Capture, the moment the last message first appears, whether it began streaming this session.
+    // A reply that streams in is spelled out line by line; an already-complete message (history
+    // opened later, or any user message) renders in full immediately.
+    val revealStreaming =
+        remember(last?.id) {
+            last != null && last.role == ChatMessage.Role.MODEL && last.isStreaming && !inspection
         }
-    }
-    // While the last message streams, jump to the bottom instantly on each
-    // delta. Animating here would restart the scroll animation many times per
-    // second, which is what makes the chat stutter as the response loads in.
-    LaunchedEffect(messages.lastOrNull()?.content?.length) {
-        if (isStreaming && messages.isNotEmpty()) {
-            listState.scrollToItem(lastIndex)
-        }
-    }
+    val revealedLength =
+        rememberRevealedLength(
+            id = last?.id,
+            content = if (revealStreaming) last!!.content else "",
+            enabled = revealStreaming,
+        )
+
+    // The list is anchored to its bottom edge (reverseLayout) with the newest message first, so as
+    // the streaming reply grows it pushes older messages up while the latest text stays pinned just
+    // above the input. The bottom tracks the growth purely through layout — there is no manual
+    // scrolling, which is what made the previous auto-scroll snap and stutter. Scrolling up to read
+    // earlier messages still works and is never yanked back down. No animateItem(): letting bubbles
+    // reposition instantly as the reply grows is smooth, whereas animating every per-line shift was
+    // its own source of jank.
     LazyColumn(
         state = listState,
         modifier = modifier.testTag(AiChatTestTags.MESSAGE_LIST),
+        reverseLayout = true,
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        items(messages, key = { it.id }) { message ->
-            MessageBubble(message = message, modifier = Modifier.animateItem())
+        items(messages.asReversed(), key = { it.id }) { message ->
+            val isRevealing = revealStreaming && message.id == last?.id
+            val displayContent =
+                if (isRevealing) message.content.take(revealedLength) else message.content
+            val stillTyping = isRevealing && revealedLength < message.content.length
+            // While the reply is typing in it renders as plain text — a single Text node that grows
+            // smoothly. Only once it has fully settled do we re-render it as formatted Markdown.
+            // Rendering Markdown live is what flickered: it rebuilds its whole view tree on every
+            // change.
+            val typingNow = message.isStreaming || stillTyping
+            MessageBubble(
+                message = message,
+                displayContent = displayContent,
+                showProgress = typingNow && displayContent.isNotEmpty(),
+                renderAsPlainText = typingNow,
+            )
         }
     }
 }
 
 @Composable
-private fun MessageBubble(message: ChatMessage, modifier: Modifier = Modifier) {
+private fun MessageBubble(
+    message: ChatMessage,
+    displayContent: String,
+    showProgress: Boolean,
+    renderAsPlainText: Boolean,
+    modifier: Modifier = Modifier,
+) {
     val isUser = message.role == ChatMessage.Role.USER
     val bubbleColor =
         if (isUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
@@ -194,16 +223,9 @@ private fun MessageBubble(message: ChatMessage, modifier: Modifier = Modifier) {
         if (isUser) stringResource(Res.string.aichat_role_you)
         else stringResource(Res.string.aichat_role_gemini)
 
-    // Skip the entrance + typewriter animations under @Preview / screenshot tests so a single
-    // captured frame renders the final, fully-revealed state deterministically.
+    // Skip the entrance animation under @Preview / screenshot tests so a single captured frame
+    // renders the final state deterministically.
     val inspection = LocalInspectionMode.current
-
-    // A model response that begins streaming this session is spelled out left to right,
-    // line by line. History (already-complete) messages and user messages render in full.
-    val typewriter = remember { !isUser && message.isStreaming }
-    val displayContent =
-        rememberRevealedContent(content = message.content, enabled = typewriter && !inspection)
-    val isTyping = typewriter && displayContent.length < message.content.length
 
     // Slide + fade each bubble into the chat log as it is appended.
     val appearance = remember { MutableTransitionState(inspection).apply { targetState = true } }
@@ -234,15 +256,24 @@ private fun MessageBubble(message: ChatMessage, modifier: Modifier = Modifier) {
                     // While streaming with nothing revealed yet, show a thinking placeholder.
                     val displayText =
                         if (displayContent.isEmpty() && message.isStreaming) "…" else displayContent
-                    if (isUser) {
-                        Text(text = displayText, style = MaterialTheme.typography.bodyLarge)
-                    } else {
-                        Markdown(
-                            content = displayText,
-                            modifier = Modifier.weight(1f, fill = false),
-                        )
+                    when {
+                        isUser ->
+                            Text(text = displayText, style = MaterialTheme.typography.bodyLarge)
+                        renderAsPlainText ->
+                            // Plain text while the reply types in — a single Text node grows
+                            // smoothly without the per-update flicker of the Markdown renderer.
+                            Text(
+                                text = displayText,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.weight(1f, fill = false),
+                            )
+                        else ->
+                            Markdown(
+                                content = displayText,
+                                modifier = Modifier.weight(1f, fill = false),
+                            )
                     }
-                    if ((message.isStreaming || isTyping) && displayContent.isNotEmpty()) {
+                    if (showProgress) {
                         Spacer(modifier = Modifier.size(6.dp))
                         CircularProgressIndicator(
                             modifier = Modifier.size(10.dp),
@@ -257,39 +288,43 @@ private fun MessageBubble(message: ChatMessage, modifier: Modifier = Modifier) {
 }
 
 /**
- * Progressively reveals [content] one character at a time so a streamed response is spelled out
- * left to right. The reveal keeps its own pace independent of how fast deltas arrive — when the
- * model races ahead the display lags behind and catches up, speeding up only when the backlog
- * grows. Once the message stops streaming the reveal finishes the remaining text and stops.
+ * Progressively reveals [content] for a smooth typewriter effect while a reply streams in. A few
+ * characters are revealed each frame; the streaming bubble renders as plain [Text], so growing it a
+ * character at a time is cheap and never flickers (unlike re-parsing Markdown live).
  *
- * When [enabled] is false the full [content] is returned immediately (history + user messages).
+ * The reveal keeps its own pace independent of how fast deltas arrive: it speeds up as the backlog
+ * grows so it never falls too far behind a fast stream, and once the message stops streaming it
+ * finishes the remaining text and the loop terminates (no idle poll loop, which keeps UI tests
+ * honest). When [enabled] is false the full length is returned immediately (history + user
+ * messages).
  */
 @Composable
-private fun rememberRevealedContent(content: String, enabled: Boolean): String {
-    if (!enabled) return content
-    var revealed by remember { mutableIntStateOf(0) }
-    // Re-key on [content] so each streamed delta resumes the reveal from where it left off and the
-    // effect terminates once caught up — no idle-blocking poll loop, which keeps UI tests honest.
-    LaunchedEffect(content) {
+private fun rememberRevealedLength(id: Long?, content: String, enabled: Boolean): Int {
+    if (!enabled) return content.length
+    var revealed by remember(id) { mutableIntStateOf(0) }
+    // Re-key on [id]/[content] so a new reply resets the count and each streamed delta resumes the
+    // reveal from where it left off, terminating once caught up.
+    LaunchedEffect(id, content) {
         while (revealed < content.length) {
-            revealed = (revealed + 1).coerceAtMost(content.length)
-            delay(revealDelayMillis(content.length - revealed))
+            revealed =
+                (revealed + revealStep(content.length - revealed)).coerceAtMost(content.length)
+            if (revealed < content.length) delay(REVEAL_FRAME_MS)
         }
     }
-    return content.take(revealed)
+    return revealed
 }
 
-/**
- * Per-character delay for the typewriter reveal. A steady, readable cadence for short bursts that
- * shortens as the backlog grows so the display never falls too far behind a fast stream.
- */
-private fun revealDelayMillis(backlog: Int): Long =
+/** Frame cadence for the typewriter reveal (~60fps). */
+private const val REVEAL_FRAME_MS = 16L
+
+/** Characters revealed per frame, scaling up with the backlog so a fast stream stays caught up. */
+private fun revealStep(backlog: Int): Int =
     when {
-        backlog > 320 -> 3L
-        backlog > 160 -> 6L
-        backlog > 80 -> 10L
-        backlog > 24 -> 16L
-        else -> 24L
+        backlog > 800 -> 12
+        backlog > 400 -> 6
+        backlog > 120 -> 3
+        backlog > 30 -> 2
+        else -> 1
     }
 
 @Composable
