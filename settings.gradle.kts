@@ -32,6 +32,8 @@ dependencyResolutionManagement {
 
 plugins { id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0" }
 
+include(":admin")
+
 include(":client:aichat:impl")
 
 include(":client:aichat:impl-robots")
