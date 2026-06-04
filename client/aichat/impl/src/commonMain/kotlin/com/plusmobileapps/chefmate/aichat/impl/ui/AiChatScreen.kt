@@ -76,6 +76,7 @@ import chefmate.client.aichat.public.generated.resources.aichat_role_you
 import chefmate.client.aichat.public.generated.resources.aichat_send
 import chefmate.client.aichat.public.generated.resources.aichat_title
 import com.mikepenz.markdown.m3.Markdown
+import com.mikepenz.markdown.model.rememberMarkdownState
 import com.plusmobileapps.chefmate.aichat.AiChatBloc
 import com.plusmobileapps.chefmate.aichat.AiChatTestTags
 import com.plusmobileapps.chefmate.aichat.ChatMessage
@@ -189,16 +190,11 @@ private fun MessageList(messages: List<ChatMessage>, modifier: Modifier = Modifi
             val displayContent =
                 if (isRevealing) message.content.take(revealedLength) else message.content
             val stillTyping = isRevealing && revealedLength < message.content.length
-            // While the reply is typing in it renders as plain text — a single Text node that grows
-            // smoothly. Only once it has fully settled do we re-render it as formatted Markdown.
-            // Rendering Markdown live is what flickered: it rebuilds its whole view tree on every
-            // change.
             val typingNow = message.isStreaming || stillTyping
             MessageBubble(
                 message = message,
                 displayContent = displayContent,
                 showProgress = typingNow && displayContent.isNotEmpty(),
-                renderAsPlainText = typingNow,
             )
         }
     }
@@ -209,7 +205,6 @@ private fun MessageBubble(
     message: ChatMessage,
     displayContent: String,
     showProgress: Boolean,
-    renderAsPlainText: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val isUser = message.role == ChatMessage.Role.USER
@@ -256,22 +251,19 @@ private fun MessageBubble(
                     // While streaming with nothing revealed yet, show a thinking placeholder.
                     val displayText =
                         if (displayContent.isEmpty() && message.isStreaming) "…" else displayContent
-                    when {
-                        isUser ->
-                            Text(text = displayText, style = MaterialTheme.typography.bodyLarge)
-                        renderAsPlainText ->
-                            // Plain text while the reply types in — a single Text node grows
-                            // smoothly without the per-update flicker of the Markdown renderer.
-                            Text(
-                                text = displayText,
-                                style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.weight(1f, fill = false),
-                            )
-                        else ->
-                            Markdown(
-                                content = displayText,
-                                modifier = Modifier.weight(1f, fill = false),
-                            )
+                    if (isUser) {
+                        Text(text = displayText, style = MaterialTheme.typography.bodyLarge)
+                    } else {
+                        // Render markdown live as the reply types in. retainState keeps the
+                        // previously parsed content on screen while the next (background) parse
+                        // runs, instead of dropping to the empty loading state on every update —
+                        // that empty-frame swap on each delta is what made the reply flicker.
+                        val markdownState =
+                            rememberMarkdownState(content = displayText, retainState = true)
+                        Markdown(
+                            markdownState = markdownState,
+                            modifier = Modifier.weight(1f, fill = false),
+                        )
                     }
                     if (showProgress) {
                         Spacer(modifier = Modifier.size(6.dp))
@@ -289,8 +281,9 @@ private fun MessageBubble(
 
 /**
  * Progressively reveals [content] for a smooth typewriter effect while a reply streams in. A few
- * characters are revealed each frame; the streaming bubble renders as plain [Text], so growing it a
- * character at a time is cheap and never flickers (unlike re-parsing Markdown live).
+ * characters are revealed each frame; the bubble re-parses this growing substring as markdown, but
+ * that parse runs in the background and is conflated (and rendered with retainState so the previous
+ * content stays on screen), so the reveal stays smooth.
  *
  * The reveal keeps its own pace independent of how fast deltas arrive: it speeds up as the backlog
  * grows so it never falls too far behind a fast stream, and once the message stops streaming it
