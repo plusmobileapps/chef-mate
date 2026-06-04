@@ -64,6 +64,10 @@ private fun recipeListBloc(model: RecipeListBloc.Model): RecipeListBloc =
 
         override fun onAddRecipeClicked() = Unit
 
+        override fun onScanRecipePhotoPicked(bytes: ByteArray, fileExtension: String) = Unit
+
+        override fun onScanErrorDismissed() = Unit
+
         override fun onDeleteRecipe(recipe: RecipeListItem) = Unit
 
         override fun onToggleFavorite(recipe: RecipeListItem) = Unit
@@ -160,6 +164,30 @@ val previewRecipeListBlocSelectionModeEmpty: RecipeListBloc =
             totalRecipeCount = sampleRecipes.size,
             isSelectionMode = true,
             selectedRecipeIds = emptySet(),
+        )
+    )
+
+/** Photo scan in progress — shows the non-cancellable scanning dialog over the list. */
+val previewRecipeListBlocScanning: RecipeListBloc =
+    recipeListBloc(
+        RecipeListBloc.Model(
+            recipes = sampleRecipes,
+            totalRecipeCount = sampleRecipes.size,
+            isScanning = true,
+        )
+    )
+
+/** Photo scan failed — shows the scan-error dialog. */
+val previewRecipeListBlocScanError: RecipeListBloc =
+    recipeListBloc(
+        RecipeListBloc.Model(
+            recipes = sampleRecipes,
+            totalRecipeCount = sampleRecipes.size,
+            scanError =
+                FixedString(
+                    "We couldn’t read a recipe from that photo. Try a clearer shot of the full " +
+                        "recipe."
+                ),
         )
     )
 

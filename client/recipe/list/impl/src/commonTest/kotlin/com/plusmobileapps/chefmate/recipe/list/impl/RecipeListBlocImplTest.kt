@@ -8,6 +8,8 @@ import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeCategoryRepository
+import com.plusmobileapps.chefmate.recipe.data.testing.FakePendingRecipePhotoStore
+import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeImageExtractor
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
@@ -55,6 +57,8 @@ class RecipeListBlocImplTest {
         every { putString(any(), any()) } returns Unit
     }
     private val categoryRepository = FakeCategoryRepository()
+    private val imageExtractor = FakeRecipeImageExtractor()
+    private val pendingPhotoStore = FakePendingRecipePhotoStore()
 
     private val bloc =
         RecipeListBlocImpl(
@@ -66,6 +70,8 @@ class RecipeListBlocImplTest {
                     repository = repository,
                     categoryRepository = categoryRepository,
                     cookingSessionRepository = cookingSessionRepository,
+                    imageExtractor = imageExtractor,
+                    pendingPhotoStore = pendingPhotoStore,
                     settings = settings,
                 )
             },
@@ -124,6 +130,29 @@ class RecipeListBlocImplTest {
     fun When_add_recipe_clicked_Then_AddNewRecipe_output_emitted() {
         bloc.onAddRecipeClicked()
         output.lastValue shouldBe RecipeListBloc.Output.AddNewRecipe
+    }
+
+    @Test
+    fun When_scan_photo_succeeds_Then_OpenScannedRecipe_output_emitted() = runTest {
+        val extracted =
+            com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData(
+                title = "Scanned",
+                description = null,
+                ingredients = listOf("flour"),
+                directions = listOf("mix"),
+                imageUrl = null,
+                sourceUrl = "",
+                servings = null,
+                prepTime = null,
+                cookTime = null,
+                totalTime = null,
+                calories = null,
+            )
+        imageExtractor.response = extracted
+
+        bloc.onScanRecipePhotoPicked(byteArrayOf(1, 2, 3), "jpg")
+
+        output.lastValue shouldBe RecipeListBloc.Output.OpenScannedRecipe(extracted)
     }
 
     @Test

@@ -31,6 +31,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
@@ -106,6 +107,7 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_catego
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_snack
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_clear_filters
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_continue_cooking
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_create_recipe
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_done_cooking
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_done_cooking_cancel
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_done_cooking_confirm
@@ -128,6 +130,10 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_item_s
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_export_all
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_select
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_more_actions
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_scan_failed_title
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_scan_from_photo
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_scanning_message
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_scanning_title
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_search
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_clear
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_empty
@@ -159,10 +165,14 @@ import com.plusmobileapps.chefmate.recipe.list.RecipeListTestTags
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
+import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.components.PlusDialog
+import com.plusmobileapps.chefmate.ui.components.PlusDialogScaffold
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
+import com.plusmobileapps.chefmate.util.rememberImagePickerLauncher
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
@@ -286,13 +296,10 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                                 )
                             }
                         }
-                        IconButton(onClick = bloc::onAddRecipeClicked) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription =
-                                    stringResource(Res.string.recipe_list_add_recipe),
-                            )
-                        }
+                        AddRecipeMenu(
+                            onCreateClicked = bloc::onAddRecipeClicked,
+                            onScanPicked = bloc::onScanRecipePhotoPicked,
+                        )
                         OverflowMenu(
                             onSelectClicked = bloc::onEnterSelectionMode,
                             onExportAllClicked = bloc::onExportClicked,
@@ -403,7 +410,83 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                 onDismiss = bloc::onDoneCookingDismissed,
             )
         }
+
+        if (state.isScanning) {
+            ScanningDialog()
+        }
+
+        state.scanError?.let { error ->
+            PlusDialog(
+                title = ResourceString(Res.string.recipe_list_scan_failed_title),
+                message = error,
+                onConfirmClick = bloc::onScanErrorDismissed,
+                onDismissRequest = bloc::onScanErrorDismissed,
+            )
+        }
     }
+}
+
+/**
+ * The "+" action. Tapping it opens a chooser: create a recipe by hand, or scan one from a photo via
+ * Gemini vision. The image picker is launched directly from the scan item.
+ */
+@Composable
+private fun AddRecipeMenu(onCreateClicked: () -> Unit, onScanPicked: (ByteArray, String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    val scanPicker = rememberImagePickerLauncher { picked ->
+        picked?.let { onScanPicked(it.bytes, it.fileExtension) }
+    }
+
+    Box {
+        IconButton(
+            onClick = { expanded = true },
+            modifier = Modifier.testTag(RecipeListTestTags.ADD_RECIPE_BUTTON),
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = stringResource(Res.string.recipe_list_add_recipe),
+            )
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.recipe_list_create_recipe)) },
+                leadingIcon = { Icon(Icons.Default.Add, contentDescription = null) },
+                modifier = Modifier.testTag(RecipeListTestTags.ADD_MENU_CREATE),
+                onClick = {
+                    expanded = false
+                    onCreateClicked()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.recipe_list_scan_from_photo)) },
+                leadingIcon = { Icon(Icons.Default.AddPhotoAlternate, contentDescription = null) },
+                modifier = Modifier.testTag(RecipeListTestTags.ADD_MENU_SCAN),
+                onClick = {
+                    expanded = false
+                    scanPicker()
+                },
+            )
+        }
+    }
+}
+
+/** Non-cancellable progress dialog shown while a picked photo is being scanned into a recipe. */
+@Composable
+private fun ScanningDialog() {
+    PlusDialogScaffold(
+        onDismissRequest = {},
+        header = { Text(stringResource(Res.string.recipe_list_scanning_title)) },
+        content = {
+            Row(
+                modifier = Modifier.testTag(RecipeListTestTags.SCANNING_DIALOG),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                Text(stringResource(Res.string.recipe_list_scanning_message))
+            }
+        },
+    )
 }
 
 @Composable

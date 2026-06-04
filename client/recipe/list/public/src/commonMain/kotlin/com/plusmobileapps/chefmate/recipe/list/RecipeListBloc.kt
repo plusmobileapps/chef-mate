@@ -4,6 +4,8 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
+import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
 
@@ -13,6 +15,17 @@ interface RecipeListBloc : BlocScreen {
     fun onRecipeClicked(recipe: RecipeListItem)
 
     fun onAddRecipeClicked()
+
+    /**
+     * The user picked a photo to scan a recipe from. [fileExtension] is the picked file's extension
+     * (e.g. `jpg`); the bloc derives the Gemini mime type from it and reuses the bytes as the new
+     * recipe's image. While extraction runs [Model.isScanning] is true; on success the bloc emits
+     * [Output.OpenScannedRecipe], on failure it surfaces [Model.scanError].
+     */
+    fun onScanRecipePhotoPicked(bytes: ByteArray, fileExtension: String)
+
+    /** Dismisses the scan-failed message. */
+    fun onScanErrorDismissed()
 
     fun onDeleteRecipe(recipe: RecipeListItem)
 
@@ -84,6 +97,10 @@ interface RecipeListBloc : BlocScreen {
         val showDoneCookingDialog: Boolean = false,
         val isSelectionMode: Boolean = false,
         val selectedRecipeIds: Set<Long> = emptySet(),
+        /** True while a picked photo is being scanned into a recipe via Gemini vision. */
+        val isScanning: Boolean = false,
+        /** Non-null when the most recent photo scan failed. */
+        val scanError: TextData? = null,
     ) {
         /** Total number of active filter chips: legacy filters + preset + user category filters. */
         val totalActiveFilterCount: Int
@@ -94,6 +111,9 @@ interface RecipeListBloc : BlocScreen {
         data class OpenRecipe(val recipeId: Long) : Output()
 
         object AddNewRecipe : Output()
+
+        /** A recipe was extracted from a scanned photo; open the pre-filled editor. */
+        data class OpenScannedRecipe(val extracted: ExtractedRecipeData) : Output()
 
         object OpenBrowser : Output()
 

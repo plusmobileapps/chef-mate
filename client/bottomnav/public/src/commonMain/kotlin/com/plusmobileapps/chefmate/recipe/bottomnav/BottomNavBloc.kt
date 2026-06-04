@@ -56,7 +56,11 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
     sealed class Output {
         data class OpenRecipe(val recipeId: Long) : Output()
 
-        data class OpenExtractedRecipe(val extracted: ExtractedRecipeData) : Output()
+        data class OpenExtractedRecipe(
+            val extracted: ExtractedRecipeData,
+            /** True when the extraction came from a scanned photo whose bytes seed the image. */
+            val consumePendingPhoto: Boolean = false,
+        ) : Output()
 
         object AddNewRecipe : Output()
 

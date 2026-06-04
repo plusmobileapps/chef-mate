@@ -2,6 +2,13 @@
     <!-- Recipe List Screen -->
     <string name="recipe_list_title">Recipes</string>
     <string name="recipe_list_add_recipe">Add recipe</string>
+    <string name="recipe_list_create_recipe">Create recipe</string>
+    <string name="recipe_list_scan_from_photo">Scan from photo</string>
+    <string name="recipe_list_scanning_title">Scanning photo…</string>
+    <string name="recipe_list_scanning_message">Reading the recipe from your photo.</string>
+    <string name="recipe_list_scan_failed_title">Couldn’t scan that photo</string>
+    <string name="recipe_list_scan_failed">We couldn’t read a recipe from that photo. Try a clearer shot of the full recipe.</string>
+    <string name="recipe_list_scan_no_api_key">Gemini API key missing. Set gemini.key in your gradle properties.</string>
 
     <!-- Search -->
     <string name="recipe_list_search">Search</string>

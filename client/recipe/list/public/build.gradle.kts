@@ -12,6 +12,7 @@ kotlin {
             implementation(compose.components.resources)
             implementation(projects.client.ui.public)
             implementation(projects.client.recipe.data.public)
+            api(projects.client.text.public)
         }
     }
 }
