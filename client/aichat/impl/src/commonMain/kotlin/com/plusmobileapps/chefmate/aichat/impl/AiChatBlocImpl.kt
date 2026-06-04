@@ -28,9 +28,7 @@ class AiChatBlocImpl(
     private val scope = createScope()
 
     init {
-        viewModel.extractedRecipe
-            .onEach { output.onNext(AiChatBloc.Output.AddAsRecipe(it)) }
-            .launchIn(scope)
+        viewModel.extractedRecipe.onEach { output.onNext(it) }.launchIn(scope)
     }
 
     override val state: StateFlow<AiChatBloc.Model> = viewModel.state
@@ -51,6 +49,10 @@ class AiChatBlocImpl(
 
     override fun onAddRecipeClick() {
         viewModel.extractRecipe()
+    }
+
+    override fun onPhotoPicked(bytes: ByteArray, fileExtension: String) {
+        viewModel.extractFromImage(bytes = bytes, fileExtension = fileExtension)
     }
 
     override fun onBackClicked() {

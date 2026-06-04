@@ -23,6 +23,8 @@ private fun aiChatBloc(model: AiChatBloc.Model, input: String = ""): AiChatBloc 
 
         override fun onAddRecipeClick() = Unit
 
+        override fun onPhotoPicked(bytes: ByteArray, fileExtension: String) = Unit
+
         override fun onBackClicked() = Unit
 
         @Composable

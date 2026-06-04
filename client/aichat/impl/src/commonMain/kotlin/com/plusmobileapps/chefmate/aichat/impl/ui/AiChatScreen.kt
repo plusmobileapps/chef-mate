@@ -31,6 +31,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.AssistChip
@@ -65,6 +66,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import chefmate.client.aichat.public.generated.resources.Res
 import chefmate.client.aichat.public.generated.resources.aichat_add_recipe
+import chefmate.client.aichat.public.generated.resources.aichat_attach_photo
 import chefmate.client.aichat.public.generated.resources.aichat_done
 import chefmate.client.aichat.public.generated.resources.aichat_empty_description
 import chefmate.client.aichat.public.generated.resources.aichat_empty_title
@@ -83,6 +85,7 @@ import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.isIosPlatform
+import com.plusmobileapps.chefmate.util.rememberImagePickerLauncher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import org.jetbrains.compose.resources.stringResource
@@ -143,8 +146,10 @@ fun AiChatScreen(bloc: AiChatBloc, modifier: Modifier = Modifier) {
             AiChatInput(
                 inputText = bloc.inputText,
                 isSending = state.isSending,
+                isExtracting = state.isExtractingRecipe,
                 onInputChange = bloc::onInputChange,
                 onSendClick = bloc::onSendClick,
+                onPhotoPicked = bloc::onPhotoPicked,
             )
         },
     )
@@ -356,8 +361,10 @@ private fun EmptyState(modifier: Modifier = Modifier) {
 private fun AiChatInput(
     inputText: StateFlow<String>,
     isSending: Boolean,
+    isExtracting: Boolean,
     onInputChange: (String) -> Unit,
     onSendClick: () -> Unit,
+    onPhotoPicked: (ByteArray, String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val text by inputText.collectAsState()
@@ -366,6 +373,9 @@ private fun AiChatInput(
     val isIos = isIosPlatform()
     var isFocused by remember { mutableStateOf(false) }
     val canSend = text.isNotBlank() && !isSending
+    val pickPhoto = rememberImagePickerLauncher { picked ->
+        picked?.let { onPhotoPicked(it.bytes, it.fileExtension) }
+    }
 
     Row(
         modifier =
@@ -375,6 +385,20 @@ private fun AiChatInput(
                 .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        IconButton(
+            onClick = pickPhoto,
+            enabled = !isExtracting,
+            modifier = Modifier.testTag(AiChatTestTags.ATTACH_PHOTO_BUTTON),
+        ) {
+            if (isExtracting) {
+                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+            } else {
+                Icon(
+                    imageVector = Icons.Default.AddPhotoAlternate,
+                    contentDescription = stringResource(Res.string.aichat_attach_photo),
+                )
+            }
+        }
         OutlinedTextField(
             value = text,
             onValueChange = onInputChange,

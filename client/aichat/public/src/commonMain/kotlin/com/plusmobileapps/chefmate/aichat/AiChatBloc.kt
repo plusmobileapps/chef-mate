@@ -22,6 +22,13 @@ interface AiChatBloc : BackClickBloc, BlocScreen {
 
     fun onAddRecipeClick()
 
+    /**
+     * The user attached a photo to extract a recipe from. [fileExtension] is the picked file's
+     * extension (e.g. `jpg`, `png`); the bloc derives the Gemini mime type from it and reuses the
+     * same bytes as the recipe's pending image.
+     */
+    fun onPhotoPicked(bytes: ByteArray, fileExtension: String)
+
     data class Model(
         val messages: List<ChatMessage> = emptyList(),
         val isSending: Boolean = false,
@@ -44,7 +51,11 @@ interface AiChatBloc : BackClickBloc, BlocScreen {
 
         data object OpenHistory : Output()
 
-        data class AddAsRecipe(val extracted: ExtractedRecipeData) : Output()
+        data class AddAsRecipe(
+            val extracted: ExtractedRecipeData,
+            /** True when extraction came from a photo whose bytes should seed the recipe image. */
+            val consumePendingPhoto: Boolean = false,
+        ) : Output()
     }
 
     fun interface Factory {
