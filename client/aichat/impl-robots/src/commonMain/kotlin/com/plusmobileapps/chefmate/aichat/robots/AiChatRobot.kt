@@ -33,6 +33,11 @@ class AiChatRobot(private val test: ComposeUiTest) {
         test.onNode(hasTestTag(AiChatTestTags.HISTORY_BUTTON) and onScreen).performClick()
     }
 
+    /** Asserts the attach-photo button (recipe-from-photo entry) is present in the input row. */
+    fun assertAttachPhotoShown(): AiChatRobot = apply {
+        test.onNode(hasTestTag(AiChatTestTags.ATTACH_PHOTO_BUTTON) and onScreen).assertIsDisplayed()
+    }
+
     fun assertMessageShown(text: String): AiChatRobot = apply {
         test.onNode(hasText(text, substring = true) and onScreen).assertIsDisplayed()
     }
