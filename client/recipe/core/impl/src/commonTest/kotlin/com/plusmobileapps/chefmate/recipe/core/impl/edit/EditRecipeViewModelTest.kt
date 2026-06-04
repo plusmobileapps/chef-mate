@@ -8,8 +8,10 @@ import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeCategoryRepository
+import com.plusmobileapps.chefmate.recipe.data.testing.FakePendingRecipePhotoStore
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipePhotoStorage
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 import kotlin.time.ExperimentalTime
@@ -26,21 +28,25 @@ class EditRecipeViewModelTest {
     private val repository = FakeRecipeRepository(recipes)
     private val categoryRepository = FakeCategoryRepository()
     private val photoStorage = FakeRecipePhotoStorage()
+    private val pendingPhotoStore = FakePendingRecipePhotoStore()
     private val mainContext = UnconfinedTestDispatcher()
 
     private fun createViewModel(
         recipeId: Long? = null,
         extractedRecipe: ExtractedRecipeData? = null,
         fromAi: Boolean = false,
+        consumePendingPhoto: Boolean = false,
     ) =
         EditRecipeViewModel(
             recipeId = recipeId,
             extractedRecipe = extractedRecipe,
             fromAi = fromAi,
+            consumePendingPhoto = consumePendingPhoto,
             mainContext = mainContext,
             repository = repository,
             categoryRepository = categoryRepository,
             photoStorage = photoStorage,
+            pendingRecipePhotoStore = pendingPhotoStore,
         )
 
     @Test
@@ -243,6 +249,48 @@ class EditRecipeViewModelTest {
 
         vm.categories.value shouldBe emptySet()
     }
+
+    @Test
+    fun When_consume_pending_photo_and_store_has_one_Then_pending_bytes_set() {
+        pendingPhotoStore.put(byteArrayOf(7, 8, 9), "jpg")
+        val vm = createViewModel(extractedRecipe = extractedSample(), consumePendingPhoto = true)
+
+        vm.pendingPhotoBytes.value.shouldNotBeNull()
+    }
+
+    @Test
+    fun When_not_consuming_pending_photo_Then_pending_bytes_null_and_store_untouched() {
+        pendingPhotoStore.put(byteArrayOf(7, 8, 9), "jpg")
+        val vm = createViewModel(extractedRecipe = extractedSample(), consumePendingPhoto = false)
+
+        vm.pendingPhotoBytes.value shouldBe null
+        // Store is left intact for whoever actually consumes it.
+        pendingPhotoStore.consume().shouldNotBeNull()
+    }
+
+    @Test
+    fun When_consume_pending_photo_but_store_empty_Then_pending_bytes_null() {
+        // Simulates process death: the serializable extracted data restores, but the in-memory
+        // photo is gone. Must not crash.
+        val vm = createViewModel(extractedRecipe = extractedSample(), consumePendingPhoto = true)
+
+        vm.pendingPhotoBytes.value shouldBe null
+    }
+
+    private fun extractedSample() =
+        ExtractedRecipeData(
+            title = "From Photo",
+            description = null,
+            ingredients = listOf("flour"),
+            directions = listOf("mix"),
+            imageUrl = null,
+            sourceUrl = "",
+            servings = null,
+            prepTime = null,
+            cookTime = null,
+            totalTime = null,
+            calories = null,
+        )
 
     @Test
     fun When_no_recipe_loaded_Then_categories_starts_empty() {
