@@ -22,8 +22,18 @@ import kotlin.test.Test
 class RecipeFromPhotoUiTest {
 
     @Test
-    fun add_menu_offers_scan_from_photo_and_create_opens_editor() = runRootBlocTest {
+    fun add_menu_offers_scan_from_photo_and_create_opens_editor() = runRootBlocTest { component ->
+        component.testFeatureFlags.set(FeatureFlagRegistry.ScanRecipeFromPhoto, true)
+
         recipeList().openAddMenu().assertScanFromPhotoShown().tapCreateRecipe()
+
+        editRecipe().awaitDisplayed()
+    }
+
+    @Test
+    fun add_button_opens_editor_directly_when_scan_flag_disabled() = runRootBlocTest {
+        // Flag defaults to off: the add button must open the blank editor with no chooser.
+        recipeList().openAddMenu()
 
         editRecipe().awaitDisplayed()
     }

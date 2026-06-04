@@ -5,6 +5,7 @@ package com.plusmobileapps.chefmate.recipe.list.impl
 
 import app.cash.turbine.test
 import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
+import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeCategoryRepository
@@ -59,6 +60,7 @@ class RecipeListBlocImplTest {
     private val categoryRepository = FakeCategoryRepository()
     private val imageExtractor = FakeRecipeImageExtractor()
     private val pendingPhotoStore = FakePendingRecipePhotoStore()
+    private val featureFlags = FakeFeatureFlags()
 
     private val bloc =
         RecipeListBlocImpl(
@@ -72,6 +74,7 @@ class RecipeListBlocImplTest {
                     cookingSessionRepository = cookingSessionRepository,
                     imageExtractor = imageExtractor,
                     pendingPhotoStore = pendingPhotoStore,
+                    featureFlags = featureFlags,
                     settings = settings,
                 )
             },

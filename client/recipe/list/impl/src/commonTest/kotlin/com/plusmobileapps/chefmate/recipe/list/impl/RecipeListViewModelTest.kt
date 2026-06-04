@@ -5,6 +5,8 @@ package com.plusmobileapps.chefmate.recipe.list.impl
 
 import app.cash.turbine.test
 import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
+import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
+import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
@@ -51,6 +53,7 @@ class RecipeListViewModelTest {
     private val categoryRepository = FakeCategoryRepository()
     private val imageExtractor = FakeRecipeImageExtractor()
     private val pendingPhotoStore = FakePendingRecipePhotoStore()
+    private val featureFlags = FakeFeatureFlags()
     private val viewModel =
         RecipeListViewModel(
             mainContext = UnconfinedTestDispatcher(),
@@ -59,6 +62,7 @@ class RecipeListViewModelTest {
             cookingSessionRepository = cookingSessionRepository,
             imageExtractor = imageExtractor,
             pendingPhotoStore = pendingPhotoStore,
+            featureFlags = featureFlags,
             settings = settings,
         )
 
@@ -99,6 +103,30 @@ class RecipeListViewModelTest {
 
         viewModel.dismissScanError()
         viewModel.state.value.scanError shouldBe null
+    }
+
+    @Test
+    fun When_scan_flag_disabled_Then_state_scan_from_photo_disabled() {
+        // Class-level viewModel uses default flags (scan_recipe_from_photo = false).
+        viewModel.state.value.isScanFromPhotoEnabled shouldBe false
+    }
+
+    @Test
+    fun When_scan_flag_enabled_Then_state_scan_from_photo_enabled() {
+        val flags = FakeFeatureFlags(mapOf(FeatureFlagRegistry.ScanRecipeFromPhoto to true))
+        val vm =
+            RecipeListViewModel(
+                mainContext = UnconfinedTestDispatcher(),
+                repository = repository,
+                categoryRepository = categoryRepository,
+                cookingSessionRepository = cookingSessionRepository,
+                imageExtractor = imageExtractor,
+                pendingPhotoStore = pendingPhotoStore,
+                featureFlags = flags,
+                settings = settings,
+            )
+
+        vm.state.value.isScanFromPhotoEnabled shouldBe true
     }
 
     private fun sampleExtracted() =
@@ -306,6 +334,7 @@ class RecipeListViewModelTest {
                 cookingSessionRepository = cookingSessionRepository,
                 imageExtractor = imageExtractor,
                 pendingPhotoStore = pendingPhotoStore,
+                featureFlags = featureFlags,
                 settings = gridSettings,
             )
         vm.state.value.isGridView shouldBe true
@@ -398,6 +427,7 @@ class RecipeListViewModelTest {
                 cookingSessionRepository = cookingSessionRepository,
                 imageExtractor = imageExtractor,
                 pendingPhotoStore = pendingPhotoStore,
+                featureFlags = featureFlags,
                 settings = sortSettings,
             )
         vm.state.value.currentSort shouldBe RecipeSortOption.TOP_RATED
@@ -427,6 +457,7 @@ class RecipeListViewModelTest {
                 cookingSessionRepository = cookingSessionRepository,
                 imageExtractor = imageExtractor,
                 pendingPhotoStore = pendingPhotoStore,
+                featureFlags = featureFlags,
                 settings = filterSettings,
             )
         vm.state.value.activeFilters shouldBe
@@ -613,6 +644,7 @@ class RecipeListViewModelTest {
                 cookingSessionRepository = cookingSessionRepository,
                 imageExtractor = imageExtractor,
                 pendingPhotoStore = pendingPhotoStore,
+                featureFlags = featureFlags,
                 settings = catSettings,
             )
         vm.state.value.activeCategories shouldBe

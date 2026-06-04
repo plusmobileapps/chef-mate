@@ -6,6 +6,9 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_scan_n
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
 import com.plusmobileapps.chefmate.di.Main
+import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
+import com.plusmobileapps.chefmate.featureflag.FeatureFlags
+import com.plusmobileapps.chefmate.featureflag.isEnabled
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.CategoryRepository
@@ -33,6 +36,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -44,8 +49,11 @@ class RecipeListViewModel(
     private val cookingSessionRepository: CookingSessionRepository,
     private val imageExtractor: RecipeImageExtractor,
     private val pendingPhotoStore: PendingRecipePhotoStore,
+    featureFlags: FeatureFlags,
     settings: Settings,
 ) : ViewModel(mainContext) {
+    private val scanFromPhotoEnabled =
+        featureFlags.isEnabled(FeatureFlagRegistry.ScanRecipeFromPhoto)
     private var isGridViewPref by settings.boolean(KEY_IS_GRID_VIEW, false)
     private var sortOptionPref by
         settings.string(KEY_SORT_OPTION, RecipeSortOption.RECENTLY_ADDED.name)
@@ -99,6 +107,9 @@ class RecipeListViewModel(
         scope.launch { observeRecipes() }
         scope.launch { observeCookingSession() }
         scope.launch { observeUserCategories() }
+        scanFromPhotoEnabled
+            .onEach { enabled -> _state.update { it.copy(isScanFromPhotoEnabled = enabled) } }
+            .launchIn(scope)
     }
 
     private suspend fun observeRecipes() {
@@ -316,6 +327,7 @@ class RecipeListViewModel(
         val selectedRecipeIds: Set<Long> = emptySet(),
         val isScanning: Boolean = false,
         val scanError: TextData? = null,
+        val isScanFromPhotoEnabled: Boolean = false,
     ) {
         val isSearchActive: Boolean
             get() = searchQuery.isNotBlank()

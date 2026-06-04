@@ -65,6 +65,7 @@ class RecipeListBlocImpl(
                 selectedRecipeIds = it.selectedRecipeIds,
                 isScanning = it.isScanning,
                 scanError = it.scanError,
+                isScanFromPhotoEnabled = it.isScanFromPhotoEnabled,
             )
         }
 

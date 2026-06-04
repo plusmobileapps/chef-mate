@@ -297,6 +297,7 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                             }
                         }
                         AddRecipeMenu(
+                            scanEnabled = state.isScanFromPhotoEnabled,
                             onCreateClicked = bloc::onAddRecipeClicked,
                             onScanPicked = bloc::onScanRecipePhotoPicked,
                         )
@@ -427,11 +428,29 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
 }
 
 /**
- * The "+" action. Tapping it opens a chooser: create a recipe by hand, or scan one from a photo via
- * Gemini vision. The image picker is launched directly from the scan item.
+ * The "+" action. When [scanEnabled] it opens a chooser — create a recipe by hand, or scan one from
+ * a photo via Gemini vision (the image picker launches directly from the scan item). When disabled
+ * it opens the blank editor directly with no menu, preserving the original add-recipe behaviour.
  */
 @Composable
-private fun AddRecipeMenu(onCreateClicked: () -> Unit, onScanPicked: (ByteArray, String) -> Unit) {
+private fun AddRecipeMenu(
+    scanEnabled: Boolean,
+    onCreateClicked: () -> Unit,
+    onScanPicked: (ByteArray, String) -> Unit,
+) {
+    if (!scanEnabled) {
+        IconButton(
+            onClick = onCreateClicked,
+            modifier = Modifier.testTag(RecipeListTestTags.ADD_RECIPE_BUTTON),
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = stringResource(Res.string.recipe_list_add_recipe),
+            )
+        }
+        return
+    }
+
     var expanded by remember { mutableStateOf(false) }
     val scanPicker = rememberImagePickerLauncher { picked ->
         picked?.let { onScanPicked(it.bytes, it.fileExtension) }

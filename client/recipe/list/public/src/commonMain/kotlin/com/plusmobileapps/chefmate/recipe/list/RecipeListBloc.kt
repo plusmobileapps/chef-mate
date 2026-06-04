@@ -101,6 +101,11 @@ interface RecipeListBloc : BlocScreen {
         val isScanning: Boolean = false,
         /** Non-null when the most recent photo scan failed. */
         val scanError: TextData? = null,
+        /**
+         * When true, the add button opens a chooser offering "Scan from photo"; when false it opens
+         * the blank editor directly. Driven by the `scan_recipe_from_photo` feature flag.
+         */
+        val isScanFromPhotoEnabled: Boolean = false,
     ) {
         /** Total number of active filter chips: legacy filters + preset + user category filters. */
         val totalActiveFilterCount: Int
