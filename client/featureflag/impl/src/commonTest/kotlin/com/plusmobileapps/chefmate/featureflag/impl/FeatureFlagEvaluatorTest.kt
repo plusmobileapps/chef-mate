@@ -107,6 +107,73 @@ class FeatureFlagEvaluatorTest {
     }
 
     @Test
+    fun When_user_allowlisted_Then_value_returned_even_outside_rollout() {
+        val row =
+            booleanRow(
+                enabled = true,
+                value = "true",
+                rolloutPercent = 0,
+                userIds = listOf("vip-user"),
+            )
+        evaluator.evaluate(SampleBoolean, row, ctx(identity = "vip-user")) shouldBe true
+    }
+
+    @Test
+    fun When_user_not_allowlisted_Then_rollout_still_applies() {
+        // rolloutPercent 0 means everyone not on the list gets the default.
+        val row =
+            booleanRow(
+                enabled = true,
+                value = "true",
+                rolloutPercent = 0,
+                userIds = listOf("vip-user"),
+            )
+        evaluator.evaluate(SampleBoolean, row, ctx(identity = "other-user")) shouldBe false
+    }
+
+    @Test
+    fun When_user_allowlisted_but_row_disabled_Then_default_returned() {
+        val row =
+            booleanRow(
+                enabled = false,
+                value = "true",
+                rolloutPercent = 100,
+                userIds = listOf("vip-user"),
+            )
+        evaluator.evaluate(SampleBoolean, row, ctx(identity = "vip-user")) shouldBe false
+    }
+
+    @Test
+    fun When_user_allowlisted_but_platform_excluded_Then_default_returned() {
+        val row =
+            booleanRow(
+                enabled = true,
+                value = "true",
+                rolloutPercent = 100,
+                platforms = listOf("IOS"),
+                userIds = listOf("vip-user"),
+            )
+        evaluator.evaluate(SampleBoolean, row, ctx(identity = "vip-user")) shouldBe false
+    }
+
+    @Test
+    fun When_user_allowlisted_but_below_min_version_Then_default_returned() {
+        val row =
+            booleanRow(
+                enabled = true,
+                value = "true",
+                rolloutPercent = 100,
+                minVersion = "1.5.0",
+                userIds = listOf("vip-user"),
+            )
+        evaluator.evaluate(
+            SampleBoolean,
+            row,
+            ctx(identity = "vip-user", versionName = "1.4.3"),
+        ) shouldBe false
+    }
+
+    @Test
     fun When_value_type_mismatch_Then_default_returned() {
         val row =
             FeatureFlagRow(
@@ -167,6 +234,7 @@ class FeatureFlagEvaluatorTest {
         platforms: List<String>? = null,
         minVersion: String? = null,
         maxVersion: String? = null,
+        userIds: List<String>? = null,
     ): FeatureFlagRow =
         FeatureFlagRow(
             key = SampleBoolean.key,
@@ -177,5 +245,6 @@ class FeatureFlagEvaluatorTest {
             platforms = platforms,
             minVersion = minVersion,
             maxVersion = maxVersion,
+            userIds = userIds,
         )
 }
