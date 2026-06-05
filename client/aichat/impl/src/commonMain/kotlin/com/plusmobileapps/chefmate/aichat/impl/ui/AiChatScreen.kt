@@ -15,13 +15,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -96,7 +100,7 @@ fun AiChatScreen(bloc: AiChatBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
 
     PlusHeaderContainer(
-        modifier = modifier.fillMaxSize().imePadding().testTag(AiChatTestTags.SCREEN),
+        modifier = modifier.fillMaxSize().testTag(AiChatTestTags.SCREEN),
         data =
             PlusHeaderData.Child(
                 title = Res.string.aichat_title.asTextData(),
@@ -120,7 +124,11 @@ fun AiChatScreen(bloc: AiChatBloc, modifier: Modifier = Modifier) {
                 if (state.messages.isEmpty()) {
                     EmptyState(modifier = Modifier.fillMaxSize())
                 } else {
-                    MessageList(messages = state.messages, modifier = Modifier.fillMaxSize())
+                    MessageList(
+                        messages = state.messages,
+                        isSending = state.isSending,
+                        modifier = Modifier.fillMaxSize(),
+                    )
                 }
             }
             state.error?.let { error ->
@@ -157,10 +165,20 @@ fun AiChatScreen(bloc: AiChatBloc, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun MessageList(messages: List<ChatMessage>, modifier: Modifier = Modifier) {
+private fun MessageList(
+    messages: List<ChatMessage>,
+    isSending: Boolean,
+    modifier: Modifier = Modifier,
+) {
     val listState = rememberLazyListState()
     val inspection = LocalInspectionMode.current
     val last = messages.lastOrNull()
+
+    // Until the reply's first token arrives no model row exists yet (the repository defers it), so
+    // surface a "Gemini is thinking" bubble where the reply will land — at the start/bottom of the
+    // log — instead of relying on the tiny spinner that used to live in the send button.
+    val showThinking =
+        isSending && messages.none { it.role == ChatMessage.Role.MODEL && it.isStreaming }
 
     // Capture, the moment the last message first appears, whether it began streaming this session.
     // A reply that streams in is spelled out line by line; an already-complete message (history
@@ -190,6 +208,11 @@ private fun MessageList(messages: List<ChatMessage>, modifier: Modifier = Modifi
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        // reverseLayout: the first item renders at the bottom (newest), so the thinking bubble sits
+        // just below the latest user message.
+        if (showThinking) {
+            item(key = "thinking") { ThinkingBubble() }
+        }
         items(messages.asReversed(), key = { it.id }) { message ->
             val isRevealing = revealStreaming && message.id == last?.id
             val displayContent =
@@ -280,6 +303,36 @@ private fun MessageBubble(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Shown in the Gemini (start) position while a reply is in flight but no token has arrived yet.
+ * Mirrors a model [MessageBubble] — same role label and bubble styling — with a small spinner in
+ * place of text, so it reads as "Gemini is thinking" rather than a stray indicator on the input.
+ */
+@Composable
+private fun ThinkingBubble(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
+        Text(
+            text = stringResource(Res.string.aichat_role_gemini),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+        )
+        Surface(
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.testTag(AiChatTestTags.THINKING_INDICATOR),
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp).size(16.dp),
+                strokeWidth = 2.dp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
@@ -410,6 +463,10 @@ private fun AiChatInput(
             modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surface)
+                // Keep the input above the keyboard when open and above the navigation/gesture bar
+                // when closed. Unioning the two insets pads by whichever is larger (the IME inset
+                // already includes the navigation bar) so they never stack.
+                .windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars))
                 .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -450,22 +507,18 @@ private fun AiChatInput(
                     }
                 ),
             trailingIcon = {
+                // The send button is purely enable/disable now — it lights up once there's text to
+                // send. The in-flight indicator lives in the chat log (see ThinkingBubble) where
+                // it's actually visible.
                 IconButton(
                     onClick = onSendClick,
                     enabled = canSend,
                     modifier = Modifier.testTag(AiChatTestTags.SEND_BUTTON),
                 ) {
-                    if (isSending) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp,
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Send,
-                            contentDescription = stringResource(Res.string.aichat_send),
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Send,
+                        contentDescription = stringResource(Res.string.aichat_send),
+                    )
                 }
             },
         )
