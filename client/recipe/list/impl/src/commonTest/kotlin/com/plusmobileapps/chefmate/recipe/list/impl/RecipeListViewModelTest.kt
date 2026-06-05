@@ -11,6 +11,7 @@ import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionError
 import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionException
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeCategoryRepository
@@ -86,7 +87,7 @@ class RecipeListViewModelTest {
 
     @Test
     fun When_scan_fails_with_missing_api_key_Then_scan_error_set() {
-        imageExtractor.error = RecipeExtractionException("MISSING_API_KEY")
+        imageExtractor.error = RecipeExtractionException(RecipeExtractionError.MISSING_API_KEY)
 
         viewModel.scanRecipeFromPhoto(byteArrayOf(1), "jpg")
 
@@ -96,7 +97,7 @@ class RecipeListViewModelTest {
 
     @Test
     fun When_scan_fails_generically_Then_scan_error_set_and_dismissable() {
-        imageExtractor.error = RecipeExtractionException("MALFORMED_JSON")
+        imageExtractor.error = RecipeExtractionException(RecipeExtractionError.MALFORMED_JSON)
 
         viewModel.scanRecipeFromPhoto(byteArrayOf(1), "jpg")
         (viewModel.state.value.scanError != null) shouldBe true

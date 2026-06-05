@@ -5,6 +5,7 @@ import com.plusmobileapps.chefmate.aichat.impl.di.GeminiApiKey
 import com.plusmobileapps.chefmate.aichat.impl.di.GeminiHttpClient
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionError
 import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionException
 import com.plusmobileapps.chefmate.recipe.data.RecipeImageExtractor
 import dev.zacsweers.metro.ContributesBinding
@@ -25,9 +26,6 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
-
-class GeminiExtractionException(message: String, cause: Throwable? = null) :
-    RuntimeException(message, cause)
 
 /**
  * One-shot Gemini call that turns the current chat history into an [ExtractedRecipeData] using
@@ -66,7 +64,7 @@ class RealGeminiRecipeExtractor(
                     parts = listOf(GeminiPart(text = message.content)),
                 )
             }
-        return generate(contents) { code, cause -> throw GeminiExtractionException(code, cause) }
+        return generate(contents)
     }
 
     override suspend fun extractFromImage(bytes: ByteArray, mimeType: String): ExtractedRecipeData {
@@ -87,18 +85,15 @@ class RealGeminiRecipeExtractor(
                         ),
                 )
             )
-        return generate(contents) { code, cause -> throw RecipeExtractionException(code, cause) }
+        return generate(contents)
     }
 
     /**
-     * Shared structured-output call. [fail] maps a stable error code to the caller's exception type
-     * (chat vs. recipe flow) so the two public entry points don't leak each other's exceptions.
+     * Shared structured-output call for both entry points. Failures surface as a
+     * [RecipeExtractionException] carrying a typed [RecipeExtractionError].
      */
-    private suspend fun generate(
-        contents: List<GeminiContent>,
-        fail: (code: String, cause: Throwable?) -> Nothing,
-    ): ExtractedRecipeData {
-        if (apiKey.isBlank()) fail("MISSING_API_KEY", null)
+    private suspend fun generate(contents: List<GeminiContent>): ExtractedRecipeData {
+        if (apiKey.isBlank()) throw RecipeExtractionException(RecipeExtractionError.MISSING_API_KEY)
 
         val request = GeminiRequest(contents = contents, generationConfig = recipeGenerationConfig)
 
@@ -114,19 +109,21 @@ class RealGeminiRecipeExtractor(
                     }
                     .body<GeminiResponse>()
             } catch (e: Throwable) {
-                fail("REQUEST_FAILED", e)
+                throw RecipeExtractionException(RecipeExtractionError.REQUEST_FAILED, e)
             }
 
         val payload =
             response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
-                ?: fail("EMPTY_RESPONSE", null)
+                ?: throw RecipeExtractionException(RecipeExtractionError.EMPTY_RESPONSE)
 
         val recipe =
             runCatching { json.decodeFromString(RecipeJson.serializer(), payload) }
-                .getOrElse { fail("MALFORMED_JSON", it) }
+                .getOrElse {
+                    throw RecipeExtractionException(RecipeExtractionError.MALFORMED_JSON, it)
+                }
 
         if (recipe.title.isBlank() || recipe.ingredients.isEmpty() || recipe.directions.isEmpty()) {
-            fail("INCOMPLETE_RECIPE", null)
+            throw RecipeExtractionException(RecipeExtractionError.INCOMPLETE_RECIPE)
         }
 
         return ExtractedRecipeData(

@@ -1,5 +1,6 @@
 package com.plusmobileapps.chefmate.aichat.impl
 
+import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionError
 import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -61,7 +62,7 @@ class GeminiRecipeExtractorImageTest {
             shouldThrow<RecipeExtractionException> {
                 extractor.extractFromImage(imageBytes, "image/jpeg")
             }
-        error.message shouldBe "MISSING_API_KEY"
+        error.error shouldBe RecipeExtractionError.MISSING_API_KEY
     }
 
     @Test
@@ -72,7 +73,7 @@ class GeminiRecipeExtractorImageTest {
             shouldThrow<RecipeExtractionException> {
                 extractor.extractFromImage(imageBytes, "image/jpeg")
             }
-        error.message shouldBe "EMPTY_RESPONSE"
+        error.error shouldBe RecipeExtractionError.EMPTY_RESPONSE
     }
 
     @Test
@@ -83,7 +84,7 @@ class GeminiRecipeExtractorImageTest {
             shouldThrow<RecipeExtractionException> {
                 extractor.extractFromImage(imageBytes, "image/jpeg")
             }
-        error.message shouldBe "MALFORMED_JSON"
+        error.error shouldBe RecipeExtractionError.MALFORMED_JSON
     }
 
     @Test
@@ -97,7 +98,7 @@ class GeminiRecipeExtractorImageTest {
             shouldThrow<RecipeExtractionException> {
                 extractor.extractFromImage(imageBytes, "image/jpeg")
             }
-        error.message shouldBe "INCOMPLETE_RECIPE"
+        error.error shouldBe RecipeExtractionError.INCOMPLETE_RECIPE
     }
 
     @Test
@@ -108,7 +109,7 @@ class GeminiRecipeExtractorImageTest {
             shouldThrow<RecipeExtractionException> {
                 extractor.extractFromImage(imageBytes, "image/jpeg")
             }
-        error.message shouldBe "REQUEST_FAILED"
+        error.error shouldBe RecipeExtractionError.REQUEST_FAILED
     }
 
     /** Wraps [recipeJson] (the structured-output payload) in Gemini's candidate envelope. */
