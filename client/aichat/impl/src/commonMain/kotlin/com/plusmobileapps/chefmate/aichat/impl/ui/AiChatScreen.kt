@@ -507,22 +507,18 @@ private fun AiChatInput(
                     }
                 ),
             trailingIcon = {
+                // The send button is purely enable/disable now — it lights up once there's text to
+                // send. The in-flight indicator lives in the chat log (see ThinkingBubble) where
+                // it's actually visible.
                 IconButton(
                     onClick = onSendClick,
                     enabled = canSend,
                     modifier = Modifier.testTag(AiChatTestTags.SEND_BUTTON),
                 ) {
-                    if (isSending) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp,
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Send,
-                            contentDescription = stringResource(Res.string.aichat_send),
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Send,
+                        contentDescription = stringResource(Res.string.aichat_send),
+                    )
                 }
             },
         )
