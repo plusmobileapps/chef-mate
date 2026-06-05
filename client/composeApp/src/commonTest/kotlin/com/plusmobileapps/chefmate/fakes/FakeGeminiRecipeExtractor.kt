@@ -1,11 +1,11 @@
 package com.plusmobileapps.chefmate.fakes
 
 import com.plusmobileapps.chefmate.aichat.ChatMessage
-import com.plusmobileapps.chefmate.aichat.impl.GeminiExtractionException
 import com.plusmobileapps.chefmate.aichat.impl.GeminiRecipeExtractor
 import com.plusmobileapps.chefmate.aichat.impl.RealGeminiRecipeExtractor
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionError
 import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionException
 import com.plusmobileapps.chefmate.recipe.data.RecipeImageExtractor
 import dev.zacsweers.metro.ContributesBinding
@@ -35,8 +35,8 @@ class FakeGeminiRecipeExtractor : GeminiRecipeExtractor, RecipeImageExtractor {
     var response: ExtractedRecipeData? = null
 
     override suspend fun extract(history: List<ChatMessage>): ExtractedRecipeData =
-        response ?: throw GeminiExtractionException("NO_FAKE_RESPONSE")
+        response ?: throw RecipeExtractionException(RecipeExtractionError.EMPTY_RESPONSE)
 
     override suspend fun extractFromImage(bytes: ByteArray, mimeType: String): ExtractedRecipeData =
-        response ?: throw RecipeExtractionException("NO_FAKE_RESPONSE")
+        response ?: throw RecipeExtractionException(RecipeExtractionError.EMPTY_RESPONSE)
 }

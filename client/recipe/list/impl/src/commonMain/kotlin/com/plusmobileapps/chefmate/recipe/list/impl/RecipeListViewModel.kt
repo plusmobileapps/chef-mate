@@ -15,6 +15,7 @@ import com.plusmobileapps.chefmate.recipe.data.CategoryRepository
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipe.data.PendingRecipePhotoStore
 import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionError
 import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionException
 import com.plusmobileapps.chefmate.recipe.data.RecipeImageExtractor
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
@@ -259,7 +260,7 @@ class RecipeListViewModel(
                 _state.update {
                     it.copy(
                         scanError =
-                            if (e.message == "MISSING_API_KEY")
+                            if (e.error == RecipeExtractionError.MISSING_API_KEY)
                                 ResourceString(Res.string.recipe_list_scan_no_api_key)
                             else ResourceString(Res.string.recipe_list_scan_failed)
                     )

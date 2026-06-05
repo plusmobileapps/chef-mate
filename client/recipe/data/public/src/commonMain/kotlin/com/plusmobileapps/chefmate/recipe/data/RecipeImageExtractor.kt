@@ -12,10 +12,23 @@ interface RecipeImageExtractor {
     suspend fun extractFromImage(bytes: ByteArray, mimeType: String): ExtractedRecipeData
 }
 
+/** The distinct ways recipe extraction (from chat text or an image) can fail. */
+enum class RecipeExtractionError {
+    /** No Gemini API key is configured. */
+    MISSING_API_KEY,
+    /** The network request to Gemini failed. */
+    REQUEST_FAILED,
+    /** Gemini returned no usable candidate/content. */
+    EMPTY_RESPONSE,
+    /** Gemini's structured-output payload couldn't be parsed as a recipe. */
+    MALFORMED_JSON,
+    /** A recipe was parsed but is missing required fields (title, ingredients, or directions). */
+    INCOMPLETE_RECIPE,
+}
+
 /**
- * Thrown when image extraction fails. [message] is a stable code (`MISSING_API_KEY`,
- * `REQUEST_FAILED`, `EMPTY_RESPONSE`, `MALFORMED_JSON`, `INCOMPLETE_RECIPE`) that callers map to a
- * user-facing error.
+ * Thrown when recipe extraction fails. [error] is a typed [RecipeExtractionError] so callers can
+ * branch exhaustively (e.g. surface a "missing API key" message) without matching on strings.
  */
-class RecipeExtractionException(message: String, cause: Throwable? = null) :
-    RuntimeException(message, cause)
+class RecipeExtractionException(val error: RecipeExtractionError, cause: Throwable? = null) :
+    RuntimeException(error.name, cause)

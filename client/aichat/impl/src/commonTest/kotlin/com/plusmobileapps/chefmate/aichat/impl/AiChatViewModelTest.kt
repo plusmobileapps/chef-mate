@@ -10,6 +10,7 @@ import com.plusmobileapps.chefmate.aichat.AiChatNoApiKeyError
 import com.plusmobileapps.chefmate.aichat.ChatMessage
 import com.plusmobileapps.chefmate.database.testing.createTestDatabase
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionError
 import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionException
 import com.plusmobileapps.chefmate.recipe.data.RecipeImageExtractor
 import com.plusmobileapps.chefmate.recipe.data.testing.FakePendingRecipePhotoStore
@@ -153,7 +154,7 @@ class AiChatViewModelTest {
     fun extractFromImage_surfaces_missing_api_key_error() =
         runTest(dispatcher) {
             everySuspend { imageExtractor.extractFromImage(any(), any()) } throws
-                RecipeExtractionException("MISSING_API_KEY")
+                RecipeExtractionException(RecipeExtractionError.MISSING_API_KEY)
             val viewModel = newViewModel()
 
             viewModel.extractFromImage(byteArrayOf(1), "jpg")
@@ -167,7 +168,7 @@ class AiChatViewModelTest {
     fun extractFromImage_surfaces_generic_error_on_other_failures() =
         runTest(dispatcher) {
             everySuspend { imageExtractor.extractFromImage(any(), any()) } throws
-                RecipeExtractionException("MALFORMED_JSON")
+                RecipeExtractionException(RecipeExtractionError.MALFORMED_JSON)
             val viewModel = newViewModel()
 
             viewModel.extractFromImage(byteArrayOf(1), "jpg")
@@ -191,7 +192,7 @@ class AiChatViewModelTest {
         runTest(dispatcher) {
             everySuspend { geminiClient.streamReply(any()) } returns flow { emit("ok") }
             everySuspend { recipeExtractor.extract(any()) } throws
-                GeminiExtractionException("MISSING_API_KEY")
+                RecipeExtractionException(RecipeExtractionError.MISSING_API_KEY)
             val viewModel = newViewModel()
 
             viewModel.onInputChange("hi")
@@ -206,7 +207,7 @@ class AiChatViewModelTest {
         runTest(dispatcher) {
             everySuspend { geminiClient.streamReply(any()) } returns flow { emit("ok") }
             everySuspend { recipeExtractor.extract(any()) } throws
-                GeminiExtractionException("MALFORMED_JSON")
+                RecipeExtractionException(RecipeExtractionError.MALFORMED_JSON)
             val viewModel = newViewModel()
 
             viewModel.onInputChange("hi")

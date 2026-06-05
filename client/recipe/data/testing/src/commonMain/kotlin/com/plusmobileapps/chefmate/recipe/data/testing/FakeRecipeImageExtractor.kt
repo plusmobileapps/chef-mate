@@ -1,6 +1,7 @@
 package com.plusmobileapps.chefmate.recipe.data.testing
 
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionError
 import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionException
 import com.plusmobileapps.chefmate.recipe.data.RecipeImageExtractor
 
@@ -16,7 +17,7 @@ class FakeRecipeImageExtractor(var response: ExtractedRecipeData? = null) : Reci
     override suspend fun extractFromImage(bytes: ByteArray, mimeType: String): ExtractedRecipeData {
         calls.add(Call(bytes = bytes, mimeType = mimeType))
         error?.let { throw it }
-        return response ?: throw RecipeExtractionException("NO_FAKE_RESPONSE")
+        return response ?: throw RecipeExtractionException(RecipeExtractionError.EMPTY_RESPONSE)
     }
 
     data class Call(val bytes: ByteArray, val mimeType: String) {

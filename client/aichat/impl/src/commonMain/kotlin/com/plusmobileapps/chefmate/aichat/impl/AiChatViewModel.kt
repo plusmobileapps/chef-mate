@@ -8,6 +8,7 @@ import com.plusmobileapps.chefmate.aichat.AiChatNoApiKeyError
 import com.plusmobileapps.chefmate.aichat.ChatMessage
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.recipe.data.PendingRecipePhotoStore
+import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionError
 import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionException
 import com.plusmobileapps.chefmate.recipe.data.RecipeImageExtractor
 import com.plusmobileapps.chefmate.text.TextData
@@ -136,9 +137,9 @@ class AiChatViewModel(
                     return@launch
                 val recipe = recipeExtractor.extract(history)
                 _extractedRecipe.tryEmit(AiChatBloc.Output.AddAsRecipe(recipe))
-            } catch (e: GeminiExtractionException) {
+            } catch (e: RecipeExtractionException) {
                 _error.value =
-                    if (e.message == "MISSING_API_KEY") AiChatNoApiKeyError
+                    if (e.error == RecipeExtractionError.MISSING_API_KEY) AiChatNoApiKeyError
                     else AiChatExtractionError
             } catch (_: Throwable) {
                 _error.value = AiChatExtractionError
@@ -170,7 +171,7 @@ class AiChatViewModel(
                 )
             } catch (e: RecipeExtractionException) {
                 _error.value =
-                    if (e.message == "MISSING_API_KEY") AiChatNoApiKeyError
+                    if (e.error == RecipeExtractionError.MISSING_API_KEY) AiChatNoApiKeyError
                     else AiChatExtractionError
             } catch (_: Throwable) {
                 _error.value = AiChatExtractionError
