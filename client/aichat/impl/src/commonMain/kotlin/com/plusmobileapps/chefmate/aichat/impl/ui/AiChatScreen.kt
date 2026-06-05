@@ -15,13 +15,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -96,7 +100,7 @@ fun AiChatScreen(bloc: AiChatBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
 
     PlusHeaderContainer(
-        modifier = modifier.fillMaxSize().imePadding().testTag(AiChatTestTags.SCREEN),
+        modifier = modifier.fillMaxSize().testTag(AiChatTestTags.SCREEN),
         data =
             PlusHeaderData.Child(
                 title = Res.string.aichat_title.asTextData(),
@@ -410,6 +414,10 @@ private fun AiChatInput(
             modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surface)
+                // Keep the input above the keyboard when open and above the navigation/gesture bar
+                // when closed. Unioning the two insets pads by whichever is larger (the IME inset
+                // already includes the navigation bar) so they never stack.
+                .windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars))
                 .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
