@@ -97,6 +97,15 @@ val previewAiChatBlocStreaming: AiChatBloc =
         )
     )
 
+/**
+ * Reply in flight before the first token arrives — the latest message is the user's and [isSending]
+ * is true, so the "Gemini is thinking" bubble shows in the model position.
+ */
+val previewAiChatBlocThinking: AiChatBloc =
+    aiChatBloc(
+        AiChatBloc.Model(messages = sampleConversation, canAddRecipe = true, isSending = true)
+    )
+
 /** Error banner state — typical for a missing API key or network failure. */
 val previewAiChatBlocError: AiChatBloc =
     aiChatBloc(
@@ -123,6 +132,12 @@ internal fun AiChatScreenEmptyPreview() {
 @Composable
 internal fun AiChatScreenStreamingPreview() {
     ChefMateTheme { previewAiChatBlocStreaming.Content() }
+}
+
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+internal fun AiChatScreenThinkingPreview() {
+    ChefMateTheme { previewAiChatBlocThinking.Content() }
 }
 
 @Preview(showBackground = true, heightDp = 900)
