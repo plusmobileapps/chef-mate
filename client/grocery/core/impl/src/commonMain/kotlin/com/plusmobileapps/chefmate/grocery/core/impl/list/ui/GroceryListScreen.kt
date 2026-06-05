@@ -8,6 +8,7 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -17,11 +18,14 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -726,39 +730,44 @@ private fun EmptyGroceryListState(
     modifier: Modifier = Modifier,
 ) {
     val dimens = ChefMateTheme.dimens
-    Column(
-        modifier =
-            modifier
-                .testTag(GroceryListTestTags.EMPTY_STATE)
-                .fillMaxWidth()
-                .padding(horizontal = dimens.paddingExtraLarge),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.ShoppingCart,
-            contentDescription = null,
-            modifier = Modifier.size(64.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(dimens.paddingNormal))
-        Text(
-            text = stringResource(Res.string.grocery_list_empty_title),
-            style = MaterialTheme.typography.titleMedium,
-        )
-        Spacer(Modifier.height(dimens.paddingSmall))
-        Text(
-            text = stringResource(Res.string.grocery_list_empty_description),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(dimens.paddingLarge))
-        Button(
-            onClick = onBrowseRecipesClicked,
-            modifier = Modifier.testTag(GroceryListTestTags.BROWSE_RECIPES_BUTTON).fillMaxWidth(),
+    // Allow the centered content to scroll when the viewport is too short (e.g. landscape) so
+    // nothing gets cut off; heightIn(min = maxHeight) keeps it vertically centered when it fits.
+    BoxWithConstraints(modifier = modifier.testTag(GroceryListTestTags.EMPTY_STATE)) {
+        Column(
+            modifier =
+                Modifier.verticalScroll(rememberScrollState())
+                    .heightIn(min = maxHeight)
+                    .fillMaxWidth()
+                    .padding(horizontal = dimens.paddingExtraLarge),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
         ) {
-            Text(stringResource(Res.string.grocery_list_empty_browse_recipes))
+            Icon(
+                imageVector = Icons.Outlined.ShoppingCart,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(dimens.paddingNormal))
+            Text(
+                text = stringResource(Res.string.grocery_list_empty_title),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Spacer(Modifier.height(dimens.paddingSmall))
+            Text(
+                text = stringResource(Res.string.grocery_list_empty_description),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(dimens.paddingLarge))
+            Button(
+                onClick = onBrowseRecipesClicked,
+                modifier =
+                    Modifier.testTag(GroceryListTestTags.BROWSE_RECIPES_BUTTON).fillMaxWidth(),
+            ) {
+                Text(stringResource(Res.string.grocery_list_empty_browse_recipes))
+            }
         }
     }
 }
@@ -775,46 +784,52 @@ private fun FilteredEmptyGroceryListState(
     modifier: Modifier = Modifier,
 ) {
     val dimens = ChefMateTheme.dimens
-    Column(
-        modifier =
-            modifier
-                .testTag(GroceryListTestTags.FILTERED_EMPTY_STATE)
-                .fillMaxWidth()
-                .padding(horizontal = dimens.paddingExtraLarge),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Icon(
-            imageVector = Icons.Default.FilterList,
-            contentDescription = null,
-            modifier = Modifier.size(64.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(dimens.paddingNormal))
-        Text(
-            text = stringResource(Res.string.grocery_list_filtered_empty_title),
-            style = MaterialTheme.typography.titleMedium,
-        )
-        Spacer(Modifier.height(dimens.paddingSmall))
-        Text(
-            text = stringResource(Res.string.grocery_list_filtered_empty_description),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(dimens.paddingLarge))
-        Button(
-            onClick = onClearFiltersClicked,
-            modifier = Modifier.testTag(GroceryListTestTags.CLEAR_FILTERS_BUTTON).fillMaxWidth(),
+    // Allow the centered content to scroll when the viewport is too short (e.g. landscape) so
+    // nothing gets cut off; heightIn(min = maxHeight) keeps it vertically centered when it fits.
+    BoxWithConstraints(modifier = modifier.testTag(GroceryListTestTags.FILTERED_EMPTY_STATE)) {
+        Column(
+            modifier =
+                Modifier.verticalScroll(rememberScrollState())
+                    .heightIn(min = maxHeight)
+                    .fillMaxWidth()
+                    .padding(horizontal = dimens.paddingExtraLarge),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
         ) {
-            Text(stringResource(Res.string.grocery_list_filtered_empty_clear_filters))
-        }
-        Spacer(Modifier.height(dimens.paddingSmall))
-        OutlinedButton(
-            onClick = onBrowseRecipesClicked,
-            modifier = Modifier.testTag(GroceryListTestTags.BROWSE_RECIPES_BUTTON).fillMaxWidth(),
-        ) {
-            Text(stringResource(Res.string.grocery_list_empty_browse_recipes))
+            Icon(
+                imageVector = Icons.Default.FilterList,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(dimens.paddingNormal))
+            Text(
+                text = stringResource(Res.string.grocery_list_filtered_empty_title),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Spacer(Modifier.height(dimens.paddingSmall))
+            Text(
+                text = stringResource(Res.string.grocery_list_filtered_empty_description),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(dimens.paddingLarge))
+            Button(
+                onClick = onClearFiltersClicked,
+                modifier =
+                    Modifier.testTag(GroceryListTestTags.CLEAR_FILTERS_BUTTON).fillMaxWidth(),
+            ) {
+                Text(stringResource(Res.string.grocery_list_filtered_empty_clear_filters))
+            }
+            Spacer(Modifier.height(dimens.paddingSmall))
+            OutlinedButton(
+                onClick = onBrowseRecipesClicked,
+                modifier =
+                    Modifier.testTag(GroceryListTestTags.BROWSE_RECIPES_BUTTON).fillMaxWidth(),
+            ) {
+                Text(stringResource(Res.string.grocery_list_empty_browse_recipes))
+            }
         }
     }
 }
