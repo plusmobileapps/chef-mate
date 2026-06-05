@@ -58,6 +58,15 @@ fun GroceryListEmptyPhonePortraitDarkScreenshot() {
     GroceryListScreenshot(bloc = previewGroceryListBlocEmpty, darkTheme = true)
 }
 
+// Landscape (short viewport): the empty state must stay vertically centered and become
+// scrollable rather than getting cut off — regression coverage for #240.
+@PreviewTest
+@Preview(showBackground = true, widthDp = 740, heightDp = 360)
+@Composable
+fun GroceryListEmptyPhoneLandscapeLightScreenshot() {
+    GroceryListScreenshot(bloc = previewGroceryListBlocEmpty)
+}
+
 // ── Filtered empty state — "Clear filters" + "Browse my recipes" recovery CTAs ──
 
 @PreviewTest
@@ -72,4 +81,13 @@ fun GroceryListFilteredEmptyPhonePortraitLightScreenshot() {
 @Composable
 fun GroceryListFilteredEmptyPhonePortraitDarkScreenshot() {
     GroceryListScreenshot(bloc = previewGroceryListBlocFilteredEmpty, darkTheme = true)
+}
+
+// Landscape (short viewport): the filtered empty state must stay centered and scroll rather than
+// getting cut off — regression coverage for #240.
+@PreviewTest
+@Preview(showBackground = true, widthDp = 740, heightDp = 360)
+@Composable
+fun GroceryListFilteredEmptyPhoneLandscapeLightScreenshot() {
+    GroceryListScreenshot(bloc = previewGroceryListBlocFilteredEmpty)
 }
