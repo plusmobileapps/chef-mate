@@ -189,6 +189,14 @@ class BottomNavBlocImpl(
             is RecipeListBloc.Output.OpenExportRecipes -> {
                 this.output.onNext(BottomNavBloc.Output.OpenExportRecipes(output.recipeIds))
             }
+            is RecipeListBloc.Output.OpenScannedRecipe -> {
+                this.output.onNext(
+                    BottomNavBloc.Output.OpenExtractedRecipe(
+                        extracted = output.extracted,
+                        consumePendingPhoto = true,
+                    )
+                )
+            }
         }
     }
 

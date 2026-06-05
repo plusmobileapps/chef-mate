@@ -1,8 +1,8 @@
 package com.plusmobileapps.chefmate.aichat.impl
 
 import com.plusmobileapps.chefmate.aichat.ChatMessage
+import com.plusmobileapps.chefmate.aichat.impl.di.GeminiApiKey
 import com.plusmobileapps.chefmate.aichat.impl.di.GeminiHttpClient
-import com.plusmobileapps.chefmate.buildconfig.BuildConfig
 import com.plusmobileapps.chefmate.di.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -33,7 +33,10 @@ interface GeminiClient {
 @Inject
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
-class RealGeminiClient(@GeminiHttpClient private val httpClient: HttpClient) : GeminiClient {
+class RealGeminiClient(
+    @GeminiHttpClient private val httpClient: HttpClient,
+    @GeminiApiKey private val apiKey: String,
+) : GeminiClient {
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -41,7 +44,6 @@ class RealGeminiClient(@GeminiHttpClient private val httpClient: HttpClient) : G
     }
 
     override fun streamReply(history: List<ChatMessage>): Flow<String> = flow {
-        val apiKey = BuildConfig.GEMINI_API_KEY
         if (apiKey.isBlank()) {
             throw GeminiException("MISSING_API_KEY")
         }

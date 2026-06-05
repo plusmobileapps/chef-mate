@@ -1,19 +1,23 @@
 package com.plusmobileapps.chefmate.aichat.impl
 
 import com.plusmobileapps.chefmate.aichat.ChatMessage
+import com.plusmobileapps.chefmate.aichat.impl.di.GeminiApiKey
 import com.plusmobileapps.chefmate.aichat.impl.di.GeminiHttpClient
-import com.plusmobileapps.chefmate.buildconfig.BuildConfig
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionException
+import com.plusmobileapps.chefmate.recipe.data.RecipeImageExtractor
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import dev.zacsweers.metro.binding
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.util.encodeBase64
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -34,11 +38,20 @@ interface GeminiRecipeExtractor {
     suspend fun extract(history: List<ChatMessage>): ExtractedRecipeData
 }
 
+/**
+ * Gemini-backed extractor for both entry points: text history ([GeminiRecipeExtractor.extract]) and
+ * a single image ([RecipeImageExtractor.extractFromImage], used by the chat photo-attach button and
+ * the standalone "Scan from photo" flow). Both share the same structured-output request and
+ * parsing; only the request `contents` differ.
+ */
 @Inject
 @SingleIn(AppScope::class)
-@ContributesBinding(AppScope::class)
-class RealGeminiRecipeExtractor(@GeminiHttpClient private val httpClient: HttpClient) :
-    GeminiRecipeExtractor {
+@ContributesBinding(AppScope::class, binding = binding<GeminiRecipeExtractor>())
+@ContributesBinding(AppScope::class, binding = binding<RecipeImageExtractor>())
+class RealGeminiRecipeExtractor(
+    @GeminiHttpClient private val httpClient: HttpClient,
+    @GeminiApiKey private val apiKey: String,
+) : GeminiRecipeExtractor, RecipeImageExtractor {
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -46,9 +59,6 @@ class RealGeminiRecipeExtractor(@GeminiHttpClient private val httpClient: HttpCl
     }
 
     override suspend fun extract(history: List<ChatMessage>): ExtractedRecipeData {
-        val apiKey = BuildConfig.GEMINI_API_KEY
-        if (apiKey.isBlank()) throw GeminiExtractionException("MISSING_API_KEY")
-
         val contents =
             (history + extractionInstruction()).map { message ->
                 GeminiContent(
@@ -56,6 +66,40 @@ class RealGeminiRecipeExtractor(@GeminiHttpClient private val httpClient: HttpCl
                     parts = listOf(GeminiPart(text = message.content)),
                 )
             }
+        return generate(contents) { code, cause -> throw GeminiExtractionException(code, cause) }
+    }
+
+    override suspend fun extractFromImage(bytes: ByteArray, mimeType: String): ExtractedRecipeData {
+        val contents =
+            listOf(
+                GeminiContent(
+                    role = "user",
+                    parts =
+                        listOf(
+                            GeminiPart(
+                                inlineData =
+                                    GeminiInlineData(
+                                        mimeType = mimeType,
+                                        data = bytes.encodeBase64(),
+                                    )
+                            ),
+                            GeminiPart(text = IMAGE_EXTRACTION_INSTRUCTION),
+                        ),
+                )
+            )
+        return generate(contents) { code, cause -> throw RecipeExtractionException(code, cause) }
+    }
+
+    /**
+     * Shared structured-output call. [fail] maps a stable error code to the caller's exception type
+     * (chat vs. recipe flow) so the two public entry points don't leak each other's exceptions.
+     */
+    private suspend fun generate(
+        contents: List<GeminiContent>,
+        fail: (code: String, cause: Throwable?) -> Nothing,
+    ): ExtractedRecipeData {
+        if (apiKey.isBlank()) fail("MISSING_API_KEY", null)
+
         val request = GeminiRequest(contents = contents, generationConfig = recipeGenerationConfig)
 
         val response: GeminiResponse =
@@ -70,19 +114,19 @@ class RealGeminiRecipeExtractor(@GeminiHttpClient private val httpClient: HttpCl
                     }
                     .body<GeminiResponse>()
             } catch (e: Throwable) {
-                throw GeminiExtractionException("REQUEST_FAILED", e)
+                fail("REQUEST_FAILED", e)
             }
 
         val payload =
             response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
-                ?: throw GeminiExtractionException("EMPTY_RESPONSE")
+                ?: fail("EMPTY_RESPONSE", null)
 
         val recipe =
             runCatching { json.decodeFromString(RecipeJson.serializer(), payload) }
-                .getOrElse { throw GeminiExtractionException("MALFORMED_JSON", it) }
+                .getOrElse { fail("MALFORMED_JSON", it) }
 
         if (recipe.title.isBlank() || recipe.ingredients.isEmpty() || recipe.directions.isEmpty()) {
-            throw GeminiExtractionException("INCOMPLETE_RECIPE")
+            fail("INCOMPLETE_RECIPE", null)
         }
 
         return ExtractedRecipeData(
@@ -119,7 +163,17 @@ class RealGeminiRecipeExtractor(@GeminiHttpClient private val httpClient: HttpCl
 
     @Serializable private data class GeminiContent(val role: String, val parts: List<GeminiPart>)
 
-    @Serializable private data class GeminiPart(val text: String)
+    @Serializable
+    private data class GeminiPart(
+        val text: String? = null,
+        @SerialName("inlineData") val inlineData: GeminiInlineData? = null,
+    )
+
+    @Serializable
+    private data class GeminiInlineData(
+        @SerialName("mimeType") val mimeType: String,
+        val data: String,
+    )
 
     @Serializable private data class GeminiResponse(val candidates: List<GeminiCandidate>? = null)
 
@@ -140,6 +194,12 @@ class RealGeminiRecipeExtractor(@GeminiHttpClient private val httpClient: HttpCl
 
     companion object {
         private const val MODEL_ID = "gemini-2.5-flash"
+
+        private const val IMAGE_EXTRACTION_INSTRUCTION =
+            "Extract the recipe shown in this image as JSON matching the response schema. The " +
+                "image may be a cookbook page, food label, screenshot, or handwritten card. Use " +
+                "minutes for any time fields. If multiple recipes are visible, return the most " +
+                "prominent one."
 
         private val recipeGenerationConfig: JsonObject = buildJsonObject {
             put("responseMimeType", JsonPrimitive("application/json"))

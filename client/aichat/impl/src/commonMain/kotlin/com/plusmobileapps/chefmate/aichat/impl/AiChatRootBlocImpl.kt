@@ -85,7 +85,12 @@ class AiChatRootBlocImpl(
             AiChatBloc.Output.Back -> output.onNext(AiChatRootBloc.Output.Finished)
             AiChatBloc.Output.OpenHistory -> navigation.bringToFront(Configuration.History)
             is AiChatBloc.Output.AddAsRecipe ->
-                output.onNext(AiChatRootBloc.Output.AddAsRecipe(out.extracted))
+                output.onNext(
+                    AiChatRootBloc.Output.AddAsRecipe(
+                        extracted = out.extracted,
+                        consumePendingPhoto = out.consumePendingPhoto,
+                    )
+                )
         }
     }
 

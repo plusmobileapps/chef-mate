@@ -34,13 +34,14 @@ class EditRecipeBlocImpl(
     @Assisted recipeId: Long?,
     @Assisted extractedRecipe: ExtractedRecipeData?,
     @Assisted fromAi: Boolean,
+    @Assisted consumePendingPhoto: Boolean,
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: EditRecipeViewModel.Factory,
 ) : EditRecipeBloc, BlocContext by context {
     private val scope = createScope()
 
     private val viewModel: EditRecipeViewModel = instanceKeeper.getViewModel {
-        viewModelFactory.create(recipeId, extractedRecipe, fromAi)
+        viewModelFactory.create(recipeId, extractedRecipe, fromAi, consumePendingPhoto)
     }
 
     override val state: StateFlow<EditRecipeBloc.Model> =

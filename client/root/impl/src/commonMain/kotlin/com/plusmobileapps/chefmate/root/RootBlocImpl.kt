@@ -239,7 +239,12 @@ class RootBlocImpl(
 
             is BottomNavBloc.Output.OpenExtractedRecipe -> {
                 navigation.bringToFront(
-                    RecipeRoot(RecipeRootBloc.Props.CreateFromExtracted(output.extracted))
+                    RecipeRoot(
+                        RecipeRootBloc.Props.CreateFromExtracted(
+                            extracted = output.extracted,
+                            consumePendingPhoto = output.consumePendingPhoto,
+                        )
+                    )
                 )
             }
 
@@ -358,7 +363,11 @@ class RootBlocImpl(
             is AiChatRootBloc.Output.AddAsRecipe ->
                 navigation.bringToFront(
                     RecipeRoot(
-                        RecipeRootBloc.Props.CreateFromExtracted(output.extracted, fromAi = true)
+                        RecipeRootBloc.Props.CreateFromExtracted(
+                            extracted = output.extracted,
+                            fromAi = true,
+                            consumePendingPhoto = output.consumePendingPhoto,
+                        )
                     )
                 )
         }

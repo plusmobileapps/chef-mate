@@ -10,6 +10,9 @@ import com.plusmobileapps.chefmate.aichat.AiChatNoApiKeyError
 import com.plusmobileapps.chefmate.aichat.ChatMessage
 import com.plusmobileapps.chefmate.database.testing.createTestDatabase
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionException
+import com.plusmobileapps.chefmate.recipe.data.RecipeImageExtractor
+import com.plusmobileapps.chefmate.recipe.data.testing.FakePendingRecipePhotoStore
 import com.plusmobileapps.chefmate.util.testing.FakeDateTimeUtil
 import dev.mokkery.answering.returns
 import dev.mokkery.answering.throws
@@ -33,6 +36,8 @@ class AiChatViewModelTest {
     private val dateTimeUtil = FakeDateTimeUtil()
     private val geminiClient = mock<GeminiClient>()
     private val recipeExtractor = mock<GeminiRecipeExtractor>()
+    private val imageExtractor = mock<RecipeImageExtractor>()
+    private val pendingPhotoStore = FakePendingRecipePhotoStore()
 
     private val repository =
         AiChatRepository(
@@ -49,6 +54,8 @@ class AiChatViewModelTest {
             props = props,
             repository = repository,
             recipeExtractor = recipeExtractor,
+            imageExtractor = imageExtractor,
+            pendingPhotoStore = pendingPhotoStore,
         )
 
     @Test
@@ -103,11 +110,69 @@ class AiChatViewModelTest {
 
             viewModel.extractedRecipe.test {
                 viewModel.extractRecipe()
-                awaitItem() shouldBe extracted
+                awaitItem() shouldBe AiChatBloc.Output.AddAsRecipe(extracted)
                 cancelAndIgnoreRemainingEvents()
             }
             viewModel.state.value.isExtractingRecipe shouldBe false
             viewModel.state.value.error shouldBe null
+        }
+
+    @Test
+    fun extractFromImage_emits_recipe_with_consume_flag_and_stores_photo() =
+        runTest(dispatcher) {
+            val extracted =
+                ExtractedRecipeData(
+                    title = "From Photo",
+                    description = null,
+                    ingredients = listOf("flour"),
+                    directions = listOf("mix"),
+                    imageUrl = null,
+                    sourceUrl = "",
+                    servings = null,
+                    prepTime = null,
+                    cookTime = null,
+                    totalTime = null,
+                    calories = null,
+                )
+            everySuspend { imageExtractor.extractFromImage(any(), any()) } returns extracted
+            val viewModel = newViewModel()
+            val bytes = byteArrayOf(1, 2, 3)
+
+            viewModel.extractedRecipe.test {
+                viewModel.extractFromImage(bytes, "jpg")
+                awaitItem() shouldBe
+                    AiChatBloc.Output.AddAsRecipe(extracted, consumePendingPhoto = true)
+                cancelAndIgnoreRemainingEvents()
+            }
+            pendingPhotoStore.consume()?.fileExtension shouldBe "jpg"
+            viewModel.state.value.isExtractingRecipe shouldBe false
+            viewModel.state.value.error shouldBe null
+        }
+
+    @Test
+    fun extractFromImage_surfaces_missing_api_key_error() =
+        runTest(dispatcher) {
+            everySuspend { imageExtractor.extractFromImage(any(), any()) } throws
+                RecipeExtractionException("MISSING_API_KEY")
+            val viewModel = newViewModel()
+
+            viewModel.extractFromImage(byteArrayOf(1), "jpg")
+
+            viewModel.state.value.error shouldBe AiChatNoApiKeyError
+            // Nothing should be stored on failure.
+            pendingPhotoStore.consume() shouldBe null
+        }
+
+    @Test
+    fun extractFromImage_surfaces_generic_error_on_other_failures() =
+        runTest(dispatcher) {
+            everySuspend { imageExtractor.extractFromImage(any(), any()) } throws
+                RecipeExtractionException("MALFORMED_JSON")
+            val viewModel = newViewModel()
+
+            viewModel.extractFromImage(byteArrayOf(1), "jpg")
+
+            viewModel.state.value.error shouldBe AiChatExtractionError
         }
 
     @Test

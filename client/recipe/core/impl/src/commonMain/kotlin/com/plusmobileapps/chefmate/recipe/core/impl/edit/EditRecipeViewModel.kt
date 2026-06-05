@@ -9,6 +9,7 @@ import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.CategoryRepository
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.chefmate.recipe.data.PendingRecipePhotoStore
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipePhotoStorage
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
@@ -35,10 +36,12 @@ class EditRecipeViewModel(
     @Assisted private val recipeId: Long?,
     @Assisted extractedRecipe: ExtractedRecipeData?,
     @Assisted fromAi: Boolean,
+    @Assisted consumePendingPhoto: Boolean,
     @Main mainContext: CoroutineContext,
     private val repository: RecipeRepository,
     private val categoryRepository: CategoryRepository,
     private val photoStorage: RecipePhotoStorage,
+    private val pendingRecipePhotoStore: PendingRecipePhotoStore,
 ) : ViewModel(mainContext) {
     private val _output = Channel<Output>(Channel.BUFFERED)
     val output: Flow<Output> = _output.receiveAsFlow()
@@ -118,6 +121,13 @@ class EditRecipeViewModel(
                 _totalTime.value = extractedRecipe.totalTime?.toString().orEmpty()
                 _calories.value = extractedRecipe.calories?.toString().orEmpty()
                 if (fromAi) attachBuiltin(BuiltinCategory.AI)
+                // The photo picked for extraction is handed off out-of-band (it can't ride in the
+                // serializable nav config); pull it in as the pending recipe image.
+                if (consumePendingPhoto) {
+                    pendingRecipePhotoStore.consume()?.let {
+                        setPendingPhoto(bytes = it.bytes, fileExtension = it.fileExtension)
+                    }
+                }
             }
         }
     }
@@ -409,6 +419,7 @@ class EditRecipeViewModel(
             recipeId: Long?,
             extractedRecipe: ExtractedRecipeData?,
             fromAi: Boolean,
+            consumePendingPhoto: Boolean,
         ): EditRecipeViewModel
     }
 }

@@ -48,6 +48,12 @@ interface RecipeRootBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
              * category.
              */
             val fromAi: Boolean = false,
+            /**
+             * When true, the Edit Recipe screen pulls the photo that was picked for extraction from
+             * [com.plusmobileapps.chefmate.recipe.data.PendingRecipePhotoStore] and pre-fills it as
+             * the pending recipe image.
+             */
+            val consumePendingPhoto: Boolean = false,
         ) : Props()
     }
 

@@ -1,5 +1,6 @@
 package com.plusmobileapps.chefmate.aichat.impl.di
 
+import com.plusmobileapps.chefmate.buildconfig.BuildConfig
 import com.plusmobileapps.chefmate.di.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
@@ -28,6 +29,20 @@ import kotlinx.serialization.json.Json
 )
 annotation class GeminiHttpClient
 
+/**
+ * Qualifier for the Gemini API key. Provided from [BuildConfig] but injected (rather than read
+ * directly) so the Gemini clients can be unit-tested with a fixed key instead of depending on the
+ * build-time value.
+ */
+@Qualifier
+@Target(
+    AnnotationTarget.PROPERTY_GETTER,
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.VALUE_PARAMETER,
+    AnnotationTarget.TYPE,
+)
+annotation class GeminiApiKey
+
 @ContributesTo(AppScope::class)
 interface GeminiHttpClientComponent {
 
@@ -45,4 +60,6 @@ interface GeminiHttpClientComponent {
             )
         }
     }
+
+    @Provides @GeminiApiKey fun providesGeminiApiKey(): String = BuildConfig.GEMINI_API_KEY
 }

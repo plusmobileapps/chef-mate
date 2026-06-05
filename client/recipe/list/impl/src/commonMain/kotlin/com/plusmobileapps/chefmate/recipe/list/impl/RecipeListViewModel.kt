@@ -1,24 +1,43 @@
 package com.plusmobileapps.chefmate.recipe.list.impl
 
+import chefmate.client.recipe.list.public.generated.resources.Res
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_scan_failed
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_scan_no_api_key
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
 import com.plusmobileapps.chefmate.di.Main
+import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
+import com.plusmobileapps.chefmate.featureflag.FeatureFlags
+import com.plusmobileapps.chefmate.featureflag.isEnabled
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.CategoryRepository
+import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.chefmate.recipe.data.PendingRecipePhotoStore
 import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionException
+import com.plusmobileapps.chefmate.recipe.data.RecipeImageExtractor
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
+import com.plusmobileapps.chefmate.text.ResourceString
+import com.plusmobileapps.chefmate.text.TextData
+import com.plusmobileapps.chefmate.util.mimeTypeForImageExtension
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.boolean
 import com.russhwolf.settings.string
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -28,8 +47,13 @@ class RecipeListViewModel(
     private val repository: RecipeRepository,
     private val categoryRepository: CategoryRepository,
     private val cookingSessionRepository: CookingSessionRepository,
+    private val imageExtractor: RecipeImageExtractor,
+    private val pendingPhotoStore: PendingRecipePhotoStore,
+    featureFlags: FeatureFlags,
     settings: Settings,
 ) : ViewModel(mainContext) {
+    private val scanFromPhotoEnabled =
+        featureFlags.isEnabled(FeatureFlagRegistry.ScanRecipeFromPhoto)
     private var isGridViewPref by settings.boolean(KEY_IS_GRID_VIEW, false)
     private var sortOptionPref by
         settings.string(KEY_SORT_OPTION, RecipeSortOption.RECENTLY_ADDED.name)
@@ -66,10 +90,26 @@ class RecipeListViewModel(
         )
     val state: StateFlow<State> = _state.asStateFlow()
 
+    private val _scannedRecipe =
+        MutableSharedFlow<ExtractedRecipeData>(
+            replay = 0,
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST,
+        )
+
+    /**
+     * Emits each time a photo scan succeeds. Collected by the BlocImpl, which forwards it as an
+     * [com.plusmobileapps.chefmate.recipe.list.RecipeListBloc.Output.OpenScannedRecipe].
+     */
+    val scannedRecipe: SharedFlow<ExtractedRecipeData> = _scannedRecipe.asSharedFlow()
+
     init {
         scope.launch { observeRecipes() }
         scope.launch { observeCookingSession() }
         scope.launch { observeUserCategories() }
+        scanFromPhotoEnabled
+            .onEach { enabled -> _state.update { it.copy(isScanFromPhotoEnabled = enabled) } }
+            .launchIn(scope)
     }
 
     private suspend fun observeRecipes() {
@@ -198,6 +238,46 @@ class RecipeListViewModel(
         }
     }
 
+    /**
+     * Scans a recipe out of a picked photo via Gemini vision. On success the picked bytes are
+     * stashed in [pendingPhotoStore] (so the editor can seed them as the recipe image) and the
+     * recipe is emitted on [scannedRecipe]; on failure [State.scanError] is set.
+     */
+    fun scanRecipeFromPhoto(bytes: ByteArray, fileExtension: String) {
+        if (_state.value.isScanning) return
+        scope.launch {
+            _state.update { it.copy(isScanning = true, scanError = null) }
+            try {
+                val recipe =
+                    imageExtractor.extractFromImage(
+                        bytes = bytes,
+                        mimeType = mimeTypeForImageExtension(fileExtension),
+                    )
+                pendingPhotoStore.put(bytes = bytes, fileExtension = fileExtension)
+                _scannedRecipe.tryEmit(recipe)
+            } catch (e: RecipeExtractionException) {
+                _state.update {
+                    it.copy(
+                        scanError =
+                            if (e.message == "MISSING_API_KEY")
+                                ResourceString(Res.string.recipe_list_scan_no_api_key)
+                            else ResourceString(Res.string.recipe_list_scan_failed)
+                    )
+                }
+            } catch (_: Throwable) {
+                _state.update {
+                    it.copy(scanError = ResourceString(Res.string.recipe_list_scan_failed))
+                }
+            } finally {
+                _state.update { it.copy(isScanning = false) }
+            }
+        }
+    }
+
+    fun dismissScanError() {
+        _state.update { it.copy(scanError = null) }
+    }
+
     fun enterSelectionMode() {
         _state.update { it.copy(isSelectionMode = true, selectedRecipeIds = emptySet()) }
     }
@@ -245,6 +325,9 @@ class RecipeListViewModel(
         val showDoneCookingDialog: Boolean = false,
         val isSelectionMode: Boolean = false,
         val selectedRecipeIds: Set<Long> = emptySet(),
+        val isScanning: Boolean = false,
+        val scanError: TextData? = null,
+        val isScanFromPhotoEnabled: Boolean = false,
     ) {
         val isSearchActive: Boolean
             get() = searchQuery.isNotBlank()
