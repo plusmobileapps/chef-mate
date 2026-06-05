@@ -52,6 +52,11 @@ class ComposeConventionPlugin : Plugin<Project> {
                     val compose = ComposePlugin.Dependencies(project)
 
                     commonMain.dependencies {
+                        // Immutable collections are used in Compose-facing Models so the compiler
+                        // (which natively treats kotlinx.collections.immutable types as stable) can
+                        // mark those Models stable/skippable. Exposed as `api` because the types
+                        // appear in public Model signatures.
+                        api(libs.kotlinx.collections.immutable)
                         implementation(libs.compose.runtime)
                         implementation(libs.compose.foundation)
                         implementation(libs.compose.material.icons.extended)
