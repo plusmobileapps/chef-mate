@@ -6,6 +6,7 @@ object AiChatTestTags {
     const val SEND_BUTTON = "AiChatSendButton"
     const val HISTORY_BUTTON = "AiChatHistoryButton"
     const val MESSAGE_LIST = "AiChatMessageList"
+    const val THINKING_INDICATOR = "AiChatThinkingIndicator"
     const val ADD_RECIPE_PILL = "AiChatAddRecipePill"
     const val ATTACH_PHOTO_BUTTON = "AiChatAttachPhotoButton"
 }
