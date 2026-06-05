@@ -13,4 +13,5 @@ data class FeatureFlagRow(
     val platforms: List<String>? = null,
     @SerialName("min_version") val minVersion: String? = null,
     @SerialName("max_version") val maxVersion: String? = null,
+    @SerialName("user_ids") val userIds: List<String>? = null,
 )
