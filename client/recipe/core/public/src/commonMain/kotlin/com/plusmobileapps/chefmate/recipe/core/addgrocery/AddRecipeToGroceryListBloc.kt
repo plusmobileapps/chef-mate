@@ -5,6 +5,8 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.ui.BlocScreen
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 
 interface AddRecipeToGroceryListBloc : BackClickBloc, BlocScreen {
@@ -18,7 +20,7 @@ interface AddRecipeToGroceryListBloc : BackClickBloc, BlocScreen {
 
     data class GroceryListItem(val id: Long, val name: String)
 
-    data class IngredientGroup(val category: GroceryCategory, val items: List<ListItem>)
+    data class IngredientGroup(val category: GroceryCategory, val items: ImmutableList<ListItem>)
 
     data class ListItem(
         val id: Int,
@@ -31,8 +33,8 @@ interface AddRecipeToGroceryListBloc : BackClickBloc, BlocScreen {
     data class Model(
         val isLoading: Boolean,
         val isAdding: Boolean,
-        val groupedIngredients: List<IngredientGroup>,
-        val groceryLists: List<GroceryListItem> = emptyList(),
+        val groupedIngredients: ImmutableList<IngredientGroup>,
+        val groceryLists: ImmutableList<GroceryListItem> = persistentListOf(),
         val selectedGroceryList: GroceryListItem? = null,
     ) {
         val hasSelectedIngredients: Boolean

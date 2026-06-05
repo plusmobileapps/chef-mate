@@ -8,6 +8,8 @@ import com.plusmobileapps.chefmate.aichat.ChatMessage
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 
 private fun aiChatBloc(model: AiChatBloc.Model, input: String = ""): AiChatBloc =
@@ -30,7 +32,7 @@ private fun aiChatBloc(model: AiChatBloc.Model, input: String = ""): AiChatBloc 
     }
 
 private val sampleConversation =
-    listOf(
+    persistentListOf(
         ChatMessage(
             id = 1L,
             role = ChatMessage.Role.USER,
@@ -84,13 +86,14 @@ val previewAiChatBlocStreaming: AiChatBloc =
     aiChatBloc(
         AiChatBloc.Model(
             messages =
-                sampleConversation +
-                    ChatMessage(
-                        id = 4L,
-                        role = ChatMessage.Role.MODEL,
-                        content = "Sure! A 15-minute option is pan-seared chicken thighs with",
-                        isStreaming = true,
-                    ),
+                (sampleConversation +
+                        ChatMessage(
+                            id = 4L,
+                            role = ChatMessage.Role.MODEL,
+                            content = "Sure! A 15-minute option is pan-seared chicken thighs with",
+                            isStreaming = true,
+                        ))
+                    .toImmutableList(),
             isSending = true,
         )
     )

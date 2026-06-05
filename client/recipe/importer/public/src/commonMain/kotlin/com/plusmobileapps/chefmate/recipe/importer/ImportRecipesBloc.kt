@@ -5,6 +5,7 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.BlocScreen
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.StateFlow
 
 interface ImportRecipesBloc : BackHandlerOwner, BlocScreen {
@@ -34,7 +35,10 @@ interface ImportRecipesBloc : BackHandlerOwner, BlocScreen {
         data object Parsing : Phase
 
         /** Parsed recipes are ready for the user to review and select. */
-        data class Review(val recipes: List<ImportItem>, val isImporting: Boolean = false) : Phase
+        data class Review(
+            val recipes: ImmutableList<ImportItem>,
+            val isImporting: Boolean = false,
+        ) : Phase
 
         /** Import finished successfully. */
         data class Done(val importedCount: Int) : Phase

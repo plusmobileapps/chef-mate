@@ -10,6 +10,7 @@ import com.plusmobileapps.chefmate.browser.BrowserPreferences
 import com.plusmobileapps.chefmate.di.Main
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,7 +37,7 @@ class BrowserEditQueryViewModel(
             .flatMapLatest { enabled ->
                 if (enabled) historyRepository.observeRecent() else flowOf(emptyList())
             }
-            .onEach { history -> _state.update { it.copy(history = history) } }
+            .onEach { history -> _state.update { it.copy(history = history.toImmutableList()) } }
             .launchIn(scope)
     }
 

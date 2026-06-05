@@ -12,6 +12,7 @@ import com.plusmobileapps.chefmate.featureflag.Override
 import com.plusmobileapps.chefmate.featureflag.StringFlag
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -34,7 +35,9 @@ class FeatureFlagsViewModel(
             if (rowFlows.isEmpty()) {
                 flowOf(FeatureFlagsBloc.Model())
             } else {
-                combine(rowFlows) { rows -> FeatureFlagsBloc.Model(rows = rows.toList()) }
+                combine(rowFlows) { rows ->
+                    FeatureFlagsBloc.Model(rows = rows.toList().toImmutableList())
+                }
             }
         return combined.stateIn(scope, SharingStarted.Eagerly, FeatureFlagsBloc.Model())
     }

@@ -15,6 +15,7 @@ import com.russhwolf.settings.Settings
 import com.russhwolf.settings.string
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -107,7 +108,10 @@ class GroceryListViewModel(
                                     .entries
                                     .sortedBy { it.key.ordinal }
                                     .map { (category, categoryItems) ->
-                                        GroceryGroup(category = category, items = categoryItems)
+                                        GroceryGroup(
+                                            category = category,
+                                            items = categoryItems.toImmutableList(),
+                                        )
                                     }
                             GrocerySort.ALPHABETICAL ->
                                 listOf(
@@ -118,9 +122,9 @@ class GroceryListViewModel(
                                                         .GroceryCategory
                                                         .OTHER,
                                             items =
-                                                recipeFiltered.sortedBy {
-                                                    it.displayName.lowercase()
-                                                },
+                                                recipeFiltered
+                                                    .sortedBy { it.displayName.lowercase() }
+                                                    .toImmutableList(),
                                         )
                                     )
                                     .filter { it.items.isNotEmpty() }

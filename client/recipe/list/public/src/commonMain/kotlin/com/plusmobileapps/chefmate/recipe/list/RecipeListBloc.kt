@@ -5,6 +5,8 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.ui.BlocScreen
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 
 interface RecipeListBloc : BlocScreen {
@@ -66,7 +68,7 @@ interface RecipeListBloc : BlocScreen {
     fun onExportFinished()
 
     data class Model(
-        val recipes: List<RecipeListItem> = emptyList(),
+        val recipes: ImmutableList<RecipeListItem> = persistentListOf(),
         val totalRecipeCount: Int = 0,
         val isLoading: Boolean = false,
         val isSyncing: Boolean = false,
@@ -76,7 +78,7 @@ interface RecipeListBloc : BlocScreen {
         /** Selected user-category IDs from the filter sheet. Disjoint from [activeCategories]. */
         val activeUserCategoryIds: Set<Long> = emptySet(),
         /** All user-created categories — surfaced so the filter sheet can render them as chips. */
-        val availableUserCategories: List<Category> = emptyList(),
+        val availableUserCategories: ImmutableList<Category> = persistentListOf(),
         val isGridView: Boolean = false,
         val searchQuery: String = "",
         val isSearchActive: Boolean = false,

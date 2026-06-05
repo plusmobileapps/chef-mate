@@ -11,10 +11,11 @@ import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 
 private val sampleRecipes =
-    listOf(
+    persistentListOf(
         RecipeListItem(
             id = 1L,
             title = "Pasta Carbonara",

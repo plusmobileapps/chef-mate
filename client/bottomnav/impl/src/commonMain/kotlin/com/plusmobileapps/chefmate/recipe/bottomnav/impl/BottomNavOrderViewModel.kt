@@ -6,6 +6,7 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.TabOrderPreferences
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +20,7 @@ class BottomNavOrderViewModel(
     private val tabOrderPreferences: TabOrderPreferences,
 ) : ViewModel(mainContext) {
 
-    private val initialOrder = tabOrderPreferences.tabOrder.value
+    private val initialOrder = tabOrderPreferences.tabOrder.value.toImmutableList()
 
     private val _state =
         MutableStateFlow(
@@ -31,7 +32,9 @@ class BottomNavOrderViewModel(
         // Keep `persistedOrder` in sync with the repository so external writes (e.g. the user adds
         // a new tab in a future build) update the "Save" affordance correctly.
         tabOrderPreferences.tabOrder
-            .onEach { latest -> _state.update { it.copy(persistedOrder = latest) } }
+            .onEach { latest ->
+                _state.update { it.copy(persistedOrder = latest.toImmutableList()) }
+            }
             .launchIn(scope)
     }
 
@@ -42,7 +45,7 @@ class BottomNavOrderViewModel(
             val mutable = list.toMutableList()
             val item = mutable.removeAt(from)
             mutable.add(to, item)
-            current.copy(editedOrder = mutable)
+            current.copy(editedOrder = mutable.toImmutableList())
         }
     }
 

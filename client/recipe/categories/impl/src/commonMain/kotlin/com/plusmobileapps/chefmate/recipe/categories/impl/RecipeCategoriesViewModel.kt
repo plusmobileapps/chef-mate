@@ -10,6 +10,7 @@ import com.plusmobileapps.chefmate.recipe.data.CategoryRepository
 import com.plusmobileapps.chefmate.recipe.data.CategoryWithCount
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,7 +35,7 @@ class RecipeCategoriesViewModel(
                     val survivingIds = mapped.map { it.id }.toSet()
                     val cleanedSelection = current.selectedIds intersect survivingIds
                     current.copy(
-                        categories = mapped,
+                        categories = mapped.toImmutableList(),
                         isLoading = false,
                         selectedIds = cleanedSelection,
                     )

@@ -13,6 +13,7 @@ import com.plusmobileapps.chefmate.recipe.core.impl.addgrocery.ui.AddRecipeToGro
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -36,8 +37,8 @@ class AddRecipeToGroceryListBlocImpl(
             AddRecipeToGroceryListBloc.Model(
                 isLoading = it.isLoading,
                 isAdding = it.isAdding,
-                groupedIngredients = it.groupedIngredients,
-                groceryLists = it.groceryLists,
+                groupedIngredients = it.groupedIngredients.toImmutableList(),
+                groceryLists = it.groceryLists.toImmutableList(),
                 selectedGroceryList = it.selectedGroceryList,
             )
         }

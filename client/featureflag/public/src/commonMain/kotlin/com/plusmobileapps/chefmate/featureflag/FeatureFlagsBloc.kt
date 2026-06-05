@@ -3,6 +3,8 @@ package com.plusmobileapps.chefmate.featureflag
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.ui.BlocScreen
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 
 interface FeatureFlagsBloc : BlocScreen {
@@ -18,7 +20,7 @@ interface FeatureFlagsBloc : BlocScreen {
 
     fun onClearAllOverrides()
 
-    data class Model(val rows: List<Row> = emptyList())
+    data class Model(val rows: ImmutableList<Row> = persistentListOf())
 
     data class Row(val flag: FeatureFlag<*>, val resolvedValue: Any, val override: Override<*>)
 
