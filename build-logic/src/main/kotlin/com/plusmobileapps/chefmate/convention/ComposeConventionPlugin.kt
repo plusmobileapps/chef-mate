@@ -8,6 +8,7 @@ import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.getByType
 import org.jetbrains.compose.ComposeExtension
 import org.jetbrains.compose.ComposePlugin
+import org.jetbrains.kotlin.compose.compiler.gradle.ComposeCompilerGradlePluginExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 class ComposeConventionPlugin : Plugin<Project> {
@@ -24,6 +25,23 @@ class ComposeConventionPlugin : Plugin<Project> {
             // Configure compose extension if needed
             extensions.configure<ComposeExtension> {
                 // Configuration if needed
+            }
+
+            extensions.configure<ComposeCompilerGradlePluginExtension> {
+                // Declare known-immutable types (read-only collections, TextData) stable so Models
+                // exposing them become skippable app-wide. See compose-stability.conf for the list
+                // and the safety rationale.
+                stabilityConfigurationFiles.add(
+                    rootProject.layout.projectDirectory.file("compose-stability.conf")
+                )
+
+                // Opt-in stability/skippability reports for verification: build with
+                // -PcomposeMetrics=true and inspect build/compose-metrics. Off by default.
+                if (findProperty("composeMetrics") == "true") {
+                    val dir = rootProject.layout.buildDirectory.dir("compose-metrics")
+                    metricsDestination.set(dir)
+                    reportsDestination.set(dir)
+                }
             }
 
             afterEvaluate {

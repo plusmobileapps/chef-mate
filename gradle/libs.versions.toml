@@ -93,6 +93,7 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 kotlin-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlin-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
+kotlin-compose-compiler-gradle-plugin = { group = "org.jetbrains.kotlin", name = "compose-compiler-gradle-plugin", version.ref = "kotlin" }
 metroExtensions-assistedFactory-runtime = { module = "com.plusmobileapps.metro-extensions:assisted-factory-runtime", version.ref = "metroExtensions" }
 metroExtensions-assistedFactory-compiler = { module = "com.plusmobileapps.metro-extensions:assisted-factory-compiler", version.ref = "metroExtensions" }
 
