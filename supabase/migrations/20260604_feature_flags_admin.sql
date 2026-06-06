@@ -3,18 +3,18 @@
 --
 -- The table was originally created by hand in the Supabase console (the client
 -- reads it via SupabaseFeatureFlagRemoteDataSource). `CREATE TABLE IF NOT EXISTS`
--- captures that existing shape so the schema is finally versioned; on the live
+-- captures that existing shape so the schema is finally versioned. On the live
 -- project it is a no-op, and the `ALTER ... ADD COLUMN IF NOT EXISTS` statements
 -- below add only what's new.
 --
 -- New columns:
---   archived     — soft-retire a flag. Clients never see archived rows (see the
---                  SELECT policy + the client-side `eq("archived", false)` filter);
---                  the admin tool keeps the row so history isn't lost.
---   description  — optional admin-authored note about what the flag does. The
+--   archived     - soft-retire a flag. Clients never see archived rows (see the
+--                  SELECT policy plus the client-side archived filter). The admin
+--                  tool keeps the row so history isn't lost.
+--   description  - optional admin-authored note about what the flag does. The
 --                  shipping client doesn't read it (descriptions live in the
---                  FeatureFlagRegistry in code); it's purely documentation here.
---   created_at / updated_at — audit timestamps; `updated_at` is bumped by trigger.
+--                  FeatureFlagRegistry in code) - it's purely documentation here.
+--   created_at / updated_at - audit timestamps. updated_at is bumped by trigger.
 --
 -- Writes are restricted to admins: membership in the `admins` table gates every
 -- INSERT/UPDATE/DELETE, and admins additionally get to SELECT archived rows.
@@ -56,10 +56,9 @@ CREATE TABLE IF NOT EXISTS admins (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- TODO: seed yourself as an admin. Find your uid in the Supabase console under
--- Authentication → Users, then run (or uncomment with your uid):
--- INSERT INTO admins (user_id) VALUES ('00000000-0000-0000-0000-000000000000')
---     ON CONFLICT DO NOTHING;
+-- Seed yourself as an admin AFTER this migration runs, in a separate query:
+-- find your uid in the Supabase console (Authentication, Users) and insert a row
+-- into admins. See the project README / PR for the exact statement.
 
 -- Only admins may read the admin allow-list (prevents enumerating who's an admin).
 ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
@@ -70,7 +69,7 @@ CREATE POLICY "Admins can view admins" ON admins
 
 ALTER TABLE feature_flags ENABLE ROW LEVEL SECURITY;
 
--- Everyone (incl. the anon client) can read active flags; admins also see archived.
+-- Everyone (incl. the anon client) can read active flags. Admins also see archived.
 DROP POLICY IF EXISTS "Anyone can read active flags" ON feature_flags;
 CREATE POLICY "Anyone can read active flags" ON feature_flags
     FOR SELECT USING (
