@@ -167,6 +167,21 @@ fun FlagEditorScreen(draft: FlagDraft, onCancel: () -> Unit, onSave: (AdminFeatu
             }
             validation.versionError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
 
+            LabeledSection("User allowlist (optional)") {
+                OutlinedTextField(
+                    value = state.userIdsText,
+                    onValueChange = { state = state.copy(userIdsText = it) },
+                    label = { Text("Supabase user ids") },
+                    supportingText = {
+                        Text(
+                            "One id per line (or comma-separated). These users get the flag on top of the rollout %."
+                        )
+                    },
+                    minLines = 2,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+
             OutlinedTextField(
                 value = state.description,
                 onValueChange = { state = state.copy(description = it) },

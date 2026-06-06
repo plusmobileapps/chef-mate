@@ -182,6 +182,9 @@ private fun FlagRow(
                     flag.platforms
                         ?.takeIf { it.isNotEmpty() }
                         ?.let { append(" · ${it.joinToString(",")}") }
+                    flag.userIds
+                        ?.takeIf { it.isNotEmpty() }
+                        ?.let { append(" · ${it.size} user(s)") }
                     if (flag.archived) append(" · ARCHIVED")
                 },
                 style = androidx.compose.material3.MaterialTheme.typography.bodySmall,

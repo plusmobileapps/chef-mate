@@ -101,6 +101,32 @@ class FlagDraftTest {
     }
 
     @Test
+    fun userIdsTextParsesAcrossCommasNewlinesAndWhitespace() {
+        val flag = FlagDraft(key = "x", userIdsText = "  uid-1,uid-2\nuid-3  uid-1\n").toFlag()
+        // Trimmed, split on commas/newlines/spaces, blanks dropped, duplicates removed (order
+        // kept).
+        flag.userIds shouldBe listOf("uid-1", "uid-2", "uid-3")
+    }
+
+    @Test
+    fun blankUserIdsBecomeNull() {
+        FlagDraft(key = "x", userIdsText = "   \n  ").toFlag().userIds shouldBe null
+    }
+
+    @Test
+    fun userIdsRoundTripThroughEditor() {
+        val original =
+            AdminFeatureFlag(
+                key = "x",
+                valueType = AdminFeatureFlag.TYPE_BOOL,
+                value = "true",
+                enabled = true,
+                userIds = listOf("uid-a", "uid-b"),
+            )
+        FlagDraft.from(original).toFlag().userIds shouldBe listOf("uid-a", "uid-b")
+    }
+
+    @Test
     fun fromMarksExistingFlagAsNotNew() {
         FlagDraft.from(
                 AdminFeatureFlag(key = "k", valueType = "string", value = "v", enabled = true)

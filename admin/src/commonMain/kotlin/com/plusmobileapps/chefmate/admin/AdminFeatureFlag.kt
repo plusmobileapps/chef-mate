@@ -18,6 +18,10 @@ data class AdminFeatureFlag(
     val platforms: List<String>? = null,
     @SerialName("min_version") val minVersion: String? = null,
     @SerialName("max_version") val maxVersion: String? = null,
+    // Allowlist of Supabase user ids that get the flag regardless of the rollout bucket (see PR
+    // #249). Additive on top of `rollout_percent`; still subject to enabled/platforms/version
+    // gates.
+    @SerialName("user_ids") val userIds: List<String>? = null,
     val archived: Boolean = false,
     val description: String? = null,
 ) {

@@ -20,6 +20,9 @@ data class FlagDraft(
     val platforms: Set<String> = emptySet(),
     val minVersion: String = "",
     val maxVersion: String = "",
+    // Raw editor text for the user-id allowlist: one id per line (commas also accepted). Parsed
+    // into the `user_ids` array by [toFlag].
+    val userIdsText: String = "",
     val description: String = "",
     val archived: Boolean = false,
     val isNew: Boolean = true,
@@ -28,6 +31,12 @@ data class FlagDraft(
         // Targetable platforms. Must match the platform identifiers the client reports in
         // FeatureFlagContext (see FeatureFlagEvaluator.platformMatches).
         val ALL_PLATFORMS = listOf("android", "ios", "desktop", "web")
+
+        // User ids are separated by commas, newlines, or surrounding whitespace.
+        private val USER_ID_SPLIT = Regex("[\\s,]+")
+
+        fun parseUserIds(text: String): List<String> =
+            text.split(USER_ID_SPLIT).map { it.trim() }.filter { it.isNotEmpty() }.distinct()
 
         fun from(flag: AdminFeatureFlag): FlagDraft {
             val isBool = flag.valueType.equals(AdminFeatureFlag.TYPE_BOOL, ignoreCase = true)
@@ -41,6 +50,7 @@ data class FlagDraft(
                 platforms = flag.platforms?.toSet() ?: emptySet(),
                 minVersion = flag.minVersion.orEmpty(),
                 maxVersion = flag.maxVersion.orEmpty(),
+                userIdsText = flag.userIds?.joinToString("\n").orEmpty(),
                 description = flag.description.orEmpty(),
                 archived = flag.archived,
                 isNew = false,
@@ -94,6 +104,7 @@ fun FlagDraft.toFlag(): AdminFeatureFlag =
         platforms = platforms.takeIf { it.isNotEmpty() }?.sorted(),
         minVersion = minVersion.trim().ifBlank { null },
         maxVersion = maxVersion.trim().ifBlank { null },
+        userIds = FlagDraft.parseUserIds(userIdsText).takeIf { it.isNotEmpty() },
         archived = archived,
         description = description.trim().ifBlank { null },
     )

@@ -68,6 +68,7 @@ class SupabaseFeatureFlagAdminRepository(private val client: SupabaseClient) :
                 "platforms",
                 "min_version",
                 "max_version",
+                "user_ids",
                 "archived",
                 "description",
             )
