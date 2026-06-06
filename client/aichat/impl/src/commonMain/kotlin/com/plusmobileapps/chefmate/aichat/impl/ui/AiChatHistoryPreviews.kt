@@ -7,6 +7,7 @@ import com.plusmobileapps.chefmate.aichat.AiChatConversation
 import com.plusmobileapps.chefmate.aichat.AiChatHistoryBloc
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 
 private fun historyBloc(model: AiChatHistoryBloc.Model): AiChatHistoryBloc =
@@ -29,7 +30,7 @@ private fun historyBloc(model: AiChatHistoryBloc.Model): AiChatHistoryBloc =
     }
 
 private val sampleConversations =
-    listOf(
+    persistentListOf(
         AiChatConversation(
             id = 1L,
             title = "Quick weeknight chicken dinner ideas under 30 minutes",

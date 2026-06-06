@@ -17,6 +17,8 @@ import com.plusmobileapps.chefmate.recipe.exporter.robots.exportRecipes
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlin.test.Test
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 
 class ExportRecipesScreenTest {
@@ -39,7 +41,11 @@ class ExportRecipesScreenTest {
         override val backHandler: BackHandler = BackDispatcher()
         override val state =
             MutableStateFlow(
-                Model(Phase.Review(listOf(item("1", "Garlic Noodles"), item("2", "Lentil Curry"))))
+                Model(
+                    Phase.Review(
+                        persistentListOf(item("1", "Garlic Noodles"), item("2", "Lentil Curry"))
+                    )
+                )
             )
 
         override fun onRecipeToggled(id: String) {
@@ -48,9 +54,9 @@ class ExportRecipesScreenTest {
                 Model(
                     review.copy(
                         recipes =
-                            review.recipes.map {
-                                if (it.id == id) it.copy(selected = !it.selected) else it
-                            }
+                            review.recipes
+                                .map { if (it.id == id) it.copy(selected = !it.selected) else it }
+                                .toImmutableList()
                     )
                 )
         }

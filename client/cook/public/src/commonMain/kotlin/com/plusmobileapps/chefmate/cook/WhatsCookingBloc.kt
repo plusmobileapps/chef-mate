@@ -2,6 +2,8 @@ package com.plusmobileapps.chefmate.cook
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 
 interface WhatsCookingBloc {
@@ -18,7 +20,7 @@ interface WhatsCookingBloc {
     fun onCloseClicked()
 
     data class Model(
-        val recipes: List<Item> = emptyList(),
+        val recipes: ImmutableList<Item> = persistentListOf(),
         val isSelectMode: Boolean = false,
         val selectedRecipeIds: Set<Long> = emptySet(),
     ) {

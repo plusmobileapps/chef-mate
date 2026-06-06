@@ -17,6 +17,7 @@ import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import kotlin.coroutines.CoroutineContext
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -87,7 +88,7 @@ class AiChatViewModel(
                 extracting,
                 error ->
                 AiChatBloc.Model(
-                    messages = messages,
+                    messages = messages.toImmutableList(),
                     isSending = sending,
                     canAddRecipe = canAdd,
                     isExtractingRecipe = extracting,

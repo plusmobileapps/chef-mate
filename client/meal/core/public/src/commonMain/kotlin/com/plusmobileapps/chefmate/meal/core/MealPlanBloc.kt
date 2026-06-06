@@ -7,6 +7,8 @@ import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.BlocScreen
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.LocalDate
 
@@ -57,23 +59,23 @@ interface MealPlanBloc : BlocScreen {
         val viewMode: ViewMode = ViewMode.DAY,
         val dateLabel: TextData = FixedString(""),
         val dayMeals: DayMeals? = null,
-        val weekMeals: List<DayGroup>? = null,
+        val weekMeals: ImmutableList<DayGroup>? = null,
         val monthModel: MonthModel? = null,
         val mealToDelete: MealPlanItem? = null,
         val cookingRecipeCount: Int = 0,
         val showDoneCookingDialog: Boolean = false,
-        val pendingReplaceCookMode: List<MealPlanItem>? = null,
+        val pendingReplaceCookMode: ImmutableList<MealPlanItem>? = null,
         val snackbarMessage: TextData? = null,
     )
 
     data class DayMeals(
-        val breakfast: List<MealPlanItem> = emptyList(),
-        val lunch: List<MealPlanItem> = emptyList(),
-        val dinner: List<MealPlanItem> = emptyList(),
-        val snacks: List<MealPlanItem> = emptyList(),
+        val breakfast: ImmutableList<MealPlanItem> = persistentListOf(),
+        val lunch: ImmutableList<MealPlanItem> = persistentListOf(),
+        val dinner: ImmutableList<MealPlanItem> = persistentListOf(),
+        val snacks: ImmutableList<MealPlanItem> = persistentListOf(),
     )
 
-    data class DayGroup(val dateLabel: TextData, val meals: List<MealPlanItem>)
+    data class DayGroup(val dateLabel: TextData, val meals: ImmutableList<MealPlanItem>)
 
     data class MonthModel(
         val firstDayOfMonth: LocalDate,

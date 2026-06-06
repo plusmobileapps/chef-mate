@@ -9,6 +9,9 @@ import com.plusmobileapps.chefmate.recipe.categories.RecipeCategoriesBloc.Create
 import com.plusmobileapps.chefmate.recipe.categories.RecipeCategoriesBloc.DialogState
 import com.plusmobileapps.chefmate.recipe.categories.RecipeCategoriesBloc.Model
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 
 private fun bloc(model: Model): RecipeCategoriesBloc =
@@ -58,8 +61,8 @@ private fun bloc(model: Model): RecipeCategoriesBloc =
         }
     }
 
-private val sampleItems: List<CategoryItem> =
-    listOf(
+private val sampleItems: ImmutableList<CategoryItem> =
+    persistentListOf(
         CategoryItem(id = 1L, name = "Family Favorites", builtinId = null, recipeCount = 12),
         CategoryItem(id = 2L, name = "Weeknight", builtinId = null, recipeCount = 3),
         CategoryItem(
@@ -128,14 +131,16 @@ val previewRecipeCategoriesBlocEmptyUser: RecipeCategoriesBloc =
     bloc(
         Model(
             categories =
-                BuiltinCategory.entries.map { builtin ->
-                    CategoryItem(
-                        id = 0L,
-                        name = builtin.id.replaceFirstChar { it.uppercase() },
-                        builtinId = builtin.id,
-                        recipeCount = 0,
-                    )
-                },
+                BuiltinCategory.entries
+                    .map { builtin ->
+                        CategoryItem(
+                            id = 0L,
+                            name = builtin.id.replaceFirstChar { it.uppercase() },
+                            builtinId = builtin.id,
+                            recipeCount = 0,
+                        )
+                    }
+                    .toImmutableList(),
             isLoading = false,
         )
     )

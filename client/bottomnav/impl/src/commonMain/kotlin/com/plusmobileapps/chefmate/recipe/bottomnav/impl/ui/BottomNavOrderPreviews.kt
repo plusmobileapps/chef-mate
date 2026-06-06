@@ -7,6 +7,8 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.DEFAULT_TAB_ORDER
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 
 private fun bottomNavOrderBloc(model: BottomNavOrderBloc.Model): BottomNavOrderBloc =
@@ -35,14 +37,14 @@ val previewBottomNavOrderDirtyBloc: BottomNavOrderBloc =
     bottomNavOrderBloc(
         BottomNavOrderBloc.Model(
             editedOrder =
-                listOf(
+                persistentListOf(
                     BottomNavBloc.Tab.SETTINGS,
                     BottomNavBloc.Tab.RECIPES,
                     BottomNavBloc.Tab.GROCERIES,
                     BottomNavBloc.Tab.MEALS,
                     BottomNavBloc.Tab.BROWSER,
                 ),
-            persistedOrder = DEFAULT_TAB_ORDER,
+            persistedOrder = DEFAULT_TAB_ORDER.toImmutableList(),
         )
     )
 

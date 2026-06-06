@@ -10,6 +10,7 @@ import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc.Model
 import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc.Phase
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 
 private fun importRecipesBloc(model: Model): ImportRecipesBloc =
@@ -36,7 +37,7 @@ private fun importRecipesBloc(model: Model): ImportRecipesBloc =
     }
 
 private val sampleItems =
-    listOf(
+    persistentListOf(
         ImportItem(
             id = "0",
             title = "Garlic Chilli Noodles",

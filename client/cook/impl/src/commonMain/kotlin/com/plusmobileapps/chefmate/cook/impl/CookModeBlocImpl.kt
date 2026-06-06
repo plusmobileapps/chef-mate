@@ -13,6 +13,7 @@ import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
 
 @AssistedInject
@@ -39,13 +40,15 @@ class CookModeBlocImpl(
                 isLoading = vm.isLoading,
                 activeRecipe = active,
                 activeSessions =
-                    vm.cookingRecipes.map { recipe ->
-                        CookModeBloc.Model.Chip(
-                            recipeId = recipe.id,
-                            title = recipe.title,
-                            isActive = recipe.id == vm.activeRecipeId,
-                        )
-                    },
+                    vm.cookingRecipes
+                        .map { recipe ->
+                            CookModeBloc.Model.Chip(
+                                recipeId = recipe.id,
+                                title = recipe.title,
+                                isActive = recipe.id == vm.activeRecipeId,
+                            )
+                        }
+                        .toImmutableList(),
                 layoutMode = vm.layoutMode,
                 keepScreenOn = vm.keepScreenOn,
             )

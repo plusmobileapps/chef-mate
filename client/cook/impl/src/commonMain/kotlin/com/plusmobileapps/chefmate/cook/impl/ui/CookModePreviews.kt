@@ -7,6 +7,7 @@ import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.cook.WhatsCookingBloc
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 
 val previewWhatsCookingBloc: WhatsCookingBloc =
@@ -15,7 +16,7 @@ val previewWhatsCookingBloc: WhatsCookingBloc =
             MutableStateFlow(
                 WhatsCookingBloc.Model(
                     recipes =
-                        listOf(
+                        persistentListOf(
                             WhatsCookingBloc.Model.Item(1L, "Pasta Carbonara", null),
                             WhatsCookingBloc.Model.Item(2L, "Caesar Salad", null),
                         )
@@ -55,7 +56,7 @@ private fun cookBloc(model: CookModeBloc.Model): CookModeBloc =
     }
 
 private val activeSessionsSample =
-    listOf(
+    persistentListOf(
         CookModeBloc.Model.Chip(1L, "Pasta Carbonara", isActive = true),
         CookModeBloc.Model.Chip(2L, "Caesar Salad", isActive = false),
     )

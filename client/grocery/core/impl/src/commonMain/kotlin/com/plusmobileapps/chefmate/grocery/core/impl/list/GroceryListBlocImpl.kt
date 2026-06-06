@@ -25,6 +25,7 @@ import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFa
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.Provider
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 
@@ -64,14 +65,14 @@ class GroceryListBlocImpl(
     override val state: StateFlow<GroceryListBloc.Model> =
         viewModel.state.mapState {
             GroceryListBloc.Model(
-                groupedItems = it.groupedItems,
+                groupedItems = it.groupedItems.toImmutableList(),
                 sort = it.sort,
                 filter = it.filter,
                 recipeFilter = it.recipeFilter,
-                availableRecipes = it.availableRecipes,
+                availableRecipes = it.availableRecipes.toImmutableList(),
                 hasNoRecipeItems = it.hasNoRecipeItems,
                 isSyncing = it.isSyncing,
-                lists = it.lists,
+                lists = it.lists.toImmutableList(),
                 selectedList = it.selectedList,
                 showCreateListDialog = it.showCreateListDialog,
                 showDeleteDialog = it.showDeleteDialog,

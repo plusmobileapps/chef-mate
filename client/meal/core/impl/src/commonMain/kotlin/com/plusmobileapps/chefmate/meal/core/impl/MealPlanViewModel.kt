@@ -18,6 +18,7 @@ import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.util.DateTimeUtil
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -218,10 +219,10 @@ class MealPlanViewModel(
 
     fun buildDayMeals(meals: List<MealPlanItem>): MealPlanBloc.DayMeals =
         MealPlanBloc.DayMeals(
-            breakfast = meals.filter { it.mealType == MealType.BREAKFAST },
-            lunch = meals.filter { it.mealType == MealType.LUNCH },
-            dinner = meals.filter { it.mealType == MealType.DINNER },
-            snacks = meals.filter { it.mealType == MealType.SNACKS },
+            breakfast = meals.filter { it.mealType == MealType.BREAKFAST }.toImmutableList(),
+            lunch = meals.filter { it.mealType == MealType.LUNCH }.toImmutableList(),
+            dinner = meals.filter { it.mealType == MealType.DINNER }.toImmutableList(),
+            snacks = meals.filter { it.mealType == MealType.SNACKS }.toImmutableList(),
         )
 
     fun buildWeekMeals(meals: List<MealPlanItem>): List<MealPlanBloc.DayGroup> {
@@ -232,7 +233,7 @@ class MealPlanViewModel(
             val dayMeals = meals.filter { it.date == dateStr }
             MealPlanBloc.DayGroup(
                 dateLabel = FixedString(dateTimeUtil.formatShortDayDate(date)),
-                meals = dayMeals,
+                meals = dayMeals.toImmutableList(),
             )
         }
     }

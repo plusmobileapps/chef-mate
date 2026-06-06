@@ -10,6 +10,8 @@ import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc.Model
 import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc.Phase
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 
 private fun exportRecipesBloc(model: Model): ExportRecipesBloc =
@@ -36,7 +38,7 @@ private fun exportRecipesBloc(model: Model): ExportRecipesBloc =
     }
 
 private val sampleItems =
-    listOf(
+    persistentListOf(
         ExportItem(
             id = "1",
             title = "Marcella Hazan Bolognese",
@@ -68,7 +70,11 @@ val previewExportRecipesReviewBloc: ExportRecipesBloc =
     exportRecipesBloc(Model(Phase.Review(recipes = sampleItems)))
 
 val previewExportRecipesReviewNoSelectionBloc: ExportRecipesBloc =
-    exportRecipesBloc(Model(Phase.Review(recipes = sampleItems.map { it.copy(selected = false) })))
+    exportRecipesBloc(
+        Model(
+            Phase.Review(recipes = sampleItems.map { it.copy(selected = false) }.toImmutableList())
+        )
+    )
 
 val previewExportRecipesExportingBloc: ExportRecipesBloc =
     exportRecipesBloc(Model(Phase.Review(recipes = sampleItems, isExporting = true)))

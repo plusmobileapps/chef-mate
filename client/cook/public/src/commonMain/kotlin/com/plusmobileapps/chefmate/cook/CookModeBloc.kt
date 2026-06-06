@@ -5,6 +5,8 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.ui.BlocScreen
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 
 interface CookModeBloc : BackClickBloc, BlocScreen {
@@ -32,7 +34,7 @@ interface CookModeBloc : BackClickBloc, BlocScreen {
     data class Model(
         val isLoading: Boolean = true,
         val activeRecipe: Recipe? = null,
-        val activeSessions: List<Chip> = emptyList(),
+        val activeSessions: ImmutableList<Chip> = persistentListOf(),
         val layoutMode: LayoutMode = LayoutMode.Stacked,
         val keepScreenOn: Boolean = true,
     ) {

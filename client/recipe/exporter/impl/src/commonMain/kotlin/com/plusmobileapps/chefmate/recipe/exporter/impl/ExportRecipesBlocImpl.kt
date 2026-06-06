@@ -18,6 +18,7 @@ import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesScreen
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
 
 @AssistedInject
@@ -64,7 +65,7 @@ class ExportRecipesBlocImpl(
                     ExportRecipesViewModel.Stage.Empty -> Phase.Empty
                     is ExportRecipesViewModel.Stage.Review ->
                         Phase.Review(
-                            recipes = stage.items.map { it.toExportItem() },
+                            recipes = stage.items.map { it.toExportItem() }.toImmutableList(),
                             isExporting = stage.isExporting,
                         )
                     is ExportRecipesViewModel.Stage.Done -> Phase.Done(stage.exportedCount)

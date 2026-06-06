@@ -24,6 +24,8 @@ import dev.mokkery.verifySuspend
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlin.test.Test
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -87,7 +89,12 @@ class GroceryListBlocTest {
             awaitItem() shouldBe
                 GroceryListBloc.Model(
                     groupedItems =
-                        listOf(GroceryGroup(category = GroceryCategory.PRODUCE, items = items)),
+                        persistentListOf(
+                            GroceryGroup(
+                                category = GroceryCategory.PRODUCE,
+                                items = items.toImmutableList(),
+                            )
+                        ),
                     hasNoRecipeItems = true,
                 )
         }

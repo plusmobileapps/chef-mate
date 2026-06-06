@@ -20,6 +20,7 @@ import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFa
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.Provider
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -49,13 +50,14 @@ class RecipeListBlocImpl(
             RecipeListBloc.Model(
                 isLoading = it.isLoading,
                 isSyncing = it.isSyncing,
-                recipes = it.displayRecipes.map { recipe -> recipe.toRecipeListItem() },
+                recipes =
+                    it.displayRecipes.map { recipe -> recipe.toRecipeListItem() }.toImmutableList(),
                 totalRecipeCount = it.recipes.size,
                 currentSort = it.currentSort,
                 activeFilters = it.activeFilters,
                 activeCategories = it.activeCategories,
                 activeUserCategoryIds = it.activeUserCategoryIds,
-                availableUserCategories = it.availableUserCategories,
+                availableUserCategories = it.availableUserCategories.toImmutableList(),
                 isGridView = it.isGridView,
                 searchQuery = it.searchQuery,
                 isSearchActive = it.isSearchActive,

@@ -3,6 +3,8 @@ package com.plusmobileapps.chefmate.browser
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.ui.BlocScreen
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 
 interface BrowserEditQueryBloc : BlocScreen {
@@ -20,7 +22,7 @@ interface BrowserEditQueryBloc : BlocScreen {
 
     data class Model(
         val searchText: String = "",
-        val history: List<BrowserHistoryEntry> = emptyList(),
+        val history: ImmutableList<BrowserHistoryEntry> = persistentListOf(),
     )
 
     sealed class Output {

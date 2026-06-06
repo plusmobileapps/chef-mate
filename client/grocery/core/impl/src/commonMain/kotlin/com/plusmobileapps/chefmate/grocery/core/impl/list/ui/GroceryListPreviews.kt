@@ -15,16 +15,17 @@ import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.SyncStatus
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 
 private val sampleList = GroceryListModel(id = 1L, name = "My List", syncStatus = SyncStatus.SYNCED)
 
 private val sampleGroups =
-    listOf(
+    persistentListOf(
         GroceryGroup(
             category = GroceryCategory.PRODUCE,
             items =
-                listOf(
+                persistentListOf(
                     GroceryItem(
                         id = 1L,
                         name = "Apples",
@@ -45,7 +46,7 @@ private val sampleGroups =
         GroceryGroup(
             category = GroceryCategory.DAIRY,
             items =
-                listOf(
+                persistentListOf(
                     GroceryItem(
                         id = 3L,
                         name = "Whole milk",
@@ -122,7 +123,7 @@ val previewGroceryListBloc: GroceryListBloc =
     groceryListBloc(
         GroceryListBloc.Model(
             groupedItems = sampleGroups,
-            lists = listOf(sampleList),
+            lists = persistentListOf(sampleList),
             selectedList = sampleList,
         )
     )
@@ -132,7 +133,9 @@ val previewGroceryListBloc: GroceryListBloc =
  * jump-to-recipes flow. Should NOT appear when filters are active (see `previewGroceryListBloc`).
  */
 val previewGroceryListBlocEmpty: GroceryListBloc =
-    groceryListBloc(GroceryListBloc.Model(lists = listOf(sampleList), selectedList = sampleList))
+    groceryListBloc(
+        GroceryListBloc.Model(lists = persistentListOf(sampleList), selectedList = sampleList)
+    )
 
 /**
  * Empty list because the active filter matched nothing — exercises the filtered-empty state with
@@ -142,11 +145,11 @@ val previewGroceryListBlocEmpty: GroceryListBloc =
 val previewGroceryListBlocFilteredEmpty: GroceryListBloc =
     groceryListBloc(
         GroceryListBloc.Model(
-            groupedItems = emptyList(),
+            groupedItems = persistentListOf(),
             filter = GroceryFilter.PURCHASED,
-            availableRecipes = listOf("Pancakes"),
+            availableRecipes = persistentListOf("Pancakes"),
             hasNoRecipeItems = true,
-            lists = listOf(sampleList),
+            lists = persistentListOf(sampleList),
             selectedList = sampleList,
         )
     )

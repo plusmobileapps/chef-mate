@@ -6,6 +6,8 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.BlocScreen
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 
@@ -30,7 +32,7 @@ interface AiChatBloc : BackClickBloc, BlocScreen {
     fun onPhotoPicked(bytes: ByteArray, fileExtension: String)
 
     data class Model(
-        val messages: List<ChatMessage> = emptyList(),
+        val messages: ImmutableList<ChatMessage> = persistentListOf(),
         val isSending: Boolean = false,
         val canAddRecipe: Boolean = false,
         val isExtractingRecipe: Boolean = false,

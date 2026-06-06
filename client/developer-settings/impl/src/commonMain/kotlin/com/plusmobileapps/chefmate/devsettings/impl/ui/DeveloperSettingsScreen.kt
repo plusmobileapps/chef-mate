@@ -54,6 +54,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
@@ -289,7 +290,7 @@ val previewDeveloperSettingsBloc =
                 DeveloperSettingsBloc.Model(
                     currentEnvironment = Environment.PROD,
                     availableUsers =
-                        listOf(
+                        persistentListOf(
                             TestUser(1, "alice@chefmate.test", "password1"),
                             TestUser(2, "bob@chefmate.test", "password2"),
                         ),

@@ -4,6 +4,8 @@ import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.ui.BlocScreen
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 
 interface AiChatHistoryBloc : BackClickBloc, BlocScreen {
@@ -17,7 +19,7 @@ interface AiChatHistoryBloc : BackClickBloc, BlocScreen {
 
     fun onNewConversationClick()
 
-    data class Model(val conversations: List<AiChatConversation> = emptyList())
+    data class Model(val conversations: ImmutableList<AiChatConversation> = persistentListOf())
 
     sealed class Output {
         data object Back : Output()

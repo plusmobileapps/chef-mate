@@ -4,6 +4,8 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.Environment
 import com.plusmobileapps.chefmate.ui.BlocScreen
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 
 interface DeveloperSettingsBloc : BlocScreen {
@@ -33,7 +35,7 @@ interface DeveloperSettingsBloc : BlocScreen {
 
     data class Model(
         val currentEnvironment: Environment = Environment.PROD,
-        val availableUsers: List<TestUser> = emptyList(),
+        val availableUsers: ImmutableList<TestUser> = persistentListOf(),
         val selectedUserIndex: Int? = null,
         val currentUserEmail: String? = null,
         val isAuthenticated: Boolean = false,

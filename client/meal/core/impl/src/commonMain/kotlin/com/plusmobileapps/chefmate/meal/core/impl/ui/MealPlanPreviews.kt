@@ -8,13 +8,15 @@ import com.plusmobileapps.chefmate.meal.data.MealPlanItem
 import com.plusmobileapps.chefmate.meal.data.MealType
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.datetime.LocalDate
 
 private val sampleDayMeals =
     MealPlanBloc.DayMeals(
         breakfast =
-            listOf(
+            persistentListOf(
                 MealPlanItem(
                     id = 1L,
                     recipeId = 10L,
@@ -25,7 +27,7 @@ private val sampleDayMeals =
                 )
             ),
         lunch =
-            listOf(
+            persistentListOf(
                 MealPlanItem(
                     id = 2L,
                     recipeId = 20L,
@@ -36,7 +38,7 @@ private val sampleDayMeals =
                 )
             ),
         dinner =
-            listOf(
+            persistentListOf(
                 MealPlanItem(
                     id = 3L,
                     recipeId = 30L,
@@ -139,10 +141,10 @@ val previewMealPlanBlocWeek: MealPlanBloc =
             viewMode = MealPlanBloc.ViewMode.WEEK,
             dateLabel = FixedString("Apr 12 - Apr 18, 2026"),
             weekMeals =
-                listOf(
+                persistentListOf(
                     MealPlanBloc.DayGroup(
                         dateLabel = FixedString("Fri, Apr 17"),
-                        meals = sampleDayMeals.breakfast + sampleDayMeals.lunch,
+                        meals = (sampleDayMeals.breakfast + sampleDayMeals.lunch).toImmutableList(),
                     )
                 ),
         )

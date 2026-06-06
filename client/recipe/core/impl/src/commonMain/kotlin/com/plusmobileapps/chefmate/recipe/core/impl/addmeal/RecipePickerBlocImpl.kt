@@ -14,6 +14,7 @@ import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFa
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.Provider
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
 
 @AssistedInject
@@ -34,7 +35,7 @@ class RecipePickerBlocImpl(
     override val state: StateFlow<RecipePickerBloc.Model> =
         viewModel.state.mapState {
             RecipePickerBloc.Model(
-                recipes = it.displayRecipes,
+                recipes = it.displayRecipes.toImmutableList(),
                 searchQuery = it.searchQuery,
                 isLoading = it.isLoading,
             )
