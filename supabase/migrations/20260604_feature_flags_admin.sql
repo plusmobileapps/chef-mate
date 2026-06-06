@@ -60,31 +60,43 @@ CREATE TABLE IF NOT EXISTS admins (
 -- find your uid in the Supabase console (Authentication, Users) and insert a row
 -- into admins. See the project README / PR for the exact statement.
 
+-- Membership check used by every policy below. SECURITY DEFINER makes it run as
+-- the function owner (the table owner), which bypasses RLS on `admins` - without
+-- this, a policy on `admins` that selects from `admins` recurses infinitely
+-- (Postgres 42P17). `stable` + a pinned search_path keep it safe and cacheable.
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+    SELECT EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid());
+$$;
+
 -- Only admins may read the admin allow-list (prevents enumerating who's an admin).
 ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Admins can view admins" ON admins;
 CREATE POLICY "Admins can view admins" ON admins
-    FOR SELECT USING (auth.uid() IN (SELECT user_id FROM admins));
+    FOR SELECT USING (public.is_admin());
 
 ALTER TABLE feature_flags ENABLE ROW LEVEL SECURITY;
 
 -- Everyone (incl. the anon client) can read active flags. Admins also see archived.
 DROP POLICY IF EXISTS "Anyone can read active flags" ON feature_flags;
 CREATE POLICY "Anyone can read active flags" ON feature_flags
-    FOR SELECT USING (
-        archived = false OR auth.uid() IN (SELECT user_id FROM admins)
-    );
+    FOR SELECT USING (archived = false OR public.is_admin());
 
 -- Writes are admin-only.
 DROP POLICY IF EXISTS "Admins can insert flags" ON feature_flags;
 CREATE POLICY "Admins can insert flags" ON feature_flags
-    FOR INSERT WITH CHECK (auth.uid() IN (SELECT user_id FROM admins));
+    FOR INSERT WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Admins can update flags" ON feature_flags;
 CREATE POLICY "Admins can update flags" ON feature_flags
-    FOR UPDATE USING (auth.uid() IN (SELECT user_id FROM admins));
+    FOR UPDATE USING (public.is_admin());
 
 DROP POLICY IF EXISTS "Admins can delete flags" ON feature_flags;
 CREATE POLICY "Admins can delete flags" ON feature_flags
-    FOR DELETE USING (auth.uid() IN (SELECT user_id FROM admins));
+    FOR DELETE USING (public.is_admin());
