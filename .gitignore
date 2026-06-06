@@ -35,4 +35,3 @@ fastlane/test_output/
 # Bundler
 vendor/bundle/
 .bundle/
-Gemfile.lock
