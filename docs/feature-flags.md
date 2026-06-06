@@ -26,7 +26,7 @@ create policy "feature_flags read" on public.feature_flags
     for select to anon, authenticated using (true);
 ```
 
-Writes go through the service role / Studio UI — clients only ever read.
+Writes go through the service role / Studio UI — clients only ever read. For a UI instead of raw SQL, use the [feature-flag admin dashboard](./feature-flag-admin.md) (the `:admin` module), which also manages archiving and per-user targeting.
 
 ### Columns
 
