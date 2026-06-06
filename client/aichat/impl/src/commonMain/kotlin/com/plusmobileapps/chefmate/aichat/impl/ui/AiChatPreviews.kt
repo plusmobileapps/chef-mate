@@ -8,6 +8,8 @@ import com.plusmobileapps.chefmate.aichat.ChatMessage
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 
 private fun aiChatBloc(model: AiChatBloc.Model, input: String = ""): AiChatBloc =
@@ -23,6 +25,8 @@ private fun aiChatBloc(model: AiChatBloc.Model, input: String = ""): AiChatBloc 
 
         override fun onAddRecipeClick() = Unit
 
+        override fun onPhotoPicked(bytes: ByteArray, fileExtension: String) = Unit
+
         override fun onBackClicked() = Unit
 
         @Composable
@@ -30,7 +34,7 @@ private fun aiChatBloc(model: AiChatBloc.Model, input: String = ""): AiChatBloc 
     }
 
 private val sampleConversation =
-    listOf(
+    persistentListOf(
         ChatMessage(
             id = 1L,
             role = ChatMessage.Role.USER,
@@ -84,15 +88,25 @@ val previewAiChatBlocStreaming: AiChatBloc =
     aiChatBloc(
         AiChatBloc.Model(
             messages =
-                sampleConversation +
-                    ChatMessage(
-                        id = 4L,
-                        role = ChatMessage.Role.MODEL,
-                        content = "Sure! A 15-minute option is pan-seared chicken thighs with",
-                        isStreaming = true,
-                    ),
+                (sampleConversation +
+                        ChatMessage(
+                            id = 4L,
+                            role = ChatMessage.Role.MODEL,
+                            content = "Sure! A 15-minute option is pan-seared chicken thighs with",
+                            isStreaming = true,
+                        ))
+                    .toImmutableList(),
             isSending = true,
         )
+    )
+
+/**
+ * Reply in flight before the first token arrives — the latest message is the user's and [isSending]
+ * is true, so the "Gemini is thinking" bubble shows in the model position.
+ */
+val previewAiChatBlocThinking: AiChatBloc =
+    aiChatBloc(
+        AiChatBloc.Model(messages = sampleConversation, canAddRecipe = true, isSending = true)
     )
 
 /** Error banner state — typical for a missing API key or network failure. */
@@ -121,6 +135,12 @@ internal fun AiChatScreenEmptyPreview() {
 @Composable
 internal fun AiChatScreenStreamingPreview() {
     ChefMateTheme { previewAiChatBlocStreaming.Content() }
+}
+
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+internal fun AiChatScreenThinkingPreview() {
+    ChefMateTheme { previewAiChatBlocThinking.Content() }
 }
 
 @Preview(showBackground = true, heightDp = 900)

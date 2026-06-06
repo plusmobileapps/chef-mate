@@ -9,6 +9,8 @@ import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.ui.BlocScreen
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 
 interface GroceryListBloc : BlocScreen {
@@ -60,7 +62,7 @@ interface GroceryListBloc : BlocScreen {
 
     fun onBrowseRecipesClicked()
 
-    data class GroceryGroup(val category: GroceryCategory, val items: List<GroceryItem>)
+    data class GroceryGroup(val category: GroceryCategory, val items: ImmutableList<GroceryItem>)
 
     enum class GrocerySort {
         AISLE,
@@ -74,14 +76,14 @@ interface GroceryListBloc : BlocScreen {
     }
 
     data class Model(
-        val groupedItems: List<GroceryGroup> = emptyList(),
+        val groupedItems: ImmutableList<GroceryGroup> = persistentListOf(),
         val sort: GrocerySort = GrocerySort.AISLE,
         val filter: GroceryFilter = GroceryFilter.ALL,
         val recipeFilter: String? = null,
-        val availableRecipes: List<String> = emptyList(),
+        val availableRecipes: ImmutableList<String> = persistentListOf(),
         val hasNoRecipeItems: Boolean = false,
         val isSyncing: Boolean = false,
-        val lists: List<GroceryListModel> = emptyList(),
+        val lists: ImmutableList<GroceryListModel> = persistentListOf(),
         val selectedList: GroceryListModel? = null,
         val showCreateListDialog: Boolean = false,
         val showDeleteDialog: Boolean = false,

@@ -52,6 +52,7 @@ class RecipeRootBlocImpl(
                                 recipeId = null,
                                 extracted = props.extracted,
                                 fromAi = props.fromAi,
+                                consumePendingPhoto = props.consumePendingPhoto,
                             )
                         )
                 }
@@ -91,6 +92,7 @@ class RecipeRootBlocImpl(
                             recipeId = config.recipeId,
                             extractedRecipe = config.extracted,
                             fromAi = config.fromAi,
+                            consumePendingPhoto = config.consumePendingPhoto,
                             output = ::handleEditOutput,
                         )
                 )
@@ -150,6 +152,7 @@ class RecipeRootBlocImpl(
             val recipeId: Long?,
             val extracted: ExtractedRecipeData?,
             val fromAi: Boolean = false,
+            val consumePendingPhoto: Boolean = false,
         ) : Configuration()
     }
 }

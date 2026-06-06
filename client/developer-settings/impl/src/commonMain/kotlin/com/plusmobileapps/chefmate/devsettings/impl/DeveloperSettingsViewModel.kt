@@ -11,6 +11,7 @@ import com.plusmobileapps.chefmate.devsettings.TestUser
 import com.plusmobileapps.chefmate.di.Main
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,7 +32,9 @@ class DeveloperSettingsViewModel(
 ) : ViewModel(mainContext) {
 
     private val _state =
-        MutableStateFlow(DeveloperSettingsBloc.Model(availableUsers = testUserProvider.users))
+        MutableStateFlow(
+            DeveloperSettingsBloc.Model(availableUsers = testUserProvider.users.toImmutableList())
+        )
     val state: StateFlow<DeveloperSettingsBloc.Model> = _state.asStateFlow()
 
     init {

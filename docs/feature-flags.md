@@ -16,6 +16,7 @@ create table public.feature_flags (
     platforms text[],
     min_version text,
     max_version text,
+    user_ids text[],
     updated_at timestamptz not null default now()
 );
 
@@ -36,6 +37,7 @@ Writes go through the service role / Studio UI — clients only ever read.
 - `rollout_percent` — % of users for whom the flag is "active". Active users get `value`; the rest get the default. Bucketing is stable per (`key`, identity) and uses FNV-1a 32-bit so Android, iOS, and JVM agree.
 - `platforms` — `null` / empty = all platforms. Otherwise an array of `'ANDROID'` / `'IOS'` / `'JVM'`.
 - `min_version` / `max_version` — optional semver bounds, compared against the app's current `versionName` (only major/minor/patch are used; `-pre` suffixes are ignored).
+- `user_ids` — `null` / empty = no allowlist. Otherwise an array of authenticated Supabase user ids who get the flag **regardless of the rollout bucket** (additive on top of `rollout_percent` — useful for force-enabling QA/beta users on a partial rollout). Allowlisted users still respect `enabled`, `platforms`, and the version bounds. Only takes effect for signed-in users: a logged-out client buckets by a device UUID that is never on the list (see Identity / bucketing below).
 
 ## Adding a flag
 

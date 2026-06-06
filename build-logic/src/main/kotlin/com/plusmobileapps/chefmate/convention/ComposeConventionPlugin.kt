@@ -8,6 +8,7 @@ import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.getByType
 import org.jetbrains.compose.ComposeExtension
 import org.jetbrains.compose.ComposePlugin
+import org.jetbrains.kotlin.compose.compiler.gradle.ComposeCompilerGradlePluginExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 class ComposeConventionPlugin : Plugin<Project> {
@@ -26,6 +27,23 @@ class ComposeConventionPlugin : Plugin<Project> {
                 // Configuration if needed
             }
 
+            extensions.configure<ComposeCompilerGradlePluginExtension> {
+                // Declare known-immutable types (read-only collections, TextData) stable so Models
+                // exposing them become skippable app-wide. See compose-stability.conf for the list
+                // and the safety rationale.
+                stabilityConfigurationFiles.add(
+                    rootProject.layout.projectDirectory.file("compose-stability.conf")
+                )
+
+                // Opt-in stability/skippability reports for verification: build with
+                // -PcomposeMetrics=true and inspect build/compose-metrics. Off by default.
+                if (findProperty("composeMetrics") == "true") {
+                    val dir = rootProject.layout.buildDirectory.dir("compose-metrics")
+                    metricsDestination.set(dir)
+                    reportsDestination.set(dir)
+                }
+            }
+
             afterEvaluate {
                 kotlin.sourceSets.apply {
                     val commonMain = getByName("commonMain")
@@ -34,6 +52,11 @@ class ComposeConventionPlugin : Plugin<Project> {
                     val compose = ComposePlugin.Dependencies(project)
 
                     commonMain.dependencies {
+                        // Immutable collections are used in Compose-facing Models so the compiler
+                        // (which natively treats kotlinx.collections.immutable types as stable) can
+                        // mark those Models stable/skippable. Exposed as `api` because the types
+                        // appear in public Model signatures.
+                        api(libs.kotlinx.collections.immutable)
                         implementation(libs.compose.runtime)
                         implementation(libs.compose.foundation)
                         implementation(libs.compose.material.icons.extended)

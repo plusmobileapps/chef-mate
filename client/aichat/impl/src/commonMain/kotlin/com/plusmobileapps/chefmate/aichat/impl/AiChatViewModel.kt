@@ -7,12 +7,17 @@ import com.plusmobileapps.chefmate.aichat.AiChatGenericError
 import com.plusmobileapps.chefmate.aichat.AiChatNoApiKeyError
 import com.plusmobileapps.chefmate.aichat.ChatMessage
 import com.plusmobileapps.chefmate.di.Main
-import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.chefmate.recipe.data.PendingRecipePhotoStore
+import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionError
+import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionException
+import com.plusmobileapps.chefmate.recipe.data.RecipeImageExtractor
 import com.plusmobileapps.chefmate.text.TextData
+import com.plusmobileapps.chefmate.util.mimeTypeForImageExtension
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import kotlin.coroutines.CoroutineContext
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -37,6 +42,8 @@ class AiChatViewModel(
     @Assisted props: AiChatBloc.Props,
     private val repository: AiChatRepository,
     private val recipeExtractor: GeminiRecipeExtractor,
+    private val imageExtractor: RecipeImageExtractor,
+    private val pendingPhotoStore: PendingRecipePhotoStore,
 ) : ViewModel(mainContext) {
 
     private val _conversationId =
@@ -51,7 +58,7 @@ class AiChatViewModel(
     private val _isExtractingRecipe = MutableStateFlow(false)
     private val _error = MutableStateFlow<TextData?>(null)
     private val _extractedRecipe =
-        MutableSharedFlow<ExtractedRecipeData>(
+        MutableSharedFlow<AiChatBloc.Output.AddAsRecipe>(
             replay = 0,
             extraBufferCapacity = 1,
             onBufferOverflow = BufferOverflow.DROP_OLDEST,
@@ -60,10 +67,10 @@ class AiChatViewModel(
     val inputText: StateFlow<String> = _inputText.asStateFlow()
 
     /**
-     * Emits each time the user successfully extracts a recipe from the chat. Collected by the
-     * BlocImpl so it can forward as an [AiChatBloc.Output.AddAsRecipe].
+     * Emits each time the user successfully extracts a recipe (from chat text or an attached
+     * photo). Collected by the BlocImpl, which forwards it as an [AiChatBloc.Output.AddAsRecipe].
      */
-    val extractedRecipe: SharedFlow<ExtractedRecipeData> = _extractedRecipe.asSharedFlow()
+    val extractedRecipe: SharedFlow<AiChatBloc.Output.AddAsRecipe> = _extractedRecipe.asSharedFlow()
 
     private val messages = _conversationId.flatMapLatest { id ->
         if (id == null) flowOf(emptyList()) else repository.observeMessages(id)
@@ -81,7 +88,7 @@ class AiChatViewModel(
                 extracting,
                 error ->
                 AiChatBloc.Model(
-                    messages = messages,
+                    messages = messages.toImmutableList(),
                     isSending = sending,
                     canAddRecipe = canAdd,
                     isExtractingRecipe = extracting,
@@ -130,10 +137,42 @@ class AiChatViewModel(
                 if (history.none { it.role == ChatMessage.Role.MODEL && !it.isStreaming })
                     return@launch
                 val recipe = recipeExtractor.extract(history)
-                _extractedRecipe.tryEmit(recipe)
-            } catch (e: GeminiExtractionException) {
+                _extractedRecipe.tryEmit(AiChatBloc.Output.AddAsRecipe(recipe))
+            } catch (e: RecipeExtractionException) {
                 _error.value =
-                    if (e.message == "MISSING_API_KEY") AiChatNoApiKeyError
+                    if (e.error == RecipeExtractionError.MISSING_API_KEY) AiChatNoApiKeyError
+                    else AiChatExtractionError
+            } catch (_: Throwable) {
+                _error.value = AiChatExtractionError
+            } finally {
+                _isExtractingRecipe.value = false
+            }
+        }
+    }
+
+    /**
+     * Extracts a recipe from an attached photo via Gemini vision. On success the picked bytes are
+     * stashed in [pendingPhotoStore] and the emitted output flags [consumePendingPhoto] so the Edit
+     * Recipe screen seeds them as the recipe image.
+     */
+    fun extractFromImage(bytes: ByteArray, fileExtension: String) {
+        if (_isExtractingRecipe.value) return
+        scope.launch {
+            _isExtractingRecipe.value = true
+            _error.value = null
+            try {
+                val recipe =
+                    imageExtractor.extractFromImage(
+                        bytes = bytes,
+                        mimeType = mimeTypeForImageExtension(fileExtension),
+                    )
+                pendingPhotoStore.put(bytes = bytes, fileExtension = fileExtension)
+                _extractedRecipe.tryEmit(
+                    AiChatBloc.Output.AddAsRecipe(extracted = recipe, consumePendingPhoto = true)
+                )
+            } catch (e: RecipeExtractionException) {
+                _error.value =
+                    if (e.error == RecipeExtractionError.MISSING_API_KEY) AiChatNoApiKeyError
                     else AiChatExtractionError
             } catch (_: Throwable) {
                 _error.value = AiChatExtractionError

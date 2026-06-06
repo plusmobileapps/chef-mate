@@ -35,6 +35,7 @@ import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFa
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.Provider
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 
@@ -88,7 +89,7 @@ class BottomNavBlocImpl(
 
     override val state: StateFlow<BottomNavBloc.Model> =
         viewModel.state.mapState {
-            BottomNavBloc.Model(selectedTab = it.selectedTab, tabs = it.tabs)
+            BottomNavBloc.Model(selectedTab = it.selectedTab, tabs = it.tabs.toImmutableList())
         }
 
     override val content: Value<ChildStack<*, BottomNavBloc.Child>> = stack
@@ -188,6 +189,14 @@ class BottomNavBlocImpl(
             }
             is RecipeListBloc.Output.OpenExportRecipes -> {
                 this.output.onNext(BottomNavBloc.Output.OpenExportRecipes(output.recipeIds))
+            }
+            is RecipeListBloc.Output.OpenScannedRecipe -> {
+                this.output.onNext(
+                    BottomNavBloc.Output.OpenExtractedRecipe(
+                        extracted = output.extracted,
+                        consumePendingPhoto = true,
+                    )
+                )
             }
         }
     }

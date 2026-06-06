@@ -13,6 +13,7 @@ import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFa
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.Provider
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
 
 @AssistedInject
@@ -29,7 +30,9 @@ class AiChatHistoryBlocImpl(
     private val viewModel = instanceKeeper.getViewModel { viewModelFactory() }
 
     override val state: StateFlow<AiChatHistoryBloc.Model> =
-        viewModel.conversations.mapState { AiChatHistoryBloc.Model(conversations = it) }
+        viewModel.conversations.mapState {
+            AiChatHistoryBloc.Model(conversations = it.toImmutableList())
+        }
 
     override fun onConversationClick(conversationId: Long) {
         output.onNext(AiChatHistoryBloc.Output.OpenConversation(conversationId))

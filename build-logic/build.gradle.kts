@@ -39,6 +39,7 @@ repositories {
 
 dependencies {
     compileOnly(libs.kotlin.gradle.plugin)
+    compileOnly(libs.kotlin.compose.compiler.gradle.plugin)
     compileOnly(libs.android.gradle.plugin)
     compileOnly(libs.android.kmp.library.gradle.plugin)
     compileOnly(libs.compose.gradle.plugin)

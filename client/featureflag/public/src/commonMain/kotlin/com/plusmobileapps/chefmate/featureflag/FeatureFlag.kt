@@ -41,5 +41,14 @@ object FeatureFlagRegistry {
                 "Show the AI Chat entry in the More tab and enable the Gemini chat screen.",
         )
 
-    val all: List<FeatureFlag<*>> = listOf(CookModeV2, HomeBannerText, AiChat)
+    object ScanRecipeFromPhoto :
+        BooleanFlag(
+            key = "scan_recipe_from_photo",
+            defaultValue = false,
+            description =
+                "Turn the recipe-list add button into a chooser with a \"Scan from photo\" " +
+                    "option. When off, the add button opens the blank editor directly.",
+        )
+
+    val all: List<FeatureFlag<*>> = listOf(CookModeV2, HomeBannerText, AiChat, ScanRecipeFromPhoto)
 }

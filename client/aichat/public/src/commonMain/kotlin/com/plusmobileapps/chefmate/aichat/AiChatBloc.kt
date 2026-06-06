@@ -6,6 +6,8 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.BlocScreen
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 
@@ -22,8 +24,15 @@ interface AiChatBloc : BackClickBloc, BlocScreen {
 
     fun onAddRecipeClick()
 
+    /**
+     * The user attached a photo to extract a recipe from. [fileExtension] is the picked file's
+     * extension (e.g. `jpg`, `png`); the bloc derives the Gemini mime type from it and reuses the
+     * same bytes as the recipe's pending image.
+     */
+    fun onPhotoPicked(bytes: ByteArray, fileExtension: String)
+
     data class Model(
-        val messages: List<ChatMessage> = emptyList(),
+        val messages: ImmutableList<ChatMessage> = persistentListOf(),
         val isSending: Boolean = false,
         val canAddRecipe: Boolean = false,
         val isExtractingRecipe: Boolean = false,
@@ -44,7 +53,11 @@ interface AiChatBloc : BackClickBloc, BlocScreen {
 
         data object OpenHistory : Output()
 
-        data class AddAsRecipe(val extracted: ExtractedRecipeData) : Output()
+        data class AddAsRecipe(
+            val extracted: ExtractedRecipeData,
+            /** True when extraction came from a photo whose bytes should seed the recipe image. */
+            val consumePendingPhoto: Boolean = false,
+        ) : Output()
     }
 
     fun interface Factory {

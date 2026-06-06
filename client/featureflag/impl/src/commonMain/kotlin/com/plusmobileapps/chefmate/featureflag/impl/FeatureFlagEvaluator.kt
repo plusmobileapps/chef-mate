@@ -20,8 +20,16 @@ class FeatureFlagEvaluator {
         if (!versionMatches(row.minVersion, row.maxVersion, context.versionName)) {
             return flag.defaultValue
         }
-        if (!inRollout(flag.key, context.identity, row.rolloutPercent)) return flag.defaultValue
+        if (!isActive(flag.key, context.identity, row)) return flag.defaultValue
         return parseValue(flag, row.valueType, row.value)
+    }
+
+    private fun isActive(flagKey: String, identity: String, row: FeatureFlagRow): Boolean {
+        // Allowlisted users get the flag regardless of the rollout bucket. The list holds
+        // authenticated Supabase user ids, so this only takes effect for signed-in users
+        // (logged-out clients bucket by a device UUID, which is never on the list).
+        if (row.userIds?.contains(identity) == true) return true
+        return inRollout(flagKey, identity, row.rolloutPercent)
     }
 
     private fun platformMatches(allowed: List<String>?, current: Platform): Boolean {

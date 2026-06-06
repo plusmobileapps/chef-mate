@@ -129,6 +129,7 @@ interface EditRecipeBloc : BackClickBloc, BlocScreen {
             recipeId: Long?,
             extractedRecipe: ExtractedRecipeData?,
             fromAi: Boolean,
+            consumePendingPhoto: Boolean,
             output: Consumer<Output>,
         ): EditRecipeBloc
     }

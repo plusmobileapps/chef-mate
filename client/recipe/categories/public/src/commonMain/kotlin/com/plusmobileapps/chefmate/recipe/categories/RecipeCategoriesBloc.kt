@@ -5,6 +5,8 @@ import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.ui.BlocScreen
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 
 interface RecipeCategoriesBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
@@ -45,7 +47,7 @@ interface RecipeCategoriesBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
     fun onBulkDeleteDismissed()
 
     data class Model(
-        val categories: List<CategoryItem> = emptyList(),
+        val categories: ImmutableList<CategoryItem> = persistentListOf(),
         val isLoading: Boolean = true,
         val selectionMode: Boolean = false,
         val selectedIds: Set<Long> = emptySet(),

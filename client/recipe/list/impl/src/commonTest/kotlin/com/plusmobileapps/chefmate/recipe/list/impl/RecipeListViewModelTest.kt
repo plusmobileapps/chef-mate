@@ -5,11 +5,18 @@ package com.plusmobileapps.chefmate.recipe.list.impl
 
 import app.cash.turbine.test
 import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
+import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
+import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
+import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionError
+import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionException
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeCategoryRepository
+import com.plusmobileapps.chefmate.recipe.data.testing.FakePendingRecipePhotoStore
+import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeImageExtractor
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
@@ -45,13 +52,97 @@ class RecipeListViewModelTest {
         every { putString(any(), any()) } returns Unit
     }
     private val categoryRepository = FakeCategoryRepository()
+    private val imageExtractor = FakeRecipeImageExtractor()
+    private val pendingPhotoStore = FakePendingRecipePhotoStore()
+    private val featureFlags = FakeFeatureFlags()
     private val viewModel =
         RecipeListViewModel(
             mainContext = UnconfinedTestDispatcher(),
             repository = repository,
             categoryRepository = categoryRepository,
             cookingSessionRepository = cookingSessionRepository,
+            imageExtractor = imageExtractor,
+            pendingPhotoStore = pendingPhotoStore,
+            featureFlags = featureFlags,
             settings = settings,
+        )
+
+    @Test
+    fun When_scan_succeeds_Then_emits_recipe_stores_photo_and_clears_scanning() =
+        runTest(UnconfinedTestDispatcher()) {
+            imageExtractor.response = sampleExtracted()
+            val bytes = byteArrayOf(1, 2, 3)
+
+            viewModel.scannedRecipe.test {
+                viewModel.scanRecipeFromPhoto(bytes, "jpg")
+                awaitItem() shouldBe sampleExtracted()
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            pendingPhotoStore.consume()?.fileExtension shouldBe "jpg"
+            imageExtractor.calls.single().mimeType shouldBe "image/jpeg"
+            viewModel.state.value.isScanning shouldBe false
+            viewModel.state.value.scanError shouldBe null
+        }
+
+    @Test
+    fun When_scan_fails_with_missing_api_key_Then_scan_error_set() {
+        imageExtractor.error = RecipeExtractionException(RecipeExtractionError.MISSING_API_KEY)
+
+        viewModel.scanRecipeFromPhoto(byteArrayOf(1), "jpg")
+
+        (viewModel.state.value.scanError != null) shouldBe true
+        viewModel.state.value.isScanning shouldBe false
+    }
+
+    @Test
+    fun When_scan_fails_generically_Then_scan_error_set_and_dismissable() {
+        imageExtractor.error = RecipeExtractionException(RecipeExtractionError.MALFORMED_JSON)
+
+        viewModel.scanRecipeFromPhoto(byteArrayOf(1), "jpg")
+        (viewModel.state.value.scanError != null) shouldBe true
+
+        viewModel.dismissScanError()
+        viewModel.state.value.scanError shouldBe null
+    }
+
+    @Test
+    fun When_scan_flag_disabled_Then_state_scan_from_photo_disabled() {
+        // Class-level viewModel uses default flags (scan_recipe_from_photo = false).
+        viewModel.state.value.isScanFromPhotoEnabled shouldBe false
+    }
+
+    @Test
+    fun When_scan_flag_enabled_Then_state_scan_from_photo_enabled() {
+        val flags = FakeFeatureFlags(mapOf(FeatureFlagRegistry.ScanRecipeFromPhoto to true))
+        val vm =
+            RecipeListViewModel(
+                mainContext = UnconfinedTestDispatcher(),
+                repository = repository,
+                categoryRepository = categoryRepository,
+                cookingSessionRepository = cookingSessionRepository,
+                imageExtractor = imageExtractor,
+                pendingPhotoStore = pendingPhotoStore,
+                featureFlags = flags,
+                settings = settings,
+            )
+
+        vm.state.value.isScanFromPhotoEnabled shouldBe true
+    }
+
+    private fun sampleExtracted() =
+        ExtractedRecipeData(
+            title = "Scanned",
+            description = null,
+            ingredients = listOf("flour"),
+            directions = listOf("mix"),
+            imageUrl = null,
+            sourceUrl = "",
+            servings = null,
+            prepTime = null,
+            cookTime = null,
+            totalTime = null,
+            calories = null,
         )
 
     private fun recipe(
@@ -242,6 +333,9 @@ class RecipeListViewModelTest {
                 repository = FakeRecipeRepository(),
                 categoryRepository = FakeCategoryRepository(),
                 cookingSessionRepository = cookingSessionRepository,
+                imageExtractor = imageExtractor,
+                pendingPhotoStore = pendingPhotoStore,
+                featureFlags = featureFlags,
                 settings = gridSettings,
             )
         vm.state.value.isGridView shouldBe true
@@ -332,6 +426,9 @@ class RecipeListViewModelTest {
                 repository = FakeRecipeRepository(),
                 categoryRepository = FakeCategoryRepository(),
                 cookingSessionRepository = cookingSessionRepository,
+                imageExtractor = imageExtractor,
+                pendingPhotoStore = pendingPhotoStore,
+                featureFlags = featureFlags,
                 settings = sortSettings,
             )
         vm.state.value.currentSort shouldBe RecipeSortOption.TOP_RATED
@@ -359,6 +456,9 @@ class RecipeListViewModelTest {
                 repository = FakeRecipeRepository(),
                 categoryRepository = FakeCategoryRepository(),
                 cookingSessionRepository = cookingSessionRepository,
+                imageExtractor = imageExtractor,
+                pendingPhotoStore = pendingPhotoStore,
+                featureFlags = featureFlags,
                 settings = filterSettings,
             )
         vm.state.value.activeFilters shouldBe
@@ -543,6 +643,9 @@ class RecipeListViewModelTest {
                 repository = FakeRecipeRepository(),
                 categoryRepository = FakeCategoryRepository(),
                 cookingSessionRepository = cookingSessionRepository,
+                imageExtractor = imageExtractor,
+                pendingPhotoStore = pendingPhotoStore,
+                featureFlags = featureFlags,
                 settings = catSettings,
             )
         vm.state.value.activeCategories shouldBe

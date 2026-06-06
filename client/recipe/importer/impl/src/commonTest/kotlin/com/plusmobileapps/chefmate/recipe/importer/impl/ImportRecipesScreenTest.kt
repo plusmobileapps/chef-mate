@@ -17,6 +17,8 @@ import com.plusmobileapps.chefmate.recipe.importer.robots.importRecipes
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlin.test.Test
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 
 class ImportRecipesScreenTest {
@@ -39,7 +41,11 @@ class ImportRecipesScreenTest {
         override val backHandler: BackHandler = BackDispatcher()
         override val state =
             MutableStateFlow(
-                Model(Phase.Review(listOf(item("0", "Garlic Noodles"), item("1", "Lentil Curry"))))
+                Model(
+                    Phase.Review(
+                        persistentListOf(item("0", "Garlic Noodles"), item("1", "Lentil Curry"))
+                    )
+                )
             )
 
         override fun onArchiveSelected(bytes: ByteArray, fileName: String) = Unit
@@ -50,9 +56,9 @@ class ImportRecipesScreenTest {
                 Model(
                     review.copy(
                         recipes =
-                            review.recipes.map {
-                                if (it.id == id) it.copy(selected = !it.selected) else it
-                            }
+                            review.recipes
+                                .map { if (it.id == id) it.copy(selected = !it.selected) else it }
+                                .toImmutableList()
                     )
                 )
         }

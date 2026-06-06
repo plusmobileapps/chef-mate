@@ -10,6 +10,7 @@ import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFa
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.Provider
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
 
 @AssistedInject
@@ -28,7 +29,7 @@ class WhatsCookingBlocImpl(
     override val state: StateFlow<WhatsCookingBloc.Model> =
         viewModel.state.mapState { vm ->
             WhatsCookingBloc.Model(
-                recipes = vm.recipes,
+                recipes = vm.recipes.toImmutableList(),
                 isSelectMode = vm.isSelectMode,
                 selectedRecipeIds = vm.selectedRecipeIds,
             )

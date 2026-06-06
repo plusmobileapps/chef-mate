@@ -23,6 +23,7 @@ import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -61,9 +62,12 @@ class ImportRecipesViewModel(
                 return@launch
             }
             parsed = recipes
-            val items = recipes.mapIndexed { index, recipe ->
-                recipe.toItem(index.toString(), selected = true)
-            }
+            val items =
+                recipes
+                    .mapIndexed { index, recipe ->
+                        recipe.toItem(index.toString(), selected = true)
+                    }
+                    .toImmutableList()
             _state.value = Model(Phase.Review(items))
         }
     }
@@ -72,7 +76,9 @@ class ImportRecipesViewModel(
         updateReview { review ->
             review.copy(
                 recipes =
-                    review.recipes.map { if (it.id == id) it.copy(selected = !it.selected) else it }
+                    review.recipes
+                        .map { if (it.id == id) it.copy(selected = !it.selected) else it }
+                        .toImmutableList()
             )
         }
     }
@@ -80,7 +86,9 @@ class ImportRecipesViewModel(
     fun onToggleSelectAll() {
         updateReview { review ->
             val selectAll = review.recipes.any { !it.selected }
-            review.copy(recipes = review.recipes.map { it.copy(selected = selectAll) })
+            review.copy(
+                recipes = review.recipes.map { it.copy(selected = selectAll) }.toImmutableList()
+            )
         }
     }
 

@@ -11,6 +11,8 @@ import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocCooking
+import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocScanError
+import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocScanning
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocSelectionMode
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocSelectionModeEmpty
 import com.plusmobileapps.chefmate.ui.Content
@@ -88,4 +90,27 @@ fun RecipeListSelectionDarkScreenshot() {
 @Composable
 fun RecipeListSelectionEmptyScreenshot() {
     RecipeListScreenshot(bloc = previewRecipeListBlocSelectionModeEmpty)
+}
+
+// ── Scan-from-photo flow ───────────────────────────────────────────────────
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+fun RecipeListScanningLightScreenshot() {
+    RecipeListScreenshot(bloc = previewRecipeListBlocScanning)
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun RecipeListScanningDarkScreenshot() {
+    RecipeListScreenshot(bloc = previewRecipeListBlocScanning, darkTheme = true)
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+fun RecipeListScanErrorLightScreenshot() {
+    RecipeListScreenshot(bloc = previewRecipeListBlocScanError)
 }

@@ -24,6 +24,7 @@ class RecipeRootBlocImplTest {
     private var lastEditRecipeId: Long? = null
     private var lastEditExtractedRecipe: ExtractedRecipeData? = null
     private var lastEditFromAi: Boolean? = null
+    private var lastEditConsumePendingPhoto: Boolean? = null
 
     private fun createBloc(
         props: RecipeRootBloc.Props = RecipeRootBloc.Props.Detail(1L)
@@ -44,10 +45,17 @@ class RecipeRootBlocImplTest {
                     }
                 },
             editBloc =
-                EditRecipeBloc.Factory { _, recipeId, extractedRecipe, fromAi, output ->
+                EditRecipeBloc.Factory {
+                    _,
+                    recipeId,
+                    extractedRecipe,
+                    fromAi,
+                    consumePendingPhoto,
+                    output ->
                     lastEditRecipeId = recipeId
                     lastEditExtractedRecipe = extractedRecipe
                     lastEditFromAi = fromAi
+                    lastEditConsumePendingPhoto = consumePendingPhoto
                     editOutput = output
                     mock()
                 },
@@ -116,6 +124,13 @@ class RecipeRootBlocImplTest {
         val extracted = sampleExtractedRecipe()
         createBloc(RecipeRootBloc.Props.CreateFromExtracted(extracted, fromAi = true))
         lastEditFromAi shouldBe true
+    }
+
+    @Test
+    fun When_create_from_extracted_with_consume_pending_photo_Then_edit_child_seeded_with_flag() {
+        val extracted = sampleExtractedRecipe()
+        createBloc(RecipeRootBloc.Props.CreateFromExtracted(extracted, consumePendingPhoto = true))
+        lastEditConsumePendingPhoto shouldBe true
     }
 
     @Test

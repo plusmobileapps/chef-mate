@@ -5,6 +5,7 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.BlocScreen
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 
@@ -34,7 +35,10 @@ interface ExportRecipesBloc : BackHandlerOwner, BlocScreen {
         data object Empty : Phase
 
         /** Recipes are ready for the user to select and export. */
-        data class Review(val recipes: List<ExportItem>, val isExporting: Boolean = false) : Phase
+        data class Review(
+            val recipes: ImmutableList<ExportItem>,
+            val isExporting: Boolean = false,
+        ) : Phase
 
         /** Export pipeline completed end-to-end (zip generated + saved by the user). */
         data class Done(val exportedCount: Int) : Phase

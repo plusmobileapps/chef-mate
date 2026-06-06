@@ -40,14 +40,21 @@ fun TestApplicationComponent.createRootBloc(
  *
  * Returns the [TestResult] from [runComposeUiTest] unchanged — required so K/N test runners await
  * the suspending body before reporting the test as finished.
+ *
+ * [beforeContent] runs against the component *before* the UI is composed — use it to seed feature
+ * flags (or other state) that the initial screen's view model reads at construction, so the first
+ * frame already reflects them. Flipping such a flag inside [block] would race the first
+ * composition.
  */
 fun runRootBlocTest(
     userState: TestUserState =
         TestUserState.Authenticated(recipes = listOf(TestRecipes.fullyPopulated)),
+    beforeContent: (TestApplicationComponent) -> Unit = {},
     block: suspend ComposeUiTest.(TestApplicationComponent) -> Unit,
 ): TestResult = runComposeUiTest {
     val app = createTestApplicationComponent()
     app.applyUserState(userState)
+    beforeContent(app)
     setContent { App(rootBloc = app.createRootBloc()) }
     block(app)
 }

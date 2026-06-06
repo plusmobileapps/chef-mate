@@ -14,6 +14,8 @@ import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.settings.SettingsBloc
 import com.plusmobileapps.chefmate.ui.BlocScreen
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
 
 interface BottomNavBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
@@ -31,7 +33,10 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
      */
     fun onExportFinished()
 
-    data class Model(val selectedTab: Tab = Tab.RECIPES, val tabs: List<Tab> = Tab.entries)
+    data class Model(
+        val selectedTab: Tab = Tab.RECIPES,
+        val tabs: ImmutableList<Tab> = Tab.entries.toImmutableList(),
+    )
 
     enum class Tab {
         RECIPES,
@@ -56,7 +61,11 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
     sealed class Output {
         data class OpenRecipe(val recipeId: Long) : Output()
 
-        data class OpenExtractedRecipe(val extracted: ExtractedRecipeData) : Output()
+        data class OpenExtractedRecipe(
+            val extracted: ExtractedRecipeData,
+            /** True when the extraction came from a scanned photo whose bytes seed the image. */
+            val consumePendingPhoto: Boolean = false,
+        ) : Output()
 
         object AddNewRecipe : Output()
 

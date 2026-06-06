@@ -15,10 +15,14 @@ kotlin {
             implementation(projects.client.recipe.data.public)
             implementation(projects.client.cook.public)
             implementation(projects.client.util.public)
+            implementation(projects.client.featureflag.public)
             implementation(libs.multiplatform.settings)
             implementation(compose.components.resources)
         }
-        commonTest.dependencies { implementation(projects.client.recipe.data.testing) }
+        commonTest.dependencies {
+            implementation(projects.client.recipe.data.testing)
+            implementation(projects.client.featureflag.testing)
+        }
     }
 }
 

@@ -3,6 +3,8 @@ package com.plusmobileapps.chefmate.recipe.core.addmeal
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.ui.BlocScreen
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 
 interface RecipePickerBloc : BlocScreen {
@@ -15,7 +17,7 @@ interface RecipePickerBloc : BlocScreen {
     data class RecipePickerItem(val id: Long, val title: String, val imageUrl: String?)
 
     data class Model(
-        val recipes: List<RecipePickerItem> = emptyList(),
+        val recipes: ImmutableList<RecipePickerItem> = persistentListOf(),
         val searchQuery: String = "",
         val isLoading: Boolean = true,
     )

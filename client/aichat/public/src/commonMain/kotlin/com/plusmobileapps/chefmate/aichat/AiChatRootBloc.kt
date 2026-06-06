@@ -21,7 +21,11 @@ interface AiChatRootBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
     sealed class Output {
         data object Finished : Output()
 
-        data class AddAsRecipe(val extracted: ExtractedRecipeData) : Output()
+        data class AddAsRecipe(
+            val extracted: ExtractedRecipeData,
+            /** True when extraction came from a photo whose bytes should seed the recipe image. */
+            val consumePendingPhoto: Boolean = false,
+        ) : Output()
     }
 
     fun interface Factory {

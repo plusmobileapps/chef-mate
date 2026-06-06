@@ -17,6 +17,7 @@ import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFa
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.Provider
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.LocalDate
 
@@ -45,7 +46,7 @@ class MealPlanBlocImpl(
                     },
                 weekMeals =
                     if (it.viewMode == MealPlanBloc.ViewMode.WEEK) {
-                        viewModel.buildWeekMeals(it.meals)
+                        viewModel.buildWeekMeals(it.meals).toImmutableList()
                     } else {
                         null
                     },
@@ -58,7 +59,7 @@ class MealPlanBlocImpl(
                 mealToDelete = it.mealToDelete,
                 cookingRecipeCount = it.cookingRecipeIds.size,
                 showDoneCookingDialog = it.showDoneCookingDialog,
-                pendingReplaceCookMode = it.pendingReplaceCookMode,
+                pendingReplaceCookMode = it.pendingReplaceCookMode?.toImmutableList(),
                 snackbarMessage = it.snackbarMessage,
             )
         }

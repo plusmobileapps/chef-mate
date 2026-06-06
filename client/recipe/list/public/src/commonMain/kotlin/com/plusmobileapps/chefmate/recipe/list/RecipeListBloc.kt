@@ -4,7 +4,11 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
+import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.BlocScreen
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 
 interface RecipeListBloc : BlocScreen {
@@ -13,6 +17,17 @@ interface RecipeListBloc : BlocScreen {
     fun onRecipeClicked(recipe: RecipeListItem)
 
     fun onAddRecipeClicked()
+
+    /**
+     * The user picked a photo to scan a recipe from. [fileExtension] is the picked file's extension
+     * (e.g. `jpg`); the bloc derives the Gemini mime type from it and reuses the bytes as the new
+     * recipe's image. While extraction runs [Model.isScanning] is true; on success the bloc emits
+     * [Output.OpenScannedRecipe], on failure it surfaces [Model.scanError].
+     */
+    fun onScanRecipePhotoPicked(bytes: ByteArray, fileExtension: String)
+
+    /** Dismisses the scan-failed message. */
+    fun onScanErrorDismissed()
 
     fun onDeleteRecipe(recipe: RecipeListItem)
 
@@ -66,7 +81,7 @@ interface RecipeListBloc : BlocScreen {
     fun onExportFinished()
 
     data class Model(
-        val recipes: List<RecipeListItem> = emptyList(),
+        val recipes: ImmutableList<RecipeListItem> = persistentListOf(),
         val totalRecipeCount: Int = 0,
         val isLoading: Boolean = false,
         val isSyncing: Boolean = false,
@@ -76,7 +91,7 @@ interface RecipeListBloc : BlocScreen {
         /** Selected user-category IDs from the filter sheet. Disjoint from [activeCategories]. */
         val activeUserCategoryIds: Set<Long> = emptySet(),
         /** All user-created categories — surfaced so the filter sheet can render them as chips. */
-        val availableUserCategories: List<Category> = emptyList(),
+        val availableUserCategories: ImmutableList<Category> = persistentListOf(),
         val isGridView: Boolean = false,
         val searchQuery: String = "",
         val isSearchActive: Boolean = false,
@@ -84,6 +99,15 @@ interface RecipeListBloc : BlocScreen {
         val showDoneCookingDialog: Boolean = false,
         val isSelectionMode: Boolean = false,
         val selectedRecipeIds: Set<Long> = emptySet(),
+        /** True while a picked photo is being scanned into a recipe via Gemini vision. */
+        val isScanning: Boolean = false,
+        /** Non-null when the most recent photo scan failed. */
+        val scanError: TextData? = null,
+        /**
+         * When true, the add button opens a chooser offering "Scan from photo"; when false it opens
+         * the blank editor directly. Driven by the `scan_recipe_from_photo` feature flag.
+         */
+        val isScanFromPhotoEnabled: Boolean = false,
     ) {
         /** Total number of active filter chips: legacy filters + preset + user category filters. */
         val totalActiveFilterCount: Int
@@ -94,6 +118,9 @@ interface RecipeListBloc : BlocScreen {
         data class OpenRecipe(val recipeId: Long) : Output()
 
         object AddNewRecipe : Output()
+
+        /** A recipe was extracted from a scanned photo; open the pre-filled editor. */
+        data class OpenScannedRecipe(val extracted: ExtractedRecipeData) : Output()
 
         object OpenBrowser : Output()
 

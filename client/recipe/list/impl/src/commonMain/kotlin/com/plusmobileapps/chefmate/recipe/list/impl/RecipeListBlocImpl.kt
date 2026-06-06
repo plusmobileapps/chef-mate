@@ -20,7 +20,10 @@ import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFa
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.Provider
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 @AssistedInject
 @ContributesAssistedFactory(
@@ -34,19 +37,27 @@ class RecipeListBlocImpl(
     private val timeFormatterUtil: TimeFormatterUtil,
 ) : RecipeListBloc, BlocContext by context {
     private val viewModel: RecipeListViewModel = instanceKeeper.getViewModel { viewModelFactory() }
+    private val scope = createScope()
+
+    init {
+        viewModel.scannedRecipe
+            .onEach { output.onNext(Output.OpenScannedRecipe(it)) }
+            .launchIn(scope)
+    }
 
     override val state: StateFlow<RecipeListBloc.Model> =
         viewModel.state.mapState {
             RecipeListBloc.Model(
                 isLoading = it.isLoading,
                 isSyncing = it.isSyncing,
-                recipes = it.displayRecipes.map { recipe -> recipe.toRecipeListItem() },
+                recipes =
+                    it.displayRecipes.map { recipe -> recipe.toRecipeListItem() }.toImmutableList(),
                 totalRecipeCount = it.recipes.size,
                 currentSort = it.currentSort,
                 activeFilters = it.activeFilters,
                 activeCategories = it.activeCategories,
                 activeUserCategoryIds = it.activeUserCategoryIds,
-                availableUserCategories = it.availableUserCategories,
+                availableUserCategories = it.availableUserCategories.toImmutableList(),
                 isGridView = it.isGridView,
                 searchQuery = it.searchQuery,
                 isSearchActive = it.isSearchActive,
@@ -54,6 +65,9 @@ class RecipeListBlocImpl(
                 showDoneCookingDialog = it.showDoneCookingDialog,
                 isSelectionMode = it.isSelectionMode,
                 selectedRecipeIds = it.selectedRecipeIds,
+                isScanning = it.isScanning,
+                scanError = it.scanError,
+                isScanFromPhotoEnabled = it.isScanFromPhotoEnabled,
             )
         }
 
@@ -67,6 +81,14 @@ class RecipeListBlocImpl(
 
     override fun onAddRecipeClicked() {
         output.onNext(Output.AddNewRecipe)
+    }
+
+    override fun onScanRecipePhotoPicked(bytes: ByteArray, fileExtension: String) {
+        viewModel.scanRecipeFromPhoto(bytes = bytes, fileExtension = fileExtension)
+    }
+
+    override fun onScanErrorDismissed() {
+        viewModel.dismissScanError()
     }
 
     override fun onDeleteRecipe(recipe: RecipeListItem) {

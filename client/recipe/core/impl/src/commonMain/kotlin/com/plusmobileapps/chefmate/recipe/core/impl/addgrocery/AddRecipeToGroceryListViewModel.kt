@@ -14,6 +14,7 @@ import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import kotlin.coroutines.CoroutineContext
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,13 +55,15 @@ class AddRecipeToGroceryListViewModel(
                     it.groupedIngredients.map { group ->
                         group.copy(
                             items =
-                                group.items.map { ingredient ->
-                                    if (ingredient.id == ingredientId) {
-                                        ingredient.copy(isSelected = !ingredient.isSelected)
-                                    } else {
-                                        ingredient
+                                group.items
+                                    .map { ingredient ->
+                                        if (ingredient.id == ingredientId) {
+                                            ingredient.copy(isSelected = !ingredient.isSelected)
+                                        } else {
+                                            ingredient
+                                        }
                                     }
-                                }
+                                    .toImmutableList()
                         )
                     }
             )
@@ -139,7 +142,10 @@ class AddRecipeToGroceryListViewModel(
                     .entries
                     .sortedBy { it.key.ordinal }
                     .map { (category, pairs) ->
-                        IngredientGroup(category = category, items = pairs.map { it.first })
+                        IngredientGroup(
+                            category = category,
+                            items = pairs.map { it.first }.toImmutableList(),
+                        )
                     }
             _state.update {
                 it.copy(isLoading = false, recipe = recipe, groupedIngredients = grouped)

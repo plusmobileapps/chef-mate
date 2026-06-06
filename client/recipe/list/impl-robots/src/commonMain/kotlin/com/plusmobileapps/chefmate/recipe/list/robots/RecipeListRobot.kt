@@ -9,6 +9,7 @@ import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.waitUntilExactlyOneExists
 import com.plusmobileapps.chefmate.recipe.list.RecipeListTestTags
 
 /**
@@ -31,6 +32,30 @@ class RecipeListRobot(private val test: ComposeUiTest) {
 
     fun clickRecipe(title: String): RecipeListRobot = apply {
         test.onNode(hasText(title) and onScreen).assertIsDisplayed().performClick()
+    }
+
+    /** Opens the "+" add-recipe chooser menu. */
+    fun openAddMenu(): RecipeListRobot = apply {
+        test.onNode(hasTestTag(RecipeListTestTags.ADD_RECIPE_BUTTON) and onScreen).performClick()
+    }
+
+    /**
+     * Asserts the chooser menu shows the "Scan from photo" entry. The menu renders in a popup
+     * outside [RecipeListTestTags.SCREEN], so matchers here are not ancestor-scoped.
+     */
+    fun assertScanFromPhotoShown(): RecipeListRobot = apply {
+        test.waitUntilExactlyOneExists(hasTestTag(RecipeListTestTags.ADD_MENU_SCAN))
+        test.onNode(hasTestTag(RecipeListTestTags.ADD_MENU_SCAN)).assertIsDisplayed()
+    }
+
+    /** Taps "Create recipe" in the chooser menu. */
+    fun tapCreateRecipe(): RecipeListRobot = apply {
+        test.onNode(hasTestTag(RecipeListTestTags.ADD_MENU_CREATE)).performClick()
+    }
+
+    /** Taps "Scan from photo" in the chooser menu (launches the platform image picker). */
+    fun tapScanFromPhoto(): RecipeListRobot = apply {
+        test.onNode(hasTestTag(RecipeListTestTags.ADD_MENU_SCAN)).performClick()
     }
 }
 

@@ -11,10 +11,11 @@ import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 
 private val sampleRecipes =
-    listOf(
+    persistentListOf(
         RecipeListItem(
             id = 1L,
             title = "Pasta Carbonara",
@@ -63,6 +64,10 @@ private fun recipeListBloc(model: RecipeListBloc.Model): RecipeListBloc =
         override fun onRecipeClicked(recipe: RecipeListItem) = Unit
 
         override fun onAddRecipeClicked() = Unit
+
+        override fun onScanRecipePhotoPicked(bytes: ByteArray, fileExtension: String) = Unit
+
+        override fun onScanErrorDismissed() = Unit
 
         override fun onDeleteRecipe(recipe: RecipeListItem) = Unit
 
@@ -160,6 +165,30 @@ val previewRecipeListBlocSelectionModeEmpty: RecipeListBloc =
             totalRecipeCount = sampleRecipes.size,
             isSelectionMode = true,
             selectedRecipeIds = emptySet(),
+        )
+    )
+
+/** Photo scan in progress — shows the non-cancellable scanning dialog over the list. */
+val previewRecipeListBlocScanning: RecipeListBloc =
+    recipeListBloc(
+        RecipeListBloc.Model(
+            recipes = sampleRecipes,
+            totalRecipeCount = sampleRecipes.size,
+            isScanning = true,
+        )
+    )
+
+/** Photo scan failed — shows the scan-error dialog. */
+val previewRecipeListBlocScanError: RecipeListBloc =
+    recipeListBloc(
+        RecipeListBloc.Model(
+            recipes = sampleRecipes,
+            totalRecipeCount = sampleRecipes.size,
+            scanError =
+                FixedString(
+                    "We couldn’t read a recipe from that photo. Try a clearer shot of the full " +
+                        "recipe."
+                ),
         )
     )
 

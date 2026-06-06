@@ -71,6 +71,11 @@ values ('home_banner_text', 'string', '', true, 0);
 update feature_flags set rollout_percent = 100 where key = 'show_onboarding_v2';
 ```
 
+To force-enable for specific signed-in users on top of the rollout (e.g. QA/beta), set the `user_ids` allowlist — those users get the flag regardless of the rollout bucket (but still subject to `enabled`, `platforms`, and version bounds):
+```sql
+update feature_flags set user_ids = array['<supabase-user-id>'] where key = 'show_onboarding_v2';
+```
+
 ## Step 3 — Read the flag in a Bloc or ViewModel
 
 Inject `FeatureFlags` and expose a `StateFlow`:
