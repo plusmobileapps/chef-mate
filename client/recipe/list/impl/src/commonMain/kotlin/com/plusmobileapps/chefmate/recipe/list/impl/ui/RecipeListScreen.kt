@@ -38,8 +38,8 @@ import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.GridView
@@ -100,6 +100,10 @@ import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.list.public.generated.resources.Res
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_add_recipe
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_apply
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_create
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_edit
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_picker_title
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_selector
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_ai
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_appetizer
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_breakfast
@@ -132,10 +136,6 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_rated
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_item_calories
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_item_servings
-import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_create
-import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_edit
-import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_picker_title
-import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_selector
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_collaborate
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_export_all
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_select
@@ -213,272 +213,275 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
     }
 
     PlusResponsiveContainer { windowSizeClass ->
-    val headerData =
-        if (state.isSelectionMode) {
-            PlusHeaderData.Parent(
-                title =
-                    PhraseModel(
-                        Res.string.recipe_list_selection_count,
-                        "count" to FixedString(state.selectedRecipeIds.size.toString()),
-                    ),
-                trailingAccessory =
-                    PlusHeaderData.TrailingAccessory.Custom {
-                        val allSelected =
-                            state.recipes.isNotEmpty() &&
-                                state.recipes.all { it.id in state.selectedRecipeIds }
-                        IconButton(onClick = bloc::onToggleSelectAllVisible) {
-                            Icon(
-                                imageVector =
-                                    if (allSelected) Icons.Default.CheckCircle
-                                    else Icons.Outlined.Circle,
-                                contentDescription =
-                                    stringResource(
-                                        if (allSelected) {
-                                            Res.string.recipe_list_selection_deselect_all
-                                        } else {
-                                            Res.string.recipe_list_selection_select_all
-                                        }
-                                    ),
-                            )
-                        }
-                        IconButton(
-                            onClick = bloc::onExportClicked,
-                            enabled = state.selectedRecipeIds.isNotEmpty(),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.FileDownload,
-                                contentDescription =
-                                    stringResource(Res.string.recipe_list_selection_export),
-                            )
-                        }
-                        IconButton(onClick = bloc::onExitSelectionMode) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription =
-                                    stringResource(Res.string.recipe_list_selection_exit),
-                            )
-                        }
-                    },
-            )
-        } else {
-            PlusHeaderData.Parent(
-                // The book selector stands in for the title when a book is active, so the static
-                // "Recipes" title is suppressed to avoid a cramped double-title in the app bar.
-                title =
-                    if (state.activeBook != null) FixedString("")
-                    else Res.string.recipe_list_title.asTextData(),
-                leading =
-                    state.activeBook?.let { activeBook ->
-                        {
-                            BookSelector(
-                                activeBookName = activeBook.name,
-                                isPickerOpen = state.isBookPickerOpen,
-                                onClick = bloc::onBookSelectorClicked,
+        val headerData =
+            if (state.isSelectionMode) {
+                PlusHeaderData.Parent(
+                    title =
+                        PhraseModel(
+                            Res.string.recipe_list_selection_count,
+                            "count" to FixedString(state.selectedRecipeIds.size.toString()),
+                        ),
+                    trailingAccessory =
+                        PlusHeaderData.TrailingAccessory.Custom {
+                            val allSelected =
+                                state.recipes.isNotEmpty() &&
+                                    state.recipes.all { it.id in state.selectedRecipeIds }
+                            IconButton(onClick = bloc::onToggleSelectAllVisible) {
+                                Icon(
+                                    imageVector =
+                                        if (allSelected) Icons.Default.CheckCircle
+                                        else Icons.Outlined.Circle,
+                                    contentDescription =
+                                        stringResource(
+                                            if (allSelected) {
+                                                Res.string.recipe_list_selection_deselect_all
+                                            } else {
+                                                Res.string.recipe_list_selection_select_all
+                                            }
+                                        ),
+                                )
+                            }
+                            IconButton(
+                                onClick = bloc::onExportClicked,
+                                enabled = state.selectedRecipeIds.isNotEmpty(),
                             ) {
-                                // The dropdown is anchored to the selector on tablet/desktop widths.
-                                if (windowSizeClass != WindowSizeClass.COMPACT) {
-                                    BookPickerDropdown(
-                                        expanded = state.isBookPickerOpen,
-                                        books = state.recipeBooks,
-                                        activeBookId = state.activeBook?.id,
-                                        onDismiss = bloc::onBookPickerDismissed,
-                                        onBookSelected = bloc::onBookSelected,
-                                        onEditBook = bloc::onEditBookClicked,
-                                        onCreateBook = bloc::onCreateBookClicked,
-                                    )
+                                Icon(
+                                    imageVector = Icons.Default.FileDownload,
+                                    contentDescription =
+                                        stringResource(Res.string.recipe_list_selection_export),
+                                )
+                            }
+                            IconButton(onClick = bloc::onExitSelectionMode) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription =
+                                        stringResource(Res.string.recipe_list_selection_exit),
+                                )
+                            }
+                        },
+                )
+            } else {
+                PlusHeaderData.Parent(
+                    // The book selector stands in for the title when a book is active, so the
+                    // static
+                    // "Recipes" title is suppressed to avoid a cramped double-title in the app bar.
+                    title =
+                        if (state.activeBook != null) FixedString("")
+                        else Res.string.recipe_list_title.asTextData(),
+                    leading =
+                        state.activeBook?.let { activeBook ->
+                            {
+                                BookSelector(
+                                    activeBookName = activeBook.name,
+                                    isPickerOpen = state.isBookPickerOpen,
+                                    onClick = bloc::onBookSelectorClicked,
+                                ) {
+                                    // The dropdown is anchored to the selector on tablet/desktop
+                                    // widths.
+                                    if (windowSizeClass != WindowSizeClass.COMPACT) {
+                                        BookPickerDropdown(
+                                            expanded = state.isBookPickerOpen,
+                                            books = state.recipeBooks,
+                                            activeBookId = state.activeBook?.id,
+                                            onDismiss = bloc::onBookPickerDismissed,
+                                            onBookSelected = bloc::onBookSelected,
+                                            onEditBook = bloc::onEditBookClicked,
+                                            onCreateBook = bloc::onCreateBookClicked,
+                                        )
+                                    }
                                 }
                             }
-                        }
-                    },
-                trailingAccessory =
-                    PlusHeaderData.TrailingAccessory.Custom {
-                        IconButton(
-                            onClick = {
-                                showSearchBar = !showSearchBar
-                                if (!showSearchBar) bloc.onSearchQueryChanged("")
+                        },
+                    trailingAccessory =
+                        PlusHeaderData.TrailingAccessory.Custom {
+                            IconButton(
+                                onClick = {
+                                    showSearchBar = !showSearchBar
+                                    if (!showSearchBar) bloc.onSearchQueryChanged("")
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription =
+                                        stringResource(Res.string.recipe_list_search),
+                                )
                             }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = stringResource(Res.string.recipe_list_search),
-                            )
-                        }
-                        IconButton(onClick = bloc::onToggleViewMode) {
-                            Icon(
-                                imageVector =
-                                    if (state.isGridView) Icons.AutoMirrored.Filled.ViewList
-                                    else Icons.Default.GridView,
-                                contentDescription =
-                                    stringResource(
-                                        if (state.isGridView) {
-                                            Res.string.recipe_list_view_list
-                                        } else {
-                                            Res.string.recipe_list_view_grid
-                                        }
-                                    ),
-                            )
-                        }
-                        IconButton(onClick = { showSortFilterSheet = true }) {
-                            val filterCount = state.totalActiveFilterCount
-                            if (filterCount > 0) {
-                                BadgedBox(badge = { Badge { Text("$filterCount") } }) {
+                            IconButton(onClick = bloc::onToggleViewMode) {
+                                Icon(
+                                    imageVector =
+                                        if (state.isGridView) Icons.AutoMirrored.Filled.ViewList
+                                        else Icons.Default.GridView,
+                                    contentDescription =
+                                        stringResource(
+                                            if (state.isGridView) {
+                                                Res.string.recipe_list_view_list
+                                            } else {
+                                                Res.string.recipe_list_view_grid
+                                            }
+                                        ),
+                                )
+                            }
+                            IconButton(onClick = { showSortFilterSheet = true }) {
+                                val filterCount = state.totalActiveFilterCount
+                                if (filterCount > 0) {
+                                    BadgedBox(badge = { Badge { Text("$filterCount") } }) {
+                                        Icon(
+                                            imageVector = Icons.Default.FilterList,
+                                            contentDescription =
+                                                stringResource(Res.string.recipe_list_filter),
+                                            tint = MaterialTheme.colorScheme.primary,
+                                        )
+                                    }
+                                } else {
                                     Icon(
                                         imageVector = Icons.Default.FilterList,
                                         contentDescription =
                                             stringResource(Res.string.recipe_list_filter),
-                                        tint = MaterialTheme.colorScheme.primary,
                                     )
                                 }
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Default.FilterList,
-                                    contentDescription =
-                                        stringResource(Res.string.recipe_list_filter),
+                            }
+                            AddRecipeMenu(
+                                scanEnabled = state.isScanFromPhotoEnabled,
+                                onCreateClicked = bloc::onAddRecipeClicked,
+                                onScanPicked = bloc::onScanRecipePhotoPicked,
+                            )
+                            OverflowMenu(
+                                onSelectClicked = bloc::onEnterSelectionMode,
+                                onExportAllClicked = bloc::onExportClicked,
+                                onCollaborateClicked = bloc::onCollaborateClicked,
+                            )
+                        },
+                )
+            }
+
+        Box(modifier = modifier.fillMaxSize().testTag(RecipeListTestTags.SCREEN)) {
+            PlusNavContainer(
+                modifier = modifier.fillMaxSize(),
+                data = headerData,
+                scrollEnabled = false,
+                content = {
+                    AnimatedVisibility(
+                        visible = showSearchBar,
+                        enter = expandVertically(),
+                        exit = shrinkVertically(),
+                    ) {
+                        SearchBar(
+                            query = state.searchQuery,
+                            onQueryChanged = bloc::onSearchQueryChanged,
+                            onClear = {
+                                bloc.onSearchQueryChanged("")
+                                showSearchBar = false
+                            },
+                        )
+                    }
+                    PullToRefreshBox(
+                        isRefreshing = state.isSyncing,
+                        onRefresh = bloc::onSyncClicked,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        when {
+                            !state.isLoading && state.totalRecipeCount == 0 -> {
+                                NoRecipesEmptyState(
+                                    onBrowseClicked = bloc::onBrowseRecipesClicked,
+                                    onCreateClicked = bloc::onAddRecipeClicked,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                            }
+                            state.recipes.isEmpty() && state.isSearchActive -> {
+                                SearchEmptyState(modifier = Modifier.fillMaxSize())
+                            }
+                            state.recipes.isEmpty() && state.totalActiveFilterCount > 0 -> {
+                                FilterEmptyState(
+                                    activeFilters = state.activeFilters,
+                                    activeCategories = state.activeCategories,
+                                    onClearFilters = bloc::onClearFilters,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                            }
+                            state.isGridView -> {
+                                RecipeGrid(
+                                    modifier = Modifier.fillMaxSize(),
+                                    recipes = state.recipes,
+                                    onRecipeClicked = bloc::onRecipeClicked,
+                                    state = gridState,
+                                    bottomContentPadding =
+                                        if (state.cookingRecipeCount > 0) FabStackReserve else 0.dp,
+                                    isSelectionMode = state.isSelectionMode,
+                                    selectedRecipeIds = state.selectedRecipeIds,
+                                )
+                            }
+                            else -> {
+                                RecipeList(
+                                    modifier = Modifier.fillMaxSize(),
+                                    recipes = state.recipes,
+                                    onRecipeClicked = bloc::onRecipeClicked,
+                                    state = listState,
+                                    bottomContentPadding =
+                                        if (state.cookingRecipeCount > 0) FabStackReserve else 0.dp,
+                                    isSelectionMode = state.isSelectionMode,
+                                    selectedRecipeIds = state.selectedRecipeIds,
                                 )
                             }
                         }
-                        AddRecipeMenu(
-                            scanEnabled = state.isScanFromPhotoEnabled,
-                            onCreateClicked = bloc::onAddRecipeClicked,
-                            onScanPicked = bloc::onScanRecipePhotoPicked,
-                        )
-                        OverflowMenu(
-                            onSelectClicked = bloc::onEnterSelectionMode,
-                            onExportAllClicked = bloc::onExportClicked,
-                            onCollaborateClicked = bloc::onCollaborateClicked,
-                        )
-                    },
-            )
-        }
-
-    Box(modifier = modifier.fillMaxSize().testTag(RecipeListTestTags.SCREEN)) {
-        PlusNavContainer(
-            modifier = modifier.fillMaxSize(),
-            data = headerData,
-            scrollEnabled = false,
-            content = {
-                AnimatedVisibility(
-                    visible = showSearchBar,
-                    enter = expandVertically(),
-                    exit = shrinkVertically(),
-                ) {
-                    SearchBar(
-                        query = state.searchQuery,
-                        onQueryChanged = bloc::onSearchQueryChanged,
-                        onClear = {
-                            bloc.onSearchQueryChanged("")
-                            showSearchBar = false
-                        },
-                    )
-                }
-                PullToRefreshBox(
-                    isRefreshing = state.isSyncing,
-                    onRefresh = bloc::onSyncClicked,
-                    modifier = Modifier.weight(1f),
-                ) {
-                    when {
-                        !state.isLoading && state.totalRecipeCount == 0 -> {
-                            NoRecipesEmptyState(
-                                onBrowseClicked = bloc::onBrowseRecipesClicked,
-                                onCreateClicked = bloc::onAddRecipeClicked,
-                                modifier = Modifier.fillMaxSize(),
-                            )
-                        }
-                        state.recipes.isEmpty() && state.isSearchActive -> {
-                            SearchEmptyState(modifier = Modifier.fillMaxSize())
-                        }
-                        state.recipes.isEmpty() && state.totalActiveFilterCount > 0 -> {
-                            FilterEmptyState(
-                                activeFilters = state.activeFilters,
-                                activeCategories = state.activeCategories,
-                                onClearFilters = bloc::onClearFilters,
-                                modifier = Modifier.fillMaxSize(),
-                            )
-                        }
-                        state.isGridView -> {
-                            RecipeGrid(
-                                modifier = Modifier.fillMaxSize(),
-                                recipes = state.recipes,
-                                onRecipeClicked = bloc::onRecipeClicked,
-                                state = gridState,
-                                bottomContentPadding =
-                                    if (state.cookingRecipeCount > 0) FabStackReserve else 0.dp,
-                                isSelectionMode = state.isSelectionMode,
-                                selectedRecipeIds = state.selectedRecipeIds,
-                            )
-                        }
-                        else -> {
-                            RecipeList(
-                                modifier = Modifier.fillMaxSize(),
-                                recipes = state.recipes,
-                                onRecipeClicked = bloc::onRecipeClicked,
-                                state = listState,
-                                bottomContentPadding =
-                                    if (state.cookingRecipeCount > 0) FabStackReserve else 0.dp,
-                                isSelectionMode = state.isSelectionMode,
-                                selectedRecipeIds = state.selectedRecipeIds,
-                            )
-                        }
                     }
-                }
-            },
-        )
-
-        if (showSortFilterSheet) {
-            SortFilterBottomSheet(
-                currentSort = state.currentSort,
-                activeFilters = state.activeFilters,
-                activeCategories = state.activeCategories,
-                activeUserCategoryIds = state.activeUserCategoryIds,
-                availableUserCategories = state.availableUserCategories,
-                onApply = { sort, filters, categories, userCategoryIds ->
-                    bloc.onApplySortAndFilters(sort, filters, categories, userCategoryIds)
-                    showSortFilterSheet = false
                 },
-                onDismiss = { showSortFilterSheet = false },
             )
-        }
 
-        if (state.cookingRecipeCount > 0) {
-            CookingSessionFabStack(
-                onContinueClicked = bloc::onContinueCookingClicked,
-                onDoneCookingClicked = bloc::onDoneCookingClicked,
-                modifier = Modifier.align(Alignment.BottomEnd),
-            )
-        }
+            if (showSortFilterSheet) {
+                SortFilterBottomSheet(
+                    currentSort = state.currentSort,
+                    activeFilters = state.activeFilters,
+                    activeCategories = state.activeCategories,
+                    activeUserCategoryIds = state.activeUserCategoryIds,
+                    availableUserCategories = state.availableUserCategories,
+                    onApply = { sort, filters, categories, userCategoryIds ->
+                        bloc.onApplySortAndFilters(sort, filters, categories, userCategoryIds)
+                        showSortFilterSheet = false
+                    },
+                    onDismiss = { showSortFilterSheet = false },
+                )
+            }
 
-        if (state.showDoneCookingDialog) {
-            DoneCookingDialog(
-                onConfirm = bloc::onDoneCookingConfirmed,
-                onDismiss = bloc::onDoneCookingDismissed,
-            )
-        }
+            if (state.cookingRecipeCount > 0) {
+                CookingSessionFabStack(
+                    onContinueClicked = bloc::onContinueCookingClicked,
+                    onDoneCookingClicked = bloc::onDoneCookingClicked,
+                    modifier = Modifier.align(Alignment.BottomEnd),
+                )
+            }
 
-        if (state.isScanning) {
-            ScanningDialog()
-        }
+            if (state.showDoneCookingDialog) {
+                DoneCookingDialog(
+                    onConfirm = bloc::onDoneCookingConfirmed,
+                    onDismiss = bloc::onDoneCookingDismissed,
+                )
+            }
 
-        state.scanError?.let { error ->
-            PlusDialog(
-                title = ResourceString(Res.string.recipe_list_scan_failed_title),
-                message = error,
-                onConfirmClick = bloc::onScanErrorDismissed,
-                onDismissRequest = bloc::onScanErrorDismissed,
-            )
-        }
+            if (state.isScanning) {
+                ScanningDialog()
+            }
 
-        // On phone widths the book picker is a bottom sheet rather than an anchored dropdown.
-        if (state.isBookPickerOpen && windowSizeClass == WindowSizeClass.COMPACT) {
-            BookPickerSheet(
-                books = state.recipeBooks,
-                activeBookId = state.activeBook?.id,
-                onDismiss = bloc::onBookPickerDismissed,
-                onBookSelected = bloc::onBookSelected,
-                onEditBook = bloc::onEditBookClicked,
-                onCreateBook = bloc::onCreateBookClicked,
-            )
+            state.scanError?.let { error ->
+                PlusDialog(
+                    title = ResourceString(Res.string.recipe_list_scan_failed_title),
+                    message = error,
+                    onConfirmClick = bloc::onScanErrorDismissed,
+                    onDismissRequest = bloc::onScanErrorDismissed,
+                )
+            }
+
+            // On phone widths the book picker is a bottom sheet rather than an anchored dropdown.
+            if (state.isBookPickerOpen && windowSizeClass == WindowSizeClass.COMPACT) {
+                BookPickerSheet(
+                    books = state.recipeBooks,
+                    activeBookId = state.activeBook?.id,
+                    onDismiss = bloc::onBookPickerDismissed,
+                    onBookSelected = bloc::onBookSelected,
+                    onEditBook = bloc::onEditBookClicked,
+                    onCreateBook = bloc::onCreateBookClicked,
+                )
+            }
         }
-    }
     }
 }
 
