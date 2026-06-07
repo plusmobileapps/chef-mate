@@ -11,6 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set Xcode Version
+        run: sudo xcode-select -s /Applications/Xcode_26.5.app
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
