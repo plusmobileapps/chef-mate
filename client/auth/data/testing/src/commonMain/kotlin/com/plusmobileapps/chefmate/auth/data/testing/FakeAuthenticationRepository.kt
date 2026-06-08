@@ -19,6 +19,17 @@ class FakeAuthenticationRepository : AuthenticationRepository {
     var verifyEmailOtpResult: Result<Unit> = Result.success(Unit)
     var resendOtpResult: Result<Unit> = Result.success(Unit)
     var ensureSessionResult: Result<Unit> = Result.success(Unit)
+    var updateProfileResult: Result<Unit> = Result.success(Unit)
+    var deleteAccountResult: Result<Unit> = Result.success(Unit)
+
+    var lastUpdatedDisplayName: String? = null
+        private set
+
+    var lastUpdatedAvatarUrl: String? = null
+        private set
+
+    var deleteAccountCallCount: Int = 0
+        private set
 
     var ensureSessionCallCount: Int = 0
         private set
@@ -67,6 +78,30 @@ class FakeAuthenticationRepository : AuthenticationRepository {
 
     override suspend fun signOut() {
         _state.value = AuthState.Unauthenticated
+    }
+
+    override suspend fun updateProfile(displayName: String, avatarUrl: String?): Result<Unit> {
+        lastUpdatedDisplayName = displayName
+        lastUpdatedAvatarUrl = avatarUrl
+        return updateProfileResult.also { result ->
+            if (result.isSuccess) {
+                (_state.value as? AuthState.Authenticated)?.let { authenticated ->
+                    _state.value =
+                        AuthState.Authenticated(
+                            authenticated.user.copy(
+                                userName = displayName,
+                                userProfileImageUrl =
+                                    avatarUrl ?: authenticated.user.userProfileImageUrl,
+                            )
+                        )
+                }
+            }
+        }
+    }
+
+    override suspend fun deleteAccount(): Result<Unit> {
+        deleteAccountCallCount += 1
+        return deleteAccountResult
     }
 
     override suspend fun sendPasswordResetEmail(email: String): Result<Unit> =
