@@ -14,14 +14,13 @@ import com.plusmobileapps.chefmate.recipebook.data.RecipeBookRepository
 import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RecipeBookRemoteDataSource
 import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RemoteRecipeBook
 import com.plusmobileapps.chefmate.util.DateTimeUtil
+import com.plusmobileapps.chefmate.util.Unique
 import com.russhwolf.settings.Settings
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Instant
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
@@ -35,7 +34,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
-@OptIn(ExperimentalUuidApi::class)
 @SingleIn(AppScope::class)
 @Inject
 @ContributesBinding(AppScope::class)
@@ -43,6 +41,7 @@ class RecipeBookRepositoryImpl(
     private val db: RecipeBookQueries,
     @IO private val ioContext: CoroutineContext,
     private val dateTimeUtil: DateTimeUtil,
+    private val unique: Unique,
     private val remoteDataSource: RecipeBookRemoteDataSource,
     private val authRepository: AuthenticationRepository,
     private val settings: Settings,
@@ -86,7 +85,7 @@ class RecipeBookRepositoryImpl(
     }
 
     override suspend fun createBook(name: String): RecipeBook {
-        val clientId = Uuid.random().toString()
+        val clientId = unique.generate()
         val book =
             withContext(ioContext) {
                 db.transactionWithResult {
@@ -139,7 +138,7 @@ class RecipeBookRepositoryImpl(
                         isDefault = true,
                         createdAt = dateTimeUtil.now.toString(),
                         updatedAt = dateTimeUtil.now.toString(),
-                        clientId = Uuid.random().toString(),
+                        clientId = unique.generate(),
                         ownerId = null,
                     )
                     db.lastInsertId().executeAsOne().MAX ?: error("No last insert id")
@@ -157,7 +156,7 @@ class RecipeBookRepositoryImpl(
                 withContext(ioContext) { db.getById(localId).executeAsOneOrNull() } ?: return
             val clientId =
                 entity.clientId
-                    ?: Uuid.random().toString().also { newId ->
+                    ?: unique.generate().also { newId ->
                         withContext(ioContext) { db.updateClientId(clientId = newId, id = localId) }
                     }
             val remote =
@@ -218,7 +217,7 @@ class RecipeBookRepositoryImpl(
                 try {
                     val clientId =
                         book.clientId
-                            ?: Uuid.random().toString().also { newId ->
+                            ?: unique.generate().also { newId ->
                                 withContext(ioContext) {
                                     db.updateClientId(clientId = newId, id = book.id)
                                 }

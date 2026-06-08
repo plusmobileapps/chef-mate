@@ -10,6 +10,7 @@ import com.plusmobileapps.chefmate.database.testing.createTestDatabase
 import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RecipeBookRemoteDataSource
 import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RemoteRecipeBook
 import com.plusmobileapps.chefmate.util.testing.FakeDateTimeUtil
+import com.plusmobileapps.chefmate.util.testing.FakeUnique
 import com.russhwolf.settings.MapSettings
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
@@ -30,6 +31,7 @@ class RecipeBookRepositoryImplTest {
             db = db.recipeBookQueries,
             ioContext = testDispatcher,
             dateTimeUtil = dateTimeUtil,
+            unique = FakeUnique(),
             remoteDataSource = NoopRecipeBookRemote(),
             authRepository = fakeAuth,
             settings = settings,

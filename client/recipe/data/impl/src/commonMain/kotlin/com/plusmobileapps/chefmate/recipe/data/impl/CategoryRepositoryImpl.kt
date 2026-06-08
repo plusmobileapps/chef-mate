@@ -15,12 +15,11 @@ import com.plusmobileapps.chefmate.recipe.data.CategoryWithCount
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.recipe.data.impl.remote.CategoryRemoteDataSource
 import com.plusmobileapps.chefmate.recipe.data.impl.remote.RemoteCategory
+import com.plusmobileapps.chefmate.util.Unique
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlin.coroutines.CoroutineContext
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
@@ -32,7 +31,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
-@OptIn(ExperimentalUuidApi::class)
 @SingleIn(AppScope::class)
 @Inject
 @ContributesBinding(AppScope::class)
@@ -40,6 +38,7 @@ class CategoryRepositoryImpl(
     private val db: CategoryQueries,
     private val recipeCategoryQueries: RecipeCategoryQueries,
     @IO private val ioContext: CoroutineContext,
+    private val unique: Unique,
     private val remoteDataSource: CategoryRemoteDataSource,
     private val authRepository: AuthenticationRepository,
 ) : CategoryRepository {
@@ -96,7 +95,7 @@ class CategoryRepositoryImpl(
                 return@withLock it
             }
             val ownerId = authRepository.state.value.userIdOrNull()
-            val clientId = Uuid.random().toString()
+            val clientId = unique.generate()
             val created =
                 withContext(ioContext) {
                     db.transactionWithResult {
@@ -118,7 +117,7 @@ class CategoryRepositoryImpl(
 
     override suspend fun createUserCategory(name: String): Category {
         val ownerId = authRepository.state.value.userIdOrNull()
-        val clientId = Uuid.random().toString()
+        val clientId = unique.generate()
         val created =
             withContext(ioContext) {
                 db.transactionWithResult {
@@ -175,7 +174,7 @@ class CategoryRepositoryImpl(
                         ?: return@launch
                 val clientId =
                     entity.clientId
-                        ?: Uuid.random().toString().also { newId ->
+                        ?: unique.generate().also { newId ->
                             withContext(ioContext) {
                                 db.updateClientId(clientId = newId, id = localId)
                             }
@@ -225,7 +224,7 @@ class CategoryRepositoryImpl(
                 try {
                     val clientId =
                         cat.clientId
-                            ?: Uuid.random().toString().also { newId ->
+                            ?: unique.generate().also { newId ->
                                 withContext(ioContext) {
                                     db.updateClientId(clientId = newId, id = cat.id)
                                 }

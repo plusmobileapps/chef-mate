@@ -22,13 +22,12 @@ import com.plusmobileapps.chefmate.recipe.data.impl.remote.RecipeRemoteDataSourc
 import com.plusmobileapps.chefmate.recipe.data.impl.remote.RemoteRecipe
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookRepository
 import com.plusmobileapps.chefmate.util.DateTimeUtil
+import com.plusmobileapps.chefmate.util.Unique
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Instant
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
@@ -42,7 +41,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
-@OptIn(ExperimentalUuidApi::class)
 @SingleIn(AppScope::class)
 @Inject
 @ContributesBinding(AppScope::class)
@@ -55,6 +53,7 @@ class RecipeRepositoryImpl(
     private val recipeBookRepository: RecipeBookRepository,
     @IO private val ioContext: CoroutineContext,
     private val dateTimeUtil: DateTimeUtil,
+    private val unique: Unique,
     private val remoteDataSource: RecipeRemoteDataSource,
     private val authRepository: AuthenticationRepository,
     private val photoStorage: RecipePhotoStorage,
@@ -96,7 +95,7 @@ class RecipeRepositoryImpl(
             .flowOn(ioContext)
 
     override suspend fun createRecipe(recipe: Recipe): Recipe {
-        val clientId = Uuid.random().toString()
+        val clientId = unique.generate()
         val bookIds = resolveBookIds(recipe)
         val result =
             withContext(ioContext) {
@@ -223,7 +222,7 @@ class RecipeRepositoryImpl(
                 withContext(ioContext) { db.getById(localId).executeAsOneOrNull() } ?: return
             val clientId =
                 entity.clientId
-                    ?: Uuid.random().toString().also { newId ->
+                    ?: unique.generate().also { newId ->
                         withContext(ioContext) { db.updateClientId(clientId = newId, id = localId) }
                     }
             syncingIds.update { it + localId }
@@ -328,7 +327,7 @@ class RecipeRepositoryImpl(
                 try {
                     val clientId =
                         recipe.clientId
-                            ?: Uuid.random().toString().also { newId ->
+                            ?: unique.generate().also { newId ->
                                 withContext(ioContext) {
                                     db.updateClientId(clientId = newId, id = recipe.id)
                                 }

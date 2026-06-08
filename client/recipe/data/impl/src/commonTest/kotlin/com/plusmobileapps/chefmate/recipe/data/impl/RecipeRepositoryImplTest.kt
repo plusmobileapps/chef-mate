@@ -18,6 +18,7 @@ import com.plusmobileapps.chefmate.recipe.data.impl.remote.RemoteRecipe
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipePhotoStorage
 import com.plusmobileapps.chefmate.recipebook.data.testing.FakeRecipeBookRepository
 import com.plusmobileapps.chefmate.util.testing.FakeDateTimeUtil
+import com.plusmobileapps.chefmate.util.testing.FakeUnique
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 import kotlin.time.ExperimentalTime
@@ -49,6 +50,7 @@ class RecipeRepositoryImplTest {
             recipeBookRepository = fakeBooks,
             ioContext = testDispatcher,
             dateTimeUtil = dateTimeUtil,
+            unique = FakeUnique(),
             remoteDataSource = recipeRemote,
             authRepository = fakeAuth,
             photoStorage = FakeRecipePhotoStorage(),
@@ -59,6 +61,7 @@ class RecipeRepositoryImplTest {
             db = db.categoryQueries,
             recipeCategoryQueries = db.recipeCategoryQueries,
             ioContext = testDispatcher,
+            unique = FakeUnique(),
             remoteDataSource = NoopCategoryRemote(),
             authRepository = fakeAuth,
         )

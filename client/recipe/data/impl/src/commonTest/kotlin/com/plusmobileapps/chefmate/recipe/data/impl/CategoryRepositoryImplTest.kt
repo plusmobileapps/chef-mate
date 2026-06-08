@@ -10,6 +10,7 @@ import com.plusmobileapps.chefmate.database.testing.createTestDatabase
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.impl.remote.CategoryRemoteDataSource
 import com.plusmobileapps.chefmate.recipe.data.impl.remote.RemoteCategory
+import com.plusmobileapps.chefmate.util.testing.FakeUnique
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 import kotlin.uuid.ExperimentalUuidApi
@@ -29,6 +30,7 @@ class CategoryRepositoryImplTest {
             db = db.categoryQueries,
             recipeCategoryQueries = db.recipeCategoryQueries,
             ioContext = testDispatcher,
+            unique = FakeUnique(),
             remoteDataSource = fakeRemote,
             authRepository = fakeAuth,
         )
