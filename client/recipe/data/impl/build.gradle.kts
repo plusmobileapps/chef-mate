@@ -7,6 +7,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(projects.client.recipe.data.public)
+            implementation(projects.client.recipebook.data.public)
             implementation(projects.client.shared)
             implementation(projects.client.database.core)
             api(projects.client.util.public)
@@ -19,6 +20,7 @@ kotlin {
         commonTest.dependencies {
             implementation(projects.client.auth.data.testing)
             implementation(projects.client.recipe.data.testing)
+            implementation(projects.client.recipebook.data.testing)
             implementation(projects.client.util.testing)
         }
         jvmMain.dependencies { implementation(libs.ktor.client.cio) }

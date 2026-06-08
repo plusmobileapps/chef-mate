@@ -75,6 +75,13 @@
     <string name="recipe_list_more_actions">More actions</string>
     <string name="recipe_list_menu_select">Select recipes</string>
     <string name="recipe_list_menu_export_all">Export all recipes</string>
+    <string name="recipe_list_menu_collaborate">Collaborate</string>
+
+    <!-- Recipe book selector -->
+    <string name="recipe_list_book_selector">Switch recipe book</string>
+    <string name="recipe_list_book_create">Create new book</string>
+    <string name="recipe_list_book_edit">Edit recipe book</string>
+    <string name="recipe_list_book_picker_title">Recipe books</string>
     <string name="recipe_list_selection_count">{count} selected</string>
     <string name="recipe_list_selection_exit">Exit selection</string>
     <string name="recipe_list_selection_select_all">Select all</string>

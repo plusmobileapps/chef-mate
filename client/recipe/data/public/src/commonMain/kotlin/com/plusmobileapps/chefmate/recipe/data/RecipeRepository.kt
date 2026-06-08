@@ -15,6 +15,9 @@ interface RecipeRepository {
      */
     fun getRecipes(presets: Set<BuiltinCategory>?): Flow<List<Recipe>>
 
+    /** Returns only the recipes belonging to the book with local id [recipeBookId]. */
+    fun getRecipes(recipeBookId: Long): Flow<List<Recipe>>
+
     suspend fun createRecipe(recipe: Recipe): Recipe
 
     suspend fun updateRecipe(recipe: Recipe): Recipe

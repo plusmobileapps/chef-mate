@@ -21,6 +21,11 @@ data class Recipe(
     val starRating: Int?,
     val isFavorite: Boolean = false,
     val categories: Set<Category> = emptySet(),
+    /**
+     * Local ids of the recipe books this recipe belongs to. A recipe can live in several books; the
+     * data layer guarantees membership in at least one (the active/default book on create).
+     */
+    val recipeBookIds: Set<Long> = emptySet(),
     val syncStatus: SyncStatus = SyncStatus.NOT_SYNCED,
     val createdAt: Instant,
     val updatedAt: Instant,

@@ -1,0 +1,39 @@
+-- Adds RecipeBook and the RecipeBookRecipe many-to-many join: a recipe can belong to
+-- several books.
+--
+-- Every user gets a single default "My Recipes" book (isDefault = 1); recipes that predate
+-- this migration are linked to it via the join table. ownerId is left NULL until the next sync
+-- stamps it, exactly like existing unsynced recipes carry ownerId = NULL until their first push.
+
+CREATE TABLE RecipeBook (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    isDefault INTEGER NOT NULL DEFAULT 0,
+    createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+    updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
+    remoteId TEXT UNIQUE,
+    clientId TEXT,
+    isDirty INTEGER NOT NULL DEFAULT 0,
+    ownerId TEXT,
+    isPendingDelete INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX idx_recipe_book_owner ON RecipeBook(ownerId);
+
+CREATE TABLE RecipeBookRecipe (
+    recipeBookId INTEGER NOT NULL,
+    recipeId INTEGER NOT NULL,
+    PRIMARY KEY (recipeBookId, recipeId),
+    FOREIGN KEY (recipeBookId) REFERENCES RecipeBook(id) ON DELETE CASCADE,
+    FOREIGN KEY (recipeId) REFERENCES Recipe(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_recipe_book_recipe_recipe ON RecipeBookRecipe(recipeId);
+
+-- Seed the single local default book.
+INSERT INTO RecipeBook (name, isDefault) VALUES ('My Recipes', 1);
+
+-- Link every existing recipe to the default book.
+INSERT INTO RecipeBookRecipe (recipeBookId, recipeId)
+SELECT (SELECT id FROM RecipeBook WHERE isDefault = 1 LIMIT 1), Recipe.id
+FROM Recipe;

@@ -1,0 +1,78 @@
+import kotlin.Boolean;
+
+CREATE TABLE RecipeBook (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    isDefault INTEGER AS Boolean NOT NULL DEFAULT 0,
+    createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+    updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
+    remoteId TEXT UNIQUE,
+    clientId TEXT,
+    isDirty INTEGER AS Boolean NOT NULL DEFAULT 0,
+    ownerId TEXT,
+    isPendingDelete INTEGER AS Boolean NOT NULL DEFAULT 0
+);
+
+CREATE INDEX idx_recipe_book_owner ON RecipeBook(ownerId);
+
+getAll:
+SELECT * FROM RecipeBook WHERE isPendingDelete = 0 ORDER BY isDefault DESC, name ASC;
+
+getById:
+SELECT * FROM RecipeBook WHERE id = ?;
+
+getDefault:
+SELECT * FROM RecipeBook WHERE isDefault = 1 AND isPendingDelete = 0 ORDER BY id ASC LIMIT 1;
+
+getByRemoteId:
+SELECT * FROM RecipeBook WHERE remoteId = ?;
+
+getByClientId:
+SELECT * FROM RecipeBook WHERE clientId = ?;
+
+create:
+INSERT INTO RecipeBook (name, isDefault, createdAt, updatedAt, clientId, ownerId)
+VALUES (?, ?, ?, ?, ?, ?);
+
+createWithRemoteId:
+INSERT INTO RecipeBook (name, isDefault, createdAt, updatedAt, remoteId, clientId, ownerId)
+VALUES (?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(remoteId) DO UPDATE SET
+    name = excluded.name,
+    isDefault = excluded.isDefault,
+    updatedAt = excluded.updatedAt,
+    clientId = excluded.clientId,
+    ownerId = excluded.ownerId;
+
+lastInsertId:
+SELECT MAX(id) FROM RecipeBook;
+
+rename:
+UPDATE RecipeBook SET name = ?, updatedAt = ?, isDirty = 1 WHERE id = ?;
+
+delete:
+DELETE FROM RecipeBook WHERE id = ?;
+
+deleteAll:
+DELETE FROM RecipeBook;
+
+getUnsynced:
+SELECT * FROM RecipeBook WHERE remoteId IS NULL AND isPendingDelete = 0;
+
+getDirty:
+SELECT * FROM RecipeBook WHERE isDirty = 1 AND remoteId IS NOT NULL AND isPendingDelete = 0;
+
+markPendingDelete:
+UPDATE RecipeBook SET isPendingDelete = 1, isDirty = 0 WHERE id = ?;
+
+getPendingDeletes:
+SELECT * FROM RecipeBook WHERE isPendingDelete = 1 AND remoteId IS NOT NULL;
+
+updateRemoteId:
+UPDATE RecipeBook SET remoteId = ?, isDirty = 0 WHERE id = ?;
+
+updateClientId:
+UPDATE RecipeBook SET clientId = ? WHERE id = ?;
+
+clearDirty:
+UPDATE RecipeBook SET isDirty = 0 WHERE id = ?;

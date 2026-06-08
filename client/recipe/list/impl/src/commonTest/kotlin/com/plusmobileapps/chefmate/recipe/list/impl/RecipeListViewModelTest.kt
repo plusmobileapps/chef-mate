@@ -20,6 +20,7 @@ import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeImageExtractor
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
+import com.plusmobileapps.chefmate.recipebook.data.testing.FakeRecipeBookRepository
 import com.russhwolf.settings.Settings
 import dev.mokkery.answering.returns
 import dev.mokkery.every
@@ -55,10 +56,12 @@ class RecipeListViewModelTest {
     private val imageExtractor = FakeRecipeImageExtractor()
     private val pendingPhotoStore = FakePendingRecipePhotoStore()
     private val featureFlags = FakeFeatureFlags()
+    private val recipeBookRepository = FakeRecipeBookRepository(MutableStateFlow(emptyList()))
     private val viewModel =
         RecipeListViewModel(
             mainContext = UnconfinedTestDispatcher(),
             repository = repository,
+            recipeBookRepository = recipeBookRepository,
             categoryRepository = categoryRepository,
             cookingSessionRepository = cookingSessionRepository,
             imageExtractor = imageExtractor,
@@ -119,6 +122,7 @@ class RecipeListViewModelTest {
             RecipeListViewModel(
                 mainContext = UnconfinedTestDispatcher(),
                 repository = repository,
+                recipeBookRepository = recipeBookRepository,
                 categoryRepository = categoryRepository,
                 cookingSessionRepository = cookingSessionRepository,
                 imageExtractor = imageExtractor,
@@ -331,6 +335,7 @@ class RecipeListViewModelTest {
             RecipeListViewModel(
                 mainContext = UnconfinedTestDispatcher(),
                 repository = FakeRecipeRepository(),
+                recipeBookRepository = FakeRecipeBookRepository(MutableStateFlow(emptyList())),
                 categoryRepository = FakeCategoryRepository(),
                 cookingSessionRepository = cookingSessionRepository,
                 imageExtractor = imageExtractor,
@@ -424,6 +429,7 @@ class RecipeListViewModelTest {
             RecipeListViewModel(
                 mainContext = UnconfinedTestDispatcher(),
                 repository = FakeRecipeRepository(),
+                recipeBookRepository = FakeRecipeBookRepository(MutableStateFlow(emptyList())),
                 categoryRepository = FakeCategoryRepository(),
                 cookingSessionRepository = cookingSessionRepository,
                 imageExtractor = imageExtractor,
@@ -454,6 +460,7 @@ class RecipeListViewModelTest {
             RecipeListViewModel(
                 mainContext = UnconfinedTestDispatcher(),
                 repository = FakeRecipeRepository(),
+                recipeBookRepository = FakeRecipeBookRepository(MutableStateFlow(emptyList())),
                 categoryRepository = FakeCategoryRepository(),
                 cookingSessionRepository = cookingSessionRepository,
                 imageExtractor = imageExtractor,
@@ -641,6 +648,7 @@ class RecipeListViewModelTest {
             RecipeListViewModel(
                 mainContext = UnconfinedTestDispatcher(),
                 repository = FakeRecipeRepository(),
+                recipeBookRepository = FakeRecipeBookRepository(MutableStateFlow(emptyList())),
                 categoryRepository = FakeCategoryRepository(),
                 cookingSessionRepository = cookingSessionRepository,
                 imageExtractor = imageExtractor,

@@ -6,6 +6,7 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
@@ -41,6 +42,12 @@ interface EditRecipeBloc : BackClickBloc, BlocScreen {
 
     /** User-created categories from the local DB. Built-in presets are not included. */
     val availableUserCategories: StateFlow<List<Category>>
+
+    /** All of the user's recipe books, so the editor can offer them as a multi-select. */
+    val recipeBooks: StateFlow<List<RecipeBook>>
+
+    /** Local ids of the books this recipe belongs to. A recipe can be filed under several. */
+    val selectedBookIds: StateFlow<Set<Long>>
 
     val pendingPhotoBytes: StateFlow<ByteArray?>
 
@@ -98,6 +105,9 @@ interface EditRecipeBloc : BackClickBloc, BlocScreen {
      * lose the attachment via the join table's cascade.
      */
     fun onDeleteCategory(id: Long)
+
+    /** Toggles whether this recipe belongs to the book with local id [bookId]. */
+    fun onToggleBook(bookId: Long)
 
     fun onDiscardChangesConfirmed()
 

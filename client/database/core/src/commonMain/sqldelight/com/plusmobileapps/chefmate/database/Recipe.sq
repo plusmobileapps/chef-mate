@@ -27,6 +27,12 @@ CREATE TABLE Recipe (
 getAll:
 SELECT * FROM Recipe WHERE isPendingDelete = 0 ORDER BY title DESC;
 
+getAllForBook:
+SELECT Recipe.* FROM Recipe
+INNER JOIN RecipeBookRecipe ON Recipe.id = RecipeBookRecipe.recipeId
+WHERE Recipe.isPendingDelete = 0 AND RecipeBookRecipe.recipeBookId = ?
+ORDER BY Recipe.title DESC;
+
 getById:
 SELECT * FROM Recipe WHERE id = ?;
 
@@ -94,3 +100,11 @@ UPDATE Recipe SET clientId = ? WHERE id = ?;
 
 clearDirty:
 UPDATE Recipe SET isDirty = 0 WHERE id = ?;
+
+markDirty:
+UPDATE Recipe SET isDirty = 1, updatedAt = ? WHERE id = ?;
+
+getRecipeIdsWithoutBook:
+SELECT Recipe.id FROM Recipe
+LEFT JOIN RecipeBookRecipe ON Recipe.id = RecipeBookRecipe.recipeId
+WHERE RecipeBookRecipe.recipeId IS NULL AND Recipe.isPendingDelete = 0;

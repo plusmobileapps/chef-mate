@@ -25,4 +25,9 @@ class FakeRecipeRemoteDataSource : RecipeRemoteDataSource {
 
     override suspend fun fetchRecipeCategoryAttachments(ownerId: String): Map<String, Set<String>> =
         emptyMap()
+
+    override suspend fun setRecipeBooks(recipeRemoteId: String, bookRemoteIds: Set<String>) = Unit
+
+    override suspend fun fetchRecipeBookAttachments(ownerId: String): Map<String, Set<String>> =
+        emptyMap()
 }

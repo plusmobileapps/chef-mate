@@ -10,6 +10,8 @@ import com.plusmobileapps.chefmate.database.Database
 import com.plusmobileapps.chefmate.database.GroceryListQueries
 import com.plusmobileapps.chefmate.database.GroceryQueries
 import com.plusmobileapps.chefmate.database.MealPlanQueries
+import com.plusmobileapps.chefmate.database.RecipeBookQueries
+import com.plusmobileapps.chefmate.database.RecipeBookRecipeQueries
 import com.plusmobileapps.chefmate.database.RecipeCategoryQueries
 import com.plusmobileapps.chefmate.database.RecipeQueries
 import com.plusmobileapps.chefmate.di.AppScope
@@ -41,6 +43,16 @@ interface DatabaseComponent {
     @SingleIn(AppScope::class)
     @Provides
     fun providesRecipeQueries(database: Database): RecipeQueries = database.recipeQueries
+
+    @SingleIn(AppScope::class)
+    @Provides
+    fun providesRecipeBookQueries(database: Database): RecipeBookQueries =
+        database.recipeBookQueries
+
+    @SingleIn(AppScope::class)
+    @Provides
+    fun providesRecipeBookRecipeQueries(database: Database): RecipeBookRecipeQueries =
+        database.recipeBookRecipeQueries
 
     @SingleIn(AppScope::class)
     @Provides

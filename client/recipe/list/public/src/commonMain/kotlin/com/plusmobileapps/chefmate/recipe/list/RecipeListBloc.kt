@@ -5,6 +5,7 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.collections.immutable.ImmutableList
@@ -80,6 +81,19 @@ interface RecipeListBloc : BlocScreen {
      */
     fun onExportFinished()
 
+    fun onBookSelectorClicked()
+
+    fun onBookPickerDismissed()
+
+    fun onBookSelected(bookId: Long)
+
+    fun onCreateBookClicked()
+
+    fun onEditBookClicked(bookId: Long)
+
+    /** Opens the edit screen for the currently active book (the app-bar "Collaborate" action). */
+    fun onCollaborateClicked()
+
     data class Model(
         val recipes: ImmutableList<RecipeListItem> = persistentListOf(),
         val totalRecipeCount: Int = 0,
@@ -108,6 +122,9 @@ interface RecipeListBloc : BlocScreen {
          * the blank editor directly. Driven by the `scan_recipe_from_photo` feature flag.
          */
         val isScanFromPhotoEnabled: Boolean = false,
+        val recipeBooks: List<RecipeBook> = emptyList(),
+        val activeBook: RecipeBook? = null,
+        val isBookPickerOpen: Boolean = false,
     ) {
         /** Total number of active filter chips: legacy filters + preset + user category filters. */
         val totalActiveFilterCount: Int
@@ -132,6 +149,9 @@ interface RecipeListBloc : BlocScreen {
          * selection mode.
          */
         data class OpenExportRecipes(val recipeIds: Set<Long>?) : Output()
+
+        /** Open the create/edit recipe-book modal. [bookId] is null to create a new book. */
+        data class OpenEditRecipeBook(val bookId: Long?) : Output()
     }
 
     interface Factory {

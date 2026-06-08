@@ -18,6 +18,8 @@ sealed class PlusHeaderData {
     data class Parent(
         override val title: TextData,
         override val trailingAccessory: TrailingAccessory? = null,
+        /** Optional leading content rendered to the left of the title (e.g. a selector). */
+        val leading: (@Composable () -> Unit)? = null,
     ) : PlusHeaderData()
 
     data class Child(

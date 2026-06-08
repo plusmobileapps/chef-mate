@@ -17,6 +17,7 @@ kotlin {
             implementation(projects.client.grocery.core.public)
             implementation(projects.client.recipe.core.public)
             implementation(projects.client.recipe.exporter.public)
+            implementation(projects.client.recipebook.edit.public)
             implementation(projects.client.settings.root.public)
             implementation(projects.client.auth.ui.public)
             implementation(libs.kotlinx.serialization.json)

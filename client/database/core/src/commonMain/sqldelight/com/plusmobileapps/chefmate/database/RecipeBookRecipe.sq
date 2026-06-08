@@ -1,0 +1,32 @@
+-- Many-to-many join between Recipe and RecipeBook: a recipe can live in several books.
+-- Mirrors the RecipeCategory junction.
+
+CREATE TABLE RecipeBookRecipe (
+    recipeBookId INTEGER NOT NULL,
+    recipeId INTEGER NOT NULL,
+    PRIMARY KEY (recipeBookId, recipeId),
+    FOREIGN KEY (recipeBookId) REFERENCES RecipeBook(id) ON DELETE CASCADE,
+    FOREIGN KEY (recipeId) REFERENCES Recipe(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_recipe_book_recipe_recipe ON RecipeBookRecipe(recipeId);
+
+attach:
+INSERT OR IGNORE INTO RecipeBookRecipe (recipeBookId, recipeId) VALUES (?, ?);
+
+detach:
+DELETE FROM RecipeBookRecipe WHERE recipeBookId = ? AND recipeId = ?;
+
+detachAllForRecipe:
+DELETE FROM RecipeBookRecipe WHERE recipeId = ?;
+
+getBookIdsForRecipe:
+SELECT recipeBookId FROM RecipeBookRecipe WHERE recipeId = ?;
+
+getRecipeIdsForBook:
+SELECT recipeId FROM RecipeBookRecipe WHERE recipeBookId = ?;
+
+countByBook:
+SELECT recipeBookId, COUNT(*) AS recipeCount
+FROM RecipeBookRecipe
+GROUP BY recipeBookId;

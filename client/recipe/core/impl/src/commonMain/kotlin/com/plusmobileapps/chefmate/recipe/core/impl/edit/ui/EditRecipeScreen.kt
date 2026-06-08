@@ -23,6 +23,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
@@ -51,6 +52,8 @@ import chefmate.client.recipe.core.public.generated.resources.edit_recipe_discar
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_discard_confirm
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_discard_message
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_discard_title
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_books
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_books_none
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_calories
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_calories_placeholder
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_category
@@ -165,6 +168,7 @@ private fun EditRecipeContent(bloc: EditRecipeBloc, modifier: Modifier = Modifie
     ) {
         RecipeTitleField(bloc = bloc)
         RecipeDescriptionField(bloc = bloc)
+        RecipeBooksField(bloc = bloc)
         RecipeCategoryField(bloc = bloc)
         RecipeStarRatingField(bloc = bloc)
         RecipePhotoUploader(bloc = bloc)
@@ -282,6 +286,45 @@ private fun RecipeCategoryField(bloc: EditRecipeBloc, modifier: Modifier = Modif
             onDeleteCategory = bloc::onDeleteCategory,
             onDismiss = { showSheet = false },
         )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun RecipeBooksField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
+    val books by bloc.recipeBooks.collectAsState()
+    val selected by bloc.selectedBookIds.collectAsState()
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
+    ) {
+        Text(
+            text = stringResource(Res.string.edit_recipe_field_books),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        if (books.isEmpty()) {
+            Text(
+                text = stringResource(Res.string.edit_recipe_field_books_none),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
+                verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
+            ) {
+                books.forEach { book ->
+                    FilterChip(
+                        selected = book.id in selected,
+                        onClick = { bloc.onToggleBook(book.id) },
+                        label = { Text(book.name) },
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -638,6 +681,10 @@ Salt for pasta water"""
         override val availableUserCategories:
             StateFlow<List<com.plusmobileapps.chefmate.recipe.data.Category>> =
             MutableStateFlow(emptyList())
+        override val recipeBooks:
+            StateFlow<List<com.plusmobileapps.chefmate.recipebook.data.RecipeBook>> =
+            MutableStateFlow(com.plusmobileapps.chefmate.recipebook.data.RecipeBook.Samples)
+        override val selectedBookIds: StateFlow<Set<Long>> = MutableStateFlow(setOf(1L))
         override val pendingPhotoBytes: StateFlow<ByteArray?> = MutableStateFlow(null)
 
         override fun onTitleChanged(title: String) {}
@@ -679,6 +726,8 @@ Salt for pasta water"""
         override fun onRenameCategory(id: Long, newName: String) {}
 
         override fun onDeleteCategory(id: Long) {}
+
+        override fun onToggleBook(bookId: Long) {}
 
         override fun onDiscardChangesConfirmed() {}
 

@@ -12,4 +12,5 @@ object RecipeListTestTags {
     const val ADD_MENU_SCAN: String = "recipe_list_add_menu_scan"
     const val SCANNING_DIALOG: String = "recipe_list_scanning_dialog"
     const val SCAN_ERROR_DIALOG: String = "recipe_list_scan_error_dialog"
+    const val BOOK_SELECTOR: String = "recipe_list_book_selector"
 }

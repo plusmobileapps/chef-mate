@@ -11,6 +11,7 @@ import com.plusmobileapps.chefmate.recipe.data.testing.FakeCategoryRepository
 import com.plusmobileapps.chefmate.recipe.data.testing.FakePendingRecipePhotoStore
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipePhotoStorage
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
+import com.plusmobileapps.chefmate.recipebook.data.testing.FakeRecipeBookRepository
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
@@ -27,6 +28,7 @@ class EditRecipeViewModelTest {
     private val recipes = MutableStateFlow<List<Recipe>>(emptyList())
     private val repository = FakeRecipeRepository(recipes)
     private val categoryRepository = FakeCategoryRepository()
+    private val recipeBookRepository = FakeRecipeBookRepository()
     private val photoStorage = FakeRecipePhotoStorage()
     private val pendingPhotoStore = FakePendingRecipePhotoStore()
     private val mainContext = UnconfinedTestDispatcher()
@@ -45,6 +47,7 @@ class EditRecipeViewModelTest {
             mainContext = mainContext,
             repository = repository,
             categoryRepository = categoryRepository,
+            recipeBookRepository = recipeBookRepository,
             photoStorage = photoStorage,
             pendingRecipePhotoStore = pendingPhotoStore,
         )

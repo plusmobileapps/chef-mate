@@ -8,6 +8,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(projects.client.recipe.data.public)
+            api(projects.client.recipebook.data.public)
             api(projects.client.text.public)
             api(libs.kotlinx.serialization.json)
 

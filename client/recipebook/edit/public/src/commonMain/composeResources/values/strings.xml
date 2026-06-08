@@ -1,0 +1,8 @@
+<resources>
+    <string name="edit_recipe_book_create_title">New recipe book</string>
+    <string name="edit_recipe_book_edit_title">Edit recipe book</string>
+    <string name="edit_recipe_book_name_label">Name</string>
+    <string name="edit_recipe_book_name_error">Enter a name for your recipe book</string>
+    <string name="edit_recipe_book_save">Save</string>
+    <string name="edit_recipe_book_close">Close</string>
+</resources>

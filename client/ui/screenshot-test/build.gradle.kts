@@ -55,6 +55,7 @@ dependencies {
     implementation(project(":client:recipe:list:impl"))
     implementation(project(":client:recipe:exporter:public"))
     implementation(project(":client:recipe:importer:public"))
+    implementation(project(":client:recipebook:edit:public"))
     implementation(project(":client:recipe:data:public"))
     implementation(project(":client:settings:public"))
     implementation(project(":client:settings:impl"))

@@ -290,7 +290,7 @@ fun PlusHeader(
                     )
                 }
             }
-            is PlusHeaderData.Parent,
+            is PlusHeaderData.Parent -> data.leading ?: {}
             PlusHeaderData.None -> {
                 {}
             }

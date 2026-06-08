@@ -8,6 +8,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.waitUntilExactlyOneExists
 import com.plusmobileapps.chefmate.recipe.list.RecipeListTestTags
@@ -56,6 +57,16 @@ class RecipeListRobot(private val test: ComposeUiTest) {
     /** Taps "Scan from photo" in the chooser menu (launches the platform image picker). */
     fun tapScanFromPhoto(): RecipeListRobot = apply {
         test.onNode(hasTestTag(RecipeListTestTags.ADD_MENU_SCAN)).performClick()
+    }
+
+    fun assertActiveBook(name: String): RecipeListRobot = apply {
+        test
+            .onNode(hasText(name) and hasTestTag(RecipeListTestTags.BOOK_SELECTOR))
+            .assertIsDisplayed()
+    }
+
+    fun openBookPicker(): RecipeListRobot = apply {
+        test.onNodeWithTag(RecipeListTestTags.BOOK_SELECTOR).performClick()
     }
 }
 

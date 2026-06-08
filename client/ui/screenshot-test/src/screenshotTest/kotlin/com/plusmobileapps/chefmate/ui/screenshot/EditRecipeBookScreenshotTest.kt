@@ -1,0 +1,47 @@
+package com.plusmobileapps.chefmate.ui.screenshot
+
+import android.content.res.Configuration
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
+import com.android.tools.screenshot.PreviewTest
+import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookScreen
+import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookCreateBloc
+import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookEditBloc
+import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookErrorBloc
+import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookSavingBloc
+import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 700)
+@Composable
+fun EditRecipeBookCreateScreenshot() {
+    ChefMateTheme { EditRecipeBookScreen(bloc = previewEditRecipeBookCreateBloc) }
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 700)
+@Composable
+fun EditRecipeBookEditScreenshot() {
+    ChefMateTheme { EditRecipeBookScreen(bloc = previewEditRecipeBookEditBloc) }
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 700)
+@Composable
+fun EditRecipeBookSavingScreenshot() {
+    ChefMateTheme { EditRecipeBookScreen(bloc = previewEditRecipeBookSavingBloc) }
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 700)
+@Composable
+fun EditRecipeBookErrorScreenshot() {
+    ChefMateTheme { EditRecipeBookScreen(bloc = previewEditRecipeBookErrorBloc) }
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 700, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun EditRecipeBookCreateDarkScreenshot() {
+    ChefMateTheme(darkTheme = true) { EditRecipeBookScreen(bloc = previewEditRecipeBookCreateBloc) }
+}

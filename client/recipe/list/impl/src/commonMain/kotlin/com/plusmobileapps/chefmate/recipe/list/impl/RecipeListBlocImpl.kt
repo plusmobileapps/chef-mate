@@ -68,6 +68,9 @@ class RecipeListBlocImpl(
                 isScanning = it.isScanning,
                 scanError = it.scanError,
                 isScanFromPhotoEnabled = it.isScanFromPhotoEnabled,
+                recipeBooks = it.recipeBooks,
+                activeBook = it.activeBook,
+                isBookPickerOpen = it.isBookPickerOpen,
             )
         }
 
@@ -181,6 +184,33 @@ class RecipeListBlocImpl(
 
     override fun onExportFinished() {
         viewModel.exitSelectionMode()
+    }
+
+    override fun onBookSelectorClicked() {
+        viewModel.openBookPicker()
+    }
+
+    override fun onBookPickerDismissed() {
+        viewModel.dismissBookPicker()
+    }
+
+    override fun onBookSelected(bookId: Long) {
+        viewModel.selectBook(bookId)
+    }
+
+    override fun onCreateBookClicked() {
+        viewModel.dismissBookPicker()
+        output.onNext(Output.OpenEditRecipeBook(bookId = null))
+    }
+
+    override fun onEditBookClicked(bookId: Long) {
+        viewModel.dismissBookPicker()
+        output.onNext(Output.OpenEditRecipeBook(bookId = bookId))
+    }
+
+    override fun onCollaborateClicked() {
+        val activeBookId = viewModel.state.value.activeBook?.id
+        output.onNext(Output.OpenEditRecipeBook(bookId = activeBookId))
     }
 
     @Composable

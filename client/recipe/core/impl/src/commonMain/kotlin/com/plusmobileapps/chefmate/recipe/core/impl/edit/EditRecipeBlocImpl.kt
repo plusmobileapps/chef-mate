@@ -17,6 +17,7 @@ import com.plusmobileapps.chefmate.recipe.core.impl.edit.ui.EditRecipeScreen
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
@@ -75,6 +76,8 @@ class EditRecipeBlocImpl(
     override val categories: StateFlow<Set<Category>> = viewModel.categories
     override val availableUserCategories: StateFlow<List<Category>> =
         viewModel.availableUserCategories
+    override val recipeBooks: StateFlow<List<RecipeBook>> = viewModel.recipeBooks
+    override val selectedBookIds: StateFlow<Set<Long>> = viewModel.selectedBookIds
     override val pendingPhotoBytes: StateFlow<ByteArray?> = viewModel.pendingPhotoBytes
 
     init {
@@ -167,6 +170,10 @@ class EditRecipeBlocImpl(
 
     override fun onDeleteCategory(id: Long) {
         viewModel.deleteUserCategory(id)
+    }
+
+    override fun onToggleBook(bookId: Long) {
+        viewModel.toggleBook(bookId)
     }
 
     override fun onDiscardChangesConfirmed() {

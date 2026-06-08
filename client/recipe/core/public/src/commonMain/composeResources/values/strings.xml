@@ -98,6 +98,8 @@
     <string name="edit_recipe_field_category_create_confirm">Add</string>
     <string name="edit_recipe_field_category_remove_a11y">Remove %1$s</string>
     <string name="edit_recipe_field_category_create_a11y">Create new category</string>
+    <string name="edit_recipe_field_books">Recipe books</string>
+    <string name="edit_recipe_field_books_none">No recipe books yet</string>
     <string name="edit_recipe_field_category_create_cancel_a11y">Cancel new category</string>
     <string name="edit_recipe_field_category_save">Save</string>
     <string name="edit_recipe_discard_title">Discard Changes?</string>
