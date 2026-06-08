@@ -13,6 +13,8 @@ import com.plusmobileapps.chefmate.recipe.data.PendingRecipePhotoStore
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipePhotoStorage
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBookRepository
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -40,6 +42,7 @@ class EditRecipeViewModel(
     @Main mainContext: CoroutineContext,
     private val repository: RecipeRepository,
     private val categoryRepository: CategoryRepository,
+    private val recipeBookRepository: RecipeBookRepository,
     private val photoStorage: RecipePhotoStorage,
     private val pendingRecipePhotoStore: PendingRecipePhotoStore,
 ) : ViewModel(mainContext) {
@@ -92,6 +95,14 @@ class EditRecipeViewModel(
             .observeUserCategories()
             .stateIn(scope = scope, started = SharingStarted.Eagerly, initialValue = emptyList())
 
+    val recipeBooks: StateFlow<List<RecipeBook>> =
+        recipeBookRepository
+            .getRecipeBooks()
+            .stateIn(scope = scope, started = SharingStarted.Eagerly, initialValue = emptyList())
+
+    private val _selectedBookIds = MutableStateFlow<Set<Long>>(emptySet())
+    val selectedBookIds: StateFlow<Set<Long>> = _selectedBookIds.asStateFlow()
+
     // Re-entrancy guard for [createUserCategoryAndAttach]; not exposed to the bloc because the
     // picker UI doesn't need a loading flag (offline-first inserts are effectively instant, and
     // routing a fast true→false transition through StateFlow could be conflated and leave the
@@ -103,6 +114,15 @@ class EditRecipeViewModel(
     private var pendingPhotoExtension: String? = null
 
     init {
+        // A new recipe defaults to the active book; an existing one loads its current membership.
+        if (recipeId == null) {
+            scope.launch {
+                val activeBook =
+                    recipeBookRepository.activeBookId.value
+                        ?: recipeBookRepository.getDefaultBookId()
+                _selectedBookIds.update { it.ifEmpty { setOf(activeBook) } }
+            }
+        }
         when {
             recipeId != null -> {
                 _state.update { it.copy(isLoading = false) }
@@ -182,6 +202,12 @@ class EditRecipeViewModel(
 
     fun updateCategories(value: Set<Category>) {
         _categories.value = value
+    }
+
+    fun toggleBook(bookId: Long) {
+        _selectedBookIds.update { current ->
+            if (bookId in current) current - bookId else current + bookId
+        }
     }
 
     fun attachBuiltin(builtin: BuiltinCategory) {
@@ -336,6 +362,7 @@ class EditRecipeViewModel(
         _calories.value = recipe.calories?.toString().orEmpty()
         _starRating.value = recipe.starRating
         _categories.value = recipe.categories
+        _selectedBookIds.value = recipe.recipeBookIds
         _state.update { it.copy(isLoading = false, recipe = recipe) }
     }
 
@@ -376,7 +403,8 @@ class EditRecipeViewModel(
             totalTime?.toString().orEmpty() != _totalTime.value ||
             calories?.toString().orEmpty() != _calories.value ||
             starRating != _starRating.value ||
-            categories != _categories.value
+            categories != _categories.value ||
+            recipeBookIds != _selectedBookIds.value
 
     private fun currentRecipe(): Recipe =
         Recipe(
@@ -395,6 +423,7 @@ class EditRecipeViewModel(
             starRating = _starRating.value,
             isFavorite = state.value.recipe?.isFavorite ?: false,
             categories = _categories.value,
+            recipeBookIds = _selectedBookIds.value,
             createdAt = Instant.DISTANT_PAST,
             updatedAt = Instant.DISTANT_PAST,
         )

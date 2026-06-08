@@ -8,6 +8,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(projects.client.recipe.data.public)
+            implementation(projects.client.recipebook.data.public)
             implementation(projects.client.recipe.core.public)
             implementation(projects.client.recipe.categories.public)
             implementation(projects.client.ui.public)
@@ -25,6 +26,7 @@ kotlin {
         commonTest.dependencies {
             implementation(projects.client.util.testing)
             implementation(projects.client.recipe.data.testing)
+            implementation(projects.client.recipebook.data.testing)
             implementation(libs.multiplatform.settings.test)
         }
     }
