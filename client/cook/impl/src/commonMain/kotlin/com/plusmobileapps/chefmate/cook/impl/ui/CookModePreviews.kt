@@ -97,6 +97,25 @@ val previewCookBlocLongTitle: CookModeBloc =
         )
     )
 
+// Recipe whose ingredients are grouped into sub-sections (issue #177): the "For the …:" headers
+// render bold and are not crossable.
+val previewCookBlocSections: CookModeBloc =
+    cookBloc(
+        CookModeBloc.Model(
+            isLoading = false,
+            activeRecipe = Recipe.SampleWithSections,
+            activeSessions = activeSessionsSample,
+            layoutMode = CookModeBloc.LayoutMode.Stacked,
+            keepScreenOn = true,
+        )
+    )
+
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+internal fun CookModeSectionsPreview() {
+    ChefMateTheme { CookModeScreen(bloc = previewCookBlocSections) }
+}
+
 @Preview(showBackground = true, heightDp = 1100)
 @Composable
 internal fun CookModeStackedPreview() {
