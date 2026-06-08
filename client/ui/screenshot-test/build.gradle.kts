@@ -60,6 +60,8 @@ dependencies {
     implementation(project(":client:settings:public"))
     implementation(project(":client:settings:impl"))
     implementation(project(":client:settings:root:public"))
+    implementation(project(":client:profile:public"))
+    implementation(project(":client:profile:impl"))
     implementation(libs.arkivanov.decompose.core)
 
     screenshotTestImplementation(libs.screenshot.validation.api)
