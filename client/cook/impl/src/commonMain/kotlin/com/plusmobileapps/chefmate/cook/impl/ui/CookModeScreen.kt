@@ -83,6 +83,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -100,6 +101,7 @@ import chefmate.client.cook.public.generated.resources.cook_mode_no_active_recip
 import chefmate.client.cook.public.generated.resources.cook_mode_whats_cooking
 import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.cook.WhatsCookingBloc
+import com.plusmobileapps.chefmate.recipe.data.IngredientSection
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.KeepScreenOn
@@ -759,6 +761,22 @@ private fun CookSectionHeader(title: String, modifier: Modifier = Modifier) {
 
 @Composable
 private fun IngredientRow(text: String, crossedOut: Boolean, onClick: () -> Unit) {
+    if (IngredientSection.isHeader(text)) {
+        // Sub-section header (e.g. "For the sauce:") — bold and not crossable.
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(
+                        top = ChefMateTheme.dimens.paddingSmall,
+                        bottom = ChefMateTheme.dimens.paddingExtraSmall,
+                    ),
+        )
+        return
+    }
     Text(
         text = text,
         style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 22.sp),
@@ -795,7 +813,10 @@ private fun DirectionRow(text: String, highlighted: Boolean, onClick: () -> Unit
                         Modifier
                     }
                 )
-                .padding(vertical = dimens.paddingExtraSmall, horizontal = dimens.paddingExtraSmall),
+                .padding(
+                    vertical = dimens.paddingExtraSmall,
+                    horizontal = dimens.paddingExtraSmall,
+                ),
     )
 }
 

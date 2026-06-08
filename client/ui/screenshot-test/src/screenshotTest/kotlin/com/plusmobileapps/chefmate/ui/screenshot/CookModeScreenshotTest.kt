@@ -7,6 +7,7 @@ import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.cook.impl.ui.previewCookBlocEmpty
 import com.plusmobileapps.chefmate.cook.impl.ui.previewCookBlocLoading
 import com.plusmobileapps.chefmate.cook.impl.ui.previewCookBlocLongTitle
+import com.plusmobileapps.chefmate.cook.impl.ui.previewCookBlocSections
 import com.plusmobileapps.chefmate.cook.impl.ui.previewCookBlocSplit
 import com.plusmobileapps.chefmate.cook.impl.ui.previewCookBlocStacked
 import com.plusmobileapps.chefmate.ui.Content
@@ -49,6 +50,15 @@ fun CookModeEmptyScreenshot() {
 @Composable
 fun CookModeLongTitleScreenshot() {
     ChefMateTheme { previewCookBlocLongTitle.Content() }
+}
+
+// Grouped ingredients (issue #177): sub-section headers ("For the …:") render bold and are not
+// crossable in the ingredients list.
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+fun CookModeSectionsScreenshot() {
+    ChefMateTheme { previewCookBlocSections.Content() }
 }
 
 // ── Phone landscape (580 × 360 dp, COMPACT width → mobile layout, compact height) ──

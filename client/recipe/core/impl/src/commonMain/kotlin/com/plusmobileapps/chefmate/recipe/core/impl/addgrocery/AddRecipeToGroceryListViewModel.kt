@@ -7,6 +7,7 @@ import com.plusmobileapps.chefmate.grocery.data.IngredientParser
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc.GroceryListItem
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc.IngredientGroup
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc.ListItem
+import com.plusmobileapps.chefmate.recipe.data.IngredientSection
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import com.russhwolf.settings.Settings
@@ -127,7 +128,7 @@ class AddRecipeToGroceryListViewModel(
             val grouped =
                 recipe.ingredients
                     .split("\n")
-                    .filter { it.isNotBlank() }
+                    .filter { it.isNotBlank() && !IngredientSection.isHeader(it) }
                     .map { raw ->
                         val parsed = IngredientParser.parse(raw)
                         ListItem(
