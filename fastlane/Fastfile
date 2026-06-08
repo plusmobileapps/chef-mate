@@ -42,6 +42,7 @@ platform :ios do
     build_app(
       project: "iosApp/iosApp.xcodeproj",
       scheme: "iosApp",
+      configuration: "Release",
       export_method: "app-store",
       output_directory: "build/ios",
       xcargs: "TEAM_ID=#{ENV['TEAM_ID']} DEVELOPMENT_TEAM=#{ENV['TEAM_ID']}",
