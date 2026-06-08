@@ -107,6 +107,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -155,6 +156,7 @@ import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailTestTags
 import com.plusmobileapps.chefmate.recipe.core.impl.addgrocery.ui.AddRecipeToGroceryListScreen
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
+import com.plusmobileapps.chefmate.recipe.data.IngredientSection
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
@@ -1432,6 +1434,23 @@ private fun IngredientLineItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (IngredientSection.isHeader(text)) {
+        // Sub-section header (e.g. "For the sauce:") — bold and not crossable.
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier =
+                modifier
+                    .fillMaxWidth()
+                    .padding(
+                        top = ChefMateTheme.dimens.paddingSmall,
+                        bottom = ChefMateTheme.dimens.paddingExtraSmall,
+                    ),
+        )
+        return
+    }
     Text(
         text = text,
         style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 22.sp),

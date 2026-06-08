@@ -1,10 +1,12 @@
 package com.plusmobileapps.chefmate.browser.impl
 
 import com.fleeksoft.ksoup.Ksoup
+import com.fleeksoft.ksoup.nodes.Element
 import com.fleeksoft.ksoup.parser.Parser
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.chefmate.recipe.data.IngredientSection
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -50,11 +52,61 @@ class RecipeExtractorServiceImpl(@IO private val ioContext: CoroutineContext) :
             for (script in jsonLdScripts) {
                 val jsonText = script.data()
                 val recipeJson = findRecipeJson(jsonText) ?: continue
-                return@withContext parseRecipeFromJson(recipeJson, url)
+                val data = parseRecipeFromJson(recipeJson, url)
+                // schema.org flattens grouped ingredients, so recover any sub-section headers
+                // (e.g. "For the sauce:") from the page markup when present.
+                val grouped = parseIngredientSections(document)
+                return@withContext if (grouped != null) data.copy(ingredients = grouped) else data
             }
 
             throw IllegalStateException("No recipe data found on this page")
         }
+
+    /**
+     * Recovers grouped ingredients (with their sub-section headers) from WP Recipe Maker markup,
+     * the most common WordPress recipe plugin. Returns `null` when the markup is absent or has no
+     * named groups, so the caller can fall back to the flat JSON-LD ingredient list.
+     */
+    internal fun parseIngredientSections(html: String): List<String>? =
+        parseIngredientSections(Ksoup.parse(html))
+
+    private fun parseIngredientSections(document: Element): List<String>? {
+        val groups = document.select("div.wprm-recipe-ingredient-group")
+        if (groups.isEmpty()) return null
+
+        val lines = mutableListOf<String>()
+        var sawHeader = false
+        for (group in groups) {
+            val name =
+                group.selectFirst(".wprm-recipe-ingredient-group-name")?.text()?.trim().orEmpty()
+            if (name.isNotEmpty()) {
+                lines += IngredientSection.header(name)
+                sawHeader = true
+            }
+            for (item in group.select("li.wprm-recipe-ingredient")) {
+                val text = ingredientText(item)
+                if (text.isNotEmpty()) lines += text
+            }
+        }
+
+        // Only worth overriding the JSON-LD list when we actually found section headers.
+        return if (sawHeader && lines.isNotEmpty()) lines else null
+    }
+
+    /** Reconstructs a single WPRM ingredient line from its amount/unit/name/notes spans. */
+    private fun ingredientText(item: Element): String {
+        val name = item.selectFirst(".wprm-recipe-ingredient-name")?.text()?.trim().orEmpty()
+        if (name.isEmpty()) {
+            // Non-structured markup: fall back to the checkbox label, else the raw list text.
+            return item.selectFirst("input.wprm-checkbox")?.attr("aria-label")?.trim()
+                ?: item.text().trim()
+        }
+        val amount = item.selectFirst(".wprm-recipe-ingredient-amount")?.text()?.trim().orEmpty()
+        val unit = item.selectFirst(".wprm-recipe-ingredient-unit")?.text()?.trim().orEmpty()
+        val notes = item.selectFirst(".wprm-recipe-ingredient-notes")?.text()?.trim().orEmpty()
+        val head = listOf(amount, unit, name).filter { it.isNotEmpty() }.joinToString(" ")
+        return if (notes.isNotEmpty()) "$head, $notes" else head
+    }
 
     private fun findRecipeJson(jsonText: String): JsonObject? {
         val element = json.parseToJsonElement(jsonText)

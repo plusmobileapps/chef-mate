@@ -80,6 +80,23 @@ data class Recipe(
                 updatedAt = Instant.DISTANT_PAST,
             )
 
+        /**
+         * Sample recipe whose ingredients are split into sub-sections via the [IngredientSection]
+         * header convention — for previews/tests of the grouped layout.
+         */
+        val SampleWithSections =
+            Sample.copy(
+                id = 7L,
+                title = "Peruvian Chicken with Green Sauce",
+                description = "Marinated chicken thighs with a creamy jalapeño cilantro sauce.",
+                ingredients =
+                    "For the Peruvian chicken:\n1½ lbs boneless skinless chicken thighs\n" +
+                        "½ cup soy sauce\n¾ cup cilantro, roughly chopped\n6 garlic cloves\n" +
+                        "1 tsp ground cumin\n" +
+                        "For the green sauce:\n½ cup sour cream\n1 jalapeño, deseeded\n" +
+                        "2 garlic cloves\n1 Tbsp lime juice\nSalt, to taste",
+            )
+
         /** Variants of [Sample] for seeding the local DB in FAKE environment / dev contexts. */
         val Samples: List<Recipe> =
             listOf(
