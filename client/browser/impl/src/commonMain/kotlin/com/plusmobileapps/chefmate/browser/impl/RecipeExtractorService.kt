@@ -14,6 +14,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.isSuccess
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -41,10 +42,13 @@ class RecipeExtractorServiceImpl(@IO private val ioContext: CoroutineContext) :
 
     override suspend fun extractRecipe(url: String): ExtractedRecipeData =
         withContext(ioContext) {
-            val html =
-                httpClient
-                    .get(url) { header("User-Agent", "Mozilla/5.0 (compatible; ChefMate/1.0)") }
-                    .bodyAsText()
+            val response = httpClient.get(url) { header("User-Agent", USER_AGENT) }
+            if (!response.status.isSuccess()) {
+                throw IllegalStateException(
+                    "Could not load the page (HTTP ${response.status.value})"
+                )
+            }
+            val html = response.bodyAsText()
 
             val document = Ksoup.parse(html)
             val jsonLdScripts = document.select("script[type=application/ld+json]")
@@ -246,6 +250,12 @@ class RecipeExtractorServiceImpl(@IO private val ioContext: CoroutineContext) :
     }
 
     companion object {
+        // A real mobile-browser User-Agent. Some sites' WAFs return 403 to bot-style or
+        // spoofed desktop-Chrome User-Agents, but accept genuine mobile-browser strings.
+        private const val USER_AGENT =
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 " +
+                "(KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
+
         fun parseDuration(iso8601: String?): Int? {
             if (iso8601 == null) return null
             var minutes = 0
