@@ -118,6 +118,100 @@ class RecipeExtractorServiceTest {
 
     // endregion
 
+    // region ingredient sections
+
+    @Test
+    fun When_ingredients_have_named_groups_Then_headers_are_extracted() {
+        val html =
+            wprmIngredients(
+                group(
+                    name = "For the chicken",
+                    ingredients = listOf(amountUnitName("1", "lb", "chicken thighs")),
+                ),
+                group(
+                    name = "For the green sauce",
+                    ingredients = listOf(amountUnitName("½", "cup", "sour cream")),
+                ),
+            )
+        service.parseIngredientSections(html) shouldBe
+            listOf(
+                "For the chicken:",
+                "1 lb chicken thighs",
+                "For the green sauce:",
+                "½ cup sour cream",
+            )
+    }
+
+    @Test
+    fun When_first_group_is_unnamed_Then_only_named_section_gets_a_header() {
+        val html =
+            wprmIngredients(
+                group(
+                    name = "",
+                    ingredients = listOf(amountUnitName("2", "Tablespoons", "avocado oil")),
+                ),
+                group(
+                    name = "Sauce Ingredients",
+                    ingredients = listOf(amountUnitName("3", "Tablespoons", "soy sauce")),
+                ),
+            )
+        service.parseIngredientSections(html) shouldBe
+            listOf("2 Tablespoons avocado oil", "Sauce Ingredients:", "3 Tablespoons soy sauce")
+    }
+
+    @Test
+    fun When_no_group_is_named_Then_returns_null_to_fall_back_to_json_ld() {
+        val html =
+            wprmIngredients(
+                group(name = "", ingredients = listOf(amountUnitName("1", "cup", "flour")))
+            )
+        service.parseIngredientSections(html) shouldBe null
+    }
+
+    @Test
+    fun When_markup_is_absent_Then_returns_null() {
+        service.parseIngredientSections("<html><body><p>no recipe</p></body></html>") shouldBe null
+    }
+
+    @Test
+    fun When_ingredient_has_notes_Then_appended_after_comma() {
+        val html =
+            wprmIngredients(
+                group(
+                    name = "Sauce",
+                    ingredients =
+                        listOf(
+                            """<span class="wprm-recipe-ingredient-amount">1</span>""" +
+                                """<span class="wprm-recipe-ingredient-name">tofu</span>""" +
+                                """<span class="wprm-recipe-ingredient-notes">16 oz</span>"""
+                        ),
+                )
+            )
+        service.parseIngredientSections(html) shouldBe listOf("Sauce:", "1 tofu, 16 oz")
+    }
+
+    private fun amountUnitName(amount: String, unit: String, name: String): String =
+        """<span class="wprm-recipe-ingredient-amount">$amount</span>""" +
+            """<span class="wprm-recipe-ingredient-unit">$unit</span>""" +
+            """<span class="wprm-recipe-ingredient-name">$name</span>"""
+
+    private fun group(name: String, ingredients: List<String>): String {
+        val heading =
+            if (name.isEmpty()) {
+                ""
+            } else {
+                """<h4 class="wprm-recipe-group-name wprm-recipe-ingredient-group-name">$name</h4>"""
+            }
+        val items =
+            ingredients.joinToString("") { """<li class="wprm-recipe-ingredient">$it</li>""" }
+        return """<div class="wprm-recipe-ingredient-group">$heading<ul class="wprm-recipe-ingredients">$items</ul></div>"""
+    }
+
+    private fun wprmIngredients(vararg groups: String): String =
+        """<html><body>${groups.joinToString("")}</body></html>"""
+
+    // endregion
+
     private fun recipeJson(
         name: String = "Test Recipe",
         description: String? = null,
