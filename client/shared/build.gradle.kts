@@ -87,11 +87,17 @@ val testUsersSerialized = buildString {
 // Detect debug builds by inspecting requested Gradle task names. Defaults to debug when no
 // release-flavoured task is requested (e.g. during IDE sync), which is the safe choice for
 // developer-only UI gating.
-val isDebugBuildFlag: Boolean =
-    gradle.startParameter.taskNames.none { taskName ->
-        taskName.contains("Release", ignoreCase = true) ||
-            taskName.contains("bundleRelease", ignoreCase = true)
-    }
+//
+// iOS is a special case: Xcode invokes `embedAndSignAppleFrameworkForXcode`, whose task name
+// never contains "Release". The real build type for an Xcode-driven build comes from the
+// CONFIGURATION env var Xcode sets ("Debug" / "Release"), so honour that too — otherwise
+// production App Store builds are misdetected as debug and leak developer-only UI.
+val xcodeConfiguration: String? = System.getenv("CONFIGURATION")
+val isReleaseBuild: Boolean =
+    gradle.startParameter.taskNames.any { taskName ->
+        taskName.contains("Release", ignoreCase = true)
+    } || xcodeConfiguration?.equals("Release", ignoreCase = true) == true
+val isDebugBuildFlag: Boolean = !isReleaseBuild
 
 // Single source of truth lives in client/composeApp/build.gradle.kts (versionName = "..").
 // The bump-version scripts already update that file via sed; we mirror its value into
