@@ -22,10 +22,10 @@ data class Recipe(
     val isFavorite: Boolean = false,
     val categories: Set<Category> = emptySet(),
     /**
-     * Local id of the [RecipeBook] this recipe belongs to. Null only transiently before the default
-     * book has been resolved; the data layer backfills it to the default book.
+     * Local ids of the recipe books this recipe belongs to. A recipe can live in several books; the
+     * data layer guarantees membership in at least one (the active/default book on create).
      */
-    val recipeBookId: Long? = null,
+    val recipeBookIds: Set<Long> = emptySet(),
     val syncStatus: SyncStatus = SyncStatus.NOT_SYNCED,
     val createdAt: Instant,
     val updatedAt: Instant,

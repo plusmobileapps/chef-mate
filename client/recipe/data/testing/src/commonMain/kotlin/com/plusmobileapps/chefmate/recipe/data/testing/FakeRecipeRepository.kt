@@ -21,7 +21,7 @@ class FakeRecipeRepository(
         }
 
     override fun getRecipes(recipeBookId: Long): Flow<List<Recipe>> =
-        getRecipes().map { list -> list.filter { it.recipeBookId == recipeBookId } }
+        getRecipes().map { list -> list.filter { recipeBookId in it.recipeBookIds } }
 
     override suspend fun createRecipe(recipe: Recipe): Recipe {
         recipes.value = recipes.value + recipe

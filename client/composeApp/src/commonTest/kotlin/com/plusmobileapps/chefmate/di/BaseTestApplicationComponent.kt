@@ -10,6 +10,7 @@ import com.plusmobileapps.chefmate.database.GroceryListQueries
 import com.plusmobileapps.chefmate.database.GroceryQueries
 import com.plusmobileapps.chefmate.database.MealPlanQueries
 import com.plusmobileapps.chefmate.database.RecipeBookQueries
+import com.plusmobileapps.chefmate.database.RecipeBookRecipeQueries
 import com.plusmobileapps.chefmate.database.RecipeCategoryQueries
 import com.plusmobileapps.chefmate.database.RecipeQueries
 import com.plusmobileapps.chefmate.fakes.FakeDatabase
@@ -27,6 +28,10 @@ abstract class BaseTestApplicationComponent : TestApplicationComponent {
     @Provides
     fun providesRecipeBookQueries(database: Database): RecipeBookQueries =
         database.recipeBookQueries
+
+    @Provides
+    fun providesRecipeBookRecipeQueries(database: Database): RecipeBookRecipeQueries =
+        database.recipeBookRecipeQueries
 
     @Provides
     fun providesGroceryQueries(database: Database): GroceryQueries = database.groceryQueries

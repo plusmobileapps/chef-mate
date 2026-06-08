@@ -23,5 +23,4 @@ data class RemoteRecipe(
     @SerialName("created_at") val createdAt: String? = null,
     @SerialName("updated_at") val updatedAt: String? = null,
     @SerialName("client_id") val clientId: String? = null,
-    @SerialName("recipe_book_id") val recipeBookId: String? = null,
 )

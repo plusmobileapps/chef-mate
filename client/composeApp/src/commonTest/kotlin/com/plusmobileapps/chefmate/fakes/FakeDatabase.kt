@@ -6,10 +6,6 @@ import com.plusmobileapps.chefmate.recipe.data.Recipe
 class FakeDatabase(private val delegate: Database = provideTestDatabase()) : Database by delegate {
 
     fun addRecipe(recipe: Recipe) {
-        // Every recipe belongs to a book. Production assigns one via createRecipe / the migration;
-        // this fixture inserts rows directly, so it files them under a seeded default book — the
-        // same book RecipeBookRepository resolves on startup — so the book-scoped list shows them.
-        val bookId = recipe.recipeBookId ?: ensureDefaultBookId()
         recipeQueries.create(
             title = recipe.title,
             description = recipe.description,
@@ -28,12 +24,18 @@ class FakeDatabase(private val delegate: Database = provideTestDatabase()) : Dat
             updatedAt = recipe.updatedAt.toString(),
             clientId = null,
             ownerId = null,
-            recipeBookId = bookId,
         )
         val recipeId =
             recipeQueries.lastInsertId().executeAsOne().MAX ?: error("Failed to get last insert id")
         for (category in recipe.categories) {
             recipeCategoryQueries.attach(recipeId = recipeId, categoryId = category.id)
+        }
+        // Every recipe belongs to a book. Production attaches one via createRecipe / the migration;
+        // this fixture inserts rows directly, so it files them under a seeded default book — the
+        // same book RecipeBookRepository resolves on startup — so the book-scoped list shows them.
+        val bookIds = recipe.recipeBookIds.ifEmpty { setOf(ensureDefaultBookId()) }
+        for (bookId in bookIds) {
+            recipeBookRecipeQueries.attach(recipeBookId = bookId, recipeId = recipeId)
         }
     }
 

@@ -19,4 +19,17 @@ interface RecipeRemoteDataSource {
      * remote ID. Recipes with no attachments are omitted (callers should treat absence as empty).
      */
     suspend fun fetchRecipeCategoryAttachments(ownerId: String): Map<String, Set<String>>
+
+    /**
+     * Replaces the recipe's book membership in the `recipe_book_recipes` join table: deletes any
+     * rows for [recipeRemoteId] whose `recipe_book_id` isn't in [bookRemoteIds], then inserts the
+     * missing rows. Idempotent — safe to call repeatedly with the same set.
+     */
+    suspend fun setRecipeBooks(recipeRemoteId: String, bookRemoteIds: Set<String>)
+
+    /**
+     * Returns the full set of recipe ↔ book memberships owned by [ownerId], keyed by recipe remote
+     * ID. Recipes with no memberships are omitted (callers should treat absence as empty).
+     */
+    suspend fun fetchRecipeBookAttachments(ownerId: String): Map<String, Set<String>>
 }

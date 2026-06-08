@@ -7,6 +7,7 @@ import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.database.CategoryQueries
 import com.plusmobileapps.chefmate.database.Recipe as DbRecipe
 import com.plusmobileapps.chefmate.database.RecipeBookQueries
+import com.plusmobileapps.chefmate.database.RecipeBookRecipeQueries
 import com.plusmobileapps.chefmate.database.RecipeCategoryQueries
 import com.plusmobileapps.chefmate.database.RecipeQueries
 import com.plusmobileapps.chefmate.di.AppScope
@@ -50,6 +51,7 @@ class RecipeRepositoryImpl(
     private val joinDb: RecipeCategoryQueries,
     private val categoryDb: CategoryQueries,
     private val recipeBookDb: RecipeBookQueries,
+    private val bookJoinDb: RecipeBookRecipeQueries,
     private val recipeBookRepository: RecipeBookRepository,
     @IO private val ioContext: CoroutineContext,
     private val dateTimeUtil: DateTimeUtil,
@@ -95,12 +97,9 @@ class RecipeRepositoryImpl(
 
     override suspend fun createRecipe(recipe: Recipe): Recipe {
         val clientId = Uuid.random().toString()
+        val bookIds = resolveBookIds(recipe)
         val result =
             withContext(ioContext) {
-                val bookId =
-                    recipe.recipeBookId
-                        ?: recipeBookRepository.activeBookId.value
-                        ?: recipeBookDb.getDefault().executeAsOneOrNull()?.id
                 db.transactionWithResult {
                     db.create(
                         title = recipe.title,
@@ -120,13 +119,15 @@ class RecipeRepositoryImpl(
                         updatedAt = dateTimeUtil.now.toString(),
                         clientId = clientId,
                         ownerId = null,
-                        recipeBookId = bookId,
                     )
                     val id =
                         db.lastInsertId().executeAsOne().MAX
                             ?: error("Failed to get last insert id")
                     for (category in recipe.categories) {
                         joinDb.attach(recipeId = id, categoryId = category.id)
+                    }
+                    for (bookId in bookIds) {
+                        bookJoinDb.attach(recipeBookId = bookId, recipeId = id)
                     }
                     db.getById(id).executeAsOne().toRecipe()
                 }
@@ -159,6 +160,7 @@ class RecipeRepositoryImpl(
                         updatedAt = now.toString(),
                     )
                     syncJoinRowsForRecipe(recipe.id, recipe.categories)
+                    syncBookJoinRowsForRecipe(recipe.id, recipe.recipeBookIds)
                     recipe.copy(updatedAt = now)
                 }
                 updated to previous?.imageUrl
@@ -246,7 +248,6 @@ class RecipeRepositoryImpl(
                             createdAt = entity.createdAt,
                             updatedAt = entity.updatedAt,
                             clientId = clientId,
-                            recipeBookId = bookRemoteId(entity.recipeBookId),
                         )
                     )
                 withContext(ioContext) {
@@ -257,6 +258,7 @@ class RecipeRepositoryImpl(
                         recipeRemoteId,
                         attachedCategoryRemoteIds(localId),
                     )
+                    remoteDataSource.setRecipeBooks(recipeRemoteId, attachedBookRemoteIds(localId))
                 }
             } finally {
                 syncingIds.update { it - localId }
@@ -294,10 +296,10 @@ class RecipeRepositoryImpl(
                         isFavorite = entity.isFavorite,
                         updatedAt = entity.updatedAt,
                         clientId = entity.clientId,
-                        recipeBookId = bookRemoteId(entity.recipeBookId),
                     )
                 )
                 remoteDataSource.setRecipeCategories(remoteId, attachedCategoryRemoteIds(localId))
+                remoteDataSource.setRecipeBooks(remoteId, attachedBookRemoteIds(localId))
                 withContext(ioContext) { db.clearDirty(localId) }
             } finally {
                 syncingIds.update { it - localId }
@@ -351,7 +353,6 @@ class RecipeRepositoryImpl(
                                 createdAt = recipe.createdAt,
                                 updatedAt = recipe.updatedAt,
                                 clientId = clientId,
-                                recipeBookId = bookRemoteId(recipe.recipeBookId),
                             )
                         )
                     withContext(ioContext) {
@@ -361,6 +362,10 @@ class RecipeRepositoryImpl(
                         remoteDataSource.setRecipeCategories(
                             recipeRemoteId,
                             attachedCategoryRemoteIds(recipe.id),
+                        )
+                        remoteDataSource.setRecipeBooks(
+                            recipeRemoteId,
+                            attachedBookRemoteIds(recipe.id),
                         )
                     }
                 } catch (_: Exception) {}
@@ -390,13 +395,13 @@ class RecipeRepositoryImpl(
                             isFavorite = recipe.isFavorite,
                             updatedAt = recipe.updatedAt,
                             clientId = recipe.clientId,
-                            recipeBookId = bookRemoteId(recipe.recipeBookId),
                         )
                     )
                     remoteDataSource.setRecipeCategories(
                         remoteId,
                         attachedCategoryRemoteIds(recipe.id),
                     )
+                    remoteDataSource.setRecipeBooks(remoteId, attachedBookRemoteIds(recipe.id))
                     withContext(ioContext) { db.clearDirty(recipe.id) }
                 } catch (_: Exception) {}
             }
@@ -416,10 +421,6 @@ class RecipeRepositoryImpl(
                     if (matchedByClientId != null) {
                         db.updateRemoteId(remoteId = remoteId, id = matchedByClientId.id)
                     } else {
-                        val localBookId =
-                            remote.recipeBookId?.let {
-                                recipeBookDb.getByRemoteId(it).executeAsOneOrNull()?.id
-                            } ?: recipeBookDb.getDefault().executeAsOneOrNull()?.id
                         db.createWithRemoteId(
                             title = remote.title,
                             description = remote.description,
@@ -439,23 +440,17 @@ class RecipeRepositoryImpl(
                             remoteId = remoteId,
                             clientId = remote.clientId,
                             ownerId = userId,
-                            recipeBookId = localBookId,
                         )
                     }
                 }
-                // Any recipe still without a book (older server rows, or books that hadn't
-                // synced yet) lands on the local default so it stays visible in the list.
-                recipeBookDb.getDefault().executeAsOneOrNull()?.let { defaultBook ->
-                    db.assignAllWithoutBook(defaultBook.id)
-                }
             }
 
-            // Pull remote attachments and rebuild local join rows. Requires both the recipe and
-            // its categories to be present locally — if either is missing (e.g. category sync
-            // hasn't run yet), the row is skipped and will be picked up on the next sync.
-            val attachments = remoteDataSource.fetchRecipeCategoryAttachments(userId)
+            // Pull remote category attachments and rebuild local join rows. Requires both the
+            // recipe and its categories to be present locally — if either is missing (e.g. category
+            // sync hasn't run yet), the row is skipped and picked up on the next sync.
+            val categoryAttachments = remoteDataSource.fetchRecipeCategoryAttachments(userId)
             withContext(ioContext) {
-                for ((recipeRemoteId, categoryRemoteIds) in attachments) {
+                for ((recipeRemoteId, categoryRemoteIds) in categoryAttachments) {
                     val recipeLocalId =
                         db.getByRemoteId(recipeRemoteId).executeAsOneOrNull()?.id ?: continue
                     val desiredLocalIds =
@@ -476,25 +471,73 @@ class RecipeRepositoryImpl(
                     }
                 }
             }
+
+            // Pull remote book attachments and rebuild the local many-to-many join rows.
+            val bookAttachments = remoteDataSource.fetchRecipeBookAttachments(userId)
+            withContext(ioContext) {
+                for ((recipeRemoteId, bookRemoteIds) in bookAttachments) {
+                    val recipeLocalId =
+                        db.getByRemoteId(recipeRemoteId).executeAsOneOrNull()?.id ?: continue
+                    val desiredBookIds =
+                        bookRemoteIds
+                            .mapNotNull { recipeBookDb.getByRemoteId(it).executeAsOneOrNull()?.id }
+                            .toSet()
+                    val current =
+                        bookJoinDb.getBookIdsForRecipe(recipeLocalId).executeAsList().toSet()
+                    for (toAttach in desiredBookIds - current) {
+                        bookJoinDb.attach(recipeBookId = toAttach, recipeId = recipeLocalId)
+                    }
+                    for (toDetach in current - desiredBookIds) {
+                        bookJoinDb.detach(recipeBookId = toDetach, recipeId = recipeLocalId)
+                    }
+                }
+
+                // A recipe must live in at least one book. Any that ended up orphaned (older server
+                // rows, or a book whose own sync hasn't landed yet) is filed under the default book
+                // so it stays visible in the list.
+                recipeBookDb.getDefault().executeAsOneOrNull()?.let { defaultBook ->
+                    for (recipeId in db.getRecipeIdsWithoutBook().executeAsList()) {
+                        bookJoinDb.attach(recipeBookId = defaultBook.id, recipeId = recipeId)
+                    }
+                }
+            }
         } catch (_: Exception) {}
     }
 
     /**
-     * Looks up the remote IDs of the categories currently attached to [recipeLocalId]. Categories
-     * that haven't been remote-synced yet (no [remoteId]) are skipped — they'll be picked up on a
-     * future sync once their own push completes. Returns null if any DB access fails.
+     * The book ids a new recipe should be filed under: the recipe's own set when non-empty,
+     * otherwise the active book (falling back to the default) so every recipe lands in at least one
+     * book.
      */
+    private suspend fun resolveBookIds(recipe: Recipe): Set<Long> {
+        if (recipe.recipeBookIds.isNotEmpty()) return recipe.recipeBookIds
+        return withContext(ioContext) {
+            val fallback =
+                recipeBookRepository.activeBookId.value
+                    ?: recipeBookDb.getDefault().executeAsOneOrNull()?.id
+            setOfNotNull(fallback)
+        }
+    }
+
     /**
-     * Translates a local recipe-book id to its remote id for the wire. Returns null when the book
-     * hasn't been remote-synced yet (no [remoteId]) — the recipe pushes without a book reference
-     * and picks one up on a later sync once the book's own push completes, mirroring how attached
-     * category remote ids are resolved.
+     * Looks up the remote IDs of the books currently attached to [recipeLocalId]. Books that
+     * haven't been remote-synced yet (no [remoteId]) are skipped — they're picked up on a future
+     * sync once their own push completes, mirroring how attached category remote ids are resolved.
      */
-    private suspend fun bookRemoteId(localBookId: Long?): String? =
+    private suspend fun attachedBookRemoteIds(recipeLocalId: Long): Set<String> =
         withContext(ioContext) {
-            localBookId?.let { recipeBookDb.getById(it).executeAsOneOrNull()?.remoteId }
+            bookJoinDb
+                .getBookIdsForRecipe(recipeLocalId)
+                .executeAsList()
+                .mapNotNull { recipeBookDb.getById(it).executeAsOneOrNull()?.remoteId }
+                .toSet()
         }
 
+    /**
+     * Looks up the remote IDs of the categories currently attached to [recipeLocalId]. Categories
+     * that haven't been remote-synced yet (no [remoteId]) are skipped — they'll be picked up on a
+     * future sync once their own push completes.
+     */
     private suspend fun attachedCategoryRemoteIds(recipeLocalId: Long): Set<String> =
         withContext(ioContext) {
             joinDb
@@ -517,6 +560,21 @@ class RecipeRepositoryImpl(
         }
         for (toDetach in current - want) {
             joinDb.detach(recipeId = recipeId, categoryId = toDetach)
+        }
+    }
+
+    /**
+     * Diffs the desired book-membership [want] against the current join rows for [recipeId] and
+     * applies the minimum number of attach/detach operations. Must be called inside a SQLDelight
+     * transaction so the diff can't see a partial mutation.
+     */
+    private fun syncBookJoinRowsForRecipe(recipeId: Long, want: Set<Long>) {
+        val current = bookJoinDb.getBookIdsForRecipe(recipeId).executeAsList().toSet()
+        for (toAttach in want - current) {
+            bookJoinDb.attach(recipeBookId = toAttach, recipeId = recipeId)
+        }
+        for (toDetach in current - want) {
+            bookJoinDb.detach(recipeBookId = toDetach, recipeId = recipeId)
         }
     }
 
@@ -558,7 +616,7 @@ class RecipeRepositoryImpl(
             starRating = starRating?.toInt(),
             isFavorite = isFavorite,
             categories = attachedCategories.toSet(),
-            recipeBookId = recipeBookId,
+            recipeBookIds = bookJoinDb.getBookIdsForRecipe(id).executeAsList().toSet(),
             syncStatus = syncStatus,
             createdAt = Instant.parse(createdAt),
             updatedAt = Instant.parse(updatedAt),

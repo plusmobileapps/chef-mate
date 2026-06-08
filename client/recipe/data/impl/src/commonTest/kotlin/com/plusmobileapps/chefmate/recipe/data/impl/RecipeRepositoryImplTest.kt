@@ -45,6 +45,7 @@ class RecipeRepositoryImplTest {
             joinDb = db.recipeCategoryQueries,
             categoryDb = db.categoryQueries,
             recipeBookDb = db.recipeBookQueries,
+            bookJoinDb = db.recipeBookRecipeQueries,
             recipeBookRepository = fakeBooks,
             ioContext = testDispatcher,
             dateTimeUtil = dateTimeUtil,
@@ -244,7 +245,6 @@ class RecipeRepositoryImplTest {
                 updatedAt = "now",
                 clientId = "tombstone-client",
                 ownerId = null,
-                recipeBookId = null,
             )
             val tombstoneId = db.recipeQueries.lastInsertId().executeAsOne().MAX!!
             db.recipeQueries.updateRemoteId(remoteId = "remote-tombstone", id = tombstoneId)
@@ -269,7 +269,6 @@ class RecipeRepositoryImplTest {
                 updatedAt = "now",
                 clientId = "fresh-client",
                 ownerId = null,
-                recipeBookId = null,
             )
             val freshId = db.recipeQueries.lastInsertId().executeAsOne().MAX!!
             recipeRemote.deleteFailure = { RuntimeException("network") }
@@ -302,7 +301,6 @@ class RecipeRepositoryImplTest {
                 updatedAt = "now",
                 clientId = "tombstone-client",
                 ownerId = null,
-                recipeBookId = null,
             )
             val id = db.recipeQueries.lastInsertId().executeAsOne().MAX!!
             db.recipeQueries.updateRemoteId(remoteId = "remote-1", id = id)
@@ -361,14 +359,34 @@ class RecipeRepositoryImplTest {
         }
 
     @Test
-    fun createRecipe_assigns_the_active_book() =
+    fun createRecipe_files_under_the_active_book_when_none_specified() =
         runTest(testDispatcher) {
             val book = createBook("active")
             fakeBooks.setActiveBook(book)
 
             val created = recipeRepository.createRecipe(blankRecipe(title = "Stamped"))
 
-            created.recipeBookId shouldBe book
+            created.recipeBookIds shouldBe setOf(book)
+        }
+
+    @Test
+    fun createRecipe_can_file_under_multiple_books() =
+        runTest(testDispatcher) {
+            val bookA = createBook("a")
+            val bookB = createBook("b")
+
+            val created =
+                recipeRepository.createRecipe(
+                    blankRecipe(title = "Shared").copy(recipeBookIds = setOf(bookA, bookB))
+                )
+
+            created.recipeBookIds shouldBe setOf(bookA, bookB)
+            recipeRepository.getRecipes(bookA).test {
+                awaitItem().map { it.title } shouldBe listOf("Shared")
+            }
+            recipeRepository.getRecipes(bookB).test {
+                awaitItem().map { it.title } shouldBe listOf("Shared")
+            }
         }
 
     private fun createBook(clientId: String): Long {
@@ -436,6 +454,15 @@ class RecipeRepositoryImplTest {
         override suspend fun fetchRecipeCategoryAttachments(
             ownerId: String
         ): Map<String, Set<String>> = emptyMap()
+
+        val bookAttachmentCalls: MutableList<Pair<String, Set<String>>> = mutableListOf()
+
+        override suspend fun setRecipeBooks(recipeRemoteId: String, bookRemoteIds: Set<String>) {
+            bookAttachmentCalls += recipeRemoteId to bookRemoteIds
+        }
+
+        override suspend fun fetchRecipeBookAttachments(ownerId: String): Map<String, Set<String>> =
+            emptyMap()
     }
 
     private class NoopCategoryRemote : CategoryRemoteDataSource {

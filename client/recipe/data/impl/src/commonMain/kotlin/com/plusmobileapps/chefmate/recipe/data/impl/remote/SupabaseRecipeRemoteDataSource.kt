@@ -66,4 +66,34 @@ class SupabaseRecipeRemoteDataSource(private val supabaseClient: SupabaseClient)
                 .decodeList<RemoteRecipeCategory>()
         return rows.groupBy { it.recipeId }.mapValues { (_, g) -> g.map { it.categoryId }.toSet() }
     }
+
+    override suspend fun setRecipeBooks(recipeRemoteId: String, bookRemoteIds: Set<String>) {
+        // Replace-all, mirroring setRecipeCategories: drop existing rows for the recipe, then
+        // insert
+        // the desired set. The PK (recipe_book_id, recipe_id) keeps the insert safe under retry.
+        supabaseClient.from("recipe_book_recipes").delete {
+            filter { eq("recipe_id", recipeRemoteId) }
+        }
+        if (bookRemoteIds.isEmpty()) return
+        supabaseClient.from("recipe_book_recipes").upsert(
+            bookRemoteIds.map { bookId ->
+                RemoteRecipeBookRecipe(recipeId = recipeRemoteId, recipeBookId = bookId)
+            }
+        ) {
+            onConflict = "recipe_book_id,recipe_id"
+        }
+    }
+
+    override suspend fun fetchRecipeBookAttachments(ownerId: String): Map<String, Set<String>> {
+        val rows =
+            supabaseClient
+                .from("recipe_book_recipes")
+                .select(Columns.raw("recipe_id, recipe_book_id, recipes!inner(owner_id)")) {
+                    filter { eq("recipes.owner_id", ownerId) }
+                }
+                .decodeList<RemoteRecipeBookRecipe>()
+        return rows
+            .groupBy { it.recipeId }
+            .mapValues { (_, g) -> g.map { it.recipeBookId }.toSet() }
+    }
 }
