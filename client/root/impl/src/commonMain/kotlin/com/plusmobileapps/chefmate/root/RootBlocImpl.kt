@@ -20,6 +20,7 @@ import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.featureflag.FeatureFlags
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagsBloc
+import com.plusmobileapps.chefmate.profile.ManageProfileBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
@@ -47,6 +48,7 @@ class RootBlocImpl(
     private val authentication: AuthenticationBloc.Factory,
     private val otpBloc: OtpBloc.Factory,
     private val settingsRoot: SettingsRootBloc.Factory,
+    private val manageProfile: ManageProfileBloc.Factory,
     private val developerSettings: DeveloperSettingsBloc.Factory,
     private val cookMode: CookModeBloc.Factory,
     private val featureFlags: FeatureFlags,
@@ -183,6 +185,15 @@ class RootBlocImpl(
                         settingsRoot.create(context = context, output = ::handleSettingsRootOutput)
                 )
 
+            Configuration.ManageProfile ->
+                RootBloc.Child.ManageProfile(
+                    bloc =
+                        manageProfile.create(
+                            context = context,
+                            output = ::handleManageProfileOutput,
+                        )
+                )
+
             Configuration.DeveloperSettings ->
                 RootBloc.Child.DeveloperSettings(
                     bloc =
@@ -282,6 +293,10 @@ class RootBlocImpl(
                 navigation.bringToFront(Configuration.MealPlanner(output.props))
             }
 
+            BottomNavBloc.Output.OpenManageProfile -> {
+                navigation.bringToFront(Configuration.ManageProfile)
+            }
+
             BottomNavBloc.Output.OpenAppSettings -> {
                 navigation.bringToFront(Configuration.SettingsRoot)
             }
@@ -333,6 +348,15 @@ class RootBlocImpl(
     private fun handleSettingsRootOutput(output: SettingsRootBloc.Output) {
         when (output) {
             SettingsRootBloc.Output.Back -> navigation.pop()
+        }
+    }
+
+    private fun handleManageProfileOutput(output: ManageProfileBloc.Output) {
+        when (output) {
+            // Both pop back to the More tab; on deletion the More tab re-renders unauthenticated
+            // on its own once the auth state flips.
+            ManageProfileBloc.Output.Back,
+            ManageProfileBloc.Output.AccountDeleted -> navigation.pop()
         }
     }
 
@@ -451,6 +475,8 @@ class RootBlocImpl(
         @Serializable data class MealPlanner(val props: MealPlannerRootBloc.Props) : Configuration()
 
         @Serializable data object SettingsRoot : Configuration()
+
+        @Serializable data object ManageProfile : Configuration()
 
         @Serializable data object DeveloperSettings : Configuration()
 

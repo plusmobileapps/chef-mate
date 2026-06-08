@@ -13,6 +13,7 @@ kotlin {
             api(projects.client.developerSettings.public)
             api(projects.client.featureflag.public)
             api(projects.client.grocery.core.public)
+            api(projects.client.profile.public)
             api(projects.client.recipe.core.public)
             api(projects.client.recipe.exporter.public)
             api(projects.client.recipebook.edit.public)

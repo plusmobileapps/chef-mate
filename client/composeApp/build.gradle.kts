@@ -104,6 +104,7 @@ kotlin {
             api(projects.client.recipe.importer.impl)
             api(projects.client.recipebook.data.impl)
             api(projects.client.recipebook.edit.impl)
+            api(projects.client.profile.impl)
             api(projects.client.util.impl)
             api(projects.client.settings.impl)
             api(projects.client.settings.root.impl)
@@ -151,6 +152,7 @@ kotlin {
             implementation(projects.client.recipe.list.implRobots)
             implementation(projects.client.settings.implRobots)
             implementation(projects.client.settings.root.implRobots)
+            implementation(projects.client.profile.implRobots)
         }
         val jvmTest by getting {
             dependencies {
