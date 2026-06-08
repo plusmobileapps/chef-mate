@@ -21,26 +21,28 @@ CREATE TABLE Recipe (
     clientId TEXT,
     isDirty INTEGER AS Boolean NOT NULL DEFAULT 0,
     ownerId TEXT,
-    isPendingDelete INTEGER AS Boolean NOT NULL DEFAULT 0,
-    recipeBookId INTEGER REFERENCES RecipeBook(id)
+    isPendingDelete INTEGER AS Boolean NOT NULL DEFAULT 0
 );
 
 getAll:
 SELECT * FROM Recipe WHERE isPendingDelete = 0 ORDER BY title DESC;
 
 getAllForBook:
-SELECT * FROM Recipe WHERE isPendingDelete = 0 AND recipeBookId = ? ORDER BY title DESC;
+SELECT Recipe.* FROM Recipe
+INNER JOIN RecipeBookRecipe ON Recipe.id = RecipeBookRecipe.recipeId
+WHERE Recipe.isPendingDelete = 0 AND RecipeBookRecipe.recipeBookId = ?
+ORDER BY Recipe.title DESC;
 
 getById:
 SELECT * FROM Recipe WHERE id = ?;
 
 create:
-INSERT INTO Recipe (title, description, ingredients, directions, imageUrl, sourceUrl, servings, prepTime, cookTime, totalTime, calories, starRating, isFavorite, createdAt, updatedAt, clientId, ownerId, recipeBookId)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO Recipe (title, description, ingredients, directions, imageUrl, sourceUrl, servings, prepTime, cookTime, totalTime, calories, starRating, isFavorite, createdAt, updatedAt, clientId, ownerId)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 createWithRemoteId:
-INSERT INTO Recipe (title, description, ingredients, directions, imageUrl, sourceUrl, servings, prepTime, cookTime, totalTime, calories, starRating, isFavorite, createdAt, updatedAt, remoteId, clientId, ownerId, recipeBookId)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO Recipe (title, description, ingredients, directions, imageUrl, sourceUrl, servings, prepTime, cookTime, totalTime, calories, starRating, isFavorite, createdAt, updatedAt, remoteId, clientId, ownerId)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(remoteId) DO UPDATE SET
     title = excluded.title,
     description = excluded.description,
@@ -57,8 +59,7 @@ ON CONFLICT(remoteId) DO UPDATE SET
     isFavorite = excluded.isFavorite,
     updatedAt = excluded.updatedAt,
     clientId = excluded.clientId,
-    ownerId = excluded.ownerId,
-    recipeBookId = excluded.recipeBookId;
+    ownerId = excluded.ownerId;
 
 lastInsertId:
 SELECT MAX(id) FROM Recipe;
@@ -100,8 +101,10 @@ UPDATE Recipe SET clientId = ? WHERE id = ?;
 clearDirty:
 UPDATE Recipe SET isDirty = 0 WHERE id = ?;
 
-setRecipeBook:
-UPDATE Recipe SET recipeBookId = ?, isDirty = 1, updatedAt = ? WHERE id = ?;
+markDirty:
+UPDATE Recipe SET isDirty = 1, updatedAt = ? WHERE id = ?;
 
-assignAllWithoutBook:
-UPDATE Recipe SET recipeBookId = ? WHERE recipeBookId IS NULL;
+getRecipeIdsWithoutBook:
+SELECT Recipe.id FROM Recipe
+LEFT JOIN RecipeBookRecipe ON Recipe.id = RecipeBookRecipe.recipeId
+WHERE RecipeBookRecipe.recipeId IS NULL AND Recipe.isPendingDelete = 0;

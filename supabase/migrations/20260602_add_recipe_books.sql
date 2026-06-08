@@ -1,15 +1,14 @@
--- Adds the `recipe_books` table and links every recipe to a book.
+-- Adds the `recipe_books` table and the `recipe_book_recipes` many-to-many join: a
+-- recipe can belong to several books.
 --
 -- A RecipeBook holds a collection of recipes. Every user gets a single default
--- "My Recipes" book (`is_default = true`); existing recipes are backfilled onto it.
--- Phase 1 is single-owner only — collaboration, invites, public visibility and
--- duplication land in later phases. RLS therefore mirrors the existing owner-scoped
--- model used by `recipes` and `categories`.
+-- "My Recipes" book (`is_default = true`); existing recipes are linked to it via the
+-- join table. Phase 1 is single-owner only — collaboration, invites, public visibility
+-- and duplication land in later phases. RLS therefore mirrors the existing owner-scoped
+-- model used by `recipes` and `recipe_categories`.
 --
 -- `client_id` is UNIQUE because the client-side upsert relies on
 -- `onConflict = "client_id"` to dedup creates retried after a transient failure.
--- `recipe_book_id` on `recipes` is left NULLABLE so clients that haven't upgraded
--- yet can still insert recipes; the client backfills a missing book to the default.
 
 CREATE TABLE IF NOT EXISTS recipe_books (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -48,13 +47,55 @@ FROM recipes
 WHERE owner_id IS NOT NULL
 ON CONFLICT DO NOTHING;
 
--- Add the nullable FK column to recipes, index it, then backfill onto each owner's default book.
-ALTER TABLE recipes ADD COLUMN IF NOT EXISTS recipe_book_id UUID
-    REFERENCES recipe_books(id) ON DELETE SET NULL;
+-- Many-to-many join between recipes and recipe books. Mirrors recipe_categories.
+CREATE TABLE IF NOT EXISTS recipe_book_recipes (
+    recipe_book_id UUID NOT NULL REFERENCES recipe_books(id) ON DELETE CASCADE,
+    recipe_id UUID NOT NULL REFERENCES recipes(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (recipe_book_id, recipe_id)
+);
 
-CREATE INDEX IF NOT EXISTS idx_recipes_recipe_book ON recipes(recipe_book_id);
+CREATE INDEX IF NOT EXISTS idx_recipe_book_recipes_recipe ON recipe_book_recipes(recipe_id);
 
-UPDATE recipes r
-SET recipe_book_id = rb.id
-FROM recipe_books rb
-WHERE rb.owner_id = r.owner_id AND rb.is_default AND r.recipe_book_id IS NULL;
+ALTER TABLE recipe_book_recipes ENABLE ROW LEVEL SECURITY;
+
+-- Recipe ownership gates the join rows: insert/delete requires owning both the recipe AND
+-- the book, which keeps users from filing another user's recipe (or into another user's book).
+CREATE POLICY "Users can view own recipe book links" ON recipe_book_recipes
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM recipes
+            WHERE recipes.id = recipe_book_recipes.recipe_id
+              AND recipes.owner_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Users can insert own recipe book links" ON recipe_book_recipes
+    FOR INSERT WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM recipes
+            WHERE recipes.id = recipe_book_recipes.recipe_id
+              AND recipes.owner_id = auth.uid()
+        )
+        AND EXISTS (
+            SELECT 1 FROM recipe_books
+            WHERE recipe_books.id = recipe_book_recipes.recipe_book_id
+              AND recipe_books.owner_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Users can delete own recipe book links" ON recipe_book_recipes
+    FOR DELETE USING (
+        EXISTS (
+            SELECT 1 FROM recipes
+            WHERE recipes.id = recipe_book_recipes.recipe_id
+              AND recipes.owner_id = auth.uid()
+        )
+    );
+
+-- Link every existing recipe to its owner's default book.
+INSERT INTO recipe_book_recipes (recipe_book_id, recipe_id)
+SELECT rb.id, r.id
+FROM recipes r
+JOIN recipe_books rb ON rb.owner_id = r.owner_id AND rb.is_default
+ON CONFLICT DO NOTHING;
