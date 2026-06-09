@@ -122,7 +122,6 @@ class RecipeBookRepositoryImplTest {
 
         override suspend fun deleteRecipeBook(remoteId: String) = Unit
 
-        override suspend fun fetchAllRecipeBooks(ownerId: String): List<RemoteRecipeBook> =
-            emptyList()
+        override suspend fun fetchAccessibleRecipeBooks(): List<RemoteRecipeBook> = emptyList()
     }
 }

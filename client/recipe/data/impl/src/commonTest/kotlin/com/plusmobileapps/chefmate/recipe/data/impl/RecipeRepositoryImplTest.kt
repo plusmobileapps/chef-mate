@@ -445,7 +445,7 @@ class RecipeRepositoryImplTest {
             deleteFailure?.invoke()?.let { throw it }
         }
 
-        override suspend fun fetchAllRecipes(ownerId: String): List<RemoteRecipe> = fetchResult
+        override suspend fun fetchAccessibleRecipes(): List<RemoteRecipe> = fetchResult
 
         override suspend fun setRecipeCategories(
             recipeRemoteId: String,
@@ -454,9 +454,7 @@ class RecipeRepositoryImplTest {
             attachmentCalls += recipeRemoteId to categoryRemoteIds
         }
 
-        override suspend fun fetchRecipeCategoryAttachments(
-            ownerId: String
-        ): Map<String, Set<String>> = emptyMap()
+        override suspend fun fetchRecipeCategoryAttachments(): Map<String, Set<String>> = emptyMap()
 
         val bookAttachmentCalls: MutableList<Pair<String, Set<String>>> = mutableListOf()
 
@@ -464,8 +462,7 @@ class RecipeRepositoryImplTest {
             bookAttachmentCalls += recipeRemoteId to bookRemoteIds
         }
 
-        override suspend fun fetchRecipeBookAttachments(ownerId: String): Map<String, Set<String>> =
-            emptyMap()
+        override suspend fun fetchRecipeBookAttachments(): Map<String, Set<String>> = emptyMap()
     }
 
     private class NoopCategoryRemote : CategoryRemoteDataSource {

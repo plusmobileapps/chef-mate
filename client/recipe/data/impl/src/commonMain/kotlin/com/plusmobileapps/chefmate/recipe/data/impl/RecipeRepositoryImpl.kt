@@ -405,8 +405,8 @@ class RecipeRepositoryImpl(
                 } catch (_: Exception) {}
             }
 
-            // Pull remote recipes
-            val remoteRecipes = remoteDataSource.fetchAllRecipes(userId)
+            // Pull every accessible recipe — owned plus recipes in books shared with the user.
+            val remoteRecipes = remoteDataSource.fetchAccessibleRecipes()
             withContext(ioContext) {
                 for (remote in remoteRecipes) {
                     val remoteId = remote.id ?: continue
@@ -438,7 +438,9 @@ class RecipeRepositoryImpl(
                             updatedAt = remote.updatedAt ?: dateTimeUtil.now.toString(),
                             remoteId = remoteId,
                             clientId = remote.clientId,
-                            ownerId = userId,
+                            // Preserve the real owner so shared recipes aren't mistaken for the
+                            // current user's own; defensively fall back to the syncing user.
+                            ownerId = remote.ownerId.ifBlank { userId },
                         )
                     }
                 }
@@ -447,7 +449,7 @@ class RecipeRepositoryImpl(
             // Pull remote category attachments and rebuild local join rows. Requires both the
             // recipe and its categories to be present locally — if either is missing (e.g. category
             // sync hasn't run yet), the row is skipped and picked up on the next sync.
-            val categoryAttachments = remoteDataSource.fetchRecipeCategoryAttachments(userId)
+            val categoryAttachments = remoteDataSource.fetchRecipeCategoryAttachments()
             withContext(ioContext) {
                 for ((recipeRemoteId, categoryRemoteIds) in categoryAttachments) {
                     val recipeLocalId =
@@ -472,7 +474,7 @@ class RecipeRepositoryImpl(
             }
 
             // Pull remote book attachments and rebuild the local many-to-many join rows.
-            val bookAttachments = remoteDataSource.fetchRecipeBookAttachments(userId)
+            val bookAttachments = remoteDataSource.fetchRecipeBookAttachments()
             withContext(ioContext) {
                 for ((recipeRemoteId, bookRemoteIds) in bookAttachments) {
                     val recipeLocalId =

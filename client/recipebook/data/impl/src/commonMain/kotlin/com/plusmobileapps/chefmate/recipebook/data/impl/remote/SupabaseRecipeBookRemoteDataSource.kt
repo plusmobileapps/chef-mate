@@ -28,9 +28,6 @@ class SupabaseRecipeBookRemoteDataSource(private val supabaseClient: SupabaseCli
         supabaseClient.from("recipe_books").delete { filter { eq("id", remoteId) } }
     }
 
-    override suspend fun fetchAllRecipeBooks(ownerId: String): List<RemoteRecipeBook> =
-        supabaseClient
-            .from("recipe_books")
-            .select { filter { eq("owner_id", ownerId) } }
-            .decodeList<RemoteRecipeBook>()
+    override suspend fun fetchAccessibleRecipeBooks(): List<RemoteRecipeBook> =
+        supabaseClient.from("recipe_books").select().decodeList<RemoteRecipeBook>()
 }

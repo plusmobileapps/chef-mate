@@ -5,5 +5,9 @@ interface RecipeBookRemoteDataSource {
 
     suspend fun deleteRecipeBook(remoteId: String)
 
-    suspend fun fetchAllRecipeBooks(ownerId: String): List<RemoteRecipeBook>
+    /**
+     * Every recipe book the current user can access — owned plus those shared with them. Row-level
+     * security on the server scopes the result, so no owner filter is applied here.
+     */
+    suspend fun fetchAccessibleRecipeBooks(): List<RemoteRecipeBook>
 }
