@@ -37,3 +37,24 @@ fun EditRecipeLightScreenshot() {
 fun EditRecipeDarkScreenshot() {
     EditRecipeScreenshot(darkTheme = true)
 }
+
+// Wide (expanded) window: the form spreads into the photo + metadata top row and the
+// ingredients | description+directions two-pane split.
+@PreviewTest
+@Preview(showBackground = true, widthDp = 1280, heightDp = 1300)
+@Composable
+fun EditRecipeWideLightScreenshot() {
+    EditRecipeScreenshot()
+}
+
+@PreviewTest
+@Preview(
+    showBackground = true,
+    widthDp = 1280,
+    heightDp = 1300,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Composable
+fun EditRecipeWideDarkScreenshot() {
+    EditRecipeScreenshot(darkTheme = true)
+}
