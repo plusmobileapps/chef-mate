@@ -1,7 +1,6 @@
 package com.plusmobileapps.chefmate.recipe.core.impl.edit.ui
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,9 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.DragHandle
-import androidx.compose.material.icons.filled.FormatBold
-import androidx.compose.material.icons.filled.FormatItalic
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.AlertDialog
@@ -33,7 +29,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -41,7 +36,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,12 +47,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -87,7 +78,6 @@ import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_ingredients_placeholder
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_prep_time
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_prep_time_placeholder
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_resize_handle_a11y
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_servings
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_servings_placeholder
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_source_url
@@ -96,8 +86,6 @@ import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_title_placeholder
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_total_time
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_total_time_placeholder
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_format_bold_a11y
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_format_italic_a11y
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_save
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload_photo
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload_photo_dismiss
@@ -105,14 +93,12 @@ import coil3.compose.AsyncImage
 import com.plusmobileapps.chefmate.recipe.categories.pickerLabelRes
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeTestTags
-import com.plusmobileapps.chefmate.recipe.core.impl.text.BOLD_MARKER
-import com.plusmobileapps.chefmate.recipe.core.impl.text.ITALIC_MARKER
-import com.plusmobileapps.chefmate.recipe.core.impl.text.toggleInlineMarker
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
+import com.plusmobileapps.chefmate.ui.components.PlusMarkdownEditor
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -662,7 +648,7 @@ private fun RecipeCaloriesField(bloc: EditRecipeBloc, modifier: Modifier = Modif
 private fun RecipeIngredientsField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     val ingredients by bloc.ingredients.collectAsState()
 
-    MarkdownEditorField(
+    PlusMarkdownEditor(
         value = ingredients,
         onValueChange = bloc::onIngredientsChanged,
         label = stringResource(Res.string.edit_recipe_field_ingredients),
@@ -675,130 +661,13 @@ private fun RecipeIngredientsField(bloc: EditRecipeBloc, modifier: Modifier = Mo
 private fun RecipeDirectionsField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     val directions by bloc.directions.collectAsState()
 
-    MarkdownEditorField(
+    PlusMarkdownEditor(
         value = directions,
         onValueChange = bloc::onDirectionsChanged,
         label = stringResource(Res.string.edit_recipe_field_directions),
         placeholder = stringResource(Res.string.edit_recipe_field_directions_placeholder),
         modifier = modifier,
     )
-}
-
-/**
- * Bridges the bloc's plain [String] field to the selection-aware [ResizableMarkdownField]. A local
- * [TextFieldValue] owns the cursor/selection while editing; it re-syncs only when the bloc text
- * diverges (async load, discard) so typing never resets the caret. The stored value is just text —
- * markdown markers (`**bold**`, `_italic_`) live inline, so no data-model change is needed.
- */
-@Composable
-private fun MarkdownEditorField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    placeholder: String,
-    modifier: Modifier = Modifier,
-) {
-    var fieldValue by remember { mutableStateOf(TextFieldValue(value)) }
-    LaunchedEffect(value) {
-        if (value != fieldValue.text) {
-            fieldValue = TextFieldValue(value, TextRange(value.length))
-        }
-    }
-
-    ResizableMarkdownField(
-        value = fieldValue,
-        onValueChange = {
-            fieldValue = it
-            onValueChange(it.text)
-        },
-        label = label,
-        placeholder = placeholder,
-        modifier = modifier,
-    )
-}
-
-/**
- * A tall multiline text field with a bold/italic formatting toolbar above it and a drag handle in
- * the bottom-end corner. Dragging the handle grows or shrinks the field between [minHeight] and
- * [maxHeight]; text scrolls internally once it exceeds the current height. The chosen height
- * survives configuration changes via [rememberSaveable].
- */
-@Composable
-private fun ResizableMarkdownField(
-    value: TextFieldValue,
-    onValueChange: (TextFieldValue) -> Unit,
-    label: String,
-    placeholder: String,
-    modifier: Modifier = Modifier,
-    minHeight: Dp = 160.dp,
-    maxHeight: Dp = 480.dp,
-    initialHeight: Dp = 200.dp,
-) {
-    var heightDp by rememberSaveable { mutableStateOf(initialHeight.value) }
-
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingExtraSmall),
-    ) {
-        MarkdownFormatToolbar(
-            onBold = { onValueChange(value.toggleInlineMarker(BOLD_MARKER)) },
-            onItalic = { onValueChange(value.toggleInlineMarker(ITALIC_MARKER)) },
-        )
-        Box(modifier = Modifier.fillMaxWidth()) {
-            OutlinedTextField(
-                value = value,
-                onValueChange = onValueChange,
-                label = { Text(label) },
-                placeholder = { Text(placeholder) },
-                modifier = Modifier.fillMaxWidth().height(heightDp.dp),
-            )
-            Icon(
-                imageVector = Icons.Default.DragHandle,
-                contentDescription =
-                    stringResource(Res.string.edit_recipe_field_resize_handle_a11y, label),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier =
-                    Modifier.align(Alignment.BottomEnd)
-                        .padding(ChefMateTheme.dimens.paddingSmall)
-                        .size(20.dp)
-                        .pointerInput(Unit) {
-                            detectDragGestures { change, dragAmount ->
-                                change.consume()
-                                heightDp =
-                                    (heightDp + dragAmount.y.toDp().value).coerceIn(
-                                        minHeight.value,
-                                        maxHeight.value,
-                                    )
-                            }
-                        },
-            )
-        }
-    }
-}
-
-@Composable
-private fun MarkdownFormatToolbar(
-    onBold: () -> Unit,
-    onItalic: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingExtraSmall),
-    ) {
-        IconButton(onClick = onBold) {
-            Icon(
-                imageVector = Icons.Default.FormatBold,
-                contentDescription = stringResource(Res.string.edit_recipe_format_bold_a11y),
-            )
-        }
-        IconButton(onClick = onItalic) {
-            Icon(
-                imageVector = Icons.Default.FormatItalic,
-                contentDescription = stringResource(Res.string.edit_recipe_format_italic_a11y),
-            )
-        }
-    }
 }
 
 @Composable

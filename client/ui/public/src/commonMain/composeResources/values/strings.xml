@@ -4,4 +4,10 @@
     <string name="loading">Loading</string>
     <string name="save">Save</string>
     <string name="okay">Okay</string>
+    <string name="markdown_editor_tab_write">Markdown</string>
+    <string name="markdown_editor_tab_preview">Preview</string>
+    <string name="markdown_editor_bold_a11y">Bold</string>
+    <string name="markdown_editor_italic_a11y">Italic</string>
+    <string name="markdown_editor_resize_handle_a11y">Drag to resize %1$s field</string>
+    <string name="markdown_editor_preview_empty">Nothing to preview yet</string>
 </resources>

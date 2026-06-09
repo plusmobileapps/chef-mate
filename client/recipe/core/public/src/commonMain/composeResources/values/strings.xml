@@ -90,9 +90,6 @@
     <string name="edit_recipe_field_ingredients_placeholder">Enter ingredients (one per line)</string>
     <string name="edit_recipe_field_directions">Directions</string>
     <string name="edit_recipe_field_directions_placeholder">Enter cooking directions</string>
-    <string name="edit_recipe_field_resize_handle_a11y">Drag to resize %1$s field</string>
-    <string name="edit_recipe_format_bold_a11y">Bold</string>
-    <string name="edit_recipe_format_italic_a11y">Italic</string>
     <string name="edit_recipe_field_category">Categories</string>
     <string name="edit_recipe_field_category_none">No categories</string>
     <string name="edit_recipe_field_category_add">Add category</string>
