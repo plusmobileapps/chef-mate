@@ -2,6 +2,8 @@ package com.plusmobileapps.chefmate.recipebook.edit
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBookMember
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBookRole
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
@@ -16,12 +18,27 @@ interface EditRecipeBookBloc : BlocScreen {
 
     fun onCloseClicked()
 
+    fun onInviteEmailChanged(email: String)
+
+    fun onInviteRoleChanged(role: RecipeBookRole)
+
+    fun onInviteClicked()
+
+    fun onRemoveMember(memberId: String)
+
     data class Model(
         val title: TextData,
         val name: String = "",
         val isCreate: Boolean = true,
         val isSaving: Boolean = false,
         val nameError: TextData? = null,
+        /** True when editing a book the current user owns — gates the collaborators section. */
+        val canManageCollaborators: Boolean = false,
+        val members: List<RecipeBookMember> = emptyList(),
+        val inviteEmail: String = "",
+        val inviteRole: RecipeBookRole = RecipeBookRole.EDITOR,
+        val isInviting: Boolean = false,
+        val inviteError: TextData? = null,
     ) {
         val canSave: Boolean
             get() = name.isNotBlank() && !isSaving
