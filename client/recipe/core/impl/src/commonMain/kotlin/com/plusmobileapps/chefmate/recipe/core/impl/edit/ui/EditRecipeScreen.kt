@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -100,6 +102,8 @@ import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
+import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
+import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import com.plusmobileapps.chefmate.util.cropImageToSquare
 import com.plusmobileapps.chefmate.util.decodeImageBitmap
@@ -127,20 +131,29 @@ fun EditRecipeScreen(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
         UploadErrorDialog(message = error.localized(), onDismiss = bloc::onUploadErrorDismissed)
     }
 
-    PlusHeaderContainer(
-        modifier = modifier.fillMaxSize().imePadding().testTag(EditRecipeTestTags.SCREEN),
-        data = PlusHeaderData.Child(title = state.title, onBackClick = bloc::onBackClicked),
-        verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingNormal),
-        floatingActionButton = {
-            SaveRecipeFab(isSaving = state.isSaving, onSaveClicked = bloc::onSaveClicked)
-        },
-    ) {
-        if (state.isLoading) {
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                LoadingIndicator()
+    PlusResponsiveContainer(modifier = modifier.fillMaxSize()) { windowSizeClass ->
+        // The form lays out in two regions on a wide window (expanded); narrower windows keep the
+        // single capped column. Opting out of the content-width cap lets the wide layout spread.
+        val isExpanded = windowSizeClass == WindowSizeClass.EXPANDED
+
+        PlusHeaderContainer(
+            modifier = Modifier.fillMaxSize().imePadding().testTag(EditRecipeTestTags.SCREEN),
+            data = PlusHeaderData.Child(title = state.title, onBackClick = bloc::onBackClicked),
+            verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingNormal),
+            maxContentWidth = if (isExpanded) Dp.Unspecified else 600.dp,
+            floatingActionButton = {
+                SaveRecipeFab(isSaving = state.isSaving, onSaveClicked = bloc::onSaveClicked)
+            },
+        ) {
+            if (state.isLoading) {
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    LoadingIndicator()
+                }
+            } else if (isExpanded) {
+                WideEditRecipeContent(bloc = bloc)
+            } else {
+                EditRecipeContent(bloc = bloc)
             }
-        } else {
-            EditRecipeContent(bloc = bloc)
         }
     }
 }
@@ -189,6 +202,62 @@ private fun EditRecipeContent(bloc: EditRecipeBloc, modifier: Modifier = Modifie
         RecipeCaloriesField(bloc = bloc)
         RecipeIngredientsField(bloc = bloc)
         RecipeDirectionsField(bloc = bloc)
+        // Clearance so the floating Save button never covers the last field.
+        Spacer(modifier = Modifier.height(ChefMateTheme.dimens.fabClearance))
+    }
+}
+
+/**
+ * Wide-window layout: the photo + metadata fields share a top row, and the long-form fields split
+ * into two panes below — ingredients on the left, description and directions on the right — so the
+ * form fills the available width instead of a single centered column. Reuses the same field
+ * composables as [EditRecipeContent]; only the arrangement differs.
+ */
+@Composable
+private fun WideEditRecipeContent(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
+    val spacing = ChefMateTheme.dimens.paddingNormal
+    Column(
+        modifier = modifier.fillMaxWidth().padding(spacing),
+        verticalArrangement = Arrangement.spacedBy(spacing),
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
+            Box(modifier = Modifier.width(220.dp)) { RecipePhotoUploader(bloc = bloc) }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(spacing),
+            ) {
+                RecipeTitleField(bloc = bloc)
+                RecipeStarRatingField(bloc = bloc)
+                Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
+                    RecipeServingsField(bloc = bloc, modifier = Modifier.weight(1f))
+                    RecipeCaloriesField(bloc = bloc, modifier = Modifier.weight(1f))
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
+                    RecipePrepTimeField(bloc = bloc, modifier = Modifier.weight(1f))
+                    RecipeCookTimeField(bloc = bloc, modifier = Modifier.weight(1f))
+                    RecipeTotalTimeField(bloc = bloc, modifier = Modifier.weight(1f))
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
+                    RecipeImageUrlField(bloc = bloc, modifier = Modifier.weight(1f))
+                    RecipeSourceUrlField(bloc = bloc, modifier = Modifier.weight(1f))
+                }
+                RecipeCategoryField(bloc = bloc)
+                RecipeBooksField(bloc = bloc)
+            }
+        }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
+            Column(modifier = Modifier.weight(1f)) { RecipeIngredientsField(bloc = bloc) }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(spacing),
+            ) {
+                RecipeDescriptionField(bloc = bloc)
+                RecipeDirectionsField(bloc = bloc)
+            }
+        }
+        // Clearance so the floating Save button never covers the last field.
+        Spacer(modifier = Modifier.height(ChefMateTheme.dimens.fabClearance))
     }
 }
 
