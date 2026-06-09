@@ -1,9 +1,0 @@
-{
-  "rules": [
-    "Use Kotlin for all new code as this is a kotlin multiplatform project.",
-    {
-      "filePathMatches": "**/*.kt",
-      "rulesPaths": "docs/architecture.md"
-    }
-  ]
-}
