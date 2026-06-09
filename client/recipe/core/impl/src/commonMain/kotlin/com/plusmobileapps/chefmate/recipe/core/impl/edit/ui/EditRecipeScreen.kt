@@ -678,7 +678,11 @@ private fun DiscardChangesDialog(
     )
 }
 
-private val previewBloc =
+/**
+ * Public so `client/ui/screenshot-test` can reuse it for snapshot coverage of [EditRecipeScreen],
+ * the same way the other feature previews expose their fake blocs.
+ */
+val previewEditRecipeBloc =
     object : EditRecipeBloc {
         override val state: StateFlow<EditRecipeBloc.Model> =
             MutableStateFlow(
@@ -804,11 +808,11 @@ Salt for pasta water"""
 @Preview
 @Composable
 private fun EditRecipeScreenLightPreview() {
-    ChefMateTheme(darkTheme = false) { EditRecipeScreen(bloc = previewBloc) }
+    ChefMateTheme(darkTheme = false) { EditRecipeScreen(bloc = previewEditRecipeBloc) }
 }
 
 @Preview
 @Composable
 private fun EditRecipeScreenDarkPreview() {
-    ChefMateTheme(darkTheme = true) { EditRecipeScreen(bloc = previewBloc) }
+    ChefMateTheme(darkTheme = true) { EditRecipeScreen(bloc = previewEditRecipeBloc) }
 }
