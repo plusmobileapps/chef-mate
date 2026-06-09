@@ -42,6 +42,10 @@ class ManageProfileRobot(private val test: ComposeUiTest) {
         test.onNode(hasTestTag(ManageProfileTestTags.SAVE) and onScreen).performClick()
     }
 
+    fun tapDeleteAccount(): ManageProfileRobot = apply {
+        test.onNode(hasTestTag(ManageProfileTestTags.DELETE_ACCOUNT) and onScreen).performClick()
+    }
+
     fun assertDisplayed(): ManageProfileRobot = apply {
         test.onNode(hasTestTag(ManageProfileTestTags.SCREEN)).assertIsDisplayed()
     }

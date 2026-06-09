@@ -18,6 +18,7 @@ import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.providers.builtin.OTP
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.auth.user.UserInfo
+import io.github.jan.supabase.functions.functions
 import kotlin.coroutines.CoroutineContext
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -214,6 +215,15 @@ class SupabaseAuthenticationRepository(
             Result.success(Unit)
         } catch (e: Exception) {
             Logger.w(throwable = e, tag = TAG) { "Failed to update profile" }
+            Result.failure(e)
+        }
+
+    override suspend fun deleteAccount(): Result<Unit> =
+        try {
+            supabaseClient.functions.invoke("delete-account")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Logger.w(throwable = e, tag = TAG) { "Failed to delete account" }
             Result.failure(e)
         }
 

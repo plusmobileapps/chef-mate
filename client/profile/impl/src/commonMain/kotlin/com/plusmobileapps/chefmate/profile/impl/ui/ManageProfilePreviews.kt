@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.plusmobileapps.chefmate.profile.ManageProfileBloc
 import com.plusmobileapps.chefmate.profile.ManageProfileBloc.Model
+import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -17,6 +18,12 @@ private fun manageProfileBloc(model: Model): ManageProfileBloc =
         override fun onDisplayNameChanged(displayName: String) = Unit
 
         override fun onSaveClicked() = Unit
+
+        override fun onDeleteAccountClicked() = Unit
+
+        override fun onDeleteConfirmed() = Unit
+
+        override fun onDeleteDismissed() = Unit
 
         @Composable
         override fun Content(modifier: Modifier) {
@@ -32,8 +39,28 @@ val previewManageProfileSavingBloc: ManageProfileBloc =
         Model(displayName = "Julia Child", email = "julia@example.com", isSaving = true)
     )
 
+val previewManageProfileDeleteDialogBloc: ManageProfileBloc =
+    manageProfileBloc(
+        Model(displayName = "Julia Child", email = "julia@example.com", showDeleteDialog = true)
+    )
+
+val previewManageProfileDeleteErrorBloc: ManageProfileBloc =
+    manageProfileBloc(
+        Model(
+            displayName = "Julia Child",
+            email = "julia@example.com",
+            deleteError = FixedString("Couldn’t delete your account. Please try again."),
+        )
+    )
+
 @Preview
 @Composable
 internal fun ManageProfilePreview() {
     ChefMateTheme { previewManageProfileBloc.Content(Modifier) }
+}
+
+@Preview
+@Composable
+internal fun ManageProfileDeleteDialogPreview() {
+    ChefMateTheme { previewManageProfileDeleteDialogBloc.Content(Modifier) }
 }

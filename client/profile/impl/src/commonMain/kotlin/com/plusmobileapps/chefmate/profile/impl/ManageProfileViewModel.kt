@@ -1,10 +1,12 @@
 package com.plusmobileapps.chefmate.profile.impl
 
 import chefmate.client.profile.public.generated.resources.Res
+import chefmate.client.profile.public.generated.resources.manage_profile_delete_error
 import chefmate.client.profile.public.generated.resources.manage_profile_save_error
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
+import com.plusmobileapps.chefmate.auth.usecase.DeleteAccountUseCase
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.profile.ManageProfileBloc.Model
 import com.plusmobileapps.chefmate.text.asTextData
@@ -23,6 +25,7 @@ import kotlinx.coroutines.launch
 class ManageProfileViewModel(
     @Main mainContext: CoroutineContext,
     private val authenticationRepository: AuthenticationRepository,
+    private val deleteAccountUseCase: DeleteAccountUseCase,
 ) : ViewModel(mainContext) {
 
     private val _state = MutableStateFlow(initialState())
@@ -62,7 +65,33 @@ class ManageProfileViewModel(
         }
     }
 
+    fun showDeleteDialog() {
+        _state.update { it.copy(showDeleteDialog = true, deleteError = null) }
+    }
+
+    fun dismissDeleteDialog() {
+        _state.update { it.copy(showDeleteDialog = false) }
+    }
+
+    fun deleteAccount() {
+        _state.update { it.copy(showDeleteDialog = false, isDeleting = true, deleteError = null) }
+        scope.launch {
+            deleteAccountUseCase()
+                .onSuccess { _outputs.send(Output.Deleted) }
+                .onFailure {
+                    _state.update {
+                        it.copy(
+                            isDeleting = false,
+                            deleteError = Res.string.manage_profile_delete_error.asTextData(),
+                        )
+                    }
+                }
+        }
+    }
+
     sealed interface Output {
         data object Saved : Output
+
+        data object Deleted : Output
     }
 }

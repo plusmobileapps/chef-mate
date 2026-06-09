@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -11,7 +12,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextAlign
 import chefmate.client.profile.public.generated.resources.Res
+import chefmate.client.profile.public.generated.resources.manage_profile_delete_account
+import chefmate.client.profile.public.generated.resources.manage_profile_delete_dialog_cancel
+import chefmate.client.profile.public.generated.resources.manage_profile_delete_dialog_confirm
+import chefmate.client.profile.public.generated.resources.manage_profile_delete_dialog_message
+import chefmate.client.profile.public.generated.resources.manage_profile_delete_dialog_title
 import chefmate.client.profile.public.generated.resources.manage_profile_display_name_hint
 import chefmate.client.profile.public.generated.resources.manage_profile_display_name_label
 import chefmate.client.profile.public.generated.resources.manage_profile_email_label
@@ -21,6 +28,8 @@ import com.plusmobileapps.chefmate.profile.ManageProfileBloc
 import com.plusmobileapps.chefmate.profile.ManageProfileTestTags
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusButton
+import com.plusmobileapps.chefmate.ui.components.PlusButtonVariant
+import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusTextField
@@ -29,6 +38,17 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 @Composable
 fun ManageProfileScreen(bloc: ManageProfileBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
+
+    if (state.showDeleteDialog) {
+        PlusDialog(
+            title = Res.string.manage_profile_delete_dialog_title.asTextData(),
+            message = Res.string.manage_profile_delete_dialog_message.asTextData(),
+            confirmButtonText = Res.string.manage_profile_delete_dialog_confirm.asTextData(),
+            dismissButtonText = Res.string.manage_profile_delete_dialog_cancel.asTextData(),
+            onConfirmClick = bloc::onDeleteConfirmed,
+            onDismissRequest = bloc::onDeleteDismissed,
+        )
+    }
 
     PlusHeaderContainer(
         modifier = modifier.testTag(ManageProfileTestTags.SCREEN),
@@ -54,7 +74,7 @@ fun ManageProfileScreen(bloc: ManageProfileBloc, modifier: Modifier = Modifier) 
                         Text(Res.string.manage_profile_display_name_hint.asTextData().localized())
                     },
                     singleLine = true,
-                    enabled = !state.isSaving,
+                    enabled = !state.isSaving && !state.isDeleting,
                     error = state.saveError,
                 )
 
@@ -76,6 +96,25 @@ fun ManageProfileScreen(bloc: ManageProfileBloc, modifier: Modifier = Modifier) 
                     enabled = state.canSave,
                     isLoading = state.isSaving,
                     onClick = bloc::onSaveClicked,
+                )
+
+                state.deleteError?.let { error ->
+                    Text(
+                        error.localized(),
+                        style = ChefMateTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+
+                PlusButton(
+                    text = Res.string.manage_profile_delete_account.asTextData(),
+                    variant = PlusButtonVariant.DESTRUCTIVE,
+                    modifier =
+                        Modifier.fillMaxWidth().testTag(ManageProfileTestTags.DELETE_ACCOUNT),
+                    enabled = !state.isSaving && !state.isDeleting,
+                    isLoading = state.isDeleting,
+                    onClick = bloc::onDeleteAccountClicked,
                 )
             }
         },

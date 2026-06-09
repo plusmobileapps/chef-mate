@@ -353,7 +353,8 @@ class RootBlocImpl(
 
     private fun handleManageProfileOutput(output: ManageProfileBloc.Output) {
         when (output) {
-            ManageProfileBloc.Output.Back -> navigation.pop()
+            ManageProfileBloc.Output.Back,
+            ManageProfileBloc.Output.AccountDeleted -> navigation.pop()
         }
     }
 

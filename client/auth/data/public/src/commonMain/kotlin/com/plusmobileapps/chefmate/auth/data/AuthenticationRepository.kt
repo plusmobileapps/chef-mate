@@ -26,6 +26,8 @@ interface AuthenticationRepository {
 
     suspend fun updateProfile(displayName: String): Result<Unit>
 
+    suspend fun deleteAccount(): Result<Unit>
+
     suspend fun sendPasswordResetEmail(email: String): Result<Unit>
 
     suspend fun sendSignInOtp(email: String): Result<Unit>

@@ -15,18 +15,29 @@ interface ManageProfileBloc : BlocScreen {
 
     fun onSaveClicked()
 
+    fun onDeleteAccountClicked()
+
+    fun onDeleteConfirmed()
+
+    fun onDeleteDismissed()
+
     data class Model(
         val displayName: String = "",
         val email: String = "",
         val isSaving: Boolean = false,
         val saveError: TextData? = null,
+        val showDeleteDialog: Boolean = false,
+        val isDeleting: Boolean = false,
+        val deleteError: TextData? = null,
     ) {
         val canSave: Boolean
-            get() = displayName.isNotBlank() && !isSaving
+            get() = displayName.isNotBlank() && !isSaving && !isDeleting
     }
 
     sealed class Output {
         data object Back : Output()
+
+        data object AccountDeleted : Output()
     }
 
     fun interface Factory {

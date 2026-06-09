@@ -13,6 +13,7 @@ kotlin {
             implementation(libs.arkivanov.decompose.compose.extensions)
             implementation(projects.client.shared)
             implementation(projects.client.auth.data.public)
+            implementation(projects.client.auth.usecase.public)
             implementation(compose.components.resources)
         }
         commonTest.dependencies { implementation(projects.client.auth.data.testing) }
