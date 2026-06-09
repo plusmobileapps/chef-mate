@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.recipe.core.impl.text
+package com.plusmobileapps.chefmate.ui.text
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
