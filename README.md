@@ -1,6 +1,8 @@
 # Chef Mate
 
-An app that is your mate in the kitchen managing the grocery list and keeping recipes to help you cook.
+A Kotlin Multiplatform app that is a mate to any chef in the kitchen managing recipes, grocery lists, and meal planning. It is available on Android, iOS, MacOS, Windows & Linux. 
+
+[Download Page](https://chefmate.plusmobileapps.com/download/)
 
 ## Getting Started
 
@@ -8,13 +10,32 @@ This is a [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplat
 
 * [client](./client/) - all the shared client code and client application code
   * [composeApp](./client/composeApp/) - the compose multiplatform applications
+  * [aichat](./client/aichat/) - AI chat and recipe extraction flows
+  * [auth](./client/auth/) - authentication data, UI, and use cases
+  * [bottomnav](./client/bottomnav/) - bottom navigation and tab ordering
+  * [browser](./client/browser/) - in-app recipe browser and browser history
+  * [cook](./client/cook/) - cook mode and active cooking sessions
   * [database](./client/database/) - client database
+  * [developer-settings](./client/developer-settings/) - debug-only developer settings and test-user support
+  * [featureflag](./client/featureflag/) - feature flag evaluation, overrides, and admin-facing data
   * [root](./client/root/) - root BLoC (business logic component) to manage navigation of the whole app
-  * [grocery](./client/grocery/) - list and detail BLoCs for groceries
+  * [grocery](./client/grocery/) - grocery data plus list and detail BLoCs
+  * [meal](./client/meal/) - meal planning data and UI logic
+  * [recipe](./client/recipe/) - recipe data, list/detail flows, categories, import, and export
+  * [recipebook](./client/recipebook/) - recipe book data and editing flows
+  * [settings](./client/settings/) - settings root, app settings, and more menu flows
   * [shared](./client/shared/) - common client code
   * [testing](./client/testing/) - common testing helpers
-* [server](./server/) - backend code
+  * [text](./client/text/) - shared text and resource helpers
+  * [ui](./client/ui/) - shared Compose UI components, theme, robots, and screenshot tests
+  * [util](./client/util/) - shared utility APIs and implementations
+* [admin](./admin/) - Compose Multiplatform admin app for managing feature flags
+* [iosApp](./iosApp/) - iOS application shell and share extension
+* [supabase](./supabase/) - Supabase migrations and backend configuration
+* [docs](./docs/) - architecture, deployment, deep linking, and feature documentation
 * [build-logic](./build-logic/) - all the convention plugins to share logic of modular libraries
+* [devkit](./devkit/) - shared Gradle snippets for module conventions
+* [scripts](./scripts/) - local development and release helper scripts
 
 ### Android
 
@@ -25,20 +46,13 @@ This is a [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplat
 ### Desktop (JVM)
 
 ```shell
-./gradlew :client:composeApp:installDebug
+./gradlew :client:composeApp:run
 ```
 
 ### iOS
 
 To build and run the development version of the iOS app, use the run configuration from the run widget
 in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
-
-
-### Server
-
-```shell
-./gradlew :server:run
-```
 
 ## Documentation
 
