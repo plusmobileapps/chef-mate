@@ -186,4 +186,73 @@ class IngredientParserTest {
         assertEquals("1 qt", result.quantity)
         assertEquals(GroceryCategory.CANNED_GOODS, result.category)
     }
+
+    // Issue #164: previously fell through to OTHER
+
+    @Test
+    fun parse_challah_categorized_as_bakery() {
+        assertEquals(GroceryCategory.BAKERY, IngredientParser.parse("challah").category)
+    }
+
+    @Test
+    fun parse_brioche_categorized_as_bakery() {
+        assertEquals(GroceryCategory.BAKERY, IngredientParser.parse("brioche").category)
+    }
+
+    @Test
+    fun parse_impossible_meat_categorized_as_meat() {
+        assertEquals(GroceryCategory.MEAT, IngredientParser.parse("impossible meat").category)
+    }
+
+    @Test
+    fun parse_plain_meat_categorized_as_meat() {
+        assertEquals(GroceryCategory.MEAT, IngredientParser.parse("1 lb ground meat").category)
+    }
+
+    // Compound keywords must win over the generic substring they contain
+
+    @Test
+    fun parse_cinnamon_roll_is_bakery_not_spice() {
+        assertEquals(GroceryCategory.BAKERY, IngredientParser.parse("cinnamon roll").category)
+    }
+
+    @Test
+    fun parse_pasta_sauce_is_canned_not_grain() {
+        val result = IngredientParser.parse("1 can pasta sauce")
+        assertEquals("pasta sauce", result.name)
+        assertEquals(GroceryCategory.CANNED_GOODS, result.category)
+    }
+
+    @Test
+    fun parse_applesauce_is_canned_not_produce() {
+        assertEquals(GroceryCategory.CANNED_GOODS, IngredientParser.parse("applesauce").category)
+    }
+
+    @Test
+    fun parse_almond_flour_is_baking_not_snack() {
+        val result = IngredientParser.parse("2 cups almond flour")
+        assertEquals("almond flour", result.name)
+        assertEquals(GroceryCategory.BAKING, result.category)
+    }
+
+    @Test
+    fun parse_peanut_butter_is_condiment_not_snack() {
+        assertEquals(GroceryCategory.CONDIMENTS, IngredientParser.parse("peanut butter").category)
+    }
+
+    @Test
+    fun parse_peppercorn_is_spice_not_produce() {
+        assertEquals(GroceryCategory.SPICES, IngredientParser.parse("black peppercorn").category)
+    }
+
+    @Test
+    fun parse_milkshake_is_beverage_not_dairy() {
+        assertEquals(GroceryCategory.BEVERAGES, IngredientParser.parse("milkshake").category)
+    }
+
+    @Test
+    fun parse_fish_stick_is_frozen_not_meat() {
+        val result = IngredientParser.parse("1 box fish sticks")
+        assertEquals(GroceryCategory.FROZEN, result.category)
+    }
 }
