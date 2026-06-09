@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.displayCutout
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
@@ -221,17 +220,22 @@ private fun ScrollingContent(
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     content: @Composable (ColumnScope.() -> Unit),
 ) {
-    val baseModifier =
-        modifier.fillMaxHeight().widthIn(max = maxContentWidth).padding(top = topPadding)
-    val insetModifier =
-        if (applyHorizontalInsets) baseModifier.scaffoldContentInsetPadding() else baseModifier
-    Column(
-        modifier = if (scrollEnabled) insetModifier.verticalScroll(scrollState) else insetModifier,
-        horizontalAlignment = horizontalAlignment,
-    ) {
-        content()
-        if (scrollEnabled) {
-            Spacer(modifier = Modifier.padding(WindowInsets.systemGestures.asPaddingValues()))
+    // The scroll surface fills the full width so the wheel/drag is captured everywhere — including
+    // the gutters on wide windows (desktop), where the capped content column doesn't reach. The
+    // visible content stays capped at [maxContentWidth] and centered inside it.
+    val scrollModifier =
+        modifier.fillMaxSize().padding(top = topPadding).let {
+            if (scrollEnabled) it.verticalScroll(scrollState) else it
+        }
+    Column(modifier = scrollModifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        val baseModifier = Modifier.fillMaxWidth().widthIn(max = maxContentWidth)
+        val insetModifier =
+            if (applyHorizontalInsets) baseModifier.scaffoldContentInsetPadding() else baseModifier
+        Column(modifier = insetModifier, horizontalAlignment = horizontalAlignment) {
+            content()
+            if (scrollEnabled) {
+                Spacer(modifier = Modifier.padding(WindowInsets.systemGestures.asPaddingValues()))
+            }
         }
     }
 }
