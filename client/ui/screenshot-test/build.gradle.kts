@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.androidBuiltInKotlin)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.screenshot)
     alias(libs.plugins.plusKtfmt)
