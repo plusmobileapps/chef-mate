@@ -30,8 +30,11 @@ CREATE TABLE RecipeBookRecipe (
 
 CREATE INDEX idx_recipe_book_recipe_recipe ON RecipeBookRecipe(recipeId);
 
--- Seed the single local default book.
-INSERT INTO RecipeBook (name, isDefault) VALUES ('My Recipes', 1);
+-- Seed the single local default book. Timestamps are written in ISO-8601 (matching
+-- kotlin.time.Instant.toString()); the column default datetime('now') would produce a
+-- space-separated SQLite datetime that Instant.parse can't read.
+INSERT INTO RecipeBook (name, isDefault, createdAt, updatedAt)
+VALUES ('My Recipes', 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), strftime('%Y-%m-%dT%H:%M:%SZ', 'now'));
 
 -- Link every existing recipe to the default book.
 INSERT INTO RecipeBookRecipe (recipeBookId, recipeId)

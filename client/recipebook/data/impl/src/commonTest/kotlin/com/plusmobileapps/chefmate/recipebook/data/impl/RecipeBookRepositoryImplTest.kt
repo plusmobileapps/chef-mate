@@ -12,6 +12,7 @@ import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RemoteRecipeBook
 import com.plusmobileapps.chefmate.util.testing.FakeDateTimeUtil
 import com.plusmobileapps.chefmate.util.testing.FakeUnique
 import com.russhwolf.settings.MapSettings
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -57,6 +58,27 @@ class RecipeBookRepositoryImplTest {
             val defaultId = repo.getDefaultBookId()
 
             repo.activeBookId.value shouldBe defaultId
+        }
+
+    @Test
+    fun reads_books_seeded_with_sqlite_datetime_timestamps() =
+        runTest(testDispatcher) {
+            // A book seeded by the upgrade migration's column default carries a SQLite datetime
+            // ("2026-06-08 22:11:24"), which Instant.parse rejects. Reading it must not crash.
+            db.recipeBookQueries.create(
+                name = "Imported",
+                isDefault = false,
+                createdAt = "2026-06-08 22:11:24",
+                updatedAt = "2026-06-08 22:11:24",
+                clientId = "client-1",
+                ownerId = null,
+            )
+            val repo = repository()
+
+            repo.getRecipeBooks().test {
+                val books = awaitItem()
+                books.map { it.name } shouldContain "Imported"
+            }
         }
 
     @Test

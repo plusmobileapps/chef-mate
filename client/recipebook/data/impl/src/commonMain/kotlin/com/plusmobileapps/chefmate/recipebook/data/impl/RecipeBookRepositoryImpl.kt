@@ -310,10 +310,18 @@ class RecipeBookRepositoryImpl(
             name = name,
             isDefault = isDefault,
             syncStatus = syncStatus,
-            createdAt = Instant.parse(createdAt),
-            updatedAt = Instant.parse(updatedAt),
+            createdAt = parseTimestamp(createdAt),
+            updatedAt = parseTimestamp(updatedAt),
         )
     }
+
+    /**
+     * Books seeded by an upgrade migration's column default carry a SQLite datetime (`"2026-06-08
+     * 22:11:24"` — space-separated, UTC, no offset), which [Instant.parse] rejects. Normalise that
+     * shape to ISO-8601 before parsing so those rows don't crash on read.
+     */
+    private fun parseTimestamp(value: String): Instant =
+        Instant.parse(if (value.contains('T')) value else "${value.replace(' ', 'T')}Z")
 
     private companion object {
         const val TAG = "RecipeBookRepositoryImpl"
