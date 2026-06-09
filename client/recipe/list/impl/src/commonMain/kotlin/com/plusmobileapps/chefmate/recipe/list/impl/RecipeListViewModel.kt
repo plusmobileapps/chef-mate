@@ -22,6 +22,8 @@ import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBookCollaborationRepository
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBookInvite
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookRepository
 import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.text.TextData
@@ -52,6 +54,7 @@ class RecipeListViewModel(
     @Main mainContext: CoroutineContext,
     private val repository: RecipeRepository,
     private val recipeBookRepository: RecipeBookRepository,
+    private val collaborationRepository: RecipeBookCollaborationRepository,
     private val categoryRepository: CategoryRepository,
     private val cookingSessionRepository: CookingSessionRepository,
     private val imageExtractor: RecipeImageExtractor,
@@ -118,6 +121,35 @@ class RecipeListViewModel(
             .onEach { enabled -> _state.update { it.copy(isScanFromPhotoEnabled = enabled) } }
             .launchIn(scope)
         scope.launch { observeRecipeBooks() }
+        scope.launch { loadPendingInvites() }
+    }
+
+    private suspend fun loadPendingInvites() {
+        val invites =
+            try {
+                collaborationRepository.pendingInvites()
+            } catch (_: Throwable) {
+                emptyList()
+            }
+        _state.update { it.copy(pendingInvites = invites) }
+    }
+
+    fun acceptInvite(memberId: String) {
+        scope.launch {
+            try {
+                collaborationRepository.acceptInvite(memberId)
+            } catch (_: Throwable) {}
+            loadPendingInvites()
+        }
+    }
+
+    fun declineInvite(memberId: String) {
+        scope.launch {
+            try {
+                collaborationRepository.declineInvite(memberId)
+            } catch (_: Throwable) {}
+            loadPendingInvites()
+        }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -371,6 +403,7 @@ class RecipeListViewModel(
         val recipeBooks: List<RecipeBook> = emptyList(),
         val activeBook: RecipeBook? = null,
         val isBookPickerOpen: Boolean = false,
+        val pendingInvites: List<RecipeBookInvite> = emptyList(),
     ) {
         val isSearchActive: Boolean
             get() = searchQuery.isNotBlank()

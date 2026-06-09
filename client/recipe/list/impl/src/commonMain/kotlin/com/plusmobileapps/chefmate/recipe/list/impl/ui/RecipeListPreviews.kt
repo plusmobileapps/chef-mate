@@ -127,6 +127,10 @@ private fun recipeListBloc(model: RecipeListBloc.Model): RecipeListBloc =
 
         override fun onCollaborateClicked() = Unit
 
+        override fun onAcceptInvite(memberId: String) = Unit
+
+        override fun onDeclineInvite(memberId: String) = Unit
+
         @Composable override fun Content(modifier: Modifier) = RecipeListScreen(this, modifier)
     }
 

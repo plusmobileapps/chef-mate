@@ -134,6 +134,9 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_favorites
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_quick_recipes
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_rated
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_invite_accept
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_invite_decline
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_invite_message
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_item_calories
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_item_servings
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_collaborate
@@ -374,6 +377,13 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                             },
                         )
                     }
+                    state.pendingInvites.forEach { invite ->
+                        InviteBanner(
+                            invite = invite,
+                            onAccept = { bloc.onAcceptInvite(invite.memberId) },
+                            onDecline = { bloc.onDeclineInvite(invite.memberId) },
+                        )
+                    }
                     PullToRefreshBox(
                         isRefreshing = state.isSyncing,
                         onRefresh = bloc::onSyncClicked,
@@ -564,6 +574,45 @@ private fun ScanningDialog() {
             }
         },
     )
+}
+
+@Composable
+private fun InviteBanner(
+    invite: com.plusmobileapps.chefmate.recipebook.data.RecipeBookInvite,
+    onAccept: () -> Unit,
+    onDecline: () -> Unit,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(ChefMateTheme.dimens.paddingNormal),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            ),
+    ) {
+        Column(modifier = Modifier.padding(ChefMateTheme.dimens.paddingNormal)) {
+            Text(
+                text =
+                    PhraseModel(
+                            Res.string.recipe_list_invite_message,
+                            "book" to FixedString(invite.bookName),
+                        )
+                        .localized(),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = ChefMateTheme.dimens.paddingSmall),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                TextButton(onClick = onDecline) {
+                    Text(stringResource(Res.string.recipe_list_invite_decline))
+                }
+                TextButton(onClick = onAccept) {
+                    Text(stringResource(Res.string.recipe_list_invite_accept))
+                }
+            }
+        }
+    }
 }
 
 @Composable
