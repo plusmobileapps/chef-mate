@@ -154,6 +154,7 @@ import com.plusmobileapps.chefmate.recipe.categories.pickerLabelRes
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailTestTags
 import com.plusmobileapps.chefmate.recipe.core.impl.addgrocery.ui.AddRecipeToGroceryListScreen
+import com.plusmobileapps.chefmate.recipe.core.impl.text.toInlineMarkdownAnnotatedString
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.IngredientSection
@@ -1452,7 +1453,7 @@ private fun IngredientLineItem(
         return
     }
     Text(
-        text = text,
+        text = text.toInlineMarkdownAnnotatedString(),
         style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 22.sp),
         textDecoration = if (crossedOut) TextDecoration.LineThrough else TextDecoration.None,
         color =
@@ -1478,7 +1479,7 @@ private fun DirectionLineItem(
 ) {
     val dimens = ChefMateTheme.dimens
     Text(
-        text = text,
+        text = text.toInlineMarkdownAnnotatedString(),
         style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 22.sp),
         modifier =
             modifier
