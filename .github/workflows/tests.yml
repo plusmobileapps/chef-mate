@@ -24,6 +24,7 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew :client:database:core:verifySqlDelightMigration
       - run: ./gradlew jvmTest testDebugUnitTest koverXmlReport koverHtmlReport --continue
       - name: Publish test report
         uses: dorny/test-reporter@v2
