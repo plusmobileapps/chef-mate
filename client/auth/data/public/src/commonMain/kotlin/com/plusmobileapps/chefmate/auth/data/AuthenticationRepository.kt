@@ -24,6 +24,13 @@ interface AuthenticationRepository {
 
     suspend fun signOut()
 
+    /**
+     * Updates the signed-in user's profile metadata. [avatarUrl] is only written when non-null, so
+     * passing `null` leaves an existing avatar untouched. The Supabase session collector mirrors
+     * the updated metadata back into [state], so callers don't need to refresh manually.
+     */
+    suspend fun updateProfile(displayName: String, avatarUrl: String?): Result<Unit>
+
     suspend fun sendPasswordResetEmail(email: String): Result<Unit>
 
     suspend fun sendSignInOtp(email: String): Result<Unit>

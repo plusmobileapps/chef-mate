@@ -28,8 +28,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 
 @Inject
 @SingleIn(AppScope::class)
@@ -201,6 +203,20 @@ class SupabaseAuthenticationRepository(
             println("Error signing out: ${e.message}")
         }
     }
+
+    override suspend fun updateProfile(displayName: String, avatarUrl: String?): Result<Unit> =
+        try {
+            supabaseClient.auth.updateUser {
+                data = buildJsonObject {
+                    put("name", displayName)
+                    avatarUrl?.let { put("avatar_url", it) }
+                }
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Logger.w(throwable = e, tag = TAG) { "Failed to update profile" }
+            Result.failure(e)
+        }
 
     override suspend fun sendPasswordResetEmail(email: String): Result<Unit> =
         try {
