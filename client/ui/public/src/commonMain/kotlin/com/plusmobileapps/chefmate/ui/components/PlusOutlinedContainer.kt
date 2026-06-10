@@ -49,6 +49,7 @@ fun PlusOutlinedContainer(
 ) {
     var expanded by rememberSaveable(title) { mutableStateOf(initiallyExpanded) }
 
+    val padding = ChefMateTheme.dimens.paddingNormal
     Column(
         modifier =
             modifier
@@ -58,16 +59,20 @@ fun PlusOutlinedContainer(
                     color = MaterialTheme.colorScheme.outlineVariant,
                     shape = MaterialTheme.shapes.medium,
                 )
-                .padding(ChefMateTheme.dimens.paddingNormal),
-        verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingExtraSmall),
     ) {
         if (title == null) {
-            content()
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(padding),
+                verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingExtraSmall),
+                content = content,
+            )
         } else {
             val chevronRotation by
                 animateFloatAsState(if (expanded) 180f else 0f, label = "chevron")
+            // The whole header — out to the rounded border, padding included — toggles the section.
             Row(
-                modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded },
+                modifier =
+                    Modifier.fillMaxWidth().clickable { expanded = !expanded }.padding(padding),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -92,7 +97,13 @@ fun PlusOutlinedContainer(
                 )
             }
             AnimatedVisibility(visible = expanded) {
-                Column(verticalArrangement = contentArrangement, content = content)
+                Column(
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(start = padding, end = padding, bottom = padding),
+                    verticalArrangement = contentArrangement,
+                    content = content,
+                )
             }
         }
     }
