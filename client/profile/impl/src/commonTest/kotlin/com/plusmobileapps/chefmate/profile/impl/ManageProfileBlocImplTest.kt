@@ -81,6 +81,52 @@ class ManageProfileBlocImplTest {
     }
 
     @Test
+    fun When_existing_photo_replaced_and_saved_Then_old_photo_deleted() = runTest {
+        authRepository.setState(
+            AuthState.Authenticated(
+                ChefMateUser(
+                    userId = "id-1",
+                    userName = "Original Name",
+                    userEmail = "chef@example.com",
+                    userProfileImageUrl = "https://example.com/avatars/id-1/old.png",
+                )
+            )
+        )
+        photoStorage.uploadResult = "https://example.com/avatars/id-1/new.png"
+        bloc.onPhotoPicked(PickedImage(bytes = byteArrayOf(1, 2, 3), fileExtension = "png"))
+        bloc.onSaveClicked()
+
+        photoStorage.deletedUrls shouldBe listOf("https://example.com/avatars/id-1/old.png")
+    }
+
+    @Test
+    fun When_first_photo_added_and_saved_Then_nothing_deleted() = runTest {
+        photoStorage.uploadResult = "https://example.com/avatars/id-1/new.png"
+        bloc.onPhotoPicked(PickedImage(bytes = byteArrayOf(1, 2, 3), fileExtension = "png"))
+        bloc.onSaveClicked()
+
+        photoStorage.deletedUrls.isEmpty() shouldBe true
+    }
+
+    @Test
+    fun When_only_name_changed_and_saved_Then_existing_photo_kept() = runTest {
+        authRepository.setState(
+            AuthState.Authenticated(
+                ChefMateUser(
+                    userId = "id-1",
+                    userName = "Original Name",
+                    userEmail = "chef@example.com",
+                    userProfileImageUrl = "https://example.com/avatars/id-1/old.png",
+                )
+            )
+        )
+        bloc.onDisplayNameChanged("New Name")
+        bloc.onSaveClicked()
+
+        photoStorage.deletedUrls.isEmpty() shouldBe true
+    }
+
+    @Test
     fun When_save_fails_Then_save_error_is_surfaced() = runTest {
         authRepository.updateProfileResult = Result.failure(RuntimeException("boom"))
 
