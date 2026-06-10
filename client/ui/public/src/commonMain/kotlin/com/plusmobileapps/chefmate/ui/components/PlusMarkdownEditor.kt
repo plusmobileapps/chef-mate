@@ -158,18 +158,7 @@ fun PlusMarkdownEditor(
 
     // A light rounded outline groups each editor as one unit, so it's clear which toolbar/toggle
     // belongs to which field when several editors stack on the form.
-    Column(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant,
-                    shape = MaterialTheme.shapes.medium,
-                )
-                .padding(ChefMateTheme.dimens.paddingNormal),
-        verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingExtraSmall),
-    ) {
+    PlusOutlinedContainer(modifier = modifier) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
