@@ -658,6 +658,8 @@ private fun RecipeIngredientsField(bloc: EditRecipeBloc, modifier: Modifier = Mo
         richTextMode = richTextMode,
         onRichTextModeChange = bloc::onRichTextEditorModeChanged,
         modifier = modifier,
+        initialHeight = 320.dp,
+        maxHeight = 640.dp,
     )
 }
 
@@ -674,6 +676,8 @@ private fun RecipeDirectionsField(bloc: EditRecipeBloc, modifier: Modifier = Mod
         richTextMode = richTextMode,
         onRichTextModeChange = bloc::onRichTextEditorModeChanged,
         modifier = modifier,
+        initialHeight = 320.dp,
+        maxHeight = 640.dp,
     )
 }
 
