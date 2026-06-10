@@ -28,8 +28,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
@@ -242,16 +245,23 @@ class SupabaseAuthenticationRepository(
         ChefMateUser(
             userId = id,
             userName =
-                userMetadata?.get("name")?.toString()
-                    ?: userMetadata?.get("username")?.toString()
+                userMetadata.stringValue("name")
+                    ?: userMetadata.stringValue("username")
                     ?: email?.substringBefore("@")
                     ?: "User",
             userEmail = email ?: "",
             userProfileImageUrl =
-                userMetadata?.get("avatar_url")?.toString()
-                    ?: userMetadata?.get("picture")?.toString(),
+                userMetadata.stringValue("avatar_url") ?: userMetadata.stringValue("picture"),
             isAnonymous = isAnonymous,
         )
+
+    /**
+     * Reads a string metadata value as its raw content. [JsonElement.toString] would wrap string
+     * primitives in literal quotes (e.g. `"Chef"`), which previously leaked into the display name
+     * and corrupted the `avatar_url` into an unloadable quoted URL.
+     */
+    private fun JsonObject?.stringValue(key: String): String? =
+        (this?.get(key) as? JsonPrimitive)?.contentOrNull
 
     /**
      * Reads the `is_anonymous` claim from the JWT payload directly. supabase-kt 3.2.6's UserInfo
