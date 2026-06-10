@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.FormatBold
 import androidx.compose.material.icons.filled.FormatItalic
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -106,51 +107,55 @@ fun PlusMarkdownEditor(
         scope.launch { runCatching { focusRequester.requestFocus() } }
     }
 
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingExtraSmall),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+    // Carded so each editor reads as one self-contained unit — it's otherwise easy to lose track of
+    // which toolbar/toggle belongs to which field when several stack together on the form.
+    Card(modifier = modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(ChefMateTheme.dimens.paddingNormal),
+            verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingExtraSmall),
         ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            MarkdownModeToggle(
-                showPreview = showPreview,
-                onShowPreviewChange = { showPreview = it },
-            )
-        }
-
-        if (!showPreview) {
-            MarkdownFormatToolbar(
-                onBold = { applyFormat(BOLD_MARKER) },
-                onItalic = { applyFormat(ITALIC_MARKER) },
-            )
-        }
-
-        Box(modifier = Modifier.fillMaxWidth().height(heightDp.dp)) {
-            if (showPreview) {
-                MarkdownPreview(text = fieldValue.text, modifier = Modifier.fillMaxSize())
-            } else {
-                OutlinedTextField(
-                    value = fieldValue,
-                    onValueChange = ::update,
-                    placeholder = { Text(placeholder) },
-                    modifier = Modifier.fillMaxSize().focusRequester(focusRequester),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                MarkdownModeToggle(
+                    showPreview = showPreview,
+                    onShowPreviewChange = { showPreview = it },
                 )
             }
-            ResizeHandle(
-                label = label,
-                modifier = Modifier.align(Alignment.BottomEnd),
-                onResizeBy = { deltaDp ->
-                    heightDp = (heightDp + deltaDp).coerceIn(minHeight.value, maxHeight.value)
-                },
-            )
+
+            if (!showPreview) {
+                MarkdownFormatToolbar(
+                    onBold = { applyFormat(BOLD_MARKER) },
+                    onItalic = { applyFormat(ITALIC_MARKER) },
+                )
+            }
+
+            Box(modifier = Modifier.fillMaxWidth().height(heightDp.dp)) {
+                if (showPreview) {
+                    MarkdownPreview(text = fieldValue.text, modifier = Modifier.fillMaxSize())
+                } else {
+                    OutlinedTextField(
+                        value = fieldValue,
+                        onValueChange = ::update,
+                        placeholder = { Text(placeholder) },
+                        modifier = Modifier.fillMaxSize().focusRequester(focusRequester),
+                    )
+                }
+                ResizeHandle(
+                    label = label,
+                    modifier = Modifier.align(Alignment.BottomEnd),
+                    onResizeBy = { deltaDp ->
+                        heightDp = (heightDp + deltaDp).coerceIn(minHeight.value, maxHeight.value)
+                    },
+                )
+            }
         }
     }
 }
