@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
+import com.plusmobileapps.chefmate.recipe.core.impl.edit.ui.EditRecipeScreen
 import com.plusmobileapps.chefmate.recipe.core.impl.edit.ui.previewEditRecipeBloc
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -57,4 +58,17 @@ fun EditRecipeWideLightScreenshot() {
 @Composable
 fun EditRecipeWideDarkScreenshot() {
     EditRecipeScreenshot(darkTheme = true)
+}
+
+// "More details" expanded — revealing the description editor plus the links/servings/time/calorie
+// fields it now consolidates.
+@PreviewTest
+@Preview(showBackground = true, heightDp = 3000)
+@Composable
+fun EditRecipeMoreDetailsExpandedScreenshot() {
+    ChefMateTheme {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            EditRecipeScreen(bloc = previewEditRecipeBloc, moreDetailsInitiallyExpanded = true)
+        }
+    }
 }

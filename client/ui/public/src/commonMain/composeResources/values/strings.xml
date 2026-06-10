@@ -12,4 +12,6 @@
     <string name="markdown_editor_italic_a11y">Italic</string>
     <string name="markdown_editor_resize_handle_a11y">Drag to resize %1$s field</string>
     <string name="markdown_editor_preview_empty">Nothing to preview yet</string>
+    <string name="plus_outlined_container_expand_a11y">Expand %1$s</string>
+    <string name="plus_outlined_container_collapse_a11y">Collapse %1$s</string>
 </resources>
