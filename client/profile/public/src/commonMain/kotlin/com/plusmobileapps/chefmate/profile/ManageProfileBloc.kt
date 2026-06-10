@@ -18,6 +18,12 @@ interface ManageProfileBloc : BlocScreen {
 
     fun onSaveClicked()
 
+    fun onDeleteAccountClicked()
+
+    fun onDeleteConfirmed()
+
+    fun onDeleteDismissed()
+
     data class Model(
         val displayName: String = "",
         val email: String = "",
@@ -27,10 +33,13 @@ interface ManageProfileBloc : BlocScreen {
         val pickedPhoto: ByteArray? = null,
         val isSaving: Boolean = false,
         val saveError: TextData? = null,
+        val showDeleteDialog: Boolean = false,
+        val isDeleting: Boolean = false,
+        val deleteError: TextData? = null,
     ) {
-        /** Save is enabled once a non-blank name exists and no save is in flight. */
+        /** Save is enabled once a non-blank name exists and no save/delete is in flight. */
         val canSave: Boolean
-            get() = displayName.isNotBlank() && !isSaving
+            get() = displayName.isNotBlank() && !isSaving && !isDeleting
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -41,6 +50,9 @@ interface ManageProfileBloc : BlocScreen {
             if (!pickedPhoto.contentEqualsNullable(other.pickedPhoto)) return false
             if (isSaving != other.isSaving) return false
             if (saveError != other.saveError) return false
+            if (showDeleteDialog != other.showDeleteDialog) return false
+            if (isDeleting != other.isDeleting) return false
+            if (deleteError != other.deleteError) return false
             return true
         }
 
@@ -51,6 +63,9 @@ interface ManageProfileBloc : BlocScreen {
             result = 31 * result + (pickedPhoto?.contentHashCode() ?: 0)
             result = 31 * result + isSaving.hashCode()
             result = 31 * result + (saveError?.hashCode() ?: 0)
+            result = 31 * result + showDeleteDialog.hashCode()
+            result = 31 * result + isDeleting.hashCode()
+            result = 31 * result + (deleteError?.hashCode() ?: 0)
             return result
         }
 
@@ -65,6 +80,9 @@ interface ManageProfileBloc : BlocScreen {
     sealed class Output {
         /** Pop back to the More tab (also emitted after a successful save). */
         data object Back : Output()
+
+        /** The account was deleted; the host pops and the More tab re-renders unauthenticated. */
+        data object AccountDeleted : Output()
     }
 
     fun interface Factory {

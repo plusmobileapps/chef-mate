@@ -353,7 +353,10 @@ class RootBlocImpl(
 
     private fun handleManageProfileOutput(output: ManageProfileBloc.Output) {
         when (output) {
-            ManageProfileBloc.Output.Back -> navigation.pop()
+            // Both pop back to the More tab; on deletion the More tab re-renders unauthenticated
+            // on its own once the auth state flips.
+            ManageProfileBloc.Output.Back,
+            ManageProfileBloc.Output.AccountDeleted -> navigation.pop()
         }
     }
 

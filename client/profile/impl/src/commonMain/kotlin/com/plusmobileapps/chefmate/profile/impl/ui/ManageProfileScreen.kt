@@ -22,10 +22,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import chefmate.client.profile.public.generated.resources.Res
 import chefmate.client.profile.public.generated.resources.manage_profile_avatar_content_description
 import chefmate.client.profile.public.generated.resources.manage_profile_change_photo
+import chefmate.client.profile.public.generated.resources.manage_profile_delete_account
+import chefmate.client.profile.public.generated.resources.manage_profile_delete_dialog_cancel
+import chefmate.client.profile.public.generated.resources.manage_profile_delete_dialog_confirm
+import chefmate.client.profile.public.generated.resources.manage_profile_delete_dialog_message
+import chefmate.client.profile.public.generated.resources.manage_profile_delete_dialog_title
 import chefmate.client.profile.public.generated.resources.manage_profile_display_name_hint
 import chefmate.client.profile.public.generated.resources.manage_profile_display_name_label
 import chefmate.client.profile.public.generated.resources.manage_profile_email_label
@@ -36,6 +42,8 @@ import com.plusmobileapps.chefmate.profile.ManageProfileBloc
 import com.plusmobileapps.chefmate.profile.ManageProfileTestTags
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusButton
+import com.plusmobileapps.chefmate.ui.components.PlusButtonVariant
+import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusTextField
@@ -47,6 +55,17 @@ fun ManageProfileScreen(bloc: ManageProfileBloc, modifier: Modifier = Modifier) 
     val state by bloc.state.collectAsState()
 
     val pickPhoto = rememberImagePickerLauncher { picked -> picked?.let(bloc::onPhotoPicked) }
+
+    if (state.showDeleteDialog) {
+        PlusDialog(
+            title = Res.string.manage_profile_delete_dialog_title.asTextData(),
+            message = Res.string.manage_profile_delete_dialog_message.asTextData(),
+            confirmButtonText = Res.string.manage_profile_delete_dialog_confirm.asTextData(),
+            dismissButtonText = Res.string.manage_profile_delete_dialog_cancel.asTextData(),
+            onConfirmClick = bloc::onDeleteConfirmed,
+            onDismissRequest = bloc::onDeleteDismissed,
+        )
+    }
 
     PlusHeaderContainer(
         modifier = modifier.testTag(ManageProfileTestTags.SCREEN),
@@ -84,7 +103,7 @@ fun ManageProfileScreen(bloc: ManageProfileBloc, modifier: Modifier = Modifier) 
                         Text(Res.string.manage_profile_display_name_hint.asTextData().localized())
                     },
                     singleLine = true,
-                    enabled = !state.isSaving,
+                    enabled = !state.isSaving && !state.isDeleting,
                     error = state.saveError,
                 )
 
@@ -106,6 +125,25 @@ fun ManageProfileScreen(bloc: ManageProfileBloc, modifier: Modifier = Modifier) 
                     enabled = state.canSave,
                     isLoading = state.isSaving,
                     onClick = bloc::onSaveClicked,
+                )
+
+                state.deleteError?.let { error ->
+                    Text(
+                        error.localized(),
+                        style = ChefMateTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+
+                PlusButton(
+                    text = Res.string.manage_profile_delete_account.asTextData(),
+                    variant = PlusButtonVariant.DESTRUCTIVE,
+                    modifier =
+                        Modifier.fillMaxWidth().testTag(ManageProfileTestTags.DELETE_ACCOUNT),
+                    enabled = !state.isSaving && !state.isDeleting,
+                    isLoading = state.isDeleting,
+                    onClick = bloc::onDeleteAccountClicked,
                 )
             }
         },

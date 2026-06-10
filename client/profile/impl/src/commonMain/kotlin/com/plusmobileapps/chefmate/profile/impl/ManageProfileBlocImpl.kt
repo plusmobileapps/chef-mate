@@ -40,6 +40,7 @@ class ManageProfileBlocImpl(
             viewModel.outputs.collect {
                 when (it) {
                     ManageProfileViewModel.Output.Saved -> output.onNext(Output.Back)
+                    ManageProfileViewModel.Output.Deleted -> output.onNext(Output.AccountDeleted)
                 }
             }
         }
@@ -59,6 +60,18 @@ class ManageProfileBlocImpl(
 
     override fun onSaveClicked() {
         viewModel.save()
+    }
+
+    override fun onDeleteAccountClicked() {
+        viewModel.showDeleteDialog()
+    }
+
+    override fun onDeleteConfirmed() {
+        viewModel.deleteAccount()
+    }
+
+    override fun onDeleteDismissed() {
+        viewModel.dismissDeleteDialog()
     }
 
     @Composable
