@@ -2,12 +2,18 @@
 
 package com.plusmobileapps.chefmate.ui.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -34,8 +40,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -43,17 +51,24 @@ import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import chefmate.client.ui.public.generated.resources.Res
 import chefmate.client.ui.public.generated.resources.markdown_editor_bold_a11y
 import chefmate.client.ui.public.generated.resources.markdown_editor_italic_a11y
+import chefmate.client.ui.public.generated.resources.markdown_editor_mode_markdown
+import chefmate.client.ui.public.generated.resources.markdown_editor_mode_rich_text
 import chefmate.client.ui.public.generated.resources.markdown_editor_preview_empty
 import chefmate.client.ui.public.generated.resources.markdown_editor_resize_handle_a11y
 import chefmate.client.ui.public.generated.resources.markdown_editor_tab_preview
 import chefmate.client.ui.public.generated.resources.markdown_editor_tab_write
+import com.mohamedrejeb.richeditor.model.rememberRichTextState
+import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 import com.plusmobileapps.chefmate.ui.text.BOLD_MARKER
 import com.plusmobileapps.chefmate.ui.text.ITALIC_MARKER
 import com.plusmobileapps.chefmate.ui.text.toInlineMarkdownAnnotatedString
@@ -63,16 +78,18 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * A shared, resizable rich-text editor for plain-text fields that carry inline markdown
- * (`**bold**`, `_italic_`). Two modes via a segmented toggle:
- * - **Markdown** — edits the raw source with a bold/italic toolbar that formats the current
- *   selection. The toolbar buttons are non-focusable so tapping one never clears the text field's
- *   selection (which would otherwise insert empty markers next to the highlight).
- * - **Preview** — read-only rendered view of the same content.
+ * A shared, resizable editor for plain-text fields that carry inline markdown (`**bold**`,
+ * `_italic_`). The caller stores plain markdown [String]; the editor owns only transient state
+ * (cursor/selection, the Markdown write/preview sub-toggle, and the resize height).
  *
- * A drag handle in the bottom-end corner resizes the editor between [minHeight] and [maxHeight];
- * the chosen height and selected tab survive configuration changes. The bloc/caller still stores a
- * plain [String]; this component owns only the transient cursor/selection and view state.
+ * Two modes, switched by [richTextMode] (a persisted, app-wide preference hoisted to the caller):
+ * - **Rich text** — a WYSIWYG editor (compose-rich-editor): Bold/Italic format the selection and
+ *   the field renders the formatting inline, markers hidden. The more approachable mode on mobile.
+ * - **Markdown** — edits the raw source with a Bold/Italic toolbar plus a GitHub-style
+ *   Write/Preview toggle (the switch animates). Toolbar buttons are non-focusable so tapping one
+ *   never clears the field's selection.
+ *
+ * A drag handle in the bottom-end corner resizes the editor between [minHeight] and [maxHeight].
  */
 @Composable
 fun PlusMarkdownEditor(
@@ -80,30 +97,63 @@ fun PlusMarkdownEditor(
     onValueChange: (String) -> Unit,
     label: String,
     placeholder: String,
+    richTextMode: Boolean,
+    onRichTextModeChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     minHeight: Dp = 160.dp,
     maxHeight: Dp = 480.dp,
     initialHeight: Dp = 200.dp,
 ) {
-    var fieldValue by remember { mutableStateOf(TextFieldValue(value)) }
-    // Re-sync only when the external text diverges (async load, discard) so typing keeps the caret.
-    LaunchedEffect(value) {
-        if (value != fieldValue.text) fieldValue = TextFieldValue(value, TextRange(value.length))
-    }
     var heightDp by rememberSaveable { mutableStateOf(initialHeight.value) }
     var showPreview by rememberSaveable { mutableStateOf(false) }
+
+    // ── Markdown-mode editing state ───────────────────────────────────────────────────────────
+    var fieldValue by remember { mutableStateOf(TextFieldValue(value)) }
+    LaunchedEffect(value) {
+        // Re-sync only when external text diverges, so typing keeps the caret.
+        if (value != fieldValue.text) fieldValue = TextFieldValue(value, TextRange(value.length))
+    }
     val focusRequester = remember { FocusRequester() }
     val scope = rememberCoroutineScope()
 
-    fun update(newValue: TextFieldValue) {
+    fun updateMarkdown(newValue: TextFieldValue) {
         fieldValue = newValue
         onValueChange(newValue.text)
     }
 
-    fun applyFormat(marker: String) {
-        update(fieldValue.toggleInlineMarker(marker))
-        // Keep the field focused so the re-selected text stays visible for a follow-up toggle.
+    fun applyMarkdownMarker(marker: String) {
+        updateMarkdown(fieldValue.toggleInlineMarker(marker))
         scope.launch { runCatching { focusRequester.requestFocus() } }
+    }
+
+    // ── Rich-text-mode editing state ──────────────────────────────────────────────────────────
+    val richTextState = rememberRichTextState()
+    val latestValue by rememberUpdatedState(value)
+    val latestOnValueChange by rememberUpdatedState(onValueChange)
+    // Seed the initial content synchronously so it's present on the first frame (no empty flash).
+    remember(richTextState) { richTextState.setMarkdown(value) }
+    LaunchedEffect(value) {
+        // Load external markdown into the rich editor; the equality guard avoids resetting the
+        // caret
+        // while the user is typing (we just emitted this exact value).
+        if (richTextState.toMarkdown() != value) richTextState.setMarkdown(value)
+    }
+    LaunchedEffect(richTextState) {
+        snapshotFlow { richTextState.annotatedString }
+            .collect {
+                val markdown = richTextState.toMarkdown()
+                if (markdown != latestValue) latestOnValueChange(markdown)
+            }
+    }
+
+    fun onBold() {
+        if (richTextMode) richTextState.toggleSpanStyle(SpanStyle(fontWeight = FontWeight.Bold))
+        else applyMarkdownMarker(BOLD_MARKER)
+    }
+
+    fun onItalic() {
+        if (richTextMode) richTextState.toggleSpanStyle(SpanStyle(fontStyle = FontStyle.Italic))
+        else applyMarkdownMarker(ITALIC_MARKER)
     }
 
     // A light rounded outline groups each editor as one unit, so it's clear which toolbar/toggle
@@ -130,29 +180,53 @@ fun PlusMarkdownEditor(
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            MarkdownModeToggle(
-                showPreview = showPreview,
-                onShowPreviewChange = { showPreview = it },
+            EditorModeToggle(
+                richTextMode = richTextMode,
+                onRichTextModeChange = onRichTextModeChange,
             )
         }
 
-        if (!showPreview) {
-            MarkdownFormatToolbar(
-                onBold = { applyFormat(BOLD_MARKER) },
-                onItalic = { applyFormat(ITALIC_MARKER) },
-            )
+        // Toolbar row: Bold/Italic on the left (hidden only in Markdown preview), Write/Preview
+        // toggle on the right (Markdown mode only).
+        val showFormatButtons = richTextMode || !showPreview
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            if (showFormatButtons) {
+                MarkdownFormatToolbar(onBold = ::onBold, onItalic = ::onItalic)
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            if (!richTextMode) {
+                WritePreviewToggle(
+                    showPreview = showPreview,
+                    onShowPreviewChange = { showPreview = it },
+                )
+            }
         }
 
         Box(modifier = Modifier.fillMaxWidth().height(heightDp.dp)) {
-            if (showPreview) {
-                MarkdownPreview(text = fieldValue.text, modifier = Modifier.fillMaxSize())
-            } else {
-                OutlinedTextField(
-                    value = fieldValue,
-                    onValueChange = ::update,
+            if (richTextMode) {
+                OutlinedRichTextEditor(
+                    state = richTextState,
                     placeholder = { Text(placeholder) },
-                    modifier = Modifier.fillMaxSize().focusRequester(focusRequester),
+                    modifier = Modifier.fillMaxSize(),
                 )
+            } else {
+                AnimatedContent(
+                    targetState = showPreview,
+                    transitionSpec = { fadeIn(tween(220)) togetherWith fadeOut(tween(180)) },
+                    label = "markdown-write-preview",
+                    modifier = Modifier.fillMaxSize(),
+                ) { preview ->
+                    if (preview) {
+                        MarkdownPreview(text = fieldValue.text, modifier = Modifier.fillMaxSize())
+                    } else {
+                        OutlinedTextField(
+                            value = fieldValue,
+                            onValueChange = ::updateMarkdown,
+                            placeholder = { Text(placeholder) },
+                            modifier = Modifier.fillMaxSize().focusRequester(focusRequester),
+                        )
+                    }
+                }
             }
             ResizeHandle(
                 label = label,
@@ -166,7 +240,31 @@ fun PlusMarkdownEditor(
 }
 
 @Composable
-private fun MarkdownModeToggle(
+private fun EditorModeToggle(
+    richTextMode: Boolean,
+    onRichTextModeChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    SingleChoiceSegmentedButtonRow(modifier = modifier) {
+        SegmentedButton(
+            selected = richTextMode,
+            onClick = { onRichTextModeChange(true) },
+            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+        ) {
+            Text(stringResource(Res.string.markdown_editor_mode_rich_text))
+        }
+        SegmentedButton(
+            selected = !richTextMode,
+            onClick = { onRichTextModeChange(false) },
+            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+        ) {
+            Text(stringResource(Res.string.markdown_editor_mode_markdown))
+        }
+    }
+}
+
+@Composable
+private fun WritePreviewToggle(
     showPreview: Boolean,
     onShowPreviewChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
