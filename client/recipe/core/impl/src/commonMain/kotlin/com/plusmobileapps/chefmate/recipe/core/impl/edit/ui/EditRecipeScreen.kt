@@ -275,12 +275,15 @@ private fun RecipeTitleField(bloc: EditRecipeBloc, modifier: Modifier = Modifier
 @Composable
 private fun RecipeDescriptionField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     val description by bloc.description.collectAsState()
+    val richTextMode by bloc.richTextEditorMode.collectAsState()
 
     PlusMarkdownEditor(
         value = description,
         onValueChange = bloc::onDescriptionChanged,
         label = stringResource(Res.string.edit_recipe_field_description),
         placeholder = stringResource(Res.string.edit_recipe_field_description_placeholder),
+        richTextMode = richTextMode,
+        onRichTextModeChange = bloc::onRichTextEditorModeChanged,
         modifier = modifier,
         minHeight = 120.dp,
         initialHeight = 140.dp,
@@ -645,12 +648,15 @@ private fun RecipeCaloriesField(bloc: EditRecipeBloc, modifier: Modifier = Modif
 @Composable
 private fun RecipeIngredientsField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     val ingredients by bloc.ingredients.collectAsState()
+    val richTextMode by bloc.richTextEditorMode.collectAsState()
 
     PlusMarkdownEditor(
         value = ingredients,
         onValueChange = bloc::onIngredientsChanged,
         label = stringResource(Res.string.edit_recipe_field_ingredients),
         placeholder = stringResource(Res.string.edit_recipe_field_ingredients_placeholder),
+        richTextMode = richTextMode,
+        onRichTextModeChange = bloc::onRichTextEditorModeChanged,
         modifier = modifier,
     )
 }
@@ -658,12 +664,15 @@ private fun RecipeIngredientsField(bloc: EditRecipeBloc, modifier: Modifier = Mo
 @Composable
 private fun RecipeDirectionsField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     val directions by bloc.directions.collectAsState()
+    val richTextMode by bloc.richTextEditorMode.collectAsState()
 
     PlusMarkdownEditor(
         value = directions,
         onValueChange = bloc::onDirectionsChanged,
         label = stringResource(Res.string.edit_recipe_field_directions),
         placeholder = stringResource(Res.string.edit_recipe_field_directions_placeholder),
+        richTextMode = richTextMode,
+        onRichTextModeChange = bloc::onRichTextEditorModeChanged,
         modifier = modifier,
     )
 }
@@ -761,6 +770,7 @@ Salt for pasta water"""
             MutableStateFlow(com.plusmobileapps.chefmate.recipebook.data.RecipeBook.Samples)
         override val selectedBookIds: StateFlow<Set<Long>> = MutableStateFlow(setOf(1L))
         override val pendingPhotoBytes: StateFlow<ByteArray?> = MutableStateFlow(null)
+        override val richTextEditorMode: StateFlow<Boolean> = MutableStateFlow(false)
 
         override fun onTitleChanged(title: String) {}
 
@@ -813,6 +823,8 @@ Salt for pasta water"""
         override fun onPhotoPicked(bytes: ByteArray, fileExtension: String) {}
 
         override fun onUploadErrorDismissed() {}
+
+        override fun onRichTextEditorModeChanged(richTextMode: Boolean) {}
 
         override fun onBackClicked() {}
 
