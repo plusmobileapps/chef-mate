@@ -7,4 +7,10 @@
     <string name="manage_profile_avatar_content_description">Profile photo</string>
     <string name="manage_profile_save">Save</string>
     <string name="manage_profile_save_error">Couldn’t save your profile. Please try again.</string>
+    <string name="manage_profile_delete_account">Delete Account</string>
+    <string name="manage_profile_delete_dialog_title">Delete account?</string>
+    <string name="manage_profile_delete_dialog_message">This permanently deletes your account and all of your recipes, groceries, and meal plans. This can’t be undone.</string>
+    <string name="manage_profile_delete_dialog_confirm">Delete</string>
+    <string name="manage_profile_delete_dialog_cancel">Cancel</string>
+    <string name="manage_profile_delete_error">Couldn’t delete your account. Please try again.</string>
 </resources>

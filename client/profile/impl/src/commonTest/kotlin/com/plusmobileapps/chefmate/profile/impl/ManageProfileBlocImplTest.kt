@@ -7,6 +7,7 @@ import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.ChefMateUser
 import com.plusmobileapps.chefmate.auth.data.testing.FakeAuthenticationRepository
 import com.plusmobileapps.chefmate.auth.data.testing.FakeProfilePhotoStorage
+import com.plusmobileapps.chefmate.auth.usecase.DeleteAccountUseCase
 import com.plusmobileapps.chefmate.profile.ManageProfileBloc
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
@@ -33,6 +34,11 @@ class ManageProfileBlocImplTest {
             )
         }
     private val photoStorage = FakeProfilePhotoStorage()
+    private var deleteCalled = false
+    private val deleteAccountUseCase = DeleteAccountUseCase {
+        deleteCalled = true
+        Result.success(Unit)
+    }
 
     private val bloc by lazy {
         ManageProfileBlocImpl(
@@ -43,6 +49,7 @@ class ManageProfileBlocImplTest {
                     mainContext = context.mainContext,
                     authenticationRepository = authRepository,
                     profilePhotoStorage = photoStorage,
+                    deleteAccountUseCase = deleteAccountUseCase,
                 )
             },
         )
@@ -87,5 +94,36 @@ class ManageProfileBlocImplTest {
             cancelAndIgnoreRemainingEvents()
         }
         output.values.isEmpty() shouldBe true
+    }
+
+    @Test
+    fun When_delete_clicked_Then_dialog_is_shown() = runTest {
+        bloc.state.test {
+            awaitItem()
+            bloc.onDeleteAccountClicked()
+            awaitItem().showDeleteDialog shouldBe true
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun When_delete_dismissed_Then_dialog_is_hidden() = runTest {
+        bloc.state.test {
+            awaitItem()
+            bloc.onDeleteAccountClicked()
+            awaitItem().showDeleteDialog shouldBe true
+            bloc.onDeleteDismissed()
+            awaitItem().showDeleteDialog shouldBe false
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun When_delete_confirmed_Then_account_deleted_and_output_emitted() = runTest {
+        bloc.onDeleteAccountClicked()
+        bloc.onDeleteConfirmed()
+
+        deleteCalled shouldBe true
+        output.lastValue shouldBe ManageProfileBloc.Output.AccountDeleted
     }
 }

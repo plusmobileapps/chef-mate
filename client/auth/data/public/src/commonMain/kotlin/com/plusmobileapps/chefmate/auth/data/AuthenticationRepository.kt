@@ -31,6 +31,14 @@ interface AuthenticationRepository {
      */
     suspend fun updateProfile(displayName: String, avatarUrl: String?): Result<Unit>
 
+    /**
+     * Permanently deletes the signed-in user's remote account. The actual deletion runs in a
+     * service-role Supabase Edge Function (`delete-account`) because the client SDK can't delete
+     * auth users. Callers are responsible for the subsequent sign-out + local-data wipe (see
+     * `DeleteAccountUseCase`).
+     */
+    suspend fun deleteAccount(): Result<Unit>
+
     suspend fun sendPasswordResetEmail(email: String): Result<Unit>
 
     suspend fun sendSignInOtp(email: String): Result<Unit>
