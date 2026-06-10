@@ -87,6 +87,7 @@ import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_total_time
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_total_time_placeholder
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_save
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_section_more_details
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload_photo
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload_photo_dismiss
 import coil3.compose.AsyncImage
@@ -99,6 +100,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
 import com.plusmobileapps.chefmate.ui.components.PlusMarkdownEditor
+import com.plusmobileapps.chefmate.ui.components.PlusOutlinedContainer
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -190,13 +192,7 @@ private fun EditRecipeContent(bloc: EditRecipeBloc, modifier: Modifier = Modifie
         RecipeCategoryField(bloc = bloc)
         RecipeStarRatingField(bloc = bloc)
         RecipePhotoUploader(bloc = bloc)
-        RecipeImageUrlField(bloc = bloc)
-        RecipeSourceUrlField(bloc = bloc)
-        RecipeServingsField(bloc = bloc)
-        RecipePrepTimeField(bloc = bloc)
-        RecipeCookTimeField(bloc = bloc)
-        RecipeTotalTimeField(bloc = bloc)
-        RecipeCaloriesField(bloc = bloc)
+        RecipeMoreDetailsSection(bloc = bloc)
         RecipeIngredientsField(bloc = bloc)
         RecipeDirectionsField(bloc = bloc)
         // Clearance so the floating Save button never covers the last field.
@@ -225,19 +221,7 @@ private fun WideEditRecipeContent(bloc: EditRecipeBloc, modifier: Modifier = Mod
             ) {
                 RecipeTitleField(bloc = bloc)
                 RecipeStarRatingField(bloc = bloc)
-                Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
-                    RecipeServingsField(bloc = bloc, modifier = Modifier.weight(1f))
-                    RecipeCaloriesField(bloc = bloc, modifier = Modifier.weight(1f))
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
-                    RecipePrepTimeField(bloc = bloc, modifier = Modifier.weight(1f))
-                    RecipeCookTimeField(bloc = bloc, modifier = Modifier.weight(1f))
-                    RecipeTotalTimeField(bloc = bloc, modifier = Modifier.weight(1f))
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
-                    RecipeImageUrlField(bloc = bloc, modifier = Modifier.weight(1f))
-                    RecipeSourceUrlField(bloc = bloc, modifier = Modifier.weight(1f))
-                }
+                RecipeMoreDetailsSection(bloc = bloc)
                 RecipeCategoryField(bloc = bloc)
                 RecipeBooksField(bloc = bloc)
             }
@@ -255,6 +239,27 @@ private fun WideEditRecipeContent(bloc: EditRecipeBloc, modifier: Modifier = Mod
         }
         // Clearance so the floating Save button never covers the last field.
         Spacer(modifier = Modifier.height(ChefMateTheme.dimens.fabClearance))
+    }
+}
+
+/**
+ * Secondary recipe metadata (links, servings, times, calories) collapsed into one expandable
+ * outlined section so the form leads with the fields people edit most. Collapsed by default.
+ */
+@Composable
+private fun RecipeMoreDetailsSection(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
+    PlusOutlinedContainer(
+        modifier = modifier,
+        title = stringResource(Res.string.edit_recipe_section_more_details),
+        initiallyExpanded = false,
+    ) {
+        RecipeImageUrlField(bloc = bloc)
+        RecipeSourceUrlField(bloc = bloc)
+        RecipeServingsField(bloc = bloc)
+        RecipePrepTimeField(bloc = bloc)
+        RecipeCookTimeField(bloc = bloc)
+        RecipeTotalTimeField(bloc = bloc)
+        RecipeCaloriesField(bloc = bloc)
     }
 }
 
