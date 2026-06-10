@@ -19,6 +19,8 @@ interface SettingsBloc : BlocScreen {
 
     fun onSignOutDismissed()
 
+    fun onManageProfileClicked()
+
     fun onUrlClicked(url: String)
 
     fun onAppSettingsClicked()
@@ -48,6 +50,8 @@ interface SettingsBloc : BlocScreen {
         data object OpenSignUp : Output()
 
         data object OpenSignIn : Output()
+
+        data object OpenManageProfile : Output()
 
         data object OpenAppSettings : Output()
 

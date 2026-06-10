@@ -67,6 +67,10 @@ class SettingsBlocImpl(
         viewModel.dismissSignOutConfirmationDialog()
     }
 
+    override fun onManageProfileClicked() {
+        output.onNext(Output.OpenManageProfile)
+    }
+
     override fun onUrlClicked(url: String) {
         output.onNext(Output.OpenUrl(url))
     }

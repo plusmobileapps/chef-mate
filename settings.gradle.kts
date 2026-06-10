@@ -110,6 +110,12 @@ include(":client:recipe:categories:impl-robots")
 
 include(":client:recipe:categories:public")
 
+include(":client:profile:impl")
+
+include(":client:profile:impl-robots")
+
+include(":client:profile:public")
+
 include(":client:recipe:core:impl")
 
 include(":client:recipe:core:impl-robots")

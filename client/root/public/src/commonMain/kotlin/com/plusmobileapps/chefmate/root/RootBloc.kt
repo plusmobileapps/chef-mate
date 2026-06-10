@@ -12,6 +12,7 @@ import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagsBloc
+import com.plusmobileapps.chefmate.profile.ManageProfileBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
@@ -39,6 +40,8 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
         data class MealPlanner(val bloc: MealPlannerRootBloc) : Child(), BlocScreen by bloc
 
         data class SettingsRoot(val bloc: SettingsRootBloc) : Child(), BlocScreen by bloc
+
+        data class ManageProfile(val bloc: ManageProfileBloc) : Child(), BlocScreen by bloc
 
         data class DeveloperSettings(val bloc: DeveloperSettingsBloc) : Child(), BlocScreen by bloc
 
