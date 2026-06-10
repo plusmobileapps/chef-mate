@@ -276,16 +276,14 @@ private fun RecipeTitleField(bloc: EditRecipeBloc, modifier: Modifier = Modifier
 private fun RecipeDescriptionField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     val description by bloc.description.collectAsState()
 
-    OutlinedTextField(
+    PlusMarkdownEditor(
         value = description,
         onValueChange = bloc::onDescriptionChanged,
-        label = { Text(stringResource(Res.string.edit_recipe_field_description)) },
-        placeholder = {
-            Text(stringResource(Res.string.edit_recipe_field_description_placeholder))
-        },
-        modifier = modifier.fillMaxWidth(),
-        minLines = 3,
-        maxLines = 5,
+        label = stringResource(Res.string.edit_recipe_field_description),
+        placeholder = stringResource(Res.string.edit_recipe_field_description_placeholder),
+        modifier = modifier,
+        minHeight = 120.dp,
+        initialHeight = 140.dp,
     )
 }
 
@@ -712,7 +710,7 @@ val previewEditRecipeBloc =
         override val title: StateFlow<String> = MutableStateFlow("Spaghetti Carbonara")
         override val description: StateFlow<String> =
             MutableStateFlow(
-                "A classic Italian pasta dish with eggs, cheese, pancetta, and black pepper"
+                "A _classic_ Italian pasta dish with eggs, cheese, pancetta, and black pepper"
             )
         override val imageUrl: StateFlow<String> =
             MutableStateFlow("https://example.com/carbonara.jpg")
