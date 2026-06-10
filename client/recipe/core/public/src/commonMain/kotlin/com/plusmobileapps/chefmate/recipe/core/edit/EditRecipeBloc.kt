@@ -51,6 +51,12 @@ interface EditRecipeBloc : BackClickBloc, BlocScreen {
 
     val pendingPhotoBytes: StateFlow<ByteArray?>
 
+    /**
+     * App-wide preference: true edits ingredients/directions/description in the WYSIWYG rich-text
+     * editor, false uses the raw markdown editor with a preview toggle. Persisted across launches.
+     */
+    val richTextEditorMode: StateFlow<Boolean>
+
     fun onTitleChanged(title: String)
 
     fun onDescriptionChanged(description: String)
@@ -118,6 +124,9 @@ interface EditRecipeBloc : BackClickBloc, BlocScreen {
     fun onPhotoPicked(bytes: ByteArray, fileExtension: String)
 
     fun onUploadErrorDismissed()
+
+    /** Persists the editor-mode preference (true = rich text, false = markdown). */
+    fun onRichTextEditorModeChanged(richTextMode: Boolean)
 
     data class Model(
         val title: TextData,

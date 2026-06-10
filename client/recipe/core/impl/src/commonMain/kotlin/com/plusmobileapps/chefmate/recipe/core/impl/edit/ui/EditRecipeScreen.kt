@@ -1,7 +1,6 @@
 package com.plusmobileapps.chefmate.recipe.core.impl.edit.ui
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,7 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.AlertDialog
@@ -49,7 +47,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
@@ -81,7 +78,6 @@ import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_ingredients_placeholder
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_prep_time
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_prep_time_placeholder
-import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_resize_handle_a11y
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_servings
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_servings_placeholder
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_source_url
@@ -102,6 +98,7 @@ import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
+import com.plusmobileapps.chefmate.ui.components.PlusMarkdownEditor
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -278,17 +275,18 @@ private fun RecipeTitleField(bloc: EditRecipeBloc, modifier: Modifier = Modifier
 @Composable
 private fun RecipeDescriptionField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     val description by bloc.description.collectAsState()
+    val richTextMode by bloc.richTextEditorMode.collectAsState()
 
-    OutlinedTextField(
+    PlusMarkdownEditor(
         value = description,
         onValueChange = bloc::onDescriptionChanged,
-        label = { Text(stringResource(Res.string.edit_recipe_field_description)) },
-        placeholder = {
-            Text(stringResource(Res.string.edit_recipe_field_description_placeholder))
-        },
-        modifier = modifier.fillMaxWidth(),
-        minLines = 3,
-        maxLines = 5,
+        label = stringResource(Res.string.edit_recipe_field_description),
+        placeholder = stringResource(Res.string.edit_recipe_field_description_placeholder),
+        richTextMode = richTextMode,
+        onRichTextModeChange = bloc::onRichTextEditorModeChanged,
+        modifier = modifier,
+        minHeight = 120.dp,
+        initialHeight = 140.dp,
     )
 }
 
@@ -650,77 +648,37 @@ private fun RecipeCaloriesField(bloc: EditRecipeBloc, modifier: Modifier = Modif
 @Composable
 private fun RecipeIngredientsField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     val ingredients by bloc.ingredients.collectAsState()
+    val richTextMode by bloc.richTextEditorMode.collectAsState()
 
-    ResizableMultilineField(
+    PlusMarkdownEditor(
         value = ingredients,
         onValueChange = bloc::onIngredientsChanged,
         label = stringResource(Res.string.edit_recipe_field_ingredients),
         placeholder = stringResource(Res.string.edit_recipe_field_ingredients_placeholder),
+        richTextMode = richTextMode,
+        onRichTextModeChange = bloc::onRichTextEditorModeChanged,
         modifier = modifier,
+        initialHeight = 320.dp,
+        maxHeight = 640.dp,
     )
 }
 
 @Composable
 private fun RecipeDirectionsField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     val directions by bloc.directions.collectAsState()
+    val richTextMode by bloc.richTextEditorMode.collectAsState()
 
-    ResizableMultilineField(
+    PlusMarkdownEditor(
         value = directions,
         onValueChange = bloc::onDirectionsChanged,
         label = stringResource(Res.string.edit_recipe_field_directions),
         placeholder = stringResource(Res.string.edit_recipe_field_directions_placeholder),
+        richTextMode = richTextMode,
+        onRichTextModeChange = bloc::onRichTextEditorModeChanged,
         modifier = modifier,
+        initialHeight = 320.dp,
+        maxHeight = 640.dp,
     )
-}
-
-/**
- * A tall multiline text field with a drag handle in the bottom-end corner. Dragging the handle
- * grows or shrinks the field between [minHeight] and [maxHeight]; text scrolls internally once it
- * exceeds the current height. The chosen height survives configuration changes via
- * [rememberSaveable].
- */
-@Composable
-private fun ResizableMultilineField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    placeholder: String,
-    modifier: Modifier = Modifier,
-    minHeight: Dp = 160.dp,
-    maxHeight: Dp = 480.dp,
-    initialHeight: Dp = 200.dp,
-) {
-    var heightDp by rememberSaveable { mutableStateOf(initialHeight.value) }
-
-    Box(modifier = modifier.fillMaxWidth()) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            label = { Text(label) },
-            placeholder = { Text(placeholder) },
-            modifier = Modifier.fillMaxWidth().height(heightDp.dp),
-        )
-        Icon(
-            imageVector = Icons.Default.DragHandle,
-            contentDescription =
-                stringResource(Res.string.edit_recipe_field_resize_handle_a11y, label),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier =
-                Modifier.align(Alignment.BottomEnd)
-                    .padding(ChefMateTheme.dimens.paddingSmall)
-                    .size(20.dp)
-                    .pointerInput(Unit) {
-                        detectDragGestures { change, dragAmount ->
-                            change.consume()
-                            heightDp =
-                                (heightDp + dragAmount.y.toDp().value).coerceIn(
-                                    minHeight.value,
-                                    maxHeight.value,
-                                )
-                        }
-                    },
-        )
-    }
 }
 
 @Composable
@@ -765,13 +723,13 @@ val previewEditRecipeBloc =
         override val title: StateFlow<String> = MutableStateFlow("Spaghetti Carbonara")
         override val description: StateFlow<String> =
             MutableStateFlow(
-                "A classic Italian pasta dish with eggs, cheese, pancetta, and black pepper"
+                "A _classic_ Italian pasta dish with eggs, cheese, pancetta, and black pepper"
             )
         override val imageUrl: StateFlow<String> =
             MutableStateFlow("https://example.com/carbonara.jpg")
         override val ingredients: StateFlow<String> =
             MutableStateFlow(
-                """400g spaghetti
+                """**400g** spaghetti
 200g pancetta
 4 large eggs
 100g Pecorino Romano cheese
@@ -781,7 +739,7 @@ Salt for pasta water"""
         override val directions: StateFlow<String> =
             MutableStateFlow(
                 """1. Bring a large pot of salted water to boil
-2. Cook spaghetti until al dente
+2. Cook spaghetti until _al dente_
 3. While pasta cooks, fry pancetta until crispy
 4. Beat eggs and mix with grated cheese
 5. Drain pasta, reserving some pasta water
@@ -816,6 +774,7 @@ Salt for pasta water"""
             MutableStateFlow(com.plusmobileapps.chefmate.recipebook.data.RecipeBook.Samples)
         override val selectedBookIds: StateFlow<Set<Long>> = MutableStateFlow(setOf(1L))
         override val pendingPhotoBytes: StateFlow<ByteArray?> = MutableStateFlow(null)
+        override val richTextEditorMode: StateFlow<Boolean> = MutableStateFlow(false)
 
         override fun onTitleChanged(title: String) {}
 
@@ -868,6 +827,8 @@ Salt for pasta water"""
         override fun onPhotoPicked(bytes: ByteArray, fileExtension: String) {}
 
         override fun onUploadErrorDismissed() {}
+
+        override fun onRichTextEditorModeChanged(richTextMode: Boolean) {}
 
         override fun onBackClicked() {}
 

@@ -79,6 +79,7 @@ class EditRecipeBlocImpl(
     override val recipeBooks: StateFlow<List<RecipeBook>> = viewModel.recipeBooks
     override val selectedBookIds: StateFlow<Set<Long>> = viewModel.selectedBookIds
     override val pendingPhotoBytes: StateFlow<ByteArray?> = viewModel.pendingPhotoBytes
+    override val richTextEditorMode: StateFlow<Boolean> = viewModel.richTextEditorMode
 
     init {
         scope.launch {
@@ -194,6 +195,10 @@ class EditRecipeBlocImpl(
 
     override fun onUploadErrorDismissed() {
         viewModel.dismissUploadError()
+    }
+
+    override fun onRichTextEditorModeChanged(richTextMode: Boolean) {
+        viewModel.updateRichTextEditorMode(richTextMode)
     }
 
     override fun onBackClicked() {

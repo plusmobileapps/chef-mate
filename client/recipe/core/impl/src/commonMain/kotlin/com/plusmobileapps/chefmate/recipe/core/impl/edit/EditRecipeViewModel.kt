@@ -5,6 +5,7 @@ package com.plusmobileapps.chefmate.recipe.core.impl.edit
 import co.touchlab.kermit.Logger
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.di.Main
+import com.plusmobileapps.chefmate.di.MarkdownEditorModeRepository
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.CategoryRepository
@@ -45,6 +46,7 @@ class EditRecipeViewModel(
     private val recipeBookRepository: RecipeBookRepository,
     private val photoStorage: RecipePhotoStorage,
     private val pendingRecipePhotoStore: PendingRecipePhotoStore,
+    private val markdownEditorModeRepository: MarkdownEditorModeRepository,
 ) : ViewModel(mainContext) {
     private val _output = Channel<Output>(Channel.BUFFERED)
     val output: Flow<Output> = _output.receiveAsFlow()
@@ -112,6 +114,9 @@ class EditRecipeViewModel(
     private val _pendingPhotoBytes = MutableStateFlow<ByteArray?>(null)
     val pendingPhotoBytes: StateFlow<ByteArray?> = _pendingPhotoBytes.asStateFlow()
     private var pendingPhotoExtension: String? = null
+
+    /** App-wide editor-mode preference, backed by [MarkdownEditorModeRepository]. */
+    val richTextEditorMode: StateFlow<Boolean> = markdownEditorModeRepository.richTextMode
 
     init {
         // A new recipe defaults to the active book; an existing one loads its current membership.
@@ -194,6 +199,10 @@ class EditRecipeViewModel(
 
     fun updateCalories(value: String) {
         _calories.value = value
+    }
+
+    fun updateRichTextEditorMode(value: Boolean) {
+        markdownEditorModeRepository.setRichTextMode(value)
     }
 
     fun updateStarRating(value: Int?) {

@@ -171,6 +171,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
+import com.plusmobileapps.chefmate.ui.text.toInlineMarkdownAnnotatedString
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import com.plusmobileapps.chefmate.util.rememberShareLauncher
 import kotlin.time.ExperimentalTime
@@ -649,7 +650,7 @@ private fun RecipeDetailCompactContent(
         recipe.description?.let { description ->
             item(key = "description") {
                 Text(
-                    text = description,
+                    text = description.toInlineMarkdownAnnotatedString(),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = padding),
@@ -956,7 +957,7 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                 recipe.description?.let { description ->
                     item(key = "metadata_description") {
                         Text(
-                            text = description,
+                            text = description.toInlineMarkdownAnnotatedString(),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -1154,7 +1155,10 @@ private fun DescriptionCard(description: String, modifier: Modifier = Modifier) 
                 text = stringResource(Res.string.recipe_detail_description),
                 style = MaterialTheme.typography.titleMedium,
             )
-            Text(text = description, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = description.toInlineMarkdownAnnotatedString(),
+                style = MaterialTheme.typography.bodyMedium,
+            )
         }
     }
 }
@@ -1452,7 +1456,7 @@ private fun IngredientLineItem(
         return
     }
     Text(
-        text = text,
+        text = text.toInlineMarkdownAnnotatedString(),
         style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 22.sp),
         textDecoration = if (crossedOut) TextDecoration.LineThrough else TextDecoration.None,
         color =
@@ -1478,7 +1482,7 @@ private fun DirectionLineItem(
 ) {
     val dimens = ChefMateTheme.dimens
     Text(
-        text = text,
+        text = text.toInlineMarkdownAnnotatedString(),
         style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 22.sp),
         modifier =
             modifier

@@ -3,6 +3,7 @@
 
 package com.plusmobileapps.chefmate.recipe.core.impl.edit
 
+import com.plusmobileapps.chefmate.di.MarkdownEditorModeRepository
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
@@ -12,6 +13,7 @@ import com.plusmobileapps.chefmate.recipe.data.testing.FakePendingRecipePhotoSto
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipePhotoStorage
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import com.plusmobileapps.chefmate.recipebook.data.testing.FakeRecipeBookRepository
+import com.russhwolf.settings.MapSettings
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
@@ -50,6 +52,7 @@ class EditRecipeViewModelTest {
             recipeBookRepository = recipeBookRepository,
             photoStorage = photoStorage,
             pendingRecipePhotoStore = pendingPhotoStore,
+            markdownEditorModeRepository = MarkdownEditorModeRepository(MapSettings()),
         )
 
     @Test

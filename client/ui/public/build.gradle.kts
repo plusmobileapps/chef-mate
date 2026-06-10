@@ -12,6 +12,7 @@ kotlin {
             api(libs.compose.material.expressive)
             api(libs.coil.compose)
             api(libs.coil.network.ktor3)
+            api(libs.richeditor.compose)
             implementation(compose.components.resources)
         }
     }
@@ -19,4 +20,7 @@ kotlin {
 
 compose { resources { publicResClass = true } }
 
-plusLibrary { namespace = "com.plusmobileapps.chefmate.ui" }
+plusLibrary {
+    namespace = "com.plusmobileapps.chefmate.ui"
+    enableTesting = true
+}
