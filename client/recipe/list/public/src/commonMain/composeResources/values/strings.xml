@@ -73,6 +73,7 @@
 
     <!-- Overflow Menu / Selection Mode -->
     <string name="recipe_list_more_actions">More actions</string>
+    <string name="recipe_list_menu_sync">Sync now</string>
     <string name="recipe_list_menu_select">Select recipes</string>
     <string name="recipe_list_menu_export_all">Export all recipes</string>
     <string name="recipe_list_menu_collaborate">Collaborate</string>

@@ -48,6 +48,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SoupKitchen
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material.icons.outlined.CloudDone
@@ -142,6 +143,7 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_item_s
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_collaborate
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_export_all
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_select
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_sync
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_more_actions
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_scan_failed_title
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_scan_from_photo
@@ -352,6 +354,7 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                                 onSelectClicked = bloc::onEnterSelectionMode,
                                 onExportAllClicked = bloc::onExportClicked,
                                 onCollaborateClicked = bloc::onCollaborateClicked,
+                                onSyncClicked = bloc::onSyncClicked,
                             )
                         },
                 )
@@ -679,6 +682,7 @@ private fun OverflowMenu(
     onSelectClicked: () -> Unit,
     onExportAllClicked: () -> Unit,
     onCollaborateClicked: () -> Unit,
+    onSyncClicked: () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box {
@@ -689,6 +693,14 @@ private fun OverflowMenu(
             )
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.recipe_list_menu_sync)) },
+                leadingIcon = { Icon(Icons.Default.Sync, contentDescription = null) },
+                onClick = {
+                    expanded = false
+                    onSyncClicked()
+                },
+            )
             DropdownMenuItem(
                 text = { Text(stringResource(Res.string.recipe_list_menu_select)) },
                 leadingIcon = { Icon(Icons.Default.Check, contentDescription = null) },
