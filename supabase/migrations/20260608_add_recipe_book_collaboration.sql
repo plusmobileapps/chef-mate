@@ -67,6 +67,27 @@ RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public AS
     );
 $$;
 
+-- Recipe-level access, resolved through the join table. SECURITY DEFINER so the join lookup
+-- bypasses recipe_book_recipes' RLS — otherwise the recipes policy below and the existing
+-- recipe_book_recipes → recipes policy would recurse infinitely (Postgres 42P17).
+CREATE OR REPLACE FUNCTION can_access_recipe(p_recipe_id uuid)
+RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public AS $$
+    SELECT EXISTS (
+        SELECT 1 FROM recipe_book_recipes rbr
+        WHERE rbr.recipe_id = p_recipe_id
+          AND can_access_recipe_book(rbr.recipe_book_id)
+    );
+$$;
+
+CREATE OR REPLACE FUNCTION can_edit_recipe(p_recipe_id uuid)
+RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public AS $$
+    SELECT EXISTS (
+        SELECT 1 FROM recipe_book_recipes rbr
+        WHERE rbr.recipe_id = p_recipe_id
+          AND can_edit_recipe_book(rbr.recipe_book_id)
+    );
+$$;
+
 -- ---------------------------------------------------------------------------
 -- recipe_book_members RLS
 -- ---------------------------------------------------------------------------
@@ -120,24 +141,13 @@ CREATE POLICY "Invitees can view invited books" ON recipe_books
 CREATE POLICY "Editors can update shared recipe books" ON recipe_books
     FOR UPDATE USING (can_edit_recipe_book(id));
 
--- A recipe is visible/editable to members of any book it belongs to.
+-- A recipe is visible/editable to members of any book it belongs to. Go through the SECURITY
+-- DEFINER helpers (not a direct recipe_book_recipes subquery) to avoid RLS recursion.
 CREATE POLICY "Members can view recipes in shared books" ON recipes
-    FOR SELECT USING (
-        EXISTS (
-            SELECT 1 FROM recipe_book_recipes rbr
-            WHERE rbr.recipe_id = recipes.id
-              AND can_access_recipe_book(rbr.recipe_book_id)
-        )
-    );
+    FOR SELECT USING (can_access_recipe(id));
 
 CREATE POLICY "Editors can update recipes in shared books" ON recipes
-    FOR UPDATE USING (
-        EXISTS (
-            SELECT 1 FROM recipe_book_recipes rbr
-            WHERE rbr.recipe_id = recipes.id
-              AND can_edit_recipe_book(rbr.recipe_book_id)
-        )
-    );
+    FOR UPDATE USING (can_edit_recipe(id));
 
 -- Join rows: viewable to members; editable (file/unfile a recipe) to editors of the book.
 CREATE POLICY "Members can view shared book links" ON recipe_book_recipes
@@ -151,10 +161,4 @@ CREATE POLICY "Editors can delete shared book links" ON recipe_book_recipes
 
 -- Category attachments of recipes that live in a shared book.
 CREATE POLICY "Members can view shared recipe categories" ON recipe_categories
-    FOR SELECT USING (
-        EXISTS (
-            SELECT 1 FROM recipe_book_recipes rbr
-            WHERE rbr.recipe_id = recipe_categories.recipe_id
-              AND can_access_recipe_book(rbr.recipe_book_id)
-        )
-    );
+    FOR SELECT USING (can_access_recipe(recipe_id));
