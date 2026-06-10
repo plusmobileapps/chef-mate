@@ -42,6 +42,7 @@ import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_bo
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookMember
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookRole
 import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.components.PlusAvatar
 import com.plusmobileapps.chefmate.ui.components.PlusButton
 import com.plusmobileapps.chefmate.ui.components.PlusButtonVariant
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
@@ -151,7 +152,16 @@ private fun CollaboratorsSection(bloc: EditRecipeBookBloc, model: EditRecipeBook
 
 @Composable
 private fun MemberRow(member: RecipeBookMember, onRemove: (String) -> Unit) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
+    ) {
+        PlusAvatar(
+            imageUrl = member.avatarUrl,
+            contentDescription = null,
+            fallbackText = member.email,
+        )
         Column(modifier = Modifier.weight(1f)) {
             Text(text = member.email, style = MaterialTheme.typography.bodyMedium)
             Text(

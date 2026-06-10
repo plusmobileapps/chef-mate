@@ -55,6 +55,7 @@ class RecipeBookCollaborationRepositoryImpl(
                         role = RecipeBookRole.OWNER,
                         accepted = true,
                         isOwner = true,
+                        avatarUrl = it.userProfileImageUrl,
                     )
                 }
             } else {
