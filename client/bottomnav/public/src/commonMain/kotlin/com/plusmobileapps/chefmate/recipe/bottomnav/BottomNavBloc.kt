@@ -73,6 +73,8 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
 
         data object OpenSignUp : Output()
 
+        data object OpenManageProfile : Output()
+
         data object OpenAppSettings : Output()
 
         data object OpenAiChat : Output()

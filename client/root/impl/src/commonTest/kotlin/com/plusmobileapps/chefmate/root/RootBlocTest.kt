@@ -31,6 +31,9 @@ class RootBlocTest {
     var recipeOutput: Consumer<RecipeRootBloc.Output> = Consumer {}
     var recipeProps: RecipeRootBloc.Props? = null
     var settingsRootOutput: Consumer<SettingsRootBloc.Output> = Consumer {}
+    var manageProfileOutput:
+        Consumer<com.plusmobileapps.chefmate.profile.ManageProfileBloc.Output> =
+        Consumer {}
     var developerSettingsOutput:
         Consumer<com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc.Output> =
         Consumer {}
@@ -83,6 +86,10 @@ class RootBlocTest {
             },
             settingsRoot = { _, output ->
                 settingsRootOutput = output
+                mock()
+            },
+            manageProfile = { _, output ->
+                manageProfileOutput = output
                 mock()
             },
             developerSettings = { _, output ->

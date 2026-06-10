@@ -33,6 +33,7 @@ import chefmate.client.settings.public.generated.resources.Res
 import chefmate.client.settings.public.generated.resources.about
 import chefmate.client.settings.public.generated.resources.developer_settings
 import chefmate.client.settings.public.generated.resources.greeting_authenticated
+import chefmate.client.settings.public.generated.resources.manage_profile
 import chefmate.client.settings.public.generated.resources.more
 import chefmate.client.settings.public.generated.resources.privacy_policy
 import chefmate.client.settings.public.generated.resources.settings
@@ -100,6 +101,11 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
                         GreetingSection(greeting = greeting)
                         HorizontalDivider()
                     }
+                    SettingsRow(
+                        name = Res.string.manage_profile.asTextData(),
+                        onClick = bloc::onManageProfileClicked,
+                    )
+                    HorizontalDivider()
                     SettingsRow(
                         name = Res.string.sign_out.asTextData(),
                         onClick = bloc::onSignOutClicked,
@@ -276,6 +282,8 @@ private val previewBlocUnauthenticated =
 
         override fun onSignOutDismissed() = Unit
 
+        override fun onManageProfileClicked() = Unit
+
         override fun onUrlClicked(url: String) = Unit
 
         override fun onAppSettingsClicked() = Unit
@@ -312,6 +320,8 @@ private val previewBlocAuthenticated =
 
         override fun onSignOutDismissed() = Unit
 
+        override fun onManageProfileClicked() = Unit
+
         override fun onUrlClicked(url: String) = Unit
 
         override fun onAppSettingsClicked() = Unit
@@ -343,6 +353,8 @@ private val previewBlocAnonymous =
         override fun onSignOutConfirmed() = Unit
 
         override fun onSignOutDismissed() = Unit
+
+        override fun onManageProfileClicked() = Unit
 
         override fun onUrlClicked(url: String) = Unit
 
