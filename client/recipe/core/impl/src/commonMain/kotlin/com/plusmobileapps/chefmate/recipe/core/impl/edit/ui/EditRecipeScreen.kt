@@ -116,7 +116,13 @@ import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditRecipeScreen(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
+fun EditRecipeScreen(
+    bloc: EditRecipeBloc,
+    modifier: Modifier = Modifier,
+    // The "More details" section starts collapsed in production; screenshot tests pass true to
+    // capture the expanded form.
+    moreDetailsInitiallyExpanded: Boolean = false,
+) {
     val state by bloc.state.collectAsState()
 
     if (state.showDiscardChangesDialog) {
@@ -149,9 +155,15 @@ fun EditRecipeScreen(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
                     LoadingIndicator()
                 }
             } else if (isExpanded) {
-                WideEditRecipeContent(bloc = bloc)
+                WideEditRecipeContent(
+                    bloc = bloc,
+                    moreDetailsInitiallyExpanded = moreDetailsInitiallyExpanded,
+                )
             } else {
-                EditRecipeContent(bloc = bloc)
+                EditRecipeContent(
+                    bloc = bloc,
+                    moreDetailsInitiallyExpanded = moreDetailsInitiallyExpanded,
+                )
             }
         }
     }
@@ -181,18 +193,21 @@ private fun LoadingIndicator(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun EditRecipeContent(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
+private fun EditRecipeContent(
+    bloc: EditRecipeBloc,
+    moreDetailsInitiallyExpanded: Boolean,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier.fillMaxWidth().padding(ChefMateTheme.dimens.paddingNormal),
         verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingNormal),
     ) {
         RecipeTitleField(bloc = bloc)
-        RecipeDescriptionField(bloc = bloc)
         RecipeBooksField(bloc = bloc)
         RecipeCategoryField(bloc = bloc)
         RecipeStarRatingField(bloc = bloc)
         RecipePhotoUploader(bloc = bloc)
-        RecipeMoreDetailsSection(bloc = bloc)
+        RecipeMoreDetailsSection(bloc = bloc, initiallyExpanded = moreDetailsInitiallyExpanded)
         RecipeIngredientsField(bloc = bloc)
         RecipeDirectionsField(bloc = bloc)
         // Clearance so the floating Save button never covers the last field.
@@ -201,13 +216,16 @@ private fun EditRecipeContent(bloc: EditRecipeBloc, modifier: Modifier = Modifie
 }
 
 /**
- * Wide-window layout: the photo + metadata fields share a top row, and the long-form fields split
- * into two panes below — ingredients on the left, description and directions on the right — so the
- * form fills the available width instead of a single centered column. Reuses the same field
- * composables as [EditRecipeContent]; only the arrangement differs.
+ * Wide-window layout: the photo + metadata fields share a top row, and ingredients and directions
+ * split into two panes below, so the form fills the available width instead of a single centered
+ * column. Reuses the same field composables as [EditRecipeContent]; only the arrangement differs.
  */
 @Composable
-private fun WideEditRecipeContent(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
+private fun WideEditRecipeContent(
+    bloc: EditRecipeBloc,
+    moreDetailsInitiallyExpanded: Boolean,
+    modifier: Modifier = Modifier,
+) {
     val spacing = ChefMateTheme.dimens.paddingNormal
     Column(
         modifier = modifier.fillMaxWidth().padding(spacing),
@@ -221,7 +239,10 @@ private fun WideEditRecipeContent(bloc: EditRecipeBloc, modifier: Modifier = Mod
             ) {
                 RecipeTitleField(bloc = bloc)
                 RecipeStarRatingField(bloc = bloc)
-                RecipeMoreDetailsSection(bloc = bloc)
+                RecipeMoreDetailsSection(
+                    bloc = bloc,
+                    initiallyExpanded = moreDetailsInitiallyExpanded,
+                )
                 RecipeCategoryField(bloc = bloc)
                 RecipeBooksField(bloc = bloc)
             }
@@ -229,13 +250,7 @@ private fun WideEditRecipeContent(bloc: EditRecipeBloc, modifier: Modifier = Mod
 
         Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
             Column(modifier = Modifier.weight(1f)) { RecipeIngredientsField(bloc = bloc) }
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(spacing),
-            ) {
-                RecipeDescriptionField(bloc = bloc)
-                RecipeDirectionsField(bloc = bloc)
-            }
+            Column(modifier = Modifier.weight(1f)) { RecipeDirectionsField(bloc = bloc) }
         }
         // Clearance so the floating Save button never covers the last field.
         Spacer(modifier = Modifier.height(ChefMateTheme.dimens.fabClearance))
@@ -243,16 +258,22 @@ private fun WideEditRecipeContent(bloc: EditRecipeBloc, modifier: Modifier = Mod
 }
 
 /**
- * Secondary recipe metadata (links, servings, times, calories) collapsed into one expandable
- * outlined section so the form leads with the fields people edit most. Collapsed by default.
+ * Secondary recipe fields (description, links, servings, times, calories) collapsed into one
+ * expandable outlined section so the form leads with the fields people edit most. Collapsed by
+ * default.
  */
 @Composable
-private fun RecipeMoreDetailsSection(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
+private fun RecipeMoreDetailsSection(
+    bloc: EditRecipeBloc,
+    initiallyExpanded: Boolean,
+    modifier: Modifier = Modifier,
+) {
     PlusOutlinedContainer(
         modifier = modifier,
         title = stringResource(Res.string.edit_recipe_section_more_details),
-        initiallyExpanded = false,
+        initiallyExpanded = initiallyExpanded,
     ) {
+        RecipeDescriptionField(bloc = bloc)
         RecipeImageUrlField(bloc = bloc)
         RecipeSourceUrlField(bloc = bloc)
         RecipeServingsField(bloc = bloc)
