@@ -61,6 +61,25 @@ class RecipeBookRepositoryImplTest {
         }
 
     @Test
+    fun clearLocalData_wipes_books_and_resets_to_a_fresh_default() =
+        runTest(testDispatcher) {
+            val repo = repository()
+            val shared = repo.createBook("Shared with me")
+            repo.setActiveBook(shared.id)
+
+            repo.clearLocalData()
+
+            repo.getRecipeBooks().test {
+                val books = awaitItem()
+                // Only the recreated baseline "My Recipes" default survives.
+                books.single().isDefault shouldBe true
+                books.single().name shouldBe "My Recipes"
+                // The active selection no longer points at the deleted book.
+                repo.activeBookId.value shouldBe books.single().id
+            }
+        }
+
+    @Test
     fun reads_books_seeded_with_sqlite_datetime_timestamps() =
         runTest(testDispatcher) {
             // A book seeded by the upgrade migration's column default carries a SQLite datetime

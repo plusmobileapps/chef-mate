@@ -126,6 +126,10 @@ class RecipeBookRepositoryImpl(
 
     override suspend fun clearLocalData() {
         withContext(ioContext) { db.deleteAll() }
+        // Drop the persisted active-book selection — it points at a now-deleted row.
+        settings.putLong(KEY_ACTIVE_BOOK, NO_ACTIVE_BOOK)
+        // Recreate the baseline "My Recipes" book so a signed-out/fresh session stays valid.
+        _activeBookId.value = ensureDefaultBookId()
     }
 
     /** Creates the default book if absent and returns its local id. Idempotent. */
