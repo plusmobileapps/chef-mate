@@ -11,6 +11,7 @@ import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocCooking
+import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocPendingInvite
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocScanError
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocScanning
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocSelectionMode
@@ -113,4 +114,20 @@ fun RecipeListScanningDarkScreenshot() {
 @Composable
 fun RecipeListScanErrorLightScreenshot() {
     RecipeListScreenshot(bloc = previewRecipeListBlocScanError)
+}
+
+// ── Pending recipe-book invite banner (accept / decline) ───────────────────
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+fun RecipeListPendingInviteLightScreenshot() {
+    RecipeListScreenshot(bloc = previewRecipeListBlocPendingInvite)
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun RecipeListPendingInviteDarkScreenshot() {
+    RecipeListScreenshot(bloc = previewRecipeListBlocPendingInvite, darkTheme = true)
 }

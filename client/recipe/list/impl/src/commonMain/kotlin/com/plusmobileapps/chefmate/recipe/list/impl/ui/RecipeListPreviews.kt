@@ -10,6 +10,8 @@ import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBookInvite
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBookRole
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.collections.immutable.persistentListOf
@@ -197,6 +199,25 @@ val previewRecipeListBlocScanning: RecipeListBloc =
             recipes = sampleRecipes,
             totalRecipeCount = sampleRecipes.size,
             isScanning = true,
+        )
+    )
+
+/** Recipe list with a pending recipe-book invite — exercises the accept/decline invite banner. */
+val previewRecipeListBlocPendingInvite: RecipeListBloc =
+    recipeListBloc(
+        RecipeListBloc.Model(
+            recipes = sampleRecipes,
+            totalRecipeCount = sampleRecipes.size,
+            recipeBooks = RecipeBook.Samples,
+            activeBook = RecipeBook.Sample,
+            pendingInvites =
+                listOf(
+                    RecipeBookInvite(
+                        memberId = "invite-1",
+                        bookName = "Weeknight Dinners",
+                        role = RecipeBookRole.EDITOR,
+                    )
+                ),
         )
     )
 
