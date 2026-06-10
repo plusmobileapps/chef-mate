@@ -11,6 +11,7 @@ import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookRepository
+import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RecipeBookMemberRemoteDataSource
 import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RecipeBookRemoteDataSource
 import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RemoteRecipeBook
 import com.plusmobileapps.chefmate.util.DateTimeUtil
@@ -43,6 +44,7 @@ class RecipeBookRepositoryImpl(
     private val dateTimeUtil: DateTimeUtil,
     private val unique: Unique,
     private val remoteDataSource: RecipeBookRemoteDataSource,
+    private val memberRemoteDataSource: RecipeBookMemberRemoteDataSource,
     private val authRepository: AuthenticationRepository,
     private val settings: Settings,
 ) : RecipeBookRepository {
@@ -261,10 +263,32 @@ class RecipeBookRepositoryImpl(
             }
 
             // Pull every accessible book — owned plus books shared with the user (RLS-scoped).
+            // RLS also lets a *pending* invitee read the invited book's row (so the banner can name
+            // it), so exclude those here: a book the user hasn't accepted yet must not appear in
+            // their list until they accept it from the recipe-list banner.
+            val pendingBookIds: Set<String> =
+                try {
+                    val email =
+                        (authRepository.state.value as? AuthState.Authenticated)
+                            ?.user
+                            ?.userEmail
+                            ?.trim()
+                            ?.lowercase()
+                    if (email.isNullOrEmpty()) emptySet()
+                    else
+                        memberRemoteDataSource
+                            .fetchPendingInvites(email)
+                            .map { it.recipeBookId }
+                            .toSet()
+                } catch (_: Exception) {
+                    emptySet()
+                }
             val remoteBooks = remoteDataSource.fetchAccessibleRecipeBooks()
             withContext(ioContext) {
                 for (remote in remoteBooks) {
                     val remoteId = remote.id ?: continue
+                    // Skip books the user only has a pending (un-accepted) invite to.
+                    if (remote.ownerId != userId && remoteId in pendingBookIds) continue
                     if (db.getByRemoteId(remoteId).executeAsOneOrNull() != null) continue
 
                     // Adopt the existing remote id onto the matching local book rather than

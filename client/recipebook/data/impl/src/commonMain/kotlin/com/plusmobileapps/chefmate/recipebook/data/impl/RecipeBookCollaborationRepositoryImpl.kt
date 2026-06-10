@@ -75,7 +75,12 @@ class RecipeBookCollaborationRepositoryImpl(
 
     override suspend fun invite(bookId: Long, email: String, role: RecipeBookRole) {
         val remoteId = bookRemoteId(bookId) ?: error("Book not synced yet")
-        remote.invite(bookRemoteId = remoteId, email = email.trim(), role = role.wireValue)
+        // Normalise the address so it always matches the invitee's (lowercased) account email.
+        remote.invite(
+            bookRemoteId = remoteId,
+            email = email.trim().lowercase(),
+            role = role.wireValue,
+        )
     }
 
     override suspend fun removeMember(memberId: String) {
@@ -83,7 +88,7 @@ class RecipeBookCollaborationRepositoryImpl(
     }
 
     override suspend fun pendingInvites(): List<RecipeBookInvite> {
-        val email = currentUser?.userEmail ?: return emptyList()
+        val email = currentUser?.userEmail?.trim()?.lowercase() ?: return emptyList()
         return remote.fetchPendingInvites(email).map {
             RecipeBookInvite(
                 memberId = it.id,

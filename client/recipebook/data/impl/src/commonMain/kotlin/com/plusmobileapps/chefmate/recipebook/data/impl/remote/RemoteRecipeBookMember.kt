@@ -18,6 +18,7 @@ data class RemoteRecipeBookMember(
 @Serializable
 data class RemoteRecipeBookInvite(
     val id: String,
+    @SerialName("recipe_book_id") val recipeBookId: String,
     val role: String,
     val status: String,
     @SerialName("recipe_books") val book: RemoteInviteBook,

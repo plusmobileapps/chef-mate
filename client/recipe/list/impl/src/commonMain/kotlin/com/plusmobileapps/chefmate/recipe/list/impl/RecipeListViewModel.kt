@@ -291,6 +291,9 @@ class RecipeListViewModel(
             _state.update { it.copy(isSyncing = true) }
             try {
                 repository.syncAllUnsynced()
+                // Refresh invites too so a pull-to-refresh surfaces a newly-arrived invitation
+                // even if the initial load raced a cold sign-in.
+                loadPendingInvites()
             } finally {
                 _state.update { it.copy(isSyncing = false) }
             }

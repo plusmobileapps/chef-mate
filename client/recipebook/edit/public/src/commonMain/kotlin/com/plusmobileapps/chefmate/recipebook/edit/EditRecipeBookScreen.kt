@@ -27,6 +27,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipebook.edit.public.generated.resources.Res
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_collaborators
@@ -122,7 +124,12 @@ private fun CollaboratorsSection(bloc: EditRecipeBookBloc, model: EditRecipeBook
             label = { Text(stringResource(Res.string.edit_recipe_book_invite_email_label)) },
             singleLine = true,
             error = model.inviteError,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardOptions =
+                KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    capitalization = KeyboardCapitalization.None,
+                    imeAction = ImeAction.Done,
+                ),
             keyboardActions = KeyboardActions(onDone = { bloc.onInviteClicked() }),
         )
 

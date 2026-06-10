@@ -42,8 +42,10 @@ class SupabaseRecipeBookMemberRemoteDataSource(private val supabaseClient: Supab
     override suspend fun fetchPendingInvites(email: String): List<RemoteRecipeBookInvite> =
         supabaseClient
             .from("recipe_book_members")
-            .select(Columns.raw("id, role, status, recipe_books!inner(name)")) {
+            .select(Columns.raw("id, recipe_book_id, role, status, recipe_books!inner(name)")) {
                 filter {
+                    // invited_email is stored lowercased on invite, and callers pass a lowercased
+                    // address, so an exact match is both correct and safe (no LIKE wildcards).
                     eq("invited_email", email)
                     eq("status", "pending")
                 }

@@ -151,6 +151,26 @@ class RecipeListViewModelTest {
         }
 
     @Test
+    fun When_pull_to_refresh_Then_pending_invites_reloaded() =
+        runTest(UnconfinedTestDispatcher()) {
+            // The screen opened before any invite existed, so the banner starts empty.
+            viewModel.state.value.pendingInvites.isEmpty() shouldBe true
+
+            // An invitation arrives while the list is already on screen.
+            collaborationRepository.invites.add(
+                com.plusmobileapps.chefmate.recipebook.data.RecipeBookInvite(
+                    memberId = "m9",
+                    bookName = "Late Book",
+                    role = com.plusmobileapps.chefmate.recipebook.data.RecipeBookRole.EDITOR,
+                )
+            )
+
+            viewModel.onSyncClicked()
+
+            viewModel.state.value.pendingInvites.map { it.memberId } shouldBe listOf("m9")
+        }
+
+    @Test
     fun When_scan_flag_enabled_Then_state_scan_from_photo_enabled() {
         val flags = FakeFeatureFlags(mapOf(FeatureFlagRegistry.ScanRecipeFromPhoto to true))
         val vm =
