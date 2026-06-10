@@ -107,8 +107,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -906,7 +909,7 @@ private fun ColumnScope.RecipeDetailExpandedContent(
         remember(recipe.ingredients) {
             mutableStateListOf(*BooleanArray(ingredientLines.size) { false }.toTypedArray())
         }
-    val directionParagraphs = remember(recipe.directions) { splitLines(recipe.directions) }
+    val directionParagraphs = remember(recipe.directions) { directionSteps(recipe.directions) }
     var directionHighlightedIndex by remember(recipe.directions) { mutableStateOf(-1) }
 
     Row(modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = padding)) {
@@ -1041,9 +1044,10 @@ private fun ColumnScope.RecipeDetailExpandedContent(
             }
             itemsIndexed(directionParagraphs, key = { index, _ -> "direction_$index" }) {
                 index,
-                paragraph ->
+                step ->
                 DirectionLineItem(
-                    text = paragraph,
+                    text = step.text,
+                    number = step.number,
                     highlighted = directionHighlightedIndex == index,
                     onClick = {
                         directionHighlightedIndex =
@@ -1473,16 +1477,45 @@ private fun IngredientLineItem(
     )
 }
 
+/**
+ * One rendered directions line. [number] is the step number (1-based, reset per section); a null
+ * [number] marks a section header (a line ending in `:`), which renders bold and is not numbered or
+ * tappable.
+ */
 @Composable
 private fun DirectionLineItem(
     text: String,
+    number: Int?,
     highlighted: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (number == null) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier =
+                modifier
+                    .fillMaxWidth()
+                    .padding(
+                        top = ChefMateTheme.dimens.paddingSmall,
+                        bottom = ChefMateTheme.dimens.paddingExtraSmall,
+                    ),
+        )
+        return
+    }
     val dimens = ChefMateTheme.dimens
+    val rendered =
+        remember(text, number) {
+            buildAnnotatedString {
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("$number. ") }
+                append(text.toInlineMarkdownAnnotatedString())
+            }
+        }
     Text(
-        text = text.toInlineMarkdownAnnotatedString(),
+        text = rendered,
         style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 22.sp),
         modifier =
             modifier
@@ -1503,6 +1536,28 @@ private fun DirectionLineItem(
                     horizontal = dimens.paddingExtraSmall,
                 ),
     )
+}
+
+/**
+ * A directions line with its display info: section headers (lines ending in `:`) carry a null
+ * [number]; real steps are numbered 1-based and the counter resets after each header. Any manual
+ * leading enumerator the author typed (e.g. "1. ") is stripped so we don't double-number.
+ */
+internal data class DirectionStep(val text: String, val number: Int?)
+
+private val leadingEnumerator = Regex("""^\s*\d+[.)]\s+""")
+
+internal fun directionSteps(directions: String): List<DirectionStep> {
+    var counter = 0
+    return splitLines(directions).map { line ->
+        if (IngredientSection.isHeader(line)) {
+            counter = 0
+            DirectionStep(text = line, number = null)
+        } else {
+            counter += 1
+            DirectionStep(text = line.replaceFirst(leadingEnumerator, ""), number = counter)
+        }
+    }
 }
 
 @Composable
@@ -1537,7 +1592,7 @@ private fun DirectionsContent(
     onHighlightedIndexChanged: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val paragraphs = remember(directions) { splitLines(directions) }
+    val steps = remember(directions) { directionSteps(directions) }
 
     val dimens = ChefMateTheme.dimens
     Column(
@@ -1548,9 +1603,10 @@ private fun DirectionsContent(
             text = stringResource(Res.string.recipe_detail_directions),
             style = MaterialTheme.typography.titleMedium,
         )
-        paragraphs.forEachIndexed { index, paragraph ->
+        steps.forEachIndexed { index, step ->
             DirectionLineItem(
-                text = paragraph,
+                text = step.text,
+                number = step.number,
                 highlighted = highlightedIndex == index,
                 onClick = {
                     onHighlightedIndexChanged(if (highlightedIndex == index) -1 else index)
