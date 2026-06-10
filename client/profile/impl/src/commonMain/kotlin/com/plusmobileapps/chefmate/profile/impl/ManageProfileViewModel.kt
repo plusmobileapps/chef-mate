@@ -62,6 +62,10 @@ class ManageProfileViewModel(
         val current = _state.value
         if (!current.canSave) return
         _state.update { it.copy(isSaving = true, saveError = null) }
+        // Capture the avatar that's currently persisted so we can clean it up once a new one is
+        // uploaded and saved. Uploads use a fresh randomized path, so without this the old object
+        // is orphaned in Supabase storage.
+        val previousPhotoUrl = current.photoUrl
         scope.launch {
             val avatarUrl =
                 pickedImage.value?.let { picked ->
@@ -80,7 +84,18 @@ class ManageProfileViewModel(
                 }
             authenticationRepository
                 .updateProfile(displayName = current.displayName.trim(), avatarUrl = avatarUrl)
-                .onSuccess { _outputs.send(Output.Saved) }
+                .onSuccess {
+                    // Only after the profile points at the new avatar do we delete the old one,
+                    // best-effort, so a delete failure can't strand the user without an avatar.
+                    if (
+                        avatarUrl != null &&
+                            !previousPhotoUrl.isNullOrBlank() &&
+                            previousPhotoUrl != avatarUrl
+                    ) {
+                        profilePhotoStorage.deletePhoto(previousPhotoUrl)
+                    }
+                    _outputs.send(Output.Saved)
+                }
                 .onFailure {
                     _state.update {
                         it.copy(
