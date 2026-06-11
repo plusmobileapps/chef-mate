@@ -1,5 +1,6 @@
 package com.plusmobileapps.chefmate.recipebook.data.impl
 
+import co.touchlab.kermit.Logger
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.auth.data.ChefMateUser
@@ -88,13 +89,26 @@ class RecipeBookCollaborationRepositoryImpl(
     }
 
     override suspend fun pendingInvites(): List<RecipeBookInvite> {
-        val email = currentUser?.userEmail?.trim()?.lowercase() ?: return emptyList()
-        return remote.fetchPendingInvites(email).map {
-            RecipeBookInvite(
-                memberId = it.id,
-                bookName = it.book.name,
-                role = RecipeBookRole.fromWire(it.role),
-            )
+        val email = currentUser?.userEmail?.trim()?.lowercase()
+        if (email == null) {
+            Logger.w(tag = TAG) { "pendingInvites: no signed-in user email; skipping" }
+            return emptyList()
+        }
+        return try {
+            val invites = remote.fetchPendingInvites(email)
+            Logger.i(tag = TAG) {
+                "pendingInvites: queried '$email' -> ${invites.size} pending invite(s)"
+            }
+            invites.map {
+                RecipeBookInvite(
+                    memberId = it.id,
+                    bookName = it.book.name,
+                    role = RecipeBookRole.fromWire(it.role),
+                )
+            }
+        } catch (t: Throwable) {
+            Logger.e(throwable = t, tag = TAG) { "pendingInvites: query failed for '$email'" }
+            emptyList()
         }
     }
 
@@ -108,5 +122,9 @@ class RecipeBookCollaborationRepositoryImpl(
 
     override suspend fun declineInvite(memberId: String) {
         remote.deleteMember(memberId)
+    }
+
+    private companion object {
+        const val TAG = "RecipeBookCollabRepo"
     }
 }
