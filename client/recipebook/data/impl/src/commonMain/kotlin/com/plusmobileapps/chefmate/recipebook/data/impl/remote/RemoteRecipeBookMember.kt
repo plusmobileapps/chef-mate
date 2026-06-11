@@ -34,6 +34,7 @@ data class RemoteRecipeBookInvite(
 data class RemoteCollaborator(
     @SerialName("member_id") val memberId: String? = null,
     val email: String,
+    val name: String? = null,
     val role: String,
     val status: String,
     @SerialName("is_owner") val isOwner: Boolean = false,

@@ -168,9 +168,11 @@ private fun CollaboratorsSection(bloc: EditRecipeBookBloc, model: EditRecipeBook
 
 @Composable
 private fun MemberRow(member: RecipeBookMember, canManage: Boolean, onRemove: (String) -> Unit) {
-    // Pending invites are dimmed; the role is always shown so collaborators can see who does what.
+    // name → email → role. Pending invites are dimmed and have no account, so they fall back to the
+    // email as the primary line. The role is always shown so collaborators can see who does what.
+    val name = member.name?.takeIf { it.isNotBlank() }
     val roleLabel = member.role.label()
-    val secondary =
+    val roleLine =
         if (member.accepted) roleLabel
         else "$roleLabel · ${stringResource(Res.string.edit_recipe_book_member_pending)}"
     Row(
@@ -181,12 +183,19 @@ private fun MemberRow(member: RecipeBookMember, canManage: Boolean, onRemove: (S
         PlusAvatar(
             imageUrl = member.avatarUrl,
             contentDescription = null,
-            fallbackText = member.email,
+            fallbackText = name ?: member.email,
         )
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = member.email, style = MaterialTheme.typography.bodyMedium)
+            Text(text = name ?: member.email, style = MaterialTheme.typography.bodyMedium)
+            if (name != null) {
+                Text(
+                    text = member.email,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             Text(
-                text = secondary,
+                text = roleLine,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
