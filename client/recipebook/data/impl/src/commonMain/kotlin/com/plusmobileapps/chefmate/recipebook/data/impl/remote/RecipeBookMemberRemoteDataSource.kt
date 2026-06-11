@@ -4,6 +4,12 @@ interface RecipeBookMemberRemoteDataSource {
     /** Members (accepted + pending) of the book with remote id [bookRemoteId]. */
     suspend fun fetchMembers(bookRemoteId: String): List<RemoteRecipeBookMember>
 
+    /**
+     * Full collaborator list for [bookRemoteId] — the owner plus every member — for anyone who can
+     * access the book. Backed by the `recipe_book_collaborators` SECURITY DEFINER RPC.
+     */
+    suspend fun fetchCollaborators(bookRemoteId: String): List<RemoteCollaborator>
+
     /** Inserts a pending invite for [email] at [role] on [bookRemoteId]. */
     suspend fun invite(bookRemoteId: String, email: String, role: String)
 

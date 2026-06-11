@@ -46,31 +46,24 @@ class RecipeBookCollaborationRepositoryImpl(
 
     override suspend fun getMembers(bookId: Long): List<RecipeBookMember> {
         val remoteId = bookRemoteId(bookId) ?: return emptyList()
-        val owner =
-            if (isOwner(bookId)) {
-                currentUser?.let {
-                    RecipeBookMember(
-                        id = null,
-                        email = it.userEmail,
-                        role = RecipeBookRole.OWNER,
-                        accepted = true,
-                        isOwner = true,
-                        avatarUrl = it.userProfileImageUrl,
-                    )
-                }
-            } else {
-                null
-            }
-        val members =
-            remote.fetchMembers(remoteId).map {
-                RecipeBookMember(
-                    id = it.id,
-                    email = it.invitedEmail,
-                    role = RecipeBookRole.fromWire(it.role),
-                    accepted = it.status == "accepted",
-                )
-            }
-        return listOfNotNull(owner) + members.sortedByDescending { it.accepted }
+        val me = currentUser
+        // The RPC returns everyone on the book — owner first, then accepted, then pending — visible
+        // to any collaborator. We only know an avatar for the current viewer's own row.
+        return remote.fetchCollaborators(remoteId).map {
+            RecipeBookMember(
+                id = it.memberId,
+                email = it.email,
+                role = RecipeBookRole.fromWire(it.role),
+                accepted = it.status == "accepted",
+                isOwner = it.isOwner,
+                avatarUrl =
+                    if (me != null && it.email.equals(me.userEmail, ignoreCase = true)) {
+                        me.userProfileImageUrl
+                    } else {
+                        null
+                    },
+            )
+        }
     }
 
     override suspend fun invite(bookId: Long, email: String, role: RecipeBookRole) {
