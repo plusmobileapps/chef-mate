@@ -8,6 +8,7 @@ import dev.zacsweers.metro.SingleIn
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -57,6 +58,13 @@ class SupabaseRecipeBookMemberRemoteDataSource(private val supabaseClient: Supab
         Logger.i(tag = "RecipeBookMemberRDS") {
             "fetchPendingInvites(v2): filterEmail='$email' jwtEmail='${currentJwtEmail()}'"
         }
+        val authCtx =
+            try {
+                supabaseClient.postgrest.rpc("debug_auth_context").data
+            } catch (t: Throwable) {
+                "rpc error: ${t.message}"
+            }
+        Logger.i(tag = "RecipeBookMemberRDS") { "server auth context = $authCtx" }
         val members =
             supabaseClient
                 .from("recipe_book_members")
