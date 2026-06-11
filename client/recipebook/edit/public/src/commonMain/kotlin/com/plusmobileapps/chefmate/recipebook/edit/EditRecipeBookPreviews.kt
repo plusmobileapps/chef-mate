@@ -84,6 +84,7 @@ val previewEditRecipeBookCollaboratorsBloc: EditRecipeBookBloc =
                         email = "you@example.com",
                         role = RecipeBookRole.OWNER,
                         accepted = true,
+                        name = "Jordan Lee",
                         isOwner = true,
                     ),
                     RecipeBookMember(
@@ -91,6 +92,7 @@ val previewEditRecipeBookCollaboratorsBloc: EditRecipeBookBloc =
                         email = "alex@example.com",
                         role = RecipeBookRole.EDITOR,
                         accepted = true,
+                        name = "Alex Rivera",
                     ),
                     RecipeBookMember(
                         id = "2",
@@ -117,6 +119,7 @@ val previewEditRecipeBookMemberViewBloc: EditRecipeBookBloc =
                         email = "casey@example.com",
                         role = RecipeBookRole.OWNER,
                         accepted = true,
+                        name = "Casey Morgan",
                         isOwner = true,
                     ),
                     RecipeBookMember(
@@ -124,6 +127,7 @@ val previewEditRecipeBookMemberViewBloc: EditRecipeBookBloc =
                         email = "you@example.com",
                         role = RecipeBookRole.EDITOR,
                         accepted = true,
+                        name = "Jordan Lee",
                     ),
                     RecipeBookMember(
                         id = "2",
