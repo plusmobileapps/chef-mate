@@ -39,18 +39,43 @@ class SupabaseRecipeBookMemberRemoteDataSource(private val supabaseClient: Supab
         supabaseClient.from("recipe_book_members").delete { filter { eq("id", memberId) } }
     }
 
-    override suspend fun fetchPendingInvites(email: String): List<RemoteRecipeBookInvite> =
-        supabaseClient
-            .from("recipe_book_members")
-            .select(Columns.raw("id, recipe_book_id, role, status, recipe_books!inner(name)")) {
-                filter {
-                    // invited_email is stored lowercased on invite, and callers pass a lowercased
-                    // address, so an exact match is both correct and safe (no LIKE wildcards).
-                    eq("invited_email", email)
-                    eq("status", "pending")
+    override suspend fun fetchPendingInvites(email: String): List<RemoteRecipeBookInvite> {
+        // Two plain queries instead of a `recipe_books!inner(name)` embed: the inner-join embed
+        // silently dropped rows even when both the member row and the book were readable to the
+        // invitee under RLS. invited_email is stored lowercased and callers pass a lowercased
+        // address, so the exact match is correct and safe (no LIKE wildcards).
+        val members =
+            supabaseClient
+                .from("recipe_book_members")
+                .select(Columns.raw("id, recipe_book_id, user_id, invited_email, role, status")) {
+                    filter {
+                        eq("invited_email", email)
+                        eq("status", "pending")
+                    }
                 }
-            }
-            .decodeList<RemoteRecipeBookInvite>()
+                .decodeList<RemoteRecipeBookMember>()
+        if (members.isEmpty()) return emptyList()
+
+        val bookNamesById =
+            supabaseClient
+                .from("recipe_books")
+                .select(Columns.raw("id, name")) {
+                    filter { isIn("id", members.map { it.recipeBookId }.distinct()) }
+                }
+                .decodeList<RemoteRecipeBookName>()
+                .associate { it.id to it.name }
+
+        return members.mapNotNull { member ->
+            val id = member.id ?: return@mapNotNull null
+            RemoteRecipeBookInvite(
+                id = id,
+                recipeBookId = member.recipeBookId,
+                role = member.role,
+                status = member.status,
+                book = RemoteInviteBook(name = bookNamesById[member.recipeBookId].orEmpty()),
+            )
+        }
+    }
 
     override suspend fun acceptInvite(memberId: String, userId: String) {
         supabaseClient.from("recipe_book_members").update(

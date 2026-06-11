@@ -25,3 +25,6 @@ data class RemoteRecipeBookInvite(
 )
 
 @Serializable data class RemoteInviteBook(val name: String)
+
+/** Minimal `recipe_books` projection used to resolve invited book names without a join embed. */
+@Serializable data class RemoteRecipeBookName(val id: String, val name: String)
