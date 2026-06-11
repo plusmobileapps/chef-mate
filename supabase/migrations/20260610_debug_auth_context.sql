@@ -16,6 +16,17 @@ RETURNS jsonb LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public AS $
             SELECT count(*) FROM recipe_book_members
             WHERE status = 'pending'
               AND lower(invited_email) = lower(current_user_email())
+        ),
+        -- The deployed SELECT policy in THIS project, so we can see if the email clause is actually
+        -- live where the app queries (vs. whatever project the SQL editor is pointed at).
+        'select_policy_count', (
+            SELECT count(*) FROM pg_policy
+            WHERE polrelid = 'recipe_book_members'::regclass AND polcmd = 'r'
+        ),
+        'select_policy', (
+            SELECT pg_get_expr(polqual, polrelid) FROM pg_policy
+            WHERE polrelid = 'recipe_book_members'::regclass AND polcmd = 'r'
+            LIMIT 1
         )
     );
 $$;
