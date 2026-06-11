@@ -1,14 +1,22 @@
 package com.plusmobileapps.chefmate.recipebook.data.impl.remote
 
+import co.touchlab.kermit.Logger
 import com.plusmobileapps.chefmate.di.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 @Inject
 @SingleIn(AppScope::class)
@@ -44,6 +52,11 @@ class SupabaseRecipeBookMemberRemoteDataSource(private val supabaseClient: Supab
         // silently dropped rows even when both the member row and the book were readable to the
         // invitee under RLS. invited_email is stored lowercased and callers pass a lowercased
         // address, so the exact match is correct and safe (no LIKE wildcards).
+        // DIAGNOSTIC: the RLS SELECT policy matches on auth.jwt() ->> 'email'; log it next to the
+        // filter so a mismatch (vs. the user-object email) is visible.
+        Logger.i(tag = "RecipeBookMemberRDS") {
+            "fetchPendingInvites(v2): filterEmail='$email' jwtEmail='${currentJwtEmail()}'"
+        }
         val members =
             supabaseClient
                 .from("recipe_book_members")
@@ -54,6 +67,9 @@ class SupabaseRecipeBookMemberRemoteDataSource(private val supabaseClient: Supab
                     }
                 }
                 .decodeList<RemoteRecipeBookMember>()
+        Logger.i(tag = "RecipeBookMemberRDS") {
+            "fetchPendingInvites(v2): member rows returned = ${members.size}"
+        }
         if (members.isEmpty()) return emptyList()
 
         val bookNamesById =
@@ -76,6 +92,24 @@ class SupabaseRecipeBookMemberRemoteDataSource(private val supabaseClient: Supab
             )
         }
     }
+
+    /** Decodes the `email` claim from the current access-token JWT (the value RLS matches on). */
+    @OptIn(ExperimentalEncodingApi::class)
+    private fun currentJwtEmail(): String? =
+        try {
+            val token = supabaseClient.auth.currentSessionOrNull()?.accessToken
+            val payload = token?.split(".")?.getOrNull(1)
+            if (payload == null) {
+                null
+            } else {
+                val padded = payload + "=".repeat((4 - payload.length % 4) % 4)
+                val json = Base64.UrlSafe.decode(padded).decodeToString()
+                Json.parseToJsonElement(json).jsonObject["email"]?.jsonPrimitive?.contentOrNull
+            }
+        } catch (t: Throwable) {
+            Logger.w(throwable = t, tag = "RecipeBookMemberRDS") { "couldn't decode jwt email" }
+            null
+        }
 
     override suspend fun acceptInvite(memberId: String, userId: String) {
         supabaseClient.from("recipe_book_members").update(
