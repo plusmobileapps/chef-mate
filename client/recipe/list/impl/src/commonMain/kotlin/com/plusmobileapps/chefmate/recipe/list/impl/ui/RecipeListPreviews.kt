@@ -169,6 +169,28 @@ val previewRecipeListBlocCooking: RecipeListBloc =
         )
     )
 
+private val crossBookRecipes =
+    persistentListOf(
+        sampleRecipes[0].copy(bookName = "Weeknight Dinners"),
+        sampleRecipes[1].copy(bookName = "Salads"),
+        sampleRecipes[2].copy(bookName = "Breakfast"),
+    )
+
+/**
+ * Cross-book search results — scope is [RecipeSearchScope.AllBooks], so each recipe row is labelled
+ * with the recipe book it lives in.
+ */
+val previewRecipeListBlocCrossBookSearch: RecipeListBloc =
+    recipeListBloc(
+        RecipeListBloc.Model(
+            recipes = crossBookRecipes,
+            totalRecipeCount = crossBookRecipes.size,
+            recipeBooks = RecipeBook.Samples,
+            activeBook = RecipeBook.Sample,
+            searchScope = RecipeSearchScope.AllBooks,
+        )
+    )
+
 /** Recipe list with one active category filter — exercises the filter-icon badge indicator. */
 val previewRecipeListBlocCategoryFiltered: RecipeListBloc =
     recipeListBloc(
@@ -266,4 +288,10 @@ internal fun RecipeListCookingTabletPreview() {
 @Composable
 internal fun RecipeListSelectionPreview() {
     ChefMateTheme { RecipeListScreen(bloc = previewRecipeListBlocSelectionMode) }
+}
+
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+internal fun RecipeListCrossBookSearchPreview() {
+    ChefMateTheme { RecipeListScreen(bloc = previewRecipeListBlocCrossBookSearch) }
 }

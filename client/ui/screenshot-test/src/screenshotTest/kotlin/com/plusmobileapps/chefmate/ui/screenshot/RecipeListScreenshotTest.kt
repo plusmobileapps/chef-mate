@@ -11,6 +11,7 @@ import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocCooking
+import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocCrossBookSearch
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocPendingInvite
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocScanError
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocScanning
@@ -114,6 +115,22 @@ fun RecipeListScanningDarkScreenshot() {
 @Composable
 fun RecipeListScanErrorLightScreenshot() {
     RecipeListScreenshot(bloc = previewRecipeListBlocScanError)
+}
+
+// ── Cross-book search results — each row labelled with its recipe book ─────
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+fun RecipeListCrossBookSearchLightScreenshot() {
+    RecipeListScreenshot(bloc = previewRecipeListBlocCrossBookSearch)
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun RecipeListCrossBookSearchDarkScreenshot() {
+    RecipeListScreenshot(bloc = previewRecipeListBlocCrossBookSearch, darkTheme = true)
 }
 
 // ── Pending recipe-book invite banner (accept / decline) ───────────────────
