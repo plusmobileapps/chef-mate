@@ -10,6 +10,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.waitUntilExactlyOneExists
 import com.plusmobileapps.chefmate.recipe.list.RecipeListTestTags
 
@@ -29,6 +30,15 @@ class RecipeListRobot(private val test: ComposeUiTest) {
 
     fun assertRecipeIsDisplayed(title: String): RecipeListRobot = apply {
         test.onNode(hasText(title) and onScreen).assertIsDisplayed()
+    }
+
+    /** Waits for a recipe with [title] to appear in the list (e.g. after an async scope change). */
+    fun awaitRecipeDisplayed(title: String): RecipeListRobot = apply {
+        test.waitUntilExactlyOneExists(hasText(title) and onScreen)
+    }
+
+    fun assertRecipeNotDisplayed(title: String): RecipeListRobot = apply {
+        test.onNode(hasText(title) and onScreen).assertDoesNotExist()
     }
 
     fun clickRecipe(title: String): RecipeListRobot = apply {
@@ -67,6 +77,28 @@ class RecipeListRobot(private val test: ComposeUiTest) {
 
     fun openBookPicker(): RecipeListRobot = apply {
         test.onNodeWithTag(RecipeListTestTags.BOOK_SELECTOR).performClick()
+    }
+
+    /** Opens the search modal from the app-bar Search action. */
+    fun openSearch(): RecipeListRobot = apply {
+        test.onNode(hasTestTag(RecipeListTestTags.SEARCH_BUTTON) and onScreen).performClick()
+        // The sheet renders in a popup outside SCREEN; wait for it before interacting.
+        test.waitUntilExactlyOneExists(hasTestTag(RecipeListTestTags.SEARCH_SHEET))
+    }
+
+    /** Types into the search field of the open modal. */
+    fun typeSearch(query: String): RecipeListRobot = apply {
+        test.onNode(hasTestTag(RecipeListTestTags.SEARCH_FIELD)).performTextInput(query)
+    }
+
+    /** Selects the "All recipe books" scope in the open search modal. */
+    fun selectAllBooks(): RecipeListRobot = apply {
+        test.onNode(hasTestTag(RecipeListTestTags.SEARCH_SCOPE_ALL)).performClick()
+    }
+
+    /** Dismisses the search modal via its Done button. */
+    fun closeSearch(): RecipeListRobot = apply {
+        test.onNode(hasTestTag(RecipeListTestTags.SEARCH_DONE)).performClick()
     }
 }
 

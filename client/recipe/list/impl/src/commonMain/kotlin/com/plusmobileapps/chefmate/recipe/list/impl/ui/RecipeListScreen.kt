@@ -1186,7 +1186,10 @@ private fun SearchBottomSheet(
                 ) {
                     Text(stringResource(Res.string.recipe_list_search_clear))
                 }
-                Button(onClick = onDismiss, modifier = Modifier.weight(1f)) {
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f).testTag(RecipeListTestTags.SEARCH_DONE),
+                ) {
                     Text(stringResource(Res.string.recipe_list_search_done))
                 }
             }

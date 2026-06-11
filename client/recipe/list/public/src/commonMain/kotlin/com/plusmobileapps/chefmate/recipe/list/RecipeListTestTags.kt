@@ -18,4 +18,5 @@ object RecipeListTestTags {
     const val SEARCH_FIELD: String = "recipe_list_search_field"
     const val SEARCH_SCOPE_ALL: String = "recipe_list_search_scope_all"
     const val SEARCH_CLEAR: String = "recipe_list_search_clear"
+    const val SEARCH_DONE: String = "recipe_list_search_done"
 }

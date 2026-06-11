@@ -51,6 +51,20 @@ class FakeDatabase(private val delegate: Database = provideTestDatabase()) : Dat
         recipeQueries.deleteAll()
     }
 
+    /** Creates a non-default recipe book and returns its local id. */
+    fun createBook(name: String): Long {
+        recipeBookQueries.create(
+            name = name,
+            isDefault = false,
+            createdAt = DEFAULT_TIMESTAMP,
+            updatedAt = DEFAULT_TIMESTAMP,
+            clientId = null,
+            ownerId = null,
+        )
+        return recipeBookQueries.lastInsertId().executeAsOne().MAX
+            ?: error("Failed to get last insert id")
+    }
+
     private fun ensureDefaultBookId(): Long {
         recipeBookQueries.getDefault().executeAsOneOrNull()?.let {
             return it.id
