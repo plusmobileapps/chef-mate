@@ -65,18 +65,21 @@ class SupabaseRecipeBookMemberRemoteDataSource(private val supabaseClient: Supab
                 "rpc error: ${t.message}"
             }
         Logger.i(tag = "RecipeBookMemberRDS") { "server auth context = $authCtx" }
-        val members =
+        // Don't filter on invited_email server-side: that's a case-sensitive `eq`, and a row stored
+        // with different casing (e.g. an autocapitalised address from before the
+        // lowercase-on-invite
+        // fix) would pass the case-insensitive RLS check yet be excluded by the filter. RLS already
+        // scopes this to the caller's own invites; match the address case-insensitively on-device.
+        val raw =
             supabaseClient
                 .from("recipe_book_members")
                 .select(Columns.raw("id, recipe_book_id, user_id, invited_email, role, status")) {
-                    filter {
-                        eq("invited_email", email)
-                        eq("status", "pending")
-                    }
+                    filter { eq("status", "pending") }
                 }
                 .decodeList<RemoteRecipeBookMember>()
+        val members = raw.filter { it.invitedEmail.trim().lowercase() == email }
         Logger.i(tag = "RecipeBookMemberRDS") {
-            "fetchPendingInvites(v2): member rows returned = ${members.size}"
+            "fetchPendingInvites(v2): raw pending rows = ${raw.size}, mine after email match = ${members.size}"
         }
         if (members.isEmpty()) return emptyList()
 
