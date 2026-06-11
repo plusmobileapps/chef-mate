@@ -47,9 +47,11 @@ class RecipeBookCollaborationRepositoryImpl(
     override suspend fun getMembers(bookId: Long): List<RecipeBookMember> {
         val remoteId = bookRemoteId(bookId) ?: return emptyList()
         val me = currentUser
-        // The RPC returns everyone on the book — owner first, then accepted, then pending — visible
-        // to any collaborator. We only know an avatar for the current viewer's own row.
+        // The RPC returns everyone on the book — owner first, then accepted, then pending — with
+        // each person's avatar from their account metadata (null for pending invites). Prefer the
+        // local profile image for the current user's own row in case it's fresher than the server.
         return remote.fetchCollaborators(remoteId).map {
+            val isCurrentUser = me != null && it.email.equals(me.userEmail, ignoreCase = true)
             RecipeBookMember(
                 id = it.memberId,
                 email = it.email,
@@ -57,11 +59,7 @@ class RecipeBookCollaborationRepositoryImpl(
                 accepted = it.status == "accepted",
                 isOwner = it.isOwner,
                 avatarUrl =
-                    if (me != null && it.email.equals(me.userEmail, ignoreCase = true)) {
-                        me.userProfileImageUrl
-                    } else {
-                        null
-                    },
+                    if (isCurrentUser) me?.userProfileImageUrl ?: it.avatarUrl else it.avatarUrl,
             )
         }
     }

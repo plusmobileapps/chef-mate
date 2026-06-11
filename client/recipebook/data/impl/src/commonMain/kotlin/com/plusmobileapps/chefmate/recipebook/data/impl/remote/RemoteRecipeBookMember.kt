@@ -37,4 +37,5 @@ data class RemoteCollaborator(
     val role: String,
     val status: String,
     @SerialName("is_owner") val isOwner: Boolean = false,
+    @SerialName("avatar_url") val avatarUrl: String? = null,
 )
