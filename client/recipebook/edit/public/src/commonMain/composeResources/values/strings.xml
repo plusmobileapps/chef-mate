@@ -19,4 +19,8 @@
     <string name="edit_recipe_book_group_editors">Editors</string>
     <string name="edit_recipe_book_group_viewers">Viewers</string>
     <string name="edit_recipe_book_remove_member">Remove %1$s</string>
+    <string name="edit_recipe_book_remove_title">Remove collaborator</string>
+    <string name="edit_recipe_book_remove_message">Remove “{name}” from this book? They’ll lose access.</string>
+    <string name="edit_recipe_book_remove_confirm">Remove</string>
+    <string name="edit_recipe_book_remove_cancel">Cancel</string>
 </resources>

@@ -70,6 +70,60 @@ class EditRecipeBookViewModelTest {
         }
 
     @Test
+    fun removing_a_member_confirms_first_then_calls_repository() =
+        runTest(testDispatcher) {
+            val collab = FakeRecipeBookCollaborationRepository(owner = true)
+            collab.members.add(
+                com.plusmobileapps.chefmate.recipebook.data.RecipeBookMember(
+                    id = "m1",
+                    email = "alex@example.com",
+                    role = com.plusmobileapps.chefmate.recipebook.data.RecipeBookRole.EDITOR,
+                    accepted = true,
+                )
+            )
+            val vm =
+                viewModel(
+                    EditRecipeBookBloc.Props.Edit(bookId = 3),
+                    collaborationRepository = collab,
+                )
+
+            vm.onRemoveMemberClicked("m1")
+            // Clicking only opens the confirmation — nothing removed yet.
+            vm.state.value.removingMember?.id shouldBe "m1"
+            collab.removed.isEmpty() shouldBe true
+
+            vm.onConfirmRemoveMember()
+
+            collab.removed shouldBe listOf("m1")
+            vm.state.value.removingMember shouldBe null
+        }
+
+    @Test
+    fun dismissing_remove_confirmation_does_not_remove() =
+        runTest(testDispatcher) {
+            val collab = FakeRecipeBookCollaborationRepository(owner = true)
+            collab.members.add(
+                com.plusmobileapps.chefmate.recipebook.data.RecipeBookMember(
+                    id = "m1",
+                    email = "alex@example.com",
+                    role = com.plusmobileapps.chefmate.recipebook.data.RecipeBookRole.EDITOR,
+                    accepted = true,
+                )
+            )
+            val vm =
+                viewModel(
+                    EditRecipeBookBloc.Props.Edit(bookId = 3),
+                    collaborationRepository = collab,
+                )
+
+            vm.onRemoveMemberClicked("m1")
+            vm.onDismissRemoveMember()
+
+            vm.state.value.removingMember shouldBe null
+            collab.removed.isEmpty() shouldBe true
+        }
+
+    @Test
     fun invalid_invite_email_sets_an_error_and_does_not_invite() =
         runTest(testDispatcher) {
             val collab = FakeRecipeBookCollaborationRepository(owner = true)

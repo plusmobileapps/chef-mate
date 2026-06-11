@@ -24,7 +24,14 @@ interface EditRecipeBookBloc : BlocScreen {
 
     fun onInviteClicked()
 
-    fun onRemoveMember(memberId: String)
+    /** Owner tapped remove on a collaborator — asks for confirmation first. */
+    fun onRemoveMemberClicked(memberId: String)
+
+    /** Confirms the pending removal. */
+    fun onConfirmRemoveMember()
+
+    /** Dismisses the remove-confirmation dialog without removing. */
+    fun onDismissRemoveMember()
 
     data class Model(
         val title: TextData,
@@ -39,6 +46,8 @@ interface EditRecipeBookBloc : BlocScreen {
         val inviteRole: RecipeBookRole = RecipeBookRole.EDITOR,
         val isInviting: Boolean = false,
         val inviteError: TextData? = null,
+        /** The collaborator awaiting remove confirmation; non-null shows the confirm dialog. */
+        val removingMember: RecipeBookMember? = null,
     ) {
         val canSave: Boolean
             get() = name.isNotBlank() && !isSaving
