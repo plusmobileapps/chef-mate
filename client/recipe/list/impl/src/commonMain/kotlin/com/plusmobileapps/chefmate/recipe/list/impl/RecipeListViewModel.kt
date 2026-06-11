@@ -20,6 +20,7 @@ import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionException
 import com.plusmobileapps.chefmate.recipe.data.RecipeImageExtractor
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
+import com.plusmobileapps.chefmate.recipe.list.RecipeSearchScope
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookCollaborationRepository
@@ -42,9 +43,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -152,9 +155,25 @@ class RecipeListViewModel(
         }
     }
 
+    /**
+     * Streams the recipes to display. The source book is the *effective search scope*: a
+     * [RecipeSearchScope] override when the user is searching, otherwise the active book. The
+     * override never touches the persisted active book — it is reset by [clearSearch] /
+     * [selectBook]. `null` book id means "all books".
+     */
     @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun observeRecipes() {
-        recipeBookRepository.activeBookId
+        combine(
+                recipeBookRepository.activeBookId,
+                _state.map { it.searchScope }.distinctUntilChanged(),
+            ) { activeBookId, scope ->
+                when (scope) {
+                    RecipeSearchScope.AllBooks -> null
+                    is RecipeSearchScope.Book -> scope.bookId
+                    null -> activeBookId
+                }
+            }
+            .distinctUntilChanged()
             .flatMapLatest { bookId ->
                 if (bookId == null) repository.getRecipes() else repository.getRecipes(bookId)
             }
@@ -286,6 +305,26 @@ class RecipeListViewModel(
         _state.update { it.copy(searchQuery = query) }
     }
 
+    fun openSearch() {
+        _state.update { it.copy(isSearchOpen = true) }
+    }
+
+    fun closeSearch() {
+        _state.update { it.copy(isSearchOpen = false) }
+    }
+
+    /**
+     * Overrides which book(s) the search reads from. Leaves the persisted active book untouched.
+     */
+    fun selectSearchScope(scope: RecipeSearchScope) {
+        _state.update { it.copy(searchScope = scope) }
+    }
+
+    /** Ends the search session: clears the query and reverts the scope to the active book. */
+    fun clearSearch() {
+        _state.update { it.copy(searchQuery = "", searchScope = null) }
+    }
+
     fun onSyncClicked() {
         scope.launch {
             _state.update { it.copy(isSyncing = true) }
@@ -349,7 +388,9 @@ class RecipeListViewModel(
     }
 
     fun selectBook(bookId: Long) {
-        _state.update { it.copy(isBookPickerOpen = false) }
+        // Switching the active book ends any in-flight search session so the list isn't left
+        // showing a stale cross-book result set against the newly-selected book.
+        _state.update { it.copy(isBookPickerOpen = false, searchQuery = "", searchScope = null) }
         scope.launch { recipeBookRepository.setActiveBook(bookId) }
     }
 
@@ -396,6 +437,12 @@ class RecipeListViewModel(
         val availableUserCategories: List<Category> = emptyList(),
         val isGridView: Boolean = false,
         val searchQuery: String = "",
+        val isSearchOpen: Boolean = false,
+        /**
+         * Active search-scope override. `null` follows the active book (the normal, non-search
+         * view).
+         */
+        val searchScope: RecipeSearchScope? = null,
         val cookingRecipeIds: List<Long> = emptyList(),
         val showDoneCookingDialog: Boolean = false,
         val isSelectionMode: Boolean = false,
@@ -410,6 +457,17 @@ class RecipeListViewModel(
     ) {
         val isSearchActive: Boolean
             get() = searchQuery.isNotBlank()
+
+        /** The scope override resolved against the active book, for display in the search modal. */
+        val resolvedSearchScope: RecipeSearchScope
+            get() =
+                searchScope
+                    ?: activeBook?.let { RecipeSearchScope.Book(it.id) }
+                    ?: RecipeSearchScope.AllBooks
+
+        /** True when results span every book, so each item should be labelled with its book. */
+        val isCrossBookSearch: Boolean
+            get() = resolvedSearchScope == RecipeSearchScope.AllBooks
 
         val displayRecipes: List<Recipe>
             get() =

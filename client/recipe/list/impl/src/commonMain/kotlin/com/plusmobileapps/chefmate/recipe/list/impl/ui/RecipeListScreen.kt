@@ -1,8 +1,5 @@
 package com.plusmobileapps.chefmate.recipe.list.impl.ui
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -76,6 +73,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -150,9 +148,14 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_scan_f
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_scanning_message
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_scanning_title
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_search
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_all_books
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_clear
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_done
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_empty
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_in_book
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_placeholder
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_scope
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_title
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_selection_count
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_selection_deselect_all
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_selection_exit
@@ -177,6 +180,7 @@ import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
 import com.plusmobileapps.chefmate.recipe.list.RecipeListTestTags
+import com.plusmobileapps.chefmate.recipe.list.RecipeSearchScope
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
@@ -201,7 +205,6 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
-    var showSearchBar by remember { mutableStateOf(state.isSearchActive) }
     var showSortFilterSheet by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val gridState = rememberLazyGridState()
@@ -300,15 +303,23 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                     trailingAccessory =
                         PlusHeaderData.TrailingAccessory.Custom {
                             IconButton(
-                                onClick = {
-                                    showSearchBar = !showSearchBar
-                                    if (!showSearchBar) bloc.onSearchQueryChanged("")
-                                }
+                                onClick = bloc::onOpenSearch,
+                                modifier = Modifier.testTag(RecipeListTestTags.SEARCH_BUTTON),
                             ) {
+                                val searchTint =
+                                    if (
+                                        state.isSearchActive ||
+                                            state.searchScope == RecipeSearchScope.AllBooks
+                                    ) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        androidx.compose.ui.graphics.Color.Unspecified
+                                    }
                                 Icon(
                                     imageVector = Icons.Default.Search,
                                     contentDescription =
                                         stringResource(Res.string.recipe_list_search),
+                                    tint = searchTint,
                                 )
                             }
                             IconButton(onClick = bloc::onToggleViewMode) {
@@ -366,20 +377,6 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                 data = headerData,
                 scrollEnabled = false,
                 content = {
-                    AnimatedVisibility(
-                        visible = showSearchBar,
-                        enter = expandVertically(),
-                        exit = shrinkVertically(),
-                    ) {
-                        SearchBar(
-                            query = state.searchQuery,
-                            onQueryChanged = bloc::onSearchQueryChanged,
-                            onClear = {
-                                bloc.onSearchQueryChanged("")
-                                showSearchBar = false
-                            },
-                        )
-                    }
                     state.pendingInvites.forEach { invite ->
                         InviteBanner(
                             invite = invite,
@@ -439,6 +436,18 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                     }
                 },
             )
+
+            if (state.isSearchOpen) {
+                SearchBottomSheet(
+                    query = state.searchQuery,
+                    scope = state.searchScope,
+                    books = state.recipeBooks,
+                    onQueryChanged = bloc::onSearchQueryChanged,
+                    onScopeSelected = bloc::onSearchScopeSelected,
+                    onClear = bloc::onClearSearch,
+                    onDismiss = bloc::onCloseSearch,
+                )
+            }
 
             if (showSortFilterSheet) {
                 SortFilterBottomSheet(
@@ -1082,36 +1091,134 @@ private fun BuiltinCategory.labelRes(): StringResource =
 
 // region Search
 
+/**
+ * Full search modal launched from the app-bar Search action. Owns the query field plus a book-scope
+ * picker so the user can search within the active book, a specific book, or across every book. The
+ * scope is a temporary view — it never changes the persisted active book.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SearchBar(
+private fun SearchBottomSheet(
     query: String,
+    scope: RecipeSearchScope,
+    books: List<com.plusmobileapps.chefmate.recipebook.data.RecipeBook>,
     onQueryChanged: (String) -> Unit,
+    onScopeSelected: (RecipeSearchScope) -> Unit,
     onClear: () -> Unit,
-    modifier: Modifier = Modifier,
+    onDismiss: () -> Unit,
 ) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
-    OutlinedTextField(
-        value = query,
-        onValueChange = onQueryChanged,
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        modifier = Modifier.testTag(RecipeListTestTags.SEARCH_SHEET),
+    ) {
+        Column(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(horizontal = ChefMateTheme.dimens.paddingNormal)
+                    .navigationBarsPadding()
+        ) {
+            Text(
+                text = stringResource(Res.string.recipe_list_search_title),
+                style = MaterialTheme.typography.titleLarge,
+            )
+            Spacer(Modifier.height(ChefMateTheme.dimens.paddingNormal))
+            OutlinedTextField(
+                value = query,
+                onValueChange = onQueryChanged,
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .focusRequester(focusRequester)
+                        .testTag(RecipeListTestTags.SEARCH_FIELD),
+                placeholder = { Text(stringResource(Res.string.recipe_list_search_placeholder)) },
+                leadingIcon = {
+                    Icon(imageVector = Icons.Default.Search, contentDescription = null)
+                },
+                trailingIcon = {
+                    if (query.isNotEmpty()) {
+                        IconButton(onClick = { onQueryChanged("") }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription =
+                                    stringResource(Res.string.recipe_list_search_clear),
+                            )
+                        }
+                    }
+                },
+                singleLine = true,
+            )
+
+            if (books.isNotEmpty()) {
+                Spacer(Modifier.height(ChefMateTheme.dimens.paddingNormal))
+                Text(
+                    text = stringResource(Res.string.recipe_list_search_scope),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(ChefMateTheme.dimens.paddingSmall))
+                SearchScopeRow(
+                    label = stringResource(Res.string.recipe_list_search_all_books),
+                    selected = scope == RecipeSearchScope.AllBooks,
+                    onClick = { onScopeSelected(RecipeSearchScope.AllBooks) },
+                    modifier = Modifier.testTag(RecipeListTestTags.SEARCH_SCOPE_ALL),
+                )
+                books.forEach { book ->
+                    SearchScopeRow(
+                        label = book.name,
+                        selected = scope == RecipeSearchScope.Book(book.id),
+                        onClick = { onScopeSelected(RecipeSearchScope.Book(book.id)) },
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(ChefMateTheme.dimens.paddingNormal))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
+            ) {
+                OutlinedButton(
+                    onClick = onClear,
+                    modifier = Modifier.weight(1f).testTag(RecipeListTestTags.SEARCH_CLEAR),
+                ) {
+                    Text(stringResource(Res.string.recipe_list_search_clear))
+                }
+                Button(onClick = onDismiss, modifier = Modifier.weight(1f)) {
+                    Text(stringResource(Res.string.recipe_list_search_done))
+                }
+            }
+            Spacer(Modifier.height(ChefMateTheme.dimens.paddingNormal))
+        }
+    }
+}
+
+@Composable
+private fun SearchScopeRow(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
         modifier =
             modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .focusRequester(focusRequester),
-        placeholder = { Text(stringResource(Res.string.recipe_list_search_placeholder)) },
-        leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) },
-        trailingIcon = {
-            IconButton(onClick = onClear) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = stringResource(Res.string.recipe_list_search_clear),
-                )
-            }
-        },
-        singleLine = true,
-    )
+                .clickable(onClick = onClick)
+                .padding(vertical = ChefMateTheme.dimens.paddingExtraSmall),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(selected = selected, onClick = onClick)
+        Spacer(Modifier.width(ChefMateTheme.dimens.paddingSmall))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
 }
 
 @Composable
@@ -1316,6 +1423,7 @@ private fun RecipeGridItem(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
+            recipe.bookName?.let { bookName -> RecipeBookLabel(bookName) }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -1446,6 +1554,7 @@ private fun RecipeListItemContent(
                     )
                 }
             }
+            recipe.bookName?.let { bookName -> RecipeBookLabel(bookName) }
             recipe.description?.let { description ->
                 Text(
                     text = description,
@@ -1551,6 +1660,21 @@ private fun StarRating(
             )
         }
     }
+}
+
+/** "in <book>" caption shown on a recipe row when results span more than one recipe book. */
+@Composable
+private fun RecipeBookLabel(bookName: String, modifier: Modifier = Modifier) {
+    Text(
+        text =
+            PhraseModel(Res.string.recipe_list_search_in_book, "book" to FixedString(bookName))
+                .localized(),
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier,
+    )
 }
 
 @Composable

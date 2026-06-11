@@ -19,7 +19,9 @@ import com.plusmobileapps.chefmate.recipe.data.testing.FakePendingRecipePhotoSto
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeImageExtractor
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
+import com.plusmobileapps.chefmate.recipe.list.RecipeSearchScope
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.recipebook.data.testing.FakeRecipeBookCollaborationRepository
 import com.plusmobileapps.chefmate.recipebook.data.testing.FakeRecipeBookRepository
 import com.russhwolf.settings.Settings
@@ -212,6 +214,7 @@ class RecipeListViewModelTest {
         starRating: Int? = null,
         totalTime: Int? = null,
         category: BuiltinCategory? = null,
+        recipeBookIds: Set<Long> = emptySet(),
         createdAt: Instant = Instant.fromEpochSeconds(id * 1000),
     ) =
         Recipe(
@@ -233,10 +236,128 @@ class RecipeListViewModelTest {
                 category?.let {
                     setOf(Category(id = it.ordinal + 1L, name = it.id, builtinId = it.id))
                 } ?: emptySet(),
+            recipeBookIds = recipeBookIds,
             syncStatus = SyncStatus.NOT_SYNCED,
             createdAt = createdAt,
             updatedAt = createdAt,
         )
+
+    private fun book(id: Long, name: String) =
+        RecipeBook(
+            id = id,
+            name = name,
+            isDefault = id == 1L,
+            createdAt = Instant.DISTANT_PAST,
+            updatedAt = Instant.DISTANT_PAST,
+        )
+
+    private fun viewModelWith(repo: FakeRecipeRepository, bookRepo: FakeRecipeBookRepository) =
+        RecipeListViewModel(
+            mainContext = UnconfinedTestDispatcher(),
+            repository = repo,
+            recipeBookRepository = bookRepo,
+            collaborationRepository = FakeRecipeBookCollaborationRepository(),
+            categoryRepository = categoryRepository,
+            cookingSessionRepository = cookingSessionRepository,
+            imageExtractor = imageExtractor,
+            pendingPhotoStore = pendingPhotoStore,
+            featureFlags = featureFlags,
+            settings = settings,
+        )
+
+    @Test
+    fun When_open_search_Then_modal_open_and_scope_follows_active_book() {
+        val vm =
+            viewModelWith(
+                FakeRecipeRepository(MutableStateFlow(emptyList())),
+                FakeRecipeBookRepository(
+                    MutableStateFlow(listOf(book(1, "Book A"), book(2, "Book B")))
+                ),
+            )
+        vm.openSearch()
+        vm.state.value.isSearchOpen shouldBe true
+        vm.state.value.resolvedSearchScope shouldBe RecipeSearchScope.Book(1L)
+    }
+
+    @Test
+    fun When_search_scope_all_books_Then_recipes_from_every_book_shown() {
+        val recipeFlow =
+            MutableStateFlow(
+                listOf(recipe(1, recipeBookIds = setOf(1)), recipe(2, recipeBookIds = setOf(2)))
+            )
+        val bookRepo =
+            FakeRecipeBookRepository(MutableStateFlow(listOf(book(1, "Book A"), book(2, "Book B"))))
+        val vm = viewModelWith(FakeRecipeRepository(recipeFlow), bookRepo)
+
+        // Default scope follows the active book (Book A), so only its recipe shows.
+        vm.state.value.displayRecipes.map { it.id } shouldBe listOf(1L)
+
+        vm.selectSearchScope(RecipeSearchScope.AllBooks)
+
+        vm.state.value.displayRecipes.map { it.id }.sorted() shouldBe listOf(1L, 2L)
+        // Temporary scope must not change the persisted active book.
+        bookRepo.activeBookId.value shouldBe 1L
+    }
+
+    @Test
+    fun When_search_query_with_all_books_Then_filters_across_books() {
+        val recipeFlow =
+            MutableStateFlow(
+                listOf(
+                    recipe(1, title = "Apple Pie", recipeBookIds = setOf(1)),
+                    recipe(2, title = "Banana Bread", recipeBookIds = setOf(2)),
+                )
+            )
+        val vm =
+            viewModelWith(
+                FakeRecipeRepository(recipeFlow),
+                FakeRecipeBookRepository(
+                    MutableStateFlow(listOf(book(1, "Book A"), book(2, "Book B")))
+                ),
+            )
+
+        vm.selectSearchScope(RecipeSearchScope.AllBooks)
+        vm.updateSearchQuery("banana")
+
+        vm.state.value.displayRecipes.map { it.id } shouldBe listOf(2L)
+    }
+
+    @Test
+    fun When_clear_search_Then_query_cleared_and_scope_back_to_active_book() {
+        val recipeFlow =
+            MutableStateFlow(
+                listOf(recipe(1, recipeBookIds = setOf(1)), recipe(2, recipeBookIds = setOf(2)))
+            )
+        val vm =
+            viewModelWith(
+                FakeRecipeRepository(recipeFlow),
+                FakeRecipeBookRepository(
+                    MutableStateFlow(listOf(book(1, "Book A"), book(2, "Book B")))
+                ),
+            )
+
+        vm.selectSearchScope(RecipeSearchScope.AllBooks)
+        vm.updateSearchQuery("recipe")
+        vm.state.value.displayRecipes.map { it.id }.sorted() shouldBe listOf(1L, 2L)
+
+        vm.clearSearch()
+
+        vm.state.value.searchQuery shouldBe ""
+        vm.state.value.resolvedSearchScope shouldBe RecipeSearchScope.Book(1L)
+        vm.state.value.displayRecipes.map { it.id } shouldBe listOf(1L)
+    }
+
+    @Test
+    fun When_search_scope_specific_book_Then_active_book_unchanged() {
+        val bookRepo =
+            FakeRecipeBookRepository(MutableStateFlow(listOf(book(1, "Book A"), book(2, "Book B"))))
+        val vm = viewModelWith(FakeRecipeRepository(MutableStateFlow(emptyList())), bookRepo)
+
+        vm.selectSearchScope(RecipeSearchScope.Book(2L))
+
+        vm.state.value.resolvedSearchScope shouldBe RecipeSearchScope.Book(2L)
+        bookRepo.activeBookId.value shouldBe 1L
+    }
 
     @Test
     fun initial_state_has_empty_recipes_and_default_sort() {

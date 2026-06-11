@@ -13,4 +13,9 @@ object RecipeListTestTags {
     const val SCANNING_DIALOG: String = "recipe_list_scanning_dialog"
     const val SCAN_ERROR_DIALOG: String = "recipe_list_scan_error_dialog"
     const val BOOK_SELECTOR: String = "recipe_list_book_selector"
+    const val SEARCH_BUTTON: String = "recipe_list_search_button"
+    const val SEARCH_SHEET: String = "recipe_list_search_sheet"
+    const val SEARCH_FIELD: String = "recipe_list_search_field"
+    const val SEARCH_SCOPE_ALL: String = "recipe_list_search_scope_all"
+    const val SEARCH_CLEAR: String = "recipe_list_search_clear"
 }

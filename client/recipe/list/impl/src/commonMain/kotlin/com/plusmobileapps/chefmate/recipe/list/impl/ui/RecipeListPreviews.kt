@@ -8,6 +8,7 @@ import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
+import com.plusmobileapps.chefmate.recipe.list.RecipeSearchScope
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookInvite
@@ -83,6 +84,14 @@ private fun recipeListBloc(model: RecipeListBloc.Model): RecipeListBloc =
         override fun onToggleViewMode() = Unit
 
         override fun onSearchQueryChanged(query: String) = Unit
+
+        override fun onOpenSearch() = Unit
+
+        override fun onCloseSearch() = Unit
+
+        override fun onSearchScopeSelected(scope: RecipeSearchScope) = Unit
+
+        override fun onClearSearch() = Unit
 
         override fun onClearFilters() = Unit
 

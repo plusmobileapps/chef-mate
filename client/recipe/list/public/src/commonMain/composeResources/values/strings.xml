@@ -15,6 +15,11 @@
     <string name="recipe_list_search_placeholder">Search recipes…</string>
     <string name="recipe_list_search_clear">Clear search</string>
     <string name="recipe_list_search_empty">No recipes match your search</string>
+    <string name="recipe_list_search_title">Search recipes</string>
+    <string name="recipe_list_search_scope">Search in</string>
+    <string name="recipe_list_search_all_books">All recipe books</string>
+    <string name="recipe_list_search_done">Done</string>
+    <string name="recipe_list_search_in_book">in {book}</string>
 
     <!-- Sort -->
     <string name="recipe_list_sort">Sort</string>

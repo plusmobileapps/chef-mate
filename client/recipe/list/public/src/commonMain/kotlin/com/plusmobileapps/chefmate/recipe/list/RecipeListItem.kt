@@ -15,4 +15,9 @@ data class RecipeListItem(
     val calories: Int?,
     val isFavorite: Boolean,
     val syncStatus: SyncStatus = SyncStatus.NOT_SYNCED,
+    /**
+     * Name of the recipe book(s) this recipe lives in, shown only for cross-book search results.
+     * Null when the result set is scoped to a single book, which hides the label.
+     */
+    val bookName: String? = null,
 )

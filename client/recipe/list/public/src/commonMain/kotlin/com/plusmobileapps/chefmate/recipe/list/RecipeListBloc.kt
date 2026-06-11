@@ -43,6 +43,18 @@ interface RecipeListBloc : BlocScreen {
 
     fun onSearchQueryChanged(query: String)
 
+    /** Opens the search modal. */
+    fun onOpenSearch()
+
+    /** Closes the search modal, leaving the active search query and scope in place. */
+    fun onCloseSearch()
+
+    /** Picks which recipe book(s) the search reads from. Does not change the active book. */
+    fun onSearchScopeSelected(scope: RecipeSearchScope)
+
+    /** Clears the search query and resets the scope back to the active book. */
+    fun onClearSearch()
+
     fun onClearFilters()
 
     fun onApplySortAndFilters(
@@ -116,6 +128,10 @@ interface RecipeListBloc : BlocScreen {
         val isGridView: Boolean = false,
         val searchQuery: String = "",
         val isSearchActive: Boolean = false,
+        /** True while the search modal is shown. */
+        val isSearchOpen: Boolean = false,
+        /** Which book(s) the current search reads from. Resolves to the active book by default. */
+        val searchScope: RecipeSearchScope = RecipeSearchScope.AllBooks,
         val cookingRecipeCount: Int = 0,
         val showDoneCookingDialog: Boolean = false,
         val isSelectionMode: Boolean = false,

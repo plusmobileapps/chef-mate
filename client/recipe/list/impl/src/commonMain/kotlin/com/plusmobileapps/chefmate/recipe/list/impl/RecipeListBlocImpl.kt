@@ -13,6 +13,7 @@ import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc.Output
 import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
+import com.plusmobileapps.chefmate.recipe.list.RecipeSearchScope
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.RecipeListScreen
 import com.plusmobileapps.chefmate.util.TimeFormatterUtil
@@ -46,32 +47,43 @@ class RecipeListBlocImpl(
     }
 
     override val state: StateFlow<RecipeListBloc.Model> =
-        viewModel.state.mapState {
+        viewModel.state.mapState { state ->
+            val bookNameById = state.recipeBooks.associate { book -> book.id to book.name }
             RecipeListBloc.Model(
-                isLoading = it.isLoading,
-                isSyncing = it.isSyncing,
+                isLoading = state.isLoading,
+                isSyncing = state.isSyncing,
                 recipes =
-                    it.displayRecipes.map { recipe -> recipe.toRecipeListItem() }.toImmutableList(),
-                totalRecipeCount = it.recipes.size,
-                currentSort = it.currentSort,
-                activeFilters = it.activeFilters,
-                activeCategories = it.activeCategories,
-                activeUserCategoryIds = it.activeUserCategoryIds,
-                availableUserCategories = it.availableUserCategories.toImmutableList(),
-                isGridView = it.isGridView,
-                searchQuery = it.searchQuery,
-                isSearchActive = it.isSearchActive,
-                cookingRecipeCount = it.cookingRecipeIds.size,
-                showDoneCookingDialog = it.showDoneCookingDialog,
-                isSelectionMode = it.isSelectionMode,
-                selectedRecipeIds = it.selectedRecipeIds,
-                isScanning = it.isScanning,
-                scanError = it.scanError,
-                isScanFromPhotoEnabled = it.isScanFromPhotoEnabled,
-                recipeBooks = it.recipeBooks,
-                activeBook = it.activeBook,
-                isBookPickerOpen = it.isBookPickerOpen,
-                pendingInvites = it.pendingInvites,
+                    state.displayRecipes
+                        .map { recipe ->
+                            recipe.toRecipeListItem(
+                                bookName =
+                                    if (state.isCrossBookSearch) recipe.bookLabel(bookNameById)
+                                    else null
+                            )
+                        }
+                        .toImmutableList(),
+                totalRecipeCount = state.recipes.size,
+                currentSort = state.currentSort,
+                activeFilters = state.activeFilters,
+                activeCategories = state.activeCategories,
+                activeUserCategoryIds = state.activeUserCategoryIds,
+                availableUserCategories = state.availableUserCategories.toImmutableList(),
+                isGridView = state.isGridView,
+                searchQuery = state.searchQuery,
+                isSearchActive = state.isSearchActive,
+                isSearchOpen = state.isSearchOpen,
+                searchScope = state.resolvedSearchScope,
+                cookingRecipeCount = state.cookingRecipeIds.size,
+                showDoneCookingDialog = state.showDoneCookingDialog,
+                isSelectionMode = state.isSelectionMode,
+                selectedRecipeIds = state.selectedRecipeIds,
+                isScanning = state.isScanning,
+                scanError = state.scanError,
+                isScanFromPhotoEnabled = state.isScanFromPhotoEnabled,
+                recipeBooks = state.recipeBooks,
+                activeBook = state.activeBook,
+                isBookPickerOpen = state.isBookPickerOpen,
+                pendingInvites = state.pendingInvites,
             )
         }
 
@@ -117,6 +129,22 @@ class RecipeListBlocImpl(
 
     override fun onSearchQueryChanged(query: String) {
         viewModel.updateSearchQuery(query)
+    }
+
+    override fun onOpenSearch() {
+        viewModel.openSearch()
+    }
+
+    override fun onCloseSearch() {
+        viewModel.closeSearch()
+    }
+
+    override fun onSearchScopeSelected(scope: RecipeSearchScope) {
+        viewModel.selectSearchScope(scope)
+    }
+
+    override fun onClearSearch() {
+        viewModel.clearSearch()
     }
 
     override fun onClearFilters() {
@@ -227,7 +255,7 @@ class RecipeListBlocImpl(
         RecipeListScreen(bloc = this, modifier = modifier)
     }
 
-    private fun Recipe.toRecipeListItem(): RecipeListItem =
+    private fun Recipe.toRecipeListItem(bookName: String? = null): RecipeListItem =
         RecipeListItem(
             id = id,
             title = title,
@@ -240,5 +268,10 @@ class RecipeListBlocImpl(
             calories = calories,
             isFavorite = isFavorite,
             syncStatus = syncStatus,
+            bookName = bookName,
         )
+
+    /** Joined names of the books this recipe belongs to, or null if none resolve. */
+    private fun Recipe.bookLabel(namesById: Map<Long, String>): String? =
+        recipeBookIds.mapNotNull { namesById[it] }.takeIf { it.isNotEmpty() }?.joinToString(", ")
 }
