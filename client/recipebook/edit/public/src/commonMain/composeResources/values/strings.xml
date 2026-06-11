@@ -15,5 +15,8 @@
     <string name="edit_recipe_book_role_editor">Editor</string>
     <string name="edit_recipe_book_role_viewer">Viewer</string>
     <string name="edit_recipe_book_member_pending">Pending</string>
+    <string name="edit_recipe_book_group_owner">Owner</string>
+    <string name="edit_recipe_book_group_editors">Editors</string>
+    <string name="edit_recipe_book_group_viewers">Viewers</string>
     <string name="edit_recipe_book_remove_member">Remove %1$s</string>
 </resources>
