@@ -25,6 +25,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -86,7 +87,7 @@ fun EditRecipeBookScreen(bloc: EditRecipeBookBloc, modifier: Modifier = Modifier
                     .testTag(EditRecipeBookTestTags.SAVE_BUTTON),
         )
 
-        if (model.canManageCollaborators) {
+        if (model.members.isNotEmpty()) {
             CollaboratorsSection(bloc = bloc, model = model)
         }
     }
@@ -110,76 +111,96 @@ private fun CollaboratorsSection(bloc: EditRecipeBookBloc, model: EditRecipeBook
         )
 
         model.members.forEach { member ->
-            MemberRow(member = member, onRemove = bloc::onRemoveMember)
+            MemberRow(
+                member = member,
+                canManage = model.canManageCollaborators,
+                onRemove = bloc::onRemoveMember,
+            )
         }
 
-        // Invite-by-email row.
-        PlusTextField(
-            value = model.inviteEmail,
-            onValueChange = bloc::onInviteEmailChanged,
-            modifier =
-                Modifier.fillMaxWidth()
-                    .padding(top = ChefMateTheme.dimens.paddingSmall)
-                    .testTag(EditRecipeBookTestTags.INVITE_EMAIL_FIELD),
-            label = { Text(stringResource(Res.string.edit_recipe_book_invite_email_label)) },
-            singleLine = true,
-            error = model.inviteError,
-            keyboardOptions =
-                KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    capitalization = KeyboardCapitalization.None,
-                    imeAction = ImeAction.Done,
-                ),
-            keyboardActions = KeyboardActions(onDone = { bloc.onInviteClicked() }),
-        )
+        // Invite controls are owner-only; collaborators just see the list above.
+        if (model.canManageCollaborators) {
+            PlusTextField(
+                value = model.inviteEmail,
+                onValueChange = bloc::onInviteEmailChanged,
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(top = ChefMateTheme.dimens.paddingSmall)
+                        .testTag(EditRecipeBookTestTags.INVITE_EMAIL_FIELD),
+                label = { Text(stringResource(Res.string.edit_recipe_book_invite_email_label)) },
+                singleLine = true,
+                error = model.inviteError,
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        capitalization = KeyboardCapitalization.None,
+                        imeAction = ImeAction.Done,
+                    ),
+                keyboardActions = KeyboardActions(onDone = { bloc.onInviteClicked() }),
+            )
 
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall)) {
-            listOf(RecipeBookRole.EDITOR, RecipeBookRole.VIEWER).forEach { role ->
-                FilterChip(
-                    selected = model.inviteRole == role,
-                    onClick = { bloc.onInviteRoleChanged(role) },
-                    label = { Text(role.label()) },
-                )
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall)
+            ) {
+                listOf(RecipeBookRole.EDITOR, RecipeBookRole.VIEWER).forEach { role ->
+                    FilterChip(
+                        selected = model.inviteRole == role,
+                        onClick = { bloc.onInviteRoleChanged(role) },
+                        label = { Text(role.label()) },
+                    )
+                }
             }
-        }
 
-        PlusButton(
-            text = Res.string.edit_recipe_book_invite_button.asTextData(),
-            variant = PlusButtonVariant.SECONDARY,
-            isLoading = model.isInviting,
-            enabled = model.inviteEmail.isNotBlank() && !model.isInviting,
-            onClick = bloc::onInviteClicked,
-            modifier =
-                Modifier.fillMaxWidth()
-                    .padding(top = ChefMateTheme.dimens.paddingSmall)
-                    .testTag(EditRecipeBookTestTags.INVITE_BUTTON),
-        )
+            PlusButton(
+                text = Res.string.edit_recipe_book_invite_button.asTextData(),
+                variant = PlusButtonVariant.SECONDARY,
+                isLoading = model.isInviting,
+                enabled = model.inviteEmail.isNotBlank() && !model.isInviting,
+                onClick = bloc::onInviteClicked,
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(top = ChefMateTheme.dimens.paddingSmall)
+                        .testTag(EditRecipeBookTestTags.INVITE_BUTTON),
+            )
+        }
     }
 }
 
 @Composable
-private fun MemberRow(member: RecipeBookMember, onRemove: (String) -> Unit) {
+private fun MemberRow(member: RecipeBookMember, canManage: Boolean, onRemove: (String) -> Unit) {
+    // name → email → role. Pending invites are dimmed and have no account, so they fall back to the
+    // email as the primary line. The role is always shown so collaborators can see who does what.
+    val name = member.name?.takeIf { it.isNotBlank() }
+    val roleLabel = member.role.label()
+    val roleLine =
+        if (member.accepted) roleLabel
+        else "$roleLabel · ${stringResource(Res.string.edit_recipe_book_member_pending)}"
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().alpha(if (member.accepted) 1f else 0.5f),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
     ) {
         PlusAvatar(
             imageUrl = member.avatarUrl,
             contentDescription = null,
-            fallbackText = member.email,
+            fallbackText = name ?: member.email,
         )
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = member.email, style = MaterialTheme.typography.bodyMedium)
+            Text(text = name ?: member.email, style = MaterialTheme.typography.bodyMedium)
+            if (name != null) {
+                Text(
+                    text = member.email,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             Text(
-                text =
-                    if (!member.accepted) stringResource(Res.string.edit_recipe_book_member_pending)
-                    else member.role.label(),
+                text = roleLine,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        if (!member.isOwner && member.id != null) {
+        if (canManage && !member.isOwner && member.id != null) {
             IconButton(onClick = { onRemove(member.id!!) }) {
                 Icon(
                     imageVector = Icons.Default.Close,

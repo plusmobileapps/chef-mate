@@ -9,6 +9,7 @@ import com.plusmobileapps.chefmate.database.Database
 import com.plusmobileapps.chefmate.database.testing.createTestDatabase
 import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RecipeBookMemberRemoteDataSource
 import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RecipeBookRemoteDataSource
+import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RemoteCollaborator
 import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RemoteInviteBook
 import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RemoteRecipeBook
 import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RemoteRecipeBookInvite
@@ -196,6 +197,9 @@ class RecipeBookRepositoryImplTest {
 
     private open class NoopMemberRemote : RecipeBookMemberRemoteDataSource {
         override suspend fun fetchMembers(bookRemoteId: String): List<RemoteRecipeBookMember> =
+            emptyList()
+
+        override suspend fun fetchCollaborators(bookRemoteId: String): List<RemoteCollaborator> =
             emptyList()
 
         override suspend fun invite(bookRemoteId: String, email: String, role: String) = Unit

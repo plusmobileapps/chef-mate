@@ -84,6 +84,7 @@ val previewEditRecipeBookCollaboratorsBloc: EditRecipeBookBloc =
                         email = "you@example.com",
                         role = RecipeBookRole.OWNER,
                         accepted = true,
+                        name = "Jordan Lee",
                         isOwner = true,
                     ),
                     RecipeBookMember(
@@ -91,6 +92,42 @@ val previewEditRecipeBookCollaboratorsBloc: EditRecipeBookBloc =
                         email = "alex@example.com",
                         role = RecipeBookRole.EDITOR,
                         accepted = true,
+                        name = "Alex Rivera",
+                    ),
+                    RecipeBookMember(
+                        id = "2",
+                        email = "sam@example.com",
+                        role = RecipeBookRole.VIEWER,
+                        accepted = false,
+                    ),
+                ),
+        )
+    )
+
+/** A non-owner collaborator viewing the book: read-only list, no invite controls. */
+val previewEditRecipeBookMemberViewBloc: EditRecipeBookBloc =
+    editRecipeBookBloc(
+        Model(
+            title = Res.string.edit_recipe_book_edit_title.asTextData(),
+            name = "Weeknight Dinners",
+            isCreate = false,
+            canManageCollaborators = false,
+            members =
+                listOf(
+                    RecipeBookMember(
+                        id = null,
+                        email = "casey@example.com",
+                        role = RecipeBookRole.OWNER,
+                        accepted = true,
+                        name = "Casey Morgan",
+                        isOwner = true,
+                    ),
+                    RecipeBookMember(
+                        id = "1",
+                        email = "you@example.com",
+                        role = RecipeBookRole.EDITOR,
+                        accepted = true,
+                        name = "Jordan Lee",
                     ),
                     RecipeBookMember(
                         id = "2",
@@ -130,4 +167,10 @@ internal fun EditRecipeBookCreateDarkPreview() {
 @Composable
 internal fun EditRecipeBookCollaboratorsPreview() {
     ChefMateTheme { EditRecipeBookScreen(bloc = previewEditRecipeBookCollaboratorsBloc) }
+}
+
+@Preview
+@Composable
+internal fun EditRecipeBookMemberViewPreview() {
+    ChefMateTheme { EditRecipeBookScreen(bloc = previewEditRecipeBookMemberViewBloc) }
 }

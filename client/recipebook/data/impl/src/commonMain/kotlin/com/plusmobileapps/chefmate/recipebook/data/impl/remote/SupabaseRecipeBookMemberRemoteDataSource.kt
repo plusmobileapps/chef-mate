@@ -6,9 +6,12 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 @Inject
 @SingleIn(AppScope::class)
@@ -21,6 +24,11 @@ class SupabaseRecipeBookMemberRemoteDataSource(private val supabaseClient: Supab
             .from("recipe_book_members")
             .select { filter { eq("recipe_book_id", bookRemoteId) } }
             .decodeList<RemoteRecipeBookMember>()
+
+    override suspend fun fetchCollaborators(bookRemoteId: String): List<RemoteCollaborator> =
+        supabaseClient.postgrest
+            .rpc("recipe_book_collaborators", buildJsonObject { put("p_book_id", bookRemoteId) })
+            .decodeList<RemoteCollaborator>()
 
     override suspend fun invite(bookRemoteId: String, email: String, role: String) {
         supabaseClient

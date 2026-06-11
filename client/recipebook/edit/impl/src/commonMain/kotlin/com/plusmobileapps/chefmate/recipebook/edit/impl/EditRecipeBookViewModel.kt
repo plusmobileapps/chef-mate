@@ -61,7 +61,9 @@ class EditRecipeBookViewModel(
                 }
                 val owner = withContext(ioContext) { collaborationRepository.isOwner(props.bookId) }
                 _state.update { it.copy(canManageCollaborators = owner) }
-                if (owner) loadMembers(props.bookId)
+                // Everyone on the book sees the collaborator list; only the owner can
+                // invite/remove.
+                loadMembers(props.bookId)
             }
         }
     }

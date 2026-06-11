@@ -28,3 +28,15 @@ data class RemoteRecipeBookInvite(
 
 /** Minimal `recipe_books` projection used to resolve invited book names without a join embed. */
 @Serializable data class RemoteRecipeBookName(val id: String, val name: String)
+
+/** A row from the `recipe_book_collaborators` RPC: the owner plus every member of a book. */
+@Serializable
+data class RemoteCollaborator(
+    @SerialName("member_id") val memberId: String? = null,
+    val email: String,
+    val name: String? = null,
+    val role: String,
+    val status: String,
+    @SerialName("is_owner") val isOwner: Boolean = false,
+    @SerialName("avatar_url") val avatarUrl: String? = null,
+)
