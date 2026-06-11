@@ -3,6 +3,9 @@
 -- and each person's role. SECURITY DEFINER so it can resolve the owner's email from auth.users
 -- (not readable cross-user) and read member rows without tripping per-row RLS; the can_access guard
 -- keeps the list scoped to people actually on the book.
+-- DROP first: CREATE OR REPLACE can't change a function's return type, and avatar_url was added to
+-- the RETURNS TABLE after an earlier version shipped.
+DROP FUNCTION IF EXISTS recipe_book_collaborators(uuid);
 CREATE OR REPLACE FUNCTION recipe_book_collaborators(p_book_id uuid)
 RETURNS TABLE(member_id uuid, email text, role text, status text, is_owner boolean, avatar_url text)
 LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public AS $$
