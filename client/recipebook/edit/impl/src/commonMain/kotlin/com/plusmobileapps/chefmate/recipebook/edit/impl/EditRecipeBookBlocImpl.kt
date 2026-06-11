@@ -7,6 +7,7 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBookRole
 import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookBloc
 import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookBloc.Model
 import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookBloc.Output
@@ -43,6 +44,14 @@ class EditRecipeBookBlocImpl(
         output.onNext(Output.Finished)
     }
 
+    override fun onInviteEmailChanged(email: String) = viewModel.onInviteEmailChanged(email)
+
+    override fun onInviteRoleChanged(role: RecipeBookRole) = viewModel.onInviteRoleChanged(role)
+
+    override fun onInviteClicked() = viewModel.onInviteClicked()
+
+    override fun onRemoveMember(memberId: String) = viewModel.onRemoveMember(memberId)
+
     @Composable
     override fun Content(modifier: Modifier) {
         EditRecipeBookScreen(bloc = this, modifier = modifier)
@@ -55,5 +64,11 @@ class EditRecipeBookBlocImpl(
             isCreate = isCreate,
             isSaving = isSaving,
             nameError = nameError,
+            canManageCollaborators = canManageCollaborators,
+            members = members,
+            inviteEmail = inviteEmail,
+            inviteRole = inviteRole,
+            isInviting = isInviting,
+            inviteError = inviteError,
         )
 }

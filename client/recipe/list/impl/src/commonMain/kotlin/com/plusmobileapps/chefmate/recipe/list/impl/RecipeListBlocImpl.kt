@@ -71,6 +71,7 @@ class RecipeListBlocImpl(
                 recipeBooks = it.recipeBooks,
                 activeBook = it.activeBook,
                 isBookPickerOpen = it.isBookPickerOpen,
+                pendingInvites = it.pendingInvites,
             )
         }
 
@@ -211,6 +212,14 @@ class RecipeListBlocImpl(
     override fun onCollaborateClicked() {
         val activeBookId = viewModel.state.value.activeBook?.id
         output.onNext(Output.OpenEditRecipeBook(bookId = activeBookId))
+    }
+
+    override fun onAcceptInvite(memberId: String) {
+        viewModel.acceptInvite(memberId)
+    }
+
+    override fun onDeclineInvite(memberId: String) {
+        viewModel.declineInvite(memberId)
     }
 
     @Composable

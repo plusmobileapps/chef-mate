@@ -20,6 +20,7 @@ import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeImageExtractor
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
+import com.plusmobileapps.chefmate.recipebook.data.testing.FakeRecipeBookCollaborationRepository
 import com.plusmobileapps.chefmate.recipebook.data.testing.FakeRecipeBookRepository
 import com.russhwolf.settings.Settings
 import dev.mokkery.answering.returns
@@ -57,11 +58,13 @@ class RecipeListViewModelTest {
     private val pendingPhotoStore = FakePendingRecipePhotoStore()
     private val featureFlags = FakeFeatureFlags()
     private val recipeBookRepository = FakeRecipeBookRepository(MutableStateFlow(emptyList()))
+    private val collaborationRepository = FakeRecipeBookCollaborationRepository()
     private val viewModel =
         RecipeListViewModel(
             mainContext = UnconfinedTestDispatcher(),
             repository = repository,
             recipeBookRepository = recipeBookRepository,
+            collaborationRepository = collaborationRepository,
             categoryRepository = categoryRepository,
             cookingSessionRepository = cookingSessionRepository,
             imageExtractor = imageExtractor,
@@ -116,6 +119,58 @@ class RecipeListViewModelTest {
     }
 
     @Test
+    fun When_invite_accepted_Then_repository_called_and_invites_reloaded() =
+        runTest(UnconfinedTestDispatcher()) {
+            collaborationRepository.invites.add(
+                com.plusmobileapps.chefmate.recipebook.data.RecipeBookInvite(
+                    memberId = "m1",
+                    bookName = "Shared Book",
+                    role = com.plusmobileapps.chefmate.recipebook.data.RecipeBookRole.EDITOR,
+                )
+            )
+            val vm =
+                RecipeListViewModel(
+                    mainContext = UnconfinedTestDispatcher(),
+                    repository = repository,
+                    recipeBookRepository = recipeBookRepository,
+                    collaborationRepository = collaborationRepository,
+                    categoryRepository = categoryRepository,
+                    cookingSessionRepository = cookingSessionRepository,
+                    imageExtractor = imageExtractor,
+                    pendingPhotoStore = pendingPhotoStore,
+                    featureFlags = featureFlags,
+                    settings = settings,
+                )
+
+            vm.state.value.pendingInvites.map { it.memberId } shouldBe listOf("m1")
+
+            vm.acceptInvite("m1")
+
+            collaborationRepository.accepted shouldBe listOf("m1")
+            vm.state.value.pendingInvites.isEmpty() shouldBe true
+        }
+
+    @Test
+    fun When_pull_to_refresh_Then_pending_invites_reloaded() =
+        runTest(UnconfinedTestDispatcher()) {
+            // The screen opened before any invite existed, so the banner starts empty.
+            viewModel.state.value.pendingInvites.isEmpty() shouldBe true
+
+            // An invitation arrives while the list is already on screen.
+            collaborationRepository.invites.add(
+                com.plusmobileapps.chefmate.recipebook.data.RecipeBookInvite(
+                    memberId = "m9",
+                    bookName = "Late Book",
+                    role = com.plusmobileapps.chefmate.recipebook.data.RecipeBookRole.EDITOR,
+                )
+            )
+
+            viewModel.onSyncClicked()
+
+            viewModel.state.value.pendingInvites.map { it.memberId } shouldBe listOf("m9")
+        }
+
+    @Test
     fun When_scan_flag_enabled_Then_state_scan_from_photo_enabled() {
         val flags = FakeFeatureFlags(mapOf(FeatureFlagRegistry.ScanRecipeFromPhoto to true))
         val vm =
@@ -123,6 +178,7 @@ class RecipeListViewModelTest {
                 mainContext = UnconfinedTestDispatcher(),
                 repository = repository,
                 recipeBookRepository = recipeBookRepository,
+                collaborationRepository = FakeRecipeBookCollaborationRepository(),
                 categoryRepository = categoryRepository,
                 cookingSessionRepository = cookingSessionRepository,
                 imageExtractor = imageExtractor,
@@ -336,6 +392,7 @@ class RecipeListViewModelTest {
                 mainContext = UnconfinedTestDispatcher(),
                 repository = FakeRecipeRepository(),
                 recipeBookRepository = FakeRecipeBookRepository(MutableStateFlow(emptyList())),
+                collaborationRepository = FakeRecipeBookCollaborationRepository(),
                 categoryRepository = FakeCategoryRepository(),
                 cookingSessionRepository = cookingSessionRepository,
                 imageExtractor = imageExtractor,
@@ -430,6 +487,7 @@ class RecipeListViewModelTest {
                 mainContext = UnconfinedTestDispatcher(),
                 repository = FakeRecipeRepository(),
                 recipeBookRepository = FakeRecipeBookRepository(MutableStateFlow(emptyList())),
+                collaborationRepository = FakeRecipeBookCollaborationRepository(),
                 categoryRepository = FakeCategoryRepository(),
                 cookingSessionRepository = cookingSessionRepository,
                 imageExtractor = imageExtractor,
@@ -461,6 +519,7 @@ class RecipeListViewModelTest {
                 mainContext = UnconfinedTestDispatcher(),
                 repository = FakeRecipeRepository(),
                 recipeBookRepository = FakeRecipeBookRepository(MutableStateFlow(emptyList())),
+                collaborationRepository = FakeRecipeBookCollaborationRepository(),
                 categoryRepository = FakeCategoryRepository(),
                 cookingSessionRepository = cookingSessionRepository,
                 imageExtractor = imageExtractor,
@@ -649,6 +708,7 @@ class RecipeListViewModelTest {
                 mainContext = UnconfinedTestDispatcher(),
                 repository = FakeRecipeRepository(),
                 recipeBookRepository = FakeRecipeBookRepository(MutableStateFlow(emptyList())),
+                collaborationRepository = FakeRecipeBookCollaborationRepository(),
                 categoryRepository = FakeCategoryRepository(),
                 cookingSessionRepository = cookingSessionRepository,
                 imageExtractor = imageExtractor,

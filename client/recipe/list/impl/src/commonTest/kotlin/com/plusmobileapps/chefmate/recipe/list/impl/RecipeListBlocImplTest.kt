@@ -15,6 +15,7 @@ import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
+import com.plusmobileapps.chefmate.recipebook.data.testing.FakeRecipeBookCollaborationRepository
 import com.plusmobileapps.chefmate.recipebook.data.testing.FakeRecipeBookRepository
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
@@ -72,6 +73,7 @@ class RecipeListBlocImplTest {
                     mainContext = context.mainContext,
                     repository = repository,
                     recipeBookRepository = FakeRecipeBookRepository(MutableStateFlow(emptyList())),
+                    collaborationRepository = FakeRecipeBookCollaborationRepository(),
                     categoryRepository = categoryRepository,
                     cookingSessionRepository = cookingSessionRepository,
                     imageExtractor = imageExtractor,

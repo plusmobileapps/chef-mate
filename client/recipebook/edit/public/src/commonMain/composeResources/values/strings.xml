@@ -5,4 +5,15 @@
     <string name="edit_recipe_book_name_error">Enter a name for your recipe book</string>
     <string name="edit_recipe_book_save">Save</string>
     <string name="edit_recipe_book_close">Close</string>
+
+    <!-- Collaborators -->
+    <string name="edit_recipe_book_collaborators">Collaborators</string>
+    <string name="edit_recipe_book_invite_email_label">Invite by email</string>
+    <string name="edit_recipe_book_invite_button">Invite</string>
+    <string name="edit_recipe_book_invite_email_error">Enter a valid email address</string>
+    <string name="edit_recipe_book_role_owner">Owner</string>
+    <string name="edit_recipe_book_role_editor">Editor</string>
+    <string name="edit_recipe_book_role_viewer">Viewer</string>
+    <string name="edit_recipe_book_member_pending">Pending</string>
+    <string name="edit_recipe_book_remove_member">Remove %1$s</string>
 </resources>

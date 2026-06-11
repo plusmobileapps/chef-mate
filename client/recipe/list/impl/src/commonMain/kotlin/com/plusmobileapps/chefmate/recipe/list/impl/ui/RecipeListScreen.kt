@@ -48,6 +48,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SoupKitchen
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material.icons.outlined.CloudDone
@@ -134,11 +135,15 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_favorites
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_quick_recipes
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_rated
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_invite_accept
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_invite_decline
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_invite_message
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_item_calories
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_item_servings
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_collaborate
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_export_all
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_select
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_sync
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_more_actions
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_scan_failed_title
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_scan_from_photo
@@ -349,6 +354,7 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                                 onSelectClicked = bloc::onEnterSelectionMode,
                                 onExportAllClicked = bloc::onExportClicked,
                                 onCollaborateClicked = bloc::onCollaborateClicked,
+                                onSyncClicked = bloc::onSyncClicked,
                             )
                         },
                 )
@@ -372,6 +378,13 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                                 bloc.onSearchQueryChanged("")
                                 showSearchBar = false
                             },
+                        )
+                    }
+                    state.pendingInvites.forEach { invite ->
+                        InviteBanner(
+                            invite = invite,
+                            onAccept = { bloc.onAcceptInvite(invite.memberId) },
+                            onDecline = { bloc.onDeclineInvite(invite.memberId) },
                         )
                     }
                     PullToRefreshBox(
@@ -567,6 +580,45 @@ private fun ScanningDialog() {
 }
 
 @Composable
+private fun InviteBanner(
+    invite: com.plusmobileapps.chefmate.recipebook.data.RecipeBookInvite,
+    onAccept: () -> Unit,
+    onDecline: () -> Unit,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(ChefMateTheme.dimens.paddingNormal),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            ),
+    ) {
+        Column(modifier = Modifier.padding(ChefMateTheme.dimens.paddingNormal)) {
+            Text(
+                text =
+                    PhraseModel(
+                            Res.string.recipe_list_invite_message,
+                            "book" to FixedString(invite.bookName),
+                        )
+                        .localized(),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = ChefMateTheme.dimens.paddingSmall),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                TextButton(onClick = onDecline) {
+                    Text(stringResource(Res.string.recipe_list_invite_decline))
+                }
+                TextButton(onClick = onAccept) {
+                    Text(stringResource(Res.string.recipe_list_invite_accept))
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun CookingSessionFabStack(
     onContinueClicked: () -> Unit,
     onDoneCookingClicked: () -> Unit,
@@ -630,6 +682,7 @@ private fun OverflowMenu(
     onSelectClicked: () -> Unit,
     onExportAllClicked: () -> Unit,
     onCollaborateClicked: () -> Unit,
+    onSyncClicked: () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box {
@@ -640,6 +693,14 @@ private fun OverflowMenu(
             )
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.recipe_list_menu_sync)) },
+                leadingIcon = { Icon(Icons.Default.Sync, contentDescription = null) },
+                onClick = {
+                    expanded = false
+                    onSyncClicked()
+                },
+            )
             DropdownMenuItem(
                 text = { Text(stringResource(Res.string.recipe_list_menu_select)) },
                 leadingIcon = { Icon(Icons.Default.Check, contentDescription = null) },

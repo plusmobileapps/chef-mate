@@ -47,6 +47,16 @@ class EditRecipeBookScreenUiTest {
 
         override fun onCloseClicked() = Unit
 
+        override fun onInviteEmailChanged(email: String) = Unit
+
+        override fun onInviteRoleChanged(
+            role: com.plusmobileapps.chefmate.recipebook.data.RecipeBookRole
+        ) = Unit
+
+        override fun onInviteClicked() = Unit
+
+        override fun onRemoveMember(memberId: String) = Unit
+
         @Composable
         override fun Content(modifier: Modifier) {
             EditRecipeBookScreen(bloc = this, modifier = modifier)

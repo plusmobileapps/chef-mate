@@ -8,6 +8,7 @@ import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.meal.data.MealPlanRepository
 import com.plusmobileapps.chefmate.recipe.data.CategoryRepository
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBookRepository
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -20,6 +21,7 @@ class SignOutUseCaseImpl(
     private val groceryRepository: GroceryRepository,
     private val mealPlanRepository: MealPlanRepository,
     private val recipeRepository: RecipeRepository,
+    private val recipeBookRepository: RecipeBookRepository,
     private val categoryRepository: CategoryRepository,
     private val aiChatLocalDataCleaner: AiChatLocalDataCleaner,
 ) : SignOutUseCase {
@@ -27,6 +29,7 @@ class SignOutUseCaseImpl(
         authenticationRepository.signOut()
         mealPlanRepository.clearLocalData()
         recipeRepository.clearLocalData()
+        recipeBookRepository.clearLocalData()
         categoryRepository.clearLocalData()
         groceryRepository.clearLocalData()
         groceryRepository.ensureDefaultList()

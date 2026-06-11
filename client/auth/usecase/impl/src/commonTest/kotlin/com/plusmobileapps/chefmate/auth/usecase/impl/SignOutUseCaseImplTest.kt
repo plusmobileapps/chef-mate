@@ -9,6 +9,8 @@ import com.plusmobileapps.chefmate.meal.data.testing.FakeMealPlanRepository
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeCategoryRepository
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
+import com.plusmobileapps.chefmate.recipebook.data.testing.FakeRecipeBookRepository
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +23,8 @@ class SignOutUseCaseImplTest {
     private val groceryRepository = FakeGroceryRepository()
     private val mealPlanRepository = FakeMealPlanRepository()
     private val recipeRepository = FakeRecipeRepository()
+    private val recipeBookRepository =
+        FakeRecipeBookRepository(MutableStateFlow(RecipeBook.Samples))
     private val categories =
         MutableStateFlow(
             listOf(
@@ -38,6 +42,7 @@ class SignOutUseCaseImplTest {
             groceryRepository = groceryRepository,
             mealPlanRepository = mealPlanRepository,
             recipeRepository = recipeRepository,
+            recipeBookRepository = recipeBookRepository,
             categoryRepository = categoryRepository,
             aiChatLocalDataCleaner = aiChatLocalDataCleaner,
         )
@@ -54,5 +59,12 @@ class SignOutUseCaseImplTest {
         useCase()
 
         aiChatCleared shouldBe true
+    }
+
+    @Test
+    fun When_signing_out_Then_local_recipe_books_are_wiped() = runTest {
+        useCase()
+
+        recipeBookRepository.getRecipeBooks().first() shouldBe emptyList()
     }
 }

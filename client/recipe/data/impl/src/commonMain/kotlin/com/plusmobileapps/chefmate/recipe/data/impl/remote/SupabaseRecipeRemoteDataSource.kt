@@ -29,11 +29,8 @@ class SupabaseRecipeRemoteDataSource(private val supabaseClient: SupabaseClient)
         supabaseClient.from("recipes").delete { filter { eq("id", remoteId) } }
     }
 
-    override suspend fun fetchAllRecipes(ownerId: String): List<RemoteRecipe> =
-        supabaseClient
-            .from("recipes")
-            .select { filter { eq("owner_id", ownerId) } }
-            .decodeList<RemoteRecipe>()
+    override suspend fun fetchAccessibleRecipes(): List<RemoteRecipe> =
+        supabaseClient.from("recipes").select().decodeList<RemoteRecipe>()
 
     override suspend fun setRecipeCategories(
         recipeRemoteId: String,
@@ -55,14 +52,12 @@ class SupabaseRecipeRemoteDataSource(private val supabaseClient: SupabaseClient)
         }
     }
 
-    override suspend fun fetchRecipeCategoryAttachments(ownerId: String): Map<String, Set<String>> {
-        // Inner-join to recipes so the ownerId filter applies across the FK.
+    override suspend fun fetchRecipeCategoryAttachments(): Map<String, Set<String>> {
+        // RLS scopes rows to recipes the user can access (own + shared).
         val rows =
             supabaseClient
                 .from("recipe_categories")
-                .select(Columns.raw("recipe_id, category_id, recipes!inner(owner_id)")) {
-                    filter { eq("recipes.owner_id", ownerId) }
-                }
+                .select(Columns.raw("recipe_id, category_id"))
                 .decodeList<RemoteRecipeCategory>()
         return rows.groupBy { it.recipeId }.mapValues { (_, g) -> g.map { it.categoryId }.toSet() }
     }
@@ -84,13 +79,12 @@ class SupabaseRecipeRemoteDataSource(private val supabaseClient: SupabaseClient)
         }
     }
 
-    override suspend fun fetchRecipeBookAttachments(ownerId: String): Map<String, Set<String>> {
+    override suspend fun fetchRecipeBookAttachments(): Map<String, Set<String>> {
+        // RLS scopes rows to books the user can access (own + shared).
         val rows =
             supabaseClient
                 .from("recipe_book_recipes")
-                .select(Columns.raw("recipe_id, recipe_book_id, recipes!inner(owner_id)")) {
-                    filter { eq("recipes.owner_id", ownerId) }
-                }
+                .select(Columns.raw("recipe_id, recipe_book_id"))
                 .decodeList<RemoteRecipeBookRecipe>()
         return rows
             .groupBy { it.recipeId }

@@ -6,6 +6,7 @@ import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBookInvite
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.collections.immutable.ImmutableList
@@ -94,6 +95,12 @@ interface RecipeListBloc : BlocScreen {
     /** Opens the edit screen for the currently active book (the app-bar "Collaborate" action). */
     fun onCollaborateClicked()
 
+    /** Accepts the pending recipe-book invite with remote [memberId]. */
+    fun onAcceptInvite(memberId: String)
+
+    /** Declines the pending recipe-book invite with remote [memberId]. */
+    fun onDeclineInvite(memberId: String)
+
     data class Model(
         val recipes: ImmutableList<RecipeListItem> = persistentListOf(),
         val totalRecipeCount: Int = 0,
@@ -125,6 +132,8 @@ interface RecipeListBloc : BlocScreen {
         val recipeBooks: List<RecipeBook> = emptyList(),
         val activeBook: RecipeBook? = null,
         val isBookPickerOpen: Boolean = false,
+        /** Pending recipe-book invites addressed to the current user (the list banner). */
+        val pendingInvites: List<RecipeBookInvite> = emptyList(),
     ) {
         /** Total number of active filter chips: legacy filters + preset + user category filters. */
         val totalActiveFilterCount: Int

@@ -11,6 +11,7 @@ import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookRepository
+import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RecipeBookMemberRemoteDataSource
 import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RecipeBookRemoteDataSource
 import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RemoteRecipeBook
 import com.plusmobileapps.chefmate.util.DateTimeUtil
@@ -43,6 +44,7 @@ class RecipeBookRepositoryImpl(
     private val dateTimeUtil: DateTimeUtil,
     private val unique: Unique,
     private val remoteDataSource: RecipeBookRemoteDataSource,
+    private val memberRemoteDataSource: RecipeBookMemberRemoteDataSource,
     private val authRepository: AuthenticationRepository,
     private val settings: Settings,
 ) : RecipeBookRepository {
@@ -126,6 +128,10 @@ class RecipeBookRepositoryImpl(
 
     override suspend fun clearLocalData() {
         withContext(ioContext) { db.deleteAll() }
+        // Drop the persisted active-book selection — it points at a now-deleted row.
+        settings.putLong(KEY_ACTIVE_BOOK, NO_ACTIVE_BOOK)
+        // Recreate the baseline "My Recipes" book so a signed-out/fresh session stays valid.
+        _activeBookId.value = ensureDefaultBookId()
     }
 
     /** Creates the default book if absent and returns its local id. Idempotent. */
@@ -256,16 +262,38 @@ class RecipeBookRepositoryImpl(
                 } catch (_: Exception) {}
             }
 
-            // Pull remote books.
-            val remoteBooks = remoteDataSource.fetchAllRecipeBooks(userId)
+            // Pull every accessible book — owned plus books shared with the user (RLS-scoped).
+            // RLS also lets a *pending* invitee read the invited book's row (so the banner can name
+            // it), so exclude those here: a book the user hasn't accepted yet must not appear in
+            // their list until they accept it from the recipe-list banner.
+            val pendingBookIds: Set<String> =
+                try {
+                    val email =
+                        (authRepository.state.value as? AuthState.Authenticated)
+                            ?.user
+                            ?.userEmail
+                            ?.trim()
+                            ?.lowercase()
+                    if (email.isNullOrEmpty()) emptySet()
+                    else
+                        memberRemoteDataSource
+                            .fetchPendingInvites(email)
+                            .map { it.recipeBookId }
+                            .toSet()
+                } catch (_: Exception) {
+                    emptySet()
+                }
+            val remoteBooks = remoteDataSource.fetchAccessibleRecipeBooks()
             withContext(ioContext) {
                 for (remote in remoteBooks) {
                     val remoteId = remote.id ?: continue
+                    // Skip books the user only has a pending (un-accepted) invite to.
+                    if (remote.ownerId != userId && remoteId in pendingBookIds) continue
                     if (db.getByRemoteId(remoteId).executeAsOneOrNull() != null) continue
 
                     // Adopt the existing remote id onto the matching local book rather than
-                    // inserting a duplicate. Match by clientId first, then — for the default book —
-                    // by the isDefault sentinel so two devices' "My Recipes" converge to one row.
+                    // inserting a duplicate. Match by clientId first, then — for your own default
+                    // book — by the isDefault sentinel so two devices' "My Recipes" converge.
                     val clientId = remote.clientId
                     val matchedByClientId: DbRecipeBook? =
                         if (clientId != null) {
@@ -273,10 +301,11 @@ class RecipeBookRepositoryImpl(
                         } else {
                             null
                         }
+                    val isOwn = remote.ownerId == userId
                     val matched: DbRecipeBook? =
                         when {
                             matchedByClientId != null -> matchedByClientId
-                            remote.isDefault ->
+                            remote.isDefault && isOwn ->
                                 db.getDefault().executeAsOneOrNull()?.takeIf { it.remoteId == null }
                             else -> null
                         }
@@ -284,13 +313,15 @@ class RecipeBookRepositoryImpl(
                         db.updateRemoteId(remoteId = remoteId, id = matched.id)
                     } else {
                         db.createWithRemoteId(
+                            // A shared book is never the local "default"; that sentinel is reserved
+                            // for the user's own My Recipes book.
                             name = remote.name,
-                            isDefault = remote.isDefault,
+                            isDefault = remote.isDefault && isOwn,
                             createdAt = remote.createdAt ?: dateTimeUtil.now.toString(),
                             updatedAt = remote.updatedAt ?: dateTimeUtil.now.toString(),
                             remoteId = remoteId,
                             clientId = remote.clientId,
-                            ownerId = userId,
+                            ownerId = remote.ownerId,
                         )
                     }
                 }
@@ -309,6 +340,8 @@ class RecipeBookRepositoryImpl(
             id = id,
             name = name,
             isDefault = isDefault,
+            // No ownerId yet (locally created, unsynced) means the creator owns it.
+            isOwnedByCurrentUser = ownerId == null || ownerId == currentUserId,
             syncStatus = syncStatus,
             createdAt = parseTimestamp(createdAt),
             updatedAt = parseTimestamp(updatedAt),
@@ -322,6 +355,9 @@ class RecipeBookRepositoryImpl(
      */
     private fun parseTimestamp(value: String): Instant =
         Instant.parse(if (value.contains('T')) value else "${value.replace(' ', 'T')}Z")
+
+    private val currentUserId: String?
+        get() = (authRepository.state.value as? AuthState.Authenticated)?.user?.userId
 
     private companion object {
         const val TAG = "RecipeBookRepositoryImpl"

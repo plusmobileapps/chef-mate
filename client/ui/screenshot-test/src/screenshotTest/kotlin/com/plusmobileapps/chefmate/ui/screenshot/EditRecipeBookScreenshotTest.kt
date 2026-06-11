@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookScreen
+import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookCollaboratorsBloc
 import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookCreateBloc
 import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookEditBloc
 import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookErrorBloc
@@ -44,4 +45,11 @@ fun EditRecipeBookErrorScreenshot() {
 @Composable
 fun EditRecipeBookCreateDarkScreenshot() {
     ChefMateTheme(darkTheme = true) { EditRecipeBookScreen(bloc = previewEditRecipeBookCreateBloc) }
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+fun EditRecipeBookCollaboratorsScreenshot() {
+    ChefMateTheme { EditRecipeBookScreen(bloc = previewEditRecipeBookCollaboratorsBloc) }
 }

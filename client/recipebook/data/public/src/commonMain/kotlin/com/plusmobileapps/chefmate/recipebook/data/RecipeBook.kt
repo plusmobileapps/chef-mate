@@ -11,6 +11,12 @@ data class RecipeBook(
     val name: String,
     /** The single "My Recipes" book every user starts with. New recipes default here. */
     val isDefault: Boolean = false,
+    /**
+     * Whether the current user owns this book (vs. being a collaborator on a book shared with
+     * them). True for locally-created books that haven't synced an owner yet. Gates collaborator
+     * management in the UI.
+     */
+    val isOwnedByCurrentUser: Boolean = true,
     val syncStatus: SyncStatus = SyncStatus.NOT_SYNCED,
     val createdAt: Instant,
     val updatedAt: Instant,

@@ -7,12 +7,17 @@ import app.cash.turbine.test
 import com.plusmobileapps.chefmate.auth.data.testing.FakeAuthenticationRepository
 import com.plusmobileapps.chefmate.database.Database
 import com.plusmobileapps.chefmate.database.testing.createTestDatabase
+import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RecipeBookMemberRemoteDataSource
 import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RecipeBookRemoteDataSource
+import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RemoteInviteBook
 import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RemoteRecipeBook
+import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RemoteRecipeBookInvite
+import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RemoteRecipeBookMember
 import com.plusmobileapps.chefmate.util.testing.FakeDateTimeUtil
 import com.plusmobileapps.chefmate.util.testing.FakeUnique
 import com.russhwolf.settings.MapSettings
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,13 +32,17 @@ class RecipeBookRepositoryImplTest {
     private val dateTimeUtil = FakeDateTimeUtil()
     private val settings = MapSettings()
 
-    private fun repository() =
+    private fun repository(
+        remoteDataSource: RecipeBookRemoteDataSource = NoopRecipeBookRemote(),
+        memberRemoteDataSource: RecipeBookMemberRemoteDataSource = NoopMemberRemote(),
+    ) =
         RecipeBookRepositoryImpl(
             db = db.recipeBookQueries,
             ioContext = testDispatcher,
             dateTimeUtil = dateTimeUtil,
             unique = FakeUnique(),
-            remoteDataSource = NoopRecipeBookRemote(),
+            remoteDataSource = remoteDataSource,
+            memberRemoteDataSource = memberRemoteDataSource,
             authRepository = fakeAuth,
             settings = settings,
         )
@@ -58,6 +67,25 @@ class RecipeBookRepositoryImplTest {
             val defaultId = repo.getDefaultBookId()
 
             repo.activeBookId.value shouldBe defaultId
+        }
+
+    @Test
+    fun clearLocalData_wipes_books_and_resets_to_a_fresh_default() =
+        runTest(testDispatcher) {
+            val repo = repository()
+            val shared = repo.createBook("Shared with me")
+            repo.setActiveBook(shared.id)
+
+            repo.clearLocalData()
+
+            repo.getRecipeBooks().test {
+                val books = awaitItem()
+                // Only the recreated baseline "My Recipes" default survives.
+                books.single().isDefault shouldBe true
+                books.single().name shouldBe "My Recipes"
+                // The active selection no longer points at the deleted book.
+                repo.activeBookId.value shouldBe books.single().id
+            }
         }
 
     @Test
@@ -117,12 +145,66 @@ class RecipeBookRepositoryImplTest {
             repository().activeBookId.value shouldBe created.id
         }
 
+    @Test
+    fun pull_skips_books_with_only_a_pending_invite() =
+        runTest(testDispatcher) {
+            fakeAuth.setAuthenticated()
+            // Two shared books owned by someone else: one accepted, one still a pending invite.
+            val accepted =
+                RemoteRecipeBook(id = "remote-accepted", ownerId = "owner", name = "Shared")
+            val pending =
+                RemoteRecipeBook(id = "remote-pending", ownerId = "owner", name = "Invited")
+            val bookRemote =
+                object : RecipeBookRemoteDataSource {
+                    override suspend fun upsertRecipeBook(book: RemoteRecipeBook) = book
+
+                    override suspend fun deleteRecipeBook(remoteId: String) = Unit
+
+                    override suspend fun fetchAccessibleRecipeBooks() = listOf(accepted, pending)
+                }
+            val memberRemote =
+                object : NoopMemberRemote() {
+                    override suspend fun fetchPendingInvites(email: String) =
+                        listOf(
+                            RemoteRecipeBookInvite(
+                                id = "member-1",
+                                recipeBookId = "remote-pending",
+                                role = "editor",
+                                status = "pending",
+                                book = RemoteInviteBook(name = "Invited"),
+                            )
+                        )
+                }
+
+            val repo =
+                repository(remoteDataSource = bookRemote, memberRemoteDataSource = memberRemote)
+
+            repo.getRecipeBooks().test {
+                val names = awaitItem().map { it.name }
+                names shouldContain "Shared" // accepted book is cached
+                names shouldNotContain "Invited" // pending-invite book stays hidden
+            }
+        }
+
     private class NoopRecipeBookRemote : RecipeBookRemoteDataSource {
         override suspend fun upsertRecipeBook(book: RemoteRecipeBook): RemoteRecipeBook = book
 
         override suspend fun deleteRecipeBook(remoteId: String) = Unit
 
-        override suspend fun fetchAllRecipeBooks(ownerId: String): List<RemoteRecipeBook> =
+        override suspend fun fetchAccessibleRecipeBooks(): List<RemoteRecipeBook> = emptyList()
+    }
+
+    private open class NoopMemberRemote : RecipeBookMemberRemoteDataSource {
+        override suspend fun fetchMembers(bookRemoteId: String): List<RemoteRecipeBookMember> =
             emptyList()
+
+        override suspend fun invite(bookRemoteId: String, email: String, role: String) = Unit
+
+        override suspend fun deleteMember(memberId: String) = Unit
+
+        override suspend fun fetchPendingInvites(email: String): List<RemoteRecipeBookInvite> =
+            emptyList()
+
+        override suspend fun acceptInvite(memberId: String, userId: String) = Unit
     }
 }

@@ -5,7 +5,11 @@ interface RecipeRemoteDataSource {
 
     suspend fun deleteRecipe(remoteId: String)
 
-    suspend fun fetchAllRecipes(ownerId: String): List<RemoteRecipe>
+    /**
+     * Every recipe the current user can access — owned plus those in books shared with them.
+     * Row-level security scopes the result, so no owner filter is applied.
+     */
+    suspend fun fetchAccessibleRecipes(): List<RemoteRecipe>
 
     /**
      * Replaces the recipe's attached-category set in the `recipe_categories` join table: deletes
@@ -15,10 +19,10 @@ interface RecipeRemoteDataSource {
     suspend fun setRecipeCategories(recipeRemoteId: String, categoryRemoteIds: Set<String>)
 
     /**
-     * Returns the full set of recipe ↔ category attachments owned by [ownerId], keyed by recipe
-     * remote ID. Recipes with no attachments are omitted (callers should treat absence as empty).
+     * Returns every accessible recipe ↔ category attachment (RLS-scoped), keyed by recipe remote
+     * ID. Recipes with no attachments are omitted (callers should treat absence as empty).
      */
-    suspend fun fetchRecipeCategoryAttachments(ownerId: String): Map<String, Set<String>>
+    suspend fun fetchRecipeCategoryAttachments(): Map<String, Set<String>>
 
     /**
      * Replaces the recipe's book membership in the `recipe_book_recipes` join table: deletes any
@@ -28,8 +32,8 @@ interface RecipeRemoteDataSource {
     suspend fun setRecipeBooks(recipeRemoteId: String, bookRemoteIds: Set<String>)
 
     /**
-     * Returns the full set of recipe ↔ book memberships owned by [ownerId], keyed by recipe remote
-     * ID. Recipes with no memberships are omitted (callers should treat absence as empty).
+     * Returns every accessible recipe ↔ book membership (RLS-scoped), keyed by recipe remote ID.
+     * Recipes with no memberships are omitted (callers should treat absence as empty).
      */
-    suspend fun fetchRecipeBookAttachments(ownerId: String): Map<String, Set<String>>
+    suspend fun fetchRecipeBookAttachments(): Map<String, Set<String>>
 }

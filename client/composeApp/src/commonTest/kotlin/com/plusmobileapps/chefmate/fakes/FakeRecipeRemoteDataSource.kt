@@ -16,18 +16,16 @@ class FakeRecipeRemoteDataSource : RecipeRemoteDataSource {
 
     override suspend fun deleteRecipe(remoteId: String) = Unit
 
-    override suspend fun fetchAllRecipes(ownerId: String): List<RemoteRecipe> = emptyList()
+    override suspend fun fetchAccessibleRecipes(): List<RemoteRecipe> = emptyList()
 
     override suspend fun setRecipeCategories(
         recipeRemoteId: String,
         categoryRemoteIds: Set<String>,
     ) = Unit
 
-    override suspend fun fetchRecipeCategoryAttachments(ownerId: String): Map<String, Set<String>> =
-        emptyMap()
+    override suspend fun fetchRecipeCategoryAttachments(): Map<String, Set<String>> = emptyMap()
 
     override suspend fun setRecipeBooks(recipeRemoteId: String, bookRemoteIds: Set<String>) = Unit
 
-    override suspend fun fetchRecipeBookAttachments(ownerId: String): Map<String, Set<String>> =
-        emptyMap()
+    override suspend fun fetchRecipeBookAttachments(): Map<String, Set<String>> = emptyMap()
 }
