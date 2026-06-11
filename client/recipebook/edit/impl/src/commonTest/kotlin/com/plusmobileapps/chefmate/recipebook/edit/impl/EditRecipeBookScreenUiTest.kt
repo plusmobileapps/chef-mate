@@ -55,7 +55,11 @@ class EditRecipeBookScreenUiTest {
 
         override fun onInviteClicked() = Unit
 
-        override fun onRemoveMember(memberId: String) = Unit
+        override fun onRemoveMemberClicked(memberId: String) = Unit
+
+        override fun onConfirmRemoveMember() = Unit
+
+        override fun onDismissRemoveMember() = Unit
 
         @Composable
         override fun Content(modifier: Modifier) {

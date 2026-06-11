@@ -10,6 +10,7 @@ import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookCreateBl
 import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookEditBloc
 import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookErrorBloc
 import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookMemberViewBloc
+import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookRemoveConfirmBloc
 import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookSavingBloc
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
@@ -60,4 +61,11 @@ fun EditRecipeBookCollaboratorsScreenshot() {
 @Composable
 fun EditRecipeBookMemberViewScreenshot() {
     ChefMateTheme { EditRecipeBookScreen(bloc = previewEditRecipeBookMemberViewBloc) }
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+fun EditRecipeBookRemoveConfirmScreenshot() {
+    ChefMateTheme { EditRecipeBookScreen(bloc = previewEditRecipeBookRemoveConfirmBloc) }
 }

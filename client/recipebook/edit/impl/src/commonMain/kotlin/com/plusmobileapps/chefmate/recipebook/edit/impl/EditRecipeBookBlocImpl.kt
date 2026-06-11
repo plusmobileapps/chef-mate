@@ -50,7 +50,11 @@ class EditRecipeBookBlocImpl(
 
     override fun onInviteClicked() = viewModel.onInviteClicked()
 
-    override fun onRemoveMember(memberId: String) = viewModel.onRemoveMember(memberId)
+    override fun onRemoveMemberClicked(memberId: String) = viewModel.onRemoveMemberClicked(memberId)
+
+    override fun onConfirmRemoveMember() = viewModel.onConfirmRemoveMember()
+
+    override fun onDismissRemoveMember() = viewModel.onDismissRemoveMember()
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -70,5 +74,6 @@ class EditRecipeBookBlocImpl(
             inviteRole = inviteRole,
             isInviting = isInviting,
             inviteError = inviteError,
+            removingMember = removingMember,
         )
 }

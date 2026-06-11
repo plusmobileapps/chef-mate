@@ -118,8 +118,19 @@ class EditRecipeBookViewModel(
         }
     }
 
-    fun onRemoveMember(memberId: String) {
+    fun onRemoveMemberClicked(memberId: String) {
+        val member = _state.value.members.firstOrNull { it.id == memberId } ?: return
+        _state.update { it.copy(removingMember = member) }
+    }
+
+    fun onDismissRemoveMember() {
+        _state.update { it.copy(removingMember = null) }
+    }
+
+    fun onConfirmRemoveMember() {
         val bookId = (props as? EditRecipeBookBloc.Props.Edit)?.bookId ?: return
+        val memberId = _state.value.removingMember?.id ?: return
+        _state.update { it.copy(removingMember = null) }
         scope.launch {
             withContext(ioContext) { collaborationRepository.removeMember(memberId) }
             loadMembers(bookId)
@@ -163,6 +174,7 @@ class EditRecipeBookViewModel(
         val inviteRole: RecipeBookRole = RecipeBookRole.EDITOR,
         val isInviting: Boolean = false,
         val inviteError: TextData? = null,
+        val removingMember: RecipeBookMember? = null,
     )
 
     @AssistedFactory

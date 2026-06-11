@@ -30,7 +30,11 @@ private fun editRecipeBookBloc(model: Model): EditRecipeBookBloc =
 
         override fun onInviteClicked() = Unit
 
-        override fun onRemoveMember(memberId: String) = Unit
+        override fun onRemoveMemberClicked(memberId: String) = Unit
+
+        override fun onConfirmRemoveMember() = Unit
+
+        override fun onDismissRemoveMember() = Unit
 
         @Composable
         override fun Content(modifier: Modifier) {
@@ -135,6 +139,43 @@ val previewEditRecipeBookMemberViewBloc: EditRecipeBookBloc =
                         role = RecipeBookRole.VIEWER,
                         accepted = false,
                     ),
+                ),
+        )
+    )
+
+/** Owner view with the remove-collaborator confirmation dialog showing. */
+val previewEditRecipeBookRemoveConfirmBloc: EditRecipeBookBloc =
+    editRecipeBookBloc(
+        Model(
+            title = Res.string.edit_recipe_book_edit_title.asTextData(),
+            name = "Weeknight Dinners",
+            isCreate = false,
+            canManageCollaborators = true,
+            members =
+                listOf(
+                    RecipeBookMember(
+                        id = null,
+                        email = "you@example.com",
+                        role = RecipeBookRole.OWNER,
+                        accepted = true,
+                        name = "Jordan Lee",
+                        isOwner = true,
+                    ),
+                    RecipeBookMember(
+                        id = "1",
+                        email = "alex@example.com",
+                        role = RecipeBookRole.EDITOR,
+                        accepted = true,
+                        name = "Alex Rivera",
+                    ),
+                ),
+            removingMember =
+                RecipeBookMember(
+                    id = "1",
+                    email = "alex@example.com",
+                    role = RecipeBookRole.EDITOR,
+                    accepted = true,
+                    name = "Alex Rivera",
                 ),
         )
     )

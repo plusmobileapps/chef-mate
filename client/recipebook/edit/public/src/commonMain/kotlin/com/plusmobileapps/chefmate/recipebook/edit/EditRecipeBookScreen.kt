@@ -40,17 +40,24 @@ import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_bo
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_invite_email_label
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_member_pending
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_name_label
+import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_remove_cancel
+import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_remove_confirm
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_remove_member
+import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_remove_message
+import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_remove_title
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_role_editor
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_role_owner
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_role_viewer
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_save
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookMember
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookRole
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusAvatar
 import com.plusmobileapps.chefmate.ui.components.PlusButton
 import com.plusmobileapps.chefmate.ui.components.PlusButtonVariant
+import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusTextField
@@ -95,6 +102,21 @@ fun EditRecipeBookScreen(bloc: EditRecipeBookBloc, modifier: Modifier = Modifier
             CollaboratorsSection(bloc = bloc, model = model)
         }
     }
+
+    model.removingMember?.let { member ->
+        PlusDialog(
+            title = Res.string.edit_recipe_book_remove_title.asTextData(),
+            message =
+                PhraseModel(
+                    Res.string.edit_recipe_book_remove_message,
+                    "name" to FixedString(member.name?.takeIf { it.isNotBlank() } ?: member.email),
+                ),
+            confirmButtonText = Res.string.edit_recipe_book_remove_confirm.asTextData(),
+            dismissButtonText = Res.string.edit_recipe_book_remove_cancel.asTextData(),
+            onConfirmClick = bloc::onConfirmRemoveMember,
+            onDismissRequest = bloc::onDismissRemoveMember,
+        )
+    }
 }
 
 @Composable
@@ -120,19 +142,19 @@ private fun CollaboratorsSection(bloc: EditRecipeBookBloc, model: EditRecipeBook
             title = Res.string.edit_recipe_book_group_owner,
             members = model.members.filter { it.isOwner || it.role == RecipeBookRole.OWNER },
             canManage = model.canManageCollaborators,
-            onRemove = bloc::onRemoveMember,
+            onRemove = bloc::onRemoveMemberClicked,
         )
         MemberGroup(
             title = Res.string.edit_recipe_book_group_editors,
             members = model.members.filter { !it.isOwner && it.role == RecipeBookRole.EDITOR },
             canManage = model.canManageCollaborators,
-            onRemove = bloc::onRemoveMember,
+            onRemove = bloc::onRemoveMemberClicked,
         )
         MemberGroup(
             title = Res.string.edit_recipe_book_group_viewers,
             members = model.members.filter { !it.isOwner && it.role == RecipeBookRole.VIEWER },
             canManage = model.canManageCollaborators,
-            onRemove = bloc::onRemoveMember,
+            onRemove = bloc::onRemoveMemberClicked,
         )
 
         // Invite controls are owner-only; collaborators just see the list above.
