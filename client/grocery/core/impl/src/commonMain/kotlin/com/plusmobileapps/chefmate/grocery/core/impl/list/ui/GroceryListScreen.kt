@@ -60,6 +60,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -161,7 +162,11 @@ import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
+fun GroceryListScreen(
+    bloc: GroceryListBloc,
+    modifier: Modifier = Modifier,
+    forceShowAutocompleteSuggestions: Boolean = false,
+) {
     val state by bloc.state.collectAsState()
     var showSortFilterSheet by remember { mutableStateOf(false) }
     val hasActiveFilter = state.filter != GroceryListBloc.GroceryFilter.ALL
@@ -336,6 +341,7 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
                         suggestions = state.autocompleteSuggestions,
                         onNameChange = bloc::onNewGroceryItemNameChange,
                         onAddClick = bloc::saveGroceryItem,
+                        forceShowSuggestions = forceShowAutocompleteSuggestions,
                     )
                 }
             },
@@ -778,58 +784,49 @@ private fun GroceryListInput(
     onNameChange: (String) -> Unit,
     onAddClick: () -> Unit,
     modifier: Modifier = Modifier,
+    forceShowSuggestions: Boolean = false,
 ) {
     val state = name.collectAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     val isIos = isIosPlatform()
     var isFocused by remember { mutableStateOf(false) }
-    val expanded = isFocused && suggestions.isNotEmpty()
+    val expanded = (isFocused || forceShowSuggestions) && suggestions.isNotEmpty()
 
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = {},
-            modifier = Modifier.weight(1f),
-        ) {
-            OutlinedTextField(
-                value = state.value,
-                onValueChange = onNameChange,
-                modifier =
-                    Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
-                        .fillMaxWidth()
-                        .onFocusChanged { isFocused = it.isFocused }
-                        .testTag(GroceryListTestTags.ITEM_INPUT),
-                singleLine = true,
-                placeholder = { Text(stringResource(Res.string.grocery_add_item_hint)) },
-                keyboardOptions =
-                    KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
-                        imeAction = ImeAction.Done,
-                    ),
-                keyboardActions =
-                    KeyboardActions(
-                        onDone = {
-                            if (state.value.isNotBlank()) onAddClick()
-                            keyboardController?.hide()
-                        }
-                    ),
-                trailingIcon = {
-                    IconButton(onClick = onAddClick, enabled = state.value.isNotBlank()) {
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = stringResource(Res.string.grocery_add_item),
+        if (forceShowSuggestions && suggestions.isNotEmpty()) {
+            Column(modifier = Modifier.weight(1f)) {
+                AutocompleteSuggestionRows(suggestions = suggestions, onNameChange = onNameChange)
+                GroceryItemNameTextField(
+                    value = state.value,
+                    onValueChange = onNameChange,
+                    onFocusChanged = { isFocused = it },
+                    onAddClick = onAddClick,
+                    keyboardController = keyboardController,
+                )
+            }
+        } else {
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = {},
+                modifier = Modifier.weight(1f),
+            ) {
+                GroceryItemNameTextField(
+                    value = state.value,
+                    onValueChange = onNameChange,
+                    onFocusChanged = { isFocused = it },
+                    onAddClick = onAddClick,
+                    keyboardController = keyboardController,
+                    modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
+                )
+                ExposedDropdownMenu(expanded = expanded, onDismissRequest = {}) {
+                    suggestions.forEach { suggestion ->
+                        DropdownMenuItem(
+                            text = { Text(suggestion) },
+                            onClick = { onNameChange(suggestion) },
+                            modifier = Modifier.testTag(GroceryListTestTags.ITEM_SUGGESTION),
                         )
                     }
-                },
-            )
-            ExposedDropdownMenu(expanded = expanded, onDismissRequest = {}) {
-                suggestions.forEach { suggestion ->
-                    DropdownMenuItem(
-                        text = { Text(suggestion) },
-                        onClick = { onNameChange(suggestion) },
-                        modifier = Modifier.testTag(GroceryListTestTags.ITEM_SUGGESTION),
-                    )
                 }
             }
         }
@@ -848,6 +845,69 @@ private fun GroceryListInput(
             }
         }
     }
+}
+
+@Composable
+private fun AutocompleteSuggestionRows(suggestions: List<String>, onNameChange: (String) -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraSmall,
+        shadowElevation = ChefMateTheme.dimens.paddingExtraSmall,
+        tonalElevation = ChefMateTheme.dimens.paddingExtraSmall,
+    ) {
+        Column {
+            suggestions.forEach { suggestion ->
+                ListItem(
+                    headlineContent = { Text(suggestion) },
+                    modifier =
+                        Modifier.clickable { onNameChange(suggestion) }
+                            .testTag(GroceryListTestTags.ITEM_SUGGESTION),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun GroceryItemNameTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    onFocusChanged: (Boolean) -> Unit,
+    onAddClick: () -> Unit,
+    keyboardController: androidx.compose.ui.platform.SoftwareKeyboardController?,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .onFocusChanged { onFocusChanged(it.isFocused) }
+                .testTag(GroceryListTestTags.ITEM_INPUT),
+        singleLine = true,
+        placeholder = { Text(stringResource(Res.string.grocery_add_item_hint)) },
+        keyboardOptions =
+            KeyboardOptions(
+                capitalization = KeyboardCapitalization.Sentences,
+                imeAction = ImeAction.Done,
+            ),
+        keyboardActions =
+            KeyboardActions(
+                onDone = {
+                    if (value.isNotBlank()) onAddClick()
+                    keyboardController?.hide()
+                }
+            ),
+        trailingIcon = {
+            IconButton(onClick = onAddClick, enabled = value.isNotBlank()) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = stringResource(Res.string.grocery_add_item),
+                )
+            }
+        },
+    )
 }
 
 @Composable
