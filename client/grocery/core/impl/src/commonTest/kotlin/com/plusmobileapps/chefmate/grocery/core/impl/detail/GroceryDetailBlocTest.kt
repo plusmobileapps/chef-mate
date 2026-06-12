@@ -20,16 +20,23 @@ import kotlin.test.Test
 import kotlinx.coroutines.test.runTest
 
 class GroceryDetailBlocTest {
+    val context = TestBlocContext.create()
     val groceryItem = GroceryItem(id = 1L, name = "Milk", isChecked = false)
     val repository: GroceryRepository = mock { everySuspend { getGrocery(1L) } returns groceryItem }
     val testConsumer = TestConsumer<GroceryDetailBloc.Output>()
 
     val bloc =
         GroceryDetailBlocImpl(
-            context = TestBlocContext.create(),
+            context = context,
             id = 1L,
             output = testConsumer,
-            repository = repository,
+            viewModelFactory = { id ->
+                GroceryDetailViewModel(
+                    id = id,
+                    mainContext = context.mainContext,
+                    repository = repository,
+                )
+            },
         )
 
     @Test

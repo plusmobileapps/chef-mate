@@ -10,7 +10,6 @@ import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc.Output
 import com.plusmobileapps.chefmate.grocery.core.impl.detail.ui.GroceryDetailSheetContent
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
-import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
@@ -27,14 +26,12 @@ class GroceryDetailBlocImpl(
     @Assisted context: BlocContext,
     @Assisted id: Long,
     @Assisted private val output: Consumer<Output>,
-    repository: GroceryRepository,
+    viewModelFactory: GroceryDetailViewModel.Factory,
 ) : GroceryDetailBloc, BlocContext by context {
 
     private val scope = createScope()
 
-    private val viewModel = instanceKeeper.getViewModel {
-        GroceryDetailViewModel(id = id, mainContext = mainContext, repository = repository)
-    }
+    private val viewModel = instanceKeeper.getViewModel { viewModelFactory.create(id) }
 
     override val models: StateFlow<GroceryDetailBloc.Model> =
         viewModel.state.mapState {

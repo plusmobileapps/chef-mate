@@ -1,9 +1,13 @@
 package com.plusmobileapps.chefmate.grocery.core.impl.detail
 
 import com.plusmobileapps.chefmate.ViewModel
+import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -13,9 +17,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
+@AssistedInject
 class GroceryDetailViewModel(
-    id: Long,
-    mainContext: CoroutineContext,
+    @Assisted id: Long,
+    @Main mainContext: CoroutineContext,
     private val repository: GroceryRepository,
 ) : ViewModel(mainContext) {
     private val _state = MutableStateFlow(State())
@@ -86,5 +91,10 @@ class GroceryDetailViewModel(
 
     sealed class Output {
         data object Finished : Output()
+    }
+
+    @AssistedFactory
+    fun interface Factory {
+        fun create(id: Long): GroceryDetailViewModel
     }
 }
