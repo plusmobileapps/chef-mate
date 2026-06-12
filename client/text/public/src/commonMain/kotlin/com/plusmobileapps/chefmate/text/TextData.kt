@@ -3,6 +3,11 @@ package com.plusmobileapps.chefmate.text
 import androidx.compose.runtime.Composable
 import kotlin.collections.component1
 import kotlin.collections.component2
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableMap
 import org.jetbrains.compose.resources.PluralStringResource
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.pluralStringResource
@@ -41,12 +46,19 @@ data class ResourceString(val resource: StringResource) : TextData() {
  * )
  * ```
  */
-data class PhraseModel(val resource: StringResource, val args: Map<String, TextData> = emptyMap()) :
-    TextData() {
+data class PhraseModel(
+    val resource: StringResource,
+    val args: ImmutableMap<String, TextData> = persistentMapOf(),
+) : TextData() {
+    constructor(
+        resource: StringResource,
+        args: Map<String, TextData>,
+    ) : this(resource = resource, args = args.toImmutableMap())
+
     constructor(
         resource: StringResource,
         vararg args: Pair<String, TextData>,
-    ) : this(resource = resource, args = args.toMap())
+    ) : this(resource = resource, args = args.toMap().toImmutableMap())
 
     @Composable
     override fun localized(): String {
@@ -72,10 +84,16 @@ data class PhraseModel(val resource: StringResource, val args: Map<String, TextD
  * `"a, b and c"`.
  */
 data class JoinedTextData(
-    val parts: List<TextData>,
+    val parts: ImmutableList<TextData>,
     val separator: String = ", ",
     val lastSeparator: String = " and ",
 ) : TextData() {
+    constructor(
+        parts: List<TextData>,
+        separator: String = ", ",
+        lastSeparator: String = " and ",
+    ) : this(parts = parts.toImmutableList(), separator = separator, lastSeparator = lastSeparator)
+
     @Composable
     override fun localized(): String {
         val resolved = parts.map { it.localized() }
@@ -108,13 +126,19 @@ data class JoinedTextData(
 data class PluralResourceString(
     val resource: PluralStringResource,
     val quantity: Int,
-    val args: Map<String, TextData> = emptyMap(),
+    val args: ImmutableMap<String, TextData> = persistentMapOf(),
 ) : TextData() {
     constructor(
         resource: PluralStringResource,
         quantity: Int,
+        args: Map<String, TextData>,
+    ) : this(resource = resource, quantity = quantity, args = args.toImmutableMap())
+
+    constructor(
+        resource: PluralStringResource,
+        quantity: Int,
         vararg args: Pair<String, TextData>,
-    ) : this(resource = resource, quantity = quantity, args = args.toMap())
+    ) : this(resource = resource, quantity = quantity, args = args.toMap().toImmutableMap())
 
     @Composable
     override fun localized(): String {
