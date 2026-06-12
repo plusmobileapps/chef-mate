@@ -35,6 +35,7 @@ class GroceryRepositoryImplTest {
         GroceryRepositoryImpl(
             queries = db.groceryQueries,
             listQueries = db.groceryListQueries,
+            memberQueries = db.groceryListMemberQueries,
             ioContext = testDispatcher,
             dateTimeUtil = dateTimeUtil,
             remoteDataSource = fakeRemote,
@@ -467,7 +468,11 @@ class GroceryRepositoryImplTest {
             fakeRemote.remoteItems[remoteListId] =
                 mutableListOf(
                     RemoteGroceryItem(id = "remote-apple", listId = remoteListId, name = "Apples"),
-                    RemoteGroceryItem(id = "remote-banana", listId = remoteListId, name = "Bananas"),
+                    RemoteGroceryItem(
+                        id = "remote-banana",
+                        listId = remoteListId,
+                        name = "Bananas",
+                    ),
                 )
 
             repository.deleteAllGroceries(listId)
