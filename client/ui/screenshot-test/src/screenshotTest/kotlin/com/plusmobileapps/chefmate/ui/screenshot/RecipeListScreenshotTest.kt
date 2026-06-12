@@ -10,10 +10,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBloc
+import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocAllRecipes
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocCooking
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocPendingInvite
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocScanError
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocScanning
+import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocSearchEmpty
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocSelectionMode
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocSelectionModeEmpty
 import com.plusmobileapps.chefmate.ui.Content
@@ -45,6 +47,29 @@ fun RecipeListPhonePortraitLightScreenshot() {
 @Composable
 fun RecipeListPhonePortraitDarkScreenshot() {
     RecipeListScreenshot(bloc = previewRecipeListBloc, darkTheme = true)
+}
+
+// ── "All recipes" cross-book selector + search-empty broaden action ────────
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+fun RecipeListAllRecipesLightScreenshot() {
+    RecipeListScreenshot(bloc = previewRecipeListBlocAllRecipes)
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+fun RecipeListSearchEmptyLightScreenshot() {
+    RecipeListScreenshot(bloc = previewRecipeListBlocSearchEmpty)
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun RecipeListSearchEmptyDarkScreenshot() {
+    RecipeListScreenshot(bloc = previewRecipeListBlocSearchEmpty, darkTheme = true)
 }
 
 // ── Cooking-session FAB stack — regression coverage for #150 ───────────────

@@ -70,6 +70,7 @@ class RecipeListBlocImpl(
                 isScanFromPhotoEnabled = it.isScanFromPhotoEnabled,
                 recipeBooks = it.recipeBooks,
                 activeBook = it.activeBook,
+                isAllRecipesSelected = it.isAllRecipesSelected,
                 isBookPickerOpen = it.isBookPickerOpen,
                 pendingInvites = it.pendingInvites,
             )
@@ -197,6 +198,10 @@ class RecipeListBlocImpl(
 
     override fun onBookSelected(bookId: Long) {
         viewModel.selectBook(bookId)
+    }
+
+    override fun onAllRecipesSelected() {
+        viewModel.selectAllRecipes()
     }
 
     override fun onCreateBookClicked() {

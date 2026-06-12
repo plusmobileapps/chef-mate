@@ -59,7 +59,12 @@ class RecipeBookRepositoryImpl(
             val defaultId = ensureDefaultBookId()
             val stored = settings.getLong(KEY_ACTIVE_BOOK, NO_ACTIVE_BOOK)
             _activeBookId.value =
-                if (stored != NO_ACTIVE_BOOK && bookExists(stored)) stored else defaultId
+                when {
+                    // The user explicitly picked the cross-book "All recipes" view.
+                    stored == ALL_RECIPES_SELECTED -> null
+                    stored != NO_ACTIVE_BOOK && bookExists(stored) -> stored
+                    else -> defaultId
+                }
         }
         scope.launch {
             authRepository.state.collect { state ->
@@ -84,6 +89,11 @@ class RecipeBookRepositoryImpl(
     override suspend fun setActiveBook(id: Long) {
         settings.putLong(KEY_ACTIVE_BOOK, id)
         _activeBookId.value = id
+    }
+
+    override suspend fun selectAllRecipes() {
+        settings.putLong(KEY_ACTIVE_BOOK, ALL_RECIPES_SELECTED)
+        _activeBookId.value = null
     }
 
     override suspend fun createBook(name: String): RecipeBook {
@@ -363,6 +373,8 @@ class RecipeBookRepositoryImpl(
         const val TAG = "RecipeBookRepositoryImpl"
         const val KEY_ACTIVE_BOOK = "recipe_active_book"
         const val NO_ACTIVE_BOOK = -1L
+        // Sentinel persisted when the user picks the cross-book "All recipes" view.
+        const val ALL_RECIPES_SELECTED = -2L
         const val DEFAULT_BOOK_NAME = "My Recipes"
     }
 }

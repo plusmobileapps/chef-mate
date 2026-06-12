@@ -147,6 +147,22 @@ class RecipeBookRepositoryImplTest {
         }
 
     @Test
+    fun selectAllRecipes_clears_active_book_and_persists_across_reload() =
+        runTest(testDispatcher) {
+            val repo = repository()
+            val created = repo.createBook("Holiday Baking")
+            repo.setActiveBook(created.id)
+
+            repo.selectAllRecipes()
+
+            // "All recipes" is modelled as a null active id spanning every book.
+            repo.activeBookId.value shouldBe null
+            // A fresh repository reading the same settings restores the "All recipes" selection
+            // rather than falling back to the default book.
+            repository().activeBookId.value shouldBe null
+        }
+
+    @Test
     fun pull_skips_books_with_only_a_pending_invite() =
         runTest(testDispatcher) {
             fakeAuth.setAuthenticated()

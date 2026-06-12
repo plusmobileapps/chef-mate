@@ -88,6 +88,12 @@ interface RecipeListBloc : BlocScreen {
 
     fun onBookSelected(bookId: Long)
 
+    /**
+     * Selects the cross-book "All recipes" view so the list and search span every recipe book. Also
+     * used by the search-empty state's broaden action.
+     */
+    fun onAllRecipesSelected()
+
     fun onCreateBookClicked()
 
     fun onEditBookClicked(bookId: Long)
@@ -131,6 +137,8 @@ interface RecipeListBloc : BlocScreen {
         val isScanFromPhotoEnabled: Boolean = false,
         val recipeBooks: List<RecipeBook> = emptyList(),
         val activeBook: RecipeBook? = null,
+        /** True when the cross-book "All recipes" view is active (no single book selected). */
+        val isAllRecipesSelected: Boolean = false,
         val isBookPickerOpen: Boolean = false,
         /** Pending recipe-book invites addressed to the current user (the list banner). */
         val pendingInvites: List<RecipeBookInvite> = emptyList(),
