@@ -20,6 +20,7 @@ import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeImageExtractor
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.recipebook.data.testing.FakeRecipeBookCollaborationRepository
 import com.plusmobileapps.chefmate.recipebook.data.testing.FakeRecipeBookRepository
 import com.russhwolf.settings.Settings
@@ -212,6 +213,7 @@ class RecipeListViewModelTest {
         starRating: Int? = null,
         totalTime: Int? = null,
         category: BuiltinCategory? = null,
+        recipeBookIds: Set<Long> = emptySet(),
         createdAt: Instant = Instant.fromEpochSeconds(id * 1000),
     ) =
         Recipe(
@@ -229,6 +231,7 @@ class RecipeListViewModelTest {
             calories = null,
             starRating = starRating,
             isFavorite = isFavorite,
+            recipeBookIds = recipeBookIds,
             categories =
                 category?.let {
                     setOf(Category(id = it.ordinal + 1L, name = it.id, builtinId = it.id))
@@ -431,6 +434,64 @@ class RecipeListViewModelTest {
         viewModel.state.value.displayRecipes shouldBe emptyList()
         viewModel.state.value.isSearchActive shouldBe true
     }
+
+    // region Recipe-book scope / "All recipes"
+
+    /** Books id 1 & 3 from the sample set, with one recipe filed under each. */
+    private fun twoBookViewModel(): RecipeListViewModel {
+        recipes.value =
+            listOf(
+                recipe(1, title = "Carbonara", recipeBookIds = setOf(1L)),
+                recipe(2, title = "Stollen", recipeBookIds = setOf(3L)),
+            )
+        return RecipeListViewModel(
+            mainContext = UnconfinedTestDispatcher(),
+            repository = repository,
+            recipeBookRepository = FakeRecipeBookRepository(MutableStateFlow(RecipeBook.Samples)),
+            collaborationRepository = FakeRecipeBookCollaborationRepository(),
+            categoryRepository = categoryRepository,
+            cookingSessionRepository = cookingSessionRepository,
+            imageExtractor = imageExtractor,
+            pendingPhotoStore = pendingPhotoStore,
+            featureFlags = featureFlags,
+            settings = settings,
+        )
+    }
+
+    @Test
+    fun When_a_book_is_active_Then_only_its_recipes_are_shown() {
+        val vm = twoBookViewModel()
+        // Active book defaults to the first sample book (id 1).
+        vm.state.value.isAllRecipesSelected shouldBe false
+        vm.state.value.activeBook?.id shouldBe 1L
+        vm.state.value.displayRecipes.map { it.id } shouldBe listOf(1L)
+    }
+
+    @Test
+    fun When_select_all_recipes_Then_every_book_is_spanned_and_flag_set() {
+        val vm = twoBookViewModel()
+
+        vm.selectAllRecipes()
+
+        vm.state.value.isAllRecipesSelected shouldBe true
+        vm.state.value.activeBook shouldBe null
+        vm.state.value.displayRecipes.map { it.id }.toSet() shouldBe setOf(1L, 2L)
+    }
+
+    @Test
+    fun When_all_recipes_selected_Then_search_spans_every_book() {
+        val vm = twoBookViewModel()
+        // Scoped to book 1, a search for the book-3 recipe finds nothing.
+        vm.updateSearchQuery("stollen")
+        vm.state.value.displayRecipes shouldBe emptyList()
+
+        vm.selectAllRecipes()
+
+        // The query is retained and now matches across all books.
+        vm.state.value.displayRecipes.map { it.id } shouldBe listOf(2L)
+    }
+
+    // endregion
 
     @Test
     fun When_search_is_case_insensitive_Then_matches_regardless_of_case() {

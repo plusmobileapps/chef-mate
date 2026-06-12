@@ -35,6 +35,10 @@ class FakeRecipeBookRepository(
         _activeBookId.value = id
     }
 
+    override suspend fun selectAllRecipes() {
+        _activeBookId.value = null
+    }
+
     override suspend fun createBook(name: String): RecipeBook {
         val book =
             RecipeBook(

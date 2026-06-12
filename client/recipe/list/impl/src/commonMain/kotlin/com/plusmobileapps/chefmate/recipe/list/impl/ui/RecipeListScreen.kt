@@ -101,6 +101,7 @@ import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.list.public.generated.resources.Res
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_add_recipe
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_apply
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_all_recipes
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_create
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_edit
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_picker_title
@@ -150,8 +151,10 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_scan_f
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_scanning_message
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_scanning_title
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_search
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_all_recipes
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_clear
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_empty
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_empty_book_hint
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_placeholder
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_selection_count
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_selection_deselect_all
@@ -218,6 +221,11 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
     }
 
     PlusResponsiveContainer { windowSizeClass ->
+        // The selector stands in for the title once any book exists — it names the active book, or
+        // "All recipes" when the cross-book view is active.
+        val showBookSelector = state.recipeBooks.isNotEmpty()
+        val bookSelectorLabel =
+            state.activeBook?.name ?: stringResource(Res.string.recipe_list_book_all_recipes)
         val headerData =
             if (state.isSelectionMode) {
                 PlusHeaderData.Parent(
@@ -267,17 +275,16 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                 )
             } else {
                 PlusHeaderData.Parent(
-                    // The book selector stands in for the title when a book is active, so the
-                    // static
+                    // The book selector stands in for the title when any book exists, so the static
                     // "Recipes" title is suppressed to avoid a cramped double-title in the app bar.
                     title =
-                        if (state.activeBook != null) FixedString("")
+                        if (showBookSelector) FixedString("")
                         else Res.string.recipe_list_title.asTextData(),
                     leading =
-                        state.activeBook?.let { activeBook ->
+                        if (showBookSelector) {
                             {
                                 BookSelector(
-                                    activeBookName = activeBook.name,
+                                    activeBookName = bookSelectorLabel,
                                     isPickerOpen = state.isBookPickerOpen,
                                     onClick = bloc::onBookSelectorClicked,
                                 ) {
@@ -288,14 +295,18 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                                             expanded = state.isBookPickerOpen,
                                             books = state.recipeBooks,
                                             activeBookId = state.activeBook?.id,
+                                            isAllRecipesSelected = state.isAllRecipesSelected,
                                             onDismiss = bloc::onBookPickerDismissed,
                                             onBookSelected = bloc::onBookSelected,
+                                            onAllRecipesSelected = bloc::onAllRecipesSelected,
                                             onEditBook = bloc::onEditBookClicked,
                                             onCreateBook = bloc::onCreateBookClicked,
                                         )
                                     }
                                 }
                             }
+                        } else {
+                            null
                         },
                     trailingAccessory =
                         PlusHeaderData.TrailingAccessory.Custom {
@@ -401,7 +412,11 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                                 )
                             }
                             state.recipes.isEmpty() && state.isSearchActive -> {
-                                SearchEmptyState(modifier = Modifier.fillMaxSize())
+                                SearchEmptyState(
+                                    canSearchAllRecipes = !state.isAllRecipesSelected,
+                                    onSearchAllRecipes = bloc::onAllRecipesSelected,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
                             }
                             state.recipes.isEmpty() && state.totalActiveFilterCount > 0 -> {
                                 FilterEmptyState(
@@ -488,8 +503,10 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                 BookPickerSheet(
                     books = state.recipeBooks,
                     activeBookId = state.activeBook?.id,
+                    isAllRecipesSelected = state.isAllRecipesSelected,
                     onDismiss = bloc::onBookPickerDismissed,
                     onBookSelected = bloc::onBookSelected,
+                    onAllRecipesSelected = bloc::onAllRecipesSelected,
                     onEditBook = bloc::onEditBookClicked,
                     onCreateBook = bloc::onCreateBookClicked,
                 )
@@ -770,12 +787,25 @@ private fun BookPickerDropdown(
     expanded: Boolean,
     books: List<com.plusmobileapps.chefmate.recipebook.data.RecipeBook>,
     activeBookId: Long?,
+    isAllRecipesSelected: Boolean,
     onDismiss: () -> Unit,
     onBookSelected: (Long) -> Unit,
+    onAllRecipesSelected: () -> Unit,
     onEditBook: (Long) -> Unit,
     onCreateBook: () -> Unit,
 ) {
     DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+        DropdownMenuItem(
+            text = { Text(stringResource(Res.string.recipe_list_book_all_recipes)) },
+            onClick = onAllRecipesSelected,
+            leadingIcon = {
+                if (isAllRecipesSelected) {
+                    Icon(Icons.Default.Check, contentDescription = null)
+                } else {
+                    Spacer(modifier = Modifier.size(24.dp))
+                }
+            },
+        )
         books.forEach { book ->
             DropdownMenuItem(
                 text = { Text(book.name) },
@@ -810,8 +840,10 @@ private fun BookPickerDropdown(
 private fun BookPickerSheet(
     books: List<com.plusmobileapps.chefmate.recipebook.data.RecipeBook>,
     activeBookId: Long?,
+    isAllRecipesSelected: Boolean,
     onDismiss: () -> Unit,
     onBookSelected: (Long) -> Unit,
+    onAllRecipesSelected: () -> Unit,
     onEditBook: (Long) -> Unit,
     onCreateBook: () -> Unit,
 ) {
@@ -823,6 +855,27 @@ private fun BookPickerSheet(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(ChefMateTheme.dimens.paddingNormal),
             )
+            Row(
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .clickable { onAllRecipesSelected() }
+                        .padding(
+                            horizontal = ChefMateTheme.dimens.paddingNormal,
+                            vertical = ChefMateTheme.dimens.paddingSmall,
+                        ),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector =
+                        if (isAllRecipesSelected) Icons.Default.Check else Icons.Outlined.Circle,
+                    contentDescription = null,
+                )
+                Spacer(modifier = Modifier.width(ChefMateTheme.dimens.paddingNormal))
+                Text(
+                    text = stringResource(Res.string.recipe_list_book_all_recipes),
+                    modifier = Modifier.weight(1f),
+                )
+            }
             books.forEach { book ->
                 Row(
                     modifier =
@@ -1115,9 +1168,13 @@ private fun SearchBar(
 }
 
 @Composable
-private fun SearchEmptyState(modifier: Modifier = Modifier) {
+private fun SearchEmptyState(
+    canSearchAllRecipes: Boolean,
+    onSearchAllRecipes: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -1133,6 +1190,26 @@ private fun SearchEmptyState(modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 16.dp),
         )
+        // When the search was scoped to a single book, offer to broaden it across every book in
+        // case the match lives elsewhere.
+        if (canSearchAllRecipes) {
+            Text(
+                text = stringResource(Res.string.recipe_list_search_empty_book_hint),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+            Button(onClick = onSearchAllRecipes, modifier = Modifier.padding(top = 16.dp)) {
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(Modifier.size(8.dp))
+                Text(stringResource(Res.string.recipe_list_search_all_recipes))
+            }
+        }
     }
 }
 

@@ -171,7 +171,10 @@ class RecipeListViewModel(
                 _state.update { state ->
                     state.copy(
                         recipeBooks = books,
-                        activeBook = books.firstOrNull { it.id == activeId } ?: books.firstOrNull(),
+                        // A null active id is the explicit "All recipes" selection — span every
+                        // book rather than falling back to the first one.
+                        activeBook = books.firstOrNull { it.id == activeId },
+                        isAllRecipesSelected = activeId == null,
                     )
                 }
             }
@@ -353,6 +356,11 @@ class RecipeListViewModel(
         scope.launch { recipeBookRepository.setActiveBook(bookId) }
     }
 
+    fun selectAllRecipes() {
+        _state.update { it.copy(isBookPickerOpen = false) }
+        scope.launch { recipeBookRepository.selectAllRecipes() }
+    }
+
     fun enterSelectionMode() {
         _state.update { it.copy(isSelectionMode = true, selectedRecipeIds = emptySet()) }
     }
@@ -405,6 +413,8 @@ class RecipeListViewModel(
         val isScanFromPhotoEnabled: Boolean = false,
         val recipeBooks: List<RecipeBook> = emptyList(),
         val activeBook: RecipeBook? = null,
+        /** True when the cross-book "All recipes" view is active (no single book selected). */
+        val isAllRecipesSelected: Boolean = false,
         val isBookPickerOpen: Boolean = false,
         val pendingInvites: List<RecipeBookInvite> = emptyList(),
     ) {
