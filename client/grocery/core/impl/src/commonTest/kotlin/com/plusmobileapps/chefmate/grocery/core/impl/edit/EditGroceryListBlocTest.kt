@@ -17,10 +17,14 @@ import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
 import dev.mokkery.MockMode
 import dev.mokkery.answering.returns
+import dev.mokkery.answering.throws
 import dev.mokkery.every
+import dev.mokkery.everySuspend
+import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import dev.mokkery.verifySuspend
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlin.test.Test
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -115,10 +119,33 @@ class EditGroceryListBlocTest {
     fun When_invite_Then_repository_invited_with_selected_role() = runTest {
         val bloc = bloc()
         bloc.state.test { awaitItem() }
-        bloc.onInviteCollaborator("friend@example.com", ListRole.VIEWER)
+        bloc.onInviteEmailChanged("friend@example.com")
+        bloc.onInviteRoleChanged(ListRole.VIEWER)
+        bloc.onInviteClicked()
         verifySuspend {
             repository.inviteCollaborator(LIST_ID, "friend@example.com", ListRole.VIEWER)
         }
+    }
+
+    @Test
+    fun When_invite_email_is_invalid_Then_error_shown() = runTest {
+        val bloc = bloc()
+        bloc.state.test { awaitItem() }
+        bloc.onInviteEmailChanged("not-an-email")
+        bloc.onInviteClicked()
+        bloc.state.value.inviteError shouldNotBe null
+    }
+
+    @Test
+    fun When_invite_fails_Then_error_shown_and_not_crashed() = runTest {
+        everySuspend { repository.inviteCollaborator(any(), any(), any()) } throws
+            RuntimeException("duplicate key")
+        val bloc = bloc()
+        bloc.state.test { awaitItem() }
+        bloc.onInviteEmailChanged("friend@example.com")
+        bloc.onInviteClicked()
+        bloc.state.value.inviteError shouldNotBe null
+        bloc.state.value.isInviting shouldBe false
     }
 
     @Test

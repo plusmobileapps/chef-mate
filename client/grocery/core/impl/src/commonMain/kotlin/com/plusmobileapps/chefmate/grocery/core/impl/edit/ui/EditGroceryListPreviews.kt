@@ -56,7 +56,11 @@ private fun fakeEditBloc(model: EditGroceryListBloc.Model): EditGroceryListBloc 
 
         override fun onDeleteDismissed() = Unit
 
-        override fun onInviteCollaborator(email: String, role: ListRole) = Unit
+        override fun onInviteEmailChanged(email: String) = Unit
+
+        override fun onInviteRoleChanged(role: ListRole) = Unit
+
+        override fun onInviteClicked() = Unit
 
         override fun onRemoveCollaboratorClicked(collaborator: ListCollaborator) = Unit
 

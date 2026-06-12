@@ -1,11 +1,15 @@
 package com.plusmobileapps.chefmate.grocery.core.impl.edit
 
+import chefmate.client.grocery.core.public.generated.resources.Res
+import chefmate.client.grocery.core.public.generated.resources.grocery_invite_error
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.grocery.data.ListCollaborator
 import com.plusmobileapps.chefmate.grocery.data.ListRole
+import com.plusmobileapps.chefmate.text.ResourceString
+import com.plusmobileapps.chefmate.text.TextData
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -74,7 +78,7 @@ class EditGroceryListViewModel(
     fun onRenameSubmitted() {
         val name = _state.value.name.trim()
         if (name.isBlank()) return
-        scope.launch { repository.renameGroceryList(listId, name) }
+        scope.launch { runCatching { repository.renameGroceryList(listId, name) } }
     }
 
     fun onDeleteClicked() {
@@ -88,15 +92,44 @@ class EditGroceryListViewModel(
     fun onDeleteConfirmed() {
         _state.update { it.copy(showDeleteConfirm = false) }
         scope.launch {
-            repository.deleteGroceryList(listId)
-            output.send(Output.Finished)
+            // Only navigate away once the delete actually succeeds; a backend failure shouldn't
+            // crash the app or leave the user on a screen for a list that's already gone.
+            val deleted = runCatching { repository.deleteGroceryList(listId) }.isSuccess
+            if (deleted) output.send(Output.Finished)
         }
     }
 
-    fun onInviteCollaborator(email: String, role: ListRole) {
-        val trimmed = email.trim()
-        if (trimmed.isBlank()) return
-        scope.launch { repository.inviteCollaborator(listId, trimmed, role) }
+    fun onInviteEmailChanged(email: String) {
+        _state.update { it.copy(inviteEmail = email, inviteError = null) }
+    }
+
+    fun onInviteRoleChanged(role: ListRole) {
+        _state.update { it.copy(inviteRole = role) }
+    }
+
+    fun onInviteClicked() {
+        val current = _state.value
+        if (current.isInviting) return
+        // Normalise so the address always matches the invitee's (lowercased) account email used by
+        // the RLS / pending-invite trigger comparisons.
+        val email = current.inviteEmail.trim().lowercase()
+        if (!email.contains("@") || email.startsWith("@") || email.endsWith("@")) {
+            _state.update { it.copy(inviteError = INVITE_ERROR) }
+            return
+        }
+        _state.update { it.copy(isInviting = true, inviteError = null) }
+        scope.launch {
+            val result = runCatching {
+                repository.inviteCollaborator(listId, email, current.inviteRole)
+            }
+            _state.update {
+                if (result.isSuccess) {
+                    it.copy(isInviting = false, inviteEmail = "", inviteError = null)
+                } else {
+                    it.copy(isInviting = false, inviteError = INVITE_ERROR)
+                }
+            }
+        }
     }
 
     fun onRemoveCollaboratorClicked(collaborator: ListCollaborator) {
@@ -110,7 +143,7 @@ class EditGroceryListViewModel(
     fun onConfirmRemoveCollaborator() {
         val collaborator = _state.value.collaboratorPendingRemoval ?: return
         _state.update { it.copy(collaboratorPendingRemoval = null) }
-        scope.launch { repository.removeCollaborator(listId, collaborator.id) }
+        scope.launch { runCatching { repository.removeCollaborator(listId, collaborator.id) } }
     }
 
     data class State(
@@ -120,9 +153,17 @@ class EditGroceryListViewModel(
         val collaborators: List<ListCollaborator> = emptyList(),
         val showDeleteConfirm: Boolean = false,
         val collaboratorPendingRemoval: ListCollaborator? = null,
+        val inviteEmail: String = "",
+        val inviteRole: ListRole = ListRole.EDITOR,
+        val isInviting: Boolean = false,
+        val inviteError: TextData? = null,
     )
 
     sealed class Output {
         data object Finished : Output()
+    }
+
+    private companion object {
+        val INVITE_ERROR: TextData = ResourceString(Res.string.grocery_invite_error)
     }
 }

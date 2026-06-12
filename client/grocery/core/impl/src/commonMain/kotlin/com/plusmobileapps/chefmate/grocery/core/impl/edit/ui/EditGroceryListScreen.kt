@@ -19,9 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -208,7 +205,7 @@ private fun CollaborationSection(state: EditGroceryListBloc.Model, bloc: EditGro
 
         // Invite controls are owner-only; collaborators just see the list above.
         if (state.isOwner) {
-            InviteRow(onInvite = bloc::onInviteCollaborator)
+            InviteRow(state = state, bloc = bloc)
         }
     }
 }
@@ -284,26 +281,25 @@ private fun MemberRow(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun InviteRow(onInvite: (String, ListRole) -> Unit) {
+private fun InviteRow(state: EditGroceryListBloc.Model, bloc: EditGroceryListBloc) {
     val dimens = ChefMateTheme.dimens
-    var inviteEmail by remember { mutableStateOf("") }
-    var inviteRole by remember { mutableStateOf(ListRole.EDITOR) }
     Column(
         modifier = Modifier.fillMaxWidth().padding(top = dimens.paddingSmall),
         verticalArrangement = Arrangement.spacedBy(dimens.paddingSmall),
     ) {
         PlusTextField(
-            value = inviteEmail,
-            onValueChange = { inviteEmail = it },
+            value = state.inviteEmail,
+            onValueChange = bloc::onInviteEmailChanged,
             label = { Text(stringResource(Res.string.grocery_invite_hint)) },
             singleLine = true,
+            error = state.inviteError,
             modifier = Modifier.fillMaxWidth().testTag(EditGroceryListTestTags.INVITE_FIELD),
         )
         FlowRow(horizontalArrangement = Arrangement.spacedBy(dimens.paddingSmall)) {
             listOf(ListRole.EDITOR, ListRole.VIEWER).forEach { role ->
                 FilterChip(
-                    selected = inviteRole == role,
-                    onClick = { inviteRole = role },
+                    selected = state.inviteRole == role,
+                    onClick = { bloc.onInviteRoleChanged(role) },
                     label = { Text(role.label()) },
                 )
             }
@@ -311,13 +307,9 @@ private fun InviteRow(onInvite: (String, ListRole) -> Unit) {
         PlusButton(
             text = Res.string.grocery_invite.asTextData(),
             variant = PlusButtonVariant.SECONDARY,
-            enabled = inviteEmail.isNotBlank(),
-            onClick = {
-                if (inviteEmail.isNotBlank()) {
-                    onInvite(inviteEmail, inviteRole)
-                    inviteEmail = ""
-                }
-            },
+            isLoading = state.isInviting,
+            enabled = state.inviteEmail.isNotBlank() && !state.isInviting,
+            onClick = bloc::onInviteClicked,
             modifier = Modifier.fillMaxWidth().testTag(EditGroceryListTestTags.INVITE_BUTTON),
         )
     }

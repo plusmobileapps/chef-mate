@@ -53,6 +53,10 @@ class EditGroceryListBlocImpl(
                 collaborators = it.collaborators,
                 showDeleteConfirm = it.showDeleteConfirm,
                 collaboratorPendingRemoval = it.collaboratorPendingRemoval,
+                inviteEmail = it.inviteEmail,
+                inviteRole = it.inviteRole,
+                isInviting = it.isInviting,
+                inviteError = it.inviteError,
             )
         }
 
@@ -86,8 +90,16 @@ class EditGroceryListBlocImpl(
         viewModel.onDeleteDismissed()
     }
 
-    override fun onInviteCollaborator(email: String, role: ListRole) {
-        viewModel.onInviteCollaborator(email, role)
+    override fun onInviteEmailChanged(email: String) {
+        viewModel.onInviteEmailChanged(email)
+    }
+
+    override fun onInviteRoleChanged(role: ListRole) {
+        viewModel.onInviteRoleChanged(role)
+    }
+
+    override fun onInviteClicked() {
+        viewModel.onInviteClicked()
     }
 
     override fun onRemoveCollaboratorClicked(collaborator: ListCollaborator) {

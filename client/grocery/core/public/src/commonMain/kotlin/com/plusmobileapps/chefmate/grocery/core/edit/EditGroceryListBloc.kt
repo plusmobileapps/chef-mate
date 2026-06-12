@@ -5,6 +5,7 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.grocery.data.ListCollaborator
 import com.plusmobileapps.chefmate.grocery.data.ListRole
+import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
 
@@ -21,7 +22,11 @@ interface EditGroceryListBloc : BackClickBloc, BlocScreen {
 
     fun onDeleteDismissed()
 
-    fun onInviteCollaborator(email: String, role: ListRole)
+    fun onInviteEmailChanged(email: String)
+
+    fun onInviteRoleChanged(role: ListRole)
+
+    fun onInviteClicked()
 
     /** Asks for confirmation before removing; shows the confirm dialog. */
     fun onRemoveCollaboratorClicked(collaborator: ListCollaborator)
@@ -50,6 +55,10 @@ interface EditGroceryListBloc : BackClickBloc, BlocScreen {
         val collaborators: List<ListCollaborator> = emptyList(),
         val showDeleteConfirm: Boolean = false,
         val collaboratorPendingRemoval: ListCollaborator? = null,
+        val inviteEmail: String = "",
+        val inviteRole: ListRole = ListRole.EDITOR,
+        val isInviting: Boolean = false,
+        val inviteError: TextData? = null,
     )
 
     sealed class Output {
