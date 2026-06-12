@@ -35,7 +35,27 @@ object IngredientParser {
         return ParsedIngredient(name = name, quantity = quantity, category = category)
     }
 
+    fun suggestedNamesFor(
+        query: String,
+        maxSuggestions: Int = DEFAULT_MAX_SUGGESTIONS,
+    ): List<String> {
+        val normalizedQuery = parse(query).name.trim().lowercase()
+        if (normalizedQuery.isBlank()) return emptyList()
+
+        return CATEGORY_MAP.asSequence()
+            .map { it.first }
+            .distinct()
+            .filter { it.lowercase().startsWith(normalizedQuery) }
+            .take(maxSuggestions)
+            .map { it.toSuggestionDisplayName() }
+            .toList()
+    }
+
     private val PARENTHETICAL_PATTERN = Regex("""\s*\([^)]*\)""")
+
+    private fun String.toSuggestionDisplayName(): String =
+        SUGGESTION_DISPLAY_NAMES[this]
+            ?: replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
 
     private fun categorize(name: String): GroceryCategory {
         val lower = name.lowercase().replace(PARENTHETICAL_PATTERN, "").trim()
@@ -587,4 +607,16 @@ object IngredientParser {
                 "zaatar" to GroceryCategory.SPICES,
             )
             .sortedByDescending { it.first.length }
+
+    private const val DEFAULT_MAX_SUGGESTIONS = 6
+
+    private val SUGGESTION_DISPLAY_NAMES =
+        mapOf(
+            "strawberr" to "Strawberries",
+            "blueberr" to "Blueberries",
+            "raspberr" to "Raspberries",
+            "blackberr" to "Blackberries",
+            "cranberr" to "Cranberries",
+            "cherr" to "Cherries",
+        )
 }

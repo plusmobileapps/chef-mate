@@ -46,7 +46,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -330,6 +333,7 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
                 if (state.currentUserRole != ListRole.VIEWER) {
                     GroceryListInput(
                         name = bloc.newGroceryItemName,
+                        suggestions = state.autocompleteSuggestions,
                         onNameChange = bloc::onNewGroceryItemNameChange,
                         onAddClick = bloc::saveGroceryItem,
                     )
@@ -766,9 +770,11 @@ private fun DeleteItemsDialog(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun GroceryListInput(
     name: StateFlow<String>,
+    suggestions: List<String>,
     onNameChange: (String) -> Unit,
     onAddClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -778,35 +784,55 @@ private fun GroceryListInput(
     val focusManager = LocalFocusManager.current
     val isIos = isIosPlatform()
     var isFocused by remember { mutableStateOf(false) }
+    val expanded = isFocused && suggestions.isNotEmpty()
 
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        OutlinedTextField(
-            value = state.value,
-            onValueChange = onNameChange,
-            modifier = Modifier.weight(1f).onFocusChanged { isFocused = it.isFocused },
-            singleLine = true,
-            placeholder = { Text(stringResource(Res.string.grocery_add_item_hint)) },
-            keyboardOptions =
-                KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Sentences,
-                    imeAction = ImeAction.Done,
-                ),
-            keyboardActions =
-                KeyboardActions(
-                    onDone = {
-                        if (state.value.isNotBlank()) onAddClick()
-                        keyboardController?.hide()
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = {},
+            modifier = Modifier.weight(1f),
+        ) {
+            OutlinedTextField(
+                value = state.value,
+                onValueChange = onNameChange,
+                modifier =
+                    Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
+                        .fillMaxWidth()
+                        .onFocusChanged { isFocused = it.isFocused }
+                        .testTag(GroceryListTestTags.ITEM_INPUT),
+                singleLine = true,
+                placeholder = { Text(stringResource(Res.string.grocery_add_item_hint)) },
+                keyboardOptions =
+                    KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences,
+                        imeAction = ImeAction.Done,
+                    ),
+                keyboardActions =
+                    KeyboardActions(
+                        onDone = {
+                            if (state.value.isNotBlank()) onAddClick()
+                            keyboardController?.hide()
+                        }
+                    ),
+                trailingIcon = {
+                    IconButton(onClick = onAddClick, enabled = state.value.isNotBlank()) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = stringResource(Res.string.grocery_add_item),
+                        )
                     }
-                ),
-            trailingIcon = {
-                IconButton(onClick = onAddClick, enabled = state.value.isNotBlank()) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = stringResource(Res.string.grocery_add_item),
+                },
+            )
+            ExposedDropdownMenu(expanded = expanded, onDismissRequest = {}) {
+                suggestions.forEach { suggestion ->
+                    DropdownMenuItem(
+                        text = { Text(suggestion) },
+                        onClick = { onNameChange(suggestion) },
+                        modifier = Modifier.testTag(GroceryListTestTags.ITEM_SUGGESTION),
                     )
                 }
-            },
-        )
+            }
+        }
         AnimatedVisibility(
             visible = isIos && isFocused,
             enter = fadeIn() + expandHorizontally(),

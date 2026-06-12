@@ -71,6 +71,7 @@ class GroceryListBlocImpl(
                 filter = it.filter,
                 recipeFilter = it.recipeFilter,
                 availableRecipes = it.availableRecipes.toImmutableList(),
+                autocompleteSuggestions = it.autocompleteSuggestions.toImmutableList(),
                 hasNoRecipeItems = it.hasNoRecipeItems,
                 isSyncing = it.isSyncing,
                 lists = it.lists.toImmutableList(),
