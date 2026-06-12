@@ -146,6 +146,8 @@ class FakeGroceryRepository : GroceryRepository {
     override fun getListCollaborators(listId: Long): Flow<List<ListCollaborator>> =
         MutableStateFlow(emptyList())
 
+    override suspend fun refreshListMembers(listId: Long) {}
+
     override suspend fun inviteCollaborator(listId: Long, email: String, role: ListRole) {}
 
     override suspend fun removeCollaborator(listId: Long, collaboratorId: Long) {}

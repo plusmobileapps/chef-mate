@@ -85,6 +85,12 @@ class EditGroceryListBlocTest {
     }
 
     @Test
+    fun When_loaded_Then_members_refreshed_from_remote() = runTest {
+        bloc().state.test { awaitItem() }
+        verifySuspend { repository.refreshListMembers(LIST_ID) }
+    }
+
+    @Test
     fun When_authenticated_with_real_account_Then_collaboration_is_enabled() = runTest {
         authState.value = authenticatedUser(isAnonymous = false)
         bloc().state.test { awaitItem().isAuthenticated shouldBe true }

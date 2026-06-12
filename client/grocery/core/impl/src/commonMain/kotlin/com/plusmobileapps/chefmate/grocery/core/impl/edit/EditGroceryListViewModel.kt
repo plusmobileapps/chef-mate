@@ -56,6 +56,11 @@ class EditGroceryListViewModel(
             }
         }
 
+        // Pull the latest members from the remote so they show even when no full sync has run this
+        // session (the local cache is empty right after sign-in). getListCollaborators above reacts
+        // to the refreshed cache.
+        scope.launch { repository.refreshListMembers(listId) }
+
         scope.launch {
             authRepository.state.collect { authState ->
                 val authenticated =

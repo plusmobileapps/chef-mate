@@ -48,6 +48,14 @@ interface GroceryRepository {
 
     fun getListCollaborators(listId: Long): Flow<List<ListCollaborator>>
 
+    /**
+     * Pulls the latest members for [listId] from the remote and replaces the local cache that
+     * [getListCollaborators] observes. Call when opening a collaborator view so members appear even
+     * when no full sync has run this session (e.g. right after sign-in). No-op when
+     * offline/unsynced.
+     */
+    suspend fun refreshListMembers(listId: Long)
+
     suspend fun inviteCollaborator(listId: Long, email: String, role: ListRole = ListRole.EDITOR)
 
     suspend fun removeCollaborator(listId: Long, collaboratorId: Long)

@@ -713,6 +713,29 @@ class GroceryRepositoryImpl(
             }
             .flowOn(ioContext)
 
+    override suspend fun refreshListMembers(listId: Long) {
+        val list =
+            withContext(ioContext) { listQueries.getById(listId).executeAsOneOrNull() } ?: return
+        val remoteListId = list.remoteId ?: return
+        runCatching {
+            val remoteMembers = remoteDataSource.fetchListMembers(remoteListId)
+            withContext(ioContext) {
+                memberQueries.deleteByListId(listId)
+                for (member in remoteMembers) {
+                    memberQueries.insert(
+                        listLocalId = listId,
+                        remoteId = member.id,
+                        userId = member.userId,
+                        userEmail = member.invitedEmail,
+                        role = member.role,
+                        status = member.status,
+                        displayName = null,
+                    )
+                }
+            }
+        }
+    }
+
     override suspend fun inviteCollaborator(listId: Long, email: String, role: ListRole) {
         val authState = authRepository.state.value
         if (authState !is AuthState.Authenticated) return
