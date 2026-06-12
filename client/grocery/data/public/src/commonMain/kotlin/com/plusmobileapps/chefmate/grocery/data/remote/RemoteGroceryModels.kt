@@ -24,3 +24,5 @@ data class RemoteGroceryList(
     @SerialName("created_at") val createdAt: String? = null,
     @SerialName("updated_at") val updatedAt: String? = null,
 )
+
+@Serializable data class RemoteGroceryListName(val id: String, val name: String)

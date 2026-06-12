@@ -19,6 +19,7 @@ import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryFilter
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GrocerySort
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
+import com.plusmobileapps.chefmate.grocery.data.GroceryListInvite
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
@@ -180,12 +181,12 @@ class GroceryListBlocImpl(
         output.onNext(GroceryListBloc.Output.OpenEditList(list.id))
     }
 
-    override fun onAcceptInvitation(list: GroceryListModel) {
-        viewModel.onAcceptInvitation(list)
+    override fun onAcceptInvitation(invite: GroceryListInvite) {
+        viewModel.onAcceptInvitation(invite)
     }
 
-    override fun onRejectInvitation(list: GroceryListModel) {
-        viewModel.onRejectInvitation(list)
+    override fun onRejectInvitation(invite: GroceryListInvite) {
+        viewModel.onRejectInvitation(invite)
     }
 
     @Composable

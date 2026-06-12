@@ -21,9 +21,13 @@ interface GroceryRemoteDataSource {
 
     suspend fun fetchListMembers(listId: String): List<RemoteGroceryListMember>
 
+    suspend fun fetchListCollaborators(listId: String): List<RemoteGroceryListCollaborator>
+
     suspend fun inviteToList(member: RemoteGroceryListMember): RemoteGroceryListMember
 
-    suspend fun respondToInvitation(memberId: String, accept: Boolean)
+    suspend fun fetchPendingInvitations(email: String): List<RemoteGroceryListInvite>
+
+    suspend fun respondToInvitation(memberId: String, userId: String, accept: Boolean)
 
     suspend fun removeFromList(memberId: String)
 }

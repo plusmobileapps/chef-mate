@@ -7,6 +7,7 @@ CREATE TABLE GroceryListMember (
     role TEXT NOT NULL DEFAULT 'editor',
     status TEXT NOT NULL DEFAULT 'pending',
     displayName TEXT,
+    avatarUrl TEXT,
     FOREIGN KEY (listLocalId) REFERENCES GroceryList(id) ON DELETE CASCADE
 );
 
@@ -17,8 +18,8 @@ getByRemoteId:
 SELECT * FROM GroceryListMember WHERE remoteId = ?;
 
 insert:
-INSERT INTO GroceryListMember (listLocalId, remoteId, userId, userEmail, role, status, displayName)
-VALUES (?, ?, ?, ?, ?, ?, ?);
+INSERT INTO GroceryListMember (listLocalId, remoteId, userId, userEmail, role, status, displayName, avatarUrl)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 updateStatus:
 UPDATE GroceryListMember SET status = ? WHERE id = ?;

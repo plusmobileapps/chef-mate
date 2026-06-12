@@ -4,12 +4,19 @@ import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.grocery.data.remote.GroceryRemoteDataSource
 import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryItem
 import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryList
+import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryListCollaborator
+import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryListInvite
 import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryListMember
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 @Inject
 @SingleIn(AppScope::class)
@@ -95,16 +102,34 @@ class SupabaseGroceryRemoteDataSource(private val supabaseClient: SupabaseClient
             .select { filter { eq("list_id", listId) } }
             .decodeList<RemoteGroceryListMember>()
 
+    override suspend fun fetchListCollaborators(
+        listId: String
+    ): List<RemoteGroceryListCollaborator> =
+        supabaseClient.postgrest
+            .rpc("grocery_list_collaborators", buildJsonObject { put("p_list_id", listId) })
+            .decodeList<RemoteGroceryListCollaborator>()
+
     override suspend fun inviteToList(member: RemoteGroceryListMember): RemoteGroceryListMember =
         supabaseClient
             .from("grocery_list_members")
             .insert(member) { select() }
             .decodeSingle<RemoteGroceryListMember>()
 
-    override suspend fun respondToInvitation(memberId: String, accept: Boolean) {
-        supabaseClient.from("grocery_list_members").update(
-            mapOf("status" to if (accept) "accepted" else "rejected")
-        ) {
+    override suspend fun fetchPendingInvitations(email: String): List<RemoteGroceryListInvite> =
+        supabaseClient.postgrest
+            .rpc("grocery_list_pending_invites")
+            .decodeList<RemoteGroceryListInvite>()
+
+    override suspend fun respondToInvitation(memberId: String, userId: String, accept: Boolean) {
+        val payload =
+            if (accept) {
+                JsonObject(
+                    mapOf("user_id" to JsonPrimitive(userId), "status" to JsonPrimitive("accepted"))
+                )
+            } else {
+                JsonObject(mapOf("status" to JsonPrimitive("rejected")))
+            }
+        supabaseClient.from("grocery_list_members").update(payload) {
             filter { eq("id", memberId) }
         }
     }

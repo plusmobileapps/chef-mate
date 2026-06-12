@@ -13,6 +13,7 @@ import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.grocery.data.CollaborationStatus
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
+import com.plusmobileapps.chefmate.grocery.data.GroceryListInvite
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.grocery.data.IngredientParser
@@ -22,6 +23,7 @@ import com.plusmobileapps.chefmate.grocery.data.SyncStatus
 import com.plusmobileapps.chefmate.grocery.data.remote.GroceryRemoteDataSource
 import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryItem
 import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryList
+import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryListCollaborator
 import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryListMember
 import com.plusmobileapps.chefmate.util.DateTimeUtil
 import dev.zacsweers.metro.ContributesBinding
@@ -708,6 +710,7 @@ class GroceryRepositoryImpl(
                                 "rejected" -> CollaborationStatus.REJECTED
                                 else -> CollaborationStatus.PENDING
                             },
+                        avatarUrl = member.avatarUrl,
                     )
                 }
             }
@@ -718,21 +721,8 @@ class GroceryRepositoryImpl(
             withContext(ioContext) { listQueries.getById(listId).executeAsOneOrNull() } ?: return
         val remoteListId = list.remoteId ?: return
         runCatching {
-            val remoteMembers = remoteDataSource.fetchListMembers(remoteListId)
-            withContext(ioContext) {
-                memberQueries.deleteByListId(listId)
-                for (member in remoteMembers) {
-                    memberQueries.insert(
-                        listLocalId = listId,
-                        remoteId = member.id,
-                        userId = member.userId,
-                        userEmail = member.invitedEmail,
-                        role = member.role,
-                        status = member.status,
-                        displayName = null,
-                    )
-                }
-            }
+            val collaborators = fetchCollaboratorsForCache(remoteListId)
+            cacheListCollaborators(listId = listId, collaborators = collaborators)
         }
     }
 
@@ -761,6 +751,7 @@ class GroceryRepositoryImpl(
                 role = role.name.lowercase(),
                 status = "pending",
                 displayName = null,
+                avatarUrl = null,
             )
         }
     }
@@ -776,48 +767,42 @@ class GroceryRepositoryImpl(
         withContext(ioContext) { memberQueries.deleteById(collaboratorId) }
     }
 
-    override suspend fun acceptInvitation(listId: Long) {
+    override suspend fun acceptInvitation(memberId: String) {
         val authState = authRepository.state.value
         if (authState !is AuthState.Authenticated) return
-        val list =
-            withContext(ioContext) { listQueries.getById(listId).executeAsOneOrNull() } ?: return
-        val remoteListId = list.remoteId ?: return
-
-        val members = remoteDataSource.fetchListMembers(remoteListId)
-        val myMember = members.firstOrNull { it.userId == authState.user.userId }
-        myMember?.id?.let { remoteDataSource.respondToInvitation(it, accept = true) }
+        remoteDataSource.respondToInvitation(
+            memberId = memberId,
+            userId = authState.user.userId,
+            accept = true,
+        )
     }
 
-    override suspend fun rejectInvitation(listId: Long) {
+    override suspend fun rejectInvitation(memberId: String) {
         val authState = authRepository.state.value
         if (authState !is AuthState.Authenticated) return
-        val list =
-            withContext(ioContext) { listQueries.getById(listId).executeAsOneOrNull() } ?: return
-        val remoteListId = list.remoteId ?: return
-
-        val members = remoteDataSource.fetchListMembers(remoteListId)
-        val myMember = members.firstOrNull { it.userId == authState.user.userId }
-        myMember?.id?.let { remoteDataSource.respondToInvitation(it, accept = false) }
-        withContext(ioContext) { listQueries.delete(listId) }
+        remoteDataSource.respondToInvitation(
+            memberId = memberId,
+            userId = authState.user.userId,
+            accept = false,
+        )
     }
 
-    override fun getPendingInvitations(): Flow<List<GroceryListModel>> =
-        listQueries
-            .getAll()
-            .asFlow()
-            .mapToList(ioContext)
-            .map { lists ->
-                lists
-                    .filter { it.isShared && it.role != "owner" }
-                    .map { entity ->
-                        GroceryListModel(
-                            id = entity.id,
-                            name = entity.name,
-                            syncStatus = SyncStatus.SYNCED,
-                            role = entity.role.toListRole(),
-                            isShared = true,
-                        )
+    override fun getPendingInvitations(): Flow<List<GroceryListInvite>> =
+        authRepository.state
+            .map { state ->
+                val email =
+                    (state as? AuthState.Authenticated)?.user?.userEmail?.trim()?.lowercase()
+                        ?: return@map emptyList()
+                runCatching {
+                        remoteDataSource.fetchPendingInvitations(email).map {
+                            GroceryListInvite(
+                                memberId = it.id,
+                                listName = it.listName,
+                                role = it.role.toListRole(),
+                            )
+                        }
                     }
+                    .getOrDefault(emptyList())
             }
             .flowOn(ioContext)
 
@@ -827,20 +812,11 @@ class GroceryRepositoryImpl(
             val remoteListId = list.remoteId ?: continue
             try {
                 val remoteMembers = remoteDataSource.fetchListMembers(remoteListId)
+                cacheListCollaborators(
+                    listId = list.id,
+                    collaborators = fetchCollaboratorsForCache(remoteListId, remoteMembers),
+                )
                 withContext(ioContext) {
-                    memberQueries.deleteByListId(list.id)
-                    for (member in remoteMembers) {
-                        memberQueries.insert(
-                            listLocalId = list.id,
-                            remoteId = member.id,
-                            userId = member.userId,
-                            userEmail = member.invitedEmail,
-                            role = member.role,
-                            status = member.status,
-                            displayName = null,
-                        )
-                    }
-                    // Determine role from members
                     val myMember = remoteMembers.firstOrNull { it.userId == userId }
                     if (myMember != null) {
                         listQueries.updateOwnership(
@@ -852,6 +828,64 @@ class GroceryRepositoryImpl(
                     }
                 }
             } catch (_: Exception) {}
+        }
+    }
+
+    private suspend fun fetchCollaboratorsForCache(
+        remoteListId: String,
+        remoteMembers: List<RemoteGroceryListMember>? = null,
+    ): List<RemoteGroceryListCollaborator> {
+        val collaborators = runCatching { remoteDataSource.fetchListCollaborators(remoteListId) }
+        if (collaborators.isSuccess && collaborators.getOrThrow().isNotEmpty()) {
+            return collaborators.getOrThrow()
+        }
+
+        // Fallback for environments that have the table policies but not the collaborator RPC yet.
+        // It cannot synthesize the owner's email, but it keeps accepted/pending invited members
+        // visible and prevents a refresh from wiping the local collaborator cache.
+        val fallbackMembers = remoteMembers ?: remoteDataSource.fetchListMembers(remoteListId)
+        return fallbackMembers.map { member ->
+            RemoteGroceryListCollaborator(
+                memberId = member.id,
+                email = member.invitedEmail,
+                name = null,
+                role = member.role,
+                status = member.status,
+                isOwner = member.role == "owner",
+                avatarUrl = null,
+            )
+        }
+    }
+
+    private suspend fun cacheListCollaborators(
+        listId: Long,
+        collaborators: List<RemoteGroceryListCollaborator>,
+    ) {
+        if (collaborators.isEmpty()) {
+            return
+        }
+        withContext(ioContext) {
+            memberQueries.transaction {
+                memberQueries.deleteByListId(listId)
+                for (collaborator in collaborators) {
+                    collaborator.memberId?.let { remoteMemberId ->
+                        memberQueries.getByRemoteId(remoteMemberId).executeAsOneOrNull()?.let {
+                            staleMember ->
+                            memberQueries.deleteById(staleMember.id)
+                        }
+                    }
+                    memberQueries.insert(
+                        listLocalId = listId,
+                        remoteId = collaborator.memberId,
+                        userId = null,
+                        userEmail = collaborator.email,
+                        role = collaborator.role,
+                        status = collaborator.status,
+                        displayName = collaborator.name,
+                        avatarUrl = collaborator.avatarUrl,
+                    )
+                }
+            }
         }
     }
 

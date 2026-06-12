@@ -253,7 +253,7 @@ private fun MemberRow(
         horizontalArrangement = Arrangement.spacedBy(dimens.paddingSmall),
     ) {
         PlusAvatar(
-            imageUrl = null,
+            imageUrl = collaborator.avatarUrl,
             contentDescription = null,
             fallbackText = name ?: collaborator.email,
         )

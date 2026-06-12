@@ -67,6 +67,7 @@
     <string name="grocery_invitation_sent">Invitation sent</string>
     <string name="grocery_remove_collaborator">Remove</string>
     <string name="grocery_pending_invitations">Pending Invitations</string>
+    <string name="grocery_pending_invite_message">You’ve been invited to “{list}”</string>
     <string name="grocery_accept">Accept</string>
     <string name="grocery_reject">Reject</string>
     <string name="grocery_shared_with_you">Shared with you</string>

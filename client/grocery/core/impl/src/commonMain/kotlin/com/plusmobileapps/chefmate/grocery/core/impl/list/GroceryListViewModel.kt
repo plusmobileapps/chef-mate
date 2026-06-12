@@ -9,6 +9,7 @@ import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryFilt
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryGroup
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GrocerySort
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
+import com.plusmobileapps.chefmate.grocery.data.GroceryListInvite
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.grocery.data.ListRole
@@ -269,15 +270,33 @@ class GroceryListViewModel(
         scope.launch { repository.deleteAllGroceries(listId) }
     }
 
-    fun onAcceptInvitation(list: GroceryListModel) {
+    fun onAcceptInvitation(invite: GroceryListInvite) {
         scope.launch {
-            repository.acceptInvitation(list.id)
+            repository.acceptInvitation(invite.memberId)
+            _state.update {
+                it.copy(
+                    pendingInvitations =
+                        it.pendingInvitations.filterNot { pending ->
+                            pending.memberId == invite.memberId
+                        }
+                )
+            }
             repository.syncAllUnsynced()
         }
     }
 
-    fun onRejectInvitation(list: GroceryListModel) {
-        scope.launch { repository.rejectInvitation(list.id) }
+    fun onRejectInvitation(invite: GroceryListInvite) {
+        scope.launch {
+            repository.rejectInvitation(invite.memberId)
+            _state.update {
+                it.copy(
+                    pendingInvitations =
+                        it.pendingInvitations.filterNot { pending ->
+                            pending.memberId == invite.memberId
+                        }
+                )
+            }
+        }
     }
 
     data class State(
@@ -293,7 +312,7 @@ class GroceryListViewModel(
         val showCreateListDialog: Boolean = false,
         val showDeleteDialog: Boolean = false,
         val showListSelector: Boolean = false,
-        val pendingInvitations: List<GroceryListModel> = emptyList(),
+        val pendingInvitations: List<GroceryListInvite> = emptyList(),
         val currentUserRole: ListRole = ListRole.OWNER,
     )
 

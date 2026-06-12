@@ -1,6 +1,7 @@
 package com.plusmobileapps.chefmate.grocery.data.testing
 
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
+import com.plusmobileapps.chefmate.grocery.data.GroceryListInvite
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.grocery.data.IngredientParser
@@ -152,10 +153,10 @@ class FakeGroceryRepository : GroceryRepository {
 
     override suspend fun removeCollaborator(listId: Long, collaboratorId: Long) {}
 
-    override suspend fun acceptInvitation(listId: Long) {}
+    override suspend fun acceptInvitation(memberId: String) {}
 
-    override suspend fun rejectInvitation(listId: Long) {}
+    override suspend fun rejectInvitation(memberId: String) {}
 
-    override fun getPendingInvitations(): Flow<List<GroceryListModel>> =
+    override fun getPendingInvitations(): Flow<List<GroceryListInvite>> =
         MutableStateFlow(emptyList())
 }

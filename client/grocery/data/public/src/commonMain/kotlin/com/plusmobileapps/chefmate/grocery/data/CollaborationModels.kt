@@ -18,4 +18,8 @@ data class ListCollaborator(
     val displayName: String?,
     val role: ListRole,
     val status: CollaborationStatus,
+    val avatarUrl: String? = null,
 )
+
+/** A pending grocery-list invite addressed to the current user. */
+data class GroceryListInvite(val memberId: String, val listName: String, val role: ListRole)

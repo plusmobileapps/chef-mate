@@ -60,9 +60,9 @@ interface GroceryRepository {
 
     suspend fun removeCollaborator(listId: Long, collaboratorId: Long)
 
-    suspend fun acceptInvitation(listId: Long)
+    suspend fun acceptInvitation(memberId: String)
 
-    suspend fun rejectInvitation(listId: Long)
+    suspend fun rejectInvitation(memberId: String)
 
-    fun getPendingInvitations(): Flow<List<GroceryListModel>>
+    fun getPendingInvitations(): Flow<List<GroceryListInvite>>
 }

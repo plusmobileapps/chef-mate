@@ -7,6 +7,7 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
+import com.plusmobileapps.chefmate.grocery.data.GroceryListInvite
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.ListRole
 import com.plusmobileapps.chefmate.ui.BlocScreen
@@ -65,9 +66,9 @@ interface GroceryListBloc : BlocScreen {
 
     fun onEditListClicked(list: GroceryListModel)
 
-    fun onAcceptInvitation(list: GroceryListModel)
+    fun onAcceptInvitation(invite: GroceryListInvite)
 
-    fun onRejectInvitation(list: GroceryListModel)
+    fun onRejectInvitation(invite: GroceryListInvite)
 
     data class GroceryGroup(val category: GroceryCategory, val items: ImmutableList<GroceryItem>)
 
@@ -95,7 +96,7 @@ interface GroceryListBloc : BlocScreen {
         val showCreateListDialog: Boolean = false,
         val showDeleteDialog: Boolean = false,
         val showListSelector: Boolean = false,
-        val pendingInvitations: List<GroceryListModel> = emptyList(),
+        val pendingInvitations: List<GroceryListInvite> = emptyList(),
         val currentUserRole: ListRole = ListRole.OWNER,
     )
 

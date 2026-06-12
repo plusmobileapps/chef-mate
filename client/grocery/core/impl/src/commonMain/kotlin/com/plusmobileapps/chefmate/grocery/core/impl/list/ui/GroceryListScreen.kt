@@ -42,6 +42,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -81,6 +83,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import chefmate.client.grocery.core.public.generated.resources.Res
+import chefmate.client.grocery.core.public.generated.resources.grocery_accept
 import chefmate.client.grocery.core.public.generated.resources.grocery_add_item
 import chefmate.client.grocery.core.public.generated.resources.grocery_add_item_hint
 import chefmate.client.grocery.core.public.generated.resources.grocery_apply
@@ -115,6 +118,8 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_list_filt
 import chefmate.client.grocery.core.public.generated.resources.grocery_list_filtered_empty_description
 import chefmate.client.grocery.core.public.generated.resources.grocery_list_filtered_empty_title
 import chefmate.client.grocery.core.public.generated.resources.grocery_my_lists
+import chefmate.client.grocery.core.public.generated.resources.grocery_pending_invite_message
+import chefmate.client.grocery.core.public.generated.resources.grocery_reject
 import chefmate.client.grocery.core.public.generated.resources.grocery_shared_badge
 import chefmate.client.grocery.core.public.generated.resources.grocery_shared_with_you
 import chefmate.client.grocery.core.public.generated.resources.grocery_sort_aisle
@@ -134,9 +139,12 @@ import com.plusmobileapps.chefmate.grocery.core.list.GroceryGroupedList
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListTestTags
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
+import com.plusmobileapps.chefmate.grocery.data.GroceryListInvite
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.ListRole
 import com.plusmobileapps.chefmate.grocery.data.SyncStatus
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
@@ -243,6 +251,13 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
                         }
                     },
                 )
+                state.pendingInvitations.forEach { invite ->
+                    GroceryInviteBanner(
+                        invite = invite,
+                        onAccept = { bloc.onAcceptInvitation(invite) },
+                        onReject = { bloc.onRejectInvitation(invite) },
+                    )
+                }
                 val itemLookup =
                     remember(state.groupedItems) {
                         state.groupedItems.flatMap { it.items }.associateBy { it.id }
@@ -363,6 +378,41 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
         }
 
         GroceryDetailSheet(bloc = bloc)
+    }
+}
+
+@Composable
+private fun GroceryInviteBanner(
+    invite: GroceryListInvite,
+    onAccept: () -> Unit,
+    onReject: () -> Unit,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(ChefMateTheme.dimens.paddingNormal),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            ),
+    ) {
+        Column(modifier = Modifier.padding(ChefMateTheme.dimens.paddingNormal)) {
+            Text(
+                text =
+                    PhraseModel(
+                            Res.string.grocery_pending_invite_message,
+                            "list" to FixedString(invite.listName),
+                        )
+                        .localized(),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = ChefMateTheme.dimens.paddingSmall),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                TextButton(onClick = onReject) { Text(stringResource(Res.string.grocery_reject)) }
+                TextButton(onClick = onAccept) { Text(stringResource(Res.string.grocery_accept)) }
+            }
+        }
     }
 }
 

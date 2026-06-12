@@ -12,6 +12,7 @@ import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryGrou
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GrocerySort
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
+import com.plusmobileapps.chefmate.grocery.data.GroceryListInvite
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.SyncStatus
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -117,9 +118,9 @@ private fun groceryListBloc(
 
         override fun onEditListClicked(list: GroceryListModel) = Unit
 
-        override fun onAcceptInvitation(list: GroceryListModel) = Unit
+        override fun onAcceptInvitation(invite: GroceryListInvite) = Unit
 
-        override fun onRejectInvitation(list: GroceryListModel) = Unit
+        override fun onRejectInvitation(invite: GroceryListInvite) = Unit
 
         @Composable override fun Content(modifier: Modifier) = GroceryListScreen(this, modifier)
     }
