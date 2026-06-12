@@ -1,6 +1,6 @@
 -- ============================================================
 -- Grocery List Collaboration
--- Run this migration in Supabase SQL Editor
+-- Run this migration in Supabase SQL Editor. Safe to re-run.
 -- ============================================================
 
 -- 1. Grocery list members (sharing/collaboration)
@@ -61,45 +61,78 @@ CREATE TRIGGER trg_migrate_pending_grocery_invitations
   FOR EACH ROW EXECUTE FUNCTION migrate_pending_grocery_invitations();
 
 -- ============================================================
+-- RLS helper functions
+-- SECURITY DEFINER so they bypass RLS and can't recurse — otherwise the
+-- grocery_lists policies (which check membership) and the
+-- grocery_list_members policies (which check list ownership) would reference
+-- each other's RLS-protected tables and loop forever (Postgres 42P17).
+-- ============================================================
+CREATE OR REPLACE FUNCTION can_access_grocery_list(p_list_id uuid)
+RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM grocery_lists l
+    WHERE l.id = p_list_id AND l.owner_id = auth.uid()
+  ) OR EXISTS (
+    SELECT 1 FROM grocery_list_members m
+    WHERE m.list_id = p_list_id
+      AND m.user_id = auth.uid()
+      AND m.status = 'accepted'
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION can_edit_grocery_list(p_list_id uuid)
+RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM grocery_lists l
+    WHERE l.id = p_list_id AND l.owner_id = auth.uid()
+  ) OR EXISTS (
+    SELECT 1 FROM grocery_list_members m
+    WHERE m.list_id = p_list_id
+      AND m.user_id = auth.uid()
+      AND m.status = 'accepted'
+      AND m.role IN ('owner', 'editor')
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION is_grocery_list_owner(p_list_id uuid)
+RETURNS boolean LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM grocery_lists l
+    WHERE l.id = p_list_id AND l.owner_id = auth.uid()
+  );
+$$;
+
+-- The caller's email, looked up from auth.users by auth.uid(). Used to match
+-- email-keyed invites for users who already have an account. SECURITY DEFINER
+-- because the authenticated role can't read auth.users directly.
+CREATE OR REPLACE FUNCTION current_user_email()
+RETURNS text LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public AS $$
+  SELECT email FROM auth.users WHERE id = auth.uid();
+$$;
+
+-- ============================================================
 -- RLS Policies
 -- ============================================================
 
 ALTER TABLE grocery_list_members ENABLE ROW LEVEL SECURITY;
 
 -- === grocery_lists ===
--- Drop existing policies if any to avoid conflicts
 DROP POLICY IF EXISTS "grocery_lists_select" ON grocery_lists;
 DROP POLICY IF EXISTS "grocery_lists_insert" ON grocery_lists;
 DROP POLICY IF EXISTS "grocery_lists_update" ON grocery_lists;
 DROP POLICY IF EXISTS "grocery_lists_delete" ON grocery_lists;
 
-CREATE POLICY "grocery_lists_select" ON grocery_lists FOR SELECT USING (
-  owner_id = auth.uid()
-  OR EXISTS (
-    SELECT 1 FROM grocery_list_members
-    WHERE grocery_list_members.list_id = grocery_lists.id
-      AND grocery_list_members.user_id = auth.uid()
-      AND grocery_list_members.status = 'accepted'
-  )
-);
+CREATE POLICY "grocery_lists_select" ON grocery_lists FOR SELECT
+  USING (can_access_grocery_list(id));
 
 CREATE POLICY "grocery_lists_insert" ON grocery_lists FOR INSERT
   WITH CHECK (owner_id = auth.uid());
 
-CREATE POLICY "grocery_lists_update" ON grocery_lists FOR UPDATE USING (
-  owner_id = auth.uid()
-  OR EXISTS (
-    SELECT 1 FROM grocery_list_members
-    WHERE grocery_list_members.list_id = grocery_lists.id
-      AND grocery_list_members.user_id = auth.uid()
-      AND grocery_list_members.role IN ('owner', 'editor')
-      AND grocery_list_members.status = 'accepted'
-  )
-);
+CREATE POLICY "grocery_lists_update" ON grocery_lists FOR UPDATE
+  USING (can_edit_grocery_list(id));
 
-CREATE POLICY "grocery_lists_delete" ON grocery_lists FOR DELETE USING (
-  owner_id = auth.uid()
-);
+CREATE POLICY "grocery_lists_delete" ON grocery_lists FOR DELETE
+  USING (owner_id = auth.uid());
 
 -- === grocery_items ===
 DROP POLICY IF EXISTS "grocery_items_select" ON grocery_items;
@@ -107,113 +140,59 @@ DROP POLICY IF EXISTS "grocery_items_insert" ON grocery_items;
 DROP POLICY IF EXISTS "grocery_items_update" ON grocery_items;
 DROP POLICY IF EXISTS "grocery_items_delete" ON grocery_items;
 
-CREATE POLICY "grocery_items_select" ON grocery_items FOR SELECT USING (
-  EXISTS (
-    SELECT 1 FROM grocery_lists
-    WHERE grocery_lists.id = grocery_items.list_id
-      AND (
-        grocery_lists.owner_id = auth.uid()
-        OR EXISTS (
-          SELECT 1 FROM grocery_list_members
-          WHERE grocery_list_members.list_id = grocery_lists.id
-            AND grocery_list_members.user_id = auth.uid()
-            AND grocery_list_members.status = 'accepted'
-        )
-      )
-  )
-);
+CREATE POLICY "grocery_items_select" ON grocery_items FOR SELECT
+  USING (can_access_grocery_list(list_id));
 
-CREATE POLICY "grocery_items_insert" ON grocery_items FOR INSERT WITH CHECK (
-  EXISTS (
-    SELECT 1 FROM grocery_lists
-    WHERE grocery_lists.id = grocery_items.list_id
-      AND (
-        grocery_lists.owner_id = auth.uid()
-        OR EXISTS (
-          SELECT 1 FROM grocery_list_members
-          WHERE grocery_list_members.list_id = grocery_lists.id
-            AND grocery_list_members.user_id = auth.uid()
-            AND grocery_list_members.role IN ('owner', 'editor')
-            AND grocery_list_members.status = 'accepted'
-        )
-      )
-  )
-);
+CREATE POLICY "grocery_items_insert" ON grocery_items FOR INSERT
+  WITH CHECK (can_edit_grocery_list(list_id));
 
-CREATE POLICY "grocery_items_update" ON grocery_items FOR UPDATE USING (
-  EXISTS (
-    SELECT 1 FROM grocery_lists
-    WHERE grocery_lists.id = grocery_items.list_id
-      AND (
-        grocery_lists.owner_id = auth.uid()
-        OR EXISTS (
-          SELECT 1 FROM grocery_list_members
-          WHERE grocery_list_members.list_id = grocery_lists.id
-            AND grocery_list_members.user_id = auth.uid()
-            AND grocery_list_members.role IN ('owner', 'editor')
-            AND grocery_list_members.status = 'accepted'
-        )
-      )
-  )
-);
+CREATE POLICY "grocery_items_update" ON grocery_items FOR UPDATE
+  USING (can_edit_grocery_list(list_id));
 
-CREATE POLICY "grocery_items_delete" ON grocery_items FOR DELETE USING (
-  EXISTS (
-    SELECT 1 FROM grocery_lists
-    WHERE grocery_lists.id = grocery_items.list_id
-      AND (
-        grocery_lists.owner_id = auth.uid()
-        OR EXISTS (
-          SELECT 1 FROM grocery_list_members
-          WHERE grocery_list_members.list_id = grocery_lists.id
-            AND grocery_list_members.user_id = auth.uid()
-            AND grocery_list_members.role IN ('owner', 'editor')
-            AND grocery_list_members.status = 'accepted'
-        )
-      )
-  )
-);
+CREATE POLICY "grocery_items_delete" ON grocery_items FOR DELETE
+  USING (can_edit_grocery_list(list_id));
 
 -- === grocery_list_members ===
+DROP POLICY IF EXISTS "glm_select" ON grocery_list_members;
+DROP POLICY IF EXISTS "glm_insert" ON grocery_list_members;
+DROP POLICY IF EXISTS "glm_update" ON grocery_list_members;
+DROP POLICY IF EXISTS "glm_delete" ON grocery_list_members;
+
+-- See member rows for lists you can access (to list collaborators) and invites addressed to you.
 CREATE POLICY "glm_select" ON grocery_list_members FOR SELECT USING (
-  user_id = auth.uid()
-  OR EXISTS (
-    SELECT 1 FROM grocery_lists
-    WHERE grocery_lists.id = grocery_list_members.list_id
-      AND grocery_lists.owner_id = auth.uid()
-  )
+  can_access_grocery_list(list_id)
+  OR user_id = auth.uid()
+  OR lower(invited_email) = lower(current_user_email())
 );
 
+-- Only the list owner can invite collaborators.
 CREATE POLICY "glm_insert" ON grocery_list_members FOR INSERT WITH CHECK (
-  EXISTS (
-    SELECT 1 FROM grocery_lists
-    WHERE grocery_lists.id = grocery_list_members.list_id
-      AND grocery_lists.owner_id = auth.uid()
-  )
+  is_grocery_list_owner(list_id)
 );
 
+-- Owner can change roles; the invitee can accept/reject their own invite.
 CREATE POLICY "glm_update" ON grocery_list_members FOR UPDATE USING (
-  -- Invited user can accept/reject
-  user_id = auth.uid()
-  OR EXISTS (
-    SELECT 1 FROM grocery_lists
-    WHERE grocery_lists.id = grocery_list_members.list_id
-      AND grocery_lists.owner_id = auth.uid()
-  )
+  is_grocery_list_owner(list_id)
+  OR user_id = auth.uid()
+  OR lower(invited_email) = lower(current_user_email())
 );
 
+-- Owner can remove anyone; a member can leave / decline.
 CREATE POLICY "glm_delete" ON grocery_list_members FOR DELETE USING (
-  -- Owner can remove anyone, member can leave
-  user_id = auth.uid()
-  OR EXISTS (
-    SELECT 1 FROM grocery_lists
-    WHERE grocery_lists.id = grocery_list_members.list_id
-      AND grocery_lists.owner_id = auth.uid()
-  )
+  is_grocery_list_owner(list_id)
+  OR user_id = auth.uid()
+  OR lower(invited_email) = lower(current_user_email())
 );
 
 -- ============================================================
--- Enable Realtime on tables for collaboration
+-- Enable Realtime on tables for collaboration (idempotent)
 -- ============================================================
-ALTER PUBLICATION supabase_realtime ADD TABLE grocery_items;
-ALTER PUBLICATION supabase_realtime ADD TABLE grocery_list_members;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE grocery_items;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE grocery_list_members;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
