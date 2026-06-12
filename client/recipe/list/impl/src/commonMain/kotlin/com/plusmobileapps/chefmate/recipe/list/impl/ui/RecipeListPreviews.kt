@@ -123,6 +123,8 @@ private fun recipeListBloc(model: RecipeListBloc.Model): RecipeListBloc =
 
         override fun onBookSelected(bookId: Long) = Unit
 
+        override fun onAllRecipesSelected() = Unit
+
         override fun onCreateBookClicked() = Unit
 
         override fun onEditBookClicked(bookId: Long) = Unit
@@ -143,6 +145,34 @@ val previewRecipeListBloc: RecipeListBloc =
             totalRecipeCount = sampleRecipes.size,
             recipeBooks = RecipeBook.Samples,
             activeBook = RecipeBook.Sample,
+        )
+    )
+
+/** "All recipes" cross-book view active — the selector reads "All recipes" with no single book. */
+val previewRecipeListBlocAllRecipes: RecipeListBloc =
+    recipeListBloc(
+        RecipeListBloc.Model(
+            recipes = sampleRecipes,
+            totalRecipeCount = sampleRecipes.size,
+            recipeBooks = RecipeBook.Samples,
+            activeBook = null,
+            isAllRecipesSelected = true,
+        )
+    )
+
+/**
+ * Search inside a single book returned nothing — exercises the empty state's "Search all recipes"
+ * broaden action (offered only when a single book is active).
+ */
+val previewRecipeListBlocSearchEmpty: RecipeListBloc =
+    recipeListBloc(
+        RecipeListBloc.Model(
+            recipes = persistentListOf(),
+            totalRecipeCount = sampleRecipes.size,
+            recipeBooks = RecipeBook.Samples,
+            activeBook = RecipeBook.Sample,
+            searchQuery = "tonkotsu",
+            isSearchActive = true,
         )
     )
 
