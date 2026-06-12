@@ -12,6 +12,7 @@ import com.plusmobileapps.chefmate.grocery.core.edit.EditGroceryListBloc.Output
 import com.plusmobileapps.chefmate.grocery.core.impl.edit.ui.EditGroceryListScreen
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.grocery.data.ListCollaborator
+import com.plusmobileapps.chefmate.grocery.data.ListRole
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
@@ -51,6 +52,7 @@ class EditGroceryListBlocImpl(
                 isOwner = it.isOwner,
                 collaborators = it.collaborators,
                 showDeleteConfirm = it.showDeleteConfirm,
+                collaboratorPendingRemoval = it.collaboratorPendingRemoval,
             )
         }
 
@@ -84,12 +86,20 @@ class EditGroceryListBlocImpl(
         viewModel.onDeleteDismissed()
     }
 
-    override fun onInviteCollaborator(email: String) {
-        viewModel.onInviteCollaborator(email)
+    override fun onInviteCollaborator(email: String, role: ListRole) {
+        viewModel.onInviteCollaborator(email, role)
     }
 
-    override fun onRemoveCollaborator(collaborator: ListCollaborator) {
-        viewModel.onRemoveCollaborator(collaborator)
+    override fun onRemoveCollaboratorClicked(collaborator: ListCollaborator) {
+        viewModel.onRemoveCollaboratorClicked(collaborator)
+    }
+
+    override fun onConfirmRemoveCollaborator() {
+        viewModel.onConfirmRemoveCollaborator()
+    }
+
+    override fun onDismissRemoveCollaborator() {
+        viewModel.onDismissRemoveCollaborator()
     }
 
     override fun onSignInClicked() {

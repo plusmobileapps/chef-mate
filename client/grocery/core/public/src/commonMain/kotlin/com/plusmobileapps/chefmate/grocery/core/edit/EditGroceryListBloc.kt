@@ -4,6 +4,7 @@ import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.grocery.data.ListCollaborator
+import com.plusmobileapps.chefmate.grocery.data.ListRole
 import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.coroutines.flow.StateFlow
 
@@ -20,9 +21,14 @@ interface EditGroceryListBloc : BackClickBloc, BlocScreen {
 
     fun onDeleteDismissed()
 
-    fun onInviteCollaborator(email: String)
+    fun onInviteCollaborator(email: String, role: ListRole)
 
-    fun onRemoveCollaborator(collaborator: ListCollaborator)
+    /** Asks for confirmation before removing; shows the confirm dialog. */
+    fun onRemoveCollaboratorClicked(collaborator: ListCollaborator)
+
+    fun onConfirmRemoveCollaborator()
+
+    fun onDismissRemoveCollaborator()
 
     fun onSignInClicked()
 
@@ -35,6 +41,7 @@ interface EditGroceryListBloc : BackClickBloc, BlocScreen {
      * @param isOwner whether the current user owns the list; only owners may delete or invite.
      * @param collaborators current members of the list (owner + editors/viewers, incl. pending).
      * @param showDeleteConfirm whether the delete-confirmation dialog is visible.
+     * @param collaboratorPendingRemoval the collaborator awaiting remove confirmation, or null.
      */
     data class Model(
         val name: String = "",
@@ -42,6 +49,7 @@ interface EditGroceryListBloc : BackClickBloc, BlocScreen {
         val isOwner: Boolean = true,
         val collaborators: List<ListCollaborator> = emptyList(),
         val showDeleteConfirm: Boolean = false,
+        val collaboratorPendingRemoval: ListCollaborator? = null,
     )
 
     sealed class Output {

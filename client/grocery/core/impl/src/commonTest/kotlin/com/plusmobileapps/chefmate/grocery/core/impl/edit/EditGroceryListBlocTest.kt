@@ -8,8 +8,10 @@ import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.auth.data.ChefMateUser
 import com.plusmobileapps.chefmate.grocery.core.edit.EditGroceryListBloc
+import com.plusmobileapps.chefmate.grocery.data.CollaborationStatus
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
+import com.plusmobileapps.chefmate.grocery.data.ListCollaborator
 import com.plusmobileapps.chefmate.grocery.data.ListRole
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
@@ -110,12 +112,53 @@ class EditGroceryListBlocTest {
     }
 
     @Test
-    fun When_invite_Then_repository_invited_as_editor() = runTest {
+    fun When_invite_Then_repository_invited_with_selected_role() = runTest {
         val bloc = bloc()
         bloc.state.test { awaitItem() }
-        bloc.onInviteCollaborator("friend@example.com")
+        bloc.onInviteCollaborator("friend@example.com", ListRole.VIEWER)
         verifySuspend {
-            repository.inviteCollaborator(LIST_ID, "friend@example.com", ListRole.EDITOR)
+            repository.inviteCollaborator(LIST_ID, "friend@example.com", ListRole.VIEWER)
+        }
+    }
+
+    @Test
+    fun When_remove_clicked_Then_confirm_shown_and_only_removed_after_confirm() = runTest {
+        val collaborator =
+            ListCollaborator(
+                id = 7L,
+                email = "friend@example.com",
+                displayName = "Friend",
+                role = ListRole.EDITOR,
+                status = CollaborationStatus.ACCEPTED,
+            )
+        val bloc = bloc()
+        bloc.state.test {
+            awaitItem()
+            bloc.onRemoveCollaboratorClicked(collaborator)
+            awaitItem().collaboratorPendingRemoval shouldBe collaborator
+            bloc.onConfirmRemoveCollaborator()
+            awaitItem().collaboratorPendingRemoval shouldBe null
+        }
+        verifySuspend { repository.removeCollaborator(LIST_ID, 7L) }
+    }
+
+    @Test
+    fun When_remove_dismissed_Then_nothing_removed() = runTest {
+        val collaborator =
+            ListCollaborator(
+                id = 8L,
+                email = "friend@example.com",
+                displayName = "Friend",
+                role = ListRole.EDITOR,
+                status = CollaborationStatus.ACCEPTED,
+            )
+        val bloc = bloc()
+        bloc.state.test {
+            awaitItem()
+            bloc.onRemoveCollaboratorClicked(collaborator)
+            awaitItem().collaboratorPendingRemoval shouldBe collaborator
+            bloc.onDismissRemoveCollaborator()
+            awaitItem().collaboratorPendingRemoval shouldBe null
         }
     }
 

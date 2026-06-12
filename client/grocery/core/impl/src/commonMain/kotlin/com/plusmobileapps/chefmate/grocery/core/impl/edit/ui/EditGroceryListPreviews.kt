@@ -21,8 +21,8 @@ private val sampleCollaborators =
         ),
         ListCollaborator(
             id = 2L,
-            email = "friend@example.com",
-            displayName = "Alex",
+            email = "alex@example.com",
+            displayName = "Alex Rivera",
             role = ListRole.EDITOR,
             status = CollaborationStatus.ACCEPTED,
         ),
@@ -32,6 +32,13 @@ private val sampleCollaborators =
             displayName = null,
             role = ListRole.EDITOR,
             status = CollaborationStatus.PENDING,
+        ),
+        ListCollaborator(
+            id = 4L,
+            email = "sam@example.com",
+            displayName = "Sam Lee",
+            role = ListRole.VIEWER,
+            status = CollaborationStatus.ACCEPTED,
         ),
     )
 
@@ -49,9 +56,13 @@ private fun fakeEditBloc(model: EditGroceryListBloc.Model): EditGroceryListBloc 
 
         override fun onDeleteDismissed() = Unit
 
-        override fun onInviteCollaborator(email: String) = Unit
+        override fun onInviteCollaborator(email: String, role: ListRole) = Unit
 
-        override fun onRemoveCollaborator(collaborator: ListCollaborator) = Unit
+        override fun onRemoveCollaboratorClicked(collaborator: ListCollaborator) = Unit
+
+        override fun onConfirmRemoveCollaborator() = Unit
+
+        override fun onDismissRemoveCollaborator() = Unit
 
         override fun onSignInClicked() = Unit
 

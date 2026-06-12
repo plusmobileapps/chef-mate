@@ -86,4 +86,10 @@
     <string name="grocery_collab_signed_out_message">Sharing a grocery list with other people requires an account. Sign in or sign up to invite collaborators by email.</string>
     <string name="grocery_sign_in">Sign in</string>
     <string name="grocery_sign_up">Sign up</string>
+    <string name="grocery_collab_group_owners">Owners</string>
+    <string name="grocery_collab_group_editors">Editors</string>
+    <string name="grocery_collab_group_viewers">Viewers</string>
+    <string name="grocery_collab_pending">Pending</string>
+    <string name="grocery_remove_collaborator_title">Remove collaborator?</string>
+    <string name="grocery_remove_collaborator_message">They’ll lose access to this list. You can invite them again later.</string>
 </resources>

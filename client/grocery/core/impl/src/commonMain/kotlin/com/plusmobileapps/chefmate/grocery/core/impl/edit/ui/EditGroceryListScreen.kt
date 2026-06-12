@@ -2,17 +2,18 @@ package com.plusmobileapps.chefmate.grocery.core.impl.edit.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material.icons.filled.PersonRemove
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,10 +24,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import chefmate.client.grocery.core.public.generated.resources.Res
 import chefmate.client.grocery.core.public.generated.resources.grocery_cancel
+import chefmate.client.grocery.core.public.generated.resources.grocery_collab_group_editors
+import chefmate.client.grocery.core.public.generated.resources.grocery_collab_group_owners
+import chefmate.client.grocery.core.public.generated.resources.grocery_collab_group_viewers
+import chefmate.client.grocery.core.public.generated.resources.grocery_collab_pending
 import chefmate.client.grocery.core.public.generated.resources.grocery_collab_signed_out_message
 import chefmate.client.grocery.core.public.generated.resources.grocery_collab_signed_out_title
 import chefmate.client.grocery.core.public.generated.resources.grocery_collaborators
@@ -39,6 +45,8 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_invite
 import chefmate.client.grocery.core.public.generated.resources.grocery_invite_hint
 import chefmate.client.grocery.core.public.generated.resources.grocery_list_name_label
 import chefmate.client.grocery.core.public.generated.resources.grocery_remove_collaborator
+import chefmate.client.grocery.core.public.generated.resources.grocery_remove_collaborator_message
+import chefmate.client.grocery.core.public.generated.resources.grocery_remove_collaborator_title
 import chefmate.client.grocery.core.public.generated.resources.grocery_rename_save
 import chefmate.client.grocery.core.public.generated.resources.grocery_role_editor
 import chefmate.client.grocery.core.public.generated.resources.grocery_role_owner
@@ -51,6 +59,7 @@ import com.plusmobileapps.chefmate.grocery.data.CollaborationStatus
 import com.plusmobileapps.chefmate.grocery.data.ListCollaborator
 import com.plusmobileapps.chefmate.grocery.data.ListRole
 import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.components.PlusAvatar
 import com.plusmobileapps.chefmate.ui.components.PlusButton
 import com.plusmobileapps.chefmate.ui.components.PlusButtonVariant
 import com.plusmobileapps.chefmate.ui.components.PlusDialog
@@ -58,6 +67,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.components.PlusTextField
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -124,6 +134,17 @@ fun EditGroceryListScreen(bloc: EditGroceryListBloc, modifier: Modifier = Modifi
             onDismissRequest = bloc::onDeleteDismissed,
         )
     }
+
+    if (state.collaboratorPendingRemoval != null) {
+        PlusDialog(
+            title = Res.string.grocery_remove_collaborator_title.asTextData(),
+            message = Res.string.grocery_remove_collaborator_message.asTextData(),
+            confirmButtonText = Res.string.grocery_remove_collaborator.asTextData(),
+            dismissButtonText = Res.string.grocery_cancel.asTextData(),
+            onConfirmClick = bloc::onConfirmRemoveCollaborator,
+            onDismissRequest = bloc::onDismissRemoveCollaborator,
+        )
+    }
 }
 
 @Composable
@@ -164,14 +185,28 @@ private fun CollaborationSection(state: EditGroceryListBloc.Model, bloc: EditGro
             return@Column
         }
 
-        state.collaborators.forEach { collaborator ->
-            CollaboratorRow(
-                collaborator = collaborator,
-                canRemove = state.isOwner && collaborator.role != ListRole.OWNER,
-                onRemove = { bloc.onRemoveCollaborator(collaborator) },
-            )
-        }
+        // Grouped by role so the owner is separated from editors and viewers. Pending invites keep
+        // their invited role, so they land in the matching group (dimmed).
+        MemberGroup(
+            title = Res.string.grocery_collab_group_owners,
+            collaborators = state.collaborators.filter { it.role == ListRole.OWNER },
+            canManage = state.isOwner,
+            onRemove = bloc::onRemoveCollaboratorClicked,
+        )
+        MemberGroup(
+            title = Res.string.grocery_collab_group_editors,
+            collaborators = state.collaborators.filter { it.role == ListRole.EDITOR },
+            canManage = state.isOwner,
+            onRemove = bloc::onRemoveCollaboratorClicked,
+        )
+        MemberGroup(
+            title = Res.string.grocery_collab_group_viewers,
+            collaborators = state.collaborators.filter { it.role == ListRole.VIEWER },
+            canManage = state.isOwner,
+            onRemove = bloc::onRemoveCollaboratorClicked,
+        )
 
+        // Invite controls are owner-only; collaborators just see the list above.
         if (state.isOwner) {
             InviteRow(onInvite = bloc::onInviteCollaborator)
         }
@@ -179,72 +214,121 @@ private fun CollaborationSection(state: EditGroceryListBloc.Model, bloc: EditGro
 }
 
 @Composable
-private fun CollaboratorRow(
-    collaborator: ListCollaborator,
-    canRemove: Boolean,
-    onRemove: () -> Unit,
+private fun MemberGroup(
+    title: StringResource,
+    collaborators: List<ListCollaborator>,
+    canManage: Boolean,
+    onRemove: (ListCollaborator) -> Unit,
 ) {
-    ListItem(
-        headlineContent = { Text(collaborator.displayName ?: collaborator.email) },
-        supportingContent = {
-            val roleText =
-                when (collaborator.role) {
-                    ListRole.OWNER -> stringResource(Res.string.grocery_role_owner)
-                    ListRole.EDITOR -> stringResource(Res.string.grocery_role_editor)
-                    ListRole.VIEWER -> stringResource(Res.string.grocery_role_viewer)
-                }
-            val statusText =
-                if (collaborator.status == CollaborationStatus.PENDING) " (pending)" else ""
-            Text("$roleText$statusText")
-        },
-        trailingContent =
-            if (canRemove) {
-                {
-                    IconButton(onClick = onRemove) {
-                        Icon(
-                            Icons.Default.PersonRemove,
-                            contentDescription =
-                                stringResource(Res.string.grocery_remove_collaborator),
-                            modifier = Modifier.size(18.dp),
-                        )
-                    }
-                }
-            } else {
-                null
-            },
+    if (collaborators.isEmpty()) return
+    Text(
+        text = stringResource(title),
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(top = ChefMateTheme.dimens.paddingSmall),
     )
+    collaborators.forEach { collaborator ->
+        MemberRow(collaborator = collaborator, canManage = canManage, onRemove = onRemove)
+    }
 }
 
 @Composable
-private fun InviteRow(onInvite: (String) -> Unit) {
+private fun MemberRow(
+    collaborator: ListCollaborator,
+    canManage: Boolean,
+    onRemove: (ListCollaborator) -> Unit,
+) {
+    // name → email, with pending invites dimmed and tagged. Role is conveyed by the group header
+    // above, so it isn't repeated per row. Pending invites have no account yet, so they fall back
+    // to the email as the primary line.
     val dimens = ChefMateTheme.dimens
-    var inviteEmail by remember { mutableStateOf("") }
+    val name = collaborator.displayName?.takeIf { it.isNotBlank() }
+    val pending = collaborator.status == CollaborationStatus.PENDING
+    val secondary =
+        listOfNotNull(
+                collaborator.email.takeIf { name != null },
+                stringResource(Res.string.grocery_collab_pending).takeIf { pending },
+            )
+            .joinToString(" · ")
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().alpha(if (pending) 0.5f else 1f),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(dimens.paddingSmall),
+    ) {
+        PlusAvatar(
+            imageUrl = null,
+            contentDescription = null,
+            fallbackText = name ?: collaborator.email,
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = name ?: collaborator.email, style = MaterialTheme.typography.bodyMedium)
+            if (secondary.isNotEmpty()) {
+                Text(
+                    text = secondary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        if (canManage && collaborator.role != ListRole.OWNER) {
+            IconButton(onClick = { onRemove(collaborator) }) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = stringResource(Res.string.grocery_remove_collaborator),
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun InviteRow(onInvite: (String, ListRole) -> Unit) {
+    val dimens = ChefMateTheme.dimens
+    var inviteEmail by remember { mutableStateOf("") }
+    var inviteRole by remember { mutableStateOf(ListRole.EDITOR) }
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(top = dimens.paddingSmall),
+        verticalArrangement = Arrangement.spacedBy(dimens.paddingSmall),
     ) {
         PlusTextField(
             value = inviteEmail,
             onValueChange = { inviteEmail = it },
             label = { Text(stringResource(Res.string.grocery_invite_hint)) },
             singleLine = true,
-            modifier = Modifier.weight(1f).testTag(EditGroceryListTestTags.INVITE_FIELD),
+            modifier = Modifier.fillMaxWidth().testTag(EditGroceryListTestTags.INVITE_FIELD),
         )
-        IconButton(
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(dimens.paddingSmall)) {
+            listOf(ListRole.EDITOR, ListRole.VIEWER).forEach { role ->
+                FilterChip(
+                    selected = inviteRole == role,
+                    onClick = { inviteRole = role },
+                    label = { Text(role.label()) },
+                )
+            }
+        }
+        PlusButton(
+            text = Res.string.grocery_invite.asTextData(),
+            variant = PlusButtonVariant.SECONDARY,
+            enabled = inviteEmail.isNotBlank(),
             onClick = {
                 if (inviteEmail.isNotBlank()) {
-                    onInvite(inviteEmail)
+                    onInvite(inviteEmail, inviteRole)
                     inviteEmail = ""
                 }
             },
-            enabled = inviteEmail.isNotBlank(),
-            modifier = Modifier.testTag(EditGroceryListTestTags.INVITE_BUTTON),
-        ) {
-            Icon(
-                Icons.Default.PersonAdd,
-                contentDescription = stringResource(Res.string.grocery_invite),
-            )
-        }
+            modifier = Modifier.fillMaxWidth().testTag(EditGroceryListTestTags.INVITE_BUTTON),
+        )
     }
 }
+
+@Composable
+private fun ListRole.label(): String =
+    stringResource(
+        when (this) {
+            ListRole.OWNER -> Res.string.grocery_role_owner
+            ListRole.EDITOR -> Res.string.grocery_role_editor
+            ListRole.VIEWER -> Res.string.grocery_role_viewer
+        }
+    )

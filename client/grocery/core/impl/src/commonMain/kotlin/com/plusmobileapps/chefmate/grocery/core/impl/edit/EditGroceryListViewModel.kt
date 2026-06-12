@@ -93,13 +93,23 @@ class EditGroceryListViewModel(
         }
     }
 
-    fun onInviteCollaborator(email: String) {
+    fun onInviteCollaborator(email: String, role: ListRole) {
         val trimmed = email.trim()
         if (trimmed.isBlank()) return
-        scope.launch { repository.inviteCollaborator(listId, trimmed, ListRole.EDITOR) }
+        scope.launch { repository.inviteCollaborator(listId, trimmed, role) }
     }
 
-    fun onRemoveCollaborator(collaborator: ListCollaborator) {
+    fun onRemoveCollaboratorClicked(collaborator: ListCollaborator) {
+        _state.update { it.copy(collaboratorPendingRemoval = collaborator) }
+    }
+
+    fun onDismissRemoveCollaborator() {
+        _state.update { it.copy(collaboratorPendingRemoval = null) }
+    }
+
+    fun onConfirmRemoveCollaborator() {
+        val collaborator = _state.value.collaboratorPendingRemoval ?: return
+        _state.update { it.copy(collaboratorPendingRemoval = null) }
         scope.launch { repository.removeCollaborator(listId, collaborator.id) }
     }
 
@@ -109,6 +119,7 @@ class EditGroceryListViewModel(
         val isOwner: Boolean = true,
         val collaborators: List<ListCollaborator> = emptyList(),
         val showDeleteConfirm: Boolean = false,
+        val collaboratorPendingRemoval: ListCollaborator? = null,
     )
 
     sealed class Output {
