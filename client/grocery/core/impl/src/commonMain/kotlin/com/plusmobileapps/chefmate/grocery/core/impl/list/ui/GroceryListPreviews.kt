@@ -161,6 +161,20 @@ val previewGroceryListBlocFilteredEmpty: GroceryListBloc =
         )
     )
 
+/** Grocery list with autocomplete suggestions visible for screenshot coverage. */
+val previewGroceryListBlocAutocomplete: GroceryListBloc =
+    groceryListBloc(
+        model =
+            GroceryListBloc.Model(
+                groupedItems = sampleGroups,
+                autocompleteSuggestions =
+                    persistentListOf("Strawberries", "Strawberry jam", "Strawberry yogurt"),
+                lists = persistentListOf(sampleList),
+                selectedList = sampleList,
+            ),
+        pendingInput = "stra",
+    )
+
 @Preview(showBackground = true, heightDp = 1100)
 @Composable
 internal fun GroceryListPreview() {
@@ -177,4 +191,15 @@ internal fun GroceryListEmptyPreview() {
 @Composable
 internal fun GroceryListFilteredEmptyPreview() {
     ChefMateTheme { GroceryListScreen(bloc = previewGroceryListBlocFilteredEmpty) }
+}
+
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+internal fun GroceryListAutocompletePreview() {
+    ChefMateTheme {
+        GroceryListScreen(
+            bloc = previewGroceryListBlocAutocomplete,
+            forceShowAutocompleteSuggestions = true,
+        )
+    }
 }

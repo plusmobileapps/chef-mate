@@ -312,6 +312,61 @@ class GroceryListBlocTest {
     }
 
     @Test
+    fun When_item_name_entered_Then_autocomplete_suggestions_include_matching_items() = runTest {
+        bloc.state.test {
+            awaitItem() shouldBe GroceryListBloc.Model()
+            groceries.emit(
+                listOf(
+                    GroceryItem(
+                        id = 1,
+                        name = "Milk chocolate",
+                        displayName = "Milk chocolate",
+                        category = GroceryCategory.BAKING,
+                    ),
+                    GroceryItem(
+                        id = 2,
+                        name = "Spinach",
+                        displayName = "Spinach",
+                        category = GroceryCategory.PRODUCE,
+                    ),
+                )
+            )
+            awaitItem().autocompleteSuggestions shouldBe emptyList()
+
+            bloc.onNewGroceryItemNameChange("mi")
+
+            val result = awaitItem()
+            result.autocompleteSuggestions.take(2) shouldBe listOf("Milk chocolate", "Microgreen")
+        }
+    }
+
+    @Test
+    fun When_item_name_matches_suggestion_exactly_Then_exact_suggestion_is_hidden() = runTest {
+        bloc.state.test {
+            awaitItem() shouldBe GroceryListBloc.Model()
+            groceries.emit(
+                listOf(
+                    GroceryItem(
+                        id = 1,
+                        name = "Eggs",
+                        displayName = "Eggs",
+                        category = GroceryCategory.DAIRY,
+                    )
+                )
+            )
+            awaitItem()
+
+            bloc.onNewGroceryItemNameChange("sal")
+            awaitItem().autocompleteSuggestions shouldBe
+                listOf("Salami", "Salmon", "Salad", "Salsa", "Salt")
+
+            bloc.onNewGroceryItemNameChange("salt")
+
+            awaitItem().autocompleteSuggestions shouldBe emptyList()
+        }
+    }
+
+    @Test
     fun When_clear_filters_applied_Then_recipe_filter_is_also_cleared() = runTest {
         val items =
             listOf(

@@ -8,7 +8,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
+import com.plusmobileapps.chefmate.grocery.core.impl.list.ui.GroceryListScreen
 import com.plusmobileapps.chefmate.grocery.core.impl.list.ui.previewGroceryListBloc
+import com.plusmobileapps.chefmate.grocery.core.impl.list.ui.previewGroceryListBlocAutocomplete
 import com.plusmobileapps.chefmate.grocery.core.impl.list.ui.previewGroceryListBlocEmpty
 import com.plusmobileapps.chefmate.grocery.core.impl.list.ui.previewGroceryListBlocFilteredEmpty
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
@@ -22,6 +24,18 @@ private fun GroceryListScreenshot(bloc: GroceryListBloc, darkTheme: Boolean = fa
     ChefMateTheme(darkTheme = darkTheme) {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             bloc.Content()
+        }
+    }
+}
+
+@Composable
+private fun GroceryListAutocompleteScreenshot(darkTheme: Boolean = false) {
+    ChefMateTheme(darkTheme = darkTheme) {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            GroceryListScreen(
+                bloc = previewGroceryListBlocAutocomplete,
+                forceShowAutocompleteSuggestions = true,
+            )
         }
     }
 }
@@ -40,6 +54,13 @@ fun GroceryListPhonePortraitLightScreenshot() {
 @Composable
 fun GroceryListPhonePortraitDarkScreenshot() {
     GroceryListScreenshot(bloc = previewGroceryListBloc, darkTheme = true)
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+fun GroceryListAutocompletePhonePortraitLightScreenshot() {
+    GroceryListAutocompleteScreenshot()
 }
 
 // ── Empty state — regression coverage for the "Browse my recipes" CTA ──────

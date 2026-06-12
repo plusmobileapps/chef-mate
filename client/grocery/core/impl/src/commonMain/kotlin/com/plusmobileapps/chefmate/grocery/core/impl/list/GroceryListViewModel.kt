@@ -12,6 +12,7 @@ import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListInvite
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
+import com.plusmobileapps.chefmate.grocery.data.IngredientParser
 import com.plusmobileapps.chefmate.grocery.data.ListRole
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.string
@@ -86,9 +87,12 @@ class GroceryListViewModel(
                     _filter,
                     _sort,
                     _recipeFilter,
-                ) { items, filter, sort, recipeFilter ->
+                    _newGroceryItemName,
+                ) { items, filter, sort, recipeFilter, newGroceryItemName ->
                     val availableRecipes = items.mapNotNull { it.recipeName }.distinct().sorted()
                     val hasNoRecipeItems = items.any { it.recipeName == null }
+                    val autocompleteSuggestions =
+                        buildAutocompleteSuggestions(query = newGroceryItemName, items = items)
                     val filtered =
                         when (filter) {
                             GroceryFilter.ALL -> items
@@ -131,14 +135,20 @@ class GroceryListViewModel(
                                     )
                                     .filter { it.items.isNotEmpty() }
                         }
-                    Triple(grouped, availableRecipes, hasNoRecipeItems)
+                    GroceryListContent(
+                        groupedItems = grouped,
+                        availableRecipes = availableRecipes,
+                        autocompleteSuggestions = autocompleteSuggestions,
+                        hasNoRecipeItems = hasNoRecipeItems,
+                    )
                 }
-                .collect { (grouped, availableRecipes, hasNoRecipeItems) ->
+                .collect { content ->
                     _state.update {
                         it.copy(
-                            groupedItems = grouped,
-                            availableRecipes = availableRecipes,
-                            hasNoRecipeItems = hasNoRecipeItems,
+                            groupedItems = content.groupedItems,
+                            availableRecipes = content.availableRecipes,
+                            autocompleteSuggestions = content.autocompleteSuggestions,
+                            hasNoRecipeItems = content.hasNoRecipeItems,
                         )
                     }
                 }
@@ -305,6 +315,7 @@ class GroceryListViewModel(
         val filter: GroceryFilter = GroceryFilter.ALL,
         val recipeFilter: String? = null,
         val availableRecipes: List<String> = emptyList(),
+        val autocompleteSuggestions: List<String> = emptyList(),
         val hasNoRecipeItems: Boolean = false,
         val isSyncing: Boolean = false,
         val lists: List<GroceryListModel> = emptyList(),
@@ -316,8 +327,39 @@ class GroceryListViewModel(
         val currentUserRole: ListRole = ListRole.OWNER,
     )
 
+    private data class GroceryListContent(
+        val groupedItems: List<GroceryGroup>,
+        val availableRecipes: List<String>,
+        val autocompleteSuggestions: List<String>,
+        val hasNoRecipeItems: Boolean,
+    )
+
     companion object {
         private const val KEY_SORT = "grocery_list_sort"
         private const val KEY_FILTER = "grocery_list_filter"
+        private const val MAX_AUTOCOMPLETE_SUGGESTIONS = 6
+
+        private fun buildAutocompleteSuggestions(
+            query: String,
+            items: List<GroceryItem>,
+        ): List<String> {
+            val normalizedQuery = IngredientParser.parse(query).name.trim().lowercase()
+            if (normalizedQuery.isBlank()) return emptyList()
+
+            val existingItemSuggestions =
+                items
+                    .asSequence()
+                    .map { it.displayName.trim() }
+                    .filter { it.isNotBlank() }
+                    .distinctBy { it.lowercase() }
+                    .filter { it.lowercase().startsWith(normalizedQuery) }
+
+            return (existingItemSuggestions +
+                    IngredientParser.suggestedNamesFor(query).asSequence())
+                .distinctBy { it.lowercase() }
+                .filter { it.lowercase() != normalizedQuery }
+                .take(MAX_AUTOCOMPLETE_SUGGESTIONS)
+                .toList()
+        }
     }
 }

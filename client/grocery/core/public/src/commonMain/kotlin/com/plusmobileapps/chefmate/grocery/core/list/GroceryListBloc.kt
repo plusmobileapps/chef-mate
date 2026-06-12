@@ -89,6 +89,7 @@ interface GroceryListBloc : BlocScreen {
         val filter: GroceryFilter = GroceryFilter.ALL,
         val recipeFilter: String? = null,
         val availableRecipes: ImmutableList<String> = persistentListOf(),
+        val autocompleteSuggestions: ImmutableList<String> = persistentListOf(),
         val hasNoRecipeItems: Boolean = false,
         val isSyncing: Boolean = false,
         val lists: ImmutableList<GroceryListModel> = persistentListOf(),

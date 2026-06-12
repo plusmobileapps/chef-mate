@@ -33,6 +33,20 @@ class IngredientParserTest {
     }
 
     @Test
+    fun suggestions_return_ingredient_names_that_start_with_query() {
+        val suggestions = IngredientParser.suggestedNamesFor("stra")
+
+        assertEquals(listOf("Strawberries"), suggestions)
+    }
+
+    @Test
+    fun suggestions_use_ingredient_name_when_query_includes_quantity() {
+        val suggestions = IngredientParser.suggestedNamesFor("2 lb ground")
+
+        assertEquals(listOf("Ground turkey", "Ground beef"), suggestions)
+    }
+
+    @Test
     fun parse_large_quantity_modifier() {
         val result = IngredientParser.parse("3 large eggs")
         assertEquals("eggs", result.name)

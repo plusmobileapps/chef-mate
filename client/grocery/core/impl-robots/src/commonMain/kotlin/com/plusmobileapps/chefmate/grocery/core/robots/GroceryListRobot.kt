@@ -5,12 +5,14 @@ package com.plusmobileapps.chefmate.grocery.core.robots
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.waitUntilAtLeastOneExists
 import androidx.compose.ui.test.waitUntilExactlyOneExists
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailTestTags
@@ -42,6 +44,24 @@ class GroceryListRobot(private val test: ComposeUiTest) {
 
     fun assertAisleSelected(label: String): GroceryListRobot = apply {
         test.onNode(hasText(label) and inDetailSheet).assertIsDisplayed()
+    }
+
+    fun enterItemNamePrefix(prefix: String): GroceryListRobot = apply {
+        test
+            .onNode(hasTestTag(GroceryListTestTags.ITEM_INPUT) and onScreen)
+            .assertIsDisplayed()
+            .performClick()
+            .performTextInput(prefix)
+    }
+
+    fun clickItemSuggestion(suggestion: String): GroceryListRobot = apply {
+        val matcher = hasTestTag(GroceryListTestTags.ITEM_SUGGESTION) and hasText(suggestion)
+        test.waitUntilExactlyOneExists(matcher)
+        test.onNode(matcher).assertIsDisplayed().performClick()
+    }
+
+    fun assertItemInputText(text: String): GroceryListRobot = apply {
+        test.onNode(hasTestTag(GroceryListTestTags.ITEM_INPUT) and onScreen).assertTextEquals(text)
     }
 
     /** Opens the list selector (bottom sheet on phones, dropdown on tablets). */
