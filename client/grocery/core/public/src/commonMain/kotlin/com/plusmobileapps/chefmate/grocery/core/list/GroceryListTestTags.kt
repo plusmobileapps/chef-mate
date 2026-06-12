@@ -6,4 +6,5 @@ object GroceryListTestTags {
     const val FILTERED_EMPTY_STATE = "grocery_list_filtered_empty_state"
     const val CLEAR_FILTERS_BUTTON = "grocery_list_clear_filters_button"
     const val BROWSE_RECIPES_BUTTON = "grocery_list_browse_recipes_button"
+    const val LIST_SELECTOR = "grocery_list_selector_title"
 }

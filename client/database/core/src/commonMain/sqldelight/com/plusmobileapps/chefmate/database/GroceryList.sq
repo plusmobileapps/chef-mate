@@ -7,7 +7,10 @@ CREATE TABLE GroceryList (
     updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
     remoteId TEXT UNIQUE,
     clientId TEXT,
-    isDirty INTEGER AS Boolean NOT NULL DEFAULT 0
+    isDirty INTEGER AS Boolean NOT NULL DEFAULT 0,
+    ownerId TEXT,
+    role TEXT NOT NULL DEFAULT 'owner',
+    isShared INTEGER AS Boolean NOT NULL DEFAULT 0
 );
 
 getAll:
@@ -51,3 +54,12 @@ UPDATE GroceryList SET isDirty = 0 WHERE id = ?;
 
 updateClientId:
 UPDATE GroceryList SET clientId = ? WHERE id = ?;
+
+updateOwnership:
+UPDATE GroceryList SET ownerId = ?, role = ?, isShared = ? WHERE id = ?;
+
+getSharedLists:
+SELECT * FROM GroceryList WHERE isShared = 1 ORDER BY createdAt ASC;
+
+getOwnedLists:
+SELECT * FROM GroceryList WHERE role = 'owner' ORDER BY createdAt ASC;

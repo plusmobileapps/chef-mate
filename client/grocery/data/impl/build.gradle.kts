@@ -13,6 +13,7 @@ kotlin {
             implementation(projects.client.auth.data.public)
             implementation(libs.supabase.client)
             implementation(libs.supabase.postgrest)
+            implementation(libs.supabase.realtime)
             implementation(libs.kotlinx.serialization.json)
         }
         commonTest.dependencies {

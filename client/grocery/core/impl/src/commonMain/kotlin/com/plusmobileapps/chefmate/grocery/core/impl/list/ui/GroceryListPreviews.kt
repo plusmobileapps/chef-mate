@@ -115,6 +115,12 @@ private fun groceryListBloc(
 
         override fun onBrowseRecipesClicked() = Unit
 
+        override fun onEditListClicked(list: GroceryListModel) = Unit
+
+        override fun onAcceptInvitation(list: GroceryListModel) = Unit
+
+        override fun onRejectInvitation(list: GroceryListModel) = Unit
+
         @Composable override fun Content(modifier: Modifier) = GroceryListScreen(this, modifier)
     }
 

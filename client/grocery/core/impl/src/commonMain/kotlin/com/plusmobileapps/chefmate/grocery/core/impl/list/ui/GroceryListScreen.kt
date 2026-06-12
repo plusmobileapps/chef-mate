@@ -8,8 +8,10 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -30,6 +32,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.outlined.CloudDone
@@ -40,6 +43,7 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
@@ -92,10 +96,10 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_delete_it
 import chefmate.client.grocery.core.public.generated.resources.grocery_delete_items
 import chefmate.client.grocery.core.public.generated.resources.grocery_delete_items_message
 import chefmate.client.grocery.core.public.generated.resources.grocery_delete_items_title
-import chefmate.client.grocery.core.public.generated.resources.grocery_delete_list
 import chefmate.client.grocery.core.public.generated.resources.grocery_delete_purchased
 import chefmate.client.grocery.core.public.generated.resources.grocery_detail
 import chefmate.client.grocery.core.public.generated.resources.grocery_done
+import chefmate.client.grocery.core.public.generated.resources.grocery_edit_list
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter_all
 import chefmate.client.grocery.core.public.generated.resources.grocery_filter_by
@@ -110,7 +114,9 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_list_empt
 import chefmate.client.grocery.core.public.generated.resources.grocery_list_filtered_empty_clear_filters
 import chefmate.client.grocery.core.public.generated.resources.grocery_list_filtered_empty_description
 import chefmate.client.grocery.core.public.generated.resources.grocery_list_filtered_empty_title
-import chefmate.client.grocery.core.public.generated.resources.grocery_select_list
+import chefmate.client.grocery.core.public.generated.resources.grocery_my_lists
+import chefmate.client.grocery.core.public.generated.resources.grocery_shared_badge
+import chefmate.client.grocery.core.public.generated.resources.grocery_shared_with_you
 import chefmate.client.grocery.core.public.generated.resources.grocery_sort_aisle
 import chefmate.client.grocery.core.public.generated.resources.grocery_sort_alphabetical
 import chefmate.client.grocery.core.public.generated.resources.grocery_sort_and_filter
@@ -120,6 +126,7 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_sync_not_
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_synced
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_syncing
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.plusmobileapps.chefmate.grocery.core.displayName
 import com.plusmobileapps.chefmate.grocery.core.impl.detail.ui.GroceryDetailSheetContent
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryDisplayGroup
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryDisplayItem
@@ -127,11 +134,15 @@ import com.plusmobileapps.chefmate.grocery.core.list.GroceryGroupedList
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListTestTags
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
+import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
+import com.plusmobileapps.chefmate.grocery.data.ListRole
 import com.plusmobileapps.chefmate.grocery.data.SyncStatus
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
+import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveModal
+import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
 import com.plusmobileapps.chefmate.ui.isIosPlatform
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.flow.StateFlow
@@ -151,180 +162,208 @@ fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {
             (if (hasRecipeFilter) 1 else 0)
     val focusManager = LocalFocusManager.current
 
-    PlusNavContainer(
-        modifier = modifier.testTag(GroceryListTestTags.SCREEN).fillMaxSize(),
-        data = PlusHeaderData.None,
-        scrollEnabled = false,
-        content = {
-            TopAppBar(
-                windowInsets = WindowInsets(0.dp),
-                title = {
-                    Row(
-                        modifier = Modifier.clickable(onClick = bloc::onListSelectorClicked),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text =
-                                state.selectedList?.name ?: stringResource(Res.string.grocery_list)
-                        )
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = state.showListSelector)
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { showSortFilterSheet = true }) {
-                        if (activeCount > 0) {
-                            BadgedBox(badge = { Badge { Text("$activeCount") } }) {
-                                Icon(
-                                    imageVector = Icons.Default.FilterList,
-                                    contentDescription = stringResource(Res.string.grocery_filter),
-                                    tint = MaterialTheme.colorScheme.primary,
+    PlusResponsiveContainer(
+        modifier = modifier.testTag(GroceryListTestTags.SCREEN).fillMaxSize()
+    ) { windowSizeClass ->
+        val useDropdownSelector = windowSizeClass == WindowSizeClass.EXPANDED
+        PlusNavContainer(
+            modifier = Modifier.fillMaxSize(),
+            data = PlusHeaderData.None,
+            scrollEnabled = false,
+            content = {
+                TopAppBar(
+                    windowInsets = WindowInsets(0.dp),
+                    title = {
+                        Box {
+                            Row(
+                                modifier =
+                                    Modifier.testTag(GroceryListTestTags.LIST_SELECTOR)
+                                        .clickable(onClick = bloc::onListSelectorClicked),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text =
+                                        state.selectedList?.name
+                                            ?: stringResource(Res.string.grocery_list)
+                                )
+                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                    expanded = state.showListSelector
                                 )
                             }
-                        } else {
+                            if (useDropdownSelector) {
+                                GroceryListSelectorDropdown(
+                                    expanded = state.showListSelector,
+                                    state = state,
+                                    onDismiss = bloc::onListSelectorDismissed,
+                                    onListSelected = bloc::onListSelected,
+                                    onCreateListClicked = bloc::onCreateListClicked,
+                                    onEditListClicked = bloc::onEditListClicked,
+                                )
+                            }
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { showSortFilterSheet = true }) {
+                            if (activeCount > 0) {
+                                BadgedBox(badge = { Badge { Text("$activeCount") } }) {
+                                    Icon(
+                                        imageVector = Icons.Default.FilterList,
+                                        contentDescription =
+                                            stringResource(Res.string.grocery_filter),
+                                        tint = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+                            } else {
+                                Icon(
+                                    Icons.Default.FilterList,
+                                    contentDescription = stringResource(Res.string.grocery_filter),
+                                )
+                            }
+                        }
+                        IconButton(onClick = bloc::onDeleteClicked) {
                             Icon(
-                                Icons.Default.FilterList,
-                                contentDescription = stringResource(Res.string.grocery_filter),
+                                Icons.Default.DeleteSweep,
+                                contentDescription =
+                                    stringResource(Res.string.grocery_delete_items),
                             )
                         }
+                        if (state.isSyncing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp).padding(end = 4.dp),
+                                strokeWidth = 2.dp,
+                            )
+                        } else {
+                            IconButton(onClick = bloc::onSyncClicked) {
+                                Icon(
+                                    Icons.Default.Sync,
+                                    contentDescription =
+                                        stringResource(Res.string.grocery_sync_all),
+                                )
+                            }
+                        }
+                    },
+                )
+                val itemLookup =
+                    remember(state.groupedItems) {
+                        state.groupedItems.flatMap { it.items }.associateBy { it.id }
                     }
-                    IconButton(onClick = bloc::onDeleteClicked) {
-                        Icon(
-                            Icons.Default.DeleteSweep,
-                            contentDescription = stringResource(Res.string.grocery_delete_items),
+                PullToRefreshBox(
+                    isRefreshing = state.isSyncing,
+                    onRefresh = bloc::onSyncClicked,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    val hasNoItems = state.groupedItems.isEmpty()
+                    val filtersApplied =
+                        state.filter != GroceryListBloc.GroceryFilter.ALL ||
+                            state.recipeFilter != null
+                    val showEmptyState = hasNoItems && !filtersApplied && !state.isSyncing
+                    val showFilteredEmptyState = hasNoItems && filtersApplied && !state.isSyncing
+                    if (showEmptyState) {
+                        EmptyGroceryListState(
+                            onBrowseRecipesClicked = bloc::onBrowseRecipesClicked,
+                            modifier = Modifier.fillMaxSize(),
                         )
-                    }
-                    if (state.isSyncing) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp).padding(end = 4.dp),
-                            strokeWidth = 2.dp,
+                    } else if (showFilteredEmptyState) {
+                        FilteredEmptyGroceryListState(
+                            onClearFiltersClicked = bloc::onClearFiltersClicked,
+                            onBrowseRecipesClicked = bloc::onBrowseRecipesClicked,
+                            modifier = Modifier.fillMaxSize(),
                         )
                     } else {
-                        IconButton(onClick = bloc::onSyncClicked) {
-                            Icon(
-                                Icons.Default.Sync,
-                                contentDescription = stringResource(Res.string.grocery_sync_all),
-                            )
-                        }
+                        GroceryGroupedList(
+                            groups =
+                                state.groupedItems.map { group ->
+                                    GroceryDisplayGroup(
+                                        category = group.category,
+                                        items =
+                                            group.items.map { item ->
+                                                GroceryDisplayItem(
+                                                    key = item.id,
+                                                    displayName = item.displayName,
+                                                    quantity = item.quantity,
+                                                    isChecked = item.isChecked,
+                                                    recipeName = item.recipeName,
+                                                )
+                                            },
+                                    )
+                                },
+                            onItemClick = { key ->
+                                itemLookup[key as Long]?.let { bloc.onGroceryItemClicked(it) }
+                            },
+                            onCheckedChange = { key ->
+                                itemLookup[key as Long]?.let {
+                                    bloc.onGroceryItemCheckedChange(it, !it.isChecked)
+                                }
+                            },
+                            modifier =
+                                Modifier.fillMaxSize().pointerInput(Unit) {
+                                    detectTapGestures(onTap = { focusManager.clearFocus() })
+                                },
+                            showHeaders = state.sort == GroceryListBloc.GrocerySort.AISLE,
+                            trailingContent = { displayItem ->
+                                val item = itemLookup[displayItem.key as Long]
+                                if (item != null) {
+                                    GroceryItemTrailingContent(
+                                        item = item,
+                                        onDeleteClick = { bloc.onGroceryItemDelete(item) },
+                                    )
+                                }
+                            },
+                        )
                     }
-                },
-            )
-            val itemLookup =
-                remember(state.groupedItems) {
-                    state.groupedItems.flatMap { it.items }.associateBy { it.id }
                 }
-            PullToRefreshBox(
-                isRefreshing = state.isSyncing,
-                onRefresh = bloc::onSyncClicked,
-                modifier = Modifier.weight(1f),
-            ) {
-                val hasNoItems = state.groupedItems.isEmpty()
-                val filtersApplied =
-                    state.filter != GroceryListBloc.GroceryFilter.ALL || state.recipeFilter != null
-                val showEmptyState = hasNoItems && !filtersApplied && !state.isSyncing
-                val showFilteredEmptyState = hasNoItems && filtersApplied && !state.isSyncing
-                if (showEmptyState) {
-                    EmptyGroceryListState(
-                        onBrowseRecipesClicked = bloc::onBrowseRecipesClicked,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                } else if (showFilteredEmptyState) {
-                    FilteredEmptyGroceryListState(
-                        onClearFiltersClicked = bloc::onClearFiltersClicked,
-                        onBrowseRecipesClicked = bloc::onBrowseRecipesClicked,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                } else {
-                    GroceryGroupedList(
-                        groups =
-                            state.groupedItems.map { group ->
-                                GroceryDisplayGroup(
-                                    category = group.category,
-                                    items =
-                                        group.items.map { item ->
-                                            GroceryDisplayItem(
-                                                key = item.id,
-                                                displayName = item.displayName,
-                                                quantity = item.quantity,
-                                                isChecked = item.isChecked,
-                                                recipeName = item.recipeName,
-                                            )
-                                        },
-                                )
-                            },
-                        onItemClick = { key ->
-                            itemLookup[key as Long]?.let { bloc.onGroceryItemClicked(it) }
-                        },
-                        onCheckedChange = { key ->
-                            itemLookup[key as Long]?.let {
-                                bloc.onGroceryItemCheckedChange(it, !it.isChecked)
-                            }
-                        },
-                        modifier =
-                            Modifier.fillMaxSize().pointerInput(Unit) {
-                                detectTapGestures(onTap = { focusManager.clearFocus() })
-                            },
-                        showHeaders = state.sort == GroceryListBloc.GrocerySort.AISLE,
-                        trailingContent = { displayItem ->
-                            val item = itemLookup[displayItem.key as Long]
-                            if (item != null) {
-                                GroceryItemTrailingContent(
-                                    item = item,
-                                    onDeleteClick = { bloc.onGroceryItemDelete(item) },
-                                )
-                            }
-                        },
+                if (state.currentUserRole != ListRole.VIEWER) {
+                    GroceryListInput(
+                        name = bloc.newGroceryItemName,
+                        onNameChange = bloc::onNewGroceryItemNameChange,
+                        onAddClick = bloc::saveGroceryItem,
                     )
                 }
-            }
-            GroceryListInput(
-                name = bloc.newGroceryItemName,
-                onNameChange = bloc::onNewGroceryItemNameChange,
-                onAddClick = bloc::saveGroceryItem,
-            )
-        },
-    )
-
-    if (showSortFilterSheet) {
-        GrocerySortFilterBottomSheet(
-            currentSort = state.sort,
-            currentFilter = state.filter,
-            currentRecipeFilter = state.recipeFilter,
-            availableRecipes = state.availableRecipes,
-            hasNoRecipeItems = state.hasNoRecipeItems,
-            onApply = { sort, filter, recipeFilter ->
-                bloc.onApplySortAndFilter(sort, filter, recipeFilter)
-                showSortFilterSheet = false
             },
-            onDismiss = { showSortFilterSheet = false },
         )
-    }
 
-    if (state.showListSelector) {
-        GroceryListSelectorSheet(
-            state = state,
-            onDismiss = bloc::onListSelectorDismissed,
-            onListSelected = bloc::onListSelected,
-            onCreateListClicked = bloc::onCreateListClicked,
-            onDeleteListClicked = bloc::onDeleteListClicked,
-        )
-    }
+        if (showSortFilterSheet) {
+            GrocerySortFilterBottomSheet(
+                currentSort = state.sort,
+                currentFilter = state.filter,
+                currentRecipeFilter = state.recipeFilter,
+                availableRecipes = state.availableRecipes,
+                hasNoRecipeItems = state.hasNoRecipeItems,
+                onApply = { sort, filter, recipeFilter ->
+                    bloc.onApplySortAndFilter(sort, filter, recipeFilter)
+                    showSortFilterSheet = false
+                },
+                onDismiss = { showSortFilterSheet = false },
+            )
+        }
 
-    if (state.showCreateListDialog) {
-        CreateListDialog(
-            onDismiss = bloc::onCreateListDismissed,
-            onConfirm = bloc::onCreateListConfirmed,
-        )
-    }
+        if (!useDropdownSelector && state.showListSelector) {
+            GroceryListSelectorSheet(
+                state = state,
+                onDismiss = bloc::onListSelectorDismissed,
+                onListSelected = bloc::onListSelected,
+                onCreateListClicked = bloc::onCreateListClicked,
+                onEditListClicked = bloc::onEditListClicked,
+            )
+        }
 
-    if (state.showDeleteDialog) {
-        DeleteItemsDialog(
-            onDismiss = bloc::onDeleteDismissed,
-            onDeletePurchased = bloc::onDeletePurchasedConfirmed,
-            onDeleteAll = bloc::onDeleteAllConfirmed,
-        )
-    }
+        if (state.showCreateListDialog) {
+            CreateListDialog(
+                onDismiss = bloc::onCreateListDismissed,
+                onConfirm = bloc::onCreateListConfirmed,
+            )
+        }
 
-    GroceryDetailSheet(bloc = bloc)
+        if (state.showDeleteDialog) {
+            DeleteItemsDialog(
+                onDismiss = bloc::onDeleteDismissed,
+                onDeletePurchased = bloc::onDeletePurchasedConfirmed,
+                onDeleteAll = bloc::onDeleteAllConfirmed,
+            )
+        }
+
+        GroceryDetailSheet(bloc = bloc)
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -518,66 +557,108 @@ private fun GrocerySortFilterBottomSheet(
     }
 }
 
+/** Phone/medium presentation of the list selector: a modal bottom sheet. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun GroceryListSelectorSheet(
     state: GroceryListBloc.Model,
     onDismiss: () -> Unit,
-    onListSelected: (com.plusmobileapps.chefmate.grocery.data.GroceryListModel) -> Unit,
+    onListSelected: (GroceryListModel) -> Unit,
     onCreateListClicked: () -> Unit,
-    onDeleteListClicked: (com.plusmobileapps.chefmate.grocery.data.GroceryListModel) -> Unit,
+    onEditListClicked: (GroceryListModel) -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState()
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        GroceryListSelectorContent(
+            state = state,
+            onDismiss = onDismiss,
+            onListSelected = onListSelected,
+            onCreateListClicked = onCreateListClicked,
+            onEditListClicked = onEditListClicked,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+/** Tablet/desktop presentation: a dropdown anchored to the title in the top bar. */
+@Composable
+private fun GroceryListSelectorDropdown(
+    expanded: Boolean,
+    state: GroceryListBloc.Model,
+    onDismiss: () -> Unit,
+    onListSelected: (GroceryListModel) -> Unit,
+    onCreateListClicked: () -> Unit,
+    onEditListClicked: (GroceryListModel) -> Unit,
+) {
+    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+        GroceryListSelectorContent(
+            state = state,
+            onDismiss = onDismiss,
+            onListSelected = onListSelected,
+            onCreateListClicked = onCreateListClicked,
+            onEditListClicked = onEditListClicked,
+        )
+    }
+}
+
+/** Shared rows for both selector presentations (My Lists / Shared with me + create). */
+@Composable
+private fun ColumnScope.GroceryListSelectorContent(
+    state: GroceryListBloc.Model,
+    onDismiss: () -> Unit,
+    onListSelected: (GroceryListModel) -> Unit,
+    onCreateListClicked: () -> Unit,
+    onEditListClicked: (GroceryListModel) -> Unit,
+) {
+    val myLists = state.lists.filter { !it.isShared }
+    val sharedLists = state.lists.filter { it.isShared }
+
+    Text(
+        text = stringResource(Res.string.grocery_my_lists),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+    )
+    myLists.forEach { list ->
+        GroceryListSelectorItem(
+            list = list,
+            isSelected = list.id == state.selectedList?.id,
+            onListSelected = onListSelected,
+            onEditListClicked = {
+                onDismiss()
+                onEditListClicked(it)
+            },
+        )
+    }
+    HorizontalDivider()
+    ListItem(
+        headlineContent = { Text(stringResource(Res.string.grocery_create_new_list)) },
+        modifier =
+            Modifier.clickable {
+                onDismiss()
+                onCreateListClicked()
+            },
+        leadingContent = {
+            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+        },
+    )
+    if (sharedLists.isNotEmpty()) {
+        HorizontalDivider()
         Text(
-            text = stringResource(Res.string.grocery_select_list),
+            text = stringResource(Res.string.grocery_shared_with_you),
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         )
-        state.lists.forEach { list ->
-            ListItem(
-                headlineContent = {
-                    Text(
-                        text = list.name,
-                        color =
-                            if (list.id == state.selectedList?.id) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
-                            },
-                    )
+        sharedLists.forEach { list ->
+            GroceryListSelectorItem(
+                list = list,
+                isSelected = list.id == state.selectedList?.id,
+                onListSelected = onListSelected,
+                onEditListClicked = {
+                    onDismiss()
+                    onEditListClicked(it)
                 },
-                modifier = Modifier.clickable { onListSelected(list) },
-                trailingContent =
-                    if (state.lists.size > 1) {
-                        {
-                            IconButton(onClick = { onDeleteListClicked(list) }) {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription =
-                                        stringResource(Res.string.grocery_delete_list),
-                                    modifier = Modifier.size(18.dp),
-                                )
-                            }
-                        }
-                    } else {
-                        null
-                    },
             )
         }
-        HorizontalDivider()
-        ListItem(
-            headlineContent = { Text(stringResource(Res.string.grocery_create_new_list)) },
-            modifier =
-                Modifier.clickable {
-                    onDismiss()
-                    onCreateListClicked()
-                },
-            leadingContent = {
-                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-            },
-        )
-        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -832,4 +913,46 @@ private fun FilteredEmptyGroceryListState(
             }
         }
     }
+}
+
+@Composable
+private fun GroceryListSelectorItem(
+    list: GroceryListModel,
+    isSelected: Boolean,
+    onListSelected: (GroceryListModel) -> Unit,
+    onEditListClicked: (GroceryListModel) -> Unit,
+) {
+    ListItem(
+        headlineContent = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = list.name,
+                    color =
+                        if (isSelected) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
+                )
+                if (list.isShared) {
+                    Text(
+                        text = stringResource(Res.string.grocery_shared_badge),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
+                }
+            }
+        },
+        modifier = Modifier.clickable { onListSelected(list) },
+        trailingContent = {
+            IconButton(onClick = { onEditListClicked(list) }) {
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = stringResource(Res.string.grocery_edit_list),
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+        },
+    )
 }

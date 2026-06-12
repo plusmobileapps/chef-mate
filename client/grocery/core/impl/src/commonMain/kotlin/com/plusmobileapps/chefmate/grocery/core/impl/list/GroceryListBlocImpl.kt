@@ -77,6 +77,8 @@ class GroceryListBlocImpl(
                 showCreateListDialog = it.showCreateListDialog,
                 showDeleteDialog = it.showDeleteDialog,
                 showListSelector = it.showListSelector,
+                pendingInvitations = it.pendingInvitations,
+                currentUserRole = it.currentUserRole,
             )
         }
 
@@ -172,6 +174,18 @@ class GroceryListBlocImpl(
 
     override fun onBrowseRecipesClicked() {
         output.onNext(GroceryListBloc.Output.OpenRecipes)
+    }
+
+    override fun onEditListClicked(list: GroceryListModel) {
+        output.onNext(GroceryListBloc.Output.OpenEditList(list.id))
+    }
+
+    override fun onAcceptInvitation(list: GroceryListModel) {
+        viewModel.onAcceptInvitation(list)
+    }
+
+    override fun onRejectInvitation(list: GroceryListModel) {
+        viewModel.onRejectInvitation(list)
     }
 
     @Composable

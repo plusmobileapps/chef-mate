@@ -98,6 +98,8 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
          * an existing book's id to rename it (the "Collaborate" and per-row edit actions).
          */
         data class OpenEditRecipeBook(val bookId: Long?) : Output()
+
+        data class OpenEditGroceryList(val listId: Long) : Output()
     }
 
     fun interface Factory {

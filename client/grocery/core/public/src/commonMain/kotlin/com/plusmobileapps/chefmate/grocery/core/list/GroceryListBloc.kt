@@ -8,6 +8,7 @@ import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
+import com.plusmobileapps.chefmate.grocery.data.ListRole
 import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -62,6 +63,12 @@ interface GroceryListBloc : BlocScreen {
 
     fun onBrowseRecipesClicked()
 
+    fun onEditListClicked(list: GroceryListModel)
+
+    fun onAcceptInvitation(list: GroceryListModel)
+
+    fun onRejectInvitation(list: GroceryListModel)
+
     data class GroceryGroup(val category: GroceryCategory, val items: ImmutableList<GroceryItem>)
 
     enum class GrocerySort {
@@ -88,10 +95,14 @@ interface GroceryListBloc : BlocScreen {
         val showCreateListDialog: Boolean = false,
         val showDeleteDialog: Boolean = false,
         val showListSelector: Boolean = false,
+        val pendingInvitations: List<GroceryListModel> = emptyList(),
+        val currentUserRole: ListRole = ListRole.OWNER,
     )
 
     sealed class Output {
         data object OpenRecipes : Output()
+
+        data class OpenEditList(val listId: Long) : Output()
     }
 
     sealed class Sheet {
