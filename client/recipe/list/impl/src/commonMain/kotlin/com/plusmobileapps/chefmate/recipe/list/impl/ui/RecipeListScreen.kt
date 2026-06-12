@@ -174,6 +174,7 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_view_l
 import chefmate.client.recipe.list.public.generated.resources.recipe_sync_not_synced
 import chefmate.client.recipe.list.public.generated.resources.recipe_sync_synced
 import chefmate.client.recipe.list.public.generated.resources.recipe_sync_syncing
+import com.plusmobileapps.chefmate.letIfTrue
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
@@ -281,7 +282,7 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                         if (showBookSelector) FixedString("")
                         else Res.string.recipe_list_title.asTextData(),
                     leading =
-                        if (showBookSelector) {
+                        letIfTrue(showBookSelector) {
                             {
                                 BookSelector(
                                     activeBookName = bookSelectorLabel,
@@ -305,8 +306,6 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                                     }
                                 }
                             }
-                        } else {
-                            null
                         },
                     trailingAccessory =
                         PlusHeaderData.TrailingAccessory.Custom {
