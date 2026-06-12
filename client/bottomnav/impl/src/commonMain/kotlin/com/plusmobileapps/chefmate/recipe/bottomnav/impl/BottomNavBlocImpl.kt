@@ -218,6 +218,9 @@ class BottomNavBlocImpl(
             GroceryListBloc.Output.OpenRecipes -> {
                 onTabSelected(BottomNavBloc.Tab.RECIPES)
             }
+            is GroceryListBloc.Output.OpenEditList -> {
+                this.output.onNext(BottomNavBloc.Output.OpenEditGroceryList(output.listId))
+            }
         }
     }
 

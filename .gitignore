@@ -21,6 +21,7 @@ build-artifacts/
 .claude/settings.local.json
 .claude/worktrees/*
 .codex/worktrees/*
+supabase/.temp/
 
 # Keystore
 keystore.properties

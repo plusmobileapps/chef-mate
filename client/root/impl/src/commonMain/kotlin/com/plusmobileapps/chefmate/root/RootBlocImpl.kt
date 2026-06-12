@@ -20,6 +20,7 @@ import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.featureflag.FeatureFlags
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagsBloc
+import com.plusmobileapps.chefmate.grocery.core.edit.EditGroceryListBloc
 import com.plusmobileapps.chefmate.profile.ManageProfileBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
@@ -56,6 +57,7 @@ class RootBlocImpl(
     private val aiChat: AiChatRootBloc.Factory,
     private val exportRecipes: ExportRecipesBloc.Factory,
     private val editRecipeBook: EditRecipeBookBloc.Factory,
+    private val editGroceryList: EditGroceryListBloc.Factory,
 ) : RootBloc, BlocContext by context {
 
     init {
@@ -250,6 +252,16 @@ class RootBlocImpl(
                             output = ::handleEditRecipeBookOutput,
                         )
                 )
+
+            is Configuration.EditGroceryList ->
+                RootBloc.Child.EditGroceryList(
+                    bloc =
+                        editGroceryList.create(
+                            context = context,
+                            listId = config.listId,
+                            output = ::handleEditGroceryListOutput,
+                        )
+                )
         }
 
     private fun handleBottomNavOutput(output: BottomNavBloc.Output) {
@@ -320,6 +332,10 @@ class RootBlocImpl(
             is BottomNavBloc.Output.OpenEditRecipeBook -> {
                 navigation.bringToFront(Configuration.EditRecipeBook(output.bookId))
             }
+
+            is BottomNavBloc.Output.OpenEditGroceryList -> {
+                navigation.bringToFront(Configuration.EditGroceryList(output.listId))
+            }
         }
     }
 
@@ -342,6 +358,20 @@ class RootBlocImpl(
     private fun handleEditRecipeBookOutput(output: EditRecipeBookBloc.Output) {
         when (output) {
             EditRecipeBookBloc.Output.Finished -> navigation.pop()
+        }
+    }
+
+    private fun handleEditGroceryListOutput(output: EditGroceryListBloc.Output) {
+        when (output) {
+            EditGroceryListBloc.Output.Finished -> navigation.pop()
+            EditGroceryListBloc.Output.OpenSignIn ->
+                navigation.bringToFront(
+                    Configuration.Authentication(AuthenticationBloc.Props.SignIn)
+                )
+            EditGroceryListBloc.Output.OpenSignUp ->
+                navigation.bringToFront(
+                    Configuration.Authentication(AuthenticationBloc.Props.SignUp)
+                )
         }
     }
 
@@ -489,5 +519,7 @@ class RootBlocImpl(
         @Serializable data class ExportRecipes(val recipeIds: Set<Long>?) : Configuration()
 
         @Serializable data class EditRecipeBook(val bookId: Long?) : Configuration()
+
+        @Serializable data class EditGroceryList(val listId: Long) : Configuration()
     }
 }

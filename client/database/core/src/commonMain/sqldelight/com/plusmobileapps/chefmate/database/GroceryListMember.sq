@@ -1,0 +1,40 @@
+CREATE TABLE GroceryListMember (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    listLocalId INTEGER NOT NULL,
+    remoteId TEXT UNIQUE,
+    userId TEXT,
+    userEmail TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'editor',
+    status TEXT NOT NULL DEFAULT 'pending',
+    displayName TEXT,
+    avatarUrl TEXT,
+    FOREIGN KEY (listLocalId) REFERENCES GroceryList(id) ON DELETE CASCADE
+);
+
+getByListId:
+SELECT * FROM GroceryListMember WHERE listLocalId = ?;
+
+getByRemoteId:
+SELECT * FROM GroceryListMember WHERE remoteId = ?;
+
+insert:
+INSERT INTO GroceryListMember (listLocalId, remoteId, userId, userEmail, role, status, displayName, avatarUrl)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+updateStatus:
+UPDATE GroceryListMember SET status = ? WHERE id = ?;
+
+deleteById:
+DELETE FROM GroceryListMember WHERE id = ?;
+
+deleteByListId:
+DELETE FROM GroceryListMember WHERE listLocalId = ?;
+
+deleteByListAndUser:
+DELETE FROM GroceryListMember WHERE listLocalId = ? AND userId = ?;
+
+getAll:
+SELECT * FROM GroceryListMember;
+
+getPendingForUser:
+SELECT * FROM GroceryListMember WHERE userEmail = ? AND status = 'pending';

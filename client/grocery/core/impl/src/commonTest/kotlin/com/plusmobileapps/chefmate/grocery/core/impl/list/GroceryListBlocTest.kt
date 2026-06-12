@@ -41,6 +41,8 @@ class GroceryListBlocTest {
         every { getGroceries() } returns groceries.asSharedFlow()
         every { getGroceries(1L) } returns groceries.asSharedFlow()
         every { getGroceryLists() } returns groceryLists.asSharedFlow()
+        every { getListCollaborators(1L) } returns kotlinx.coroutines.flow.flowOf(emptyList())
+        every { getPendingInvitations() } returns kotlinx.coroutines.flow.flowOf(emptyList())
         everySuspend { ensureDefaultList() } returns 1L
     }
 

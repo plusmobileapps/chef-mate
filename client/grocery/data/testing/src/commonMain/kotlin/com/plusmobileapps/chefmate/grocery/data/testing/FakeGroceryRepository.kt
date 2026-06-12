@@ -1,9 +1,12 @@
 package com.plusmobileapps.chefmate.grocery.data.testing
 
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
+import com.plusmobileapps.chefmate.grocery.data.GroceryListInvite
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.grocery.data.IngredientParser
+import com.plusmobileapps.chefmate.grocery.data.ListCollaborator
+import com.plusmobileapps.chefmate.grocery.data.ListRole
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -140,4 +143,20 @@ class FakeGroceryRepository : GroceryRepository {
         _lists.value = emptyList()
         itemListMap.clear()
     }
+
+    override fun getListCollaborators(listId: Long): Flow<List<ListCollaborator>> =
+        MutableStateFlow(emptyList())
+
+    override suspend fun refreshListMembers(listId: Long) {}
+
+    override suspend fun inviteCollaborator(listId: Long, email: String, role: ListRole) {}
+
+    override suspend fun removeCollaborator(listId: Long, collaboratorId: Long) {}
+
+    override suspend fun acceptInvitation(memberId: String) {}
+
+    override suspend fun rejectInvitation(memberId: String) {}
+
+    override fun getPendingInvitations(): Flow<List<GroceryListInvite>> =
+        MutableStateFlow(emptyList())
 }

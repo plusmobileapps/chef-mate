@@ -3,6 +3,9 @@ package com.plusmobileapps.chefmate.grocery.data.testing
 import com.plusmobileapps.chefmate.grocery.data.remote.GroceryRemoteDataSource
 import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryItem
 import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryList
+import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryListCollaborator
+import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryListInvite
+import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryListMember
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -63,5 +66,71 @@ class FakeGroceryRemoteDataSource : GroceryRemoteDataSource {
         val index = ownerLists.indexOfFirst { it.id == list.id }
         if (index >= 0) ownerLists[index] = list
         return list
+    }
+
+    val remoteMembers = mutableMapOf<String, MutableList<RemoteGroceryListMember>>()
+
+    override suspend fun fetchAccessibleGroceryLists(): List<RemoteGroceryList> =
+        remoteLists.values.flatten()
+
+    override suspend fun fetchListMembers(listId: String): List<RemoteGroceryListMember> =
+        remoteMembers[listId].orEmpty()
+
+    override suspend fun fetchListCollaborators(
+        listId: String
+    ): List<RemoteGroceryListCollaborator> =
+        remoteMembers[listId].orEmpty().map { member ->
+            RemoteGroceryListCollaborator(
+                memberId = member.id,
+                email = member.invitedEmail,
+                name = null,
+                role = member.role,
+                status = member.status,
+                isOwner = member.role == "owner",
+            )
+        }
+
+    override suspend fun inviteToList(member: RemoteGroceryListMember): RemoteGroceryListMember {
+        val result = member.copy(id = member.id ?: "remote-member-${Uuid.random()}")
+        remoteMembers.getOrPut(member.listId) { mutableListOf() }.add(result)
+        return result
+    }
+
+    override suspend fun fetchPendingInvitations(email: String): List<RemoteGroceryListInvite> =
+        remoteMembers.values
+            .flatten()
+            .filter {
+                it.status == "pending" && it.invitedEmail.trim().lowercase() == email.lowercase()
+            }
+            .mapNotNull { member ->
+                val id = member.id ?: return@mapNotNull null
+                val list =
+                    remoteLists.values.flatten().firstOrNull { remoteList ->
+                        remoteList.id == member.listId
+                    }
+                RemoteGroceryListInvite(
+                    id = id,
+                    listId = member.listId,
+                    listName = list?.name.orEmpty(),
+                    role = member.role,
+                    status = member.status,
+                )
+            }
+
+    override suspend fun respondToInvitation(memberId: String, userId: String, accept: Boolean) {
+        remoteMembers.values.forEach { members ->
+            val idx = members.indexOfFirst { it.id == memberId }
+            if (idx >= 0) {
+                members[idx] =
+                    members[idx].copy(
+                        userId = if (accept) userId else members[idx].userId,
+                        status = if (accept) "accepted" else "rejected",
+                    )
+            }
+        }
+    }
+
+    override suspend fun removeFromList(memberId: String) {
+        remoteMembers.values.forEach { it.removeAll { m -> m.id == memberId } }
     }
 }

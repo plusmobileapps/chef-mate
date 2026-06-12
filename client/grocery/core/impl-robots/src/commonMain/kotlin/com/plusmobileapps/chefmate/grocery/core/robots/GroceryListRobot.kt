@@ -6,9 +6,12 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.waitUntilAtLeastOneExists
 import androidx.compose.ui.test.waitUntilExactlyOneExists
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailTestTags
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListTestTags
@@ -39,6 +42,24 @@ class GroceryListRobot(private val test: ComposeUiTest) {
 
     fun assertAisleSelected(label: String): GroceryListRobot = apply {
         test.onNode(hasText(label) and inDetailSheet).assertIsDisplayed()
+    }
+
+    /** Opens the list selector (bottom sheet on phones, dropdown on tablets). */
+    fun openListSelector(): GroceryListRobot = apply {
+        test
+            .onNode(hasTestTag(GroceryListTestTags.LIST_SELECTOR) and onScreen)
+            .assertIsDisplayed()
+            .performClick()
+    }
+
+    /**
+     * Clicks the edit (pencil) icon on the first list row in the open selector. The selector floats
+     * in its own subtree (sheet or dropdown popup), so this is matched by content description
+     * rather than scoped to the list screen.
+     */
+    fun clickEditFirstList(editContentDescription: String): GroceryListRobot = apply {
+        test.waitUntilAtLeastOneExists(hasContentDescription(editContentDescription))
+        test.onAllNodes(hasContentDescription(editContentDescription)).onFirst().performClick()
     }
 }
 

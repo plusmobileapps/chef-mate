@@ -7,6 +7,7 @@ import com.plusmobileapps.chefmate.database.BrowserHistoryQueries
 import com.plusmobileapps.chefmate.database.CategoryQueries
 import com.plusmobileapps.chefmate.database.CookingSessionQueries
 import com.plusmobileapps.chefmate.database.Database
+import com.plusmobileapps.chefmate.database.GroceryListMemberQueries
 import com.plusmobileapps.chefmate.database.GroceryListQueries
 import com.plusmobileapps.chefmate.database.GroceryQueries
 import com.plusmobileapps.chefmate.database.MealPlanQueries
@@ -82,4 +83,9 @@ interface DatabaseComponent {
     @Provides
     fun providesAiChatConversationQueries(database: Database): AiChatConversationQueries =
         database.aiChatConversationQueries
+
+    @SingleIn(AppScope::class)
+    @Provides
+    fun providesGroceryListMemberQueries(database: Database): GroceryListMemberQueries =
+        database.groceryListMemberQueries
 }

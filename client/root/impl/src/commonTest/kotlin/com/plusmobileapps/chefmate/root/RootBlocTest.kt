@@ -109,6 +109,7 @@ class RootBlocTest {
                 mock()
             },
             editRecipeBook = { _, _, _ -> mock() },
+            editGroceryList = { _, _, _ -> mock() },
         )
 
     val rootBloc = createRoot(context = context)

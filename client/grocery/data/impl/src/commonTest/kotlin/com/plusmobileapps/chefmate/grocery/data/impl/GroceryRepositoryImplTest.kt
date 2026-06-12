@@ -9,9 +9,11 @@ import com.plusmobileapps.chefmate.auth.data.ChefMateUser
 import com.plusmobileapps.chefmate.auth.data.testing.FakeAuthenticationRepository
 import com.plusmobileapps.chefmate.database.Database
 import com.plusmobileapps.chefmate.database.testing.createTestDatabase
+import com.plusmobileapps.chefmate.grocery.data.CollaborationStatus
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryItem
 import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryList
+import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryListMember
 import com.plusmobileapps.chefmate.grocery.data.testing.FakeGroceryRemoteDataSource
 import com.plusmobileapps.chefmate.util.testing.FakeDateTimeUtil
 import io.kotest.matchers.shouldBe
@@ -35,6 +37,7 @@ class GroceryRepositoryImplTest {
         GroceryRepositoryImpl(
             queries = db.groceryQueries,
             listQueries = db.groceryListQueries,
+            memberQueries = db.groceryListMemberQueries,
             ioContext = testDispatcher,
             dateTimeUtil = dateTimeUtil,
             remoteDataSource = fakeRemote,
@@ -420,6 +423,109 @@ class GroceryRepositoryImplTest {
             pushed.aisle shouldBe GroceryCategory.MEAT.name
         }
 
+    @Test
+    fun refreshListMembers_caches_pending_and_accepted_collaborators_from_remote() =
+        runTest(testDispatcher) {
+            val listId = repository.ensureDefaultList()
+            val remoteListId = "remote-list-members"
+            db.groceryListQueries.updateRemoteId(remoteId = remoteListId, id = listId)
+            fakeRemote.remoteMembers[remoteListId] =
+                mutableListOf(
+                    RemoteGroceryListMember(
+                        id = "pending-member",
+                        listId = remoteListId,
+                        invitedEmail = "pending@example.com",
+                        role = "viewer",
+                        status = "pending",
+                    ),
+                    RemoteGroceryListMember(
+                        id = "accepted-member",
+                        listId = remoteListId,
+                        userId = "user-2",
+                        invitedEmail = "accepted@example.com",
+                        role = "editor",
+                        status = "accepted",
+                    ),
+                )
+
+            repository.refreshListMembers(listId)
+
+            repository.getListCollaborators(listId).test {
+                val collaborators = awaitItem()
+                collaborators.map { it.email } shouldBe
+                    listOf("pending@example.com", "accepted@example.com")
+                collaborators.first { it.email == "pending@example.com" }.status shouldBe
+                    CollaborationStatus.PENDING
+                collaborators.first { it.email == "accepted@example.com" }.status shouldBe
+                    CollaborationStatus.ACCEPTED
+            }
+        }
+
+    @Test
+    fun refreshListMembers_does_not_clear_existing_cache_when_remote_returns_empty() =
+        runTest(testDispatcher) {
+            val listId = repository.ensureDefaultList()
+            val remoteListId = "remote-list-empty-members"
+            db.groceryListQueries.updateRemoteId(remoteId = remoteListId, id = listId)
+            db.groceryListMemberQueries.insert(
+                listLocalId = listId,
+                remoteId = "cached-member",
+                userId = null,
+                userEmail = "cached@example.com",
+                role = "editor",
+                status = "pending",
+                displayName = null,
+                avatarUrl = null,
+            )
+
+            repository.refreshListMembers(listId)
+
+            repository.getListCollaborators(listId).test {
+                val collaborators = awaitItem()
+                collaborators.map { it.email } shouldBe listOf("cached@example.com")
+            }
+        }
+
+    @Test
+    fun refreshListMembers_moves_stale_remote_member_cache_to_current_list() =
+        runTest(testDispatcher) {
+            val staleListId = repository.ensureDefaultList()
+            val currentListId = repository.createGroceryList("Shared")
+            val currentRemoteListId = "remote-list-current-members"
+            db.groceryListQueries.updateRemoteId(remoteId = currentRemoteListId, id = currentListId)
+            db.groceryListMemberQueries.insert(
+                listLocalId = staleListId,
+                remoteId = "accepted-member",
+                userId = null,
+                userEmail = "accepted@example.com",
+                role = "editor",
+                status = "accepted",
+                displayName = null,
+                avatarUrl = null,
+            )
+            fakeRemote.remoteMembers[currentRemoteListId] =
+                mutableListOf(
+                    RemoteGroceryListMember(
+                        id = "accepted-member",
+                        listId = currentRemoteListId,
+                        userId = "user-2",
+                        invitedEmail = "accepted@example.com",
+                        role = "editor",
+                        status = "accepted",
+                    )
+                )
+
+            repository.refreshListMembers(currentListId)
+
+            repository.getListCollaborators(currentListId).test {
+                val collaborators = awaitItem()
+                collaborators.map { it.email } shouldBe listOf("accepted@example.com")
+            }
+            repository.getListCollaborators(staleListId).test {
+                awaitItem().isEmpty() shouldBe true
+            }
+        }
+
     // ─── deleteAllGroceries ───────────────────────────────────────────────────
 
     @Test
@@ -467,7 +573,11 @@ class GroceryRepositoryImplTest {
             fakeRemote.remoteItems[remoteListId] =
                 mutableListOf(
                     RemoteGroceryItem(id = "remote-apple", listId = remoteListId, name = "Apples"),
-                    RemoteGroceryItem(id = "remote-banana", listId = remoteListId, name = "Bananas"),
+                    RemoteGroceryItem(
+                        id = "remote-banana",
+                        listId = remoteListId,
+                        name = "Bananas",
+                    ),
                 )
 
             repository.deleteAllGroceries(listId)
