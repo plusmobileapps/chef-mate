@@ -44,16 +44,19 @@ need to run `supabase init` again.
 
 ---
 
-## ⚠️ One-time: seed the baseline schema from prod
+## ⚠️ One-time: dump prod's schema as a baseline
 
-**This step is required before the local DB will build.** The `supabase/migrations/` folder is
-**not** a complete schema — the base tables (`recipes`, `profiles`, grocery, `meal_plans`) were
-created by hand on the prod dashboard and have no migration file. The oldest migration,
-`20260513_add_categories.sql`, already `REFERENCES recipes(id)`, so a fresh `supabase db reset`
-fails until those base tables exist.
+**This step is required before the local DB will build** — `supabase/migrations/` ships empty.
 
-Capture prod's live schema as a **baseline migration**. `db pull` only *reads* prod — it never
-modifies it:
+Why a squashed baseline instead of replaying migrations: the prod schema was built largely by
+hand on the dashboard, so the base tables (`recipes`, `profiles`, grocery, `meal_plans`) never had
+migration files. The original incremental migrations are kept in
+[`supabase/archived_migrations/`](../supabase/archived_migrations/) but are **not** applied —
+replaying them fails (the oldest already `REFERENCES recipes(id)` before any file creates it, and
+three share the version `20260610`). Instead we snapshot prod's *current* schema into one baseline.
+
+`db dump` is a read-only `pg_dump` — it never modifies prod and doesn't care about migration
+history:
 
 ```bash
 # 1. Authenticate the CLI (opens a browser, one-time).
@@ -63,20 +66,17 @@ supabase login
 #    https://app.supabase.com/project/<project-ref>
 supabase link --project-ref <your-prod-ref>
 
-# 3. Dump prod's current schema into a new, earliest-timestamped baseline migration.
-supabase db pull
-
-# This writes supabase/migrations/<timestamp>_remote_schema.sql containing recipes,
-# profiles, etc. Commit it — it becomes the foundation your 9 existing migrations stack on.
+# 3. Snapshot prod's public schema into an early-timestamped baseline migration so it runs first.
+supabase db dump --linked --schema public -f supabase/migrations/20260101000000_baseline.sql
 ```
 
-After this, `supabase/migrations/` = `remote_schema` baseline → your incremental migrations, and
-the local DB will reproduce prod faithfully.
+This single file recreates everything currently in prod (base tables + every change the archived
+migrations made). Commit it. Future schema changes go in new migrations stacked on top.
 
-> **Note on storage buckets.** `db pull` dumps schema, not bucket rows. The `recipe-photos` and
-> `avatars` buckets + their RLS policies are recreated locally by [`supabase/seed.sql`](../supabase/seed.sql)
-> (mirroring `docs/supabase-storage-setup.sql` / `docs/supabase-avatars-setup.sql`, which you
-> pasted into the prod dashboard). Nothing extra to do.
+> **Note on storage buckets.** `db dump --schema public` doesn't include storage. The
+> `recipe-photos` and `avatars` buckets + their RLS policies are recreated locally by
+> [`supabase/seed.sql`](../supabase/seed.sql) (mirroring `docs/supabase-storage-setup.sql` /
+> `docs/supabase-avatars-setup.sql`, which you pasted into the prod dashboard). Nothing extra to do.
 
 ---
 
@@ -205,8 +205,9 @@ client picks them up automatically when pointed at the local API URL. `SUPABASE_
 
 ## Troubleshooting
 
-- **`db reset` fails on `relation "recipes" does not exist`** — you skipped the baseline step.
-  Run the [`supabase db pull`](#️-one-time-seed-the-baseline-schema-from-prod) step above.
+- **`db reset` fails on `relation "recipes" does not exist`** (or `migrations/` is empty) — you
+  skipped the baseline step. Run the
+  [`supabase db dump`](#️-one-time-dump-prods-schema-as-a-baseline) step above.
 - **Android emulator: `CLEARTEXT communication ... not permitted`** — you're on a release build,
   or using a host other than the ones in the debug `network_security_config.xml`. Use a debug
   build and `10.0.2.2` (or add your host to the config).
@@ -241,36 +242,24 @@ local stack is preferred for day-to-day work.
 ## Appendix: reconciling prod's migration history (for future CLI pushes)
 
 You've been applying SQL to prod **by hand**, so prod's migration-history table
-(`supabase_migrations.schema_migrations`) doesn't know about the 9 files in
-`supabase/migrations/`. If you ever run `supabase db push` against prod, the CLI will try to
-**replay all of them from scratch** — which will error or duplicate objects.
+(`supabase_migrations.schema_migrations`) doesn't know about your migrations. If you ever run
+`supabase db push` against prod, the CLI will try to **replay the baseline from scratch** — which
+will error because every object already exists.
 
-Reconcile **once** so prod's history matches the repo. After `supabase link --project-ref <prod-ref>`:
+Because we squashed to a single baseline, reconciling is now a one-liner. After
+`supabase link --project-ref <prod-ref>`:
 
 ```bash
-# See what the CLI thinks is applied vs local.
-supabase migration list
+# Mark the baseline as already-applied WITHOUT re-running it (prod already has this schema).
+supabase migration repair --status applied 20260101000000
 
-# Mark each already-applied migration as applied WITHOUT re-running it.
-# Use the version (timestamp prefix) of each file, e.g.:
-supabase migration repair --status applied 20260513
-supabase migration repair --status applied 20260522
-supabase migration repair --status applied 20260602
-supabase migration repair --status applied 20260604
-supabase migration repair --status applied 20260605
-supabase migration repair --status applied 20260608
-supabase migration repair --status applied 20260610   # repeat for each 20260610_* version
-
-# Also mark the baseline you generated with `db pull` as applied.
-supabase migration repair --status applied <remote_schema timestamp>
-
-# Verify everything lines up.
+# Verify local and remote agree.
 supabase migration list
 ```
 
-> Use the exact version string `supabase migration list` shows for each entry. The three
-> `20260610_*` files share a date but have distinct full version strings — repair each one.
+Once reconciled, `supabase db push` will only apply genuinely *new* migrations you add on top of
+the baseline, and you can stop pasting SQL into the dashboard. **This is optional and only needed
+when you want the CLI to manage prod — it is not required for local development.**
 
-Once history is reconciled, `supabase db push` will only apply genuinely new migrations, and you
-can stop pasting SQL into the dashboard. **This is optional and only needed when you want the CLI
-to manage prod — it is not required for local development.**
+> The archived per-feature migrations in `supabase/archived_migrations/` are history-only and are
+> never pushed; the baseline already contains their combined effect.
