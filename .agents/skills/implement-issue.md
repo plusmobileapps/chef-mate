@@ -1,6 +1,6 @@
 # implement-issue
 
-Take a GitHub issue, implement the fix/feature, and open a pull request.
+Take a GitHub issue, implement the fix/feature, and prepare the work for review. Only push or open a pull request when the user explicitly asks for that in the current message.
 
 ## Required Input
 
@@ -37,15 +37,13 @@ If tests are relevant, run them with `./gradlew test` (or the appropriate module
 
 Stage and commit the changes. Write a clear, concise commit message that references the issue. Use conventional commit style (e.g., `feat:`, `fix:`, `refactor:`).
 
-### Step 5: Push
+### Step 5: Stop unless the user explicitly asked to push
 
-```sh
-git push -u origin <branch-name>
-```
+Do **not** push by default. The project workflow requires a separate, explicit user request before running `git push`.
 
-### Step 6: Create the pull request
+### Step 6: Create the pull request only if requested
 
-Use the `gh` CLI to create a PR against `main`. The PR title should be concise and the body should summarize the changes and reference the issue with `Closes #<number>`.
+Only if the user explicitly asks for a PR in the current message, use the `gh` CLI to create a PR against `main`. The PR title should be concise and the body should summarize the changes and reference the issue with `Closes #<number>`.
 
 ```sh
 gh pr create --title "<type>: <short description>" --body "$(cat <<'EOF'

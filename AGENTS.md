@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This project shares its agent instructions between Claude and Codex.
+This project shares its agent instructions between Codex and Claude.
 
 Before working in this repository, read and follow:
 
