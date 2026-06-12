@@ -153,6 +153,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
+import com.plusmobileapps.chefmate.letIfTrue
 import com.plusmobileapps.chefmate.recipe.categories.pickerLabelRes
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailTestTags
@@ -407,7 +408,7 @@ private fun RecipeDetailBody(
                 scrollEnabled = false,
                 maxContentWidth = if (isCompact) 600.dp else Dp.Unspecified,
                 floatingToolbar =
-                    if (showToolbar) {
+                    letIfTrue(showToolbar) {
                         {
                             HorizontalFloatingToolbar(
                                 expanded = true,
@@ -462,8 +463,6 @@ private fun RecipeDetailBody(
                                 }
                             }
                         }
-                    } else {
-                        null
                     },
             ) {
                 if (state.isLoading) {
