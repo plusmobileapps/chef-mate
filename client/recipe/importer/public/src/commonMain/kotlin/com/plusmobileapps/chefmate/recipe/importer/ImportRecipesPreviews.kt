@@ -14,12 +14,15 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 
-private fun importRecipesBloc(model: Model): ImportRecipesBloc =
+private fun importRecipesBloc(
+    model: Model,
+    selectedBookIds: Set<Long> = setOf(1L),
+): ImportRecipesBloc =
     object : ImportRecipesBloc {
         override val backHandler: BackHandler = BackDispatcher()
         override val state = MutableStateFlow(model)
         override val recipeBooks = MutableStateFlow(RecipeBook.Samples)
-        override val selectedBookIds = MutableStateFlow(setOf(1L))
+        override val selectedBookIds = MutableStateFlow(selectedBookIds)
 
         override fun onArchiveSelected(bytes: ByteArray, fileName: String) = Unit
 
@@ -76,6 +79,10 @@ val previewImportRecipesReviewBloc: ImportRecipesBloc =
 val previewImportRecipesImportingBloc: ImportRecipesBloc =
     importRecipesBloc(Model(Phase.Review(recipes = sampleItems, isImporting = true)))
 
+/** Review with no book selected — the required-book hint shows and import is disabled. */
+val previewImportRecipesNoBookBloc: ImportRecipesBloc =
+    importRecipesBloc(Model(Phase.Review(recipes = sampleItems)), selectedBookIds = emptySet())
+
 val previewImportRecipesDoneBloc: ImportRecipesBloc =
     importRecipesBloc(Model(Phase.Done(importedCount = 2)))
 
@@ -92,6 +99,12 @@ internal fun ImportRecipesEmptyPreview() {
 @Composable
 internal fun ImportRecipesReviewPreview() {
     ChefMateTheme { ImportRecipesScreen(bloc = previewImportRecipesReviewBloc) }
+}
+
+@Preview
+@Composable
+internal fun ImportRecipesNoBookPreview() {
+    ChefMateTheme { ImportRecipesScreen(bloc = previewImportRecipesNoBookBloc) }
 }
 
 @Preview

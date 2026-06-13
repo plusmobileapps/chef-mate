@@ -8,6 +8,7 @@ import com.plusmobileapps.chefmate.recipe.importer.previewImportRecipesDoneBloc
 import com.plusmobileapps.chefmate.recipe.importer.previewImportRecipesEmptyBloc
 import com.plusmobileapps.chefmate.recipe.importer.previewImportRecipesErrorBloc
 import com.plusmobileapps.chefmate.recipe.importer.previewImportRecipesImportingBloc
+import com.plusmobileapps.chefmate.recipe.importer.previewImportRecipesNoBookBloc
 import com.plusmobileapps.chefmate.recipe.importer.previewImportRecipesReviewBloc
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -31,6 +32,13 @@ fun ImportRecipesReviewScreenshot() {
 @Composable
 fun ImportRecipesReviewDarkScreenshot() {
     ChefMateTheme(darkTheme = true) { previewImportRecipesReviewBloc.Content() }
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+fun ImportRecipesNoBookScreenshot() {
+    ChefMateTheme { previewImportRecipesNoBookBloc.Content() }
 }
 
 @PreviewTest
