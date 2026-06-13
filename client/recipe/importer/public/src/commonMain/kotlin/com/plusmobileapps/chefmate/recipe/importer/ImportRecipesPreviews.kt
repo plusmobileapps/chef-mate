@@ -8,6 +8,7 @@ import com.arkivanov.essenty.backhandler.BackHandler
 import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc.ImportItem
 import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc.Model
 import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc.Phase
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.collections.immutable.persistentListOf
@@ -17,12 +18,16 @@ private fun importRecipesBloc(model: Model): ImportRecipesBloc =
     object : ImportRecipesBloc {
         override val backHandler: BackHandler = BackDispatcher()
         override val state = MutableStateFlow(model)
+        override val recipeBooks = MutableStateFlow(RecipeBook.Samples)
+        override val selectedBookIds = MutableStateFlow(setOf(1L))
 
         override fun onArchiveSelected(bytes: ByteArray, fileName: String) = Unit
 
         override fun onRecipeToggled(id: String) = Unit
 
         override fun onToggleSelectAll() = Unit
+
+        override fun onToggleBook(bookId: Long) = Unit
 
         override fun onImportClicked() = Unit
 
