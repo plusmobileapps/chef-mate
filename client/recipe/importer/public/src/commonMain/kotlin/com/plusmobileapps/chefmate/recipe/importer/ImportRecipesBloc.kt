@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.recipe.importer
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.collections.immutable.ImmutableList
@@ -11,12 +12,21 @@ import kotlinx.coroutines.flow.StateFlow
 interface ImportRecipesBloc : BackHandlerOwner, BlocScreen {
     val state: StateFlow<Model>
 
+    /** All of the user's recipe books, offered as a multi-select target for the import. */
+    val recipeBooks: StateFlow<List<RecipeBook>>
+
+    /** Local ids of the books the imported recipes will be filed under. */
+    val selectedBookIds: StateFlow<Set<Long>>
+
     /** Called by the screen once the platform picker returns the chosen archive. */
     fun onArchiveSelected(bytes: ByteArray, fileName: String)
 
     fun onRecipeToggled(id: String)
 
     fun onToggleSelectAll()
+
+    /** Toggles whether the imported recipes are filed under the book with local id [bookId]. */
+    fun onToggleBook(bookId: Long)
 
     fun onImportClicked()
 

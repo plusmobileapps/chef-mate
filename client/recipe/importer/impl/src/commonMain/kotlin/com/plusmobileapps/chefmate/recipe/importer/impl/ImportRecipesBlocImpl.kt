@@ -30,12 +30,18 @@ class ImportRecipesBlocImpl(
 
     override val state: StateFlow<ImportRecipesBloc.Model> = viewModel.state
 
+    override val recipeBooks = viewModel.recipeBooks
+
+    override val selectedBookIds = viewModel.selectedBookIds
+
     override fun onArchiveSelected(bytes: ByteArray, fileName: String) =
         viewModel.onArchiveSelected(bytes, fileName)
 
     override fun onRecipeToggled(id: String) = viewModel.onRecipeToggled(id)
 
     override fun onToggleSelectAll() = viewModel.onToggleSelectAll()
+
+    override fun onToggleBook(bookId: Long) = viewModel.onToggleBook(bookId)
 
     override fun onImportClicked() = viewModel.onImportClicked()
 

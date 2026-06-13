@@ -7,6 +7,9 @@ import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipePhotoStorage
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc.Phase
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
+import com.plusmobileapps.chefmate.recipebook.data.testing.FakeRecipeBookRepository
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import java.io.ByteArrayOutputStream
@@ -21,6 +24,14 @@ class ImportRecipesViewModelTest {
 
     private val recipes = MutableStateFlow<List<Recipe>>(emptyList())
     private val repository = FakeRecipeRepository(recipes)
+    private val books =
+        MutableStateFlow(
+            listOf(
+                RecipeBook.Sample.copy(id = 1L, name = "My Recipes", isDefault = true),
+                RecipeBook.Sample.copy(id = 2L, name = "Weeknight Dinners", isDefault = false),
+            )
+        )
+    private val recipeBookRepository = FakeRecipeBookRepository(books)
     private val photoStorage = FakeRecipePhotoStorage()
     private val dispatcher = UnconfinedTestDispatcher()
 
@@ -29,6 +40,7 @@ class ImportRecipesViewModelTest {
             mainContext = dispatcher,
             ioContext = dispatcher,
             repository = repository,
+            recipeBookRepository = recipeBookRepository,
             photoStorage = photoStorage,
         )
 
@@ -79,6 +91,40 @@ class ImportRecipesViewModelTest {
 
         vm.state.value.phase.shouldBeInstanceOf<Phase.Done>().importedCount shouldBe 2
         recipes.value.size shouldBe 2
+    }
+
+    @Test
+    fun Initially_the_active_book_is_selected_as_the_import_target() {
+        val vm = createViewModel()
+
+        vm.selectedBookIds.value shouldBe setOf(1L)
+        vm.recipeBooks.value.map { it.id } shouldBe listOf(1L, 2L)
+    }
+
+    @Test
+    fun When_imported_Then_recipes_are_filed_under_the_selected_books() {
+        val vm = createViewModel()
+        vm.onArchiveSelected(twoRecipeArchive(), "export.zip")
+
+        // Also file under the second book in addition to the default active one.
+        vm.onToggleBook(2L)
+        vm.onImportClicked()
+
+        vm.state.value.phase.shouldBeInstanceOf<Phase.Done>()
+        recipes.value.forEach { it.recipeBookIds shouldBe setOf(1L, 2L) }
+    }
+
+    @Test
+    fun When_active_book_deselected_Then_recipes_file_under_remaining_book() {
+        val vm = createViewModel()
+        vm.onArchiveSelected(twoRecipeArchive(), "export.zip")
+
+        vm.onToggleBook(2L)
+        vm.onToggleBook(1L)
+        vm.selectedBookIds.value.shouldContainExactlyInAnyOrder(2L)
+        vm.onImportClicked()
+
+        recipes.value.forEach { it.recipeBookIds shouldBe setOf(2L) }
     }
 
     @Test

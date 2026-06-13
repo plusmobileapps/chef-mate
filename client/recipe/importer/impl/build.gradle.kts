@@ -8,6 +8,7 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.client.recipe.importer.public)
             implementation(projects.client.recipe.data.public)
+            implementation(projects.client.recipebook.data.public)
             implementation(projects.client.text.public)
             implementation(projects.client.shared)
             implementation(libs.arkivanov.decompose.core)
@@ -16,6 +17,7 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(projects.client.recipe.data.testing)
+            implementation(projects.client.recipebook.data.testing)
             implementation(projects.client.recipe.importer.implRobots)
         }
     }
