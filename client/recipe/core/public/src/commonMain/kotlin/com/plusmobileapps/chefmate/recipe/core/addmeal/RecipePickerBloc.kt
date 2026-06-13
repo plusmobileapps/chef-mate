@@ -14,7 +14,13 @@ interface RecipePickerBloc : BlocScreen {
 
     fun onRecipeSelected(item: RecipePickerItem)
 
-    data class RecipePickerItem(val id: Long, val title: String, val imageUrl: String?)
+    data class RecipePickerItem(
+        val id: Long,
+        val title: String,
+        val imageUrl: String?,
+        /** Names of the recipe book(s) this recipe belongs to, sorted alphabetically. */
+        val bookNames: ImmutableList<String> = persistentListOf(),
+    )
 
     data class Model(
         val recipes: ImmutableList<RecipePickerItem> = persistentListOf(),
