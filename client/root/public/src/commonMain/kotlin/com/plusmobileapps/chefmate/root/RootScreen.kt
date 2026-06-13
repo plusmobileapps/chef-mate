@@ -57,7 +57,8 @@ private fun RootBloc.Child.isModal(): Boolean =
     this is RootBloc.Child.Browser ||
         this is RootBloc.Child.MealPlanner ||
         this is RootBloc.Child.CookMode ||
-        this is RootBloc.Child.EditRecipeBook
+        this is RootBloc.Child.EditRecipeBook ||
+            this is RootBloc.Child.EditGroceryList
 
 private fun verticalSlide(): StackAnimator = stackAnimator { factor, direction, content ->
     content(Modifier.offsetYFactor(if (direction.isFront) factor else 0f))
