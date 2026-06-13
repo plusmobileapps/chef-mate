@@ -14,6 +14,7 @@ import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc.Model
 import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc.Phase
 import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesScreen
 import com.plusmobileapps.chefmate.recipe.importer.robots.importRecipes
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlin.test.Test
@@ -47,6 +48,8 @@ class ImportRecipesScreenTest {
                     )
                 )
             )
+        override val recipeBooks = MutableStateFlow(RecipeBook.Samples)
+        override val selectedBookIds = MutableStateFlow(setOf(1L))
 
         override fun onArchiveSelected(bytes: ByteArray, fileName: String) = Unit
 
@@ -64,6 +67,8 @@ class ImportRecipesScreenTest {
         }
 
         override fun onToggleSelectAll() = Unit
+
+        override fun onToggleBook(bookId: Long) = Unit
 
         override fun onImportClicked() {
             val review = state.value.phase as? Phase.Review ?: return

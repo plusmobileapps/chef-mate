@@ -36,6 +36,10 @@ class ImportRecipesRobot(private val test: ComposeUiTest) {
         test.onNode(hasText(title) and onScreen).assertIsDisplayed().performClick()
     }
 
+    fun toggleBook(name: String): ImportRecipesRobot = apply {
+        test.onNode(hasText(name) and onScreen).assertIsDisplayed().performClick()
+    }
+
     fun clickImport(): ImportRecipesRobot = apply {
         test.onNodeWithTag(ImportRecipesTestTags.IMPORT_BUTTON).assertIsDisplayed().performClick()
     }
