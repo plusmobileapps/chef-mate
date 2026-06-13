@@ -60,6 +60,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusAvatar
 import com.plusmobileapps.chefmate.ui.components.PlusButton
 import com.plusmobileapps.chefmate.ui.components.PlusButtonVariant
 import com.plusmobileapps.chefmate.ui.components.PlusDialog
+import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.components.PlusTextField
@@ -72,12 +73,12 @@ fun EditGroceryListScreen(bloc: EditGroceryListBloc, modifier: Modifier = Modifi
     val state by bloc.state.collectAsState()
     val dimens = ChefMateTheme.dimens
 
-    PlusNavContainer(
+    PlusHeaderContainer(
         modifier = modifier.testTag(EditGroceryListTestTags.SCREEN).fillMaxWidth(),
         data =
-            PlusHeaderData.Child(
+            PlusHeaderData.Modal(
                 title = Res.string.grocery_edit_list_title.asTextData(),
-                onBackClick = bloc::onBackClicked,
+                onCloseClick = bloc::onBackClicked,
             ),
         content = {
             Column(
