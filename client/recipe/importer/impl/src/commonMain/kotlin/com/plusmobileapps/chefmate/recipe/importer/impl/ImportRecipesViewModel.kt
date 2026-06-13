@@ -127,7 +127,9 @@ class ImportRecipesViewModel(
         val selected = review.recipes.filter { it.selected }
         if (selected.isEmpty()) return
 
+        // A book is required: imported recipes must have an explicit home.
         val bookIds = _selectedBookIds.value
+        if (bookIds.isEmpty()) return
         _state.value = Model(review.copy(isImporting = true))
         scope.launch {
             try {

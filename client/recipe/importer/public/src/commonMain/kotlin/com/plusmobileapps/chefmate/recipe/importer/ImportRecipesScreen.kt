@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.importer.`public`.generated.resources.Res
 import chefmate.client.recipe.importer.`public`.generated.resources.import_recipes_books_label
+import chefmate.client.recipe.importer.`public`.generated.resources.import_recipes_books_required
 import chefmate.client.recipe.importer.`public`.generated.resources.import_recipes_choose_file
 import chefmate.client.recipe.importer.`public`.generated.resources.import_recipes_deselect_all
 import chefmate.client.recipe.importer.`public`.generated.resources.import_recipes_done_button
@@ -207,10 +208,14 @@ private fun ReviewContent(
         )
     }
 
+    // A book is required so imported recipes always have an explicit home; the default book is
+    // pre-selected, but the user can swap it out as long as one remains chosen.
+    val bookRequired = books.isNotEmpty() && selectedBookIds.isEmpty()
+
     Spacer(Modifier.height(ChefMateTheme.dimens.paddingNormal))
     Button(
         onClick = onImport,
-        enabled = selectedCount > 0 && !phase.isImporting,
+        enabled = selectedCount > 0 && !phase.isImporting && !bookRequired,
         modifier =
             Modifier.fillMaxWidth()
                 .padding(horizontal = ChefMateTheme.dimens.paddingNormal)
@@ -262,6 +267,13 @@ private fun BookSelector(
                     label = { Text(book.name) },
                 )
             }
+        }
+        if (selectedBookIds.isEmpty()) {
+            Text(
+                Res.string.import_recipes_books_required.asTextData().localized(),
+                style = ChefMateTheme.typography.bodySmall,
+                color = ChefMateTheme.colorScheme.error,
+            )
         }
     }
 }

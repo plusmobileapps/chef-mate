@@ -7,6 +7,7 @@
     <string name="import_recipes_parsing">Reading archive…</string>
     <string name="import_recipes_review_headline">Select recipes to import</string>
     <string name="import_recipes_books_label">Save to</string>
+    <string name="import_recipes_books_required">Select at least one book to save these recipes to.</string>
     <string name="import_recipes_select_all">Select all</string>
     <string name="import_recipes_deselect_all">Deselect all</string>
     <string name="import_recipes_import_button">Import {count}</string>

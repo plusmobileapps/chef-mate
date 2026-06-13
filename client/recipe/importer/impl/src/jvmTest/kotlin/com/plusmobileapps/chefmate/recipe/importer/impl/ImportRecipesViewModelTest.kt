@@ -128,6 +128,20 @@ class ImportRecipesViewModelTest {
     }
 
     @Test
+    fun When_no_book_selected_Then_import_is_blocked() {
+        val vm = createViewModel()
+        vm.onArchiveSelected(twoRecipeArchive(), "export.zip")
+
+        // Deselect the pre-selected active book, leaving no import target.
+        vm.onToggleBook(1L)
+        vm.selectedBookIds.value shouldBe emptySet()
+        vm.onImportClicked()
+
+        vm.state.value.phase.shouldBeInstanceOf<Phase.Review>()
+        recipes.value shouldBe emptyList()
+    }
+
+    @Test
     fun When_start_over_clicked_Then_state_resets_to_empty() {
         val vm = createViewModel()
         vm.onArchiveSelected(twoRecipeArchive(), "export.zip")
