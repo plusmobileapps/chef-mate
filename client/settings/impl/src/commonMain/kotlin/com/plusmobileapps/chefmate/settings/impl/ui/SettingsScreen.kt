@@ -159,11 +159,13 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
                 name = Res.string.about.asTextData(),
                 onClick = { bloc.onUrlClicked("https://chefmate.plusmobileapps.com/") },
             )
-            HorizontalDivider()
-            SettingsRow(
-                name = Res.string.settings_replay_onboarding.asTextData(),
-                onClick = bloc::onReplayOnboardingClicked,
-            )
+            if (viewState.isOnboardingEnabled) {
+                HorizontalDivider()
+                SettingsRow(
+                    name = Res.string.settings_replay_onboarding.asTextData(),
+                    onClick = bloc::onReplayOnboardingClicked,
+                )
+            }
             if (viewState.isDebugBuild) {
                 HorizontalDivider()
                 SettingsRow(

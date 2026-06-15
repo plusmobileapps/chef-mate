@@ -11,6 +11,7 @@ import com.plusmobileapps.chefmate.auth.ui.otp.OtpBloc
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.di.OnboardingRepository
+import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
 import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
 import com.plusmobileapps.chefmate.onboarding.OnboardingRootBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
@@ -54,6 +55,7 @@ class RootBlocTest {
         deepLink: DeepLink = DeepLink.None,
         context: BlocContext = TestBlocContext.create(),
         onboardingCompleted: Boolean = true,
+        onboardingFlagEnabled: Boolean = true,
     ): RootBlocImpl =
         RootBlocImpl(
             context = context,
@@ -110,7 +112,8 @@ class RootBlocTest {
                 mock()
             },
             cookMode = CookModeBloc.Factory { _, _, _ -> mock() },
-            featureFlags = FakeFeatureFlags(),
+            featureFlags =
+                FakeFeatureFlags(mapOf(FeatureFlagRegistry.Onboarding to onboardingFlagEnabled)),
             featureFlagsBlocFactory = { _, _ -> mock() },
             aiChat = { _, output ->
                 aiChatOutput = output
@@ -139,6 +142,13 @@ class RootBlocTest {
     fun When_onboarding_not_completed_Then_onboarding_is_shown() {
         val root = createRoot(onboardingCompleted = false)
         root.instance() should instanceOf<RootBloc.Child.Onboarding>()
+        root.state.value.backStack.size shouldBe 0
+    }
+
+    @Test
+    fun When_onboarding_flag_disabled_Then_bottom_nav_is_shown_even_if_not_completed() {
+        val root = createRoot(onboardingCompleted = false, onboardingFlagEnabled = false)
+        root.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
         root.state.value.backStack.size shouldBe 0
     }
 
