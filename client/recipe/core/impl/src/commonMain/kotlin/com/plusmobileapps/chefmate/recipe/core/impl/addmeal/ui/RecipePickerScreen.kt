@@ -2,6 +2,7 @@ package com.plusmobileapps.chefmate.recipe.core.impl.addmeal.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement.spacedBy
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -101,10 +102,15 @@ private fun RecipePickerItem(
             contentDescription = recipe.title,
             modifier = Modifier.size(48.dp),
         )
-        Text(
-            text = recipe.title,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.weight(1f),
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = recipe.title, style = MaterialTheme.typography.bodyLarge)
+            if (recipe.bookNames.isNotEmpty()) {
+                Text(
+                    text = recipe.bookNames.joinToString(", "),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
