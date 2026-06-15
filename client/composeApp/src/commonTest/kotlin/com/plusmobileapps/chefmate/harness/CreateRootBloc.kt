@@ -54,6 +54,9 @@ fun runRootBlocTest(
 ): TestResult = runComposeUiTest {
     val app = createTestApplicationComponent()
     app.applyUserState(userState)
+    // Default to a returning user so tests boot straight into the main app. Onboarding-specific
+    // tests can assert the first-run flow before flipping this in their own setup.
+    app.onboardingRepository.setOnboardingCompleted()
     beforeContent(app)
     setContent { App(rootBloc = app.createRootBloc()) }
     block(app)

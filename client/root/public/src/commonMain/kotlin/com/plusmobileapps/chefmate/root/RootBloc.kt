@@ -13,6 +13,7 @@ import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagsBloc
 import com.plusmobileapps.chefmate.grocery.core.edit.EditGroceryListBloc
+import com.plusmobileapps.chefmate.onboarding.OnboardingRootBloc
 import com.plusmobileapps.chefmate.profile.ManageProfileBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
@@ -28,6 +29,8 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
     fun handleSharedUrl(url: String)
 
     sealed class Child : BlocScreen {
+        data class Onboarding(val bloc: OnboardingRootBloc) : Child(), BlocScreen by bloc
+
         data class BottomNavigation(val bloc: BottomNavBloc) : Child(), BlocScreen by bloc
 
         data class RecipeRoot(val bloc: RecipeRootBloc) : Child(), BlocScreen by bloc

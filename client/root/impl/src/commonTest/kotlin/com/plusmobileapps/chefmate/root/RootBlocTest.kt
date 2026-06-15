@@ -10,7 +10,9 @@ import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
 import com.plusmobileapps.chefmate.auth.ui.otp.OtpBloc
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.cook.CookModeBloc
+import com.plusmobileapps.chefmate.di.OnboardingRepository
 import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
+import com.plusmobileapps.chefmate.onboarding.OnboardingRootBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
@@ -18,6 +20,7 @@ import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc
 import com.plusmobileapps.chefmate.settings.root.SettingsRootBloc
 import com.plusmobileapps.chefmate.testing.TestBlocContext
+import com.russhwolf.settings.MapSettings
 import dev.mokkery.MockMode
 import dev.mokkery.mock
 import io.kotest.matchers.should
@@ -45,14 +48,24 @@ class RootBlocTest {
     var exportRecipesOutput: Consumer<ExportRecipesBloc.Output> = Consumer {}
     var exportRecipesProps: ExportRecipesBloc.Props? = null
     var bottomNavInitialTab: BottomNavBloc.Tab? = null
+    var onboardingOutput: Consumer<OnboardingRootBloc.Output> = Consumer {}
 
     fun createRoot(
         deepLink: DeepLink = DeepLink.None,
         context: BlocContext = TestBlocContext.create(),
+        onboardingCompleted: Boolean = true,
     ): RootBlocImpl =
         RootBlocImpl(
             context = context,
             deepLink = deepLink,
+            onboardingRepository =
+                OnboardingRepository(MapSettings()).apply {
+                    if (onboardingCompleted) setOnboardingCompleted()
+                },
+            onboardingRoot = { _, output ->
+                onboardingOutput = output
+                mock()
+            },
             bottomNav = { _, output, initialTab ->
                 bottomNavOutput = output
                 bottomNavInitialTab = initialTab
@@ -120,6 +133,22 @@ class RootBlocTest {
     fun When_initialized_Then_bottom_nav_is_shown() {
         rootBloc.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
         rootBloc.state.value.backStack.size shouldBe 0
+    }
+
+    @Test
+    fun When_onboarding_not_completed_Then_onboarding_is_shown() {
+        val root = createRoot(onboardingCompleted = false)
+        root.instance() should instanceOf<RootBloc.Child.Onboarding>()
+        root.state.value.backStack.size shouldBe 0
+    }
+
+    @Test
+    fun When_onboarding_finishes_Then_bottom_nav_replaces_the_stack() {
+        val root = createRoot(onboardingCompleted = false)
+        onboardingOutput.onNext(OnboardingRootBloc.Output.Finished)
+        root.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
+        // replaceAll wipes the onboarding flow so back can't return to it.
+        root.state.value.backStack.size shouldBe 0
     }
 
     @Test

@@ -8,6 +8,7 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.bringToFront
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.aichat.AiChatRootBloc
@@ -18,9 +19,11 @@ import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc
 import com.plusmobileapps.chefmate.di.AppScope
+import com.plusmobileapps.chefmate.di.OnboardingRepository
 import com.plusmobileapps.chefmate.featureflag.FeatureFlags
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagsBloc
 import com.plusmobileapps.chefmate.grocery.core.edit.EditGroceryListBloc
+import com.plusmobileapps.chefmate.onboarding.OnboardingRootBloc
 import com.plusmobileapps.chefmate.profile.ManageProfileBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
@@ -42,6 +45,8 @@ import kotlinx.serialization.Serializable
 class RootBlocImpl(
     @Assisted context: BlocContext,
     @Assisted deepLink: DeepLink,
+    private val onboardingRepository: OnboardingRepository,
+    private val onboardingRoot: OnboardingRootBloc.Factory,
     private val bottomNav: BottomNavBloc.Factory,
     private val browserRootBlocFactory: BrowserRootBloc.Factory,
     private val recipeRoot: RecipeRootBloc.Factory,
@@ -83,8 +88,13 @@ class RootBlocImpl(
             childFactory = ::createChild,
         )
 
-    private fun initialStackFor(deepLink: DeepLink): List<Configuration> =
-        when (deepLink) {
+    private fun initialStackFor(deepLink: DeepLink): List<Configuration> {
+        // First run: show onboarding before anything else. Deep links are honored once onboarding
+        // has been completed on a previous launch.
+        if (!onboardingRepository.hasCompletedOnboarding) {
+            return listOf(Configuration.Onboarding)
+        }
+        return when (deepLink) {
             DeepLink.None,
             DeepLink.Groceries,
             DeepLink.MealPlanner -> listOf(Configuration.BottomNavigation)
@@ -103,6 +113,7 @@ class RootBlocImpl(
                     Configuration.Authentication(AuthenticationBloc.Props.SignUp),
                 )
         }
+    }
 
     override val state: Value<ChildStack<*, RootBloc.Child>> = stack
 
@@ -119,6 +130,12 @@ class RootBlocImpl(
 
     private fun createChild(config: Configuration, context: BlocContext): RootBloc.Child =
         when (config) {
+            Configuration.Onboarding ->
+                RootBloc.Child.Onboarding(
+                    bloc =
+                        onboardingRoot.create(context = context, output = ::handleOnboardingOutput)
+                )
+
             Configuration.BottomNavigation ->
                 BottomNavigation(
                     bottomNav.create(
@@ -263,6 +280,16 @@ class RootBlocImpl(
                         )
                 )
         }
+
+    private fun handleOnboardingOutput(output: OnboardingRootBloc.Output) {
+        when (output) {
+            // Onboarding marks itself completed; swap the whole stack for the main app so back
+            // can't
+            // return to the flow.
+            OnboardingRootBloc.Output.Finished ->
+                navigation.replaceAll(Configuration.BottomNavigation)
+        }
+    }
 
     private fun handleBottomNavOutput(output: BottomNavBloc.Output) {
         when (output) {
@@ -490,6 +517,8 @@ class RootBlocImpl(
 
     @Serializable
     private sealed class Configuration {
+        @Serializable data object Onboarding : Configuration()
+
         @Serializable data object BottomNavigation : Configuration()
 
         @Serializable data class RecipeRoot(val props: RecipeRootBloc.Props) : Configuration()

@@ -15,6 +15,7 @@ kotlin {
             implementation(projects.client.cook.public)
             implementation(projects.client.featureflag.public)
             implementation(projects.client.grocery.core.public)
+            implementation(projects.client.onboarding.public)
             implementation(projects.client.profile.public)
             implementation(projects.client.recipe.core.public)
             implementation(projects.client.recipe.exporter.public)
@@ -23,7 +24,10 @@ kotlin {
             implementation(projects.client.auth.ui.public)
             implementation(libs.kotlinx.serialization.json)
         }
-        commonTest.dependencies { implementation(projects.client.featureflag.testing) }
+        commonTest.dependencies {
+            implementation(projects.client.featureflag.testing)
+            implementation(libs.multiplatform.settings.test)
+        }
     }
 }
 
