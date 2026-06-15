@@ -158,5 +158,6 @@ metro = { id = "dev.zacsweers.metro", version.ref = "metro" }
 metroDi = { id = "com.plusmobileapps.chefmate.metro" }
 kmpLibrary = { id = "com.plusmobileapps.chefmate.kmp-library" }
 compose = { id = "com.plusmobileapps.chefmate.compose" }
+plusApplication = { id = "com.plusmobileapps.chefmate.application" }
 plusKtfmt = { id = "com.plusmobileapps.chefmate.ktfmt" }
 plusTesting = { id = "com.plusmobileapps.chefmate.testing" }

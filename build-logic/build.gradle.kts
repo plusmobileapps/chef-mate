@@ -18,6 +18,11 @@ gradlePlugin {
             id = "com.plusmobileapps.chefmate.compose"
             implementationClass = "com.plusmobileapps.chefmate.convention.ComposeConventionPlugin"
         }
+        create("plusApplication") {
+            id = "com.plusmobileapps.chefmate.application"
+            implementationClass =
+                "com.plusmobileapps.chefmate.convention.PlusApplicationConventionPlugin"
+        }
 
         create("ktfmt") {
             id = "com.plusmobileapps.chefmate.ktfmt"
