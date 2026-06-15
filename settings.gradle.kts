@@ -98,6 +98,10 @@ include(":client:meal:core:impl")
 
 include(":client:meal:core:public")
 
+include(":client:onboarding:impl")
+
+include(":client:onboarding:public")
+
 include(":client:meal:data:impl")
 
 include(":client:meal:data:public")

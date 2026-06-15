@@ -1,0 +1,9 @@
+<resources>
+    <string name="onboarding_welcome_title">Welcome to ChefMate</string>
+    <string name="onboarding_welcome_message">Your kitchen companion for saving recipes, planning meals, and building grocery lists.</string>
+    <string name="onboarding_welcome_get_started">Get started</string>
+
+    <string name="onboarding_start_cooking_title">You’re all set</string>
+    <string name="onboarding_start_cooking_message">Everything’s ready to go. Let’s start cooking!</string>
+    <string name="onboarding_start_cooking_button">Start cooking</string>
+</resources>
