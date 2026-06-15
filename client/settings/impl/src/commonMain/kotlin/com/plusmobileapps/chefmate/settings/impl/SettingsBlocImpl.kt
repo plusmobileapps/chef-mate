@@ -43,6 +43,7 @@ class SettingsBlocImpl(
                 showSignOutConfirmationDialog = it.showSignOutConfirmationDialog,
                 isDebugBuild = isDebugBuild,
                 isAiChatEnabled = it.isAiChatEnabled,
+                isOnboardingEnabled = it.isOnboardingEnabled,
                 versionName = BuildConfig.VERSION_NAME,
             )
         }
@@ -85,6 +86,10 @@ class SettingsBlocImpl(
 
     override fun onDeveloperSettingsClicked() {
         output.onNext(Output.OpenDeveloperSettings)
+    }
+
+    override fun onReplayOnboardingClicked() {
+        output.onNext(Output.OpenOnboarding)
     }
 
     @Composable

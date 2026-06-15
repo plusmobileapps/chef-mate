@@ -16,6 +16,7 @@
     <string name="sign_out_confirmation_cancel">Cancel</string>
     <string name="settings">Settings</string>
     <string name="settings_ai_chat">AI Chat</string>
+    <string name="settings_replay_onboarding">View Onboarding Again</string>
     <string name="import_recipes">Import Recipes</string>
     <string name="export_recipes">Export Recipes</string>
     <string name="app_settings_title">Settings</string>

@@ -50,5 +50,15 @@ object FeatureFlagRegistry {
                     "option. When off, the add button opens the blank editor directly.",
         )
 
-    val all: List<FeatureFlag<*>> = listOf(CookModeV2, HomeBannerText, AiChat, ScanRecipeFromPhoto)
+    object Onboarding :
+        BooleanFlag(
+            key = "onboarding",
+            defaultValue = false,
+            description =
+                "Show the first-run onboarding flow (and the \"View Onboarding Again\" row in the " +
+                    "More tab). When off, onboarding is never shown.",
+        )
+
+    val all: List<FeatureFlag<*>> =
+        listOf(CookModeV2, HomeBannerText, AiChat, ScanRecipeFromPhoto, Onboarding)
 }

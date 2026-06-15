@@ -90,6 +90,8 @@ kotlin {
             api(projects.client.grocery.core.public)
             api(projects.client.meal.data.impl)
             api(projects.client.meal.core.impl)
+            api(projects.client.onboarding.impl)
+            api(projects.client.onboarding.public)
             implementation(libs.kotlinx.serialization.json)
             api(projects.client.database.core)
             api(projects.client.root.public)
