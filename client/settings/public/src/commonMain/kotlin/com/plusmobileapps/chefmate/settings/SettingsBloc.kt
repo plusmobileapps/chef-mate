@@ -29,6 +29,8 @@ interface SettingsBloc : BlocScreen {
 
     fun onDeveloperSettingsClicked()
 
+    fun onReplayOnboardingClicked()
+
     data class Model(
         val isAuthenticated: Boolean = false,
         /**
@@ -58,6 +60,9 @@ interface SettingsBloc : BlocScreen {
         data object OpenAiChat : Output()
 
         data object OpenDeveloperSettings : Output()
+
+        /** Replay the first-run onboarding flow from the More tab. */
+        data object OpenOnboarding : Output()
 
         data class OpenUrl(val url: String) : Output()
     }

@@ -348,6 +348,10 @@ class RootBlocImpl(
                 navigation.bringToFront(Configuration.DeveloperSettings)
             }
 
+            BottomNavBloc.Output.OpenOnboarding -> {
+                navigation.bringToFront(Configuration.Onboarding)
+            }
+
             is BottomNavBloc.Output.OpenCookMode -> {
                 navigation.bringToFront(Configuration.CookMode(output.recipeId))
             }

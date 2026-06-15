@@ -81,6 +81,9 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
 
         data object OpenDeveloperSettings : Output()
 
+        /** Replay the onboarding flow, launched from the More tab. */
+        data object OpenOnboarding : Output()
+
         data class OpenUrl(val url: String) : Output()
 
         data class OpenMealPlanner(val props: MealPlannerRootBloc.Props) : Output()

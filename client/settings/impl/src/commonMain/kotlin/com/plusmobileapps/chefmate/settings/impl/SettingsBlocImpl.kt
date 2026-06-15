@@ -87,6 +87,10 @@ class SettingsBlocImpl(
         output.onNext(Output.OpenDeveloperSettings)
     }
 
+    override fun onReplayOnboardingClicked() {
+        output.onNext(Output.OpenOnboarding)
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         SettingsScreen(bloc = this, modifier = modifier)

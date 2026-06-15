@@ -152,6 +152,13 @@ class RootBlocTest {
     }
 
     @Test
+    fun When_bottom_nav_outputs_open_onboarding_Then_onboarding_is_pushed() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenOnboarding)
+        rootBloc.instance() should instanceOf<RootBloc.Child.Onboarding>()
+        rootBloc.state.value.backStack.size shouldBe 1
+    }
+
+    @Test
     fun When_bottom_nav_outputs_create_recipe_Then_recipe_root_shown_with_create_props() {
         bottomNavOutput.onNext(BottomNavBloc.Output.AddNewRecipe)
         rootBloc.instance() should instanceOf<RootBloc.Child.RecipeRoot>()

@@ -39,6 +39,7 @@ import chefmate.client.settings.public.generated.resources.privacy_policy
 import chefmate.client.settings.public.generated.resources.settings
 import chefmate.client.settings.public.generated.resources.settings_ai_chat
 import chefmate.client.settings.public.generated.resources.settings_guest_banner
+import chefmate.client.settings.public.generated.resources.settings_replay_onboarding
 import chefmate.client.settings.public.generated.resources.sign_in
 import chefmate.client.settings.public.generated.resources.sign_out
 import chefmate.client.settings.public.generated.resources.sign_out_confirmation_cancel
@@ -157,6 +158,11 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
             SettingsRow(
                 name = Res.string.about.asTextData(),
                 onClick = { bloc.onUrlClicked("https://chefmate.plusmobileapps.com/") },
+            )
+            HorizontalDivider()
+            SettingsRow(
+                name = Res.string.settings_replay_onboarding.asTextData(),
+                onClick = bloc::onReplayOnboardingClicked,
             )
             if (viewState.isDebugBuild) {
                 HorizontalDivider()
@@ -292,6 +298,8 @@ private val previewBlocUnauthenticated =
 
         override fun onDeveloperSettingsClicked() = Unit
 
+        override fun onReplayOnboardingClicked() = Unit
+
         @Composable override fun Content(modifier: Modifier) = SettingsScreen(this, modifier)
     }
 
@@ -330,6 +338,8 @@ private val previewBlocAuthenticated =
 
         override fun onDeveloperSettingsClicked() = Unit
 
+        override fun onReplayOnboardingClicked() = Unit
+
         @Composable override fun Content(modifier: Modifier) = SettingsScreen(this, modifier)
     }
 
@@ -363,6 +373,8 @@ private val previewBlocAnonymous =
         override fun onAiChatClicked() = Unit
 
         override fun onDeveloperSettingsClicked() = Unit
+
+        override fun onReplayOnboardingClicked() = Unit
 
         @Composable override fun Content(modifier: Modifier) = SettingsScreen(this, modifier)
     }
