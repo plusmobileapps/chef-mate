@@ -10,12 +10,13 @@ import com.plusmobileapps.chefmate.ui.BlocScreen
 
 /**
  * Navigation BLoC that drives the first-run onboarding flow. It owns a Decompose router that walks
- * the user from the [WelcomeBloc] through to the final [StartCookingBloc]. When the user finishes,
- * it marks onboarding as completed and emits [Output.Finished] so the root can load the rest of the
- * app.
+ * the user from the [WelcomeBloc] through a series of feature tours ([SaveRecipesBloc],
+ * [CookModeBloc], [GroceryListBloc], [MealPlanningBloc]) to the final [StartCookingBloc]. When the
+ * user finishes (or skips), it marks onboarding as completed and emits [Output.Finished] so the
+ * root can load the rest of the app.
  *
- * This is currently a skeleton with only the welcome and start-cooking screens; additional steps
- * will be inserted between them in follow-up work.
+ * From the welcome screen the user can also choose to sign in; that is surfaced as [Output.SignIn]
+ * so the root can open the authentication flow.
  */
 interface OnboardingRootBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
     val routerState: Value<ChildStack<*, Child>>
@@ -26,12 +27,25 @@ interface OnboardingRootBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
 
         data class Welcome(override val bloc: WelcomeBloc) : Child()
 
+        data class SaveRecipes(override val bloc: SaveRecipesBloc) : Child()
+
+        data class CookMode(override val bloc: CookModeBloc) : Child()
+
+        data class GroceryList(override val bloc: GroceryListBloc) : Child()
+
+        data class MealPlanning(override val bloc: MealPlanningBloc) : Child()
+
         data class StartCooking(override val bloc: StartCookingBloc) : Child()
     }
 
     sealed class Output {
-        /** The user reached the end of onboarding; the root should load the main app. */
+        /**
+         * The user reached the end of onboarding (or skipped); the root should load the main app.
+         */
         data object Finished : Output()
+
+        /** The user wants to sign in; the root should open the authentication flow. */
+        data object SignIn : Output()
     }
 
     fun interface Factory {
