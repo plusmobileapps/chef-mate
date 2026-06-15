@@ -50,6 +50,7 @@ class RootBlocTest {
     var exportRecipesProps: ExportRecipesBloc.Props? = null
     var bottomNavInitialTab: BottomNavBloc.Tab? = null
     var onboardingOutput: Consumer<OnboardingRootBloc.Output> = Consumer {}
+    lateinit var onboardingRepository: OnboardingRepository
 
     fun createRoot(
         deepLink: DeepLink = DeepLink.None,
@@ -61,9 +62,9 @@ class RootBlocTest {
             context = context,
             deepLink = deepLink,
             onboardingRepository =
-                OnboardingRepository(MapSettings()).apply {
-                    if (onboardingCompleted) setOnboardingCompleted()
-                },
+                OnboardingRepository(MapSettings())
+                    .apply { if (onboardingCompleted) setOnboardingCompleted() }
+                    .also { onboardingRepository = it },
             onboardingRoot = { _, output ->
                 onboardingOutput = output
                 mock()
@@ -166,6 +167,27 @@ class RootBlocTest {
         bottomNavOutput.onNext(BottomNavBloc.Output.OpenOnboarding)
         rootBloc.instance() should instanceOf<RootBloc.Child.Onboarding>()
         rootBloc.state.value.backStack.size shouldBe 1
+    }
+
+    @Test
+    fun When_onboarding_outputs_sign_in_Then_authentication_is_pushed() {
+        val root = createRoot(onboardingCompleted = false)
+        onboardingOutput.onNext(OnboardingRootBloc.Output.SignIn)
+        root.instance() should instanceOf<RootBloc.Child.Authentication>()
+        authProps shouldBe AuthenticationBloc.Props.SignIn
+        root.state.value.backStack.size shouldBe 1
+    }
+
+    @Test
+    fun When_auth_succeeds_from_onboarding_Then_bottom_nav_replaces_stack_and_completes() {
+        val root = createRoot(onboardingCompleted = false)
+        onboardingOutput.onNext(OnboardingRootBloc.Output.SignIn)
+
+        authOutput.onNext(AuthenticationBloc.Output.AuthenticationSuccess)
+
+        root.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
+        root.state.value.backStack.size shouldBe 0
+        onboardingRepository.hasCompletedOnboarding shouldBe true
     }
 
     @Test

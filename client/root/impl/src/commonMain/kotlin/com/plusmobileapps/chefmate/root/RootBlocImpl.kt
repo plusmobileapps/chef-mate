@@ -288,10 +288,15 @@ class RootBlocImpl(
     private fun handleOnboardingOutput(output: OnboardingRootBloc.Output) {
         when (output) {
             // Onboarding marks itself completed; swap the whole stack for the main app so back
-            // can't
-            // return to the flow.
+            // can't return to the flow.
             OnboardingRootBloc.Output.Finished ->
                 navigation.replaceAll(Configuration.BottomNavigation)
+            // Open the auth flow on top of onboarding. On success, handleAuthenticationOutput tears
+            // the onboarding stack down for us.
+            OnboardingRootBloc.Output.SignIn ->
+                navigation.bringToFront(
+                    Configuration.Authentication(AuthenticationBloc.Props.SignIn)
+                )
         }
     }
 
@@ -495,7 +500,18 @@ class RootBlocImpl(
     private fun handleAuthenticationOutput(output: AuthenticationBloc.Output) {
         when (output) {
             AuthenticationBloc.Output.Finished -> navigation.pop()
-            AuthenticationBloc.Output.AuthenticationSuccess -> navigation.pop()
+            AuthenticationBloc.Output.AuthenticationSuccess -> {
+                val cameFromOnboarding =
+                    stack.value.items.any { it.instance is RootBloc.Child.Onboarding }
+                if (cameFromOnboarding) {
+                    // Signing in from onboarding counts as finishing it: mark complete and drop the
+                    // whole onboarding + auth stack so back can't return to the flow.
+                    onboardingRepository.setOnboardingCompleted()
+                    navigation.replaceAll(Configuration.BottomNavigation)
+                } else {
+                    navigation.pop()
+                }
+            }
             is AuthenticationBloc.Output.EmailVerificationRequired ->
                 navigation.bringToFront(
                     Configuration.OtpVerification(email = output.email, flow = OtpFlow.SignUp)
