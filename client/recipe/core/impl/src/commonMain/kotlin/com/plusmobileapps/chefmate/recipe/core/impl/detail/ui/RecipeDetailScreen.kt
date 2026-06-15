@@ -157,7 +157,6 @@ import com.plusmobileapps.chefmate.letIfTrue
 import com.plusmobileapps.chefmate.recipe.categories.pickerLabelRes
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailTestTags
-import com.plusmobileapps.chefmate.recipe.core.impl.addgrocery.ui.AddRecipeToGroceryListScreen
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.IngredientSection
@@ -166,6 +165,7 @@ import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.LocalAnimatedVisibilityScope
 import com.plusmobileapps.chefmate.ui.LocalSecondaryAnimatedVisibilityScope
 import com.plusmobileapps.chefmate.ui.LocalSharedTransitionScope
@@ -567,11 +567,7 @@ private fun RecipeDetailSheet(
                 }
             },
         ) {
-            when (val current = sheetChild) {
-                is RecipeDetailBloc.Sheet.AddToGroceryList ->
-                    AddRecipeToGroceryListScreen(current.bloc)
-                null -> {}
-            }
+            sheetChild?.bloc?.Content()
         }
     }
 }

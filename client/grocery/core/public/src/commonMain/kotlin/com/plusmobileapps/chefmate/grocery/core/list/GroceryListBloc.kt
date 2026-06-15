@@ -108,7 +108,10 @@ interface GroceryListBloc : BlocScreen {
     }
 
     sealed class Sheet {
-        data class GroceryDetail(val bloc: GroceryDetailBloc) : Sheet()
+
+        abstract val bloc: BlocScreen
+
+        data class GroceryDetail(override val bloc: GroceryDetailBloc) : Sheet()
     }
 
     fun interface Factory {

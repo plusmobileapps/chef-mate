@@ -46,7 +46,7 @@ fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
                         isModal = { it.isModal() },
                     ),
             ) { child ->
-                child.instance.Content()
+                child.instance.bloc.Content()
             }
         }
     }
@@ -58,7 +58,7 @@ private fun RootBloc.Child.isModal(): Boolean =
         this is RootBloc.Child.MealPlanner ||
         this is RootBloc.Child.CookMode ||
         this is RootBloc.Child.EditRecipeBook ||
-            this is RootBloc.Child.EditGroceryList
+        this is RootBloc.Child.EditGroceryList
 
 private fun verticalSlide(): StackAnimator = stackAnimator { factor, direction, content ->
     content(Modifier.offsetYFactor(if (direction.isFront) factor else 0f))

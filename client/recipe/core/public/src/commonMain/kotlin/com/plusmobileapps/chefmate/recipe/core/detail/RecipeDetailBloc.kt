@@ -74,7 +74,10 @@ interface RecipeDetailBloc : BackClickBloc, BlocScreen {
     }
 
     sealed class Sheet {
-        data class AddToGroceryList(val bloc: AddRecipeToGroceryListBloc) : Sheet()
+
+        abstract val bloc: BlocScreen
+
+        data class AddToGroceryList(override val bloc: AddRecipeToGroceryListBloc) : Sheet()
     }
 
     sealed class FullImage {

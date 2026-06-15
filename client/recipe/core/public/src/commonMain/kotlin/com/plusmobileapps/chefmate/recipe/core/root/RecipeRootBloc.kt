@@ -16,10 +16,13 @@ import kotlinx.serialization.Serializable
 interface RecipeRootBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
     val routerState: Value<ChildStack<*, Child>>
 
-    sealed class Child : BlocScreen {
-        data class Detail(val bloc: RecipeDetailBloc) : Child(), BlocScreen by bloc
+    sealed class Child {
 
-        data class Edit(val bloc: EditRecipeBloc) : Child(), BlocScreen by bloc
+        abstract val bloc: BlocScreen
+
+        data class Detail(override val bloc: RecipeDetailBloc) : Child()
+
+        data class Edit(override val bloc: EditRecipeBloc) : Child()
     }
 
     sealed class Output {

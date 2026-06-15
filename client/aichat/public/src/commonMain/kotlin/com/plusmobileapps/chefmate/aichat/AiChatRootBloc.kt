@@ -12,10 +12,13 @@ import com.plusmobileapps.chefmate.ui.BlocScreen
 interface AiChatRootBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
     val routerState: Value<ChildStack<*, Child>>
 
-    sealed class Child : BlocScreen {
-        data class Chat(val bloc: AiChatBloc) : Child(), BlocScreen by bloc
+    sealed class Child {
 
-        data class History(val bloc: AiChatHistoryBloc) : Child(), BlocScreen by bloc
+        abstract val bloc: BlocScreen
+
+        data class Chat(override val bloc: AiChatBloc) : Child()
+
+        data class History(override val bloc: AiChatHistoryBloc) : Child()
     }
 
     sealed class Output {

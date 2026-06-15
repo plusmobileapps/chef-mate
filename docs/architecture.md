@@ -175,20 +175,27 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
+import com.plusmobileapps.chefmate.ui.BlocScreen
 import kotlinx.serialization.Serializable
 
 interface RecipeRootBloc :
     BackHandlerOwner,
-    BackClickBloc {
+    BackClickBloc,
+    BlocScreen {
     val routerState: Value<ChildStack<*, Child>>
 
+    // The Child sealed class exposes an `abstract val bloc: BlocScreen`, and each
+    // variant overrides it with its concrete bloc. This lets the screen render any
+    // child uniformly with `child.instance.bloc.Content()` — no `when`.
     sealed class Child {
+        abstract val bloc: BlocScreen
+
         data class Detail(
-            val bloc: RecipeDetailBloc,
+            override val bloc: RecipeDetailBloc,
         ) : Child()
 
         data class Edit(
-            val bloc: EditRecipeBloc,
+            override val bloc: EditRecipeBloc,
         ) : Child()
     }
 
@@ -350,6 +357,21 @@ class RecipeRootBlocImpl(
 All UI is written using Compose Multiplatform to share the same UI across all of the client targets. Every UI has the suffix `Screen` to the name of its file, i.e. `RecipeListScreen.kt`. These files live in the feature's `public` module so that it could be bound into which ever feature depends on it.
 
 All reusable components for the project exist in `client/ui/public` module typically prefixing every component with `Plus`. `PlusHeaderContainer` is the most common component used at the base of every screen's `@Composable`.
+
+Every screen implements `BlocScreen`, which exposes a single `@Composable fun Content(modifier: Modifier)`. Because each navigation `Child` exposes its wrapped bloc via `val bloc: BlocScreen` (see the BLoC pattern above), a navigation screen renders the whole stack without a `when` over child types:
+
+```kotlin
+@Composable
+fun RecipeRootScreen(bloc: RecipeRootBloc, modifier: Modifier = Modifier) {
+    Children(
+        modifier = modifier.fillMaxSize(),
+        stack = bloc.routerState,
+        animation = backAnimation(backHandler = bloc.backHandler, onBack = bloc::onBackClicked),
+    ) { child ->
+        child.instance.bloc.Content()
+    }
+}
+```
 
 ### Navigation Animations & Shared Elements
 

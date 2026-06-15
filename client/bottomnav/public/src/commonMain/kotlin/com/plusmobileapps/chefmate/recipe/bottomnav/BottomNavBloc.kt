@@ -46,16 +46,19 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
         SETTINGS,
     }
 
-    sealed class Child : BlocScreen {
-        data class RecipeList(val bloc: RecipeListBloc) : Child(), BlocScreen by bloc
+    sealed class Child {
 
-        data class GroceryList(val bloc: GroceryListBloc) : Child(), BlocScreen by bloc
+        abstract val bloc: BlocScreen
 
-        data class Meals(val bloc: MealPlanBloc) : Child(), BlocScreen by bloc
+        data class RecipeList(override val bloc: RecipeListBloc) : Child()
 
-        data class Browser(val bloc: BrowserRootBloc) : Child(), BlocScreen by bloc
+        data class GroceryList(override val bloc: GroceryListBloc) : Child()
 
-        data class Settings(val bloc: SettingsBloc) : Child(), BlocScreen by bloc
+        data class Meals(override val bloc: MealPlanBloc) : Child()
+
+        data class Browser(override val bloc: BrowserRootBloc) : Child()
+
+        data class Settings(override val bloc: SettingsBloc) : Child()
     }
 
     sealed class Output {
