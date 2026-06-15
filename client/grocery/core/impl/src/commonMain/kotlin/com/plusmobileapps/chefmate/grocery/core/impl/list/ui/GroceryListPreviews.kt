@@ -84,6 +84,8 @@ private fun groceryListBloc(
 
         override fun onSyncClicked() = Unit
 
+        override fun onSyncTooltipDismissed() = Unit
+
         override fun onListSelected(list: GroceryListModel) = Unit
 
         override fun onCreateListClicked() = Unit

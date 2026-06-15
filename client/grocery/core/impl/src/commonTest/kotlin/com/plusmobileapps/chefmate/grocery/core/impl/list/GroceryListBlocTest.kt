@@ -5,6 +5,8 @@ package com.plusmobileapps.chefmate.grocery.core.impl.list
 
 import app.cash.turbine.test
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.di.CoachMarkController
+import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryGroup
@@ -54,6 +56,11 @@ class GroceryListBlocTest {
         mock(MockMode.autoUnit)
     }
 
+    // Seed the sync coach mark as already seen so the default-state assertions below aren't
+    // affected by the tooltip. The unseen path has its own dedicated test.
+    val coachMarkController =
+        CoachMarkController(MapSettings()).apply { dismiss(CoachMarkId.GROCERY_LIST_SYNC) }
+
     val bloc =
         GroceryListBlocImpl(
             context = context,
@@ -63,6 +70,7 @@ class GroceryListBlocTest {
                     mainContext = context.mainContext,
                     repository = repository,
                     settings = settings,
+                    coachMarkController = coachMarkController,
                 )
             },
             groceryDetailFactory = groceryDetailFactory,
@@ -477,6 +485,31 @@ class GroceryListBlocTest {
         bloc.childSlot.value.child shouldNotBe null
         bloc.onDismissSheet()
         bloc.childSlot.value.child shouldBe null
+    }
+
+    @Test
+    fun When_sync_coach_mark_unseen_Then_shown_and_dismiss_persists() = runTest {
+        val freshContext = TestBlocContext.Companion.create()
+        val controller = CoachMarkController(MapSettings())
+        val tooltipBloc =
+            GroceryListBlocImpl(
+                context = freshContext,
+                output = output,
+                viewModelFactory = {
+                    GroceryListViewModel(
+                        mainContext = freshContext.mainContext,
+                        repository = repository,
+                        settings = MapSettings(),
+                        coachMarkController = controller,
+                    )
+                },
+                groceryDetailFactory = groceryDetailFactory,
+            )
+
+        tooltipBloc.state.value.showSyncTooltip shouldBe true
+        tooltipBloc.onSyncTooltipDismissed()
+        tooltipBloc.state.value.showSyncTooltip shouldBe false
+        controller.hasSeen(CoachMarkId.GROCERY_LIST_SYNC) shouldBe true
     }
 
     @Test

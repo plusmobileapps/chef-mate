@@ -3,6 +3,9 @@
 package com.plusmobileapps.chefmate.grocery.core.impl.list
 
 import com.plusmobileapps.chefmate.ViewModel
+import com.plusmobileapps.chefmate.combineStates
+import com.plusmobileapps.chefmate.di.CoachMarkController
+import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryFilter
@@ -34,6 +37,7 @@ class GroceryListViewModel(
     @Main mainContext: CoroutineContext,
     private val repository: GroceryRepository,
     settings: Settings,
+    private val coachMarkController: CoachMarkController,
 ) : ViewModel(mainContext) {
     private var sortPref by settings.string(KEY_SORT, GrocerySort.AISLE.name)
     private var filterPref by settings.string(KEY_FILTER, GroceryFilter.ALL.name)
@@ -49,11 +53,18 @@ class GroceryListViewModel(
     private val _filter = MutableStateFlow(initialFilter)
     private val _recipeFilter = MutableStateFlow<String?>(null)
 
-    val state: StateFlow<State> = _state.asStateFlow()
+    // The sync coach mark only shows while it's the active mark in the shared controller, so at
+    // most one coach mark is ever visible across the app at a time.
+    val state: StateFlow<State> =
+        combineStates(_state, coachMarkController.activeCoachMark) { state, activeCoachMark ->
+            state.copy(showSyncTooltip = activeCoachMark == CoachMarkId.GROCERY_LIST_SYNC)
+        }
 
     val newGroceryItemName: StateFlow<String> = _newGroceryItemName.asStateFlow()
 
     init {
+        coachMarkController.request(CoachMarkId.GROCERY_LIST_SYNC)
+
         scope.launch {
             val defaultListId = repository.ensureDefaultList()
             if (selectedListId.value == null) {
@@ -182,6 +193,7 @@ class GroceryListViewModel(
     }
 
     fun onSyncClicked() {
+        coachMarkController.dismiss(CoachMarkId.GROCERY_LIST_SYNC)
         scope.launch {
             _state.update { it.copy(isSyncing = true) }
             try {
@@ -190,6 +202,17 @@ class GroceryListViewModel(
                 _state.update { it.copy(isSyncing = false) }
             }
         }
+    }
+
+    /** Hide the sync coach mark and remember the dismissal so it never shows again. */
+    fun dismissSyncTooltip() {
+        coachMarkController.dismiss(CoachMarkId.GROCERY_LIST_SYNC)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        // Leaving the screen without dismissing frees the queue so other coach marks can show.
+        coachMarkController.release(CoachMarkId.GROCERY_LIST_SYNC)
     }
 
     fun onListSelected(list: GroceryListModel) {
@@ -325,6 +348,7 @@ class GroceryListViewModel(
         val showListSelector: Boolean = false,
         val pendingInvitations: List<GroceryListInvite> = emptyList(),
         val currentUserRole: ListRole = ListRole.OWNER,
+        val showSyncTooltip: Boolean = false,
     )
 
     private data class GroceryListContent(

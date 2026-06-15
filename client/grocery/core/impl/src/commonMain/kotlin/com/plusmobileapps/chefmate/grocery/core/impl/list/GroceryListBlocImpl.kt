@@ -81,6 +81,7 @@ class GroceryListBlocImpl(
                 showListSelector = it.showListSelector,
                 pendingInvitations = it.pendingInvitations,
                 currentUserRole = it.currentUserRole,
+                showSyncTooltip = it.showSyncTooltip,
             )
         }
 
@@ -116,6 +117,10 @@ class GroceryListBlocImpl(
 
     override fun onSyncClicked() {
         viewModel.onSyncClicked()
+    }
+
+    override fun onSyncTooltipDismissed() {
+        viewModel.dismissSyncTooltip()
     }
 
     override fun onListSelected(list: GroceryListModel) {
