@@ -124,6 +124,7 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_to_meal_plan
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_calories
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_cook_mode
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_cook_mode_onboarding
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_cook_time
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_copied_to_clipboard
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_created
@@ -172,6 +173,7 @@ import com.plusmobileapps.chefmate.ui.LocalSharedTransitionScope
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
+import com.plusmobileapps.chefmate.ui.components.PlusOnboardingTooltip
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
@@ -296,6 +298,11 @@ private fun RecipeDetailBody(
     copiedMessage: String,
     scope: CoroutineScope,
 ) {
+    // First-run coach mark pointing at the cook-mode button. Shows once the recipe has loaded and
+    // hides as soon as the user taps it (or the bubble). Kept in local saveable state for now —
+    // wiring it to a persisted "seen" flag is a follow-up.
+    var showCookModeTooltip by rememberSaveable { mutableStateOf(true) }
+
     Box(modifier = Modifier.fillMaxSize().testTag(RecipeDetailTestTags.SCREEN)) {
         PlusResponsiveContainer(modifier = Modifier.fillMaxSize()) { windowSizeClass ->
             val isCompact = windowSizeClass == WindowSizeClass.COMPACT
@@ -413,15 +420,28 @@ private fun RecipeDetailBody(
                             HorizontalFloatingToolbar(
                                 expanded = true,
                                 floatingActionButton = {
-                                    FloatingActionButton(
-                                        onClick = bloc::onCookModeClicked,
-                                        shape = ChefMateTheme.shapes.large,
+                                    PlusOnboardingTooltip(
+                                        text =
+                                            Res.string.recipe_detail_cook_mode_onboarding
+                                                .asTextData(),
+                                        visible = showCookModeTooltip && !state.isLoading,
+                                        onDismiss = { showCookModeTooltip = false },
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.SoupKitchen,
-                                            contentDescription =
-                                                stringResource(Res.string.recipe_detail_cook_mode),
-                                        )
+                                        FloatingActionButton(
+                                            onClick = {
+                                                showCookModeTooltip = false
+                                                bloc.onCookModeClicked()
+                                            },
+                                            shape = ChefMateTheme.shapes.large,
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.SoupKitchen,
+                                                contentDescription =
+                                                    stringResource(
+                                                        Res.string.recipe_detail_cook_mode
+                                                    ),
+                                            )
+                                        }
                                     }
                                 },
                             ) {
