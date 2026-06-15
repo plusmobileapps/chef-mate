@@ -112,6 +112,7 @@ class RecipeDetailBlocImpl(
                 formattedTotalTime =
                     it.recipe.totalTime?.let { time -> timeFormatterUtil.formatMinutes(time) },
                 showGroceryAddedSnackbar = it.showGroceryAddedSnackbar,
+                showCookModeTooltip = it.showCookModeTooltip,
             )
         }
 
@@ -156,7 +157,12 @@ class RecipeDetailBlocImpl(
     }
 
     override fun onCookModeClicked() {
+        viewModel.dismissCookModeTooltip()
         output.onNext(Output.OpenCookMode(recipeId))
+    }
+
+    override fun onCookModeTooltipDismissed() {
+        viewModel.dismissCookModeTooltip()
     }
 
     override fun onSourceUrlClicked(url: String) {

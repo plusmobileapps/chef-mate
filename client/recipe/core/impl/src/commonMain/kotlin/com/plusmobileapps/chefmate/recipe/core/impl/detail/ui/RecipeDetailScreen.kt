@@ -298,11 +298,6 @@ private fun RecipeDetailBody(
     copiedMessage: String,
     scope: CoroutineScope,
 ) {
-    // First-run coach mark pointing at the cook-mode button. Shows once the recipe has loaded and
-    // hides as soon as the user taps it (or the bubble). Kept in local saveable state for now —
-    // wiring it to a persisted "seen" flag is a follow-up.
-    var showCookModeTooltip by rememberSaveable { mutableStateOf(true) }
-
     Box(modifier = Modifier.fillMaxSize().testTag(RecipeDetailTestTags.SCREEN)) {
         PlusResponsiveContainer(modifier = Modifier.fillMaxSize()) { windowSizeClass ->
             val isCompact = windowSizeClass == WindowSizeClass.COMPACT
@@ -424,14 +419,11 @@ private fun RecipeDetailBody(
                                         text =
                                             Res.string.recipe_detail_cook_mode_onboarding
                                                 .asTextData(),
-                                        visible = showCookModeTooltip && !state.isLoading,
-                                        onDismiss = { showCookModeTooltip = false },
+                                        visible = state.showCookModeTooltip && !state.isLoading,
+                                        onDismiss = bloc::onCookModeTooltipDismissed,
                                     ) {
                                         FloatingActionButton(
-                                            onClick = {
-                                                showCookModeTooltip = false
-                                                bloc.onCookModeClicked()
-                                            },
+                                            onClick = bloc::onCookModeClicked,
                                             shape = ChefMateTheme.shapes.large,
                                         ) {
                                             Icon(
@@ -1799,6 +1791,10 @@ private val previewBloc =
         }
 
         override fun onCookModeClicked() {
+            TODO("Not yet implemented")
+        }
+
+        override fun onCookModeTooltipDismissed() {
             TODO("Not yet implemented")
         }
 

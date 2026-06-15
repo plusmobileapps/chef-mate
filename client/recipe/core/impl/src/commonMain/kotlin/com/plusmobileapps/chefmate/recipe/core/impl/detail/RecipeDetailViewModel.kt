@@ -4,6 +4,8 @@ import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
+import com.russhwolf.settings.Settings
+import com.russhwolf.settings.boolean
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -23,12 +25,17 @@ class RecipeDetailViewModel(
     @Assisted private val recipeId: Long,
     @Main mainContext: CoroutineContext,
     private val repository: RecipeRepository,
+    settings: Settings,
 ) : ViewModel(mainContext) {
+
+    // Whether the user has dismissed the cook-mode coach mark. Persisted via multiplatform-settings
+    // so the tip is only ever shown once per install.
+    private var cookModeTooltipSeen by settings.boolean(KEY_COOK_MODE_TOOLTIP_SEEN, false)
 
     private val _output = Channel<Output>(Channel.BUFFERED)
     val output: Flow<Output> = _output.receiveAsFlow()
 
-    private val _state = MutableStateFlow(State())
+    private val _state = MutableStateFlow(State(showCookModeTooltip = !cookModeTooltipSeen))
     val state: StateFlow<State> = _state.asStateFlow()
 
     init {
@@ -77,12 +84,20 @@ class RecipeDetailViewModel(
         _state.update { it.copy(showGroceryAddedSnackbar = false) }
     }
 
+    /** Hide the cook-mode coach mark and remember the dismissal so it never shows again. */
+    fun dismissCookModeTooltip() {
+        if (cookModeTooltipSeen) return
+        cookModeTooltipSeen = true
+        _state.update { it.copy(showCookModeTooltip = false) }
+    }
+
     data class State(
         val isLoading: Boolean = true,
         val isDeleting: Boolean = false,
         val showDeleteConfirmationDialog: Boolean = false,
         val recipe: Recipe = Recipe.Empty,
         val showGroceryAddedSnackbar: Boolean = false,
+        val showCookModeTooltip: Boolean = false,
     )
 
     sealed class Output {
@@ -94,3 +109,5 @@ class RecipeDetailViewModel(
         fun create(recipeId: Long): RecipeDetailViewModel
     }
 }
+
+private const val KEY_COOK_MODE_TOOLTIP_SEEN = "recipe_detail_cook_mode_tooltip_seen"

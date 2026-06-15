@@ -36,6 +36,8 @@ interface RecipeDetailBloc : BackClickBloc, BlocScreen {
 
     fun onCookModeClicked()
 
+    fun onCookModeTooltipDismissed()
+
     fun onAddToMealPlanClicked()
 
     fun onSourceUrlClicked(url: String)
@@ -57,6 +59,7 @@ interface RecipeDetailBloc : BackClickBloc, BlocScreen {
         val formattedCookTime: TextData? = null,
         val formattedTotalTime: TextData? = null,
         val showGroceryAddedSnackbar: Boolean = false,
+        val showCookModeTooltip: Boolean = false,
     )
 
     sealed class Output {

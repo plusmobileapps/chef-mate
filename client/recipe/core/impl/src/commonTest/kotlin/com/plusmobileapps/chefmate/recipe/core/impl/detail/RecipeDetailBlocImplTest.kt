@@ -11,8 +11,11 @@ import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
-import com.plusmobileapps.chefmate.util.DateTimeUtil
+import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.util.TimeFormatterUtil
+import com.plusmobileapps.chefmate.util.testing.FakeDateTimeUtil
+import com.russhwolf.settings.MapSettings
+import com.russhwolf.settings.Settings
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.matcher.any
@@ -51,18 +54,28 @@ class RecipeDetailBlocImplTest {
             updatedAt = Instant.parse("2024-01-02T00:00:00Z"),
         )
 
-    private fun createBloc(recipe: Recipe? = sampleRecipe): RecipeDetailBlocImpl {
+    private lateinit var settings: Settings
+
+    private fun createBloc(
+        recipe: Recipe? = sampleRecipe,
+        cookModeTooltipSeen: Boolean = false,
+    ): RecipeDetailBlocImpl {
         if (recipe != null) recipes.value = listOf(recipe)
+        settings = MapSettings()
+        if (cookModeTooltipSeen) settings.putBoolean(COOK_MODE_TOOLTIP_KEY, true)
         val viewModelFactory = RecipeDetailViewModel.Factory { id ->
             RecipeDetailViewModel(
                 recipeId = id,
                 mainContext = context.mainContext,
                 repository = repository,
+                settings = settings,
             )
         }
-        val dateTimeUtil =
-            mock<DateTimeUtil>().also { every { it.formatDateTime(any()) } returns "" }
-        val timeFormatterUtil = mock<TimeFormatterUtil>()
+        val dateTimeUtil = FakeDateTimeUtil()
+        val timeFormatterUtil =
+            mock<TimeFormatterUtil>().also {
+                every { it.formatMinutes(any()) } returns FixedString("")
+            }
         val groceryFactory =
             object : AddRecipeToGroceryListBloc.Factory {
                 override fun create(
@@ -125,4 +138,35 @@ class RecipeDetailBlocImplTest {
         bloc.onBackClicked()
         output.lastValue shouldBe RecipeDetailBloc.Output.Finished
     }
+
+    @Test
+    fun When_tooltip_not_yet_seen_Then_cook_mode_tooltip_is_shown() {
+        val bloc = createBloc(cookModeTooltipSeen = false)
+        bloc.state.value.showCookModeTooltip shouldBe true
+    }
+
+    @Test
+    fun When_tooltip_already_seen_Then_cook_mode_tooltip_is_hidden() {
+        val bloc = createBloc(cookModeTooltipSeen = true)
+        bloc.state.value.showCookModeTooltip shouldBe false
+    }
+
+    @Test
+    fun When_onCookModeTooltipDismissed_Then_tooltip_hidden_and_persisted() {
+        val bloc = createBloc(cookModeTooltipSeen = false)
+        bloc.onCookModeTooltipDismissed()
+        bloc.state.value.showCookModeTooltip shouldBe false
+        settings.getBoolean(COOK_MODE_TOOLTIP_KEY, false) shouldBe true
+    }
+
+    @Test
+    fun When_onCookModeClicked_Then_tooltip_persisted_and_output_emitted() {
+        val bloc = createBloc(cookModeTooltipSeen = false)
+        bloc.onCookModeClicked()
+        bloc.state.value.showCookModeTooltip shouldBe false
+        settings.getBoolean(COOK_MODE_TOOLTIP_KEY, false) shouldBe true
+        output.lastValue shouldBe RecipeDetailBloc.Output.OpenCookMode(sampleRecipe.id)
+    }
 }
+
+private const val COOK_MODE_TOOLTIP_KEY = "recipe_detail_cook_mode_tooltip_seen"
