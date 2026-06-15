@@ -20,10 +20,13 @@ import com.plusmobileapps.chefmate.ui.BlocScreen
 interface OnboardingRootBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
     val routerState: Value<ChildStack<*, Child>>
 
-    sealed class Child : BlocScreen {
-        data class Welcome(val bloc: WelcomeBloc) : Child(), BlocScreen by bloc
+    sealed class Child {
 
-        data class StartCooking(val bloc: StartCookingBloc) : Child(), BlocScreen by bloc
+        abstract val bloc: BlocScreen
+
+        data class Welcome(override val bloc: WelcomeBloc) : Child()
+
+        data class StartCooking(override val bloc: StartCookingBloc) : Child()
     }
 
     sealed class Output {
