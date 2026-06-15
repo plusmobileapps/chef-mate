@@ -19,6 +19,6 @@ fun RecipeRootScreen(recipeRootBloc: RecipeRootBloc, modifier: Modifier = Modifi
                 onBack = recipeRootBloc::onBackClicked,
             ),
     ) { child ->
-        child.instance.Content()
+        child.instance.bloc.Content()
     }
 }

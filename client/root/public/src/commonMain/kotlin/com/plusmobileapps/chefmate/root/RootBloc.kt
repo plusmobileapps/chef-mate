@@ -28,38 +28,41 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
 
     fun handleSharedUrl(url: String)
 
-    sealed class Child : BlocScreen {
-        data class Onboarding(val bloc: OnboardingRootBloc) : Child(), BlocScreen by bloc
+    sealed class Child {
 
-        data class BottomNavigation(val bloc: BottomNavBloc) : Child(), BlocScreen by bloc
+        abstract val bloc: BlocScreen
 
-        data class RecipeRoot(val bloc: RecipeRootBloc) : Child(), BlocScreen by bloc
+        data class Onboarding(override val bloc: OnboardingRootBloc) : Child()
 
-        data class Authentication(val bloc: AuthenticationBloc) : Child(), BlocScreen by bloc
+        data class BottomNavigation(override val bloc: BottomNavBloc) : Child()
 
-        data class OtpVerification(val bloc: OtpBloc) : Child(), BlocScreen by bloc
+        data class RecipeRoot(override val bloc: RecipeRootBloc) : Child()
 
-        data class Browser(val bloc: BrowserRootBloc) : Child(), BlocScreen by bloc
+        data class Authentication(override val bloc: AuthenticationBloc) : Child()
 
-        data class MealPlanner(val bloc: MealPlannerRootBloc) : Child(), BlocScreen by bloc
+        data class OtpVerification(override val bloc: OtpBloc) : Child()
 
-        data class SettingsRoot(val bloc: SettingsRootBloc) : Child(), BlocScreen by bloc
+        data class Browser(override val bloc: BrowserRootBloc) : Child()
 
-        data class ManageProfile(val bloc: ManageProfileBloc) : Child(), BlocScreen by bloc
+        data class MealPlanner(override val bloc: MealPlannerRootBloc) : Child()
 
-        data class DeveloperSettings(val bloc: DeveloperSettingsBloc) : Child(), BlocScreen by bloc
+        data class SettingsRoot(override val bloc: SettingsRootBloc) : Child()
 
-        data class FeatureFlags(val bloc: FeatureFlagsBloc) : Child(), BlocScreen by bloc
+        data class ManageProfile(override val bloc: ManageProfileBloc) : Child()
 
-        data class CookMode(val bloc: CookModeBloc) : Child(), BlocScreen by bloc
+        data class DeveloperSettings(override val bloc: DeveloperSettingsBloc) : Child()
 
-        data class AiChat(val bloc: AiChatRootBloc) : Child(), BlocScreen by bloc
+        data class FeatureFlags(override val bloc: FeatureFlagsBloc) : Child()
 
-        data class ExportRecipes(val bloc: ExportRecipesBloc) : Child(), BlocScreen by bloc
+        data class CookMode(override val bloc: CookModeBloc) : Child()
 
-        data class EditRecipeBook(val bloc: EditRecipeBookBloc) : Child(), BlocScreen by bloc
+        data class AiChat(override val bloc: AiChatRootBloc) : Child()
 
-        data class EditGroceryList(val bloc: EditGroceryListBloc) : Child(), BlocScreen by bloc
+        data class ExportRecipes(override val bloc: ExportRecipesBloc) : Child()
+
+        data class EditRecipeBook(override val bloc: EditRecipeBookBloc) : Child()
+
+        data class EditGroceryList(override val bloc: EditGroceryListBloc) : Child()
     }
 
     fun interface Factory {

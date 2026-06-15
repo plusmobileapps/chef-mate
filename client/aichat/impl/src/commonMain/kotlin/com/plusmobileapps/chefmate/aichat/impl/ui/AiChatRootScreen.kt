@@ -15,6 +15,6 @@ fun AiChatRootScreen(bloc: AiChatRootBloc, modifier: Modifier = Modifier) {
         stack = bloc.routerState,
         animation = backAnimation(backHandler = bloc.backHandler, onBack = bloc::onBackClicked),
     ) { child ->
-        child.instance.Content()
+        child.instance.bloc.Content()
     }
 }

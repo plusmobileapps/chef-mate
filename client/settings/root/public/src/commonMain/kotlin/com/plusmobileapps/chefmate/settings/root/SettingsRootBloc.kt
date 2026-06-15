@@ -16,16 +16,19 @@ import com.plusmobileapps.chefmate.ui.BlocScreen
 interface SettingsRootBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
     val routerState: Value<ChildStack<*, Child>>
 
-    sealed class Child : BlocScreen {
-        data class AppSettings(val bloc: AppSettingsBloc) : Child(), BlocScreen by bloc
+    sealed class Child {
 
-        data class BottomNavOrder(val bloc: BottomNavOrderBloc) : Child(), BlocScreen by bloc
+        abstract val bloc: BlocScreen
 
-        data class ExportRecipes(val bloc: ExportRecipesBloc) : Child(), BlocScreen by bloc
+        data class AppSettings(override val bloc: AppSettingsBloc) : Child()
 
-        data class ImportRecipes(val bloc: ImportRecipesBloc) : Child(), BlocScreen by bloc
+        data class BottomNavOrder(override val bloc: BottomNavOrderBloc) : Child()
 
-        data class RecipeCategories(val bloc: RecipeCategoriesBloc) : Child(), BlocScreen by bloc
+        data class ExportRecipes(override val bloc: ExportRecipesBloc) : Child()
+
+        data class ImportRecipes(override val bloc: ImportRecipesBloc) : Child()
+
+        data class RecipeCategories(override val bloc: RecipeCategoriesBloc) : Child()
     }
 
     sealed class Output {

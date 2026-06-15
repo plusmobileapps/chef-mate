@@ -136,7 +136,6 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_sync_sync
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_syncing
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.plusmobileapps.chefmate.grocery.core.displayName
-import com.plusmobileapps.chefmate.grocery.core.impl.detail.ui.GroceryDetailSheetContent
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryDisplayGroup
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryDisplayItem
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryGroupedList
@@ -150,6 +149,7 @@ import com.plusmobileapps.chefmate.grocery.data.SyncStatus
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
@@ -453,10 +453,7 @@ private fun GroceryDetailSheet(bloc: GroceryListBloc) {
             title = Res.string.grocery_detail.asTextData(),
             onCloseClick = bloc::onDismissSheet,
         ) {
-            when (active) {
-                is GroceryListBloc.Sheet.GroceryDetail ->
-                    GroceryDetailSheetContent(bloc = active.bloc)
-            }
+            active.bloc.Content()
         }
     }
 }

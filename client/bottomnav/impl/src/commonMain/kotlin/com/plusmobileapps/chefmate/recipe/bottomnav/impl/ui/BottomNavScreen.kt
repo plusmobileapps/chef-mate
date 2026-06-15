@@ -149,7 +149,7 @@ private fun BottomNavContentContainer(bloc: BottomNavBloc, modifier: Modifier = 
                 },
             ),
     ) { created ->
-        created.instance.Content()
+        created.instance.bloc.Content()
     }
 }
 

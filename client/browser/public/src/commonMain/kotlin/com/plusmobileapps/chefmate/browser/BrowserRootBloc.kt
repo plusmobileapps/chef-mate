@@ -12,12 +12,15 @@ interface BrowserRootBloc : BlocScreen {
 
     fun navigateToUrl(url: String)
 
-    sealed class Child : BlocScreen {
-        data class Landing(val bloc: BrowserLandingBloc) : Child(), BlocScreen by bloc
+    sealed class Child {
 
-        data class EditQuery(val bloc: BrowserEditQueryBloc) : Child(), BlocScreen by bloc
+        abstract val bloc: BlocScreen
 
-        data class Browser(val bloc: BrowserBloc) : Child(), BlocScreen by bloc
+        data class Landing(override val bloc: BrowserLandingBloc) : Child()
+
+        data class EditQuery(override val bloc: BrowserEditQueryBloc) : Child()
+
+        data class Browser(override val bloc: BrowserBloc) : Child()
     }
 
     sealed class Output {
