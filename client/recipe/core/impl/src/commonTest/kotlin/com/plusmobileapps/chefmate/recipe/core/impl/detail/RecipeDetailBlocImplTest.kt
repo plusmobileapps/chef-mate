@@ -5,6 +5,8 @@ package com.plusmobileapps.chefmate.recipe.core.impl.detail
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.di.CoachMarkController
+import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.data.Recipe
@@ -15,7 +17,6 @@ import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.util.TimeFormatterUtil
 import com.plusmobileapps.chefmate.util.testing.FakeDateTimeUtil
 import com.russhwolf.settings.MapSettings
-import com.russhwolf.settings.Settings
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.matcher.any
@@ -54,21 +55,21 @@ class RecipeDetailBlocImplTest {
             updatedAt = Instant.parse("2024-01-02T00:00:00Z"),
         )
 
-    private lateinit var settings: Settings
+    private lateinit var coachMarkController: CoachMarkController
 
     private fun createBloc(
         recipe: Recipe? = sampleRecipe,
         cookModeTooltipSeen: Boolean = false,
     ): RecipeDetailBlocImpl {
         if (recipe != null) recipes.value = listOf(recipe)
-        settings = MapSettings()
-        if (cookModeTooltipSeen) settings.putBoolean(COOK_MODE_TOOLTIP_KEY, true)
+        coachMarkController = CoachMarkController(MapSettings())
+        if (cookModeTooltipSeen) coachMarkController.dismiss(CoachMarkId.RECIPE_DETAIL_COOK_MODE)
         val viewModelFactory = RecipeDetailViewModel.Factory { id ->
             RecipeDetailViewModel(
                 recipeId = id,
                 mainContext = context.mainContext,
                 repository = repository,
-                settings = settings,
+                coachMarkController = coachMarkController,
             )
         }
         val dateTimeUtil = FakeDateTimeUtil()
@@ -156,7 +157,7 @@ class RecipeDetailBlocImplTest {
         val bloc = createBloc(cookModeTooltipSeen = false)
         bloc.onCookModeTooltipDismissed()
         bloc.state.value.showCookModeTooltip shouldBe false
-        settings.getBoolean(COOK_MODE_TOOLTIP_KEY, false) shouldBe true
+        coachMarkController.hasSeen(CoachMarkId.RECIPE_DETAIL_COOK_MODE) shouldBe true
     }
 
     @Test
@@ -164,9 +165,7 @@ class RecipeDetailBlocImplTest {
         val bloc = createBloc(cookModeTooltipSeen = false)
         bloc.onCookModeClicked()
         bloc.state.value.showCookModeTooltip shouldBe false
-        settings.getBoolean(COOK_MODE_TOOLTIP_KEY, false) shouldBe true
+        coachMarkController.hasSeen(CoachMarkId.RECIPE_DETAIL_COOK_MODE) shouldBe true
         output.lastValue shouldBe RecipeDetailBloc.Output.OpenCookMode(sampleRecipe.id)
     }
 }
-
-private const val COOK_MODE_TOOLTIP_KEY = "recipe_detail_cook_mode_tooltip_seen"
