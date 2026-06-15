@@ -2,6 +2,7 @@ package com.plusmobileapps.chefmate.ui.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -18,10 +19,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -32,8 +35,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
+import chefmate.client.ui.public.generated.resources.Res
+import chefmate.client.ui.public.generated.resources.coach_mark_dismiss
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import org.jetbrains.compose.resources.stringResource
 
 /** Which side of the anchor the tooltip bubble sits on. The caret always points at the anchor. */
 enum class PlusTooltipPlacement {
@@ -50,12 +56,12 @@ enum class PlusTooltipPlacement {
  * the underlying control — a user can tap the highlighted control directly.
  *
  * Visibility is fully caller-controlled. Pass [visible] = true to show it and handle [onDismiss]
- * (called when the bubble itself is tapped) to hide it. Callers that want it shown only once should
- * persist that decision themselves.
+ * (called when the user taps the bubble's dismiss button) to hide it. Callers that want it shown
+ * only once should persist that decision themselves — e.g. via the shared coach-mark controller.
  *
  * @param text the message shown in the bubble.
  * @param visible whether the bubble is currently shown.
- * @param onDismiss invoked when the user taps the bubble to dismiss it.
+ * @param onDismiss invoked when the user taps the bubble's dismiss button.
  * @param placement which side of the anchor the bubble sits on. Defaults to [ABOVE].
  * @param anchor the control the tooltip points at; always laid out, tooltip or not.
  */
@@ -100,7 +106,7 @@ fun PlusOnboardingTooltip(
                     text = text,
                     placement = placement,
                     caretOffsetPx = caretOffsetPx,
-                    onClick = onDismiss,
+                    onDismiss = onDismiss,
                 )
             }
         }
@@ -125,7 +131,7 @@ fun PlusTooltipBubble(
     placement: PlusTooltipPlacement,
     modifier: Modifier = Modifier,
     caretOffsetPx: Int = -1,
-    onClick: () -> Unit = {},
+    onDismiss: () -> Unit = {},
 ) {
     val color = MaterialTheme.colorScheme.primaryContainer
     val caret: @Composable () -> Unit = {
@@ -138,7 +144,7 @@ fun PlusTooltipBubble(
 
     // IntrinsicSize.Max pins the column to the text surface's width so the full-width caret canvas
     // doesn't stretch the bubble to the popup window's width.
-    Column(modifier = modifier.width(IntrinsicSize.Max).clickable(onClick = onClick)) {
+    Column(modifier = modifier.width(IntrinsicSize.Max)) {
         if (placement == PlusTooltipPlacement.BELOW) caret()
         Surface(
             color = color,
@@ -146,17 +152,32 @@ fun PlusTooltipBubble(
             shape = ChefMateTheme.shapes.medium,
             shadowElevation = ChefMateTheme.dimens.paddingExtraSmall,
         ) {
-            Text(
-                text = text.localized(),
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
+            Column(
                 modifier =
                     Modifier.widthIn(max = MaxBubbleWidth)
                         .padding(
                             horizontal = ChefMateTheme.dimens.paddingNormal,
                             vertical = ChefMateTheme.dimens.paddingSmall,
                         ),
-            )
+                verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingExtraSmall),
+            ) {
+                Text(
+                    text = text.localized(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Text(
+                    text = stringResource(Res.string.coach_mark_dismiss),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier =
+                        Modifier.align(Alignment.End)
+                            .clickable(onClick = onDismiss)
+                            .padding(ChefMateTheme.dimens.paddingExtraSmall),
+                )
+            }
         }
         if (placement == PlusTooltipPlacement.ABOVE) caret()
     }
