@@ -155,6 +155,7 @@ kotlin {
             implementation(projects.client.settings.implRobots)
             implementation(projects.client.settings.root.implRobots)
             implementation(projects.client.profile.implRobots)
+            implementation(projects.client.onboarding.implRobots)
         }
         val jvmTest by getting {
             dependencies {
