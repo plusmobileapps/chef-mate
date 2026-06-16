@@ -35,7 +35,7 @@ interface CookModeBloc : BackClickBloc, BlocScreen {
         val isLoading: Boolean = true,
         val activeRecipe: Recipe? = null,
         val activeSessions: ImmutableList<Chip> = persistentListOf(),
-        val layoutMode: LayoutMode = LayoutMode.Stacked,
+        val layoutMode: LayoutMode = LayoutMode.Split,
         val keepScreenOn: Boolean = true,
     ) {
         data class Chip(val recipeId: Long, val title: String, val isActive: Boolean)
