@@ -66,6 +66,14 @@ kotlin {
 
     jvm()
 
+    // Deployable web (browser) target. Bundles the app to `composeApp.js` to match the
+    // <script> reference in src/wasmJsMain/resources/index.html.
+    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+    wasmJs {
+        browser { commonWebpackConfig { outputFileName = "composeApp.js" } }
+        binaries.executable()
+    }
+
     sourceSets {
         commonMain.dependencies {
             api(libs.arkivanov.decompose.core)
@@ -138,6 +146,9 @@ kotlin {
             implementation(libs.bugsnag.kmp)
             implementation(libs.kermit.bugsnag)
         }
+        // The Js engine is the only Ktor engine on wasmJs; Supabase and Coil pick it up off
+        // the classpath, so no per-data-module wiring is needed.
+        val wasmJsMain by getting { dependencies { implementation(libs.ktor.client.js) } }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
