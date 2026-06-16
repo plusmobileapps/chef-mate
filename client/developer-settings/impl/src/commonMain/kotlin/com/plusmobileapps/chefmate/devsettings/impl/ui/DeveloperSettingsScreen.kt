@@ -26,6 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import chefmate.client.developer_settings.public.generated.resources.Res
+import chefmate.client.developer_settings.public.generated.resources.dev_coach_marks_reset_message
+import chefmate.client.developer_settings.public.generated.resources.dev_coach_marks_reset_title
 import chefmate.client.developer_settings.public.generated.resources.dev_env_fake
 import chefmate.client.developer_settings.public.generated.resources.dev_env_prod
 import chefmate.client.developer_settings.public.generated.resources.dev_env_testing
@@ -35,6 +37,7 @@ import chefmate.client.developer_settings.public.generated.resources.dev_login_a
 import chefmate.client.developer_settings.public.generated.resources.dev_no_test_users
 import chefmate.client.developer_settings.public.generated.resources.dev_no_test_users_message
 import chefmate.client.developer_settings.public.generated.resources.dev_picker_dismiss
+import chefmate.client.developer_settings.public.generated.resources.dev_reset_coach_marks
 import chefmate.client.developer_settings.public.generated.resources.dev_restart_required_message
 import chefmate.client.developer_settings.public.generated.resources.dev_restart_required_title
 import chefmate.client.developer_settings.public.generated.resources.dev_sign_in_error_title
@@ -87,6 +90,15 @@ fun DeveloperSettingsScreen(bloc: DeveloperSettingsBloc, modifier: Modifier = Mo
         )
     }
 
+    if (state.showCoachMarksResetConfirmation) {
+        PlusDialog(
+            title = Res.string.dev_coach_marks_reset_title.asTextData(),
+            message = Res.string.dev_coach_marks_reset_message.asTextData(),
+            onConfirmClick = bloc::onCoachMarksResetConfirmationDismissed,
+            onDismissRequest = bloc::onCoachMarksResetConfirmationDismissed,
+        )
+    }
+
     state.signInError?.let { rawMessage ->
         val message: TextData =
             if (rawMessage.isBlank()) Res.string.dev_sign_in_error_unknown.asTextData()
@@ -131,6 +143,11 @@ fun DeveloperSettingsScreen(bloc: DeveloperSettingsBloc, modifier: Modifier = Mo
                 DeveloperRow(
                     title = Res.string.dev_feature_flags.asTextData(),
                     onClick = bloc::onFeatureFlagsClicked,
+                )
+                HorizontalDivider()
+                DeveloperRow(
+                    title = Res.string.dev_reset_coach_marks.asTextData(),
+                    onClick = bloc::onClearCoachMarksClicked,
                 )
             },
         )
@@ -321,6 +338,10 @@ val previewDeveloperSettingsBloc =
         override fun onSignInErrorDismissed() = Unit
 
         override fun onFeatureFlagsClicked() = Unit
+
+        override fun onClearCoachMarksClicked() = Unit
+
+        override fun onCoachMarksResetConfirmationDismissed() = Unit
 
         @Composable
         override fun Content(modifier: Modifier) = DeveloperSettingsScreen(this, modifier)

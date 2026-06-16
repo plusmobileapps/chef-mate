@@ -132,6 +132,7 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_sort_and_
 import chefmate.client.grocery.core.public.generated.resources.grocery_sort_by
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_all
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_not_synced
+import chefmate.client.grocery.core.public.generated.resources.grocery_sync_onboarding
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_synced
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_syncing
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -152,8 +153,10 @@ import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
+import com.plusmobileapps.chefmate.ui.components.PlusOnboardingTooltip
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveModal
+import com.plusmobileapps.chefmate.ui.components.PlusTooltipPlacement
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
 import com.plusmobileapps.chefmate.ui.isIosPlatform
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -249,12 +252,19 @@ fun GroceryListScreen(
                                 strokeWidth = 2.dp,
                             )
                         } else {
-                            IconButton(onClick = bloc::onSyncClicked) {
-                                Icon(
-                                    Icons.Default.Sync,
-                                    contentDescription =
-                                        stringResource(Res.string.grocery_sync_all),
-                                )
+                            PlusOnboardingTooltip(
+                                text = Res.string.grocery_sync_onboarding.asTextData(),
+                                visible = state.showSyncTooltip,
+                                onDismiss = bloc::onSyncTooltipDismissed,
+                                placement = PlusTooltipPlacement.BELOW,
+                            ) {
+                                IconButton(onClick = bloc::onSyncClicked) {
+                                    Icon(
+                                        Icons.Default.Sync,
+                                        contentDescription =
+                                            stringResource(Res.string.grocery_sync_all),
+                                    )
+                                }
                             }
                         }
                     },

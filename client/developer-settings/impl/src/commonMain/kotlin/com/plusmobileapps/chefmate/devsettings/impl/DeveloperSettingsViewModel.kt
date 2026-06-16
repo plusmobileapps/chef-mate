@@ -8,6 +8,7 @@ import com.plusmobileapps.chefmate.auth.usecase.SignOutUseCase
 import com.plusmobileapps.chefmate.devsettings.DeveloperPreferences
 import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc
 import com.plusmobileapps.chefmate.devsettings.TestUser
+import com.plusmobileapps.chefmate.di.CoachMarkController
 import com.plusmobileapps.chefmate.di.Main
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
@@ -29,6 +30,7 @@ class DeveloperSettingsViewModel(
     private val authenticationRepository: AuthenticationRepository,
     private val signOutUseCase: SignOutUseCase,
     private val fakeRecipeSeeder: FakeRecipeSeeder,
+    private val coachMarkController: CoachMarkController,
 ) : ViewModel(mainContext) {
 
     private val _state =
@@ -117,5 +119,15 @@ class DeveloperSettingsViewModel(
             preferences.setSelectedUserIndex(null)
             signOutUseCase()
         }
+    }
+
+    /** Forget every coach mark so they show again on the next visit to their screens. */
+    fun clearCoachMarks() {
+        coachMarkController.clearAllSeen()
+        _state.update { it.copy(showCoachMarksResetConfirmation = true) }
+    }
+
+    fun dismissCoachMarksResetConfirmation() {
+        _state.update { it.copy(showCoachMarksResetConfirmation = false) }
     }
 }

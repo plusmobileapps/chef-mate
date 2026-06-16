@@ -38,6 +38,9 @@ interface RecipeDetailBloc : BackClickBloc, BlocScreen {
 
     fun onAddToMealPlanClicked()
 
+    /** Dismiss the coach mark with the given [com.plusmobileapps.chefmate.di.CoachMarkId]. */
+    fun onCoachMarkDismissed(id: String)
+
     fun onSourceUrlClicked(url: String)
 
     fun onDismissSheet()
@@ -57,6 +60,8 @@ interface RecipeDetailBloc : BackClickBloc, BlocScreen {
         val formattedCookTime: TextData? = null,
         val formattedTotalTime: TextData? = null,
         val showGroceryAddedSnackbar: Boolean = false,
+        /** Id of the coach mark currently allowed to show on this screen, or null. */
+        val activeCoachMark: String? = null,
     )
 
     sealed class Output {

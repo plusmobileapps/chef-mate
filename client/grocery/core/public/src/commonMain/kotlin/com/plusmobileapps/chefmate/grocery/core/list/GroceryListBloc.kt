@@ -36,6 +36,8 @@ interface GroceryListBloc : BlocScreen {
 
     fun onSyncClicked()
 
+    fun onSyncTooltipDismissed()
+
     fun onListSelected(list: GroceryListModel)
 
     fun onCreateListClicked()
@@ -99,6 +101,7 @@ interface GroceryListBloc : BlocScreen {
         val showListSelector: Boolean = false,
         val pendingInvitations: List<GroceryListInvite> = emptyList(),
         val currentUserRole: ListRole = ListRole.OWNER,
+        val showSyncTooltip: Boolean = false,
     )
 
     sealed class Output {

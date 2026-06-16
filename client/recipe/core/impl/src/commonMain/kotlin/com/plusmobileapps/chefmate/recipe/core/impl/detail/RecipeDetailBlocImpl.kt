@@ -12,6 +12,7 @@ import com.arkivanov.essenty.backhandler.BackCallback
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
+import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc
@@ -112,6 +113,7 @@ class RecipeDetailBlocImpl(
                 formattedTotalTime =
                     it.recipe.totalTime?.let { time -> timeFormatterUtil.formatMinutes(time) },
                 showGroceryAddedSnackbar = it.showGroceryAddedSnackbar,
+                activeCoachMark = it.activeCoachMark,
             )
         }
 
@@ -132,10 +134,12 @@ class RecipeDetailBlocImpl(
     }
 
     override fun onFavoriteToggled() {
+        viewModel.dismissCoachMark(CoachMarkId.RECIPE_DETAIL_FAVORITE)
         viewModel.toggleFavorite()
     }
 
     override fun onAddToGroceryListClicked() {
+        viewModel.dismissCoachMark(CoachMarkId.RECIPE_DETAIL_ADD_TO_GROCERY)
         sheetNavigation.activate(SheetConfig.AddToGroceryList(recipeId))
     }
 
@@ -152,11 +156,17 @@ class RecipeDetailBlocImpl(
     }
 
     override fun onAddToMealPlanClicked() {
+        viewModel.dismissCoachMark(CoachMarkId.RECIPE_DETAIL_ADD_TO_MEAL_PLAN)
         output.onNext(Output.OpenMealPlanner(recipeId))
     }
 
     override fun onCookModeClicked() {
+        viewModel.dismissCoachMark(CoachMarkId.RECIPE_DETAIL_COOK_MODE)
         output.onNext(Output.OpenCookMode(recipeId))
+    }
+
+    override fun onCoachMarkDismissed(id: String) {
+        viewModel.dismissCoachMark(id)
     }
 
     override fun onSourceUrlClicked(url: String) {

@@ -17,7 +17,10 @@ kotlin {
             implementation(libs.multiplatform.settings.noarg)
             implementation(libs.essenty.lifecycle.coroutines)
         }
-        commonTest.dependencies { implementation(libs.kotlin.test) }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.multiplatform.settings.test)
+        }
     }
 }
 

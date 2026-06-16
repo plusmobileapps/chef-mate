@@ -5,14 +5,18 @@ package com.plusmobileapps.chefmate.recipe.core.impl.detail
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.di.CoachMarkController
+import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
-import com.plusmobileapps.chefmate.util.DateTimeUtil
+import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.util.TimeFormatterUtil
+import com.plusmobileapps.chefmate.util.testing.FakeDateTimeUtil
+import com.russhwolf.settings.MapSettings
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.matcher.any
@@ -51,18 +55,28 @@ class RecipeDetailBlocImplTest {
             updatedAt = Instant.parse("2024-01-02T00:00:00Z"),
         )
 
-    private fun createBloc(recipe: Recipe? = sampleRecipe): RecipeDetailBlocImpl {
+    private lateinit var coachMarkController: CoachMarkController
+
+    private fun createBloc(
+        recipe: Recipe? = sampleRecipe,
+        cookModeTooltipSeen: Boolean = false,
+    ): RecipeDetailBlocImpl {
         if (recipe != null) recipes.value = listOf(recipe)
+        coachMarkController = CoachMarkController(MapSettings())
+        if (cookModeTooltipSeen) coachMarkController.dismiss(CoachMarkId.RECIPE_DETAIL_COOK_MODE)
         val viewModelFactory = RecipeDetailViewModel.Factory { id ->
             RecipeDetailViewModel(
                 recipeId = id,
                 mainContext = context.mainContext,
                 repository = repository,
+                coachMarkController = coachMarkController,
             )
         }
-        val dateTimeUtil =
-            mock<DateTimeUtil>().also { every { it.formatDateTime(any()) } returns "" }
-        val timeFormatterUtil = mock<TimeFormatterUtil>()
+        val dateTimeUtil = FakeDateTimeUtil()
+        val timeFormatterUtil =
+            mock<TimeFormatterUtil>().also {
+                every { it.formatMinutes(any()) } returns FixedString("")
+            }
         val groceryFactory =
             object : AddRecipeToGroceryListBloc.Factory {
                 override fun create(
@@ -124,5 +138,43 @@ class RecipeDetailBlocImplTest {
         val bloc = createBloc()
         bloc.onBackClicked()
         output.lastValue shouldBe RecipeDetailBloc.Output.Finished
+    }
+
+    @Test
+    fun When_no_marks_seen_Then_cook_mode_coach_mark_is_active_first() {
+        val bloc = createBloc()
+        bloc.state.value.activeCoachMark shouldBe CoachMarkId.RECIPE_DETAIL_COOK_MODE
+    }
+
+    @Test
+    fun When_cook_mode_seen_Then_next_mark_in_sequence_is_active() {
+        val bloc = createBloc(cookModeTooltipSeen = true)
+        bloc.state.value.activeCoachMark shouldBe CoachMarkId.RECIPE_DETAIL_ADD_TO_GROCERY
+    }
+
+    @Test
+    fun When_active_coach_mark_dismissed_Then_it_is_seen_and_next_advances() {
+        val bloc = createBloc()
+        bloc.onCoachMarkDismissed(CoachMarkId.RECIPE_DETAIL_COOK_MODE)
+        coachMarkController.hasSeen(CoachMarkId.RECIPE_DETAIL_COOK_MODE) shouldBe true
+        bloc.state.value.activeCoachMark shouldBe CoachMarkId.RECIPE_DETAIL_ADD_TO_GROCERY
+    }
+
+    @Test
+    fun When_onCookModeClicked_Then_its_mark_is_seen_and_output_emitted() {
+        val bloc = createBloc()
+        bloc.onCookModeClicked()
+        coachMarkController.hasSeen(CoachMarkId.RECIPE_DETAIL_COOK_MODE) shouldBe true
+        bloc.state.value.activeCoachMark shouldBe CoachMarkId.RECIPE_DETAIL_ADD_TO_GROCERY
+        output.lastValue shouldBe RecipeDetailBloc.Output.OpenCookMode(sampleRecipe.id)
+    }
+
+    @Test
+    fun When_button_tapped_while_another_mark_active_Then_its_mark_is_not_consumed() {
+        val bloc = createBloc()
+        // Cook mode is active; tapping add-to-grocery must not prematurely consume its tip.
+        bloc.onAddToGroceryListClicked()
+        coachMarkController.hasSeen(CoachMarkId.RECIPE_DETAIL_ADD_TO_GROCERY) shouldBe false
+        bloc.state.value.activeCoachMark shouldBe CoachMarkId.RECIPE_DETAIL_COOK_MODE
     }
 }
