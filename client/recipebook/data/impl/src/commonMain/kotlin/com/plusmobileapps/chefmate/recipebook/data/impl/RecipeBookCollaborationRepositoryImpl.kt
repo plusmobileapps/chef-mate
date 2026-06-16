@@ -57,10 +57,10 @@ class RecipeBookCollaborationRepositoryImpl(
                 email = it.email,
                 role = RecipeBookRole.fromWire(it.role),
                 accepted = it.status == "accepted",
-                name = if (isCurrentUser) me?.userName ?: it.name else it.name,
+                name = if (isCurrentUser) me.userName else it.name,
                 isOwner = it.isOwner,
                 avatarUrl =
-                    if (isCurrentUser) me?.userProfileImageUrl ?: it.avatarUrl else it.avatarUrl,
+                    if (isCurrentUser) me.userProfileImageUrl ?: it.avatarUrl else it.avatarUrl,
             )
         }
     }

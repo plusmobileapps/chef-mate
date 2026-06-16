@@ -373,11 +373,10 @@ private fun MonthView(
 
     val dayMeals = monthModel.selectedDayMeals
     val allEmpty =
-        dayMeals == null ||
-            (dayMeals.breakfast.isEmpty() &&
-                dayMeals.lunch.isEmpty() &&
-                dayMeals.dinner.isEmpty() &&
-                dayMeals.snacks.isEmpty())
+        dayMeals.breakfast.isEmpty() &&
+            dayMeals.lunch.isEmpty() &&
+            dayMeals.dinner.isEmpty() &&
+            dayMeals.snacks.isEmpty()
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -406,7 +405,7 @@ private fun MonthView(
                     )
                 }
             }
-        } else if (dayMeals != null) {
+        } else {
             if (dayMeals.breakfast.isNotEmpty()) {
                 stickyHeader(key = "month_breakfast") {
                     MealSectionHeader(

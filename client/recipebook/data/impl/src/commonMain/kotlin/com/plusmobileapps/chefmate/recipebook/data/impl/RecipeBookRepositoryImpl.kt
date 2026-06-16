@@ -220,7 +220,7 @@ class RecipeBookRepositoryImpl(
             // Retry remote deletes for any locally tombstoned books.
             val pendingDeletes = withContext(ioContext) { db.getPendingDeletes().executeAsList() }
             for (book in pendingDeletes) {
-                val remoteId = book.remoteId ?: continue
+                val remoteId = book.remoteId
                 try {
                     remoteDataSource.deleteRecipeBook(remoteId)
                     withContext(ioContext) { db.delete(book.id) }
@@ -257,7 +257,7 @@ class RecipeBookRepositoryImpl(
             val dirty = withContext(ioContext) { db.getDirty().executeAsList() }
             for (book in dirty) {
                 try {
-                    val remoteId = book.remoteId ?: continue
+                    val remoteId = book.remoteId
                     remoteDataSource.upsertRecipeBook(
                         RemoteRecipeBook(
                             id = remoteId,
