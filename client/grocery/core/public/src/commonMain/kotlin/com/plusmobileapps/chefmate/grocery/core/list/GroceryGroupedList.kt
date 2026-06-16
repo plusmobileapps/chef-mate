@@ -30,6 +30,7 @@ import com.plusmobileapps.chefmate.grocery.core.displayName
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
+import com.plusmobileapps.chefmate.ui.text.toInlineMarkdownAnnotatedString
 import org.jetbrains.compose.resources.stringResource
 
 data class GroceryDisplayItem(
@@ -114,7 +115,10 @@ private fun GroceryDisplayListItem(
             }
         }
         Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
-            Text(text = item.displayName, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = item.displayName.toInlineMarkdownAnnotatedString(),
+                style = MaterialTheme.typography.bodyLarge,
+            )
             val quantity = item.quantity
             if (quantity != null) {
                 Text(
