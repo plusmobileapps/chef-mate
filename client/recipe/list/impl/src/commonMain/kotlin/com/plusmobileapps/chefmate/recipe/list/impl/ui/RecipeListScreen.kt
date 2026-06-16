@@ -193,6 +193,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
+import com.plusmobileapps.chefmate.ui.text.toInlineMarkdownAnnotatedString
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import com.plusmobileapps.chefmate.util.rememberImagePickerLauncher
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -1524,7 +1525,7 @@ private fun RecipeListItemContent(
             }
             recipe.description?.let { description ->
                 Text(
-                    text = description,
+                    text = description.toInlineMarkdownAnnotatedString(),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
