@@ -141,31 +141,40 @@ class RecipeDetailBlocImplTest {
     }
 
     @Test
-    fun When_tooltip_not_yet_seen_Then_cook_mode_tooltip_is_shown() {
-        val bloc = createBloc(cookModeTooltipSeen = false)
-        bloc.state.value.showCookModeTooltip shouldBe true
+    fun When_no_marks_seen_Then_cook_mode_coach_mark_is_active_first() {
+        val bloc = createBloc()
+        bloc.state.value.activeCoachMark shouldBe CoachMarkId.RECIPE_DETAIL_COOK_MODE
     }
 
     @Test
-    fun When_tooltip_already_seen_Then_cook_mode_tooltip_is_hidden() {
+    fun When_cook_mode_seen_Then_next_mark_in_sequence_is_active() {
         val bloc = createBloc(cookModeTooltipSeen = true)
-        bloc.state.value.showCookModeTooltip shouldBe false
+        bloc.state.value.activeCoachMark shouldBe CoachMarkId.RECIPE_DETAIL_ADD_TO_GROCERY
     }
 
     @Test
-    fun When_onCookModeTooltipDismissed_Then_tooltip_hidden_and_persisted() {
-        val bloc = createBloc(cookModeTooltipSeen = false)
-        bloc.onCookModeTooltipDismissed()
-        bloc.state.value.showCookModeTooltip shouldBe false
+    fun When_active_coach_mark_dismissed_Then_it_is_seen_and_next_advances() {
+        val bloc = createBloc()
+        bloc.onCoachMarkDismissed(CoachMarkId.RECIPE_DETAIL_COOK_MODE)
         coachMarkController.hasSeen(CoachMarkId.RECIPE_DETAIL_COOK_MODE) shouldBe true
+        bloc.state.value.activeCoachMark shouldBe CoachMarkId.RECIPE_DETAIL_ADD_TO_GROCERY
     }
 
     @Test
-    fun When_onCookModeClicked_Then_tooltip_persisted_and_output_emitted() {
-        val bloc = createBloc(cookModeTooltipSeen = false)
+    fun When_onCookModeClicked_Then_its_mark_is_seen_and_output_emitted() {
+        val bloc = createBloc()
         bloc.onCookModeClicked()
-        bloc.state.value.showCookModeTooltip shouldBe false
         coachMarkController.hasSeen(CoachMarkId.RECIPE_DETAIL_COOK_MODE) shouldBe true
+        bloc.state.value.activeCoachMark shouldBe CoachMarkId.RECIPE_DETAIL_ADD_TO_GROCERY
         output.lastValue shouldBe RecipeDetailBloc.Output.OpenCookMode(sampleRecipe.id)
+    }
+
+    @Test
+    fun When_button_tapped_while_another_mark_active_Then_its_mark_is_not_consumed() {
+        val bloc = createBloc()
+        // Cook mode is active; tapping add-to-grocery must not prematurely consume its tip.
+        bloc.onAddToGroceryListClicked()
+        coachMarkController.hasSeen(CoachMarkId.RECIPE_DETAIL_ADD_TO_GROCERY) shouldBe false
+        bloc.state.value.activeCoachMark shouldBe CoachMarkId.RECIPE_DETAIL_COOK_MODE
     }
 }

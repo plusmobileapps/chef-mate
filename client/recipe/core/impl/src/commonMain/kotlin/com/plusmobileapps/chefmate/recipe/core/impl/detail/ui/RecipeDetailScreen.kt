@@ -121,7 +121,9 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_groc
 import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_grocery_list_view
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_favorite
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_to_grocery
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_to_grocery_onboarding
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_to_meal_plan
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_to_meal_plan_onboarding
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_calories
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_cook_mode
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_cook_mode_onboarding
@@ -139,6 +141,7 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_desc
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_details
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_directions
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_edit
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_favorite_onboarding
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_ingredients
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_kcal
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_prep_time
@@ -154,6 +157,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
+import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.letIfTrue
 import com.plusmobileapps.chefmate.recipe.categories.pickerLabelRes
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
@@ -415,12 +419,14 @@ private fun RecipeDetailBody(
                             HorizontalFloatingToolbar(
                                 expanded = true,
                                 floatingActionButton = {
-                                    PlusOnboardingTooltip(
+                                    RecipeDetailCoachMark(
+                                        id = CoachMarkId.RECIPE_DETAIL_COOK_MODE,
                                         text =
                                             Res.string.recipe_detail_cook_mode_onboarding
                                                 .asTextData(),
-                                        visible = state.showCookModeTooltip && !state.isLoading,
-                                        onDismiss = bloc::onCookModeTooltipDismissed,
+                                        activeCoachMark = state.activeCoachMark,
+                                        isLoading = state.isLoading,
+                                        onDismiss = bloc::onCoachMarkDismissed,
                                     ) {
                                         FloatingActionButton(
                                             onClick = bloc::onCookModeClicked,
@@ -437,41 +443,72 @@ private fun RecipeDetailBody(
                                     }
                                 },
                             ) {
-                                IconButton(onClick = bloc::onAddToGroceryListClicked) {
-                                    Icon(
-                                        imageVector = Icons.Default.AddShoppingCart,
-                                        contentDescription =
-                                            stringResource(Res.string.recipe_detail_add_to_grocery),
-                                    )
-                                }
-                                IconButton(onClick = { bloc.onFavoriteToggled() }) {
-                                    Icon(
-                                        imageVector =
-                                            if (state.recipe.isFavorite) {
-                                                Icons.Default.Favorite
-                                            } else {
-                                                Icons.Default.FavoriteBorder
-                                            },
-                                        contentDescription =
-                                            if (state.recipe.isFavorite) {
+                                RecipeDetailCoachMark(
+                                    id = CoachMarkId.RECIPE_DETAIL_ADD_TO_GROCERY,
+                                    text =
+                                        Res.string.recipe_detail_add_to_grocery_onboarding
+                                            .asTextData(),
+                                    activeCoachMark = state.activeCoachMark,
+                                    isLoading = state.isLoading,
+                                    onDismiss = bloc::onCoachMarkDismissed,
+                                ) {
+                                    IconButton(onClick = bloc::onAddToGroceryListClicked) {
+                                        Icon(
+                                            imageVector = Icons.Default.AddShoppingCart,
+                                            contentDescription =
                                                 stringResource(
-                                                    Res.string.recipe_detail_remove_favorite
-                                                )
-                                            } else {
-                                                stringResource(
-                                                    Res.string.recipe_detail_add_favorite
-                                                )
-                                            },
-                                    )
+                                                    Res.string.recipe_detail_add_to_grocery
+                                                ),
+                                        )
+                                    }
                                 }
-                                IconButton(onClick = { bloc.onAddToMealPlanClicked() }) {
-                                    Icon(
-                                        imageVector = Icons.Default.CalendarMonth,
-                                        contentDescription =
-                                            stringResource(
-                                                Res.string.recipe_detail_add_to_meal_plan
-                                            ),
-                                    )
+                                RecipeDetailCoachMark(
+                                    id = CoachMarkId.RECIPE_DETAIL_FAVORITE,
+                                    text =
+                                        Res.string.recipe_detail_favorite_onboarding.asTextData(),
+                                    activeCoachMark = state.activeCoachMark,
+                                    isLoading = state.isLoading,
+                                    onDismiss = bloc::onCoachMarkDismissed,
+                                ) {
+                                    IconButton(onClick = { bloc.onFavoriteToggled() }) {
+                                        Icon(
+                                            imageVector =
+                                                if (state.recipe.isFavorite) {
+                                                    Icons.Default.Favorite
+                                                } else {
+                                                    Icons.Default.FavoriteBorder
+                                                },
+                                            contentDescription =
+                                                if (state.recipe.isFavorite) {
+                                                    stringResource(
+                                                        Res.string.recipe_detail_remove_favorite
+                                                    )
+                                                } else {
+                                                    stringResource(
+                                                        Res.string.recipe_detail_add_favorite
+                                                    )
+                                                },
+                                        )
+                                    }
+                                }
+                                RecipeDetailCoachMark(
+                                    id = CoachMarkId.RECIPE_DETAIL_ADD_TO_MEAL_PLAN,
+                                    text =
+                                        Res.string.recipe_detail_add_to_meal_plan_onboarding
+                                            .asTextData(),
+                                    activeCoachMark = state.activeCoachMark,
+                                    isLoading = state.isLoading,
+                                    onDismiss = bloc::onCoachMarkDismissed,
+                                ) {
+                                    IconButton(onClick = { bloc.onAddToMealPlanClicked() }) {
+                                        Icon(
+                                            imageVector = Icons.Default.CalendarMonth,
+                                            contentDescription =
+                                                stringResource(
+                                                    Res.string.recipe_detail_add_to_meal_plan
+                                                ),
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -536,6 +573,27 @@ private fun RecipeDetailBody(
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp),
         )
     }
+}
+
+/**
+ * A recipe-detail toolbar coach mark: shows its tooltip above [anchor] only while [id] is the
+ * active coach mark (and the recipe has loaded), and reports dismissal back by id.
+ */
+@Composable
+private fun RecipeDetailCoachMark(
+    id: String,
+    text: TextData,
+    activeCoachMark: String?,
+    isLoading: Boolean,
+    onDismiss: (String) -> Unit,
+    anchor: @Composable () -> Unit,
+) {
+    PlusOnboardingTooltip(
+        text = text,
+        visible = !isLoading && activeCoachMark == id,
+        onDismiss = { onDismiss(id) },
+        anchor = anchor,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1794,7 +1852,7 @@ private val previewBloc =
             TODO("Not yet implemented")
         }
 
-        override fun onCookModeTooltipDismissed() {
+        override fun onCoachMarkDismissed(id: String) {
             TODO("Not yet implemented")
         }
 

@@ -33,15 +33,16 @@ class RecipeDetailViewModel(
 
     private val _state = MutableStateFlow(State())
 
-    // The cook-mode coach mark only shows while it's the active mark in the shared controller, so
-    // at most one coach mark is ever visible across the app at a time.
+    // Surface the shared controller's active mark so the screen can show one coach mark at a time;
+    // only ids in CoachMarkId.recipeDetailSequence are anchored on this screen.
     val state: StateFlow<State> =
         combineStates(_state, coachMarkController.activeCoachMark) { state, activeCoachMark ->
-            state.copy(showCookModeTooltip = activeCoachMark == CoachMarkId.RECIPE_DETAIL_COOK_MODE)
+            state.copy(activeCoachMark = activeCoachMark)
         }
 
     init {
-        coachMarkController.request(CoachMarkId.RECIPE_DETAIL_COOK_MODE)
+        // Queue every recipe-detail coach mark in order; the controller shows them one at a time.
+        CoachMarkId.recipeDetailSequence.forEach(coachMarkController::request)
         scope.launch { observeRecipe() }
     }
 
@@ -77,7 +78,7 @@ class RecipeDetailViewModel(
     override fun onCleared() {
         super.onCleared()
         // Leaving the screen without dismissing frees the queue so other coach marks can show.
-        coachMarkController.release(CoachMarkId.RECIPE_DETAIL_COOK_MODE)
+        CoachMarkId.recipeDetailSequence.forEach(coachMarkController::release)
         _output.close()
     }
 
@@ -89,9 +90,15 @@ class RecipeDetailViewModel(
         _state.update { it.copy(showGroceryAddedSnackbar = false) }
     }
 
-    /** Hide the cook-mode coach mark and remember the dismissal so it never shows again. */
-    fun dismissCookModeTooltip() {
-        coachMarkController.dismiss(CoachMarkId.RECIPE_DETAIL_COOK_MODE)
+    /**
+     * Mark a coach mark seen, but only if it's the one currently showing. This lets a button's tap
+     * dismiss its own tip while it's visible, without prematurely consuming tips further down the
+     * queue when their button is tapped early.
+     */
+    fun dismissCoachMark(id: String) {
+        if (coachMarkController.activeCoachMark.value == id) {
+            coachMarkController.dismiss(id)
+        }
     }
 
     data class State(
@@ -100,7 +107,7 @@ class RecipeDetailViewModel(
         val showDeleteConfirmationDialog: Boolean = false,
         val recipe: Recipe = Recipe.Empty,
         val showGroceryAddedSnackbar: Boolean = false,
-        val showCookModeTooltip: Boolean = false,
+        val activeCoachMark: String? = null,
     )
 
     sealed class Output {

@@ -10,6 +10,9 @@
     <string name="recipe_detail_back">Back</string>
     <string name="recipe_detail_cook_mode">Cook this recipe</string>
     <string name="recipe_detail_cook_mode_onboarding">Tap here to cook hands-free in Cook Mode</string>
+    <string name="recipe_detail_add_to_grocery_onboarding">Add this recipe’s ingredients to your grocery list</string>
+    <string name="recipe_detail_favorite_onboarding">Save this recipe to your favorites for quick access</string>
+    <string name="recipe_detail_add_to_meal_plan_onboarding">Schedule this recipe on your meal-plan calendar</string>
     <string name="recipe_detail_add_to_grocery">Add ingredients to grocery list</string>
     <string name="recipe_detail_remove_favorite">Remove from favorites</string>
     <string name="recipe_detail_add_favorite">Add to favorites</string>
