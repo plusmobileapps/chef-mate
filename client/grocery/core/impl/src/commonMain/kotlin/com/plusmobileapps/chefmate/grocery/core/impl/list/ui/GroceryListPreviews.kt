@@ -29,14 +29,14 @@ private val sampleGroups =
                 persistentListOf(
                     GroceryItem(
                         id = 1L,
-                        name = "Apples",
+                        name = "**Honeycrisp** apples",
                         quantity = "6",
                         category = GroceryCategory.PRODUCE,
                         syncStatus = SyncStatus.SYNCED,
                     ),
                     GroceryItem(
                         id = 2L,
-                        name = "Spinach",
+                        name = "_baby_ spinach",
                         quantity = "1 bag",
                         category = GroceryCategory.PRODUCE,
                         isChecked = true,

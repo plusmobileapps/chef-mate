@@ -22,7 +22,7 @@ private val sampleRecipes =
         RecipeListItem(
             id = 1L,
             title = "Pasta Carbonara",
-            description = "A classic Roman pasta with eggs, cheese, and cured pork.",
+            description = "A **classic Roman** pasta with eggs, cheese, and _cured pork_.",
             imageUrl = null,
             starRating = 5,
             totalTime = 25,
