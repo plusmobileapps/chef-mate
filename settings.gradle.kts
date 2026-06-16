@@ -100,6 +100,8 @@ include(":client:meal:core:public")
 
 include(":client:onboarding:impl")
 
+include(":client:onboarding:impl-robots")
+
 include(":client:onboarding:public")
 
 include(":client:meal:data:impl")

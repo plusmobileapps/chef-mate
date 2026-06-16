@@ -2,6 +2,22 @@
     <string name="onboarding_welcome_title">Welcome to ChefMate</string>
     <string name="onboarding_welcome_message">Your kitchen companion for saving recipes, planning meals, and building grocery lists.</string>
     <string name="onboarding_welcome_get_started">Get started</string>
+    <string name="onboarding_welcome_sign_in">I already have an account</string>
+    <string name="onboarding_welcome_skip">Skip</string>
+
+    <string name="onboarding_next">Next</string>
+
+    <string name="onboarding_save_recipes_title">Save recipes from anywhere</string>
+    <string name="onboarding_save_recipes_message">Use the in-app browser to find your favorite recipes on the web, then tap Download to save them straight to your account.</string>
+
+    <string name="onboarding_cook_mode_title">Cook hands-free</string>
+    <string name="onboarding_cook_mode_message">Open any recipe and start Cook Mode from the recipe detail screen to follow along step by step while you cook.</string>
+
+    <string name="onboarding_grocery_list_title">Build your grocery list</string>
+    <string name="onboarding_grocery_list_message">Add a recipe’s ingredients to your grocery list with a tap, so you never forget an item at the store.</string>
+
+    <string name="onboarding_meal_planning_title">Plan your week</string>
+    <string name="onboarding_meal_planning_message">Add recipes to breakfast, lunch, dinner, or snacks for any day of the week with the meal planner.</string>
 
     <string name="onboarding_start_cooking_title">You’re all set</string>
     <string name="onboarding_start_cooking_message">Everything’s ready to go. Let’s start cooking!</string>

@@ -8,9 +8,19 @@ import com.plusmobileapps.chefmate.ui.BlocScreen
 interface WelcomeBloc : BlocScreen {
     fun onGetStartedClicked()
 
+    fun onSignInClicked()
+
+    fun onSkipClicked()
+
     sealed class Output {
         /** Advance to the next onboarding step. */
         data object GetStarted : Output()
+
+        /** The user already has an account and wants to sign in. */
+        data object SignIn : Output()
+
+        /** The user wants to skip onboarding entirely. */
+        data object Skip : Output()
     }
 
     fun interface Factory {

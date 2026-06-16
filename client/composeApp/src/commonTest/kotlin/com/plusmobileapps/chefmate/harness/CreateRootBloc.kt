@@ -12,6 +12,7 @@ import com.plusmobileapps.chefmate.App
 import com.plusmobileapps.chefmate.DefaultBlocContext
 import com.plusmobileapps.chefmate.di.TestApplicationComponent
 import com.plusmobileapps.chefmate.di.createTestApplicationComponent
+import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
 import com.plusmobileapps.chefmate.fixtures.TestRecipes
 import com.plusmobileapps.chefmate.root.DeepLink
 import com.plusmobileapps.chefmate.root.RootBloc
@@ -49,14 +50,23 @@ fun TestApplicationComponent.createRootBloc(
 fun runRootBlocTest(
     userState: TestUserState =
         TestUserState.Authenticated(recipes = listOf(TestRecipes.fullyPopulated)),
+    showOnboarding: Boolean = false,
     beforeContent: (TestApplicationComponent) -> Unit = {},
     block: suspend ComposeUiTest.(TestApplicationComponent) -> Unit,
 ): TestResult = runComposeUiTest {
     val app = createTestApplicationComponent()
+    // The production Settings() is backed by a process-global store (JVM Preferences), so persisted
+    // flags leak across tests. Clear it up front for deterministic, isolated runs.
+    app.settings.clear()
     app.applyUserState(userState)
-    // Default to a returning user so tests boot straight into the main app. Onboarding-specific
-    // tests can assert the first-run flow before flipping this in their own setup.
-    app.onboardingRepository.setOnboardingCompleted()
+    if (showOnboarding) {
+        // First-run state: enable the gating flag and leave onboarding incomplete so the root
+        // boots into the onboarding flow.
+        app.testFeatureFlags.set(FeatureFlagRegistry.Onboarding, true)
+    } else {
+        // Default to a returning user so tests boot straight into the main app.
+        app.onboardingRepository.setOnboardingCompleted()
+    }
     beforeContent(app)
     setContent { App(rootBloc = app.createRootBloc()) }
     block(app)

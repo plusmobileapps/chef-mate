@@ -22,6 +22,14 @@ class WelcomeBlocImpl(
         output.onNext(WelcomeBloc.Output.GetStarted)
     }
 
+    override fun onSignInClicked() {
+        output.onNext(WelcomeBloc.Output.SignIn)
+    }
+
+    override fun onSkipClicked() {
+        output.onNext(WelcomeBloc.Output.Skip)
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         WelcomeScreen(bloc = this, modifier = modifier)
