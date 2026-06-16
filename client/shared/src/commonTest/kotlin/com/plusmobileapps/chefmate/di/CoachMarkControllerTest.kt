@@ -95,6 +95,34 @@ class CoachMarkControllerTest {
     }
 
     @Test
+    fun When_clearAllSeen_Then_previously_seen_marks_can_show_again() {
+        val controller = controller()
+        controller.dismiss(A)
+        controller.dismiss(B)
+        assertTrue(controller.hasSeen(A))
+
+        controller.clearAllSeen()
+
+        assertFalse(controller.hasSeen(A))
+        assertFalse(controller.hasSeen(B))
+        controller.request(A)
+        assertEquals(A, controller.activeCoachMark.value)
+    }
+
+    @Test
+    fun When_clearAllSeen_Then_unrelated_settings_are_untouched() {
+        val settings = MapSettings()
+        settings.putString("unrelated_key", "keep")
+        val controller = CoachMarkController(settings)
+        controller.dismiss(A)
+
+        controller.clearAllSeen()
+
+        assertFalse(controller.hasSeen(A))
+        assertTrue(settings.hasKey("unrelated_key"))
+    }
+
+    @Test
     fun When_seen_persisted_in_settings_Then_hasSeen_reads_it_back() {
         val settings = MapSettings()
         CoachMarkController(settings).dismiss(A)

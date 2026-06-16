@@ -76,6 +76,14 @@ class DeveloperSettingsBlocImpl(
         output.onNext(Output.OpenFeatureFlags)
     }
 
+    override fun onClearCoachMarksClicked() {
+        viewModel.clearCoachMarks()
+    }
+
+    override fun onCoachMarksResetConfirmationDismissed() {
+        viewModel.dismissCoachMarksResetConfirmation()
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         DeveloperSettingsScreen(bloc = this, modifier = modifier)

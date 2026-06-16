@@ -51,6 +51,14 @@ class CoachMarkController(private val settings: Settings) {
 
     fun hasSeen(id: String): Boolean = settings.getBoolean(seenKey(id), false)
 
+    /**
+     * Forget every coach mark's seen state so they can all show again. Intended for developer
+     * tooling; leaves unrelated settings untouched.
+     */
+    fun clearAllSeen() {
+        settings.keys.filter { it.startsWith(SEEN_KEY_PREFIX) }.forEach(settings::remove)
+    }
+
     private fun seenKey(id: String): String = "$SEEN_KEY_PREFIX$id"
 
     companion object {

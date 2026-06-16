@@ -33,6 +33,10 @@ interface DeveloperSettingsBloc : BlocScreen {
 
     fun onFeatureFlagsClicked()
 
+    fun onClearCoachMarksClicked()
+
+    fun onCoachMarksResetConfirmationDismissed()
+
     data class Model(
         val currentEnvironment: Environment = Environment.PROD,
         val availableUsers: ImmutableList<TestUser> = persistentListOf(),
@@ -43,6 +47,7 @@ interface DeveloperSettingsBloc : BlocScreen {
         val showUserPicker: Boolean = false,
         val showRestartPrompt: Boolean = false,
         val signInError: String? = null,
+        val showCoachMarksResetConfirmation: Boolean = false,
     )
 
     sealed class Output {
