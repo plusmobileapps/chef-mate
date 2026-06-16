@@ -184,6 +184,8 @@ include(":client:developer-settings:public")
 
 include(":client:shared")
 
+include(":client:metro-assisted-factory-runtime")
+
 include(":client:testing")
 
 include(":client:text:public")

@@ -106,6 +106,11 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
                 // Configure JVM target
                 jvm { compilerOptions { jvmTarget.set(JvmTarget.JVM_11) } }
 
+                // Configure the web (wasmJs/browser) target. Shared modules expose this so the
+                // composeApp can compile for the browser. The wasmJs source sets only compile when
+                // the web target is actually built, so Android/iOS/JVM builds are unaffected.
+                @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class) wasmJs { browser() }
+
                 // Remove once kotlin.time is stable in 2.3.0
                 compilerOptions.optIn.add("kotlin.time.ExperimentalTime")
 
