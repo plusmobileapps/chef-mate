@@ -66,6 +66,11 @@ kotlin {
 
     jvm()
 
+    // Acknowledge the still-Beta expect/actual classes feature (KT-61573) so modules with
+    // `expect`/`actual` classes (e.g. BugsnagStartup) don't warn on every compile. Drop once
+    // the feature is stabilized. Mirrors the same flag in KmpLibraryConventionPlugin.
+    compilerOptions { freeCompilerArgs.add("-Xexpect-actual-classes") }
+
     sourceSets {
         commonMain.dependencies {
             api(libs.arkivanov.decompose.core)

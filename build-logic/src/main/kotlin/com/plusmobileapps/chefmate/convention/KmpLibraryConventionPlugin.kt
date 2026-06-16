@@ -109,6 +109,11 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
                 // Remove once kotlin.time is stable in 2.3.0
                 compilerOptions.optIn.add("kotlin.time.ExperimentalTime")
 
+                // Acknowledge the still-Beta expect/actual classes feature (KT-61573) so
+                // modules with `expect`/`actual` classes (e.g. DriverFactory) don't emit a
+                // warning on every compile. Drop once the feature is stabilized.
+                compilerOptions.freeCompilerArgs.add("-Xexpect-actual-classes")
+
                 // Default source sets configuration
                 sourceSets.apply {
                     val commonMain = getByName("commonMain")
