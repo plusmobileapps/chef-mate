@@ -3,6 +3,8 @@ package com.plusmobileapps.chefmate.recipe.importer
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +17,7 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
@@ -30,6 +33,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.importer.`public`.generated.resources.Res
+import chefmate.client.recipe.importer.`public`.generated.resources.import_recipes_books_label
+import chefmate.client.recipe.importer.`public`.generated.resources.import_recipes_books_required
 import chefmate.client.recipe.importer.`public`.generated.resources.import_recipes_choose_file
 import chefmate.client.recipe.importer.`public`.generated.resources.import_recipes_deselect_all
 import chefmate.client.recipe.importer.`public`.generated.resources.import_recipes_done_button
@@ -44,6 +49,7 @@ import chefmate.client.recipe.importer.`public`.generated.resources.import_recip
 import chefmate.client.recipe.importer.`public`.generated.resources.import_recipes_start_over
 import chefmate.client.recipe.importer.`public`.generated.resources.import_recipes_title
 import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc.Phase
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.asTextData
@@ -74,13 +80,19 @@ fun ImportRecipesScreen(bloc: ImportRecipesBloc, modifier: Modifier = Modifier) 
                     StatusContent(
                         message = Res.string.import_recipes_parsing.asTextData().localized()
                     )
-                is Phase.Review ->
+                is Phase.Review -> {
+                    val books by bloc.recipeBooks.collectAsState()
+                    val selectedBookIds by bloc.selectedBookIds.collectAsState()
                     ReviewContent(
                         phase = phase,
+                        books = books,
+                        selectedBookIds = selectedBookIds,
                         onToggle = bloc::onRecipeToggled,
                         onToggleSelectAll = bloc::onToggleSelectAll,
+                        onToggleBook = bloc::onToggleBook,
                         onImport = bloc::onImportClicked,
                     )
+                }
                 is Phase.Done ->
                     DoneContent(
                         importedCount = phase.importedCount,
@@ -144,8 +156,11 @@ private fun StatusContent(message: String) {
 @Composable
 private fun ReviewContent(
     phase: Phase.Review,
+    books: List<RecipeBook>,
+    selectedBookIds: Set<Long>,
     onToggle: (String) -> Unit,
     onToggleSelectAll: () -> Unit,
+    onToggleBook: (Long) -> Unit,
     onImport: () -> Unit,
 ) {
     val selectedCount = phase.recipes.count { it.selected }
@@ -184,10 +199,23 @@ private fun ReviewContent(
     }
     HorizontalDivider()
 
+    if (books.isNotEmpty()) {
+        BookSelector(
+            books = books,
+            selectedBookIds = selectedBookIds,
+            enabled = !phase.isImporting,
+            onToggleBook = onToggleBook,
+        )
+    }
+
+    // A book is required so imported recipes always have an explicit home; the default book is
+    // pre-selected, but the user can swap it out as long as one remains chosen.
+    val bookRequired = books.isNotEmpty() && selectedBookIds.isEmpty()
+
     Spacer(Modifier.height(ChefMateTheme.dimens.paddingNormal))
     Button(
         onClick = onImport,
-        enabled = selectedCount > 0 && !phase.isImporting,
+        enabled = selectedCount > 0 && !phase.isImporting && !bookRequired,
         modifier =
             Modifier.fillMaxWidth()
                 .padding(horizontal = ChefMateTheme.dimens.paddingNormal)
@@ -206,6 +234,48 @@ private fun ReviewContent(
         }
     }
     Spacer(Modifier.height(ChefMateTheme.dimens.paddingNormal))
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun BookSelector(
+    books: List<RecipeBook>,
+    selectedBookIds: Set<Long>,
+    enabled: Boolean,
+    onToggleBook: (Long) -> Unit,
+) {
+    Column(
+        modifier =
+            Modifier.fillMaxWidth()
+                .padding(horizontal = ChefMateTheme.dimens.paddingNormal)
+                .padding(top = ChefMateTheme.dimens.paddingNormal),
+        verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
+    ) {
+        Text(
+            Res.string.import_recipes_books_label.asTextData().localized(),
+            style = ChefMateTheme.typography.titleMedium,
+        )
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
+            verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
+        ) {
+            books.forEach { book ->
+                FilterChip(
+                    selected = book.id in selectedBookIds,
+                    onClick = { onToggleBook(book.id) },
+                    enabled = enabled,
+                    label = { Text(book.name) },
+                )
+            }
+        }
+        if (selectedBookIds.isEmpty()) {
+            Text(
+                Res.string.import_recipes_books_required.asTextData().localized(),
+                style = ChefMateTheme.typography.bodySmall,
+                color = ChefMateTheme.colorScheme.error,
+            )
+        }
+    }
 }
 
 @Composable

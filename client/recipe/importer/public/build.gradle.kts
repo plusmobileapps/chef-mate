@@ -7,6 +7,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.arkivanov.decompose.core)
+            api(projects.client.recipebook.data.public)
             api(projects.client.text.public)
             implementation(projects.client.shared)
             api(projects.client.ui.public)
