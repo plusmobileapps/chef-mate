@@ -30,7 +30,8 @@ class CookModeViewModel(
     private val keepScreenOnRepository: KeepScreenOnRepository,
 ) : ViewModel(mainContext) {
 
-    private var splitLayoutPref by settings.boolean(KEY_LAYOUT_SPLIT, defaultValue = false)
+    // Split view is the default; users can toggle to the scrolling (Stacked) list, which persists.
+    private var splitLayoutPref by settings.boolean(KEY_LAYOUT_SPLIT, defaultValue = true)
 
     private val _state =
         MutableStateFlow(
@@ -96,7 +97,7 @@ class CookModeViewModel(
         val isLoading: Boolean = true,
         val cookingRecipes: List<Recipe> = emptyList(),
         val activeRecipeId: Long? = null,
-        val layoutMode: CookModeBloc.LayoutMode = CookModeBloc.LayoutMode.Stacked,
+        val layoutMode: CookModeBloc.LayoutMode = CookModeBloc.LayoutMode.Split,
         val keepScreenOn: Boolean = true,
     )
 
