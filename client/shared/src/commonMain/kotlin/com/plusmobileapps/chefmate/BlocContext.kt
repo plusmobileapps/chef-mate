@@ -11,7 +11,6 @@ import com.arkivanov.essenty.statekeeper.StateKeeperOwner
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.SupervisorJob
 
 interface BlocContext : GenericComponentContext<BlocContext> {
@@ -29,7 +28,7 @@ interface BlocContext : GenericComponentContext<BlocContext> {
 class DefaultBlocContext(
     componentContext: ComponentContext,
     override val mainContext: CoroutineContext = Dispatchers.Main,
-    override val ioContext: CoroutineContext = Dispatchers.IO,
+    override val ioContext: CoroutineContext = ioDispatcher,
     override val defaultContext: CoroutineContext = Dispatchers.Default,
     override val unconfinedContext: CoroutineContext = Dispatchers.Unconfined,
 ) :
