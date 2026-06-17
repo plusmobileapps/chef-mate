@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 
-package com.plusmobileapps.chefmate.meal.core.impl.ui
+package com.plusmobileapps.chefmate.meal.core
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -92,7 +92,6 @@ import chefmate.client.meal.core.public.generated.resources.meal_plan_sync_synce
 import chefmate.client.meal.core.public.generated.resources.meal_plan_sync_syncing
 import chefmate.client.meal.core.public.generated.resources.meal_plan_title
 import chefmate.client.meal.core.public.generated.resources.meal_plan_week
-import com.plusmobileapps.chefmate.meal.core.MealPlanBloc
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
 import com.plusmobileapps.chefmate.meal.data.MealType
 import com.plusmobileapps.chefmate.meal.data.SyncStatus
@@ -170,8 +169,7 @@ fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
                     ViewModeSegmentedControl(
                         selectedMode = state.viewMode,
                         onModeSelected = bloc::onViewModeSelected,
-                        modifier =
-                            Modifier.padding(horizontal = ChefMateTheme.dimens.paddingNormal),
+                        modifier = Modifier.padding(horizontal = ChefMateTheme.dimens.paddingNormal),
                     )
 
                     DateNavigationRow(

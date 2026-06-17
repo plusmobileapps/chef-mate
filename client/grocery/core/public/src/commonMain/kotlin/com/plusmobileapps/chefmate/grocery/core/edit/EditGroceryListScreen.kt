@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.grocery.core.impl.edit.ui
+package com.plusmobileapps.chefmate.grocery.core.edit
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -50,8 +50,6 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_role_owne
 import chefmate.client.grocery.core.public.generated.resources.grocery_role_viewer
 import chefmate.client.grocery.core.public.generated.resources.grocery_sign_in
 import chefmate.client.grocery.core.public.generated.resources.grocery_sign_up
-import com.plusmobileapps.chefmate.grocery.core.edit.EditGroceryListBloc
-import com.plusmobileapps.chefmate.grocery.core.edit.EditGroceryListTestTags
 import com.plusmobileapps.chefmate.grocery.data.CollaborationStatus
 import com.plusmobileapps.chefmate.grocery.data.ListCollaborator
 import com.plusmobileapps.chefmate.grocery.data.ListRole
@@ -62,7 +60,6 @@ import com.plusmobileapps.chefmate.ui.components.PlusButtonVariant
 import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
-import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.components.PlusTextField
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.StringResource

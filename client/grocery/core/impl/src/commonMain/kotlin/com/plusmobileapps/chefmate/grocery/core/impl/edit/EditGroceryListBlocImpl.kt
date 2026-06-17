@@ -1,7 +1,5 @@
 package com.plusmobileapps.chefmate.grocery.core.impl.edit
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
@@ -9,7 +7,6 @@ import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.grocery.core.edit.EditGroceryListBloc
 import com.plusmobileapps.chefmate.grocery.core.edit.EditGroceryListBloc.Output
-import com.plusmobileapps.chefmate.grocery.core.impl.edit.ui.EditGroceryListScreen
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.grocery.data.ListCollaborator
 import com.plusmobileapps.chefmate.grocery.data.ListRole
@@ -124,10 +121,5 @@ class EditGroceryListBlocImpl(
 
     override fun onBackClicked() {
         output.onNext(Output.Finished)
-    }
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        EditGroceryListScreen(bloc = this, modifier = modifier)
     }
 }

@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.aichat
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
@@ -11,6 +13,11 @@ import com.plusmobileapps.chefmate.ui.ComposeScreen
 
 interface AiChatRootBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
     val routerState: Value<ChildStack<*, Child>>
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        AiChatRootScreen(bloc = this, modifier = modifier)
+    }
 
     sealed class Child {
 

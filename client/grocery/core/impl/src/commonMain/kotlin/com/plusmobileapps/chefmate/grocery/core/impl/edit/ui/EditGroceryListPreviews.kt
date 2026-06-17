@@ -1,9 +1,9 @@
 package com.plusmobileapps.chefmate.grocery.core.impl.edit.ui
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.plusmobileapps.chefmate.grocery.core.edit.EditGroceryListBloc
+import com.plusmobileapps.chefmate.grocery.core.edit.EditGroceryListScreen
 import com.plusmobileapps.chefmate.grocery.data.CollaborationStatus
 import com.plusmobileapps.chefmate.grocery.data.ListCollaborator
 import com.plusmobileapps.chefmate.grocery.data.ListRole
@@ -73,8 +73,6 @@ private fun fakeEditBloc(model: EditGroceryListBloc.Model): EditGroceryListBloc 
         override fun onSignUpClicked() = Unit
 
         override fun onBackClicked() = Unit
-
-        @Composable override fun Content(modifier: Modifier) = EditGroceryListScreen(this, modifier)
     }
 
 /** Authenticated owner managing collaborators. */

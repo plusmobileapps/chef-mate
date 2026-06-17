@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
-import com.plusmobileapps.chefmate.grocery.core.impl.detail.ui.GroceryDetailSheetContent
+import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailSheetContent
 import com.plusmobileapps.chefmate.grocery.core.impl.detail.ui.previewGroceryDetailBlocFromRecipe
 import com.plusmobileapps.chefmate.grocery.core.impl.detail.ui.previewGroceryDetailBlocLoaded
 import com.plusmobileapps.chefmate.grocery.core.impl.detail.ui.previewGroceryDetailBlocLoading

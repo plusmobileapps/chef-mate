@@ -12,6 +12,8 @@ kotlin {
             api(libs.kotlin.coroutines.core)
             api(projects.client.shared)
             api(projects.client.ui.public)
+            implementation(projects.client.util.public)
+            implementation(libs.multiplatform.markdown.renderer.m3)
             implementation(compose.components.resources)
         }
     }

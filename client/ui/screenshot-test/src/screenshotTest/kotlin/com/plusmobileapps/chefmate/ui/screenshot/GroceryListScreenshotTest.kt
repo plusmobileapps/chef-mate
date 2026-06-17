@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
-import com.plusmobileapps.chefmate.grocery.core.impl.list.ui.GroceryListScreen
+import com.plusmobileapps.chefmate.grocery.core.list.GroceryListScreen
 import com.plusmobileapps.chefmate.grocery.core.impl.list.ui.previewGroceryListBloc
 import com.plusmobileapps.chefmate.grocery.core.impl.list.ui.previewGroceryListBlocAutocomplete
 import com.plusmobileapps.chefmate.grocery.core.impl.list.ui.previewGroceryListBlocEmpty

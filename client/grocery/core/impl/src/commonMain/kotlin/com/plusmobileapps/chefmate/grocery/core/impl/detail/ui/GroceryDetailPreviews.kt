@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
+import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailSheetContent
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme

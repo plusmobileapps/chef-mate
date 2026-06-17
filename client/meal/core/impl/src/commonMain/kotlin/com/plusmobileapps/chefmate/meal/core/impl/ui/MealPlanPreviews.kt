@@ -1,9 +1,9 @@
 package com.plusmobileapps.chefmate.meal.core.impl.ui
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.plusmobileapps.chefmate.meal.core.MealPlanBloc
+import com.plusmobileapps.chefmate.meal.core.MealPlanScreen
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
 import com.plusmobileapps.chefmate.meal.data.MealType
 import com.plusmobileapps.chefmate.text.FixedString
@@ -91,8 +91,6 @@ private fun mealPlanBloc(model: MealPlanBloc.Model): MealPlanBloc =
         override fun onDoneCookingConfirmed() = Unit
 
         override fun onDoneCookingDismissed() = Unit
-
-        @Composable override fun Content(modifier: Modifier) = MealPlanScreen(this, modifier)
     }
 
 val previewMealPlanBloc: MealPlanBloc =

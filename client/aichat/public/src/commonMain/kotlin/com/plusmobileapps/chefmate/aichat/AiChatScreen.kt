@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.aichat.impl.ui
+package com.plusmobileapps.chefmate.aichat
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
@@ -83,9 +83,6 @@ import chefmate.client.aichat.public.generated.resources.aichat_send
 import chefmate.client.aichat.public.generated.resources.aichat_title
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.model.rememberMarkdownState
-import com.plusmobileapps.chefmate.aichat.AiChatBloc
-import com.plusmobileapps.chefmate.aichat.AiChatTestTags
-import com.plusmobileapps.chefmate.aichat.ChatMessage
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData

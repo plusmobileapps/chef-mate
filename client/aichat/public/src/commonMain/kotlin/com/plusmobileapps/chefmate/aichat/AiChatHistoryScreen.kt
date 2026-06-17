@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.aichat.impl.ui
+package com.plusmobileapps.chefmate.aichat
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -50,9 +50,6 @@ import chefmate.client.aichat.public.generated.resources.aichat_history_empty_ti
 import chefmate.client.aichat.public.generated.resources.aichat_history_new_conversation
 import chefmate.client.aichat.public.generated.resources.aichat_history_title
 import chefmate.client.aichat.public.generated.resources.aichat_history_untitled
-import com.plusmobileapps.chefmate.aichat.AiChatConversation
-import com.plusmobileapps.chefmate.aichat.AiChatHistoryBloc
-import com.plusmobileapps.chefmate.aichat.AiChatHistoryTestTags
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
@@ -78,8 +75,7 @@ fun AiChatHistoryScreen(bloc: AiChatHistoryBloc, modifier: Modifier = Modifier) 
                         PlusHeaderData.TrailingAccessory.Custom {
                             IconButton(
                                 onClick = { pendingDeleteAll = true },
-                                modifier =
-                                    Modifier.testTag(AiChatHistoryTestTags.DELETE_ALL_BUTTON),
+                                modifier = Modifier.testTag(AiChatHistoryTestTags.DELETE_ALL_BUTTON),
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.DeleteSweep,

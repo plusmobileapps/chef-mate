@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.grocery.core.list
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
@@ -17,6 +19,11 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface GroceryListBloc : ComposeScreen {
     val state: StateFlow<Model>
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        GroceryListScreen(bloc = this, modifier = modifier)
+    }
 
     val newGroceryItemName: StateFlow<String>
 

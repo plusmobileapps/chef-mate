@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.plusmobileapps.chefmate.aichat.AiChatBloc
+import com.plusmobileapps.chefmate.aichat.AiChatScreen
 import com.plusmobileapps.chefmate.aichat.ChatMessage
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.Content

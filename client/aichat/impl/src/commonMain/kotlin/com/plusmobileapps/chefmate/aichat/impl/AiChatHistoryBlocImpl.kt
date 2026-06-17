@@ -1,11 +1,8 @@
 package com.plusmobileapps.chefmate.aichat.impl
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.aichat.AiChatHistoryBloc
-import com.plusmobileapps.chefmate.aichat.impl.ui.AiChatHistoryScreen
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
@@ -52,10 +49,5 @@ class AiChatHistoryBlocImpl(
 
     override fun onBackClicked() {
         output.onNext(AiChatHistoryBloc.Output.Back)
-    }
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        AiChatHistoryScreen(bloc = this, modifier = modifier)
     }
 }

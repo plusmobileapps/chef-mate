@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.plusmobileapps.chefmate.aichat.AiChatConversation
 import com.plusmobileapps.chefmate.aichat.AiChatHistoryBloc
+import com.plusmobileapps.chefmate.aichat.AiChatHistoryScreen
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.collections.immutable.persistentListOf

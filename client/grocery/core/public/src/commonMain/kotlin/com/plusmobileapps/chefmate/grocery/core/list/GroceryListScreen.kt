@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.grocery.core.impl.list.ui
+package com.plusmobileapps.chefmate.grocery.core.list
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
@@ -137,11 +137,6 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_sync_sync
 import chefmate.client.grocery.core.public.generated.resources.grocery_sync_syncing
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.plusmobileapps.chefmate.grocery.core.displayName
-import com.plusmobileapps.chefmate.grocery.core.list.GroceryDisplayGroup
-import com.plusmobileapps.chefmate.grocery.core.list.GroceryDisplayItem
-import com.plusmobileapps.chefmate.grocery.core.list.GroceryGroupedList
-import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
-import com.plusmobileapps.chefmate.grocery.core.list.GroceryListTestTags
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListInvite
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
@@ -242,8 +237,7 @@ fun GroceryListScreen(
                         IconButton(onClick = bloc::onDeleteClicked) {
                             Icon(
                                 Icons.Default.DeleteSweep,
-                                contentDescription =
-                                    stringResource(Res.string.grocery_delete_items),
+                                contentDescription = stringResource(Res.string.grocery_delete_items),
                             )
                         }
                         if (state.isSyncing) {
@@ -1041,8 +1035,7 @@ private fun FilteredEmptyGroceryListState(
             Spacer(Modifier.height(dimens.paddingLarge))
             Button(
                 onClick = onClearFiltersClicked,
-                modifier =
-                    Modifier.testTag(GroceryListTestTags.CLEAR_FILTERS_BUTTON).fillMaxWidth(),
+                modifier = Modifier.testTag(GroceryListTestTags.CLEAR_FILTERS_BUTTON).fillMaxWidth(),
             ) {
                 Text(stringResource(Res.string.grocery_list_filtered_empty_clear_filters))
             }

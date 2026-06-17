@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.aichat
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
@@ -10,6 +12,11 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface AiChatHistoryBloc : BackClickBloc, ComposeScreen {
     val state: StateFlow<Model>
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        AiChatHistoryScreen(bloc = this, modifier = modifier)
+    }
 
     fun onConversationClick(conversationId: Long)
 
