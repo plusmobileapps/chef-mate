@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalDecomposeApi::class)
 
-package com.plusmobileapps.chefmate.recipe.bottomnav.impl.ui
+package com.plusmobileapps.chefmate.recipe.bottomnav
 
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
@@ -41,7 +41,6 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.plus
 import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.predictiveBackAnimation
 import com.arkivanov.decompose.extensions.compose.stack.animation.scale
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
-import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.BROWSER
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.GROCERIES
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc.Tab.MEALS

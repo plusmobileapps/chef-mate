@@ -23,7 +23,7 @@ import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.browser.BrowserEditQueryBloc
 import com.plusmobileapps.chefmate.browser.BrowserLandingBloc
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
-import com.plusmobileapps.chefmate.browser.impl.ui.BrowserRootScreen
+import com.plusmobileapps.chefmate.browser.BrowserRootScreen
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer

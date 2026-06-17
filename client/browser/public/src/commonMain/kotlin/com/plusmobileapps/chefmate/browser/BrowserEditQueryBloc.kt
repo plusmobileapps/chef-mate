@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.browser
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.ui.ComposeScreen
@@ -9,6 +11,11 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface BrowserEditQueryBloc : ComposeScreen {
     val state: StateFlow<Model>
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        BrowserEditQueryScreen(bloc = this, modifier = modifier)
+    }
 
     fun onSearchTextChanged(text: String)
 
