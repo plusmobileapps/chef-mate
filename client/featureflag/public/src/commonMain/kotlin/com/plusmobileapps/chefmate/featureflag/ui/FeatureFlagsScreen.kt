@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.featureflag.impl.ui
+package com.plusmobileapps.chefmate.featureflag.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

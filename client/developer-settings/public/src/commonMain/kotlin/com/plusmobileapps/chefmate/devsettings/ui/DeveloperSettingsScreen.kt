@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.devsettings.impl.ui
+package com.plusmobileapps.chefmate.devsettings.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -342,7 +342,4 @@ val previewDeveloperSettingsBloc =
         override fun onClearCoachMarksClicked() = Unit
 
         override fun onCoachMarksResetConfirmationDismissed() = Unit
-
-        @Composable
-        override fun Content(modifier: Modifier) = DeveloperSettingsScreen(this, modifier)
     }

@@ -1,7 +1,10 @@
 package com.plusmobileapps.chefmate.featureflag
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.featureflag.ui.FeatureFlagsScreen
 import com.plusmobileapps.chefmate.ui.ComposeScreen
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -9,6 +12,11 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface FeatureFlagsBloc : ComposeScreen {
     val state: StateFlow<Model>
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        FeatureFlagsScreen(bloc = this, modifier = modifier)
+    }
 
     fun onBack()
 

@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package com.plusmobileapps.chefmate.settings.impl.ui
+package com.plusmobileapps.chefmate.settings.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -150,9 +150,7 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
             HorizontalDivider()
             SettingsRow(
                 name = Res.string.terms_of_use.asTextData(),
-                onClick = {
-                    bloc.onUrlClicked("https://chefmate.plusmobileapps.com/terms-of-use/")
-                },
+                onClick = { bloc.onUrlClicked("https://chefmate.plusmobileapps.com/terms-of-use/") },
             )
             HorizontalDivider()
             SettingsRow(
@@ -301,8 +299,6 @@ private val previewBlocUnauthenticated =
         override fun onDeveloperSettingsClicked() = Unit
 
         override fun onReplayOnboardingClicked() = Unit
-
-        @Composable override fun Content(modifier: Modifier) = SettingsScreen(this, modifier)
     }
 
 private val previewBlocAuthenticated =
@@ -341,8 +337,6 @@ private val previewBlocAuthenticated =
         override fun onDeveloperSettingsClicked() = Unit
 
         override fun onReplayOnboardingClicked() = Unit
-
-        @Composable override fun Content(modifier: Modifier) = SettingsScreen(this, modifier)
     }
 
 private val previewBlocAnonymous =
@@ -377,8 +371,6 @@ private val previewBlocAnonymous =
         override fun onDeveloperSettingsClicked() = Unit
 
         override fun onReplayOnboardingClicked() = Unit
-
-        @Composable override fun Content(modifier: Modifier) = SettingsScreen(this, modifier)
     }
 
 @Preview(showBackground = true)
