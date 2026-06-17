@@ -68,6 +68,8 @@ include(":client:bottomnav:public")
 
 include(":client:composeApp")
 
+include(":client:androidApp")
+
 include(":client:cook:impl")
 
 include(":client:cook:public")

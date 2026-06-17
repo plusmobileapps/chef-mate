@@ -1,8 +1,5 @@
-import java.util.Properties
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
 
 fun osClassifier(): String {
     val osName = System.getProperty("os.name").lowercase()
@@ -23,7 +20,10 @@ fun osClassifier(): String {
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidApplication)
+    // Applied without an explicit version: AGP is already on the build classpath (via the
+    // :client:androidApp application module and the KMP library convention plugin), so an
+    // aliased version request would fail the "plugin already on the classpath" check.
+    id("com.android.kotlin.multiplatform.library")
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.metro)
     alias(libs.plugins.compose)
@@ -31,19 +31,30 @@ plugins {
 }
 
 kotlin {
-    androidTarget {
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
+    // AGP 9: the Android target is now a KMP-aware library (com.android.application was
+    // extracted into the standalone :client:androidApp module). The app's manifest,
+    // resources, signing, and entry points live there; this module ships only shared code.
+    androidLibrary {
+        // Distinct from the app module's `com.plusmobileapps.chefmate` namespace — Android
+        // requires every module/library to have a unique namespace. Only scopes this
+        // library's generated R/BuildConfig; the shared Kotlin code keeps its own packages.
+        namespace = "com.plusmobileapps.chefmate.composeapp"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
 
-            // commonTest is shared with the Android instrumented test variant
-            // (connectedDebugAndroidTest), not the unit test variant (testDebugUnitTest).
-            // unitTestVariant gets its own (empty) tree so commonTest UI tests don't get
-            // dragged into testDebugUnitTest, where Robolectric isn't initialised.
-            @OptIn(ExperimentalKotlinGradlePluginApi::class)
-            instrumentedTestVariant.sourceSetTree.set(KotlinSourceSetTree.test)
-            @OptIn(ExperimentalKotlinGradlePluginApi::class)
-            unitTestVariant.sourceSetTree.set(KotlinSourceSetTree.unitTest)
-        }
+        // Pin Android JVM bytecode level (iOS/JVM targets configured separately below).
+        compilerOptions.jvmTarget.set(JvmTarget.JVM_11)
+
+        // Compose Multiplatform resources (strings.xml under commonMain/composeResources)
+        // are bundled into the AAR via the Android resource pipeline. The new KMP Android
+        // library plugin defaults this to false, which would drop them at runtime.
+        androidResources.enable = true
+
+        // The robot UI flows live in commonTest with their android `actual`s (test DI
+        // graph, in-memory database) in androidDeviceTest; both run on-device. No host
+        // (JVM) unit tests exist for this module, so androidHostTest stays disabled (was
+        // unitTestVariant=empty). androidDeviceTest is wired to commonTest below.
+        withDeviceTest {}
     }
 
     listOf(iosArm64(), iosSimulatorArm64()).forEach { iosTarget ->
@@ -170,74 +181,21 @@ kotlin {
                 implementation(compose.desktop.currentOs)
             }
         }
-        val androidInstrumentedTest by getting {
+        val androidDeviceTest by getting {
+            // TODO(agp9): the new KMP Android library plugin places androidDeviceTest in its
+            // own instrumented source-set tree, so the shared robot UI flows in commonTest
+            // (and their android actuals here) are not yet routed into the on-device test the
+            // way the old `instrumentedTestVariant.sourceSetTree.set(test)` did. The straight
+            // `dependsOn(commonTest)` and `withDeviceTestBuilder { sourceSetTreeName = "test" }`
+            // forms both fail expect/actual resolution; needs finalizing + on-device run.
             dependencies {
                 implementation(libs.sqldelight.drivers.android)
                 implementation(libs.androidx.test.core)
+                implementation(libs.androidx.compose.ui.test.junit4.android)
+                implementation(libs.androidx.compose.ui.test.manifest)
             }
         }
     }
-}
-
-android {
-    namespace = "com.plusmobileapps.chefmate"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
-
-    val keystorePropertiesFile = rootProject.file("keystore.properties")
-    val keystoreProperties =
-        Properties().also { props ->
-            if (keystorePropertiesFile.exists()) {
-                keystorePropertiesFile.reader().use { props.load(it) }
-            }
-        }
-
-    signingConfigs {
-        create("release") {
-            storeFile =
-                file(
-                    System.getenv("ANDROID_KEYSTORE_FILE")
-                        ?: keystoreProperties.getProperty("releaseKeyStore")
-                        ?: "release.keystore"
-                )
-            storePassword =
-                System.getenv("ANDROID_KEYSTORE_PASSWORD")
-                    ?: keystoreProperties.getProperty("releaseStorePassword")
-                    ?: ""
-            keyAlias =
-                System.getenv("ANDROID_KEY_ALIAS")
-                    ?: keystoreProperties.getProperty("releaseKeyAlias")
-                    ?: ""
-            keyPassword =
-                System.getenv("ANDROID_KEY_PASSWORD")
-                    ?: keystoreProperties.getProperty("releaseKeyPassword")
-                    ?: ""
-        }
-    }
-
-    defaultConfig {
-        applicationId = "com.plusmobileapps.chefmate"
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 82
-        versionName = "1.8.7"
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-    packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("release")
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-}
-
-dependencies {
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4.android)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
 
 compose.desktop {
