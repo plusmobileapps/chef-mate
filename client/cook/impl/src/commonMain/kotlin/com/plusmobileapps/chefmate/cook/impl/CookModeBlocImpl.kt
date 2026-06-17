@@ -1,12 +1,9 @@
 package com.plusmobileapps.chefmate.cook.impl
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.cook.WhatsCookingBloc
-import com.plusmobileapps.chefmate.cook.impl.ui.CookModeScreen
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
@@ -72,11 +69,6 @@ class CookModeBlocImpl(
 
     override fun onBackClicked() {
         output.onNext(CookModeBloc.Output.Finished)
-    }
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        CookModeScreen(bloc = this, modifier = modifier)
     }
 
     private fun handleWhatsCookingOutput(out: WhatsCookingBloc.Output) {
