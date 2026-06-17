@@ -27,11 +27,6 @@ private fun manageProfileBloc(model: Model): ManageProfileBloc =
         override fun onDeleteConfirmed() = Unit
 
         override fun onDeleteDismissed() = Unit
-
-        @Composable
-        override fun Content(modifier: Modifier) {
-            ManageProfileScreen(bloc = this, modifier = modifier)
-        }
     }
 
 val previewManageProfileBloc: ManageProfileBloc =

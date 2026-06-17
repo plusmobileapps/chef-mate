@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.auth.ui.impl.ui
+package com.plusmobileapps.chefmate.auth.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
@@ -68,7 +68,6 @@ import chefmate.client.auth.ui.public.generated.resources.auth_screen_title_sign
 import chefmate.client.auth.ui.public.generated.resources.auth_switch_to_sign_in
 import chefmate.client.auth.ui.public.generated.resources.auth_switch_to_sign_up
 import chefmate.client.auth.ui.public.generated.resources.auth_terms_of_use
-import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.ResourceString

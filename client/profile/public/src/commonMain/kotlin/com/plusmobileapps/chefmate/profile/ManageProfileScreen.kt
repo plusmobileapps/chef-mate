@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.profile.impl.ui
+package com.plusmobileapps.chefmate.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -38,8 +38,6 @@ import chefmate.client.profile.public.generated.resources.manage_profile_email_l
 import chefmate.client.profile.public.generated.resources.manage_profile_save
 import chefmate.client.profile.public.generated.resources.manage_profile_title
 import coil3.compose.AsyncImage
-import com.plusmobileapps.chefmate.profile.ManageProfileBloc
-import com.plusmobileapps.chefmate.profile.ManageProfileTestTags
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusButton
 import com.plusmobileapps.chefmate.ui.components.PlusButtonVariant

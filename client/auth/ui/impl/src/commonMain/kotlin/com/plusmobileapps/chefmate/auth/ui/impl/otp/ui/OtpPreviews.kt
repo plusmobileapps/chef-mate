@@ -1,10 +1,10 @@
 package com.plusmobileapps.chefmate.auth.ui.impl.otp.ui
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.plusmobileapps.chefmate.auth.data.OtpFlow
 import com.plusmobileapps.chefmate.auth.ui.otp.OtpBloc
+import com.plusmobileapps.chefmate.auth.ui.otp.OtpScreen
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,8 +23,6 @@ private fun otpBloc(model: OtpBloc.Model, code: String = ""): OtpBloc =
         override fun onDismissError() = Unit
 
         override fun onBackClicked() = Unit
-
-        @Composable override fun Content(modifier: Modifier) = OtpScreen(this, modifier)
     }
 
 val previewOtpBlocSignUp: OtpBloc =

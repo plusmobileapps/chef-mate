@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.profile
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.text.TextData
@@ -9,6 +11,11 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface ManageProfileBloc : ComposeScreen {
     val state: StateFlow<Model>
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        ManageProfileScreen(bloc = this, modifier = modifier)
+    }
 
     fun onBack()
 
