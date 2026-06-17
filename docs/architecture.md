@@ -175,20 +175,20 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 import kotlinx.serialization.Serializable
 
 interface RecipeRootBloc :
     BackHandlerOwner,
     BackClickBloc,
-    BlocScreen {
+    ComposeScreen {
     val routerState: Value<ChildStack<*, Child>>
 
-    // The Child sealed class exposes an `abstract val bloc: BlocScreen`, and each
+    // The Child sealed class exposes an `abstract val bloc: ComposeScreen`, and each
     // variant overrides it with its concrete bloc. This lets the screen render any
     // child uniformly with `child.instance.bloc.Content()` — no `when`.
     sealed class Child {
-        abstract val bloc: BlocScreen
+        abstract val bloc: ComposeScreen
 
         data class Detail(
             override val bloc: RecipeDetailBloc,
@@ -358,7 +358,7 @@ All UI is written using Compose Multiplatform to share the same UI across all of
 
 All reusable components for the project exist in `client/ui/public` module typically prefixing every component with `Plus`. `PlusHeaderContainer` is the most common component used at the base of every screen's `@Composable`.
 
-Every screen implements `BlocScreen`, which exposes a single `@Composable fun Content(modifier: Modifier)`. Because each navigation `Child` exposes its wrapped bloc via `val bloc: BlocScreen` (see the BLoC pattern above), a navigation screen renders the whole stack without a `when` over child types:
+Every screen implements `ComposeScreen`, which exposes a single `@Composable fun Content(modifier: Modifier)`. Because each navigation `Child` exposes its wrapped bloc via `val bloc: ComposeScreen` (see the BLoC pattern above), a navigation screen renders the whole stack without a `when` over child types:
 
 ```kotlin
 @Composable

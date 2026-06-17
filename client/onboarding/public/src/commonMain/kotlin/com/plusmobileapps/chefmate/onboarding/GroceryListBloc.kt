@@ -2,10 +2,10 @@ package com.plusmobileapps.chefmate.onboarding
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 
 /** Onboarding step explaining how to add a recipe’s ingredients to the grocery list. */
-interface GroceryListBloc : BlocScreen {
+interface GroceryListBloc : ComposeScreen {
     fun onNextClicked()
 
     sealed class Output {

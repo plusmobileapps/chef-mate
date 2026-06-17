@@ -7,14 +7,14 @@ import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 
-interface AiChatRootBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
+interface AiChatRootBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
     val routerState: Value<ChildStack<*, Child>>
 
     sealed class Child {
 
-        abstract val bloc: BlocScreen
+        abstract val bloc: ComposeScreen
 
         data class Chat(override val bloc: AiChatBloc) : Child()
 

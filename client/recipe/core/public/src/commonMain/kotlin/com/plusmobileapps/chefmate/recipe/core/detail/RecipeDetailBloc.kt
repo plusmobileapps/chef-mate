@@ -8,10 +8,10 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.TextData
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 import kotlinx.coroutines.flow.StateFlow
 
-interface RecipeDetailBloc : BackClickBloc, BlocScreen {
+interface RecipeDetailBloc : BackClickBloc, ComposeScreen {
     val state: StateFlow<Model>
 
     val childSlot: Value<ChildSlot<*, Sheet>>
@@ -80,7 +80,7 @@ interface RecipeDetailBloc : BackClickBloc, BlocScreen {
 
     sealed class Sheet {
 
-        abstract val bloc: BlocScreen
+        abstract val bloc: ComposeScreen
 
         data class AddToGroceryList(override val bloc: AddRecipeToGroceryListBloc) : Sheet()
     }

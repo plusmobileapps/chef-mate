@@ -10,12 +10,12 @@ import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListInvite
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.ListRole
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 
-interface GroceryListBloc : BlocScreen {
+interface GroceryListBloc : ComposeScreen {
     val state: StateFlow<Model>
 
     val newGroceryItemName: StateFlow<String>
@@ -112,7 +112,7 @@ interface GroceryListBloc : BlocScreen {
 
     sealed class Sheet {
 
-        abstract val bloc: BlocScreen
+        abstract val bloc: ComposeScreen
 
         data class GroceryDetail(override val bloc: GroceryDetailBloc) : Sheet()
     }

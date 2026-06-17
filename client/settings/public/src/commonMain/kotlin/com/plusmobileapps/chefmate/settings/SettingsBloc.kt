@@ -3,10 +3,10 @@ package com.plusmobileapps.chefmate.settings
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.text.TextData
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 import kotlinx.coroutines.flow.StateFlow
 
-interface SettingsBloc : BlocScreen {
+interface SettingsBloc : ComposeScreen {
     val state: StateFlow<Model>
 
     fun onSignInClicked()

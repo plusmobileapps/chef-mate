@@ -4,10 +4,10 @@ import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.meal.data.MealType
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 import kotlinx.coroutines.flow.StateFlow
 
-interface ChooseMealTypeBloc : BackClickBloc, BlocScreen {
+interface ChooseMealTypeBloc : BackClickBloc, ComposeScreen {
     val state: StateFlow<Model>
 
     fun onMealTypeSelected(mealType: MealType)

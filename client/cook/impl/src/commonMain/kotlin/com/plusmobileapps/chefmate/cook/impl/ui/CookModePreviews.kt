@@ -1,10 +1,10 @@
 package com.plusmobileapps.chefmate.cook.impl.ui
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.cook.WhatsCookingBloc
+import com.plusmobileapps.chefmate.cook.ui.CookModeScreen
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.collections.immutable.persistentListOf
@@ -48,11 +48,6 @@ private fun cookBloc(model: CookModeBloc.Model): CookModeBloc =
         override fun onKeepScreenOnToggled() = Unit
 
         override fun onBackClicked() = Unit
-
-        @Composable
-        override fun Content(modifier: Modifier) {
-            CookModeScreen(bloc = this, modifier = modifier)
-        }
     }
 
 private val activeSessionsSample =

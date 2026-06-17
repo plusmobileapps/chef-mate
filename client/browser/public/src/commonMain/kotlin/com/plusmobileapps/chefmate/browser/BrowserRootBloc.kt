@@ -5,16 +5,16 @@ import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 
-interface BrowserRootBloc : BlocScreen {
+interface BrowserRootBloc : ComposeScreen {
     val routerState: Value<ChildStack<*, Child>>
 
     fun navigateToUrl(url: String)
 
     sealed class Child {
 
-        abstract val bloc: BlocScreen
+        abstract val bloc: ComposeScreen
 
         data class Landing(override val bloc: BrowserLandingBloc) : Child()
 

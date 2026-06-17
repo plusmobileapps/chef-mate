@@ -8,12 +8,12 @@ import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookInvite
 import com.plusmobileapps.chefmate.text.TextData
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 
-interface RecipeListBloc : BlocScreen {
+interface RecipeListBloc : ComposeScreen {
     val state: StateFlow<Model>
 
     fun onRecipeClicked(recipe: RecipeListItem)

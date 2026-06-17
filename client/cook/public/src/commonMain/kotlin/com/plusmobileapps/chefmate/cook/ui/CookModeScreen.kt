@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 
-package com.plusmobileapps.chefmate.cook.impl.ui
+package com.plusmobileapps.chefmate.cook.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -813,10 +813,7 @@ private fun DirectionRow(text: String, highlighted: Boolean, onClick: () -> Unit
                         Modifier
                     }
                 )
-                .padding(
-                    vertical = dimens.paddingExtraSmall,
-                    horizontal = dimens.paddingExtraSmall,
-                ),
+                .padding(vertical = dimens.paddingExtraSmall, horizontal = dimens.paddingExtraSmall),
     )
 }
 

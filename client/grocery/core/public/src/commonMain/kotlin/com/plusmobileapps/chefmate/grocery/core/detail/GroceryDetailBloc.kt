@@ -5,10 +5,10 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 import kotlinx.coroutines.flow.StateFlow
 
-interface GroceryDetailBloc : BackClickBloc, BlocScreen {
+interface GroceryDetailBloc : BackClickBloc, ComposeScreen {
     val models: StateFlow<Model>
 
     fun onGroceryNameChanged(name: String)

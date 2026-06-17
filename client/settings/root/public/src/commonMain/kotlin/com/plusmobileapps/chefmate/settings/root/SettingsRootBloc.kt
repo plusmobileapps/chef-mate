@@ -11,14 +11,14 @@ import com.plusmobileapps.chefmate.recipe.categories.RecipeCategoriesBloc
 import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc
 import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc
 import com.plusmobileapps.chefmate.settings.AppSettingsBloc
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 
-interface SettingsRootBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
+interface SettingsRootBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
     val routerState: Value<ChildStack<*, Child>>
 
     sealed class Child {
 
-        abstract val bloc: BlocScreen
+        abstract val bloc: ComposeScreen
 
         data class AppSettings(override val bloc: AppSettingsBloc) : Child()
 

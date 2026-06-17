@@ -8,10 +8,10 @@ import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.text.TextData
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 import kotlinx.coroutines.flow.StateFlow
 
-interface EditRecipeBloc : BackClickBloc, BlocScreen {
+interface EditRecipeBloc : BackClickBloc, ComposeScreen {
     val state: StateFlow<Model>
 
     val title: StateFlow<String>

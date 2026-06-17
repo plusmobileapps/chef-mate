@@ -70,7 +70,7 @@ Every screen is a BLoC. The pattern is:
 2. **Impl** (`GroceryListBlocImpl`) — annotated with `@Inject` + `@ContributesAssistedFactory(scope = AppScope::class, assistedFactory = ...)`. Delegates `BlocContext by context`. Gets a ViewModel via `instanceKeeper.getViewModel { ... }`.
 3. **ViewModel** — annotated `@Inject`. Extends `ViewModel(@Main mainContext)`. Uses `scope` (coroutine scope on main thread) for async work. Holds `MutableStateFlow<State>`.
 
-Navigation BLoCs expose `routerState: Value<ChildStack<*, Child>>`, use `StackNavigation<Configuration>` with `childStack()`, and use serializable `Configuration` sealed classes. The `Child` sealed class exposes an `abstract val bloc: BlocScreen`, and each variant overrides it with its concrete bloc (`data class Detail(override val bloc: RecipeDetailBloc) : Child()`). This lets the navigation screen render any child uniformly with `child.instance.bloc.Content()` — no `when` over child types.
+Navigation BLoCs expose `routerState: Value<ChildStack<*, Child>>`, use `StackNavigation<Configuration>` with `childStack()`, and use serializable `Configuration` sealed classes. The `Child` sealed class exposes an `abstract val bloc: ComposeScreen`, and each variant overrides it with its concrete bloc (`data class Detail(override val bloc: RecipeDetailBloc) : Child()`). This lets the navigation screen render any child uniformly with `child.instance.bloc.Content()` — no `when` over child types.
 
 See `docs/architecture.md` for full annotated examples of both patterns.
 

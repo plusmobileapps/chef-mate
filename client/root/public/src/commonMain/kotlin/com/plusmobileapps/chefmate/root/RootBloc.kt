@@ -21,7 +21,7 @@ import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc
 import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookBloc
 import com.plusmobileapps.chefmate.settings.root.SettingsRootBloc
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 
 interface RootBloc : BackHandlerOwner, BackClickBloc {
     val state: Value<ChildStack<*, Child>>
@@ -30,7 +30,7 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
 
     sealed class Child {
 
-        abstract val bloc: BlocScreen
+        abstract val bloc: ComposeScreen
 
         data class Onboarding(override val bloc: OnboardingRootBloc) : Child()
 

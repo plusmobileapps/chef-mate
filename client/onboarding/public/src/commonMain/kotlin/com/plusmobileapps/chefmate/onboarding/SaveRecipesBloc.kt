@@ -2,12 +2,12 @@ package com.plusmobileapps.chefmate.onboarding
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 
 /**
  * Onboarding step explaining how to find recipes in the browser and download them to the account.
  */
-interface SaveRecipesBloc : BlocScreen {
+interface SaveRecipesBloc : ComposeScreen {
     fun onNextClicked()
 
     sealed class Output {
