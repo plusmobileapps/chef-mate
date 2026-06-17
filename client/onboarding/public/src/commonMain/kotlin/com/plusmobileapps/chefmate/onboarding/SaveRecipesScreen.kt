@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.onboarding.impl.ui
+package com.plusmobileapps.chefmate.onboarding
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FileDownload
@@ -8,8 +8,6 @@ import chefmate.client.onboarding.public.generated.resources.Res
 import chefmate.client.onboarding.public.generated.resources.onboarding_next
 import chefmate.client.onboarding.public.generated.resources.onboarding_save_recipes_message
 import chefmate.client.onboarding.public.generated.resources.onboarding_save_recipes_title
-import com.plusmobileapps.chefmate.onboarding.OnboardingTestTags
-import com.plusmobileapps.chefmate.onboarding.SaveRecipesBloc
 
 @Composable
 fun SaveRecipesScreen(bloc: SaveRecipesBloc, modifier: Modifier = Modifier) {

@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.onboarding.impl.ui
+package com.plusmobileapps.chefmate.onboarding
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SoupKitchen
@@ -8,8 +8,6 @@ import chefmate.client.onboarding.public.generated.resources.Res
 import chefmate.client.onboarding.public.generated.resources.onboarding_cook_mode_message
 import chefmate.client.onboarding.public.generated.resources.onboarding_cook_mode_title
 import chefmate.client.onboarding.public.generated.resources.onboarding_next
-import com.plusmobileapps.chefmate.onboarding.CookModeBloc
-import com.plusmobileapps.chefmate.onboarding.OnboardingTestTags
 
 @Composable
 fun CookModeScreen(bloc: CookModeBloc, modifier: Modifier = Modifier) {

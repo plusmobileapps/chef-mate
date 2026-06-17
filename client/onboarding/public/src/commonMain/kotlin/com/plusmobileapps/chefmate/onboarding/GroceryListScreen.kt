@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.onboarding.impl.ui
+package com.plusmobileapps.chefmate.onboarding
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddShoppingCart
@@ -8,8 +8,6 @@ import chefmate.client.onboarding.public.generated.resources.Res
 import chefmate.client.onboarding.public.generated.resources.onboarding_grocery_list_message
 import chefmate.client.onboarding.public.generated.resources.onboarding_grocery_list_title
 import chefmate.client.onboarding.public.generated.resources.onboarding_next
-import com.plusmobileapps.chefmate.onboarding.GroceryListBloc
-import com.plusmobileapps.chefmate.onboarding.OnboardingTestTags
 
 @Composable
 fun GroceryListScreen(bloc: GroceryListBloc, modifier: Modifier = Modifier) {

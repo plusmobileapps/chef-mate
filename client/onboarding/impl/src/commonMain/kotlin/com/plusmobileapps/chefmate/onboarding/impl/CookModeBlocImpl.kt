@@ -1,12 +1,9 @@
 package com.plusmobileapps.chefmate.onboarding.impl
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.onboarding.CookModeBloc
-import com.plusmobileapps.chefmate.onboarding.impl.ui.CookModeScreen
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
@@ -20,10 +17,5 @@ class CookModeBlocImpl(
 
     override fun onNextClicked() {
         output.onNext(CookModeBloc.Output.Next)
-    }
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        CookModeScreen(bloc = this, modifier = modifier)
     }
 }

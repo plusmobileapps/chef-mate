@@ -1,10 +1,9 @@
-package com.plusmobileapps.chefmate.onboarding.impl.ui
+package com.plusmobileapps.chefmate.onboarding
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
-import com.plusmobileapps.chefmate.onboarding.OnboardingRootBloc
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.backAnimation
 

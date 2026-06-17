@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.onboarding
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.ui.ComposeScreen
@@ -9,6 +11,11 @@ import com.plusmobileapps.chefmate.ui.ComposeScreen
  */
 interface SaveRecipesBloc : ComposeScreen {
     fun onNextClicked()
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        SaveRecipesScreen(bloc = this, modifier = modifier)
+    }
 
     sealed class Output {
         /** Advance to the next onboarding step. */

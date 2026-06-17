@@ -2,8 +2,6 @@
 
 package com.plusmobileapps.chefmate.onboarding.impl
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.DelicateDecomposeApi
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
@@ -23,7 +21,6 @@ import com.plusmobileapps.chefmate.onboarding.OnboardingRootBloc.Output
 import com.plusmobileapps.chefmate.onboarding.SaveRecipesBloc
 import com.plusmobileapps.chefmate.onboarding.StartCookingBloc
 import com.plusmobileapps.chefmate.onboarding.WelcomeBloc
-import com.plusmobileapps.chefmate.onboarding.impl.ui.OnboardingRootScreen
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
@@ -62,11 +59,6 @@ class OnboardingRootBlocImpl(
 
     override fun onBackClicked() {
         navigation.pop()
-    }
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        OnboardingRootScreen(bloc = this, modifier = modifier)
     }
 
     private fun createChild(config: Configuration, context: BlocContext): OnboardingRootBloc.Child =
