@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.recipe.core.edit
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
@@ -13,6 +15,11 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface EditRecipeBloc : BackClickBloc, ComposeScreen {
     val state: StateFlow<Model>
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        EditRecipeScreen(bloc = this, modifier = modifier)
+    }
 
     val title: StateFlow<String>
 

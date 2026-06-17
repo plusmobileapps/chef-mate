@@ -8,8 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
-import com.plusmobileapps.chefmate.recipe.core.impl.edit.ui.EditRecipeScreen
-import com.plusmobileapps.chefmate.recipe.core.impl.edit.ui.previewEditRecipeBloc
+import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeScreen
+import com.plusmobileapps.chefmate.recipe.core.edit.previewEditRecipeBloc
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 

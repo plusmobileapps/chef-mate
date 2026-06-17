@@ -1,7 +1,6 @@
 package com.plusmobileapps.chefmate.recipe.importer
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.arkivanov.essenty.backhandler.BackDispatcher
 import com.arkivanov.essenty.backhandler.BackHandler
@@ -37,11 +36,6 @@ private fun importRecipesBloc(
         override fun onStartOver() = Unit
 
         override fun onBack() = Unit
-
-        @Composable
-        override fun Content(modifier: Modifier) {
-            ImportRecipesScreen(bloc = this, modifier = modifier)
-        }
     }
 
 private val sampleItems =

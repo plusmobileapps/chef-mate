@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.recipe.core.addmeal
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
@@ -12,6 +14,11 @@ import kotlinx.datetime.LocalDate
 
 interface ChooseDateBloc : BackClickBloc, ComposeScreen {
     val state: StateFlow<Model>
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        ChooseDateScreen(bloc = this, modifier = modifier)
+    }
 
     fun onDaySelected(date: LocalDate)
 

@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.recipe.core.impl.edit.ui
+package com.plusmobileapps.chefmate.recipe.core.edit
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -92,8 +92,6 @@ import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload_photo_dismiss
 import coil3.compose.AsyncImage
 import com.plusmobileapps.chefmate.recipe.categories.pickerLabelRes
-import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
-import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeTestTags
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer

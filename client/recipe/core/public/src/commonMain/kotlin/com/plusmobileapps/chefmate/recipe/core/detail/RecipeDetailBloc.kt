@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.recipe.core.detail
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BackClickBloc
@@ -13,6 +15,11 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface RecipeDetailBloc : BackClickBloc, ComposeScreen {
     val state: StateFlow<Model>
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        RecipeDetailScreen(bloc = this, modifier = modifier)
+    }
 
     val childSlot: Value<ChildSlot<*, Sheet>>
 

@@ -4,7 +4,7 @@
     ExperimentalSharedTransitionApi::class,
 )
 
-package com.plusmobileapps.chefmate.recipe.core.impl.detail.ui
+package com.plusmobileapps.chefmate.recipe.core.detail
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -160,8 +160,6 @@ import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.letIfTrue
 import com.plusmobileapps.chefmate.recipe.categories.pickerLabelRes
-import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
-import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailTestTags
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.IngredientSection
@@ -1596,10 +1594,7 @@ private fun DirectionLineItem(
                         Modifier
                     }
                 )
-                .padding(
-                    vertical = dimens.paddingExtraSmall,
-                    horizontal = dimens.paddingExtraSmall,
-                ),
+                .padding(vertical = dimens.paddingExtraSmall, horizontal = dimens.paddingExtraSmall),
     )
 }
 

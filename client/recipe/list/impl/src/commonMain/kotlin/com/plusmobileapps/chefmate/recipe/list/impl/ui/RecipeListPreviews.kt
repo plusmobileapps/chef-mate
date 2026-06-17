@@ -1,13 +1,13 @@
 package com.plusmobileapps.chefmate.recipe.list.impl.ui
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
+import com.plusmobileapps.chefmate.recipe.list.RecipeListScreen
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookInvite
@@ -134,8 +134,6 @@ private fun recipeListBloc(model: RecipeListBloc.Model): RecipeListBloc =
         override fun onAcceptInvite(memberId: String) = Unit
 
         override fun onDeclineInvite(memberId: String) = Unit
-
-        @Composable override fun Content(modifier: Modifier) = RecipeListScreen(this, modifier)
     }
 
 val previewRecipeListBloc: RecipeListBloc =

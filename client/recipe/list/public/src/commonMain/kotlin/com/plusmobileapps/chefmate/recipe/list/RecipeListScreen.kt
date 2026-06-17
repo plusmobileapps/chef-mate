@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.recipe.list.impl.ui
+package com.plusmobileapps.chefmate.recipe.list
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -177,11 +177,6 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_sync_syncin
 import com.plusmobileapps.chefmate.letIfTrue
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
-import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
-import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
-import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
-import com.plusmobileapps.chefmate.recipe.list.RecipeListTestTags
-import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.ResourceString

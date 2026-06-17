@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.recipe.core.impl.edit.ui
+package com.plusmobileapps.chefmate.recipe.core.edit
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background

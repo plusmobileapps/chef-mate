@@ -1,14 +1,11 @@
 package com.plusmobileapps.chefmate.recipe.importer.impl
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc
 import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc.Output
-import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesScreen
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
@@ -49,10 +46,5 @@ class ImportRecipesBlocImpl(
 
     override fun onBack() {
         output.onNext(Output.Back)
-    }
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        ImportRecipesScreen(bloc = this, modifier = modifier)
     }
 }

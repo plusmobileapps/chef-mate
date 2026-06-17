@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalFoundationApi::class)
 
-package com.plusmobileapps.chefmate.recipe.core.impl.addmeal.ui
+package com.plusmobileapps.chefmate.recipe.core.addmeal
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -49,7 +49,6 @@ import chefmate.client.recipe.core.public.generated.resources.add_meal_plan_snac
 import chefmate.client.recipe.core.public.generated.resources.add_meal_plan_today
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
 import com.plusmobileapps.chefmate.meal.data.MealType
-import com.plusmobileapps.chefmate.recipe.core.addmeal.ChooseDateBloc
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData

@@ -1,7 +1,6 @@
 package com.plusmobileapps.chefmate.recipebook.edit
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import chefmate.client.recipebook.edit.public.generated.resources.Res
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_create_title
@@ -35,11 +34,6 @@ private fun editRecipeBookBloc(model: Model): EditRecipeBookBloc =
         override fun onConfirmRemoveMember() = Unit
 
         override fun onDismissRemoveMember() = Unit
-
-        @Composable
-        override fun Content(modifier: Modifier) {
-            EditRecipeBookScreen(bloc = this, modifier = modifier)
-        }
     }
 
 val previewEditRecipeBookCreateBloc: EditRecipeBookBloc =

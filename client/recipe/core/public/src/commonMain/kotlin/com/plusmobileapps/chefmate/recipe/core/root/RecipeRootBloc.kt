@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.recipe.core.root
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
@@ -15,6 +17,11 @@ import kotlinx.serialization.Serializable
 
 interface RecipeRootBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
     val routerState: Value<ChildStack<*, Child>>
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        RecipeRootScreen(recipeRootBloc = this, modifier = modifier)
+    }
 
     sealed class Child {
 

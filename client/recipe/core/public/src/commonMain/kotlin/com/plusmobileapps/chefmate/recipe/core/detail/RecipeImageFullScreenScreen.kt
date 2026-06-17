@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.recipe.core.impl.detail.ui
+package com.plusmobileapps.chefmate.recipe.core.detail
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween

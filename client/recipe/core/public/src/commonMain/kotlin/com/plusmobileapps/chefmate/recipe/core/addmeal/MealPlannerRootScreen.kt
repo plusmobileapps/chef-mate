@@ -1,11 +1,10 @@
-package com.plusmobileapps.chefmate.recipe.core.impl.addmeal.ui
+package com.plusmobileapps.chefmate.recipe.core.addmeal
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.ui.backAnimation
 
 @Composable

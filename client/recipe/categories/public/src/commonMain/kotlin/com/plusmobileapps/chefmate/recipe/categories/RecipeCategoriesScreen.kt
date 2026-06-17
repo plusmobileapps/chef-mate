@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.recipe.categories.impl.ui
+package com.plusmobileapps.chefmate.recipe.categories
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -72,14 +72,9 @@ import chefmate.client.recipe.categories.public.generated.resources.recipe_categ
 import chefmate.client.recipe.categories.public.generated.resources.recipe_categories_selection_delete_a11y
 import chefmate.client.recipe.categories.public.generated.resources.recipe_categories_selection_empty_title
 import chefmate.client.recipe.categories.public.generated.resources.recipe_categories_title
-import com.plusmobileapps.chefmate.recipe.categories.DeleteCategoryDialog
-import com.plusmobileapps.chefmate.recipe.categories.RecipeCategoriesBloc
 import com.plusmobileapps.chefmate.recipe.categories.RecipeCategoriesBloc.CategoryItem
 import com.plusmobileapps.chefmate.recipe.categories.RecipeCategoriesBloc.CreateState
 import com.plusmobileapps.chefmate.recipe.categories.RecipeCategoriesBloc.DialogState
-import com.plusmobileapps.chefmate.recipe.categories.RecipeCategoriesTestTags
-import com.plusmobileapps.chefmate.recipe.categories.RenameCategoryDialog
-import com.plusmobileapps.chefmate.recipe.categories.pickerLabelRes
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel

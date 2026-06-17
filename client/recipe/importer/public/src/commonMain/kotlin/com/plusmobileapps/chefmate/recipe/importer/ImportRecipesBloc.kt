@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.recipe.importer
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
@@ -11,6 +13,11 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface ImportRecipesBloc : BackHandlerOwner, ComposeScreen {
     val state: StateFlow<Model>
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        ImportRecipesScreen(bloc = this, modifier = modifier)
+    }
 
     /** All of the user's recipe books, offered as a multi-select target for the import. */
     val recipeBooks: StateFlow<List<RecipeBook>>
