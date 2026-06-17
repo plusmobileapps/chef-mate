@@ -6,13 +6,13 @@ import com.plusmobileapps.chefmate.meal.data.MealPlanItem
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.TextData
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.LocalDate
 
-interface MealPlanBloc : BlocScreen {
+interface MealPlanBloc : ComposeScreen {
     val state: StateFlow<Model>
 
     fun onViewModeSelected(mode: ViewMode)

@@ -5,11 +5,11 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.text.TextData
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.StateFlow
 
-interface ImportRecipesBloc : BackHandlerOwner, BlocScreen {
+interface ImportRecipesBloc : BackHandlerOwner, ComposeScreen {
     val state: StateFlow<Model>
 
     /** All of the user's recipe books, offered as a multi-select target for the import. */

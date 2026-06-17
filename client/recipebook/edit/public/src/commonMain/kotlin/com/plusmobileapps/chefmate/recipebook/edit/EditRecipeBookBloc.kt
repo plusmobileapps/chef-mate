@@ -5,11 +5,11 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookMember
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookRole
 import com.plusmobileapps.chefmate.text.TextData
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 
-interface EditRecipeBookBloc : BlocScreen {
+interface EditRecipeBookBloc : ComposeScreen {
     val state: StateFlow<Model>
 
     fun onNameChanged(name: String)

@@ -3,12 +3,12 @@ package com.plusmobileapps.chefmate.aichat
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 
-interface AiChatHistoryBloc : BackClickBloc, BlocScreen {
+interface AiChatHistoryBloc : BackClickBloc, ComposeScreen {
     val state: StateFlow<Model>
 
     fun onConversationClick(conversationId: Long)

@@ -4,11 +4,11 @@ import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.text.TextData
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 
-interface AuthenticationBloc : BackClickBloc, BlocScreen {
+interface AuthenticationBloc : BackClickBloc, ComposeScreen {
     val models: StateFlow<Model>
     val email: StateFlow<String>
     val password: StateFlow<String>

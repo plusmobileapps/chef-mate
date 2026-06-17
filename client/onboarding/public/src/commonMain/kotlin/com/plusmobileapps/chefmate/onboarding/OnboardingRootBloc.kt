@@ -6,7 +6,7 @@ import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 
 /**
  * Navigation BLoC that drives the first-run onboarding flow. It owns a Decompose router that walks
@@ -18,12 +18,12 @@ import com.plusmobileapps.chefmate.ui.BlocScreen
  * From the welcome screen the user can also choose to sign in; that is surfaced as [Output.SignIn]
  * so the root can open the authentication flow.
  */
-interface OnboardingRootBloc : BackHandlerOwner, BackClickBloc, BlocScreen {
+interface OnboardingRootBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
     val routerState: Value<ChildStack<*, Child>>
 
     sealed class Child {
 
-        abstract val bloc: BlocScreen
+        abstract val bloc: ComposeScreen
 
         data class Welcome(override val bloc: WelcomeBloc) : Child()
 

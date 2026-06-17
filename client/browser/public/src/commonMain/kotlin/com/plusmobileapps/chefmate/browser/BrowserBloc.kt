@@ -5,10 +5,10 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.text.TextData
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 import kotlinx.coroutines.flow.StateFlow
 
-interface BrowserBloc : BlocScreen {
+interface BrowserBloc : ComposeScreen {
     val state: StateFlow<Model>
 
     val instanceKeeper: InstanceKeeper

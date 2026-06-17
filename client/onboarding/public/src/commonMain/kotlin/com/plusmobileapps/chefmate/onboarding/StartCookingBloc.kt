@@ -2,10 +2,10 @@ package com.plusmobileapps.chefmate.onboarding
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 
 /** Final screen of the onboarding flow — confirms setup and launches the rest of the app. */
-interface StartCookingBloc : BlocScreen {
+interface StartCookingBloc : ComposeScreen {
     fun onStartCookingClicked()
 
     sealed class Output {

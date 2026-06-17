@@ -2,10 +2,10 @@ package com.plusmobileapps.chefmate.onboarding
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
-import com.plusmobileapps.chefmate.ui.BlocScreen
+import com.plusmobileapps.chefmate.ui.ComposeScreen
 
 /** First screen of the onboarding flow — greets the user and kicks off the flow. */
-interface WelcomeBloc : BlocScreen {
+interface WelcomeBloc : ComposeScreen {
     fun onGetStartedClicked()
 
     fun onSignInClicked()
