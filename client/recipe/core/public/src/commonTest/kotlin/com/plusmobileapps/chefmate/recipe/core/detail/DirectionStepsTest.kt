@@ -1,4 +1,4 @@
-package com.plusmobileapps.chefmate.recipe.core.impl.detail.ui
+package com.plusmobileapps.chefmate.recipe.core.detail
 
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
