@@ -21,7 +21,7 @@ Unknown URIs, missing/invalid path segments (`chefmate://recipe`, `chefmate://re
 
 ## Android
 
-The `chefmate://` scheme is registered via an `ACTION_VIEW` intent-filter on `MainActivity` in `client/composeApp/src/androidMain/AndroidManifest.xml`. `MainActivity.onCreate` reads `intent.data` and passes the parsed `DeepLink` to `buildRootBloc`.
+The `chefmate://` scheme is registered via an `ACTION_VIEW` intent-filter on `MainActivity` in `client/androidApp/src/main/AndroidManifest.xml`. `MainActivity.onCreate` reads `intent.data` and passes the parsed `DeepLink` to `buildRootBloc`.
 
 ```bash
 # Force-stop first so a fresh cold start picks up the new intent

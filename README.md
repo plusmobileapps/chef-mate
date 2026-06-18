@@ -9,7 +9,8 @@ A Kotlin Multiplatform app that is a mate to any chef in the kitchen managing re
 This is a [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html) project targeting Android, iOS, Web, Desktop (JVM), Server. It aims to share as much code as possible in a modular way, so the general file structure of the project is as follows: 
 
 * [client](./client/) - all the shared client code and client application code
-  * [composeApp](./client/composeApp/) - the compose multiplatform applications
+  * [androidApp](./client/androidApp/) - the Android application module (entry points, manifest, resources, signing)
+  * [composeApp](./client/composeApp/) - the shared Compose Multiplatform application code (consumed as an Android library, the iOS framework, and the desktop app)
   * [aichat](./client/aichat/) - AI chat and recipe extraction flows
   * [auth](./client/auth/) - authentication data, UI, and use cases
   * [bottomnav](./client/bottomnav/) - bottom navigation and tab ordering
@@ -40,7 +41,7 @@ This is a [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplat
 ### Android
 
 ```shell
-./gradlew :client:composeApp:installDebug
+./gradlew :client:androidApp:installDebug
 ```
 
 ### Desktop (JVM)

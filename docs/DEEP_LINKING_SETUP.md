@@ -29,7 +29,7 @@ This configures Supabase to:
 
 ### 2. Android Manifest Configuration
 
-**File**: `client/composeApp/src/androidMain/AndroidManifest.xml`
+**File**: `client/androidApp/src/main/AndroidManifest.xml`
 
 Added deep link intent filter to MainActivity:
 
@@ -61,7 +61,7 @@ Added deep link intent filter to MainActivity:
 
 ### 3. Deep Link Handling in MainActivity
 
-**File**: `client/composeApp/src/androidMain/kotlin/com/plusmobileapps/chefmate/MainActivity.kt`
+**File**: `client/androidApp/src/main/kotlin/com/plusmobileapps/chefmate/MainActivity.kt`
 
 The MainActivity now:
 - Injects the `SupabaseClient`
@@ -355,8 +355,8 @@ And configure Universal Links to handle this domain.
 - `client/auth/data/impl/src/commonMain/kotlin/com/plusmobileapps/chefmate/auth/data/impl/SupabaseAuthenticationRepository.kt` - Session status listener
 
 ### Android Layer
-- `client/composeApp/src/androidMain/AndroidManifest.xml` - Deep link intent filter
-- `client/composeApp/src/androidMain/kotlin/com/plusmobileapps/chefmate/MainActivity.kt` - Deep link handling
+- `client/androidApp/src/main/AndroidManifest.xml` - Deep link intent filter
+- `client/androidApp/src/main/kotlin/com/plusmobileapps/chefmate/MainActivity.kt` - Deep link handling
 - `client/composeApp/src/commonMain/kotlin/com/plusmobileapps/chefmate/ApplicationComponent.kt` - Exposes SupabaseClient
 
 ## Next Steps
