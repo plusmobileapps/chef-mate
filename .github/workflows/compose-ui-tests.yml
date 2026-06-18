@@ -80,7 +80,11 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: ./gradlew :client:composeApp:connectedDebugAndroidTest --continue
+          # AGP 9 KMP library plugin renamed connectedDebugAndroidTest ->
+          # connectedAndroidDeviceTest. NOTE: the shared commonTest robot flows are not yet
+          # routed into androidDeviceTest under the new plugin (see TODO(agp9) in
+          # client/composeApp/build.gradle.kts), so this currently runs no instrumented tests.
+          script: ./gradlew :client:composeApp:connectedAndroidDeviceTest --continue
       - name: Publish Android test report
         uses: dorny/test-reporter@v2
         if: always()

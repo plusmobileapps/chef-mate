@@ -90,7 +90,7 @@ These are read by BuildKonfig at build time. See [buildconfig-setup.md](buildcon
 
 **What it does:**
 1. Decodes the release keystore from the `ANDROID_KEYSTORE_BASE64` secret
-2. Builds a signed AAB via `./gradlew :client:composeApp:bundleRelease`
+2. Builds a signed AAB via `./gradlew :client:androidApp:bundleRelease`
 3. Uploads the AAB to the Play Store **internal** track via Fastlane `supply`
 
 **Fastlane lane:** `bundle exec fastlane android release`
@@ -165,9 +165,9 @@ Follow these steps in order to go from zero to automated Play Store deployments:
 
 4. **Upload the first AAB manually** — the Play Store API cannot create a new app, only upload to an existing one:
    ```bash
-   ./gradlew :client:composeApp:bundleRelease
+   ./gradlew :client:androidApp:bundleRelease
    ```
-   Then upload `client/composeApp/build/outputs/bundle/release/composeApp-release.aab` through the Play Console.
+   Then upload `client/androidApp/build/outputs/bundle/release/androidApp-release.aab` through the Play Console.
 
 5. **Create a Google Play service account** (see [below](#play-store-service-account)) and grant it access in the Play Console.
 
@@ -302,7 +302,7 @@ If you have a `keystore.properties` file at the project root, no environment var
 
 ```bash
 # Android — build the AAB locally (uses keystore.properties)
-./gradlew :client:composeApp:bundleRelease
+./gradlew :client:androidApp:bundleRelease
 
 # iOS — run the full lane (requires match setup and Xcode)
 bundle exec fastlane ios release
@@ -315,11 +315,11 @@ bundle exec fastlane ios release
 
 ## Version Management
 
-Versions are defined in two files across three platforms:
+Versions are defined in three files across three platforms:
 
 | Platform | File | Fields |
 |----------|------|--------|
-| Android | `client/composeApp/build.gradle.kts` | `versionCode` / `versionName` |
+| Android | `client/androidApp/build.gradle.kts` | `versionCode` / `versionName` |
 | iOS | `iosApp/Configuration/Config.xcconfig` | `CURRENT_PROJECT_VERSION` / `MARKETING_VERSION` |
 | Desktop | `client/composeApp/build.gradle.kts` | `packageVersion` (generic + macOS) |
 

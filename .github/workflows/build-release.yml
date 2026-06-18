@@ -37,8 +37,8 @@ jobs:
         id: version
         run: |
           set -euo pipefail
-          VERSION=$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' client/composeApp/build.gradle.kts)
-          BUILD=$(sed -n 's/.*versionCode = \([0-9]*\).*/\1/p' client/composeApp/build.gradle.kts)
+          VERSION=$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' client/androidApp/build.gradle.kts)
+          BUILD=$(sed -n 's/.*versionCode = \([0-9]*\).*/\1/p' client/androidApp/build.gradle.kts)
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "build=${BUILD}" >> "$GITHUB_OUTPUT"
           echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
@@ -73,14 +73,14 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew :client:composeApp:assembleRelease
+        run: ./gradlew :client:androidApp:assembleRelease
 
       - name: Locate APK
         id: apk
         run: |
-          APK=$(find client/composeApp/build/outputs/apk/release -name '*.apk' | head -1)
+          APK=$(find client/androidApp/build/outputs/apk/release -name '*.apk' | head -1)
           if [[ -z "$APK" ]]; then
-            echo "::error::No APK found under client/composeApp/build/outputs/apk/release/"
+            echo "::error::No APK found under client/androidApp/build/outputs/apk/release/"
             exit 1
           fi
           echo "path=$APK" >> "$GITHUB_OUTPUT"

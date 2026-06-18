@@ -34,9 +34,11 @@ jobs:
       - name: Read current versions
         id: current
         run: |
-          GRADLE_FILE="client/composeApp/build.gradle.kts"
-          CURRENT_VERSION=$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' "$GRADLE_FILE")
-          CURRENT_BUILD=$(sed -n 's/.*versionCode = \([0-9]*\).*/\1/p' "$GRADLE_FILE")
+          # Android versionName/versionCode live in the standalone app module; the desktop
+          # packageVersion fields stay in composeApp (see "Apply version bump" below).
+          APP_FILE="client/androidApp/build.gradle.kts"
+          CURRENT_VERSION=$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' "$APP_FILE")
+          CURRENT_BUILD=$(sed -n 's/.*versionCode = \([0-9]*\).*/\1/p' "$APP_FILE")
           echo "version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
           echo "build=$CURRENT_BUILD" >> "$GITHUB_OUTPUT"
 
@@ -86,17 +88,20 @@ jobs:
       - name: Apply version bump
         run: |
           set -euo pipefail
-          GRADLE_FILE="client/composeApp/build.gradle.kts"
+          # Android versionName/versionCode live in the standalone app module; the desktop
+          # packageVersion fields live in composeApp's compose.desktop block.
+          APP_FILE="client/androidApp/build.gradle.kts"
+          DESKTOP_FILE="client/composeApp/build.gradle.kts"
           XCCONFIG_FILE="iosApp/Configuration/Config.xcconfig"
           NEW_VERSION="${{ steps.new.outputs.version }}"
           NEW_BUILD="${{ steps.new.outputs.build }}"
           MAC_VERSION="${{ steps.new.outputs.mac_version }}"
 
           # Android versionCode
-          sed -i "s/versionCode = [0-9]*/versionCode = ${NEW_BUILD}/" "$GRADLE_FILE"
+          sed -i "s/versionCode = [0-9]*/versionCode = ${NEW_BUILD}/" "$APP_FILE"
 
           # Android versionName
-          sed -i "s/versionName = \"[^\"]*\"/versionName = \"${NEW_VERSION}\"/" "$GRADLE_FILE"
+          sed -i "s/versionName = \"[^\"]*\"/versionName = \"${NEW_VERSION}\"/" "$APP_FILE"
 
           # Desktop packageVersion — first occurrence (generic/JVM)
           awk -v new="$NEW_VERSION" '
@@ -104,17 +109,17 @@ jobs:
               sub(/packageVersion = "[^"]*"/, "packageVersion = \"" new "\"")
               done=1
             }
-            1' "$GRADLE_FILE" > "$GRADLE_FILE.tmp" && mv "$GRADLE_FILE.tmp" "$GRADLE_FILE"
+            1' "$DESKTOP_FILE" > "$DESKTOP_FILE.tmp" && mv "$DESKTOP_FILE.tmp" "$DESKTOP_FILE"
 
           # Desktop macOS packageVersion — second (last) occurrence.
           # Uses tac (Linux equivalent of macOS tail -r) to reverse, replace from
           # the "top" (which is the bottom of the original file), then reverse back.
-          tac "$GRADLE_FILE" | awk -v new="$MAC_VERSION" '
+          tac "$DESKTOP_FILE" | awk -v new="$MAC_VERSION" '
             /packageVersion[[:space:]]*=/ && !done {
               sub(/packageVersion = "[^"]*"/, "packageVersion = \"" new "\"")
               done=1
             }
-            1' | tac > "$GRADLE_FILE.tmp" && mv "$GRADLE_FILE.tmp" "$GRADLE_FILE"
+            1' | tac > "$DESKTOP_FILE.tmp" && mv "$DESKTOP_FILE.tmp" "$DESKTOP_FILE"
 
           # iOS build number and marketing version
           sed -i "s/CURRENT_PROJECT_VERSION=.*/CURRENT_PROJECT_VERSION=${NEW_BUILD}/" "$XCCONFIG_FILE"
@@ -132,7 +137,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git branch -D "$BRANCH" 2>/dev/null || true
           git checkout -b "$BRANCH"
-          git add client/composeApp/build.gradle.kts iosApp/Configuration/Config.xcconfig
+          git add client/androidApp/build.gradle.kts client/composeApp/build.gradle.kts iosApp/Configuration/Config.xcconfig
           git commit -m "chore: bump version to ${NEW_VERSION} (build ${NEW_BUILD})"
           git push --force-with-lease origin "$BRANCH"
 

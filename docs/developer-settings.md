@@ -55,7 +55,7 @@ After editing `local.properties`, re-run the JVM/Android target so Gradle regene
 
 ```bash
 ./gradlew :client:composeApp:run            # desktop
-./gradlew :client:composeApp:installDebug   # Android
+./gradlew :client:androidApp:installDebug   # Android
 ```
 
 ### `~/.gradle/gradle.properties` (machine-wide, outside any repo)
@@ -84,9 +84,9 @@ The "Developer Settings" row only appears when `BuildConfig.IS_DEBUG` is `true`.
 
 | Build path | `IS_DEBUG` |
 |---|---|
-| `./gradlew :client:composeApp:installDebug` | `true` |
+| `./gradlew :client:androidApp:installDebug` | `true` |
 | `./gradlew :client:composeApp:run` (desktop) | `true` |
-| `./gradlew :client:composeApp:bundleRelease` | `false` |
+| `./gradlew :client:androidApp:bundleRelease` | `false` |
 | IDE sync (no tasks) | `true` |
 
 ## Architecture notes
@@ -99,7 +99,7 @@ The "Developer Settings" row only appears when `BuildConfig.IS_DEBUG` is `true`.
 ## Verification checklist
 
 1. Add at least one `chefmate.user.1` / `chefmate.user.password.1` and (optionally) `supabase.testing.*` to one of the lookup sources above.
-2. `./gradlew :client:composeApp:installDebug` — open the More tab, confirm "Developer Settings" appears at the bottom.
+2. `./gradlew :client:androidApp:installDebug` — open the More tab, confirm "Developer Settings" appears at the bottom.
 3. Switch Environment → TESTING. Verify: signed out, recipe list empty, restart-required dialog. Force-stop + reopen, confirm sync now hits the testing URL.
 4. Switch Environment → FAKE. Verify several seeded recipes appear after the wipe.
 5. Tap "Login as test user" → User 1. Verify signed in; user persists across an app restart.

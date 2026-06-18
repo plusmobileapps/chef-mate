@@ -182,7 +182,7 @@ When `supabaseClient.handleDeeplinks(intent)` restores the session, this listene
 
 1. **Build and install the app**
    ```bash
-   ./gradlew :client:composeApp:installDebug
+   ./gradlew :client:androidApp:installDebug
    ```
 
 2. **Sign up a new user** in the app

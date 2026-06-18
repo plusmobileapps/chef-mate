@@ -9,7 +9,7 @@ This file provides shared guidance to Claude Code and Codex when working with co
 ./scripts/setup-hooks.sh
 
 # Android
-./gradlew :client:composeApp:installDebug
+./gradlew :client:androidApp:installDebug
 
 # Desktop (JVM)
 ./gradlew :client:composeApp:run

@@ -29,7 +29,8 @@ Merge PR (squash)           build-release.yml  (triggered by push to main)
 
 | File | Fields |
 |---|---|
-| `client/composeApp/build.gradle.kts` | `versionCode`, `versionName`, `packageVersion` (JVM), `packageVersion` (macOS block) |
+| `client/androidApp/build.gradle.kts` | `versionCode`, `versionName` |
+| `client/composeApp/build.gradle.kts` | `packageVersion` (JVM), `packageVersion` (macOS block) |
 | `iosApp/Configuration/Config.xcconfig` | `CURRENT_PROJECT_VERSION`, `MARKETING_VERSION` |
 
 The macOS `packageVersion` is always `1.x.y` when the app version is `0.x.y`
@@ -148,7 +149,7 @@ same way.
 
 ## Setting up Android signing
 
-The `build-release.yml` workflow calls `./gradlew :client:composeApp:assembleRelease`
+The `build-release.yml` workflow calls `./gradlew :client:androidApp:assembleRelease`
 with signing env vars that are read by the signing config in
 `client/composeApp/build.gradle.kts`.
 
