@@ -1,10 +1,7 @@
 package com.plusmobileapps.chefmate.auth.ui.impl.otp
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
-import com.plusmobileapps.chefmate.auth.ui.impl.otp.ui.OtpScreen
 import com.plusmobileapps.chefmate.auth.ui.otp.OtpBloc
 import com.plusmobileapps.chefmate.auth.ui.otp.OtpBloc.Output
 import com.plusmobileapps.chefmate.di.AppScope
@@ -73,10 +70,5 @@ class OtpBlocImpl(
 
     override fun onBackClicked() {
         output.onNext(Output.Cancelled)
-    }
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        OtpScreen(bloc = this, modifier = modifier)
     }
 }

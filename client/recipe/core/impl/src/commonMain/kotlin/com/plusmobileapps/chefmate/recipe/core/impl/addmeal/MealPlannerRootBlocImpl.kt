@@ -1,7 +1,5 @@
 package com.plusmobileapps.chefmate.recipe.core.impl.addmeal
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
@@ -16,7 +14,6 @@ import com.plusmobileapps.chefmate.recipe.core.addmeal.ChooseMealTypeBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc.Output
 import com.plusmobileapps.chefmate.recipe.core.addmeal.RecipePickerBloc
-import com.plusmobileapps.chefmate.recipe.core.impl.addmeal.ui.MealPlannerRootScreen
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
@@ -62,11 +59,6 @@ class MealPlannerRootBlocImpl(
         } else {
             output.onNext(Output.Finished)
         }
-    }
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        MealPlannerRootScreen(bloc = this, modifier = modifier)
     }
 
     private fun createChild(

@@ -1,7 +1,6 @@
 package com.plusmobileapps.chefmate.recipe.exporter
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.arkivanov.essenty.backhandler.BackDispatcher
 import com.arkivanov.essenty.backhandler.BackHandler
@@ -30,11 +29,6 @@ private fun exportRecipesBloc(model: Model): ExportRecipesBloc =
         override fun onStartOver() = Unit
 
         override fun onBack() = Unit
-
-        @Composable
-        override fun Content(modifier: Modifier) {
-            ExportRecipesScreen(bloc = this, modifier = modifier)
-        }
     }
 
 private val sampleItems =

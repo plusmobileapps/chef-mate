@@ -1,14 +1,11 @@
 package com.plusmobileapps.chefmate.devsettings.impl
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.Environment
 import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc
 import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc.Output
 import com.plusmobileapps.chefmate.devsettings.TestUser
-import com.plusmobileapps.chefmate.devsettings.impl.ui.DeveloperSettingsScreen
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
@@ -82,10 +79,5 @@ class DeveloperSettingsBlocImpl(
 
     override fun onCoachMarksResetConfirmationDismissed() {
         viewModel.dismissCoachMarksResetConfirmation()
-    }
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        DeveloperSettingsScreen(bloc = this, modifier = modifier)
     }
 }

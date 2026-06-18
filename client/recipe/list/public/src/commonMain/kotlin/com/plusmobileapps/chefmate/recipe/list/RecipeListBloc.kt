@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.recipe.list
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
@@ -15,6 +17,11 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface RecipeListBloc : ComposeScreen {
     val state: StateFlow<Model>
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        RecipeListScreen(bloc = this, modifier = modifier)
+    }
 
     fun onRecipeClicked(recipe: RecipeListItem)
 

@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.recipebook.edit
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookMember
@@ -11,6 +13,11 @@ import kotlinx.serialization.Serializable
 
 interface EditRecipeBookBloc : ComposeScreen {
     val state: StateFlow<Model>
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        EditRecipeBookScreen(bloc = this, modifier = modifier)
+    }
 
     fun onNameChanged(name: String)
 

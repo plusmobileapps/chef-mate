@@ -1,7 +1,5 @@
 package com.plusmobileapps.chefmate.recipe.core.impl.root
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.bringToFront
@@ -15,7 +13,6 @@ import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
-import com.plusmobileapps.chefmate.recipe.core.impl.root.ui.RecipeRootScreen
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
@@ -66,11 +63,6 @@ class RecipeRootBlocImpl(
 
     override fun onBackClicked() {
         navigation.pop()
-    }
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        RecipeRootScreen(recipeRootBloc = this, modifier = modifier)
     }
 
     private fun createChild(config: Configuration, context: BlocContext): RecipeRootBloc.Child =

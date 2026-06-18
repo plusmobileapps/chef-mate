@@ -1,7 +1,5 @@
 package com.plusmobileapps.chefmate.featureflag.impl
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
@@ -11,7 +9,6 @@ import com.plusmobileapps.chefmate.featureflag.FeatureFlagsBloc
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagsBloc.Output
 import com.plusmobileapps.chefmate.featureflag.Override
 import com.plusmobileapps.chefmate.featureflag.StringFlag
-import com.plusmobileapps.chefmate.featureflag.impl.ui.FeatureFlagsScreen
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
@@ -52,10 +49,5 @@ class FeatureFlagsBlocImpl(
 
     override fun onClearAllOverrides() {
         viewModel.clearAll()
-    }
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        FeatureFlagsScreen(bloc = this, modifier = modifier)
     }
 }

@@ -4,7 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
-import com.plusmobileapps.chefmate.recipe.categories.impl.ui.RecipeCategoriesScreen
+import com.plusmobileapps.chefmate.recipe.categories.RecipeCategoriesScreen
 import com.plusmobileapps.chefmate.recipe.categories.previewRecipeCategoriesBloc
 import com.plusmobileapps.chefmate.recipe.categories.previewRecipeCategoriesBlocBulkDeleteDialog
 import com.plusmobileapps.chefmate.recipe.categories.previewRecipeCategoriesBlocCreating

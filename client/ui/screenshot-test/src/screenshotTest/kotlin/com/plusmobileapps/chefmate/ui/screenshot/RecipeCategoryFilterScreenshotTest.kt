@@ -11,7 +11,7 @@ import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
-import com.plusmobileapps.chefmate.recipe.list.impl.ui.SortFilterSheetContent
+import com.plusmobileapps.chefmate.recipe.list.SortFilterSheetContent
 import com.plusmobileapps.chefmate.recipe.list.impl.ui.previewRecipeListBlocCategoryFiltered
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme

@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.android.tools.screenshot.PreviewTest
-import com.plusmobileapps.chefmate.recipe.core.impl.detail.ui.RecipeCategoriesRow
+import com.plusmobileapps.chefmate.recipe.core.detail.RecipeCategoriesRow
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme

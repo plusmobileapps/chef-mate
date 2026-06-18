@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.auth.ui.otp
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
@@ -12,6 +14,11 @@ import kotlinx.serialization.Serializable
 interface OtpBloc : BackClickBloc, ComposeScreen {
     val models: StateFlow<Model>
     val code: StateFlow<String>
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        OtpScreen(bloc = this, modifier = modifier)
+    }
 
     fun onCodeChanged(code: String)
 

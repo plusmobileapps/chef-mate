@@ -1,7 +1,5 @@
 package com.plusmobileapps.chefmate.settings.impl
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.buildconfig.BuildConfig
@@ -13,7 +11,6 @@ import com.plusmobileapps.chefmate.settings.SettingsBloc
 import com.plusmobileapps.chefmate.settings.SettingsBloc.Output
 import com.plusmobileapps.chefmate.settings.createEmailVerificationMessage
 import com.plusmobileapps.chefmate.settings.createGreeting
-import com.plusmobileapps.chefmate.settings.impl.ui.SettingsScreen
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
@@ -90,10 +87,5 @@ class SettingsBlocImpl(
 
     override fun onReplayOnboardingClicked() {
         output.onNext(Output.OpenOnboarding)
-    }
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        SettingsScreen(bloc = this, modifier = modifier)
     }
 }

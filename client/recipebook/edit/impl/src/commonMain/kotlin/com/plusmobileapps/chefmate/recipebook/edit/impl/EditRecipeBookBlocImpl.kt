@@ -1,7 +1,5 @@
 package com.plusmobileapps.chefmate.recipebook.edit.impl
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
@@ -12,7 +10,6 @@ import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookBloc
 import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookBloc.Model
 import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookBloc.Output
 import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookBloc.Props
-import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookScreen
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
@@ -55,11 +52,6 @@ class EditRecipeBookBlocImpl(
     override fun onConfirmRemoveMember() = viewModel.onConfirmRemoveMember()
 
     override fun onDismissRemoveMember() = viewModel.onDismissRemoveMember()
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        EditRecipeBookScreen(bloc = this, modifier = modifier)
-    }
 
     private fun EditRecipeBookViewModel.State.toBlocModel(): Model =
         Model(

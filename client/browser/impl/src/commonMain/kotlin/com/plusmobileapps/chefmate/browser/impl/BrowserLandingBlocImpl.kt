@@ -1,11 +1,8 @@
 package com.plusmobileapps.chefmate.browser.impl
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.browser.BrowserLandingBloc
-import com.plusmobileapps.chefmate.browser.impl.ui.BrowserLandingScreen
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
@@ -23,10 +20,5 @@ class BrowserLandingBlocImpl(
 
     override fun onSearchFieldFocused() {
         output.onNext(BrowserLandingBloc.Output.OpenEditQuery)
-    }
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        BrowserLandingScreen(bloc = this, modifier = modifier)
     }
 }

@@ -1,7 +1,5 @@
 package com.plusmobileapps.chefmate.recipe.exporter.impl
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
@@ -14,7 +12,6 @@ import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc.Output
 import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc.PendingSave
 import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc.Phase
 import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc.Props
-import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesScreen
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
@@ -50,11 +47,6 @@ class ExportRecipesBlocImpl(
     override fun onBack() {
         val isFromDone = viewModel.state.value.stage is ExportRecipesViewModel.Stage.Done
         output.onNext(if (isFromDone) Output.Finished else Output.Back)
-    }
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        ExportRecipesScreen(bloc = this, modifier = modifier)
     }
 
     private fun ExportRecipesViewModel.State.toBlocModel(): Model =

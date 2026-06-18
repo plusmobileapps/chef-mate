@@ -1,7 +1,5 @@
 package com.plusmobileapps.chefmate.recipe.categories.impl
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.arkivanov.essenty.backhandler.BackCallback
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
@@ -10,7 +8,6 @@ import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.recipe.categories.RecipeCategoriesBloc
 import com.plusmobileapps.chefmate.recipe.categories.RecipeCategoriesBloc.CategoryItem
 import com.plusmobileapps.chefmate.recipe.categories.RecipeCategoriesBloc.Output
-import com.plusmobileapps.chefmate.recipe.categories.impl.ui.RecipeCategoriesScreen
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
@@ -128,10 +125,5 @@ class RecipeCategoriesBlocImpl(
 
     override fun onBulkDeleteDismissed() {
         viewModel.dismissDialog()
-    }
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        RecipeCategoriesScreen(bloc = this, modifier = modifier)
     }
 }

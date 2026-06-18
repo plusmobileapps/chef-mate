@@ -2,8 +2,6 @@
 
 package com.plusmobileapps.chefmate.settings.root.impl
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.DelicateDecomposeApi
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
@@ -21,7 +19,6 @@ import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc
 import com.plusmobileapps.chefmate.settings.AppSettingsBloc
 import com.plusmobileapps.chefmate.settings.root.SettingsRootBloc
 import com.plusmobileapps.chefmate.settings.root.SettingsRootBloc.Output
-import com.plusmobileapps.chefmate.settings.root.SettingsRootScreen
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
@@ -58,11 +55,6 @@ class SettingsRootBlocImpl(
 
     override fun onBackClicked() {
         navigation.pop()
-    }
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        SettingsRootScreen(bloc = this, modifier = modifier)
     }
 
     private fun createChild(config: Configuration, context: BlocContext): SettingsRootBloc.Child =

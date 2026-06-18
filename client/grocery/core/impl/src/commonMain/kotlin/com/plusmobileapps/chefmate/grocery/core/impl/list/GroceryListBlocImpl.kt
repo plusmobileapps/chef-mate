@@ -1,7 +1,5 @@
 package com.plusmobileapps.chefmate.grocery.core.impl.list
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
@@ -14,7 +12,6 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.grocery.core.detail.GroceryDetailBloc
-import com.plusmobileapps.chefmate.grocery.core.impl.list.ui.GroceryListScreen
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryFilter
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GrocerySort
@@ -193,11 +190,6 @@ class GroceryListBlocImpl(
 
     override fun onRejectInvitation(invite: GroceryListInvite) {
         viewModel.onRejectInvitation(invite)
-    }
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        GroceryListScreen(bloc = this, modifier = modifier)
     }
 
     private fun createSheet(config: SheetConfig, context: BlocContext): GroceryListBloc.Sheet =

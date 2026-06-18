@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.recipe.categories
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
@@ -11,6 +13,11 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface RecipeCategoriesBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
     val state: StateFlow<Model>
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        RecipeCategoriesScreen(bloc = this, modifier = modifier)
+    }
 
     fun onCategoryClicked(item: CategoryItem)
 

@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.auth.ui
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
@@ -10,6 +12,12 @@ import kotlinx.serialization.Serializable
 
 interface AuthenticationBloc : BackClickBloc, ComposeScreen {
     val models: StateFlow<Model>
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        AuthenticationScreen(bloc = this, modifier = modifier)
+    }
+
     val email: StateFlow<String>
     val password: StateFlow<String>
     val confirmPassword: StateFlow<String>

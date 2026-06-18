@@ -15,10 +15,6 @@ private fun recipePickerBloc(model: RecipePickerBloc.Model): RecipePickerBloc =
         override fun onSearchQueryChanged(query: String) = Unit
 
         override fun onRecipeSelected(item: RecipePickerBloc.RecipePickerItem) = Unit
-
-        @Composable
-        override fun Content(modifier: Modifier) =
-            RecipePickerScreen(bloc = this, modifier = modifier)
     }
 
 private val sampleRecipes =

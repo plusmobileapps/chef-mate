@@ -1,7 +1,5 @@
 package com.plusmobileapps.chefmate.recipe.categories
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.arkivanov.essenty.backhandler.BackDispatcher
 import com.arkivanov.essenty.backhandler.BackHandler
 import com.plusmobileapps.chefmate.recipe.categories.RecipeCategoriesBloc.CategoryItem
@@ -54,11 +52,6 @@ private fun bloc(model: Model): RecipeCategoriesBloc =
         override fun onBulkDeleteConfirmed() = Unit
 
         override fun onBulkDeleteDismissed() = Unit
-
-        @Composable
-        override fun Content(modifier: Modifier) {
-            // Stub; screenshot tests render the impl screen directly via the public bloc above.
-        }
     }
 
 private val sampleItems: ImmutableList<CategoryItem> =

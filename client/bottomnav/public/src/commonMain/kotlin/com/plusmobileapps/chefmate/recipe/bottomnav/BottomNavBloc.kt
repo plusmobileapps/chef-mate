@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.recipe.bottomnav
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
@@ -20,6 +22,11 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface BottomNavBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
     val state: StateFlow<Model>
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        BottomNavigationScreen(bloc = this, modifier = modifier)
+    }
 
     val content: Value<ChildStack<*, Child>>
 

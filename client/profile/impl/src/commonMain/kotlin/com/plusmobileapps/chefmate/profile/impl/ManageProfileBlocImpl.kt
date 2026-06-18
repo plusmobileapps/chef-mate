@@ -1,7 +1,5 @@
 package com.plusmobileapps.chefmate.profile.impl
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
@@ -9,7 +7,6 @@ import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.profile.ManageProfileBloc
 import com.plusmobileapps.chefmate.profile.ManageProfileBloc.Model
 import com.plusmobileapps.chefmate.profile.ManageProfileBloc.Output
-import com.plusmobileapps.chefmate.profile.impl.ui.ManageProfileScreen
 import com.plusmobileapps.chefmate.util.PickedImage
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
@@ -72,10 +69,5 @@ class ManageProfileBlocImpl(
 
     override fun onDeleteDismissed() {
         viewModel.dismissDeleteDialog()
-    }
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        ManageProfileScreen(bloc = this, modifier = modifier)
     }
 }

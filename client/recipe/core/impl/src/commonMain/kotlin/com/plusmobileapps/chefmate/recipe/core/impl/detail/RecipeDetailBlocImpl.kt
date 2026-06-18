@@ -1,7 +1,5 @@
 package com.plusmobileapps.chefmate.recipe.core.impl.detail
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
@@ -18,7 +16,6 @@ import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc.Output
-import com.plusmobileapps.chefmate.recipe.core.impl.detail.ui.RecipeDetailScreen
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.util.DateTimeUtil
 import com.plusmobileapps.chefmate.util.TimeFormatterUtil
@@ -192,11 +189,6 @@ class RecipeDetailBlocImpl(
         } else {
             output.onNext(Output.Finished)
         }
-    }
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        RecipeDetailScreen(bloc = this, modifier = modifier)
     }
 
     private fun createSheet(config: SheetConfig, context: BlocContext): RecipeDetailBloc.Sheet =

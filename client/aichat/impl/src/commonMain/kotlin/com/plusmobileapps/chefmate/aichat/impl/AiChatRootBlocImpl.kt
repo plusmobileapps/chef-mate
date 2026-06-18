@@ -2,8 +2,6 @@
 
 package com.plusmobileapps.chefmate.aichat.impl
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.DelicateDecomposeApi
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
@@ -17,7 +15,6 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.aichat.AiChatBloc
 import com.plusmobileapps.chefmate.aichat.AiChatHistoryBloc
 import com.plusmobileapps.chefmate.aichat.AiChatRootBloc
-import com.plusmobileapps.chefmate.aichat.impl.ui.AiChatRootScreen
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
@@ -102,11 +99,6 @@ class AiChatRootBlocImpl(
             AiChatHistoryBloc.Output.NewConversation ->
                 navigation.navigate { listOf(Configuration.Chat(conversationId = null)) }
         }
-    }
-
-    @Composable
-    override fun Content(modifier: Modifier) {
-        AiChatRootScreen(bloc = this, modifier = modifier)
     }
 
     @Serializable

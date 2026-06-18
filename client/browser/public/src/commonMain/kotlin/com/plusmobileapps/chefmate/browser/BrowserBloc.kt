@@ -1,5 +1,7 @@
 package com.plusmobileapps.chefmate.browser
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.arkivanov.essenty.instancekeeper.InstanceKeeper
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
@@ -10,6 +12,11 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface BrowserBloc : ComposeScreen {
     val state: StateFlow<Model>
+
+    @Composable
+    override fun Content(modifier: Modifier) {
+        BrowserScreen(bloc = this, modifier = modifier)
+    }
 
     val instanceKeeper: InstanceKeeper
 

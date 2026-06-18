@@ -1,7 +1,6 @@
 package com.plusmobileapps.chefmate.grocery.core.impl.list.ui
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.MutableValue
@@ -10,6 +9,7 @@ import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryFilter
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryGroup
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GrocerySort
+import com.plusmobileapps.chefmate.grocery.core.list.GroceryListScreen
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListInvite
@@ -123,8 +123,6 @@ private fun groceryListBloc(
         override fun onAcceptInvitation(invite: GroceryListInvite) = Unit
 
         override fun onRejectInvitation(invite: GroceryListInvite) = Unit
-
-        @Composable override fun Content(modifier: Modifier) = GroceryListScreen(this, modifier)
     }
 
 /** Grocery list with items in two categories — exercises grouped rendering + sync badges. */

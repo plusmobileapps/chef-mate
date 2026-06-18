@@ -1,10 +1,10 @@
 package com.plusmobileapps.chefmate.recipe.bottomnav.impl.ui
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
+import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderScreen
 import com.plusmobileapps.chefmate.recipe.bottomnav.DEFAULT_TAB_ORDER
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.collections.immutable.persistentListOf
@@ -20,11 +20,6 @@ private fun bottomNavOrderBloc(model: BottomNavOrderBloc.Model): BottomNavOrderB
         override fun onSave() = Unit
 
         override fun onBack() = Unit
-
-        @Composable
-        override fun Content(modifier: Modifier) {
-            BottomNavOrderScreen(bloc = this, modifier = modifier)
-        }
     }
 
 val previewBottomNavOrderBloc: BottomNavOrderBloc = bottomNavOrderBloc(BottomNavOrderBloc.Model())
