@@ -246,7 +246,7 @@ class CategoryRepositoryImpl(
             val dirty = withContext(ioContext) { db.getDirty().executeAsList() }
             for (cat in dirty) {
                 try {
-                    val remoteId = cat.remoteId ?: continue
+                    val remoteId = cat.remoteId
                     remoteDataSource.upsertCategory(
                         RemoteCategory(
                             id = remoteId,

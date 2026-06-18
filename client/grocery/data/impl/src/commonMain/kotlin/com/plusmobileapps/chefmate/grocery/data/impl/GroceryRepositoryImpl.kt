@@ -520,7 +520,7 @@ class GroceryRepositoryImpl(
             for (list in dirtyLists) {
                 if (list.role != "owner") continue
                 try {
-                    val remoteId = list.remoteId ?: continue
+                    val remoteId = list.remoteId
                     remoteDataSource.updateGroceryList(
                         RemoteGroceryList(id = remoteId, name = list.name, ownerId = userId)
                     )
@@ -586,7 +586,7 @@ class GroceryRepositoryImpl(
                     }
                 for (item in dirty) {
                     try {
-                        val remoteId = item.remoteId ?: continue
+                        val remoteId = item.remoteId
                         val itemListId = item.listRemoteId ?: listRemoteId
                         syncingIds.update { it + item.id }
                         try {

@@ -314,7 +314,7 @@ class RecipeRepositoryImpl(
             // failure on one leaves the tombstone in place and continues with the rest of sync.
             val pendingDeletes = withContext(ioContext) { db.getPendingDeletes().executeAsList() }
             for (recipe in pendingDeletes) {
-                val remoteId = recipe.remoteId ?: continue
+                val remoteId = recipe.remoteId
                 try {
                     remoteDataSource.deleteRecipe(remoteId)
                     withContext(ioContext) { db.delete(recipe.id) }
@@ -374,7 +374,7 @@ class RecipeRepositoryImpl(
             val dirty = withContext(ioContext) { db.getDirty().executeAsList() }
             for (recipe in dirty) {
                 try {
-                    val remoteId = recipe.remoteId ?: continue
+                    val remoteId = recipe.remoteId
                     remoteDataSource.upsertRecipe(
                         RemoteRecipe(
                             id = remoteId,
