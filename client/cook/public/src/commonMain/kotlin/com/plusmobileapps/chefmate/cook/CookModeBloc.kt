@@ -29,6 +29,9 @@ interface CookModeBloc : BackClickBloc, ComposeScreen {
 
     fun onKeepScreenOnToggled()
 
+    /** Marks the first-run coach mark with [id] as seen so it never shows again. */
+    fun onCoachMarkDismissed(id: String)
+
     @Composable
     override fun Content(modifier: Modifier) {
         CookModeScreen(bloc = this, modifier = modifier)
@@ -45,6 +48,8 @@ interface CookModeBloc : BackClickBloc, ComposeScreen {
         val activeSessions: ImmutableList<Chip> = persistentListOf(),
         val layoutMode: LayoutMode = LayoutMode.Split,
         val keepScreenOn: Boolean = true,
+        /** Id of the first-run coach mark currently allowed to show, or null when none. */
+        val activeCoachMark: String? = null,
     ) {
         data class Chip(val recipeId: Long, val title: String, val isActive: Boolean)
     }

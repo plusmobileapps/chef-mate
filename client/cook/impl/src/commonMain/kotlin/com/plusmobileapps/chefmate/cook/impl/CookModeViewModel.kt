@@ -1,8 +1,11 @@
 package com.plusmobileapps.chefmate.cook.impl
 
 import com.plusmobileapps.chefmate.ViewModel
+import com.plusmobileapps.chefmate.combineStates
 import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
+import com.plusmobileapps.chefmate.di.CoachMarkController
+import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.di.KeepScreenOnRepository
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.recipe.data.Recipe
@@ -15,7 +18,6 @@ import dev.zacsweers.metro.AssistedInject
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -28,6 +30,7 @@ class CookModeViewModel(
     private val sessionRepository: CookingSessionRepository,
     settings: Settings,
     private val keepScreenOnRepository: KeepScreenOnRepository,
+    private val coachMarkController: CoachMarkController,
 ) : ViewModel(mainContext) {
 
     // Split view is the default; users can toggle to the scrolling (Stacked) list, which persists.
@@ -42,9 +45,17 @@ class CookModeViewModel(
                 keepScreenOn = keepScreenOnRepository.keepScreenOn.value,
             )
         )
-    val state: StateFlow<State> = _state.asStateFlow()
+
+    // Fold the shared controller's active mark into state so the screen shows at most one coach
+    // mark at a time across the whole app.
+    val state: StateFlow<State> =
+        combineStates(_state, coachMarkController.activeCoachMark) { state, activeCoachMark ->
+            state.copy(activeCoachMark = activeCoachMark)
+        }
 
     init {
+        // Queue every cook-mode coach mark in order; the controller shows them one at a time.
+        CoachMarkId.cookModeSequence.forEach(coachMarkController::request)
         scope.launch {
             sessionRepository.start(initialRecipeId)
             sessionRepository.markSelected(initialRecipeId)
@@ -93,12 +104,29 @@ class CookModeViewModel(
         keepScreenOnRepository.toggle()
     }
 
+    /**
+     * Mark a coach mark seen, but only if it's the one currently showing, so tapping a control
+     * dismisses its own tip without consuming tips further down the queue.
+     */
+    fun dismissCoachMark(id: String) {
+        if (coachMarkController.activeCoachMark.value == id) {
+            coachMarkController.dismiss(id)
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        // Leaving the screen without dismissing frees the queue so other coach marks can show.
+        CoachMarkId.cookModeSequence.forEach(coachMarkController::release)
+    }
+
     data class State(
         val isLoading: Boolean = true,
         val cookingRecipes: List<Recipe> = emptyList(),
         val activeRecipeId: Long? = null,
         val layoutMode: CookModeBloc.LayoutMode = CookModeBloc.LayoutMode.Split,
         val keepScreenOn: Boolean = true,
+        val activeCoachMark: String? = null,
     )
 
     @AssistedFactory
