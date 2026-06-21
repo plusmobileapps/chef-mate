@@ -56,6 +56,8 @@ private fun mealPlanBloc(model: MealPlanBloc.Model): MealPlanBloc =
 
         override fun onViewModeSelected(mode: MealPlanBloc.ViewMode) = Unit
 
+        override fun onCoachMarkDismissed(id: String) = Unit
+
         override fun onPreviousClicked() = Unit
 
         override fun onNextClicked() = Unit

@@ -63,6 +63,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import chefmate.client.meal.core.public.generated.resources.Res
 import chefmate.client.meal.core.public.generated.resources.meal_plan_add_meal
+import chefmate.client.meal.core.public.generated.resources.meal_plan_add_meal_onboarding
 import chefmate.client.meal.core.public.generated.resources.meal_plan_add_to_cook_mode
 import chefmate.client.meal.core.public.generated.resources.meal_plan_breakfast
 import chefmate.client.meal.core.public.generated.resources.meal_plan_continue_cooking
@@ -91,16 +92,21 @@ import chefmate.client.meal.core.public.generated.resources.meal_plan_sync_not_s
 import chefmate.client.meal.core.public.generated.resources.meal_plan_sync_synced
 import chefmate.client.meal.core.public.generated.resources.meal_plan_sync_syncing
 import chefmate.client.meal.core.public.generated.resources.meal_plan_title
+import chefmate.client.meal.core.public.generated.resources.meal_plan_view_mode_onboarding
 import chefmate.client.meal.core.public.generated.resources.meal_plan_week
+import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
 import com.plusmobileapps.chefmate.meal.data.MealType
 import com.plusmobileapps.chefmate.meal.data.SyncStatus
 import com.plusmobileapps.chefmate.text.ResourceString
+import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
+import com.plusmobileapps.chefmate.ui.components.PlusOnboardingTooltip
+import com.plusmobileapps.chefmate.ui.components.PlusTooltipPlacement
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.datetime.DateTimeUnit
@@ -154,23 +160,38 @@ fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
                     title = Res.string.meal_plan_title.asTextData(),
                     trailingAccessory =
                         PlusHeaderData.TrailingAccessory.Custom {
-                            IconButton(onClick = bloc::onAddMealClicked) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription =
-                                        stringResource(Res.string.meal_plan_add_meal),
-                                )
+                            MealPlanCoachMark(
+                                id = CoachMarkId.MEAL_PLAN_ADD_MEAL,
+                                text = Res.string.meal_plan_add_meal_onboarding.asTextData(),
+                                activeCoachMark = state.activeCoachMark,
+                                onDismiss = bloc::onCoachMarkDismissed,
+                            ) {
+                                IconButton(onClick = bloc::onAddMealClicked) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription =
+                                            stringResource(Res.string.meal_plan_add_meal),
+                                    )
+                                }
                             }
                         },
                 ),
             scrollEnabled = false,
             content = {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    ViewModeSegmentedControl(
-                        selectedMode = state.viewMode,
-                        onModeSelected = bloc::onViewModeSelected,
-                        modifier = Modifier.padding(horizontal = ChefMateTheme.dimens.paddingNormal),
-                    )
+                    MealPlanCoachMark(
+                        id = CoachMarkId.MEAL_PLAN_VIEW_MODE,
+                        text = Res.string.meal_plan_view_mode_onboarding.asTextData(),
+                        activeCoachMark = state.activeCoachMark,
+                        onDismiss = bloc::onCoachMarkDismissed,
+                    ) {
+                        ViewModeSegmentedControl(
+                            selectedMode = state.viewMode,
+                            onModeSelected = bloc::onViewModeSelected,
+                            modifier =
+                                Modifier.padding(horizontal = ChefMateTheme.dimens.paddingNormal),
+                        )
+                    }
 
                     DateNavigationRow(
                         dateLabel = state.dateLabel.localized(),
@@ -303,6 +324,28 @@ private fun DoneCookingDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
                 Text(stringResource(Res.string.meal_plan_done_cooking_cancel))
             }
         },
+    )
+}
+
+/**
+ * Wraps a control in a first-run coach mark that points up at it (the meal-plan header and
+ * view-mode control both sit near the top of the screen). The bubble only shows while [id] is the
+ * shared controller's active mark.
+ */
+@Composable
+private fun MealPlanCoachMark(
+    id: String,
+    text: TextData,
+    activeCoachMark: String?,
+    onDismiss: (String) -> Unit,
+    anchor: @Composable () -> Unit,
+) {
+    PlusOnboardingTooltip(
+        text = text,
+        visible = activeCoachMark == id,
+        onDismiss = { onDismiss(id) },
+        placement = PlusTooltipPlacement.BELOW,
+        anchor = anchor,
     )
 }
 

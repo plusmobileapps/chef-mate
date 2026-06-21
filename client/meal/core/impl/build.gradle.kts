@@ -21,7 +21,10 @@ kotlin {
             implementation(projects.client.util.public)
             implementation(compose.components.resources)
         }
-        commonTest.dependencies { implementation(projects.client.util.testing) }
+        commonTest.dependencies {
+            implementation(projects.client.util.testing)
+            implementation(libs.multiplatform.settings.test)
+        }
     }
 }
 
