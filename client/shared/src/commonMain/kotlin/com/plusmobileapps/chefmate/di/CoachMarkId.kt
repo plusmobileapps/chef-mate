@@ -44,6 +44,12 @@ object CoachMarkId {
     /** The save button on the edit recipe screen. */
     const val EDIT_RECIPE_SAVE: String = "edit_recipe_save"
 
+    /** The keep-screen-on (always-on display) toggle on the cook mode screen. */
+    const val COOK_MODE_KEEP_SCREEN_ON: String = "cook_mode_keep_screen_on"
+
+    /** The stacked/split layout (view mode) toggle on the cook mode screen. */
+    const val COOK_MODE_LAYOUT: String = "cook_mode_layout"
+
     /**
      * The recipe detail coach marks in the order they should be shown to a first-time user. The
      * controller shows them one at a time, advancing as each is dismissed.
@@ -68,4 +74,7 @@ object CoachMarkId {
 
     /** The edit recipe coach marks, shown one at a time in order. */
     val editRecipeSequence: List<String> = listOf(EDIT_RECIPE_RICH_TEXT, EDIT_RECIPE_SAVE)
+
+    /** The cook mode coach marks, shown one at a time in order. */
+    val cookModeSequence: List<String> = listOf(COOK_MODE_KEEP_SCREEN_ON, COOK_MODE_LAYOUT)
 }
