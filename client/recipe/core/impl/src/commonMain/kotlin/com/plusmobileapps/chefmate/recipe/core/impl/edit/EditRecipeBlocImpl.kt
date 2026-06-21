@@ -7,6 +7,7 @@ import chefmate.client.recipe.core.impl.generated.resources.edit_recipe_upload_f
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
+import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
@@ -56,6 +57,7 @@ class EditRecipeBlocImpl(
                 showDiscardChangesDialog = it.showDiscardChangesDialog,
                 uploadError =
                     it.uploadError?.let { ResourceString(Res.string.edit_recipe_upload_failed) },
+                activeCoachMark = it.activeCoachMark,
             )
         }
     override val title: StateFlow<String> = viewModel.title
@@ -111,6 +113,7 @@ class EditRecipeBlocImpl(
     }
 
     override fun onDirectionsChanged(directions: String) {
+        viewModel.dismissCoachMark(CoachMarkId.EDIT_RECIPE_RICH_TEXT)
         viewModel.updateDirections(directions)
     }
 
@@ -183,6 +186,7 @@ class EditRecipeBlocImpl(
     }
 
     override fun onSaveClicked() {
+        viewModel.dismissCoachMark(CoachMarkId.EDIT_RECIPE_SAVE)
         viewModel.save()
     }
 
@@ -195,7 +199,12 @@ class EditRecipeBlocImpl(
     }
 
     override fun onRichTextEditorModeChanged(richTextMode: Boolean) {
+        viewModel.dismissCoachMark(CoachMarkId.EDIT_RECIPE_RICH_TEXT)
         viewModel.updateRichTextEditorMode(richTextMode)
+    }
+
+    override fun onCoachMarkDismissed(id: String) {
+        viewModel.dismissCoachMark(id)
     }
 
     override fun onBackClicked() {

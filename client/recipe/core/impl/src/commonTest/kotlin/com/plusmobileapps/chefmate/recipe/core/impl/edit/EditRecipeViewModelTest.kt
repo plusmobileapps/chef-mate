@@ -3,6 +3,8 @@
 
 package com.plusmobileapps.chefmate.recipe.core.impl.edit
 
+import com.plusmobileapps.chefmate.di.CoachMarkController
+import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.di.MarkdownEditorModeRepository
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
@@ -34,12 +36,14 @@ class EditRecipeViewModelTest {
     private val photoStorage = FakeRecipePhotoStorage()
     private val pendingPhotoStore = FakePendingRecipePhotoStore()
     private val mainContext = UnconfinedTestDispatcher()
+    private val coachMarkController = CoachMarkController(MapSettings())
 
     private fun createViewModel(
         recipeId: Long? = null,
         extractedRecipe: ExtractedRecipeData? = null,
         fromAi: Boolean = false,
         consumePendingPhoto: Boolean = false,
+        coachMarkController: CoachMarkController = this.coachMarkController,
     ) =
         EditRecipeViewModel(
             recipeId = recipeId,
@@ -53,7 +57,25 @@ class EditRecipeViewModelTest {
             photoStorage = photoStorage,
             pendingRecipePhotoStore = pendingPhotoStore,
             markdownEditorModeRepository = MarkdownEditorModeRepository(MapSettings()),
+            coachMarkController = coachMarkController,
         )
+
+    @Test
+    fun When_screen_opens_Then_first_coach_mark_active() {
+        val vm = createViewModel()
+        vm.state.value.activeCoachMark shouldBe CoachMarkId.EDIT_RECIPE_RICH_TEXT
+    }
+
+    @Test
+    fun When_active_coach_mark_dismissed_Then_persisted_and_next_shown() {
+        val controller = CoachMarkController(MapSettings())
+        val vm = createViewModel(coachMarkController = controller)
+
+        vm.dismissCoachMark(CoachMarkId.EDIT_RECIPE_RICH_TEXT)
+
+        controller.hasSeen(CoachMarkId.EDIT_RECIPE_RICH_TEXT) shouldBe true
+        vm.state.value.activeCoachMark shouldBe CoachMarkId.EDIT_RECIPE_SAVE
+    }
 
     @Test
     fun When_no_recipe_id_or_extracted_data_Then_all_fields_start_empty() {
