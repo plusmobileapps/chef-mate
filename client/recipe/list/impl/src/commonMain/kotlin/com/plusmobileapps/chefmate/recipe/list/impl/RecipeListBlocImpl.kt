@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.recipe.list.impl
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
+import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
@@ -70,6 +71,7 @@ class RecipeListBlocImpl(
                 isAllRecipesSelected = it.isAllRecipesSelected,
                 isBookPickerOpen = it.isBookPickerOpen,
                 pendingInvites = it.pendingInvites,
+                activeCoachMark = it.activeCoachMark,
             )
         }
 
@@ -82,10 +84,12 @@ class RecipeListBlocImpl(
     }
 
     override fun onAddRecipeClicked() {
+        viewModel.dismissCoachMark(CoachMarkId.RECIPE_LIST_ADD)
         output.onNext(Output.AddNewRecipe)
     }
 
     override fun onScanRecipePhotoPicked(bytes: ByteArray, fileExtension: String) {
+        viewModel.dismissCoachMark(CoachMarkId.RECIPE_LIST_ADD)
         viewModel.scanRecipeFromPhoto(bytes = bytes, fileExtension = fileExtension)
     }
 
@@ -110,6 +114,7 @@ class RecipeListBlocImpl(
     }
 
     override fun onToggleViewMode() {
+        viewModel.dismissCoachMark(CoachMarkId.RECIPE_LIST_VIEW_MODE)
         viewModel.toggleViewMode()
     }
 
@@ -222,6 +227,10 @@ class RecipeListBlocImpl(
 
     override fun onDeclineInvite(memberId: String) {
         viewModel.declineInvite(memberId)
+    }
+
+    override fun onCoachMarkDismissed(id: String) {
+        viewModel.dismissCoachMark(id)
     }
 
     private fun Recipe.toRecipeListItem(): RecipeListItem =

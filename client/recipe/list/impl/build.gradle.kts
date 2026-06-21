@@ -24,6 +24,7 @@ kotlin {
             implementation(projects.client.recipe.data.testing)
             implementation(projects.client.featureflag.testing)
             implementation(projects.client.recipebook.data.testing)
+            implementation(libs.multiplatform.settings.test)
         }
     }
 }

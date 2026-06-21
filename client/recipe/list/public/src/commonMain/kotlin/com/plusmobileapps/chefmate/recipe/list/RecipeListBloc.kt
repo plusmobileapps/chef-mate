@@ -114,6 +114,9 @@ interface RecipeListBloc : ComposeScreen {
     /** Declines the pending recipe-book invite with remote [memberId]. */
     fun onDeclineInvite(memberId: String)
 
+    /** Marks the first-run coach mark with [id] as seen so it never shows again. */
+    fun onCoachMarkDismissed(id: String)
+
     data class Model(
         val recipes: ImmutableList<RecipeListItem> = persistentListOf(),
         val totalRecipeCount: Int = 0,
@@ -149,6 +152,8 @@ interface RecipeListBloc : ComposeScreen {
         val isBookPickerOpen: Boolean = false,
         /** Pending recipe-book invites addressed to the current user (the list banner). */
         val pendingInvites: List<RecipeBookInvite> = emptyList(),
+        /** Id of the first-run coach mark currently allowed to show, or null when none. */
+        val activeCoachMark: String? = null,
     ) {
         /** Total number of active filter chips: legacy filters + preset + user category filters. */
         val totalActiveFilterCount: Int

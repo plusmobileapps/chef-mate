@@ -4,7 +4,10 @@ import chefmate.client.recipe.list.public.generated.resources.Res
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_scan_failed
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_scan_no_api_key
 import com.plusmobileapps.chefmate.ViewModel
+import com.plusmobileapps.chefmate.combineStates
 import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
+import com.plusmobileapps.chefmate.di.CoachMarkController
+import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
 import com.plusmobileapps.chefmate.featureflag.FeatureFlags
@@ -40,7 +43,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -61,6 +63,7 @@ class RecipeListViewModel(
     private val pendingPhotoStore: PendingRecipePhotoStore,
     featureFlags: FeatureFlags,
     settings: Settings,
+    private val coachMarkController: CoachMarkController,
 ) : ViewModel(mainContext) {
     private val scanFromPhotoEnabled =
         featureFlags.isEnabled(FeatureFlagRegistry.ScanRecipeFromPhoto)
@@ -98,7 +101,13 @@ class RecipeListViewModel(
                         .toSet(),
             )
         )
-    val state: StateFlow<State> = _state.asStateFlow()
+
+    // Fold the shared controller's active mark into state so the screen shows at most one coach
+    // mark at a time across the whole app.
+    val state: StateFlow<State> =
+        combineStates(_state, coachMarkController.activeCoachMark) { state, activeCoachMark ->
+            state.copy(activeCoachMark = activeCoachMark)
+        }
 
     private val _scannedRecipe =
         MutableSharedFlow<ExtractedRecipeData>(
@@ -114,6 +123,8 @@ class RecipeListViewModel(
     val scannedRecipe: SharedFlow<ExtractedRecipeData> = _scannedRecipe.asSharedFlow()
 
     init {
+        // Queue every recipe-list coach mark in order; the controller shows them one at a time.
+        CoachMarkId.recipeListSequence.forEach(coachMarkController::request)
         scope.launch { observeRecipes() }
         scope.launch { observeCookingSession() }
         scope.launch { observeUserCategories() }
@@ -285,6 +296,22 @@ class RecipeListViewModel(
         isGridViewPref = _state.value.isGridView
     }
 
+    /**
+     * Mark a coach mark seen, but only if it's the one currently showing, so tapping a control
+     * dismisses its own tip without consuming tips further down the queue.
+     */
+    fun dismissCoachMark(id: String) {
+        if (coachMarkController.activeCoachMark.value == id) {
+            coachMarkController.dismiss(id)
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        // Leaving the screen without dismissing frees the queue so other coach marks can show.
+        CoachMarkId.recipeListSequence.forEach(coachMarkController::release)
+    }
+
     fun updateSearchQuery(query: String) {
         _state.update { it.copy(searchQuery = query) }
     }
@@ -417,6 +444,7 @@ class RecipeListViewModel(
         val isAllRecipesSelected: Boolean = false,
         val isBookPickerOpen: Boolean = false,
         val pendingInvites: List<RecipeBookInvite> = emptyList(),
+        val activeCoachMark: String? = null,
     ) {
         val isSearchActive: Boolean
             get() = searchQuery.isNotBlank()

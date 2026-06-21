@@ -82,6 +82,8 @@ private fun recipeListBloc(model: RecipeListBloc.Model): RecipeListBloc =
 
         override fun onToggleViewMode() = Unit
 
+        override fun onCoachMarkDismissed(id: String) = Unit
+
         override fun onSearchQueryChanged(query: String) = Unit
 
         override fun onClearFilters() = Unit
