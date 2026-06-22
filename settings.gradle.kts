@@ -190,6 +190,12 @@ include(":client:testing")
 
 include(":client:text:public")
 
+include(":client:toast:impl")
+
+include(":client:toast:public")
+
+include(":client:toast:testing")
+
 include(":client:ui:public")
 
 include(":client:ui:screenshot-test")

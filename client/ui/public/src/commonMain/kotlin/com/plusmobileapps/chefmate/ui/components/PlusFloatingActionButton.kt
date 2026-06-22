@@ -1,6 +1,7 @@
 package com.plusmobileapps.chefmate.ui.components
 
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -19,7 +20,8 @@ fun PlusFloatingActionButton(
     icon: Painter? = null,
 ) {
     ExtendedFloatingActionButton(
-        modifier = modifier,
+        // Ride up so a shown snackbar never covers the FAB.
+        modifier = modifier.padding(bottom = LocalSnackbarInset.current),
         onClick = onClick,
         shape = ChefMateTheme.shapes.extraLarge,
     ) {
@@ -39,7 +41,8 @@ fun PlusFloatingActionButton(
     icon: ImageVector? = null,
 ) {
     ExtendedFloatingActionButton(
-        modifier = modifier,
+        // Ride up so a shown snackbar never covers the FAB.
+        modifier = modifier.padding(bottom = LocalSnackbarInset.current),
         onClick = onClick,
         shape = ChefMateTheme.shapes.extraLarge,
     ) {

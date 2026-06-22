@@ -20,6 +20,7 @@ import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
+import com.plusmobileapps.chefmate.toast.testing.FakeToastService
 import com.plusmobileapps.chefmate.util.testing.FakeDateTimeUtil
 import com.russhwolf.settings.MapSettings
 import dev.mokkery.answering.returns
@@ -59,6 +60,8 @@ class MealPlanBlocTest {
         everySuspend { stopAll() } returns Unit
     }
 
+    val toastService = FakeToastService()
+
     val bloc =
         MealPlanBlocImpl(
             context = context,
@@ -70,6 +73,7 @@ class MealPlanBlocTest {
                     cookingSessionRepository = cookingSessionRepository,
                     dateTimeUtil = dateTimeUtil,
                     coachMarkController = coachMarkController,
+                    toastService = toastService,
                 )
             },
         )
@@ -287,15 +291,12 @@ class MealPlanBlocTest {
             bloc.onReplaceCookModeClicked(meals)
             bloc.onReplaceCookModeConfirmed()
 
-            bloc.state.test {
-                val state = awaitItem()
-                state.pendingReplaceCookMode shouldBe null
-                state.snackbarMessage shouldBe
-                    PhraseModel(
-                        Res.string.meal_plan_replaced_cook_mode_multiple,
-                        "count" to FixedString("2"),
-                    )
-            }
+            bloc.state.test { awaitItem().pendingReplaceCookMode shouldBe null }
+            toastService.shown.last() shouldBe
+                PhraseModel(
+                    Res.string.meal_plan_replaced_cook_mode_multiple,
+                    "count" to FixedString("2"),
+                )
             verifySuspend { cookingSessionRepository.replaceAll(listOf(10L, 20L)) }
         }
 
@@ -317,13 +318,11 @@ class MealPlanBlocTest {
             bloc.onReplaceCookModeClicked(meals)
             bloc.onReplaceCookModeConfirmed()
 
-            bloc.state.test {
-                awaitItem().snackbarMessage shouldBe
-                    PhraseModel(
-                        Res.string.meal_plan_replaced_cook_mode_single,
-                        "name" to FixedString("Pancakes"),
-                    )
-            }
+            toastService.shown.last() shouldBe
+                PhraseModel(
+                    Res.string.meal_plan_replaced_cook_mode_single,
+                    "name" to FixedString("Pancakes"),
+                )
         }
 
     @Test
@@ -362,14 +361,11 @@ class MealPlanBlocTest {
 
         bloc.onAddToCookModeClicked(meals)
 
-        bloc.state.test {
-            val message = awaitItem().snackbarMessage
-            message shouldBe
-                PhraseModel(
-                    Res.string.meal_plan_added_to_cook_mode_single,
-                    "name" to FixedString("Pancakes"),
-                )
-        }
+        toastService.shown.last() shouldBe
+            PhraseModel(
+                Res.string.meal_plan_added_to_cook_mode_single,
+                "name" to FixedString("Pancakes"),
+            )
         verifySuspend { cookingSessionRepository.start(10) }
         verifySuspend { cookingSessionRepository.markSelected(10) }
     }
@@ -398,33 +394,11 @@ class MealPlanBlocTest {
 
         bloc.onAddToCookModeClicked(meals)
 
-        bloc.state.test {
-            val message = awaitItem().snackbarMessage
-            message shouldBe
-                PhraseModel(
-                    Res.string.meal_plan_added_to_cook_mode_multiple,
-                    "count" to FixedString("2"),
-                )
-        }
-    }
-
-    @Test
-    fun WHEN_snackbar_shown_THEN_message_cleared() = runTest {
-        bloc.onAddToCookModeClicked(
-            listOf(
-                MealPlanItem(
-                    id = 1,
-                    recipeId = 10,
-                    recipeTitle = "Pancakes",
-                    recipeImageUrl = null,
-                    date = "2026-04-17",
-                    mealType = MealType.BREAKFAST,
-                )
+        toastService.shown.last() shouldBe
+            PhraseModel(
+                Res.string.meal_plan_added_to_cook_mode_multiple,
+                "count" to FixedString("2"),
             )
-        )
-        bloc.onSnackbarShown()
-
-        bloc.state.test { awaitItem().snackbarMessage shouldBe null }
     }
 
     @Test
@@ -445,6 +419,7 @@ class MealPlanBlocTest {
                             cookingSessionRepository = sessionRepo,
                             dateTimeUtil = dateTimeUtil,
                             coachMarkController = CoachMarkController(MapSettings()),
+                            toastService = toastService,
                         )
                     },
                 )

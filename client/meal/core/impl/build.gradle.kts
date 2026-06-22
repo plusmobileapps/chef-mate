@@ -13,6 +13,7 @@ kotlin {
             implementation(projects.client.recipe.core.public)
             implementation(projects.client.recipe.data.public)
             implementation(projects.client.ui.public)
+            implementation(projects.client.toast.public)
             implementation(libs.arkivanov.decompose.core)
             implementation(libs.arkivanov.decompose.compose.extensions)
             implementation(libs.kotlinx.serialization.json)
@@ -23,6 +24,7 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(projects.client.util.testing)
+            implementation(projects.client.toast.testing)
             implementation(libs.multiplatform.settings.test)
         }
     }

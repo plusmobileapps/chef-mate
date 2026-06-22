@@ -68,6 +68,6 @@ fun runRootBlocTest(
         app.onboardingRepository.setOnboardingCompleted()
     }
     beforeContent(app)
-    setContent { App(rootBloc = app.createRootBloc()) }
+    setContent { App(rootBloc = app.createRootBloc(), toastService = app.toastService) }
     block(app)
 }

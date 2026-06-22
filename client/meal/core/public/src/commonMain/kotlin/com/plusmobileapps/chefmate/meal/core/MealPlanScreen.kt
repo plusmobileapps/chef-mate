@@ -44,16 +44,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -101,6 +97,7 @@ import com.plusmobileapps.chefmate.meal.data.SyncStatus
 import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.components.LocalSnackbarInset
 import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
@@ -118,18 +115,6 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
-    val snackbarText = state.snackbarMessage?.localized()
-
-    LaunchedEffect(snackbarText) {
-        if (snackbarText != null) {
-            try {
-                snackbarHostState.showSnackbar(snackbarText)
-            } finally {
-                bloc.onSnackbarShown()
-            }
-        }
-    }
 
     state.mealToDelete?.let {
         PlusDialog(
@@ -250,7 +235,10 @@ fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
             CookingSessionFabStack(
                 onContinueClicked = bloc::onContinueCookingClicked,
                 onDoneCookingClicked = bloc::onDoneCookingClicked,
-                modifier = Modifier.align(Alignment.BottomEnd),
+                // Ride up so the app-wide cook-mode toast never covers the FAB stack.
+                modifier =
+                    Modifier.align(Alignment.BottomEnd)
+                        .padding(bottom = LocalSnackbarInset.current),
             )
         }
 
@@ -260,11 +248,6 @@ fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
                 onDismiss = bloc::onDoneCookingDismissed,
             )
         }
-
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp),
-        )
     }
 }
 

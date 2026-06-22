@@ -7,11 +7,13 @@ import coil3.compose.setSingletonImageLoaderFactory
 import coil3.network.ktor3.KtorNetworkFetcherFactory
 import com.plusmobileapps.chefmate.root.RootBloc
 import com.plusmobileapps.chefmate.root.RootScreen
+import com.plusmobileapps.chefmate.toast.ToastScaffold
+import com.plusmobileapps.chefmate.toast.ToastService
 
 @Composable
-fun App(rootBloc: RootBloc, modifier: Modifier = Modifier) {
+fun App(rootBloc: RootBloc, toastService: ToastService, modifier: Modifier = Modifier) {
     setSingletonImageLoaderFactory { context ->
         ImageLoader.Builder(context).components { add(KtorNetworkFetcherFactory()) }.build()
     }
-    RootScreen(rootBloc, modifier)
+    ToastScaffold(toastService = toastService) { RootScreen(rootBloc, modifier) }
 }

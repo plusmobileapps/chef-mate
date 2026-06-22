@@ -1,5 +1,9 @@
 package com.plusmobileapps.chefmate.recipe.core.impl.detail
 
+import androidx.compose.material3.SnackbarDuration
+import chefmate.client.recipe.core.public.generated.resources.Res
+import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_grocery_list_added
+import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_grocery_list_view
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
@@ -17,6 +21,8 @@ import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryList
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc.Output
 import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.ResourceString
+import com.plusmobileapps.chefmate.toast.ToastService
 import com.plusmobileapps.chefmate.util.DateTimeUtil
 import com.plusmobileapps.chefmate.util.TimeFormatterUtil
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
@@ -39,6 +45,7 @@ class RecipeDetailBlocImpl(
     private val dateTimeUtil: DateTimeUtil,
     private val timeFormatterUtil: TimeFormatterUtil,
     private val addToGroceryList: AddRecipeToGroceryListBloc.Factory,
+    private val toastService: ToastService,
 ) : RecipeDetailBloc, BlocContext by context {
     private val scope = createScope()
 
@@ -109,7 +116,6 @@ class RecipeDetailBlocImpl(
                     it.recipe.cookTime?.let { time -> timeFormatterUtil.formatMinutes(time) },
                 formattedTotalTime =
                     it.recipe.totalTime?.let { time -> timeFormatterUtil.formatMinutes(time) },
-                showGroceryAddedSnackbar = it.showGroceryAddedSnackbar,
                 activeCoachMark = it.activeCoachMark,
             )
         }
@@ -174,15 +180,6 @@ class RecipeDetailBlocImpl(
         sheetNavigation.dismiss()
     }
 
-    override fun onViewGroceryListClicked() {
-        viewModel.dismissGroceryAddedSnackbar()
-        output.onNext(Output.OpenGroceryList)
-    }
-
-    override fun onGrocerySnackbarDismissed() {
-        viewModel.dismissGroceryAddedSnackbar()
-    }
-
     override fun onBackClicked() {
         if (fullImageRouter.value.child != null) {
             fullImageNavigation.dismiss()
@@ -205,7 +202,18 @@ class RecipeDetailBlocImpl(
                                         sheetNavigation.dismiss()
                                     AddRecipeToGroceryListBloc.Output.Added -> {
                                         sheetNavigation.dismiss()
-                                        viewModel.showGroceryAddedSnackbar()
+                                        toastService.show(
+                                            message =
+                                                ResourceString(
+                                                    Res.string.recipe_add_to_grocery_list_added
+                                                ),
+                                            actionLabel =
+                                                ResourceString(
+                                                    Res.string.recipe_add_to_grocery_list_view
+                                                ),
+                                            duration = SnackbarDuration.Long,
+                                            onAction = { output.onNext(Output.OpenGroceryList) },
+                                        )
                                     }
                                 }
                             },

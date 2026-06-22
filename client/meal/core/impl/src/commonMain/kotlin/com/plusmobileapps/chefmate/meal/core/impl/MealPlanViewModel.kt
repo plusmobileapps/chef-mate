@@ -18,6 +18,7 @@ import com.plusmobileapps.chefmate.meal.data.MealType
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.TextData
+import com.plusmobileapps.chefmate.toast.ToastService
 import com.plusmobileapps.chefmate.util.DateTimeUtil
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
@@ -40,6 +41,7 @@ class MealPlanViewModel(
     private val cookingSessionRepository: CookingSessionRepository,
     private val dateTimeUtil: DateTimeUtil,
     private val coachMarkController: CoachMarkController,
+    private val toastService: ToastService,
 ) : ViewModel(mainContext) {
 
     private val _state = MutableStateFlow(State())
@@ -161,9 +163,8 @@ class MealPlanViewModel(
 
     fun confirmReplaceCookMode() {
         val meals = _state.value.pendingReplaceCookMode ?: return
-        _state.update {
-            it.copy(pendingReplaceCookMode = null, snackbarMessage = replacedCookModeMessage(meals))
-        }
+        _state.update { it.copy(pendingReplaceCookMode = null) }
+        toastService.show(replacedCookModeMessage(meals))
         val recipeIds = meals.map { it.recipeId }.distinct()
         scope.launch { cookingSessionRepository.replaceAll(recipeIds) }
     }
@@ -175,15 +176,11 @@ class MealPlanViewModel(
     fun addToCookMode(meals: List<MealPlanItem>) {
         val recipeIds = meals.map { it.recipeId }.distinct()
         if (recipeIds.isEmpty()) return
-        _state.update { it.copy(snackbarMessage = addedToCookModeMessage(meals)) }
+        toastService.show(addedToCookModeMessage(meals))
         scope.launch {
             recipeIds.forEach { cookingSessionRepository.start(it) }
             cookingSessionRepository.markSelected(recipeIds.first())
         }
-    }
-
-    fun clearSnackbar() {
-        _state.update { it.copy(snackbarMessage = null) }
     }
 
     private fun addedToCookModeMessage(meals: List<MealPlanItem>): TextData =
@@ -326,7 +323,6 @@ class MealPlanViewModel(
         val cookingRecipeIds: List<Long> = emptyList(),
         val showDoneCookingDialog: Boolean = false,
         val pendingReplaceCookMode: List<MealPlanItem>? = null,
-        val snackbarMessage: TextData? = null,
         val activeCoachMark: String? = null,
     )
 }

@@ -25,7 +25,11 @@ object MainViewController {
             },
             modifier = Modifier.fillMaxSize(),
         ) {
-            App(rootBloc = rootBloc, modifier = Modifier.fillMaxSize())
+            App(
+                rootBloc = rootBloc,
+                toastService = RootBlocProvider.toastService,
+                modifier = Modifier.fillMaxSize(),
+            )
         }
     }
 }

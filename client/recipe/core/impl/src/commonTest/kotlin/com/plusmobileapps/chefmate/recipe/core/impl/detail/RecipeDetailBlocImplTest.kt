@@ -14,6 +14,7 @@ import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
 import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.toast.testing.FakeToastService
 import com.plusmobileapps.chefmate.util.TimeFormatterUtil
 import com.plusmobileapps.chefmate.util.testing.FakeDateTimeUtil
 import com.russhwolf.settings.MapSettings
@@ -93,6 +94,7 @@ class RecipeDetailBlocImplTest {
             dateTimeUtil = dateTimeUtil,
             timeFormatterUtil = timeFormatterUtil,
             addToGroceryList = groceryFactory,
+            toastService = FakeToastService(),
         )
     }
 

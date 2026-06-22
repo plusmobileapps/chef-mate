@@ -116,6 +116,8 @@ kotlin {
             api(projects.client.settings.impl)
             api(projects.client.settings.root.impl)
             api(projects.client.developerSettings.impl)
+            api(projects.client.toast.impl)
+            api(projects.client.toast.public)
             api(libs.kermit)
             implementation(libs.supabase.client)
             implementation(libs.supabase.auth)

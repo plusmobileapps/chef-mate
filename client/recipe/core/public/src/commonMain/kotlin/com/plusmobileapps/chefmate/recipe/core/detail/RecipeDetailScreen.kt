@@ -73,16 +73,13 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SecondaryTabRow
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -117,8 +114,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import chefmate.client.recipe.core.public.generated.resources.Res
-import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_grocery_list_added
-import chefmate.client.recipe.core.public.generated.resources.recipe_add_to_grocery_list_view
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_favorite
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_to_grocery
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_to_grocery_onboarding
@@ -177,6 +172,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
 import com.plusmobileapps.chefmate.ui.components.PlusOnboardingTooltip
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
+import com.plusmobileapps.chefmate.ui.components.PlusToolbar
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
 import com.plusmobileapps.chefmate.ui.text.toInlineMarkdownAnnotatedString
@@ -199,23 +195,9 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val copiedMessage = stringResource(Res.string.recipe_detail_copied_to_clipboard)
-    val groceryAddedMessage = stringResource(Res.string.recipe_add_to_grocery_list_added)
-    val groceryViewLabel = stringResource(Res.string.recipe_add_to_grocery_list_view)
 
-    LaunchedEffect(state.showGroceryAddedSnackbar) {
-        if (state.showGroceryAddedSnackbar) {
-            val result =
-                snackbarHostState.showSnackbar(
-                    message = groceryAddedMessage,
-                    actionLabel = groceryViewLabel,
-                    duration = SnackbarDuration.Long,
-                )
-            when (result) {
-                SnackbarResult.ActionPerformed -> bloc.onViewGroceryListClicked()
-                SnackbarResult.Dismissed -> bloc.onGrocerySnackbarDismissed()
-            }
-        }
-    }
+    // The "added to grocery list" toast (with its View action) is now fired from the BLoC through
+    // the app-wide ToastService; this screen only hosts the local "copied to clipboard" snackbar.
 
     // Delete confirmation dialog
     if (state.showDeleteConfirmationDialog) {
@@ -414,7 +396,7 @@ private fun RecipeDetailBody(
                 floatingToolbar =
                     letIfTrue(showToolbar) {
                         {
-                            HorizontalFloatingToolbar(
+                            PlusToolbar(
                                 expanded = true,
                                 floatingActionButton = {
                                     RecipeDetailCoachMark(
@@ -1594,7 +1576,10 @@ private fun DirectionLineItem(
                         Modifier
                     }
                 )
-                .padding(vertical = dimens.paddingExtraSmall, horizontal = dimens.paddingExtraSmall),
+                .padding(
+                    vertical = dimens.paddingExtraSmall,
+                    horizontal = dimens.paddingExtraSmall,
+                ),
     )
 }
 
@@ -1856,14 +1841,6 @@ private val previewBloc =
         }
 
         override fun onDismissSheet() {
-            TODO("Not yet implemented")
-        }
-
-        override fun onViewGroceryListClicked() {
-            TODO("Not yet implemented")
-        }
-
-        override fun onGrocerySnackbarDismissed() {
             TODO("Not yet implemented")
         }
 
