@@ -12,6 +12,7 @@ kotlin {
             implementation(projects.client.recipe.core.public)
             implementation(projects.client.recipe.categories.public)
             implementation(projects.client.ui.public)
+            implementation(projects.client.toast.public)
             implementation(libs.arkivanov.decompose.core)
             implementation(libs.arkivanov.decompose.compose.extensions)
             implementation(projects.client.shared)
@@ -27,6 +28,7 @@ kotlin {
             implementation(projects.client.util.testing)
             implementation(projects.client.recipe.data.testing)
             implementation(projects.client.recipebook.data.testing)
+            implementation(projects.client.toast.testing)
             implementation(libs.multiplatform.settings.test)
         }
     }

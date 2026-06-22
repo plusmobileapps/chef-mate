@@ -82,14 +82,6 @@ class RecipeDetailViewModel(
         _output.close()
     }
 
-    fun showGroceryAddedSnackbar() {
-        _state.update { it.copy(showGroceryAddedSnackbar = true) }
-    }
-
-    fun dismissGroceryAddedSnackbar() {
-        _state.update { it.copy(showGroceryAddedSnackbar = false) }
-    }
-
     /**
      * Mark a coach mark seen, but only if it's the one currently showing. This lets a button's tap
      * dismiss its own tip while it's visible, without prematurely consuming tips further down the
@@ -106,7 +98,6 @@ class RecipeDetailViewModel(
         val isDeleting: Boolean = false,
         val showDeleteConfirmationDialog: Boolean = false,
         val recipe: Recipe = Recipe.Empty,
-        val showGroceryAddedSnackbar: Boolean = false,
         val activeCoachMark: String? = null,
     )
 

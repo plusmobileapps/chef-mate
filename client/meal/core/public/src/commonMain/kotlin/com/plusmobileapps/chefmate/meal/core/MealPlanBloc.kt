@@ -50,8 +50,6 @@ interface MealPlanBloc : ComposeScreen {
 
     fun onAddToCookModeClicked(meals: List<MealPlanItem>)
 
-    fun onSnackbarShown()
-
     fun onContinueCookingClicked()
 
     fun onDoneCookingClicked()
@@ -75,7 +73,6 @@ interface MealPlanBloc : ComposeScreen {
         val cookingRecipeCount: Int = 0,
         val showDoneCookingDialog: Boolean = false,
         val pendingReplaceCookMode: ImmutableList<MealPlanItem>? = null,
-        val snackbarMessage: TextData? = null,
         /** Id of the first-run coach mark currently allowed to show, or null when none. */
         val activeCoachMark: String? = null,
     )

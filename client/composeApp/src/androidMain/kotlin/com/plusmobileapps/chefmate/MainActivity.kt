@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
                 applicationComponent = appComponent,
                 deepLink = parseDeepLink(intent),
             )
-        setContent { App(rootBloc) }
+        setContent { App(rootBloc, appComponent.toastService) }
 
         handleShareIntent(intent)
     }

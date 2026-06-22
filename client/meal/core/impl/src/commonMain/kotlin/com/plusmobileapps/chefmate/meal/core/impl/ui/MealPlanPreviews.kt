@@ -84,8 +84,6 @@ private fun mealPlanBloc(model: MealPlanBloc.Model): MealPlanBloc =
 
         override fun onAddToCookModeClicked(meals: List<MealPlanItem>) = Unit
 
-        override fun onSnackbarShown() = Unit
-
         override fun onContinueCookingClicked() = Unit
 
         override fun onDoneCookingClicked() = Unit

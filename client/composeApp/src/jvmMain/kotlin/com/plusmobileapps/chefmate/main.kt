@@ -116,7 +116,7 @@ fun main(args: Array<String>) {
                 }
             },
         ) {
-            App(rootBloc = rootBloc)
+            App(rootBloc = rootBloc, toastService = appComponent.toastService)
         }
     }
 }

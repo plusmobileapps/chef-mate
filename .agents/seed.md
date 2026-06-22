@@ -88,6 +88,18 @@ See `docs/architecture.md` for full annotated examples of both patterns.
 - **Prefer a shared `Plus*` component over a raw Material composable when one exists.** For example, use `PlusDialog` instead of Material `AlertDialog`. Check `client/ui/public/.../components` before reaching for a Material primitive.
 - **Spacing/sizing dimensions should come from the theme (`ChefMateTheme.dimens`), not hardcoded `.dp` literals.** Use the closest `AppDimensions` token (`paddingExtraSmall` 4, `paddingSmall` 8, `paddingNormal` 16, `paddingLarge` 24, `paddingExtraLarge` 32, `rowHeight` 56, `fabClearance` 88). Only fall back to a raw `.dp` literal when the value is genuinely off-spec (no matching token); if an off-spec value recurs, add a token to `AppDimensions` instead.
 
+### Snackbars & Toasts
+
+Pick the layer by scope — **do not hand-roll a `SnackbarHostState` + `LaunchedEffect` per screen.**
+
+1. **App-wide toast (default): `ToastService`** (`client/toast/public`). Inject `ToastService` into a BLoC/ViewModel and call `toastService.show(message, actionLabel?, duration?, onAction?)`. A single global host (`ToastScaffold`, wired once in `App.kt`) renders it over every screen — **never add your own host for these.** The service is an `AppScope` singleton, so it's constructor-injectable anywhere; for a composable with no BLoC, use `LocalToastService.current.show(...)`. For an action button, pass `actionLabel` + `onAction` — but route navigation through app-scoped output, since the callback is held only for the toast's lifetime (don't capture a short-lived screen object). Worked example: `RecipeDetailBlocImpl` (added-to-grocery toast with a "View" action).
+
+2. **Screen-local snackbar (only when it must be scoped to one screen): `SnackbarQueue` + `PlusSnackbarHost`.** Hold a `SnackbarQueue` in the BLoC `Model`, `enqueue(...)` onto it from the ViewModel, expose `onSnackbarShown(id)`, and drop `PlusSnackbarHost(state.snackbars, bloc::onSnackbarShown)` into the screen. The queue's monotonic ids make dequeue correct under rapid messages. Worked example: `MealPlanScreen`.
+
+3. **Raw Material `SnackbarHost`** only for a one-off, screen-private message that never needs queueing (e.g. "copied to clipboard").
+
+**Keeping FABs & bottom toolbars clear of a shown snackbar.** A bottom-aligned element can be covered by a snackbar. The shared components handle this for you: `PlusFloatingActionButton` (FABs) and `PlusToolbar` (the bottom horizontal floating toolbar, wrapping Material's `HorizontalFloatingToolbar`) both ride up automatically. Prefer them over the raw Material primitives for bottom-aligned controls. For a **raw FAB, a custom FAB stack, or a hand-rolled bottom bar**, opt in by adding `Modifier.padding(bottom = LocalSnackbarInset.current)` (from `client/ui/public`) to its bottom-aligned root — it animates up while a snackbar is visible and back when it dismisses. Top toolbars (`PlusHeader`) are unaffected and need nothing. Worked example: `RecipeDetailScreen`'s `PlusToolbar` lifts above the added-to-grocery toast.
+
 ### Navigation Animations & Shared Elements
 
 - Navigation (root and per-feature) renders a Decompose `ChildStack` with `Children` + `predictiveBackAnimation`. Use the shared `backAnimation` helper in `client/ui/public/.../BackAnimation.kt` (a `predictiveBackAnimation` with a `slide` fallback). `RootScreen` inlines `predictiveBackAnimation` directly because it varies the fallback by child type (modal screens slide vertically). **Predictive back is the priority** — the system back gesture/animation must keep working across the whole stack.

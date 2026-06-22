@@ -52,10 +52,6 @@ interface RecipeDetailBloc : BackClickBloc, ComposeScreen {
 
     fun onDismissSheet()
 
-    fun onViewGroceryListClicked()
-
-    fun onGrocerySnackbarDismissed()
-
     data class Model(
         val isLoading: Boolean,
         val isDeleting: Boolean,
@@ -66,7 +62,6 @@ interface RecipeDetailBloc : BackClickBloc, ComposeScreen {
         val formattedPrepTime: TextData? = null,
         val formattedCookTime: TextData? = null,
         val formattedTotalTime: TextData? = null,
-        val showGroceryAddedSnackbar: Boolean = false,
         /** Id of the coach mark currently allowed to show on this screen, or null. */
         val activeCoachMark: String? = null,
     )
