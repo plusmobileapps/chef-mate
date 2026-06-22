@@ -6,7 +6,10 @@ import chefmate.client.meal.core.public.generated.resources.meal_plan_added_to_c
 import chefmate.client.meal.core.public.generated.resources.meal_plan_replaced_cook_mode_multiple
 import chefmate.client.meal.core.public.generated.resources.meal_plan_replaced_cook_mode_single
 import com.plusmobileapps.chefmate.ViewModel
+import com.plusmobileapps.chefmate.combineStates
 import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
+import com.plusmobileapps.chefmate.di.CoachMarkController
+import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.meal.core.MealPlanBloc
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
@@ -22,7 +25,6 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
@@ -37,14 +39,23 @@ class MealPlanViewModel(
     private val repository: MealPlanRepository,
     private val cookingSessionRepository: CookingSessionRepository,
     private val dateTimeUtil: DateTimeUtil,
+    private val coachMarkController: CoachMarkController,
 ) : ViewModel(mainContext) {
 
     private val _state = MutableStateFlow(State())
-    val state: StateFlow<State> = _state.asStateFlow()
+
+    // Fold the shared controller's active mark into state so the screen shows at most one coach
+    // mark at a time across the whole app.
+    val state: StateFlow<State> =
+        combineStates(_state, coachMarkController.activeCoachMark) { state, activeCoachMark ->
+            state.copy(activeCoachMark = activeCoachMark)
+        }
 
     private var observeJob: Job? = null
 
     init {
+        // Queue every meal-plan coach mark in order; the controller shows them one at a time.
+        CoachMarkId.mealPlanSequence.forEach(coachMarkController::request)
         val today = dateTimeUtil.today()
         _state.update { it.copy(currentDate = today, selectedMonthDay = today) }
         observeMeals()
@@ -100,6 +111,22 @@ class MealPlanViewModel(
 
     fun onMonthDaySelected(date: LocalDate) {
         _state.update { it.copy(selectedMonthDay = date) }
+    }
+
+    /**
+     * Mark a coach mark seen, but only if it's the one currently showing, so tapping a control
+     * dismisses its own tip without consuming tips further down the queue.
+     */
+    fun dismissCoachMark(id: String) {
+        if (coachMarkController.activeCoachMark.value == id) {
+            coachMarkController.dismiss(id)
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        // Leaving the screen without dismissing frees the queue so other coach marks can show.
+        CoachMarkId.mealPlanSequence.forEach(coachMarkController::release)
     }
 
     fun requestRemoveMeal(item: MealPlanItem) {
@@ -300,5 +327,6 @@ class MealPlanViewModel(
         val showDoneCookingDialog: Boolean = false,
         val pendingReplaceCookMode: List<MealPlanItem>? = null,
         val snackbarMessage: TextData? = null,
+        val activeCoachMark: String? = null,
     )
 }

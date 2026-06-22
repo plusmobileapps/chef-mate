@@ -67,6 +67,9 @@
     <string name="edit_recipe_title">Edit Recipe</string>
     <string name="edit_recipe_back">Back</string>
     <string name="edit_recipe_save">Save</string>
+    <!-- First-run coach marks -->
+    <string name="edit_recipe_rich_text_onboarding">Write your steps here — tap the toggle for rich-text formatting</string>
+    <string name="edit_recipe_save_onboarding">Tap save when your recipe is ready</string>
     <string name="edit_recipe_field_title">Title</string>
     <string name="edit_recipe_field_title_placeholder">Enter recipe title</string>
     <string name="edit_recipe_field_description">Description</string>

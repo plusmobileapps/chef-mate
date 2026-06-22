@@ -60,6 +60,9 @@ interface MealPlanBloc : ComposeScreen {
 
     fun onDoneCookingDismissed()
 
+    /** Marks the first-run coach mark with [id] as seen so it never shows again. */
+    fun onCoachMarkDismissed(id: String)
+
     data class Model(
         val isLoading: Boolean = true,
         val isSyncing: Boolean = false,
@@ -73,6 +76,8 @@ interface MealPlanBloc : ComposeScreen {
         val showDoneCookingDialog: Boolean = false,
         val pendingReplaceCookMode: ImmutableList<MealPlanItem>? = null,
         val snackbarMessage: TextData? = null,
+        /** Id of the first-run coach mark currently allowed to show, or null when none. */
+        val activeCoachMark: String? = null,
     )
 
     data class DayMeals(

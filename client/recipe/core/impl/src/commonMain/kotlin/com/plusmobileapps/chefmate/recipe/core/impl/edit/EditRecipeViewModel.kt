@@ -4,6 +4,9 @@ package com.plusmobileapps.chefmate.recipe.core.impl.edit
 
 import co.touchlab.kermit.Logger
 import com.plusmobileapps.chefmate.ViewModel
+import com.plusmobileapps.chefmate.combineStates
+import com.plusmobileapps.chefmate.di.CoachMarkController
+import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.di.MarkdownEditorModeRepository
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
@@ -47,11 +50,18 @@ class EditRecipeViewModel(
     private val photoStorage: RecipePhotoStorage,
     private val pendingRecipePhotoStore: PendingRecipePhotoStore,
     private val markdownEditorModeRepository: MarkdownEditorModeRepository,
+    private val coachMarkController: CoachMarkController,
 ) : ViewModel(mainContext) {
     private val _output = Channel<Output>(Channel.BUFFERED)
     val output: Flow<Output> = _output.receiveAsFlow()
     private val _state = MutableStateFlow(State())
-    val state: StateFlow<State> = _state.asStateFlow()
+
+    // Fold the shared controller's active mark into state so the screen shows at most one coach
+    // mark at a time across the whole app.
+    val state: StateFlow<State> =
+        combineStates(_state, coachMarkController.activeCoachMark) { state, activeCoachMark ->
+            state.copy(activeCoachMark = activeCoachMark)
+        }
 
     private val _title = MutableStateFlow("")
     val title: StateFlow<String> = _title.asStateFlow()
@@ -119,6 +129,8 @@ class EditRecipeViewModel(
     val richTextEditorMode: StateFlow<Boolean> = markdownEditorModeRepository.richTextMode
 
     init {
+        // Queue every edit-recipe coach mark in order; the controller shows them one at a time.
+        CoachMarkId.editRecipeSequence.forEach(coachMarkController::request)
         // A new recipe defaults to the active book; an existing one loads its current membership.
         if (recipeId == null) {
             scope.launch {
@@ -203,6 +215,16 @@ class EditRecipeViewModel(
 
     fun updateRichTextEditorMode(value: Boolean) {
         markdownEditorModeRepository.setRichTextMode(value)
+    }
+
+    /**
+     * Mark a coach mark seen, but only if it's the one currently showing, so tapping a control
+     * dismisses its own tip without consuming tips further down the queue.
+     */
+    fun dismissCoachMark(id: String) {
+        if (coachMarkController.activeCoachMark.value == id) {
+            coachMarkController.dismiss(id)
+        }
     }
 
     fun updateStarRating(value: Int?) {
@@ -349,6 +371,8 @@ class EditRecipeViewModel(
 
     override fun onCleared() {
         super.onCleared()
+        // Leaving the screen without dismissing frees the queue so other coach marks can show.
+        CoachMarkId.editRecipeSequence.forEach(coachMarkController::release)
         _output.close()
     }
 
@@ -443,6 +467,7 @@ class EditRecipeViewModel(
         val showDiscardChangesDialog: Boolean = false,
         val recipe: Recipe? = null,
         val uploadError: Throwable? = null,
+        val activeCoachMark: String? = null,
     )
 
     sealed class Output {

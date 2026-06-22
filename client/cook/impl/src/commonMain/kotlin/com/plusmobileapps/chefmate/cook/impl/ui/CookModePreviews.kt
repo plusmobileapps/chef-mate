@@ -47,6 +47,8 @@ private fun cookBloc(model: CookModeBloc.Model): CookModeBloc =
 
         override fun onKeepScreenOnToggled() = Unit
 
+        override fun onCoachMarkDismissed(id: String) = Unit
+
         override fun onBackClicked() = Unit
     }
 

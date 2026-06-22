@@ -19,7 +19,10 @@ kotlin {
             implementation(libs.multiplatform.settings)
             implementation(compose.components.resources)
         }
-        commonTest.dependencies { implementation(libs.multiplatform.settings.test) }
+        commonTest.dependencies {
+            implementation(libs.multiplatform.settings.test)
+            implementation(projects.client.recipe.data.testing)
+        }
     }
 }
 

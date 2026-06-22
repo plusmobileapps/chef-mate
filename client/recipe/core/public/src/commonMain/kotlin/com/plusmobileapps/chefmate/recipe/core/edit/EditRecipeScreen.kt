@@ -86,20 +86,27 @@ import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_title_placeholder
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_total_time
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_field_total_time_placeholder
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_rich_text_onboarding
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_save
+import chefmate.client.recipe.core.public.generated.resources.edit_recipe_save_onboarding
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_section_more_details
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload_photo
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload_photo_dismiss
 import coil3.compose.AsyncImage
+import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.recipe.categories.pickerLabelRes
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.TextData
+import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
 import com.plusmobileapps.chefmate.ui.components.PlusMarkdownEditor
+import com.plusmobileapps.chefmate.ui.components.PlusOnboardingTooltip
 import com.plusmobileapps.chefmate.ui.components.PlusOutlinedContainer
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
+import com.plusmobileapps.chefmate.ui.components.PlusTooltipPlacement
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import com.plusmobileapps.chefmate.util.cropImageToSquare
@@ -145,7 +152,12 @@ fun EditRecipeScreen(
             verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingNormal),
             maxContentWidth = if (isExpanded) Dp.Unspecified else 600.dp,
             floatingActionButton = {
-                SaveRecipeFab(isSaving = state.isSaving, onSaveClicked = bloc::onSaveClicked)
+                SaveRecipeFab(
+                    isSaving = state.isSaving,
+                    onSaveClicked = bloc::onSaveClicked,
+                    activeCoachMark = state.activeCoachMark,
+                    onCoachMarkDismissed = bloc::onCoachMarkDismissed,
+                )
             },
         ) {
             if (state.isLoading) {
@@ -171,16 +183,51 @@ fun EditRecipeScreen(
 private fun SaveRecipeFab(
     isSaving: Boolean,
     onSaveClicked: () -> Unit,
+    activeCoachMark: String?,
+    onCoachMarkDismissed: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    ExtendedFloatingActionButton(onClick = onSaveClicked, modifier = modifier) {
-        if (isSaving) {
-            PlusLoadingIndicator(
-                modifier = Modifier.padding(end = ChefMateTheme.dimens.paddingSmall)
-            )
+    EditRecipeCoachMark(
+        id = CoachMarkId.EDIT_RECIPE_SAVE,
+        text = Res.string.edit_recipe_save_onboarding.asTextData(),
+        activeCoachMark = activeCoachMark,
+        onDismiss = onCoachMarkDismissed,
+        modifier = modifier,
+    ) {
+        ExtendedFloatingActionButton(onClick = onSaveClicked) {
+            if (isSaving) {
+                PlusLoadingIndicator(
+                    modifier = Modifier.padding(end = ChefMateTheme.dimens.paddingSmall)
+                )
+            }
+            Text(stringResource(Res.string.edit_recipe_save))
         }
-        Text(stringResource(Res.string.edit_recipe_save))
     }
+}
+
+/**
+ * Wraps a control in a first-run coach mark. The bubble only shows while [id] is the shared
+ * controller's active mark. Defaults to [PlusTooltipPlacement.ABOVE] since the anchored controls
+ * (the Save FAB, the directions field) sit toward the bottom of the form.
+ */
+@Composable
+private fun EditRecipeCoachMark(
+    id: String,
+    text: TextData,
+    activeCoachMark: String?,
+    onDismiss: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    placement: PlusTooltipPlacement = PlusTooltipPlacement.ABOVE,
+    anchor: @Composable () -> Unit,
+) {
+    PlusOnboardingTooltip(
+        text = text,
+        visible = activeCoachMark == id,
+        onDismiss = { onDismiss(id) },
+        placement = placement,
+        modifier = modifier,
+        anchor = anchor,
+    )
 }
 
 @Composable
@@ -691,18 +738,26 @@ private fun RecipeIngredientsField(bloc: EditRecipeBloc, modifier: Modifier = Mo
 private fun RecipeDirectionsField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     val directions by bloc.directions.collectAsState()
     val richTextMode by bloc.richTextEditorMode.collectAsState()
+    val model by bloc.state.collectAsState()
 
-    PlusMarkdownEditor(
-        value = directions,
-        onValueChange = bloc::onDirectionsChanged,
-        label = stringResource(Res.string.edit_recipe_field_directions),
-        placeholder = stringResource(Res.string.edit_recipe_field_directions_placeholder),
-        richTextMode = richTextMode,
-        onRichTextModeChange = bloc::onRichTextEditorModeChanged,
+    EditRecipeCoachMark(
+        id = CoachMarkId.EDIT_RECIPE_RICH_TEXT,
+        text = Res.string.edit_recipe_rich_text_onboarding.asTextData(),
+        activeCoachMark = model.activeCoachMark,
+        onDismiss = bloc::onCoachMarkDismissed,
         modifier = modifier,
-        initialHeight = 320.dp,
-        maxHeight = 640.dp,
-    )
+    ) {
+        PlusMarkdownEditor(
+            value = directions,
+            onValueChange = bloc::onDirectionsChanged,
+            label = stringResource(Res.string.edit_recipe_field_directions),
+            placeholder = stringResource(Res.string.edit_recipe_field_directions_placeholder),
+            richTextMode = richTextMode,
+            onRichTextModeChange = bloc::onRichTextEditorModeChanged,
+            initialHeight = 320.dp,
+            maxHeight = 640.dp,
+        )
+    }
 }
 
 @Composable
@@ -853,6 +908,8 @@ Salt for pasta water"""
         override fun onUploadErrorDismissed() {}
 
         override fun onRichTextEditorModeChanged(richTextMode: Boolean) {}
+
+        override fun onCoachMarkDismissed(id: String) {}
 
         override fun onBackClicked() {}
 

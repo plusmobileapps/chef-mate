@@ -99,6 +99,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipe.list.public.generated.resources.Res
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_add_onboarding
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_add_recipe
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_apply
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_all_recipes
@@ -134,6 +135,7 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_empty_description
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_empty_title
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_favorites
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_onboarding
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_quick_recipes
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_filter_rated
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_invite_accept
@@ -171,21 +173,26 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort_z
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_title
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_view_grid
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_view_list
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_view_mode_onboarding
 import chefmate.client.recipe.list.public.generated.resources.recipe_sync_not_synced
 import chefmate.client.recipe.list.public.generated.resources.recipe_sync_synced
 import chefmate.client.recipe.list.public.generated.resources.recipe_sync_syncing
+import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.letIfTrue
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.ResourceString
+import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusDialogScaffold
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
+import com.plusmobileapps.chefmate.ui.components.PlusOnboardingTooltip
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
+import com.plusmobileapps.chefmate.ui.components.PlusTooltipPlacement
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
 import com.plusmobileapps.chefmate.ui.text.toInlineMarkdownAnnotatedString
@@ -317,45 +324,71 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                                         stringResource(Res.string.recipe_list_search),
                                 )
                             }
-                            IconButton(onClick = bloc::onToggleViewMode) {
-                                Icon(
-                                    imageVector =
-                                        if (state.isGridView) Icons.AutoMirrored.Filled.ViewList
-                                        else Icons.Default.GridView,
-                                    contentDescription =
-                                        stringResource(
-                                            if (state.isGridView) {
-                                                Res.string.recipe_list_view_list
-                                            } else {
-                                                Res.string.recipe_list_view_grid
-                                            }
-                                        ),
-                                )
+                            RecipeListCoachMark(
+                                id = CoachMarkId.RECIPE_LIST_VIEW_MODE,
+                                text = Res.string.recipe_list_view_mode_onboarding.asTextData(),
+                                activeCoachMark = state.activeCoachMark,
+                                onDismiss = bloc::onCoachMarkDismissed,
+                            ) {
+                                IconButton(onClick = bloc::onToggleViewMode) {
+                                    Icon(
+                                        imageVector =
+                                            if (state.isGridView) Icons.AutoMirrored.Filled.ViewList
+                                            else Icons.Default.GridView,
+                                        contentDescription =
+                                            stringResource(
+                                                if (state.isGridView) {
+                                                    Res.string.recipe_list_view_list
+                                                } else {
+                                                    Res.string.recipe_list_view_grid
+                                                }
+                                            ),
+                                    )
+                                }
                             }
-                            IconButton(onClick = { showSortFilterSheet = true }) {
-                                val filterCount = state.totalActiveFilterCount
-                                if (filterCount > 0) {
-                                    BadgedBox(badge = { Badge { Text("$filterCount") } }) {
+                            RecipeListCoachMark(
+                                id = CoachMarkId.RECIPE_LIST_FILTER,
+                                text = Res.string.recipe_list_filter_onboarding.asTextData(),
+                                activeCoachMark = state.activeCoachMark,
+                                onDismiss = bloc::onCoachMarkDismissed,
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        bloc.onCoachMarkDismissed(CoachMarkId.RECIPE_LIST_FILTER)
+                                        showSortFilterSheet = true
+                                    }
+                                ) {
+                                    val filterCount = state.totalActiveFilterCount
+                                    if (filterCount > 0) {
+                                        BadgedBox(badge = { Badge { Text("$filterCount") } }) {
+                                            Icon(
+                                                imageVector = Icons.Default.FilterList,
+                                                contentDescription =
+                                                    stringResource(Res.string.recipe_list_filter),
+                                                tint = MaterialTheme.colorScheme.primary,
+                                            )
+                                        }
+                                    } else {
                                         Icon(
                                             imageVector = Icons.Default.FilterList,
                                             contentDescription =
                                                 stringResource(Res.string.recipe_list_filter),
-                                            tint = MaterialTheme.colorScheme.primary,
                                         )
                                     }
-                                } else {
-                                    Icon(
-                                        imageVector = Icons.Default.FilterList,
-                                        contentDescription =
-                                            stringResource(Res.string.recipe_list_filter),
-                                    )
                                 }
                             }
-                            AddRecipeMenu(
-                                scanEnabled = state.isScanFromPhotoEnabled,
-                                onCreateClicked = bloc::onAddRecipeClicked,
-                                onScanPicked = bloc::onScanRecipePhotoPicked,
-                            )
+                            RecipeListCoachMark(
+                                id = CoachMarkId.RECIPE_LIST_ADD,
+                                text = Res.string.recipe_list_add_onboarding.asTextData(),
+                                activeCoachMark = state.activeCoachMark,
+                                onDismiss = bloc::onCoachMarkDismissed,
+                            ) {
+                                AddRecipeMenu(
+                                    scanEnabled = state.isScanFromPhotoEnabled,
+                                    onCreateClicked = bloc::onAddRecipeClicked,
+                                    onScanPicked = bloc::onScanRecipePhotoPicked,
+                                )
+                            }
                             OverflowMenu(
                                 onSelectClicked = bloc::onEnterSelectionMode,
                                 onExportAllClicked = bloc::onExportClicked,
@@ -515,6 +548,27 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
  * a photo via Gemini vision (the image picker launches directly from the scan item). When disabled
  * it opens the blank editor directly with no menu, preserving the original add-recipe behaviour.
  */
+/**
+ * Wraps a header control in a first-run coach mark that points up at it (the header sits at the top
+ * of the screen). The bubble only shows while [id] is the shared controller's active mark.
+ */
+@Composable
+private fun RecipeListCoachMark(
+    id: String,
+    text: TextData,
+    activeCoachMark: String?,
+    onDismiss: (String) -> Unit,
+    anchor: @Composable () -> Unit,
+) {
+    PlusOnboardingTooltip(
+        text = text,
+        visible = activeCoachMark == id,
+        onDismiss = { onDismiss(id) },
+        placement = PlusTooltipPlacement.BELOW,
+        anchor = anchor,
+    )
+}
+
 @Composable
 private fun AddRecipeMenu(
     scanEnabled: Boolean,

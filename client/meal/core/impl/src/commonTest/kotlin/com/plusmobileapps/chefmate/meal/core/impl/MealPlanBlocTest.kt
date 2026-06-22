@@ -10,6 +10,8 @@ import chefmate.client.meal.core.public.generated.resources.meal_plan_added_to_c
 import chefmate.client.meal.core.public.generated.resources.meal_plan_replaced_cook_mode_multiple
 import chefmate.client.meal.core.public.generated.resources.meal_plan_replaced_cook_mode_single
 import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
+import com.plusmobileapps.chefmate.di.CoachMarkController
+import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.meal.core.MealPlanBloc
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
 import com.plusmobileapps.chefmate.meal.data.MealPlanRepository
@@ -19,6 +21,7 @@ import com.plusmobileapps.chefmate.testing.TestConsumer
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.util.testing.FakeDateTimeUtil
+import com.russhwolf.settings.MapSettings
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.everySuspend
@@ -40,6 +43,7 @@ class MealPlanBlocTest {
     val mealsFlow = MutableSharedFlow<List<MealPlanItem>>()
     val fakeDate = LocalDate(2026, 4, 17)
     val dateTimeUtil = FakeDateTimeUtil(fakeToday = fakeDate)
+    val coachMarkController = CoachMarkController(MapSettings())
 
     val repository: MealPlanRepository = mock {
         every { getMealsByDate("2026-04-17") } returns mealsFlow
@@ -65,9 +69,31 @@ class MealPlanBlocTest {
                     repository = repository,
                     cookingSessionRepository = cookingSessionRepository,
                     dateTimeUtil = dateTimeUtil,
+                    coachMarkController = coachMarkController,
                 )
             },
         )
+
+    @Test
+    fun WHEN_screen_opens_THEN_first_coach_mark_active() = runTest {
+        bloc.state.value.activeCoachMark shouldBe CoachMarkId.MEAL_PLAN_ADD_MEAL
+    }
+
+    @Test
+    fun WHEN_active_coach_mark_dismissed_THEN_persisted_and_next_shown() = runTest {
+        bloc.onCoachMarkDismissed(CoachMarkId.MEAL_PLAN_ADD_MEAL)
+
+        coachMarkController.hasSeen(CoachMarkId.MEAL_PLAN_ADD_MEAL) shouldBe true
+        bloc.state.value.activeCoachMark shouldBe CoachMarkId.MEAL_PLAN_VIEW_MODE
+    }
+
+    @Test
+    fun WHEN_inactive_coach_mark_dismissed_THEN_ignored() = runTest {
+        bloc.onCoachMarkDismissed(CoachMarkId.MEAL_PLAN_VIEW_MODE)
+
+        coachMarkController.hasSeen(CoachMarkId.MEAL_PLAN_VIEW_MODE) shouldBe false
+        bloc.state.value.activeCoachMark shouldBe CoachMarkId.MEAL_PLAN_ADD_MEAL
+    }
 
     @Test
     fun WHEN_meals_loaded_THEN_state_is_updated_with_day_meals() = runTest {
@@ -418,6 +444,7 @@ class MealPlanBlocTest {
                             repository = repository,
                             cookingSessionRepository = sessionRepo,
                             dateTimeUtil = dateTimeUtil,
+                            coachMarkController = CoachMarkController(MapSettings()),
                         )
                     },
                 )

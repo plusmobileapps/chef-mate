@@ -22,6 +22,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
@@ -31,6 +33,11 @@ import androidx.compose.ui.unit.dp
 import chefmate.client.browser.public.generated.resources.Res
 import chefmate.client.browser.public.generated.resources.browser_landing_hint
 import chefmate.client.browser.public.generated.resources.browser_landing_tagline
+import chefmate.client.browser.public.generated.resources.browser_search_onboarding
+import com.plusmobileapps.chefmate.di.CoachMarkId
+import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.components.PlusOnboardingTooltip
+import com.plusmobileapps.chefmate.ui.components.PlusTooltipPlacement
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -41,6 +48,7 @@ fun BrowserLandingScreen(
     modifier: Modifier = Modifier,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
+    val state by bloc.state.collectAsState()
 
     val sharedFieldModifier =
         if (sharedTransitionScope != null && animatedVisibilityScope != null) {
@@ -68,22 +76,30 @@ fun BrowserLandingScreen(
         Text(text = "Chef Mate", style = MaterialTheme.typography.headlineLarge)
         Spacer(Modifier.height(32.dp))
 
-        OutlinedTextField(
-            value = "",
-            onValueChange = {},
-            readOnly = true,
-            modifier =
-                Modifier.fillMaxWidth().then(sharedFieldModifier).onFocusChanged { focusState ->
-                    if (focusState.isFocused) {
-                        keyboardController?.hide()
-                        bloc.onSearchFieldFocused()
-                    }
-                },
-            placeholder = { Text(stringResource(Res.string.browser_landing_hint)) },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-            singleLine = true,
-            shape = RoundedCornerShape(28.dp),
-        )
+        PlusOnboardingTooltip(
+            text = Res.string.browser_search_onboarding.asTextData(),
+            visible = state.activeCoachMark == CoachMarkId.BROWSER_SEARCH,
+            onDismiss = { bloc.onCoachMarkDismissed(CoachMarkId.BROWSER_SEARCH) },
+            placement = PlusTooltipPlacement.BELOW,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            OutlinedTextField(
+                value = "",
+                onValueChange = {},
+                readOnly = true,
+                modifier =
+                    Modifier.fillMaxWidth().then(sharedFieldModifier).onFocusChanged { focusState ->
+                        if (focusState.isFocused) {
+                            keyboardController?.hide()
+                            bloc.onSearchFieldFocused()
+                        }
+                    },
+                placeholder = { Text(stringResource(Res.string.browser_landing_hint)) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                singleLine = true,
+                shape = RoundedCornerShape(28.dp),
+            )
+        }
 
         Text(
             text = stringResource(Res.string.browser_landing_tagline),

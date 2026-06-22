@@ -135,12 +135,17 @@ interface EditRecipeBloc : BackClickBloc, ComposeScreen {
     /** Persists the editor-mode preference (true = rich text, false = markdown). */
     fun onRichTextEditorModeChanged(richTextMode: Boolean)
 
+    /** Marks the first-run coach mark with [id] as seen so it never shows again. */
+    fun onCoachMarkDismissed(id: String)
+
     data class Model(
         val title: TextData,
         val isLoading: Boolean,
         val isSaving: Boolean,
         val showDiscardChangesDialog: Boolean,
         val uploadError: TextData? = null,
+        /** Id of the first-run coach mark currently allowed to show, or null when none. */
+        val activeCoachMark: String? = null,
     )
 
     sealed class Output {

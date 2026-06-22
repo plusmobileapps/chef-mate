@@ -5,6 +5,7 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.cook.WhatsCookingBloc
 import com.plusmobileapps.chefmate.di.AppScope
+import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
@@ -48,6 +49,7 @@ class CookModeBlocImpl(
                         .toImmutableList(),
                 layoutMode = vm.layoutMode,
                 keepScreenOn = vm.keepScreenOn,
+                activeCoachMark = vm.activeCoachMark,
             )
         }
 
@@ -60,11 +62,17 @@ class CookModeBlocImpl(
     }
 
     override fun onLayoutToggled() {
+        viewModel.dismissCoachMark(CoachMarkId.COOK_MODE_LAYOUT)
         viewModel.toggleLayout()
     }
 
     override fun onKeepScreenOnToggled() {
+        viewModel.dismissCoachMark(CoachMarkId.COOK_MODE_KEEP_SCREEN_ON)
         viewModel.toggleKeepScreenOn()
+    }
+
+    override fun onCoachMarkDismissed(id: String) {
+        viewModel.dismissCoachMark(id)
     }
 
     override fun onBackClicked() {

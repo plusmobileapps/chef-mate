@@ -94,6 +94,8 @@ import chefmate.client.cook.public.generated.resources.cook_mode_allow_screen_of
 import chefmate.client.cook.public.generated.resources.cook_mode_directions
 import chefmate.client.cook.public.generated.resources.cook_mode_ingredients
 import chefmate.client.cook.public.generated.resources.cook_mode_keep_screen_on
+import chefmate.client.cook.public.generated.resources.cook_mode_keep_screen_on_onboarding
+import chefmate.client.cook.public.generated.resources.cook_mode_layout_onboarding
 import chefmate.client.cook.public.generated.resources.cook_mode_layout_split
 import chefmate.client.cook.public.generated.resources.cook_mode_layout_stacked
 import chefmate.client.cook.public.generated.resources.cook_mode_loading
@@ -101,12 +103,17 @@ import chefmate.client.cook.public.generated.resources.cook_mode_no_active_recip
 import chefmate.client.cook.public.generated.resources.cook_mode_whats_cooking
 import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.cook.WhatsCookingBloc
+import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.recipe.data.IngredientSection
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.TextData
+import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.KeepScreenOn
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
+import com.plusmobileapps.chefmate.ui.components.PlusOnboardingTooltip
+import com.plusmobileapps.chefmate.ui.components.PlusTooltipPlacement
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.launch
@@ -141,6 +148,28 @@ fun CookModeScreen(bloc: CookModeBloc, modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * Wraps a header control in a first-run coach mark that points up at it (the cook-mode header sits
+ * at the top of the screen). The bubble only shows while [id] is the shared controller's active
+ * mark.
+ */
+@Composable
+private fun CookModeCoachMark(
+    id: String,
+    text: TextData,
+    activeCoachMark: String?,
+    onDismiss: (String) -> Unit,
+    anchor: @Composable () -> Unit,
+) {
+    PlusOnboardingTooltip(
+        text = text,
+        visible = activeCoachMark == id,
+        onDismiss = { onDismiss(id) },
+        placement = PlusTooltipPlacement.BELOW,
+        anchor = anchor,
+    )
+}
+
 @Composable
 private fun CookModeTabletLayout(
     bloc: CookModeBloc,
@@ -167,32 +196,49 @@ private fun CookModeTabletLayout(
                                     )
                                 }
                             }
-                            IconButton(onClick = bloc::onKeepScreenOnToggled) {
-                                Icon(
-                                    imageVector =
-                                        if (state.keepScreenOn) Icons.Default.Visibility
-                                        else Icons.Default.VisibilityOff,
-                                    contentDescription =
-                                        stringResource(
-                                            if (state.keepScreenOn)
-                                                Res.string.cook_mode_allow_screen_off
-                                            else Res.string.cook_mode_keep_screen_on
-                                        ),
-                                )
+                            CookModeCoachMark(
+                                id = CoachMarkId.COOK_MODE_KEEP_SCREEN_ON,
+                                text = Res.string.cook_mode_keep_screen_on_onboarding.asTextData(),
+                                activeCoachMark = state.activeCoachMark,
+                                onDismiss = bloc::onCoachMarkDismissed,
+                            ) {
+                                IconButton(onClick = bloc::onKeepScreenOnToggled) {
+                                    Icon(
+                                        imageVector =
+                                            if (state.keepScreenOn) Icons.Default.Visibility
+                                            else Icons.Default.VisibilityOff,
+                                        contentDescription =
+                                            stringResource(
+                                                if (state.keepScreenOn)
+                                                    Res.string.cook_mode_allow_screen_off
+                                                else Res.string.cook_mode_keep_screen_on
+                                            ),
+                                    )
+                                }
                             }
-                            IconButton(onClick = bloc::onLayoutToggled) {
-                                Icon(
-                                    imageVector =
-                                        if (state.layoutMode == CookModeBloc.LayoutMode.Stacked)
-                                            Icons.Default.ViewWeek
-                                        else Icons.Default.ViewAgenda,
-                                    contentDescription =
-                                        stringResource(
+                            CookModeCoachMark(
+                                id = CoachMarkId.COOK_MODE_LAYOUT,
+                                text = Res.string.cook_mode_layout_onboarding.asTextData(),
+                                activeCoachMark = state.activeCoachMark,
+                                onDismiss = bloc::onCoachMarkDismissed,
+                            ) {
+                                IconButton(onClick = bloc::onLayoutToggled) {
+                                    Icon(
+                                        imageVector =
                                             if (state.layoutMode == CookModeBloc.LayoutMode.Stacked)
-                                                Res.string.cook_mode_layout_split
-                                            else Res.string.cook_mode_layout_stacked
-                                        ),
-                                )
+                                                Icons.Default.ViewWeek
+                                            else Icons.Default.ViewAgenda,
+                                        contentDescription =
+                                            stringResource(
+                                                if (
+                                                    state.layoutMode ==
+                                                        CookModeBloc.LayoutMode.Stacked
+                                                )
+                                                    Res.string.cook_mode_layout_split
+                                                else Res.string.cook_mode_layout_stacked
+                                            ),
+                                    )
+                                }
                             }
                         },
                 ),
@@ -299,35 +345,53 @@ private fun CookModeMobileLayout(
                         onCloseClick = bloc::onCloseClicked,
                         trailingAccessory =
                             PlusHeaderData.TrailingAccessory.Custom {
-                                IconButton(onClick = bloc::onKeepScreenOnToggled) {
-                                    Icon(
-                                        imageVector =
-                                            if (state.keepScreenOn) Icons.Default.Visibility
-                                            else Icons.Default.VisibilityOff,
-                                        contentDescription =
-                                            stringResource(
-                                                if (state.keepScreenOn)
-                                                    Res.string.cook_mode_allow_screen_off
-                                                else Res.string.cook_mode_keep_screen_on
-                                            ),
-                                    )
+                                CookModeCoachMark(
+                                    id = CoachMarkId.COOK_MODE_KEEP_SCREEN_ON,
+                                    text =
+                                        Res.string.cook_mode_keep_screen_on_onboarding.asTextData(),
+                                    activeCoachMark = state.activeCoachMark,
+                                    onDismiss = bloc::onCoachMarkDismissed,
+                                ) {
+                                    IconButton(onClick = bloc::onKeepScreenOnToggled) {
+                                        Icon(
+                                            imageVector =
+                                                if (state.keepScreenOn) Icons.Default.Visibility
+                                                else Icons.Default.VisibilityOff,
+                                            contentDescription =
+                                                stringResource(
+                                                    if (state.keepScreenOn)
+                                                        Res.string.cook_mode_allow_screen_off
+                                                    else Res.string.cook_mode_keep_screen_on
+                                                ),
+                                        )
+                                    }
                                 }
-                                IconButton(onClick = bloc::onLayoutToggled) {
-                                    Icon(
-                                        imageVector =
-                                            if (state.layoutMode == CookModeBloc.LayoutMode.Stacked)
-                                                Icons.Default.ViewWeek
-                                            else Icons.Default.ViewAgenda,
-                                        contentDescription =
-                                            stringResource(
+                                CookModeCoachMark(
+                                    id = CoachMarkId.COOK_MODE_LAYOUT,
+                                    text = Res.string.cook_mode_layout_onboarding.asTextData(),
+                                    activeCoachMark = state.activeCoachMark,
+                                    onDismiss = bloc::onCoachMarkDismissed,
+                                ) {
+                                    IconButton(onClick = bloc::onLayoutToggled) {
+                                        Icon(
+                                            imageVector =
                                                 if (
                                                     state.layoutMode ==
                                                         CookModeBloc.LayoutMode.Stacked
                                                 )
-                                                    Res.string.cook_mode_layout_split
-                                                else Res.string.cook_mode_layout_stacked
-                                            ),
-                                    )
+                                                    Icons.Default.ViewWeek
+                                                else Icons.Default.ViewAgenda,
+                                            contentDescription =
+                                                stringResource(
+                                                    if (
+                                                        state.layoutMode ==
+                                                            CookModeBloc.LayoutMode.Stacked
+                                                    )
+                                                        Res.string.cook_mode_layout_split
+                                                    else Res.string.cook_mode_layout_stacked
+                                                ),
+                                        )
+                                    }
                                 }
                             },
                     ),
@@ -813,7 +877,10 @@ private fun DirectionRow(text: String, highlighted: Boolean, onClick: () -> Unit
                         Modifier
                     }
                 )
-                .padding(vertical = dimens.paddingExtraSmall, horizontal = dimens.paddingExtraSmall),
+                .padding(
+                    vertical = dimens.paddingExtraSmall,
+                    horizontal = dimens.paddingExtraSmall,
+                ),
     )
 }
 

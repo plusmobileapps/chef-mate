@@ -5,6 +5,7 @@ package com.plusmobileapps.chefmate.recipe.list.impl
 
 import app.cash.turbine.test
 import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
+import com.plusmobileapps.chefmate.di.CoachMarkController
 import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
@@ -22,6 +23,7 @@ import com.plusmobileapps.chefmate.testing.TestConsumer
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.util.TimeFormatterUtil
+import com.russhwolf.settings.MapSettings
 import com.russhwolf.settings.Settings
 import dev.mokkery.answering.returns
 import dev.mokkery.every
@@ -80,6 +82,7 @@ class RecipeListBlocImplTest {
                     pendingPhotoStore = pendingPhotoStore,
                     featureFlags = featureFlags,
                     settings = settings,
+                    coachMarkController = CoachMarkController(MapSettings()),
                 )
             },
             timeFormatterUtil = timeFormatterUtil,

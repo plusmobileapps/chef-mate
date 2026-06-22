@@ -5,8 +5,10 @@ import androidx.compose.ui.Modifier
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.ui.ComposeScreen
+import kotlinx.coroutines.flow.StateFlow
 
 interface BrowserLandingBloc : ComposeScreen {
+    val state: StateFlow<Model>
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -14,6 +16,14 @@ interface BrowserLandingBloc : ComposeScreen {
     }
 
     fun onSearchFieldFocused()
+
+    /** Marks the first-run coach mark with [id] as seen so it never shows again. */
+    fun onCoachMarkDismissed(id: String)
+
+    data class Model(
+        /** Id of the first-run coach mark currently allowed to show, or null when none. */
+        val activeCoachMark: String? = null
+    )
 
     sealed class Output {
         data object OpenEditQuery : Output()

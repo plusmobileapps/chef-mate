@@ -5,6 +5,8 @@ package com.plusmobileapps.chefmate.recipe.list.impl
 
 import app.cash.turbine.test
 import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
+import com.plusmobileapps.chefmate.di.CoachMarkController
+import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
 import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
@@ -23,6 +25,7 @@ import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.recipebook.data.testing.FakeRecipeBookCollaborationRepository
 import com.plusmobileapps.chefmate.recipebook.data.testing.FakeRecipeBookRepository
+import com.russhwolf.settings.MapSettings
 import com.russhwolf.settings.Settings
 import dev.mokkery.answering.returns
 import dev.mokkery.every
@@ -60,6 +63,7 @@ class RecipeListViewModelTest {
     private val featureFlags = FakeFeatureFlags()
     private val recipeBookRepository = FakeRecipeBookRepository(MutableStateFlow(emptyList()))
     private val collaborationRepository = FakeRecipeBookCollaborationRepository()
+    private val coachMarkController = CoachMarkController(MapSettings())
     private val viewModel =
         RecipeListViewModel(
             mainContext = UnconfinedTestDispatcher(),
@@ -72,6 +76,7 @@ class RecipeListViewModelTest {
             pendingPhotoStore = pendingPhotoStore,
             featureFlags = featureFlags,
             settings = settings,
+            coachMarkController = coachMarkController,
         )
 
     @Test
@@ -141,6 +146,7 @@ class RecipeListViewModelTest {
                     pendingPhotoStore = pendingPhotoStore,
                     featureFlags = featureFlags,
                     settings = settings,
+                    coachMarkController = CoachMarkController(MapSettings()),
                 )
 
             vm.state.value.pendingInvites.map { it.memberId } shouldBe listOf("m1")
@@ -186,6 +192,7 @@ class RecipeListViewModelTest {
                 pendingPhotoStore = pendingPhotoStore,
                 featureFlags = flags,
                 settings = settings,
+                coachMarkController = CoachMarkController(MapSettings()),
             )
 
         vm.state.value.isScanFromPhotoEnabled shouldBe true
@@ -402,6 +409,7 @@ class RecipeListViewModelTest {
                 pendingPhotoStore = pendingPhotoStore,
                 featureFlags = featureFlags,
                 settings = gridSettings,
+                coachMarkController = CoachMarkController(MapSettings()),
             )
         vm.state.value.isGridView shouldBe true
     }
@@ -435,6 +443,28 @@ class RecipeListViewModelTest {
         viewModel.state.value.isSearchActive shouldBe true
     }
 
+    @Test
+    fun When_screen_opens_Then_first_coach_mark_active() {
+        viewModel.state.value.activeCoachMark shouldBe CoachMarkId.RECIPE_LIST_ADD
+    }
+
+    @Test
+    fun When_active_coach_mark_dismissed_Then_persisted_and_next_shown() {
+        viewModel.dismissCoachMark(CoachMarkId.RECIPE_LIST_ADD)
+
+        coachMarkController.hasSeen(CoachMarkId.RECIPE_LIST_ADD) shouldBe true
+        viewModel.state.value.activeCoachMark shouldBe CoachMarkId.RECIPE_LIST_VIEW_MODE
+    }
+
+    @Test
+    fun When_dismissing_a_coach_mark_that_is_not_active_Then_ignored() {
+        // The view-mode mark is queued behind the add mark, so dismissing it does nothing yet.
+        viewModel.dismissCoachMark(CoachMarkId.RECIPE_LIST_VIEW_MODE)
+
+        coachMarkController.hasSeen(CoachMarkId.RECIPE_LIST_VIEW_MODE) shouldBe false
+        viewModel.state.value.activeCoachMark shouldBe CoachMarkId.RECIPE_LIST_ADD
+    }
+
     // region Recipe-book scope / "All recipes"
 
     /** Books id 1 & 3 from the sample set, with one recipe filed under each. */
@@ -455,6 +485,7 @@ class RecipeListViewModelTest {
             pendingPhotoStore = pendingPhotoStore,
             featureFlags = featureFlags,
             settings = settings,
+            coachMarkController = CoachMarkController(MapSettings()),
         )
     }
 
@@ -555,6 +586,7 @@ class RecipeListViewModelTest {
                 pendingPhotoStore = pendingPhotoStore,
                 featureFlags = featureFlags,
                 settings = sortSettings,
+                coachMarkController = CoachMarkController(MapSettings()),
             )
         vm.state.value.currentSort shouldBe RecipeSortOption.TOP_RATED
     }
@@ -587,6 +619,7 @@ class RecipeListViewModelTest {
                 pendingPhotoStore = pendingPhotoStore,
                 featureFlags = featureFlags,
                 settings = filterSettings,
+                coachMarkController = CoachMarkController(MapSettings()),
             )
         vm.state.value.activeFilters shouldBe
             setOf(RecipeFilterOption.FAVORITES, RecipeFilterOption.RATED)
@@ -776,6 +809,7 @@ class RecipeListViewModelTest {
                 pendingPhotoStore = pendingPhotoStore,
                 featureFlags = featureFlags,
                 settings = catSettings,
+                coachMarkController = CoachMarkController(MapSettings()),
             )
         vm.state.value.activeCategories shouldBe
             setOf(BuiltinCategory.BREAKFAST, BuiltinCategory.DINNER)

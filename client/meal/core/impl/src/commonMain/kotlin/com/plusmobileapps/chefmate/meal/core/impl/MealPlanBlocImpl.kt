@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.meal.core.impl
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
+import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.chefmate.meal.core.MealPlanBloc
@@ -58,10 +59,12 @@ class MealPlanBlocImpl(
                 showDoneCookingDialog = it.showDoneCookingDialog,
                 pendingReplaceCookMode = it.pendingReplaceCookMode?.toImmutableList(),
                 snackbarMessage = it.snackbarMessage,
+                activeCoachMark = it.activeCoachMark,
             )
         }
 
     override fun onViewModeSelected(mode: MealPlanBloc.ViewMode) {
+        viewModel.dismissCoachMark(CoachMarkId.MEAL_PLAN_VIEW_MODE)
         viewModel.selectViewMode(mode)
     }
 
@@ -94,6 +97,7 @@ class MealPlanBlocImpl(
     }
 
     override fun onAddMealClicked() {
+        viewModel.dismissCoachMark(CoachMarkId.MEAL_PLAN_ADD_MEAL)
         output.onNext(Output.OpenMealPlanner(MealPlannerRootBloc.Props.FromMealPlanner))
     }
 
@@ -137,5 +141,9 @@ class MealPlanBlocImpl(
 
     override fun onDoneCookingDismissed() {
         viewModel.dismissDoneCookingDialog()
+    }
+
+    override fun onCoachMarkDismissed(id: String) {
+        viewModel.dismissCoachMark(id)
     }
 }

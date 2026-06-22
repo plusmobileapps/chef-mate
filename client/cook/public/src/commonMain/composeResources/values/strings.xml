@@ -10,6 +10,9 @@
     <string name="cook_mode_layout_split">Show ingredients and directions side by side</string>
     <string name="cook_mode_keep_screen_on">Keep screen on</string>
     <string name="cook_mode_allow_screen_off">Allow screen to turn off</string>
+    <!-- First-run coach marks -->
+    <string name="cook_mode_keep_screen_on_onboarding">Keep the screen awake while you cook</string>
+    <string name="cook_mode_layout_onboarding">Switch between side-by-side and single-list views</string>
     <string name="whats_cooking_title">What’s Cooking</string>
     <string name="whats_cooking_select">Select recipes</string>
     <string name="whats_cooking_cancel_select">Cancel selection</string>
