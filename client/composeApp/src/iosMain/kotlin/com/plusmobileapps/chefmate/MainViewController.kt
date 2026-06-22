@@ -1,10 +1,11 @@
-@file:OptIn(ExperimentalDecomposeApi::class)
+@file:OptIn(ExperimentalDecomposeApi::class, ExperimentalComposeUiApi::class)
 
 package com.plusmobileapps.chefmate
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.ComposeUIViewController
 import com.arkivanov.decompose.ExperimentalDecomposeApi
@@ -14,22 +15,23 @@ import com.arkivanov.essenty.backhandler.BackDispatcher
 import com.plusmobileapps.chefmate.root.RootBloc
 
 object MainViewController {
-    fun create(rootBloc: RootBloc, backDispatcher: BackDispatcher) = ComposeUIViewController {
-        PredictiveBackGestureOverlay(
-            backDispatcher = backDispatcher,
-            backIcon = { progress, _ ->
-                PredictiveBackGestureIcon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    progress = progress,
-                )
-            },
-            modifier = Modifier.fillMaxSize(),
-        ) {
-            App(
-                rootBloc = rootBloc,
-                toastService = RootBlocProvider.toastService,
+    fun create(rootBloc: RootBloc, backDispatcher: BackDispatcher) =
+        ComposeUIViewController(configure = { parallelRendering = true }) {
+            PredictiveBackGestureOverlay(
+                backDispatcher = backDispatcher,
+                backIcon = { progress, _ ->
+                    PredictiveBackGestureIcon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        progress = progress,
+                    )
+                },
                 modifier = Modifier.fillMaxSize(),
-            )
+            ) {
+                App(
+                    rootBloc = rootBloc,
+                    toastService = RootBlocProvider.toastService,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
-    }
 }
