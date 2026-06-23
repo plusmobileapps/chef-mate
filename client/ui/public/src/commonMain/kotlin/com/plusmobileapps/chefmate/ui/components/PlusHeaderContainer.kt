@@ -186,7 +186,11 @@ private fun BottomBarBox(
                     end =
                         with(density) {
                             WindowInsets.displayCutout.getRight(density, LayoutDirection.Ltr).toDp()
-                        }
+                        },
+                    // Bottom breathing room the (now-removed) snackbar slot used to reserve below
+                    // the FAB. Kept so the FAB sits exactly where it did before the toast
+                    // migration.
+                    bottom = ChefMateTheme.dimens.paddingNormal,
                 )
         ) {
             Spacer(modifier = Modifier.weight(1f))
