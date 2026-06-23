@@ -61,6 +61,28 @@ fun CookModeSectionsScreenshot() {
     ChefMateTheme { previewCookBlocSections.Content() }
 }
 
+// Split body on a phone (COMPACT width → tabbed SplitCompactLayout). Regression coverage for
+// issue #317: the tabbed scroll content must run all the way down to the bottom-sheet peek without
+// a clipped gap above it.
+@PreviewTest
+@Preview(showBackground = true, widthDp = 360, heightDp = 1100)
+@Composable
+fun CookModeSplitPhonePortraitLightScreenshot() {
+    ChefMateTheme { previewCookBlocSplit.Content() }
+}
+
+@PreviewTest
+@Preview(
+    showBackground = true,
+    widthDp = 360,
+    heightDp = 1100,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Composable
+fun CookModeSplitPhonePortraitDarkScreenshot() {
+    ChefMateTheme(darkTheme = true) { previewCookBlocSplit.Content() }
+}
+
 // ── Phone landscape (580 × 360 dp, COMPACT width → mobile layout, compact height) ──
 
 @PreviewTest
