@@ -78,8 +78,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SecondaryTabRow
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -161,8 +159,10 @@ import com.plusmobileapps.chefmate.recipe.data.IngredientSection
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
+import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.toast.LocalToastService
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.LocalAnimatedVisibilityScope
 import com.plusmobileapps.chefmate.ui.LocalSecondaryAnimatedVisibilityScope
@@ -180,7 +180,6 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import com.plusmobileapps.chefmate.util.rememberShareLauncher
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -192,12 +191,9 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val shareLauncher = rememberShareLauncher()
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-    val copiedMessage = stringResource(Res.string.recipe_detail_copied_to_clipboard)
 
-    // The "added to grocery list" toast (with its View action) is now fired from the BLoC through
-    // the app-wide ToastService; this screen only hosts the local "copied to clipboard" snackbar.
+    // The "added to grocery list" toast (with its View action) is fired from the BLoC through the
+    // app-wide ToastService; the "copied to clipboard" toast below goes through the same service.
 
     // Delete confirmation dialog
     if (state.showDeleteConfirmationDialog) {
@@ -256,10 +252,7 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
                             onShowOverflowMenuChange = { showOverflowMenu = it },
                             metadataCollapsed = metadataCollapsed,
                             onMetadataCollapsedChange = { metadataCollapsed = it },
-                            snackbarHostState = snackbarHostState,
                             shareLauncher = shareLauncher,
-                            copiedMessage = copiedMessage,
-                            scope = scope,
                         )
                     }
                 }
@@ -277,11 +270,10 @@ private fun RecipeDetailBody(
     onShowOverflowMenuChange: (Boolean) -> Unit,
     metadataCollapsed: Boolean,
     onMetadataCollapsedChange: (Boolean) -> Unit,
-    snackbarHostState: SnackbarHostState,
     shareLauncher: (String) -> Boolean,
-    copiedMessage: String,
-    scope: CoroutineScope,
 ) {
+    val toastService = LocalToastService.current
+    val copiedMessage = ResourceString(Res.string.recipe_detail_copied_to_clipboard)
     Box(modifier = Modifier.fillMaxSize().testTag(RecipeDetailTestTags.SCREEN)) {
         PlusResponsiveContainer(modifier = Modifier.fillMaxSize()) { windowSizeClass ->
             val isCompact = windowSizeClass == WindowSizeClass.COMPACT
@@ -336,11 +328,7 @@ private fun RecipeDetailBody(
                                                 onClick = {
                                                     onShowOverflowMenuChange(false)
                                                     if (shareLauncher(url)) {
-                                                        scope.launch {
-                                                            snackbarHostState.showSnackbar(
-                                                                copiedMessage
-                                                            )
-                                                        }
+                                                        toastService.show(copiedMessage)
                                                     }
                                                 },
                                             )
@@ -361,11 +349,7 @@ private fun RecipeDetailBody(
                                                 if (
                                                     shareLauncher(formatRecipeAsText(state.recipe))
                                                 ) {
-                                                    scope.launch {
-                                                        snackbarHostState.showSnackbar(
-                                                            copiedMessage
-                                                        )
-                                                    }
+                                                    toastService.show(copiedMessage)
                                                 }
                                             },
                                         )
@@ -548,10 +532,6 @@ private fun RecipeDetailBody(
                 }
             }
         }
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp),
-        )
     }
 }
 

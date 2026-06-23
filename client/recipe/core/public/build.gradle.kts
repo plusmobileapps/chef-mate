@@ -16,6 +16,7 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation(projects.client.shared)
             implementation(projects.client.ui.public)
+            implementation(projects.client.toast.public)
             implementation(projects.client.util.public)
             implementation(projects.client.grocery.data.public)
             implementation(projects.client.grocery.core.public)

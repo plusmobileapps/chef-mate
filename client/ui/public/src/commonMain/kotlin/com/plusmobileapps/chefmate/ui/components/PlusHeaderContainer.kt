@@ -71,7 +71,6 @@ fun PlusHeaderContainer(
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     scrollEnabled: Boolean = true,
     maxContentWidth: Dp = PlusHeaderContainerDefaults.MaxContentWidth,
-    snackbarHost: @Composable () -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
     floatingToolbar: (@Composable () -> Unit)? = null,
     floatingHeader: Boolean = false,
@@ -113,7 +112,6 @@ fun PlusHeaderContainer(
                     BottomBarBox(
                         density = density,
                         floatingActionButton = floatingActionButton,
-                        snackbarHost = snackbarHost,
                     )
                     floatingToolbar?.let {
                         Box(modifier = Modifier.align(BottomCenter).floatingToolbarPadding()) {
@@ -162,7 +160,6 @@ fun PlusHeaderContainer(
                     BottomBarBox(
                         density = density,
                         floatingActionButton = floatingActionButton,
-                        snackbarHost = snackbarHost,
                     )
 
                     floatingToolbar?.let {
@@ -180,7 +177,6 @@ fun PlusHeaderContainer(
 private fun BottomBarBox(
     density: Density,
     floatingActionButton: @Composable (() -> Unit),
-    snackbarHost: @Composable (() -> Unit),
 ) {
     Column {
         Spacer(modifier = Modifier.weight(1f))
@@ -190,20 +186,17 @@ private fun BottomBarBox(
                     end =
                         with(density) {
                             WindowInsets.displayCutout.getRight(density, LayoutDirection.Ltr).toDp()
-                        }
+                        },
+                    // Bottom breathing room the (now-removed) snackbar slot used to reserve below
+                    // the FAB. Kept so the FAB sits exactly where it did before the toast
+                    // migration.
+                    bottom = ChefMateTheme.dimens.paddingNormal,
                 )
         ) {
             Spacer(modifier = Modifier.weight(1f))
             Box(modifier = Modifier.padding(end = ChefMateTheme.dimens.paddingNormal)) {
                 floatingActionButton()
             }
-        }
-
-        Box(
-            modifier = Modifier.fillMaxWidth().padding(top = ChefMateTheme.dimens.paddingNormal),
-            contentAlignment = Alignment.Center,
-        ) {
-            snackbarHost()
         }
         Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.systemBars))
     }
