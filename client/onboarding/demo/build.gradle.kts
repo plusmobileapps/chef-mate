@@ -1,4 +1,7 @@
-plugins { alias(libs.plugins.plusApplication) }
+plugins {
+    alias(libs.plugins.plusApplication)
+    alias(libs.plugins.kotlinSerialization)
+}
 
 kotlin {
     sourceSets {

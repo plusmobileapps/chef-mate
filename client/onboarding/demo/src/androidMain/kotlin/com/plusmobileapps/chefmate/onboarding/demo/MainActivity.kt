@@ -5,10 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.arkivanov.decompose.defaultComponentContext
-import com.plusmobileapps.chefmate.onboarding.OnboardingRootBloc
 
 class MainActivity : ComponentActivity() {
-    private lateinit var bloc: OnboardingRootBloc
+    private lateinit var bloc: OnboardingDemoBloc
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
