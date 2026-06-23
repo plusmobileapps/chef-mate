@@ -100,6 +100,10 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+      - name: Select Xcode 26 (iOS 26 SDK required by Compose 1.11)
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
