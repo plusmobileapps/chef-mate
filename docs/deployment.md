@@ -147,13 +147,32 @@ releaseStorePassword=YOUR_STORE_PASSWORD
    UI. R8/ProGuard minification is disabled for the release build type in
    `client/composeApp/build.gradle.kts`, so the binary is functionally identical to the old debug
    packaging — it just carries the release marker.
-2. Uploads each package as a build artifact
-3. Creates a GitHub Release from the tag with all three packages attached
-4. Auto-generates release notes from commits since the last tag
-
-**No Fastlane:** Desktop distribution uses Gradle's Compose Desktop packaging plugin and GitHub Actions directly, since Fastlane is mobile-only.
+2. On macOS, signs and notarizes the DMG (see [Code signing](#desktop-macos-code-signing) below)
+3. Uploads each package as a build artifact
+4. Creates a GitHub Release from the tag with all three packages attached
+5. Auto-generates release notes from commits since the last tag
 
 **Package configuration:** Native distribution settings (package name, version, vendor, platform-specific options) are in `client/composeApp/build.gradle.kts` under the `compose.desktop.application.nativeDistributions` block.
+
+#### Desktop macOS code signing
+
+The macOS DMG is signed with a **Developer ID Application** certificate and notarized so it opens without a Gatekeeper warning. Windows and Linux packages remain unsigned.
+
+**Certificate:** Stored and fetched via Fastlane `match` (`type: "developer_id"`) from the same private certificates repo used for iOS. The `mac certificates` lane (`fastlane/Fastfile`) runs `setup_ci` + `match` (readonly) to import the cert into a temporary CI keychain.
+
+**Signing:** Enabled in `client/composeApp/build.gradle.kts` via the `macOS { signing { ... } }` block, gated on the `MACOS_SIGN_IDENTITY` env var (resolved in CI from the keychain). Local builds without that var stay unsigned. Compose Desktop applies hardened runtime + default entitlements automatically when signing.
+
+**Notarization:** The workflow submits the built DMG with `xcrun notarytool submit --wait` and then `xcrun stapler staple`, reusing the App Store Connect API key (`ASC_*` secrets) — no app-specific password needed.
+
+**One-time bootstrap:** Generate and store the Developer ID cert once, locally, with an account-holder ASC API key:
+
+```bash
+bundle exec fastlane match developer_id \
+  --git_url git@github.com:Plus-Mobile-Apps/certificates.git \
+  --username andrew@plusmobileapps.com
+```
+
+**Reused secrets:** `MATCH_PASSWORD`, `MATCH_GIT_BASIC_AUTHORIZATION`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY` (no new secrets required).
 
 ---
 
@@ -372,6 +391,6 @@ Run the script before tagging a new release.
 
 ## Known Limitations
 
-- **macOS DMG is unsigned** — Apple requires notarization for DMGs distributed outside the Mac App Store. Users may see a Gatekeeper warning. Adding notarization requires `compose.desktop` signing config and `xcrun notarytool`.
+- **Windows MSI and Linux DEB are unsigned** — only the macOS DMG is signed/notarized (see [Desktop macOS code signing](#desktop-macos-code-signing)). Windows users may see a SmartScreen warning.
 - **R8/ProGuard is disabled** — Android release builds are not minified. Enabling R8 requires ProGuard rules for KMP libraries (Ktor, Supabase, kotlinx.serialization, Decompose).
 - **No CI version bumping** — versions are bumped locally via `scripts/bump-version.sh` before tagging; there is no automatic version increment in CI.
