@@ -743,6 +743,17 @@ private fun SplitWideLayout(
     val layoutDir = LocalLayoutDirection.current
     var ingredientsWeight by remember { mutableStateOf(0.5f) }
 
+    // Each column scrolls behind the floating bottom bar: reserve the bottom inset as the columns'
+    // scroll padding rather than shrinking the Row, so long content runs all the way down to the
+    // bar
+    // instead of being clipped short above it (matching StackedLayout).
+    val columnContentPadding =
+        PaddingValues(
+            start = padding,
+            end = padding,
+            bottom = contentPadding.calculateBottomPadding(),
+        )
+
     Row(
         modifier =
             Modifier.fillMaxSize()
@@ -750,12 +761,11 @@ private fun SplitWideLayout(
                     start = contentPadding.calculateStartPadding(layoutDir),
                     end = contentPadding.calculateEndPadding(layoutDir),
                     top = contentPadding.calculateTopPadding(),
-                    bottom = contentPadding.calculateBottomPadding(),
                 )
     ) {
         LazyColumn(
             modifier = Modifier.weight(ingredientsWeight).fillMaxHeight(),
-            contentPadding = PaddingValues(horizontal = padding),
+            contentPadding = columnContentPadding,
             verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingExtraSmall),
         ) {
             stickyHeader(key = "ingredients_header") {
@@ -777,7 +787,7 @@ private fun SplitWideLayout(
         )
         LazyColumn(
             modifier = Modifier.weight(1f - ingredientsWeight).fillMaxHeight(),
-            contentPadding = PaddingValues(horizontal = padding),
+            contentPadding = columnContentPadding,
             verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingExtraSmall),
         ) {
             stickyHeader(key = "directions_header") {
