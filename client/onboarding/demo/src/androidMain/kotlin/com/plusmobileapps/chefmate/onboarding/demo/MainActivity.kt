@@ -12,7 +12,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        bloc = buildOnboardingDemoBloc(componentContext = defaultComponentContext())
+        val component = (application as OnboardingDemoApplication).component
+        bloc =
+            buildOnboardingDemoBloc(
+                componentContext = defaultComponentContext(),
+                component = component,
+            )
         setContent { OnboardingDemoApp(bloc) }
     }
 }

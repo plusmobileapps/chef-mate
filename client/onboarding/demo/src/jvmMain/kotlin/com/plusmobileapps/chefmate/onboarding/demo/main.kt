@@ -10,18 +10,22 @@ import androidx.compose.ui.window.rememberWindowState
 import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.backhandler.BackDispatcher
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
+import dev.zacsweers.metro.createGraphFactory
 
 fun main() {
-    // Initialize the lifecycle outside the application block, as the main composeApp does.
+    // Initialize the lifecycle and the demo Metro graph once, outside the application block, as the
+    // main composeApp does — the graph is process-scoped, not per-window.
     val lifecycle = LifecycleRegistry()
     val backDispatcher = BackDispatcher()
+    val component = createGraphFactory<OnboardingDemoComponent.Factory>().create()
 
     application {
         // Build the ComponentContext inside the application block so it runs on the main thread.
         val bloc =
             buildOnboardingDemoBloc(
                 componentContext =
-                    DefaultComponentContext(lifecycle = lifecycle, backHandler = backDispatcher)
+                    DefaultComponentContext(lifecycle = lifecycle, backHandler = backDispatcher),
+                component = component,
             )
 
         Window(
