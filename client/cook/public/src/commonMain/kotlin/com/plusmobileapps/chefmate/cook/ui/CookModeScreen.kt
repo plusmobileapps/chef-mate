@@ -335,9 +335,10 @@ private fun CookModeMobileLayout(
             )
         },
     ) { bodyPadding ->
-        Box(
-            modifier = Modifier.fillMaxSize().padding(bottom = bodyPadding.calculateBottomPadding())
-        ) {
+        // Don't shrink the body by the sheet peek — let the scrolling content run all the way down
+        // behind the opaque sheet, and reserve the peek as scroll padding instead so the last item
+        // clears the sheet without an empty band above it.
+        Box(modifier = Modifier.fillMaxSize()) {
             PlusHeaderContainer(
                 data =
                     PlusHeaderData.Modal(
@@ -408,7 +409,10 @@ private fun CookModeMobileLayout(
                     recipe = state.activeRecipe,
                     layoutMode = state.layoutMode,
                     windowSizeClass = windowSizeClass,
-                    bottomReserve = 0.dp,
+                    bottomReserve = bodyPadding.calculateBottomPadding(),
+                    // The sheet peek already sits above the nav bar and covers it, so don't add the
+                    // bottom system inset on top of the reserve — that's what left the clipped gap.
+                    applyBottomInset = false,
                     modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -451,6 +455,7 @@ private fun CookModeBody(
     windowSizeClass: WindowSizeClass,
     bottomReserve: Dp,
     modifier: Modifier = Modifier,
+    applyBottomInset: Boolean = true,
 ) {
     when {
         isLoading -> LoadingState(modifier)
@@ -480,6 +485,7 @@ private fun CookModeBody(
                             highlightedIndex = highlightedDirectionIndex,
                             onDirectionToggled = onDirectionToggled,
                             bottomReserve = bottomReserve,
+                            applyBottomInset = applyBottomInset,
                         )
                     CookModeBloc.LayoutMode.Split ->
                         when (windowSizeClass) {
@@ -491,6 +497,7 @@ private fun CookModeBody(
                                     highlightedIndex = highlightedDirectionIndex,
                                     onDirectionToggled = onDirectionToggled,
                                     bottomReserve = bottomReserve,
+                                    applyBottomInset = applyBottomInset,
                                 )
                             WindowSizeClass.MEDIUM,
                             WindowSizeClass.EXPANDED ->
@@ -501,6 +508,7 @@ private fun CookModeBody(
                                     highlightedIndex = highlightedDirectionIndex,
                                     onDirectionToggled = onDirectionToggled,
                                     bottomReserve = bottomReserve,
+                                    applyBottomInset = applyBottomInset,
                                 )
                         }
                 }
@@ -546,17 +554,19 @@ private val MobilePeekHeight = 96.dp
  * Cook Mode draws edge-to-edge with a floating top app bar (and on tablet a floating bottom bar),
  * so body padding must reserve room for those bars *plus* keep text out of any display cutout (e.g.
  * landscape camera hole on Pixel). On mobile the persistent bottom sheet handles its own spacing
- * via [BottomSheetScaffold]'s padding values, so the caller passes [bottomReserve] = 0.
+ * via [BottomSheetScaffold]'s padding values, so the caller passes that peek as [bottomReserve] and
+ * sets [applyBottomInset] = false (the sheet sits above and covers the bottom system inset).
  */
 @Composable
-private fun bodyContentPadding(bottomReserve: Dp): PaddingValues {
+private fun bodyContentPadding(bottomReserve: Dp, applyBottomInset: Boolean = true): PaddingValues {
     val safe = WindowInsets.systemBars.union(WindowInsets.displayCutout).asPaddingValues()
     val layoutDir = LocalLayoutDirection.current
+    val bottomInset = if (applyBottomInset) safe.calculateBottomPadding() else 0.dp
     return PaddingValues(
         start = safe.calculateStartPadding(layoutDir),
         end = safe.calculateEndPadding(layoutDir),
         top = safe.calculateTopPadding() + AppBarHeight,
-        bottom = safe.calculateBottomPadding() + bottomReserve,
+        bottom = bottomInset + bottomReserve,
     )
 }
 
@@ -568,9 +578,10 @@ private fun StackedLayout(
     highlightedIndex: Int,
     onDirectionToggled: (Int) -> Unit,
     bottomReserve: Dp,
+    applyBottomInset: Boolean,
 ) {
     val padding = ChefMateTheme.dimens.paddingNormal
-    val contentPadding = bodyContentPadding(bottomReserve)
+    val contentPadding = bodyContentPadding(bottomReserve, applyBottomInset)
     val layoutDir = LocalLayoutDirection.current
     val lazyListState = rememberLazyListState()
 
@@ -649,9 +660,10 @@ private fun SplitCompactLayout(
     highlightedIndex: Int,
     onDirectionToggled: (Int) -> Unit,
     bottomReserve: Dp,
+    applyBottomInset: Boolean,
 ) {
     val padding = ChefMateTheme.dimens.paddingNormal
-    val contentPadding = bodyContentPadding(bottomReserve)
+    val contentPadding = bodyContentPadding(bottomReserve, applyBottomInset)
     val layoutDir = LocalLayoutDirection.current
     val pagerState = rememberPagerState(pageCount = { 2 })
     val scope = rememberCoroutineScope()
@@ -724,11 +736,23 @@ private fun SplitWideLayout(
     highlightedIndex: Int,
     onDirectionToggled: (Int) -> Unit,
     bottomReserve: Dp,
+    applyBottomInset: Boolean,
 ) {
     val padding = ChefMateTheme.dimens.paddingNormal
-    val contentPadding = bodyContentPadding(bottomReserve)
+    val contentPadding = bodyContentPadding(bottomReserve, applyBottomInset)
     val layoutDir = LocalLayoutDirection.current
     var ingredientsWeight by remember { mutableStateOf(0.5f) }
+
+    // Each column scrolls behind the floating bottom bar: reserve the bottom inset as the columns'
+    // scroll padding rather than shrinking the Row, so long content runs all the way down to the
+    // bar
+    // instead of being clipped short above it (matching StackedLayout).
+    val columnContentPadding =
+        PaddingValues(
+            start = padding,
+            end = padding,
+            bottom = contentPadding.calculateBottomPadding(),
+        )
 
     Row(
         modifier =
@@ -737,12 +761,11 @@ private fun SplitWideLayout(
                     start = contentPadding.calculateStartPadding(layoutDir),
                     end = contentPadding.calculateEndPadding(layoutDir),
                     top = contentPadding.calculateTopPadding(),
-                    bottom = contentPadding.calculateBottomPadding(),
                 )
     ) {
         LazyColumn(
             modifier = Modifier.weight(ingredientsWeight).fillMaxHeight(),
-            contentPadding = PaddingValues(horizontal = padding),
+            contentPadding = columnContentPadding,
             verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingExtraSmall),
         ) {
             stickyHeader(key = "ingredients_header") {
@@ -764,7 +787,7 @@ private fun SplitWideLayout(
         )
         LazyColumn(
             modifier = Modifier.weight(1f - ingredientsWeight).fillMaxHeight(),
-            contentPadding = PaddingValues(horizontal = padding),
+            contentPadding = columnContentPadding,
             verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingExtraSmall),
         ) {
             stickyHeader(key = "directions_header") {
