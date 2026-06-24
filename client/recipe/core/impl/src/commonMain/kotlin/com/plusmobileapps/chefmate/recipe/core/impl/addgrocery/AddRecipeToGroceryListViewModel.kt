@@ -129,10 +129,10 @@ class AddRecipeToGroceryListViewModel(
                 recipe.ingredients
                     .split("\n")
                     .filter { it.isNotBlank() && !IngredientSection.isHeader(it) }
-                    .map { raw ->
+                    .mapIndexed { index, raw ->
                         val parsed = IngredientParser.parse(raw)
                         ListItem(
-                            id = raw.hashCode(),
+                            id = index,
                             name = raw,
                             displayName = parsed.name,
                             quantity = parsed.quantity,
