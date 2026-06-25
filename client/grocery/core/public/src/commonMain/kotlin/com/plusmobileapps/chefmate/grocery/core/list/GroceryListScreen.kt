@@ -46,10 +46,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -75,15 +72,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import chefmate.client.grocery.core.public.generated.resources.Res
@@ -153,7 +157,6 @@ import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveModal
 import com.plusmobileapps.chefmate.ui.components.PlusTooltipPlacement
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
-import com.plusmobileapps.chefmate.ui.isIosPlatform
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.flow.StateFlow
 import org.jetbrains.compose.resources.stringResource
@@ -175,6 +178,17 @@ fun GroceryListScreen(
             (if (hasNonDefaultSort) 1 else 0) +
             (if (hasRecipeFilter) 1 else 0)
     val focusManager = LocalFocusManager.current
+    // Scrolling the list dismisses the keyboard, mirroring the tap-to-dismiss gesture below. The
+    // connection never consumes the scroll so pull-to-refresh and the list itself keep scrolling.
+    val dismissKeyboardOnScroll =
+        remember(focusManager) {
+            object : NestedScrollConnection {
+                override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                    if (available.y != 0f) focusManager.clearFocus()
+                    return Offset.Zero
+                }
+            }
+        }
 
     PlusResponsiveContainer(
         modifier = modifier.testTag(GroceryListTestTags.SCREEN).fillMaxSize()
@@ -237,7 +251,8 @@ fun GroceryListScreen(
                         IconButton(onClick = bloc::onDeleteClicked) {
                             Icon(
                                 Icons.Default.DeleteSweep,
-                                contentDescription = stringResource(Res.string.grocery_delete_items),
+                                contentDescription =
+                                    stringResource(Res.string.grocery_delete_items),
                             )
                         }
                         if (state.isSyncing) {
@@ -323,9 +338,11 @@ fun GroceryListScreen(
                                 }
                             },
                             modifier =
-                                Modifier.fillMaxSize().pointerInput(Unit) {
-                                    detectTapGestures(onTap = { focusManager.clearFocus() })
-                                },
+                                Modifier.fillMaxSize()
+                                    .nestedScroll(dismissKeyboardOnScroll)
+                                    .pointerInput(Unit) {
+                                        detectTapGestures(onTap = { focusManager.clearFocus() })
+                                    },
                             showHeaders = state.sort == GroceryListBloc.GrocerySort.AISLE,
                             trailingContent = { displayItem ->
                                 val item = itemLookup[displayItem.key as Long]
@@ -777,7 +794,6 @@ private fun DeleteItemsDialog(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun GroceryListInput(
     name: StateFlow<String>,
@@ -790,59 +806,39 @@ private fun GroceryListInput(
     val state = name.collectAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
-    val isIos = isIosPlatform()
     var isFocused by remember { mutableStateOf(false) }
     val expanded = (isFocused || forceShowSuggestions) && suggestions.isNotEmpty()
+    val dismissKeyboard: () -> Unit = {
+        focusManager.clearFocus()
+        keyboardController?.hide()
+    }
 
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        if (forceShowSuggestions && suggestions.isNotEmpty()) {
-            Column(modifier = Modifier.weight(1f)) {
-                AutocompleteSuggestionRows(suggestions = suggestions, onNameChange = onNameChange)
-                GroceryItemNameTextField(
-                    value = state.value,
-                    onValueChange = onNameChange,
-                    onFocusChanged = { isFocused = it },
-                    onAddClick = onAddClick,
-                    keyboardController = keyboardController,
-                )
-            }
-        } else {
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = {},
-                modifier = Modifier.weight(1f),
-            ) {
-                GroceryItemNameTextField(
-                    value = state.value,
-                    onValueChange = onNameChange,
-                    onFocusChanged = { isFocused = it },
-                    onAddClick = onAddClick,
-                    keyboardController = keyboardController,
-                    modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
-                )
-                ExposedDropdownMenu(expanded = expanded, onDismissRequest = {}) {
-                    suggestions.forEach { suggestion ->
-                        DropdownMenuItem(
-                            text = { Text(suggestion) },
-                            onClick = { onNameChange(suggestion) },
-                            modifier = Modifier.testTag(GroceryListTestTags.ITEM_SUGGESTION),
-                        )
-                    }
-                }
-            }
+    Column(modifier = modifier) {
+        // Suggestions render directly above the field rather than as a downward dropdown: the input
+        // is anchored at the bottom of the screen, so a dropdown would open behind the keyboard
+        // (especially on iOS, where it doesn't flip above the anchor). They sit above the
+        // field/Done row so the Done button only centers against the field, not the suggestion
+        // list.
+        if (expanded) {
+            AutocompleteSuggestionRows(suggestions = suggestions, onNameChange = onNameChange)
         }
-        AnimatedVisibility(
-            visible = isIos && isFocused,
-            enter = fadeIn() + expandHorizontally(),
-            exit = fadeOut() + shrinkHorizontally(),
-        ) {
-            TextButton(
-                onClick = {
-                    focusManager.clearFocus()
-                    keyboardController?.hide()
-                }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            GroceryItemNameTextField(
+                value = state.value,
+                onValueChange = onNameChange,
+                onFocusChanged = { isFocused = it },
+                onAddClick = onAddClick,
+                onDismissKeyboard = dismissKeyboard,
+                modifier = Modifier.weight(1f),
+            )
+            AnimatedVisibility(
+                visible = isFocused,
+                enter = fadeIn() + expandHorizontally(),
+                exit = fadeOut() + shrinkHorizontally(),
             ) {
-                Text(stringResource(Res.string.grocery_done))
+                TextButton(onClick = dismissKeyboard) {
+                    Text(stringResource(Res.string.grocery_done))
+                }
             }
         }
     }
@@ -860,8 +856,13 @@ private fun AutocompleteSuggestionRows(suggestions: List<String>, onNameChange: 
             suggestions.forEach { suggestion ->
                 ListItem(
                     headlineContent = { Text(suggestion) },
+                    // canFocus = false keeps the row clickable without stealing focus from the text
+                    // field. Otherwise tapping a suggestion unfocuses the field, which collapses
+                    // the
+                    // list (it's gated on focus) and removes the row before the tap can register.
                     modifier =
-                        Modifier.clickable { onNameChange(suggestion) }
+                        Modifier.focusProperties { canFocus = false }
+                            .clickable { onNameChange(suggestion) }
                             .testTag(GroceryListTestTags.ITEM_SUGGESTION),
                 )
             }
@@ -875,12 +876,24 @@ private fun GroceryItemNameTextField(
     onValueChange: (String) -> Unit,
     onFocusChanged: (Boolean) -> Unit,
     onAddClick: () -> Unit,
-    keyboardController: androidx.compose.ui.platform.SoftwareKeyboardController?,
+    onDismissKeyboard: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var fieldValue by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
+    // The name is owned externally (the BLoC). When it changes from outside the field — a
+    // suggestion tap or the clear after adding — sync it in and move the cursor to the end. Normal
+    // typing keeps text and value equal, so this leaves the user's cursor alone.
+    LaunchedEffect(value) {
+        if (value != fieldValue.text) {
+            fieldValue = TextFieldValue(value, TextRange(value.length))
+        }
+    }
     OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
+        value = fieldValue,
+        onValueChange = {
+            fieldValue = it
+            onValueChange(it.text)
+        },
         modifier =
             modifier
                 .fillMaxWidth()
@@ -891,17 +904,19 @@ private fun GroceryItemNameTextField(
         keyboardOptions =
             KeyboardOptions(
                 capitalization = KeyboardCapitalization.Sentences,
-                imeAction = ImeAction.Done,
+                imeAction = ImeAction.Send,
             ),
+        // Submits the item and keeps the keyboard open so the user can keep entering items. On an
+        // empty field the action instead dismisses the keyboard, matching the Done button and
+        // scroll-to-dismiss gestures.
         keyboardActions =
             KeyboardActions(
-                onDone = {
-                    if (value.isNotBlank()) onAddClick()
-                    keyboardController?.hide()
+                onSend = {
+                    if (fieldValue.text.isNotBlank()) onAddClick() else onDismissKeyboard()
                 }
             ),
         trailingIcon = {
-            IconButton(onClick = onAddClick, enabled = value.isNotBlank()) {
+            IconButton(onClick = onAddClick, enabled = fieldValue.text.isNotBlank()) {
                 Icon(
                     Icons.Default.Add,
                     contentDescription = stringResource(Res.string.grocery_add_item),
@@ -1035,7 +1050,8 @@ private fun FilteredEmptyGroceryListState(
             Spacer(Modifier.height(dimens.paddingLarge))
             Button(
                 onClick = onClearFiltersClicked,
-                modifier = Modifier.testTag(GroceryListTestTags.CLEAR_FILTERS_BUTTON).fillMaxWidth(),
+                modifier =
+                    Modifier.testTag(GroceryListTestTags.CLEAR_FILTERS_BUTTON).fillMaxWidth(),
             ) {
                 Text(stringResource(Res.string.grocery_list_filtered_empty_clear_filters))
             }
