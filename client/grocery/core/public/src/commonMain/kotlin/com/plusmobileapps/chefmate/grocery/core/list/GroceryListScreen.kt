@@ -807,33 +807,36 @@ private fun GroceryListInput(
     var isFocused by remember { mutableStateOf(false) }
     val expanded = (isFocused || forceShowSuggestions) && suggestions.isNotEmpty()
 
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+    Column(modifier = modifier) {
         // Suggestions render directly above the field rather than as a downward dropdown: the input
         // is anchored at the bottom of the screen, so a dropdown would open behind the keyboard
-        // (especially on iOS, where it doesn't flip above the anchor).
-        Column(modifier = Modifier.weight(1f)) {
-            if (expanded) {
-                AutocompleteSuggestionRows(suggestions = suggestions, onNameChange = onNameChange)
-            }
+        // (especially on iOS, where it doesn't flip above the anchor). They sit above the
+        // field/Done row so the Done button only centers against the field, not the suggestion
+        // list.
+        if (expanded) {
+            AutocompleteSuggestionRows(suggestions = suggestions, onNameChange = onNameChange)
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
             GroceryItemNameTextField(
                 value = state.value,
                 onValueChange = onNameChange,
                 onFocusChanged = { isFocused = it },
                 onAddClick = onAddClick,
+                modifier = Modifier.weight(1f),
             )
-        }
-        AnimatedVisibility(
-            visible = isFocused,
-            enter = fadeIn() + expandHorizontally(),
-            exit = fadeOut() + shrinkHorizontally(),
-        ) {
-            TextButton(
-                onClick = {
-                    focusManager.clearFocus()
-                    keyboardController?.hide()
-                }
+            AnimatedVisibility(
+                visible = isFocused,
+                enter = fadeIn() + expandHorizontally(),
+                exit = fadeOut() + shrinkHorizontally(),
             ) {
-                Text(stringResource(Res.string.grocery_done))
+                TextButton(
+                    onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                    }
+                ) {
+                    Text(stringResource(Res.string.grocery_done))
+                }
             }
         }
     }
