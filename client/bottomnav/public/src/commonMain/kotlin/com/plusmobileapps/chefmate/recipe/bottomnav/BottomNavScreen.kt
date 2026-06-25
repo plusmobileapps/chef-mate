@@ -3,11 +3,8 @@
 package com.plusmobileapps.chefmate.recipe.bottomnav
 
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -26,7 +23,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import chefmate.client.bottomnav.public.generated.resources.Res
 import chefmate.client.bottomnav.public.generated.resources.tab_browser
@@ -71,8 +67,7 @@ fun BottomNavigationScreen(bloc: BottomNavBloc, modifier: Modifier = Modifier) {
                 else -> NavigationLayout.SIDE_EXPANDED
             }
         when (layout) {
-            NavigationLayout.BOTTOM ->
-                MobileBottomNavContent(modifier = Modifier.imePadding(), bloc = bloc)
+            NavigationLayout.BOTTOM -> MobileBottomNavContent(bloc = bloc)
             NavigationLayout.SIDE_COMPACT ->
                 SideNavContent(modifier = Modifier.imePadding(), bloc = bloc, expandedItems = false)
             NavigationLayout.SIDE_EXPANDED ->
@@ -113,23 +108,17 @@ private fun SideNavContent(
 @Composable
 private fun MobileBottomNavContent(bloc: BottomNavBloc, modifier: Modifier = Modifier) {
     val state = bloc.state.collectAsState()
-    val density = LocalDensity.current
-    val isImeVisible = WindowInsets.ime.getBottom(density) > 0
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        bottomBar = {
-            if (!isImeVisible) {
-                PlusBottomBar(state = state.value, onClick = bloc::onTabSelected)
-            }
-        },
+        bottomBar = { PlusBottomBar(state = state.value, onClick = bloc::onTabSelected) },
     ) { paddingValues ->
-        val contentPadding =
-            if (isImeVisible) {
-                PaddingValues(top = paddingValues.calculateTopPadding())
-            } else {
-                paddingValues
-            }
-        BottomNavContentContainer(modifier = Modifier.padding(contentPadding), bloc = bloc)
+        // The bottom bar stays anchored at the bottom of the screen; only the content gets ime
+        // padding so an open keyboard pushes the content (e.g. the grocery input) up and shrinks
+        // the scrollable area above the bar instead of hiding the navigation.
+        BottomNavContentContainer(
+            modifier = Modifier.padding(paddingValues).imePadding(),
+            bloc = bloc,
+        )
     }
 }
 

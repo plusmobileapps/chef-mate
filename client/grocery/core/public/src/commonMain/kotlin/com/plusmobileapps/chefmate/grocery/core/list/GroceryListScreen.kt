@@ -76,6 +76,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -153,7 +157,6 @@ import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveModal
 import com.plusmobileapps.chefmate.ui.components.PlusTooltipPlacement
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
-import com.plusmobileapps.chefmate.ui.isIosPlatform
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.flow.StateFlow
 import org.jetbrains.compose.resources.stringResource
@@ -175,6 +178,17 @@ fun GroceryListScreen(
             (if (hasNonDefaultSort) 1 else 0) +
             (if (hasRecipeFilter) 1 else 0)
     val focusManager = LocalFocusManager.current
+    // Scrolling the list dismisses the keyboard, mirroring the tap-to-dismiss gesture below. The
+    // connection never consumes the scroll so pull-to-refresh and the list itself keep scrolling.
+    val dismissKeyboardOnScroll =
+        remember(focusManager) {
+            object : NestedScrollConnection {
+                override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                    if (available.y != 0f) focusManager.clearFocus()
+                    return Offset.Zero
+                }
+            }
+        }
 
     PlusResponsiveContainer(
         modifier = modifier.testTag(GroceryListTestTags.SCREEN).fillMaxSize()
@@ -237,7 +251,8 @@ fun GroceryListScreen(
                         IconButton(onClick = bloc::onDeleteClicked) {
                             Icon(
                                 Icons.Default.DeleteSweep,
-                                contentDescription = stringResource(Res.string.grocery_delete_items),
+                                contentDescription =
+                                    stringResource(Res.string.grocery_delete_items),
                             )
                         }
                         if (state.isSyncing) {
@@ -323,9 +338,11 @@ fun GroceryListScreen(
                                 }
                             },
                             modifier =
-                                Modifier.fillMaxSize().pointerInput(Unit) {
-                                    detectTapGestures(onTap = { focusManager.clearFocus() })
-                                },
+                                Modifier.fillMaxSize()
+                                    .nestedScroll(dismissKeyboardOnScroll)
+                                    .pointerInput(Unit) {
+                                        detectTapGestures(onTap = { focusManager.clearFocus() })
+                                    },
                             showHeaders = state.sort == GroceryListBloc.GrocerySort.AISLE,
                             trailingContent = { displayItem ->
                                 val item = itemLookup[displayItem.key as Long]
@@ -790,7 +807,6 @@ private fun GroceryListInput(
     val state = name.collectAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
-    val isIos = isIosPlatform()
     var isFocused by remember { mutableStateOf(false) }
     val expanded = (isFocused || forceShowSuggestions) && suggestions.isNotEmpty()
 
@@ -803,7 +819,6 @@ private fun GroceryListInput(
                     onValueChange = onNameChange,
                     onFocusChanged = { isFocused = it },
                     onAddClick = onAddClick,
-                    keyboardController = keyboardController,
                 )
             }
         } else {
@@ -817,7 +832,6 @@ private fun GroceryListInput(
                     onValueChange = onNameChange,
                     onFocusChanged = { isFocused = it },
                     onAddClick = onAddClick,
-                    keyboardController = keyboardController,
                     modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
                 )
                 ExposedDropdownMenu(expanded = expanded, onDismissRequest = {}) {
@@ -832,7 +846,7 @@ private fun GroceryListInput(
             }
         }
         AnimatedVisibility(
-            visible = isIos && isFocused,
+            visible = isFocused,
             enter = fadeIn() + expandHorizontally(),
             exit = fadeOut() + shrinkHorizontally(),
         ) {
@@ -875,7 +889,6 @@ private fun GroceryItemNameTextField(
     onValueChange: (String) -> Unit,
     onFocusChanged: (Boolean) -> Unit,
     onAddClick: () -> Unit,
-    keyboardController: androidx.compose.ui.platform.SoftwareKeyboardController?,
     modifier: Modifier = Modifier,
 ) {
     OutlinedTextField(
@@ -893,13 +906,9 @@ private fun GroceryItemNameTextField(
                 capitalization = KeyboardCapitalization.Sentences,
                 imeAction = ImeAction.Done,
             ),
-        keyboardActions =
-            KeyboardActions(
-                onDone = {
-                    if (value.isNotBlank()) onAddClick()
-                    keyboardController?.hide()
-                }
-            ),
+        // Adds the item but keeps the keyboard open so the user can keep entering items. The
+        // keyboard is dismissed via the Done button or by scrolling the list instead.
+        keyboardActions = KeyboardActions(onDone = { if (value.isNotBlank()) onAddClick() }),
         trailingIcon = {
             IconButton(onClick = onAddClick, enabled = value.isNotBlank()) {
                 Icon(
@@ -1035,7 +1044,8 @@ private fun FilteredEmptyGroceryListState(
             Spacer(Modifier.height(dimens.paddingLarge))
             Button(
                 onClick = onClearFiltersClicked,
-                modifier = Modifier.testTag(GroceryListTestTags.CLEAR_FILTERS_BUTTON).fillMaxWidth(),
+                modifier =
+                    Modifier.testTag(GroceryListTestTags.CLEAR_FILTERS_BUTTON).fillMaxWidth(),
             ) {
                 Text(stringResource(Res.string.grocery_list_filtered_empty_clear_filters))
             }
