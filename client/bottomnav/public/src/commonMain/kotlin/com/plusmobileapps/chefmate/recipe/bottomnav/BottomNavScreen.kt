@@ -3,6 +3,7 @@
 package com.plusmobileapps.chefmate.recipe.bottomnav
 
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -115,8 +116,14 @@ private fun MobileBottomNavContent(bloc: BottomNavBloc, modifier: Modifier = Mod
         // The bottom bar stays anchored at the bottom of the screen; only the content gets ime
         // padding so an open keyboard pushes the content (e.g. the grocery input) up and shrinks
         // the scrollable area above the bar instead of hiding the navigation.
+        //
+        // consumeWindowInsets marks the bottom-bar/navigation-bar inset (already applied via
+        // paddingValues) as consumed, so imePadding only adds the *remaining* keyboard height.
+        // Without this, the open keyboard would be padded on top of the nav-bar inset that it
+        // already covers, leaving a gap the size of the bottom bar between the input and keyboard.
         BottomNavContentContainer(
-            modifier = Modifier.padding(paddingValues).imePadding(),
+            modifier =
+                Modifier.padding(paddingValues).consumeWindowInsets(paddingValues).imePadding(),
             bloc = bloc,
         )
     }
