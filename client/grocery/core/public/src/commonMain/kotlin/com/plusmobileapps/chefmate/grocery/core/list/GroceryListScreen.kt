@@ -806,6 +806,10 @@ private fun GroceryListInput(
     val focusManager = LocalFocusManager.current
     var isFocused by remember { mutableStateOf(false) }
     val expanded = (isFocused || forceShowSuggestions) && suggestions.isNotEmpty()
+    val dismissKeyboard: () -> Unit = {
+        focusManager.clearFocus()
+        keyboardController?.hide()
+    }
 
     Column(modifier = modifier) {
         // Suggestions render directly above the field rather than as a downward dropdown: the input
@@ -822,6 +826,7 @@ private fun GroceryListInput(
                 onValueChange = onNameChange,
                 onFocusChanged = { isFocused = it },
                 onAddClick = onAddClick,
+                onDismissKeyboard = dismissKeyboard,
                 modifier = Modifier.weight(1f),
             )
             AnimatedVisibility(
@@ -829,12 +834,7 @@ private fun GroceryListInput(
                 enter = fadeIn() + expandHorizontally(),
                 exit = fadeOut() + shrinkHorizontally(),
             ) {
-                TextButton(
-                    onClick = {
-                        focusManager.clearFocus()
-                        keyboardController?.hide()
-                    }
-                ) {
+                TextButton(onClick = dismissKeyboard) {
                     Text(stringResource(Res.string.grocery_done))
                 }
             }
@@ -874,6 +874,7 @@ private fun GroceryItemNameTextField(
     onValueChange: (String) -> Unit,
     onFocusChanged: (Boolean) -> Unit,
     onAddClick: () -> Unit,
+    onDismissKeyboard: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     OutlinedTextField(
@@ -891,9 +892,13 @@ private fun GroceryItemNameTextField(
                 capitalization = KeyboardCapitalization.Sentences,
                 imeAction = ImeAction.Send,
             ),
-        // Submits the item but keeps the keyboard open so the user can keep entering items. The
-        // keyboard is dismissed via the Done button or by scrolling the list instead.
-        keyboardActions = KeyboardActions(onSend = { if (value.isNotBlank()) onAddClick() }),
+        // Submits the item and keeps the keyboard open so the user can keep entering items. On an
+        // empty field the action instead dismisses the keyboard, matching the Done button and
+        // scroll-to-dismiss gestures.
+        keyboardActions =
+            KeyboardActions(
+                onSend = { if (value.isNotBlank()) onAddClick() else onDismissKeyboard() }
+            ),
         trailingIcon = {
             IconButton(onClick = onAddClick, enabled = value.isNotBlank()) {
                 Icon(
