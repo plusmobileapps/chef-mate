@@ -47,6 +47,7 @@ import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.components.NavRailItem
 import com.plusmobileapps.chefmate.ui.components.PlusNavRailHeaderContainer
+import com.plusmobileapps.chefmate.ui.components.reportBottomNavInset
 import com.plusmobileapps.chefmate.ui.fadeScalePredictiveBackAnimatable
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.StringResource
@@ -150,7 +151,9 @@ private fun BottomNavContentContainer(bloc: BottomNavBloc, modifier: Modifier = 
 
 @Composable
 private fun PlusBottomBar(state: BottomNavBloc.Model, onClick: (BottomNavBloc.Tab) -> Unit) {
-    BottomAppBar(modifier = Modifier.fillMaxWidth()) {
+    // Report the bar height so the global toast host floats snackbars above it instead of covering
+    // it. See LocalBottomNavInset / ToastScaffold.
+    BottomAppBar(modifier = Modifier.fillMaxWidth().reportBottomNavInset()) {
         state.tabs.forEach { tab ->
             NavigationBarItem(
                 selected = tab == state.selectedTab,
