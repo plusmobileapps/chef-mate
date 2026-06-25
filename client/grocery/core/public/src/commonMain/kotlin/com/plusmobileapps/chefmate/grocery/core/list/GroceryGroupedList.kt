@@ -1,6 +1,9 @@
 package com.plusmobileapps.chefmate.grocery.core.list
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
@@ -19,6 +24,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -43,6 +50,9 @@ data class GroceryDisplayItem(
 
 data class GroceryDisplayGroup(val category: GroceryCategory, val items: List<GroceryDisplayItem>)
 
+/** Peak opacity of the brief highlight shown on a freshly added grocery item. */
+private const val HIGHLIGHT_PEAK_ALPHA = 0.5f
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun GroceryGroupedList(
@@ -50,11 +60,13 @@ fun GroceryGroupedList(
     onItemClick: (Any) -> Unit,
     onCheckedChange: (Any) -> Unit,
     modifier: Modifier = Modifier,
+    state: LazyListState = rememberLazyListState(),
     showHeaders: Boolean = true,
+    highlightedKey: Any? = null,
     trailingContent: (@Composable (GroceryDisplayItem) -> Unit)? = null,
     footer: (LazyListScope.() -> Unit)? = null,
 ) {
-    LazyColumn(modifier = modifier.fillMaxSize()) {
+    LazyColumn(state = state, modifier = modifier.fillMaxSize()) {
         groups.forEach { group ->
             if (showHeaders) {
                 stickyHeader(key = "header_${group.category.name}") {
@@ -68,6 +80,7 @@ fun GroceryGroupedList(
                     onCheckedChange = { onCheckedChange(item.key) },
                     onClick = { onItemClick(item.key) },
                     trailingContent = trailingContent,
+                    highlighted = item.key == highlightedKey,
                     modifier = Modifier.animateItem(),
                 )
                 HorizontalDivider()
@@ -96,9 +109,27 @@ private fun GroceryDisplayListItem(
     onClick: () -> Unit,
     trailingContent: (@Composable (GroceryDisplayItem) -> Unit)?,
     modifier: Modifier = Modifier,
+    highlighted: Boolean = false,
 ) {
+    // Briefly tint the row when it's the freshly added item, then fade back to transparent so the
+    // user can see where it landed in the list.
+    val highlightColor = MaterialTheme.colorScheme.primaryContainer
+    val highlightAlpha = remember { Animatable(0f) }
+    LaunchedEffect(highlighted) {
+        if (highlighted) {
+            highlightAlpha.snapTo(HIGHLIGHT_PEAK_ALPHA)
+            highlightAlpha.animateTo(
+                targetValue = 0f,
+                animationSpec = tween(durationMillis = 1200, delayMillis = 400),
+            )
+        }
+    }
     Row(
-        modifier = modifier.fillMaxWidth().clickable(onClick = onClick),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(highlightColor.copy(alpha = highlightAlpha.value))
+                .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = onCheckedChange) {
