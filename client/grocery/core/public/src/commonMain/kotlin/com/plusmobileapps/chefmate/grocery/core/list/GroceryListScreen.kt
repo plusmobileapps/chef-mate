@@ -84,8 +84,10 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import chefmate.client.grocery.core.public.generated.resources.Res
@@ -877,9 +879,21 @@ private fun GroceryItemNameTextField(
     onDismissKeyboard: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var fieldValue by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
+    // The name is owned externally (the BLoC). When it changes from outside the field — a
+    // suggestion tap or the clear after adding — sync it in and move the cursor to the end. Normal
+    // typing keeps text and value equal, so this leaves the user's cursor alone.
+    LaunchedEffect(value) {
+        if (value != fieldValue.text) {
+            fieldValue = TextFieldValue(value, TextRange(value.length))
+        }
+    }
     OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
+        value = fieldValue,
+        onValueChange = {
+            fieldValue = it
+            onValueChange(it.text)
+        },
         modifier =
             modifier
                 .fillMaxWidth()
@@ -897,10 +911,12 @@ private fun GroceryItemNameTextField(
         // scroll-to-dismiss gestures.
         keyboardActions =
             KeyboardActions(
-                onSend = { if (value.isNotBlank()) onAddClick() else onDismissKeyboard() }
+                onSend = {
+                    if (fieldValue.text.isNotBlank()) onAddClick() else onDismissKeyboard()
+                }
             ),
         trailingIcon = {
-            IconButton(onClick = onAddClick, enabled = value.isNotBlank()) {
+            IconButton(onClick = onAddClick, enabled = fieldValue.text.isNotBlank()) {
                 Icon(
                     Icons.Default.Add,
                     contentDescription = stringResource(Res.string.grocery_add_item),
