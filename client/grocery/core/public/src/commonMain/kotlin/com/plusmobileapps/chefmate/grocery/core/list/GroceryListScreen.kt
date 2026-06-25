@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -190,6 +191,29 @@ fun GroceryListScreen(
             }
         }
 
+    // When the user adds an item from the input, scroll it into view and briefly highlight it. We
+    // can't know the new item's id up front, so we flag the pending add and, on the next state that
+    // introduces an id we hadn't seen, treat that id as the freshly added item.
+    val listState = rememberLazyListState()
+    var highlightedItemKey by remember { mutableStateOf<Long?>(null) }
+    var awaitingAddedItem by remember { mutableStateOf(false) }
+    var knownItemIds by remember { mutableStateOf<Set<Long>>(emptySet()) }
+
+    LaunchedEffect(state.groupedItems) {
+        val currentIds = state.groupedItems.flatMap { group -> group.items.map { it.id } }.toSet()
+        if (awaitingAddedItem) {
+            val addedId = (currentIds - knownItemIds).firstOrNull()
+            if (addedId != null) {
+                awaitingAddedItem = false
+                highlightedItemKey = addedId
+                val showHeaders = state.sort == GroceryListBloc.GrocerySort.AISLE
+                val index = state.groupedItems.flatIndexOfItem(addedId, showHeaders)
+                if (index >= 0) listState.animateScrollToItem(index)
+            }
+        }
+        knownItemIds = currentIds
+    }
+
     PlusResponsiveContainer(
         modifier = modifier.testTag(GroceryListTestTags.SCREEN).fillMaxSize()
     ) { windowSizeClass ->
@@ -343,7 +367,9 @@ fun GroceryListScreen(
                                     .pointerInput(Unit) {
                                         detectTapGestures(onTap = { focusManager.clearFocus() })
                                     },
+                            state = listState,
                             showHeaders = state.sort == GroceryListBloc.GrocerySort.AISLE,
+                            highlightedKey = highlightedItemKey,
                             trailingContent = { displayItem ->
                                 val item = itemLookup[displayItem.key as Long]
                                 if (item != null) {
@@ -361,7 +387,10 @@ fun GroceryListScreen(
                         name = bloc.newGroceryItemName,
                         suggestions = state.autocompleteSuggestions,
                         onNameChange = bloc::onNewGroceryItemNameChange,
-                        onAddClick = bloc::saveGroceryItem,
+                        onAddClick = {
+                            awaitingAddedItem = true
+                            bloc.saveGroceryItem()
+                        },
                         forceShowSuggestions = forceShowAutocompleteSuggestions,
                     )
                 }
@@ -410,6 +439,26 @@ fun GroceryListScreen(
 
         GroceryDetailSheet(bloc = bloc)
     }
+}
+
+/**
+ * Flattened index of the item with [id] within the lazy list, accounting for the per-category
+ * sticky headers when [showHeaders] is set. Mirrors the layout built in [GroceryGroupedList].
+ * Returns -1 when the item isn't present.
+ */
+private fun List<GroceryListBloc.GroceryGroup>.flatIndexOfItem(
+    id: Long,
+    showHeaders: Boolean,
+): Int {
+    var index = 0
+    forEach { group ->
+        if (showHeaders) index++
+        group.items.forEach { item ->
+            if (item.id == id) return index
+            index++
+        }
+    }
+    return -1
 }
 
 @Composable
