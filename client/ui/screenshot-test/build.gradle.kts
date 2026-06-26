@@ -64,6 +64,8 @@ dependencies {
     implementation(project(":client:settings:root:public"))
     implementation(project(":client:profile:public"))
     implementation(project(":client:profile:impl"))
+    implementation(project(":client:toast:public"))
+    implementation(project(":client:toast:testing"))
     implementation(libs.arkivanov.decompose.core)
 
     screenshotTestImplementation(libs.screenshot.validation.api)
