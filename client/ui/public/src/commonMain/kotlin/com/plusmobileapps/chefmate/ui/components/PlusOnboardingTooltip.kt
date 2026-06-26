@@ -55,13 +55,16 @@ enum class PlusTooltipPlacement {
  * floating toolbar) and can overlay other content. The popup is non-focusable, so taps still reach
  * the underlying control — a user can tap the highlighted control directly.
  *
- * Visibility is fully caller-controlled. Pass [visible] = true to show it and handle [onDismiss]
- * (called when the user taps the bubble's dismiss button) to hide it. Callers that want it shown
- * only once should persist that decision themselves — e.g. via the shared coach-mark controller.
+ * Visibility is fully caller-controlled. Pass [visible] = true to show it and handle [onDismiss] to
+ * hide it. [onDismiss] fires only when the user taps the bubble's dismiss button — never when the
+ * popup goes away for other reasons (outside interaction, or the anchor leaving composition as the
+ * user navigates away). Callers that want it shown only once should persist that decision in
+ * [onDismiss] — e.g. via the shared coach-mark controller — so that merely leaving the screen
+ * mid-tooltip lets it reappear on the next visit rather than dismissing it forever.
  *
  * @param text the message shown in the bubble.
  * @param visible whether the bubble is currently shown.
- * @param onDismiss invoked when the user taps the bubble's dismiss button.
+ * @param onDismiss invoked only when the user taps the bubble's dismiss button.
  * @param placement which side of the anchor the bubble sits on. Defaults to [ABOVE].
  * @param anchor the control the tooltip points at; always laid out, tooltip or not.
  */
@@ -99,7 +102,12 @@ fun PlusOnboardingTooltip(
 
             Popup(
                 popupPositionProvider = positionProvider,
-                onDismissRequest = onDismiss,
+                // Deliberately a no-op: only the bubble's dismiss button should mark the coach mark
+                // as seen. The popup auto-dismissing for any other reason (outside interaction, the
+                // anchor leaving composition when navigating away) must NOT consume it — otherwise
+                // leaving the screen mid-tooltip would hide it forever. Visibility is caller-driven
+                // via [visible], so the tip simply reappears the next time the screen requests it.
+                onDismissRequest = {},
                 properties = PopupProperties(focusable = false, clippingEnabled = false),
             ) {
                 PlusTooltipBubble(
