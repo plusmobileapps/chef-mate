@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -81,6 +82,10 @@ fun PlusHeaderContainer(
     // its own insets (e.g. Cook Mode applies horizontal insets per body region) so the cutout
     // side isn't padded twice.
     applyContentInsets: Boolean = true,
+    // Padding applied once around the capped content column, inside the display-cutout safe area.
+    // Use this for a screen's horizontal gutters instead of padding each child composable. Defaults
+    // to none so screens that manage their own content padding are unaffected.
+    contentPadding: PaddingValues = PaddingValues(),
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val scrollState = rememberScrollState()
@@ -107,6 +112,7 @@ fun PlusHeaderContainer(
                         topPadding = topPadding,
                         applyHorizontalInsets = applyContentInsets,
                         horizontalAlignment = horizontalAlignment,
+                        contentPadding = contentPadding,
                         content = content,
                     )
                     BottomBarBox(
@@ -155,6 +161,7 @@ fun PlusHeaderContainer(
                         maxContentWidth = maxContentWidth,
                         applyHorizontalInsets = true,
                         horizontalAlignment = horizontalAlignment,
+                        contentPadding = contentPadding,
                         content = content,
                     )
                     BottomBarBox(
@@ -211,6 +218,7 @@ private fun ScrollingContent(
     topPadding: Dp = 0.dp,
     applyHorizontalInsets: Boolean = true,
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
+    contentPadding: PaddingValues = PaddingValues(),
     content: @Composable (ColumnScope.() -> Unit),
 ) {
     // The scroll surface fills the full width so the wheel/drag is captured everywhere — including
@@ -224,7 +232,10 @@ private fun ScrollingContent(
         val baseModifier = Modifier.fillMaxWidth().widthIn(max = maxContentWidth)
         val insetModifier =
             if (applyHorizontalInsets) baseModifier.scaffoldContentInsetPadding() else baseModifier
-        Column(modifier = insetModifier, horizontalAlignment = horizontalAlignment) {
+        Column(
+            modifier = insetModifier.padding(contentPadding),
+            horizontalAlignment = horizontalAlignment,
+        ) {
             content()
             if (scrollEnabled) {
                 Spacer(modifier = Modifier.padding(WindowInsets.systemGestures.asPaddingValues()))
