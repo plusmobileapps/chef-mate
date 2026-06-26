@@ -5,12 +5,17 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.plusmobileapps.chefmate.text.TextData
@@ -26,6 +31,33 @@ import com.plusmobileapps.chefmate.text.TextData
  * this; raw FABs and bottom bars must opt in.
  */
 val LocalSnackbarInset: ProvidableCompositionLocal<Dp> = compositionLocalOf { 0.dp }
+
+/**
+ * A holder for the live height of the app's bottom navigation bar (its content plus the system
+ * navigation-bar inset it absorbs), or `0.dp` when no bottom bar is showing. Provided by the
+ * app-root toast scaffold so the global snackbar host can float its snackbars *above* the bar
+ * instead of rendering on top of it.
+ *
+ * The bottom bar reports its measured height by applying [reportBottomNavInset] to itself; nothing
+ * else should write to this. Read it only inside the toast scaffold.
+ */
+val LocalBottomNavInset: ProvidableCompositionLocal<MutableState<Dp>> = compositionLocalOf {
+    mutableStateOf(0.dp)
+}
+
+/**
+ * Reports this composable's height into [LocalBottomNavInset] so the global snackbar host can sit
+ * above it, and resets the reported height to `0.dp` when the composable leaves composition (e.g.
+ * navigating away from a screen that shows a bottom bar). Apply it to the app's bottom navigation
+ * bar.
+ */
+@Composable
+fun Modifier.reportBottomNavInset(): Modifier {
+    val holder = LocalBottomNavInset.current
+    val density = LocalDensity.current
+    DisposableEffect(holder) { onDispose { holder.value = 0.dp } }
+    return onSizeChanged { holder.value = with(density) { it.height.toDp() } }
+}
 
 /**
  * A single queued snackbar. [id] is stable so the UI can dequeue exactly what it showed.
