@@ -1,0 +1,51 @@
+package com.plusmobileapps.chefmate.ui.screenshot
+
+import android.content.res.Configuration
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.tooling.preview.Preview
+import com.android.tools.screenshot.PreviewTest
+import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailScreen
+import com.plusmobileapps.chefmate.recipe.core.detail.previewRecipeDetailBloc
+import com.plusmobileapps.chefmate.toast.LocalToastService
+import com.plusmobileapps.chefmate.toast.testing.FakeToastService
+import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+
+// RecipeDetailScreen reads LocalToastService.current directly, so it must be provided for the
+// screen to compose at all.
+@Composable
+private fun RecipeDetailPreview(darkTheme: Boolean = false) {
+    CompositionLocalProvider(LocalToastService provides FakeToastService()) {
+        ChefMateTheme(darkTheme = darkTheme) {
+            RecipeDetailScreen(bloc = previewRecipeDetailBloc)
+        }
+    }
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1000)
+@Composable
+fun RecipeDetailCompactScreenshot() {
+    RecipeDetailPreview()
+}
+
+// Wide window: the top-bar actions fan out into dedicated Edit / Share / Delete buttons instead of
+// the compact three-dot overflow.
+@PreviewTest
+@Preview(showBackground = true, widthDp = 900, heightDp = 800)
+@Composable
+fun RecipeDetailTabletScreenshot() {
+    RecipeDetailPreview()
+}
+
+@PreviewTest
+@Preview(
+    showBackground = true,
+    widthDp = 900,
+    heightDp = 800,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+)
+@Composable
+fun RecipeDetailTabletDarkScreenshot() {
+    RecipeDetailPreview(darkTheme = true)
+}

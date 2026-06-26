@@ -140,6 +140,7 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_kcal
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_prep_time
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_remove_favorite
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_servings
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_text
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_url
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_source
@@ -286,92 +287,21 @@ private fun RecipeDetailBody(
                         onBackClick = bloc::onBackClicked,
                         trailingAccessory =
                             PlusHeaderData.TrailingAccessory.Custom {
-                                Box {
-                                    IconButton(onClick = { onShowOverflowMenuChange(true) }) {
-                                        Icon(
-                                            imageVector = Icons.Default.MoreVert,
-                                            contentDescription =
-                                                stringResource(Res.string.recipe_detail_edit),
-                                        )
-                                    }
-                                    DropdownMenu(
-                                        expanded = showOverflowMenu,
-                                        onDismissRequest = { onShowOverflowMenuChange(false) },
-                                    ) {
-                                        DropdownMenuItem(
-                                            text = {
-                                                Text(stringResource(Res.string.recipe_detail_edit))
-                                            },
-                                            leadingIcon = {
-                                                Icon(Icons.Default.Edit, contentDescription = null)
-                                            },
-                                            onClick = {
-                                                onShowOverflowMenuChange(false)
-                                                bloc.onEditClicked()
-                                            },
-                                        )
-                                        state.recipe.sourceUrl?.let { url ->
-                                            DropdownMenuItem(
-                                                text = {
-                                                    Text(
-                                                        stringResource(
-                                                            Res.string.recipe_detail_share_url
-                                                        )
-                                                    )
-                                                },
-                                                leadingIcon = {
-                                                    Icon(
-                                                        Icons.Default.Share,
-                                                        contentDescription = null,
-                                                    )
-                                                },
-                                                onClick = {
-                                                    onShowOverflowMenuChange(false)
-                                                    if (shareLauncher(url)) {
-                                                        toastService.show(copiedMessage)
-                                                    }
-                                                },
-                                            )
+                                RecipeDetailActions(
+                                    recipe = state.recipe,
+                                    // Compact collapses into the three-dot overflow; wider windows
+                                    // have the app-bar room to surface the actions directly.
+                                    inlineActions = !isCompact,
+                                    showOverflowMenu = showOverflowMenu,
+                                    onShowOverflowMenuChange = onShowOverflowMenuChange,
+                                    onEdit = bloc::onEditClicked,
+                                    onDelete = bloc::onDeleteClicked,
+                                    onShare = { content ->
+                                        if (shareLauncher(content)) {
+                                            toastService.show(copiedMessage)
                                         }
-                                        DropdownMenuItem(
-                                            text = {
-                                                Text(
-                                                    stringResource(
-                                                        Res.string.recipe_detail_share_text
-                                                    )
-                                                )
-                                            },
-                                            leadingIcon = {
-                                                Icon(Icons.Default.Share, contentDescription = null)
-                                            },
-                                            onClick = {
-                                                onShowOverflowMenuChange(false)
-                                                if (
-                                                    shareLauncher(formatRecipeAsText(state.recipe))
-                                                ) {
-                                                    toastService.show(copiedMessage)
-                                                }
-                                            },
-                                        )
-                                        DropdownMenuItem(
-                                            text = {
-                                                Text(
-                                                    stringResource(Res.string.recipe_detail_delete)
-                                                )
-                                            },
-                                            leadingIcon = {
-                                                Icon(
-                                                    Icons.Default.Delete,
-                                                    contentDescription = null,
-                                                )
-                                            },
-                                            onClick = {
-                                                onShowOverflowMenuChange(false)
-                                                bloc.onDeleteClicked()
-                                            },
-                                        )
-                                    }
-                                }
+                                    },
+                                )
                             },
                     ),
                 verticalArrangement = spacedBy(ChefMateTheme.dimens.paddingNormal),
@@ -533,6 +463,158 @@ private fun RecipeDetailBody(
             }
         }
     }
+}
+
+/**
+ * Recipe-detail top-bar actions. On compact widths everything collapses into a single overflow
+ * (three-dot) menu; on wider windows ([inlineActions]) the otherwise-empty app-bar space is used to
+ * surface Edit / Share / Delete directly, with Share opening its own small menu to pick between the
+ * source URL and the full recipe text.
+ */
+@Composable
+private fun RecipeDetailActions(
+    recipe: Recipe,
+    inlineActions: Boolean,
+    showOverflowMenu: Boolean,
+    onShowOverflowMenuChange: (Boolean) -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onShare: (String) -> Unit,
+) {
+    if (inlineActions) {
+        InlineRecipeActions(
+            recipe = recipe,
+            onEdit = onEdit,
+            onDelete = onDelete,
+            onShare = onShare,
+        )
+    } else {
+        OverflowRecipeActions(
+            recipe = recipe,
+            expanded = showOverflowMenu,
+            onExpandedChange = onShowOverflowMenuChange,
+            onEdit = onEdit,
+            onDelete = onDelete,
+            onShare = onShare,
+        )
+    }
+}
+
+/** Tablet/wide layout: Edit, Share, and Delete laid out directly in the app bar. */
+@Composable
+private fun InlineRecipeActions(
+    recipe: Recipe,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onShare: (String) -> Unit,
+) {
+    IconButton(onClick = onEdit) {
+        Icon(
+            imageVector = Icons.Default.Edit,
+            contentDescription = stringResource(Res.string.recipe_detail_edit),
+        )
+    }
+    ShareActionButton(recipe = recipe, onShare = onShare)
+    IconButton(onClick = onDelete) {
+        Icon(
+            imageVector = Icons.Default.Delete,
+            contentDescription = stringResource(Res.string.recipe_detail_delete),
+        )
+    }
+}
+
+/** Share icon button that owns its own dropdown for picking the source URL or the recipe text. */
+@Composable
+private fun ShareActionButton(recipe: Recipe, onShare: (String) -> Unit) {
+    Box {
+        var showShareMenu by remember { mutableStateOf(false) }
+        IconButton(onClick = { showShareMenu = true }) {
+            Icon(
+                imageVector = Icons.Default.Share,
+                contentDescription = stringResource(Res.string.recipe_detail_share),
+            )
+        }
+        DropdownMenu(expanded = showShareMenu, onDismissRequest = { showShareMenu = false }) {
+            RecipeShareMenuItems(
+                recipe = recipe,
+                onClose = { showShareMenu = false },
+                onShare = onShare,
+            )
+        }
+    }
+}
+
+/** Compact layout: every action collapsed behind a single three-dot overflow menu. */
+@Composable
+private fun OverflowRecipeActions(
+    recipe: Recipe,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onShare: (String) -> Unit,
+) {
+    Box {
+        IconButton(onClick = { onExpandedChange(true) }) {
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = stringResource(Res.string.recipe_detail_edit),
+            )
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { onExpandedChange(false) }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.recipe_detail_edit)) },
+                leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                onClick = {
+                    onExpandedChange(false)
+                    onEdit()
+                },
+            )
+            RecipeShareMenuItems(
+                recipe = recipe,
+                onClose = { onExpandedChange(false) },
+                onShare = onShare,
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.recipe_detail_delete)) },
+                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
+                onClick = {
+                    onExpandedChange(false)
+                    onDelete()
+                },
+            )
+        }
+    }
+}
+
+/**
+ * The two share entries — the source URL (only when present) and the full recipe text — shared by
+ * both the compact overflow menu and the tablet Share button's own dropdown.
+ */
+@Composable
+private fun RecipeShareMenuItems(
+    recipe: Recipe,
+    onClose: () -> Unit,
+    onShare: (String) -> Unit,
+) {
+    recipe.sourceUrl?.let { url ->
+        DropdownMenuItem(
+            text = { Text(stringResource(Res.string.recipe_detail_share_url)) },
+            leadingIcon = { Icon(Icons.Default.Share, contentDescription = null) },
+            onClick = {
+                onClose()
+                onShare(url)
+            },
+        )
+    }
+    DropdownMenuItem(
+        text = { Text(stringResource(Res.string.recipe_detail_share_text)) },
+        leadingIcon = { Icon(Icons.Default.Share, contentDescription = null) },
+        onClick = {
+            onClose()
+            onShare(formatRecipeAsText(recipe))
+        },
+    )
 }
 
 /**
@@ -1708,7 +1790,7 @@ private fun DeletingDialog(modifier: Modifier = Modifier) {
     )
 }
 
-private val previewBloc =
+val previewRecipeDetailBloc: RecipeDetailBloc =
     object : RecipeDetailBloc {
         override val state: StateFlow<RecipeDetailBloc.Model> =
             MutableStateFlow(
@@ -1834,11 +1916,11 @@ private val previewBloc =
 @Preview(heightDp = 1100)
 @Composable
 private fun RecipeDetailContentPreview() {
-    ChefMateTheme { RecipeDetailScreen(bloc = previewBloc) }
+    ChefMateTheme { RecipeDetailScreen(bloc = previewRecipeDetailBloc) }
 }
 
 @Preview(heightDp = 1100)
 @Composable
 private fun RecipeDetailContentDarkPreview() {
-    ChefMateTheme(darkTheme = true) { RecipeDetailScreen(bloc = previewBloc) }
+    ChefMateTheme(darkTheme = true) { RecipeDetailScreen(bloc = previewRecipeDetailBloc) }
 }
