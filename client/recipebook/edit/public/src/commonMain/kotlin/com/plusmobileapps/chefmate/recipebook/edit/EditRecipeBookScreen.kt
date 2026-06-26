@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -72,6 +73,7 @@ fun EditRecipeBookScreen(bloc: EditRecipeBookBloc, modifier: Modifier = Modifier
     PlusHeaderContainer(
         modifier = modifier.testTag(EditRecipeBookTestTags.SCREEN),
         data = PlusHeaderData.Modal(title = model.title, onCloseClick = bloc::onCloseClicked),
+        contentPadding = PaddingValues(horizontal = ChefMateTheme.dimens.paddingNormal),
     ) {
         PlusTextField(
             value = model.name,
