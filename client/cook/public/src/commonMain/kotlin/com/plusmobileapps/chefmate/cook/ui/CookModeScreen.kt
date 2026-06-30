@@ -115,6 +115,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusOnboardingTooltip
 import com.plusmobileapps.chefmate.ui.components.PlusTooltipPlacement
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
+import com.plusmobileapps.chefmate.ui.text.toInlineMarkdownAnnotatedString
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -865,7 +866,7 @@ private fun IngredientRow(text: String, crossedOut: Boolean, onClick: () -> Unit
         return
     }
     Text(
-        text = text,
+        text = text.toInlineMarkdownAnnotatedString(),
         style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 22.sp),
         textDecoration = if (crossedOut) TextDecoration.LineThrough else TextDecoration.None,
         color =
@@ -885,7 +886,7 @@ private fun IngredientRow(text: String, crossedOut: Boolean, onClick: () -> Unit
 private fun DirectionRow(text: String, highlighted: Boolean, onClick: () -> Unit) {
     val dimens = ChefMateTheme.dimens
     Text(
-        text = text,
+        text = text.toInlineMarkdownAnnotatedString(),
         style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 22.sp),
         modifier =
             Modifier.fillMaxWidth()
