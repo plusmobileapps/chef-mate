@@ -1678,10 +1678,6 @@ private fun IngredientsContent(
         modifier = modifier.padding(dimens.paddingNormal),
         verticalArrangement = Arrangement.spacedBy(dimens.paddingExtraSmall),
     ) {
-        Text(
-            text = stringResource(Res.string.recipe_detail_ingredients),
-            style = MaterialTheme.typography.titleMedium,
-        )
         lines.forEachIndexed { index, line ->
             IngredientLineItem(
                 text = line,
@@ -1706,10 +1702,6 @@ private fun DirectionsContent(
         modifier = modifier.padding(dimens.paddingNormal),
         verticalArrangement = Arrangement.spacedBy(dimens.paddingSmall),
     ) {
-        Text(
-            text = stringResource(Res.string.recipe_detail_directions),
-            style = MaterialTheme.typography.titleMedium,
-        )
         steps.forEachIndexed { index, step ->
             DirectionLineItem(
                 text = step.text,
@@ -1811,20 +1803,20 @@ val previewRecipeDetailBloc: RecipeDetailBloc =
                             sourceUrl = "https://example.com/spaghetti-bolognese",
                             ingredients =
                                 """
-                                - 400g spaghetti
+                                - 400g **spaghetti**
                                 - 2 tbsp olive oil
-                                - 1 onion, chopped
+                                - 1 onion, _finely chopped_
                                 - 2 garlic cloves, crushed
                                 - 400g minced beef
                                 - 800g canned tomatoes
-                                - Salt and pepper to taste
+                                - Salt and **pepper** to taste
                                 """
                                     .trimIndent(),
                             directions =
                                 """
-                                1. Cook the spaghetti according to the package instructions.
+                                1. Cook the spaghetti until _al dente_.
                                 2. Heat the olive oil in a pan and sauté the onion and garlic until soft.
-                                3. Add the minced beef and cook until browned.
+                                3. Add the minced beef and cook until **browned**.
                                 4. Stir in the canned tomatoes and simmer for 45 minutes.
                                 5. Season with salt and pepper.
                                 6. Serve the sauce over the cooked spaghetti.

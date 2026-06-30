@@ -58,11 +58,26 @@ private val activeSessionsSample =
         CookModeBloc.Model.Chip(2L, "Caesar Salad", isActive = false),
     )
 
+// Inline **bold** / _italic_ markdown in the ingredients and directions exercises the rich-text
+// rendering on the cook-mode rows (issue: markdown wasn't formatted in cook mode).
+private val sampleWithMarkdown =
+    Recipe.Sample.copy(
+        ingredients =
+            "200g **spaghetti**\n100g _guanciale_\n2 large eggs\n50g pecorino romano\n" +
+                "Freshly cracked **black pepper**\nSalt",
+        directions =
+            "Bring a large pot of **salted water** to a boil and cook pasta until _al dente_.\n" +
+                "Meanwhile, render the guanciale in a wide pan over medium heat until crisp.\n" +
+                "Whisk eggs and pecorino in a bowl with plenty of black pepper.\n" +
+                "Drain pasta (reserving a cup of water) and add to the pan _off the heat_.\n" +
+                "Pour in the egg mixture and toss vigorously until **silky**.",
+    )
+
 val previewCookBlocStacked: CookModeBloc =
     cookBloc(
         CookModeBloc.Model(
             isLoading = false,
-            activeRecipe = Recipe.Sample,
+            activeRecipe = sampleWithMarkdown,
             activeSessions = activeSessionsSample,
             layoutMode = CookModeBloc.LayoutMode.Stacked,
             keepScreenOn = true,
