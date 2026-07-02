@@ -28,6 +28,16 @@ Build release AAB and upload to Play Store internal track
 
 ## iOS
 
+### ios certificates
+
+```sh
+[bundle exec] fastlane ios certificates
+```
+
+Generate/refresh signing certificates and provisioning profiles (read-write match)
+
+Run this once after adding an app id (e.g. the watch app) so its profile is registered.
+
 ### ios release
 
 ```sh
