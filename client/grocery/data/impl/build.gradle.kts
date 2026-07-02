@@ -9,7 +9,9 @@ kotlin {
             implementation(projects.client.database.core)
             implementation(projects.client.grocery.data.public)
             implementation(projects.client.shared)
-            implementation(projects.client.util.public)
+            // Only the Compose-free DateTimeUtil is needed here; depend on util:core:public
+            // rather than the Compose-coupled util:public so the data layer stays Compose-free.
+            implementation(projects.client.util.core.public)
             implementation(projects.client.auth.data.public)
             implementation(libs.supabase.client)
             implementation(libs.supabase.postgrest)

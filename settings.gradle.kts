@@ -200,6 +200,8 @@ include(":client:ui:public")
 
 include(":client:ui:screenshot-test")
 
+include(":client:util:core:public")
+
 include(":client:util:impl")
 
 include(":client:util:public")

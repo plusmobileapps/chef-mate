@@ -7,6 +7,10 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(libs.kotlinx.datetime)
+            // Re-export the Compose-free date/time core (DateTimeUtil + LocalDate extensions) so
+            // existing consumers that import them from `com.plusmobileapps.chefmate.util` keep
+            // working unchanged.
+            api(projects.client.util.core.public)
             api(projects.client.text.public)
             implementation(compose.components.resources)
             implementation(compose.ui)
