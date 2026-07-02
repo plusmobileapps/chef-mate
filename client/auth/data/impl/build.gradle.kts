@@ -15,7 +15,7 @@ kotlin {
         }
         jvmMain.dependencies { implementation(libs.ktor.client.cio) }
         androidMain.dependencies { implementation(libs.ktor.client.cio) }
-        iosMain.dependencies { implementation(libs.ktor.client.darwin) }
+        appleMain.dependencies { implementation(libs.ktor.client.darwin) }
     }
 }
 
@@ -23,4 +23,5 @@ plusLibrary {
     namespace = "com.plusmobileapps.chefmate.auth.data.impl"
     enableDi = true
     enableTesting = true
+    enableWatch = true
 }

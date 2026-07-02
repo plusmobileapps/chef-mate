@@ -27,6 +27,7 @@ kotlin {
 plusLibrary {
     namespace = "com.plusmobileapps.chefmate.shared"
     enableDi = true
+    enableWatch = true
 }
 
 // Load properties from local.properties

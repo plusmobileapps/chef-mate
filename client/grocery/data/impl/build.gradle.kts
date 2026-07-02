@@ -25,7 +25,7 @@ kotlin {
         }
         jvmMain.dependencies { implementation(libs.ktor.client.cio) }
         androidMain.dependencies { implementation(libs.ktor.client.cio) }
-        iosMain.dependencies { implementation(libs.ktor.client.darwin) }
+        appleMain.dependencies { implementation(libs.ktor.client.darwin) }
     }
 }
 
@@ -34,4 +34,5 @@ plusLibrary {
     enableDi = true
     enableTesting = true
     enableDatabaseTesting = true
+    enableWatch = true
 }

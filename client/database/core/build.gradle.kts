@@ -14,7 +14,9 @@ kotlin {
             implementation(libs.kotlin.coroutines.test)
         }
         androidMain.dependencies { implementation(libs.sqldelight.drivers.android) }
-        iosMain.dependencies { implementation(libs.sqldelight.drivers.native) }
+        // Shared by iOS + watchOS via the appleMain hierarchy. The native SQLite driver and the
+        // DriverFactory apple actual both support watchOS unchanged.
+        appleMain.dependencies { implementation(libs.sqldelight.drivers.native) }
         jvmMain.dependencies { implementation(libs.sqldelight.drivers.jvm) }
     }
 }
@@ -33,4 +35,5 @@ sqldelight {
 plusLibrary {
     namespace = "com.plusmobileapps.chefmate.database"
     enableDi = true
+    enableWatch = true
 }
