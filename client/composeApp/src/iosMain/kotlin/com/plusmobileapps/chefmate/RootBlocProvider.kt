@@ -34,7 +34,7 @@ object RootBlocProvider {
         val applicationComponent =
             createGraphFactory<IosApplicationComponent.Factory>().create(application)
         toastService = applicationComponent.toastService
-        sessionRelay = WatchSessionRelay(applicationComponent.authenticationRepository)
+        sessionRelay = applicationComponent.watchSessionRelay
         return applicationComponent.rootBlocFactory.create(
             context = DefaultBlocContext(componentContext = componentContext),
             deepLink = DeepLink.parse(deepLinkUrl),
