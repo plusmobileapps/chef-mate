@@ -4,6 +4,7 @@ import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.auth.data.ChefMateUser
 import com.plusmobileapps.chefmate.auth.data.OtpFlow
+import com.plusmobileapps.chefmate.auth.data.SessionTokens
 import com.plusmobileapps.chefmate.auth.data.SignUpResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -60,6 +61,10 @@ class FakeAuthenticationRepository : AuthenticationRepository {
                 )
             )
     }
+
+    var sessionTokens: SessionTokens? = null
+
+    override suspend fun currentSessionTokens(): SessionTokens? = sessionTokens
 
     override suspend fun ensureSession(): Result<Unit> {
         ensureSessionCallCount += 1

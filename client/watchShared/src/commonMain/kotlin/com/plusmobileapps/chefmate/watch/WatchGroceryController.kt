@@ -74,12 +74,12 @@ class WatchGroceryController(
     }
 
     /**
-     * Adopts a Supabase session handed off from the phone over WatchConnectivity, which flips
-     * [AuthenticationRepository.state] to Authenticated and triggers the repository's existing
-     * auth-state-driven sync. See [WatchSessionImporter].
+     * Adopts a short-lived access token handed off from the phone over WatchConnectivity, which
+     * flips [AuthenticationRepository.state] to Authenticated and triggers the repository's
+     * existing auth-state-driven sync. See [WatchSessionImporter].
      */
-    suspend fun importSession(refreshToken: String) {
-        sessionImporter.importSession(refreshToken)
+    suspend fun importSession(accessToken: String, expiresAtEpochSeconds: Long) {
+        sessionImporter.importSession(accessToken, expiresAtEpochSeconds)
     }
 
     suspend fun signOut() {

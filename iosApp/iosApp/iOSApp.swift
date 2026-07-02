@@ -14,6 +14,12 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     var backDispatcher: BackDispatcher = BackDispatcherKt.BackDispatcher()
     private var launchDeepLinkUrl: String?
 
+    /// Hands the Supabase session to the watch companion. Lazily created after `root` builds the
+    /// DI graph (which sets `RootBlocProvider.sessionRelay`).
+    private lazy var watchSessionSender = WatchSessionSender(
+        relay: RootBlocProvider.shared.sessionRelay
+    )
+
     override init() {
         super.init()
         BugsnagStartup_iosKt.initializeBugsnag()
@@ -28,6 +34,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
            url.host != "import" {
             launchDeepLinkUrl = url.absoluteString
         }
+        // Build the graph (which sets sessionRelay), then start the watch session bridge.
+        _ = root
+        _ = watchSessionSender
         return true
     }
 

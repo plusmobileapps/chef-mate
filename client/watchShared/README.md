@@ -43,18 +43,29 @@ deps those need but that normally come from Compose-coupled modules absent on wa
 ./gradlew :client:watchShared:jvmTest                                   # facade unit tests
 ```
 
-## Remaining work — native watchOS app (needs Xcode)
+## The native watchOS app (`iosApp/ChefMateWatch/`)
 
-The following live in `iosApp/` and require Xcode; they are **not** in this module/PR:
+The SwiftUI app is wired into `iosApp/iosApp.xcodeproj` (watch target + framework embed via
+`scripts/add_watch_target.rb`): a lists screen → items screen (tap to toggle, add sheet), a Siri
+`AddGroceryItemIntent`, and a `WatchConnectivityManager`. All state/sync is this module's
+`WatchGroceryController` — SwiftUI just renders and forwards taps.
 
-1. **Add a watchOS App target** to `iosApp/iosApp.xcodeproj` (SwiftUI lifecycle). Bundle id
-   `com.plusmobileapps.chefmate.ChefMate.watchkitapp`; deployment target watchOS 10+.
-2. **Embed `WatchShared.framework`** via a "Run Script" build phase that invokes the KMP
-   `embedAndSignAppleFrameworkForXcode` task for `:client:watchShared` — clone the existing
-   `ComposeApp` framework build phase on the iOS app target.
-3. **SwiftUI UI**: a lists screen (`observeLists`) → items screen (`observeItems`, tap = `setChecked`,
-   "+" = dictation/scribble → `addItem`); call `syncNow()` on scene-active.
-4. **WatchConnectivity**: iOS side pushes `{refreshToken}` via `updateApplicationContext` when the
-   Supabase session changes; watch side calls `controller.importSession(refreshToken)`.
-5. **Siri App Intents**: `AddGroceryItemIntent` (+ `AppShortcutsProvider`) whose `perform()` calls
-   `controller.addItem(...)` then `syncNow()`. Add to the watch + phone targets.
+### Session handoff (access-token model)
+
+The watch has no login screen; it receives its session from the iPhone over WatchConnectivity.
+To avoid Supabase refresh-token rotation signing the phone out, **only the phone holds the refresh
+token**:
+
+- **Phone** (`WatchSessionSender` + `WatchSessionRelay` on the iOS framework) pushes the current
+  **access token** + expiry via `updateApplicationContext` on auth changes, and replies to the
+  watch's pull requests with a freshly-auto-refreshed token.
+- **Watch** (`WatchConnectivityManager`) pulls a token when it becomes active and calls
+  `controller.importSession(accessToken, expiresAtEpochSeconds)`, which imports the session with
+  `autoRefresh = false` (the watch never refreshes). When the token expires it pulls another.
+
+### Remaining polish
+
+- A real `match` provisioning profile for `…ChefMate.watchkitapp` (currently Automatic signing for
+  dev builds) and app icons.
+- Optionally push a fresh token from the phone on each of *its own* silent refreshes (today the
+  watch pulls on activate, which covers the common case).

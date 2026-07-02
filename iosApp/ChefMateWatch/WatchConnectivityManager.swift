@@ -1,12 +1,11 @@
 import Foundation
 import WatchConnectivity
 
-/// Receives the Supabase session handed off from the iPhone. The phone pushes the current
-/// refresh token via `updateApplicationContext(["supabaseRefreshToken": ...])` whenever its
-/// session changes; the watch imports it, which signs the watch in and kicks off sync.
-///
-/// (The iPhone-side sender is a follow-up — it needs a small refresh-token accessor on the shared
-/// `AuthenticationRepository`.)
+/// Receives the Supabase access token handed off from the iPhone and imports it (which signs the
+/// watch in and kicks off sync). The phone pushes the token via `updateApplicationContext` on auth
+/// changes; the watch also actively pulls a fresh token via `sendMessage` when it opens, so it
+/// never depends on a stale context. The watch never holds the refresh token — only the phone
+/// refreshes, avoiding token-rotation conflicts.
 final class WatchConnectivityManager: NSObject, WCSessionDelegate {
     private let store: GroceryStore
 
@@ -19,9 +18,21 @@ final class WatchConnectivityManager: NSObject, WCSessionDelegate {
         session.activate()
     }
 
-    private func handle(context: [String: Any]) {
-        guard let token = context["supabaseRefreshToken"] as? String, !token.isEmpty else { return }
-        Task { await store.importSession(refreshToken: token) }
+    /// Pull the freshest access token from the phone. Call when the watch app becomes active.
+    func requestSession() {
+        let session = WCSession.default
+        guard session.activationState == .activated else { return }
+        session.sendMessage(["request": "session"], replyHandler: { [weak self] reply in
+            self?.apply(reply)
+        }, errorHandler: nil)
+    }
+
+    private func apply(_ payload: [String: Any]) {
+        guard
+            let token = payload["accessToken"] as? String,
+            let expiresAt = (payload["expiresAt"] as? NSNumber)?.int64Value
+        else { return }
+        Task { await store.importSession(accessToken: token, expiresAtEpochSeconds: expiresAt) }
     }
 
     func session(
@@ -29,11 +40,11 @@ final class WatchConnectivityManager: NSObject, WCSessionDelegate {
         activationDidCompleteWith activationState: WCSessionActivationState,
         error: Error?
     ) {
-        // Adopt any context already delivered before activation completed.
-        handle(context: session.receivedApplicationContext)
+        apply(session.receivedApplicationContext)
+        requestSession()
     }
 
     func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
-        handle(context: applicationContext)
+        apply(applicationContext)
     }
 }
