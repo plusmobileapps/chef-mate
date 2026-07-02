@@ -37,16 +37,18 @@ platform :ios do
   desc "Generate/refresh signing certificates and provisioning profiles (read-write match)"
   desc "Run this once after adding an app id (e.g. the watch app) so its profile is registered."
   lane :certificates do
+    # Sets the App Store Connect API token globally (used by `produce` and `match` below).
     api_key = asc_api_key
 
     # `match` creates provisioning profiles but not App IDs, so register the watchOS companion's
     # bundle id on the Developer Portal first. It ships inside the parent app, so it needs no App
-    # Store Connect record (skip_itc). Idempotent — a no-op once the App ID exists.
+    # Store Connect record (skip_itc). `produce` has no `api_key` param — it uses the token set by
+    # `app_store_connect_api_key` above. Idempotent — a no-op once the App ID exists.
     produce(
       app_identifier: "com.plusmobileapps.chefmate.ChefMate.watchkitapp",
       app_name: "Chef Mate Watch",
       skip_itc: true,
-      api_key: api_key,
+      team_id: ENV["TEAM_ID"] || "Y89258SF5P",
     )
 
     match(
