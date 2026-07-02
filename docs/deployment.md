@@ -238,8 +238,22 @@ behind `MATCH_GIT_BASIC_AUTHORIZATION` only needs read access.
 2. Run match locally to generate and store certificates:
 
    ```bash
-   bundle exec fastlane match appstore
+   bundle exec fastlane ios certificates
    ```
+
+   This read-write lane authenticates with the App Store Connect API key (set
+   the `APP_STORE_CONNECT_API_*` env vars, same as the release lane), registers
+   the watchOS companion's App ID via `produce` if it doesn't exist yet (it
+   ships inside the parent app, so no App Store Connect record is created), and
+   then provisions every app id in `fastlane/Matchfile` — the app, the share
+   extension, and the watchOS app (`com.plusmobileapps.chefmate.ChefMate.watchkitapp`).
+   Re-run it after adding a new app id so its App Store profile is registered
+   before the next release; the release lane / CI fetches profiles in `readonly`
+   mode and will fail if one is missing.
+
+   > Don't run `fastlane match appstore` directly — on its own it doesn't build
+   > the API-key Hash and fails with `'api_key' value must be a Hash`. Use the
+   > `certificates` lane, which sets it up.
 
 3. Set the `MATCH_PASSWORD` secret to the encryption password you chose.
 

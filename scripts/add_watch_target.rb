@@ -75,7 +75,6 @@ watch.build_configurations.each do |config|
   bs['GENERATE_INFOPLIST_FILE'] = 'NO'
   bs['INFOPLIST_FILE'] = "#{WATCH_DIR}/Info.plist"
   bs['ASSETCATALOG_COMPILER_APPICON_NAME'] = 'AppIcon'
-  bs['CODE_SIGN_STYLE'] = 'Automatic'
   bs['DEVELOPMENT_TEAM'] = TEAM_ID
   bs['CURRENT_PROJECT_VERSION'] = '1'
   bs['MARKETING_VERSION'] = '1.0.0'
@@ -84,6 +83,19 @@ watch.build_configurations.each do |config|
   bs['SKIP_INSTALL'] = 'NO'
   bs['ENABLE_PREVIEWS'] = 'YES'
   bs['SWIFT_EMIT_LOC_STRINGS'] = 'YES'
+
+  if config.name == 'Release'
+    # Manual signing via Fastlane match for release/App Store archives (the watch is embedded and
+    # signed during the iOS app archive), mirroring the iOS app + ShareExtension targets. Requires
+    # the watch bundle id in fastlane/Matchfile + the release lane's provisioningProfiles.
+    bs['CODE_SIGN_STYLE'] = 'Manual'
+    bs['CODE_SIGN_IDENTITY'] = 'Apple Development'
+    bs['CODE_SIGN_IDENTITY[sdk=watchos*]'] = 'Apple Distribution'
+    bs['PROVISIONING_PROFILE_SPECIFIER[sdk=watchos*]'] = "match AppStore #{WATCH_BUNDLE_ID}"
+  else
+    # Automatic signing keeps local device/simulator dev builds friction-free.
+    bs['CODE_SIGN_STYLE'] = 'Automatic'
+  end
 end
 
 # --- embed the watch app into the iOS app -------------------------------------------------------
