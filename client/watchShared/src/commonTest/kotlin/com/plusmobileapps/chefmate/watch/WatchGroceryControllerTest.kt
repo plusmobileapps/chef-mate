@@ -14,10 +14,12 @@ import kotlinx.coroutines.test.runTest
 @OptIn(ExperimentalCoroutinesApi::class)
 class WatchGroceryControllerTest {
     private class RecordingSessionImporter : WatchSessionImporter {
-        var lastRefreshToken: String? = null
+        var lastAccessToken: String? = null
+        var lastExpiresAt: Long? = null
 
-        override suspend fun importSession(refreshToken: String) {
-            lastRefreshToken = refreshToken
+        override suspend fun importSession(accessToken: String, expiresAtEpochSeconds: Long) {
+            lastAccessToken = accessToken
+            lastExpiresAt = expiresAtEpochSeconds
         }
     }
 
@@ -89,8 +91,9 @@ class WatchGroceryControllerTest {
                 dispatcher = UnconfinedTestDispatcher(testScheduler),
             )
 
-        controller.importSession("refresh-token-123")
+        controller.importSession(accessToken = "access-123", expiresAtEpochSeconds = 999)
 
-        assertEquals("refresh-token-123", importer.lastRefreshToken)
+        assertEquals("access-123", importer.lastAccessToken)
+        assertEquals(999L, importer.lastExpiresAt)
     }
 }

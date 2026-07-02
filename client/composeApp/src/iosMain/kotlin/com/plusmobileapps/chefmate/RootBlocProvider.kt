@@ -18,6 +18,14 @@ object RootBlocProvider {
     lateinit var toastService: ToastService
         private set
 
+    /**
+     * Bridge for handing the Supabase session to the watch companion over WatchConnectivity. Set by
+     * [buildRootBloc] (always called before the UI is created) and read by the Swift
+     * `WatchSessionSender`.
+     */
+    lateinit var sessionRelay: WatchSessionRelay
+        private set
+
     fun buildRootBloc(
         componentContext: ComponentContext,
         application: UIApplication,
@@ -26,6 +34,7 @@ object RootBlocProvider {
         val applicationComponent =
             createGraphFactory<IosApplicationComponent.Factory>().create(application)
         toastService = applicationComponent.toastService
+        sessionRelay = WatchSessionRelay(applicationComponent.authenticationRepository)
         return applicationComponent.rootBlocFactory.create(
             context = DefaultBlocContext(componentContext = componentContext),
             deepLink = DeepLink.parse(deepLinkUrl),

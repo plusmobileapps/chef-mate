@@ -53,7 +53,10 @@ final class GroceryStore: ObservableObject {
         try? await controller.syncNow()
     }
 
-    func importSession(refreshToken: String) async {
-        try? await controller.importSession(refreshToken: refreshToken)
+    func importSession(accessToken: String, expiresAtEpochSeconds: Int64) async {
+        try? await controller.importSession(
+            accessToken: accessToken,
+            expiresAtEpochSeconds: expiresAtEpochSeconds
+        )
     }
 }
