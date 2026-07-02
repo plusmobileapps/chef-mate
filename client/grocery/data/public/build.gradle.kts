@@ -13,4 +13,7 @@ kotlin {
     }
 }
 
-plusLibrary { namespace = "com.plusmobileapps.chefmate.grocery.data" }
+plusLibrary {
+    namespace = "com.plusmobileapps.chefmate.grocery.data"
+    enableWatch = true
+}

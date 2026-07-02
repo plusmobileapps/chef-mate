@@ -7,4 +7,7 @@ kotlin {
     }
 }
 
-plusLibrary { namespace = "com.plusmobileapps.chefmate.util.core" }
+plusLibrary {
+    namespace = "com.plusmobileapps.chefmate.util.core"
+    enableWatch = true
+}

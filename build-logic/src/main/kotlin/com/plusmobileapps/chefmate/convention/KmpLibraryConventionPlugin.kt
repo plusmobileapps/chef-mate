@@ -15,8 +15,12 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 class KmpLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
-            // Create plusMobile extension for configuration
-            val plusLibraryExtension = extensions.create<PlusLibraryExtension>("plusLibrary")
+            // Create plusMobile extension for configuration. The `onWatchEnabled` callback fires
+            // synchronously when a module sets `plusLibrary { enableWatch = true }` — i.e. during
+            // configuration, the valid window to register extra KMP targets. By then the Kotlin
+            // multiplatform plugin (applied below) is present, so the extension is available.
+            val plusLibraryExtension =
+                extensions.create<PlusLibraryExtension>("plusLibrary", { registerWatchTargets() })
 
             // Add afterEvaluate hook to catch property changes
             afterEvaluate {
@@ -139,6 +143,26 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
 
                     getByName("commonTest").dependencies { implementation(libs.kotlin.test) }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * Registers the watchOS targets on a module. Invoked from [PlusLibraryExtension.enableWatch]'s
+ * setter, which runs during configuration — the valid window to add KMP targets. The default Kotlin
+ * hierarchy template links both watch targets to `watchosMain` → `appleMain`, so shared
+ * Darwin/native code placed in `appleMain` is picked up by iOS and watchOS alike.
+ */
+private fun Project.registerWatchTargets() {
+    val frameworkName = name.replaceFirstChar { it.uppercase() }
+    extensions.configure<KotlinMultiplatformExtension> {
+        val watchArm64 = watchosArm64()
+        val watchSimulatorArm64 = watchosSimulatorArm64()
+        listOf(watchArm64, watchSimulatorArm64).forEach { watchTarget ->
+            watchTarget.binaries.framework {
+                baseName = frameworkName
+                isStatic = true
             }
         }
     }
