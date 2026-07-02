@@ -22,14 +22,43 @@ platform :android do
 end
 
 platform :ios do
-  desc "Build release IPA and upload to App Store Connect"
-  lane :release do
-    api_key = app_store_connect_api_key(
+  # Builds the App Store Connect API key Hash `match` and `build_app` expect. Running
+  # `fastlane match` on its own does not set this up (and picks up a String from the environment,
+  # failing with "'api_key' value must be a Hash"), so both lanes go through this helper.
+  def asc_api_key
+    app_store_connect_api_key(
       key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
       issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
       key_content: ENV["APP_STORE_CONNECT_API_KEY"],
       is_key_content_base64: true,
     )
+  end
+
+  desc "Generate/refresh signing certificates and provisioning profiles (read-write match)"
+  desc "Run this once after adding an app id (e.g. the watch app) so its profile is registered."
+  lane :certificates do
+    api_key = asc_api_key
+
+    # `match` creates provisioning profiles but not App IDs, so register the watchOS companion's
+    # bundle id on the Developer Portal first. It ships inside the parent app, so it needs no App
+    # Store Connect record (skip_itc). Idempotent — a no-op once the App ID exists.
+    produce(
+      app_identifier: "com.plusmobileapps.chefmate.ChefMate.watchkitapp",
+      app_name: "Chef Mate Watch",
+      skip_itc: true,
+      api_key: api_key,
+    )
+
+    match(
+      type: "appstore",
+      readonly: false,
+      api_key: api_key,
+    )
+  end
+
+  desc "Build release IPA and upload to App Store Connect"
+  lane :release do
+    api_key = asc_api_key
 
     setup_ci
 
