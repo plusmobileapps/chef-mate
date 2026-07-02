@@ -241,6 +241,12 @@ behind `MATCH_GIT_BASIC_AUTHORIZATION` only needs read access.
    bundle exec fastlane match appstore
    ```
 
+   This provisions every app id in `fastlane/Matchfile` — the app, the share
+   extension, and the watchOS app (`com.plusmobileapps.chefmate.ChefMate.watchkitapp`).
+   Re-run it (read-write, locally) after adding a new app id so its App Store
+   profile is registered before the next release; CI fetches profiles in
+   `readonly` mode and will fail if one is missing.
+
 3. Set the `MATCH_PASSWORD` secret to the encryption password you chose.
 
 #### Creating / rotating `MATCH_GIT_BASIC_AUTHORIZATION`

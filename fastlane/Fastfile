@@ -50,6 +50,7 @@ platform :ios do
         provisioningProfiles: {
           "com.plusmobileapps.chefmate.ChefMate" => "match AppStore com.plusmobileapps.chefmate.ChefMate",
           "com.plusmobileapps.chefmate.ChefMate.ShareExtension" => "match AppStore com.plusmobileapps.chefmate.ChefMate.ShareExtension",
+          "com.plusmobileapps.chefmate.ChefMate.watchkitapp" => "match AppStore com.plusmobileapps.chefmate.ChefMate.watchkitapp",
         },
       },
     )
