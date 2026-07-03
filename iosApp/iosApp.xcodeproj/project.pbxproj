@@ -18,7 +18,6 @@
 		853E04942F8986CD00955A73 /* Bugsnag in Frameworks */ = {isa = PBXBuildFile; productRef = 853E04932F8986CD00955A73 /* Bugsnag */; };
 		853E04962F8986CD00955A73 /* BugsnagNetworkRequestPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = 853E04952F8986CD00955A73 /* BugsnagNetworkRequestPlugin */; };
 		854859222F9B4505001123A9 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 854859182F9B4505001123A9 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		89742D4D1B03A972EF804763 /* ChefMateWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 8725AFBF3A257499229E57E1 /* ChefMateWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B7E9C9113F8FBD3BF7F3AFFC /* GroceryItemsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6706F1DC1D7DE83A34FB8DCD /* GroceryItemsView.swift */; };
 		CF419526CBA2B9512C25EB14 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C9D044ECA48AE60D90F4FCE2 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
@@ -30,13 +29,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 854859172F9B4505001123A9;
 			remoteInfo = ShareExtension;
-		};
-		9C8A6AC1AFD54FA71724960C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = CDB0B4ADAA143F5F0B669BBA /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = CBF9AFC8E8726D886BBB926C;
-			remoteInfo = ChefMateWatch;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -50,17 +42,6 @@
 				854859222F9B4505001123A9 /* ShareExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		CF216F6CBEE5BAF9E26F051A /* Embed Watch Content */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
-			dstSubfolderSpec = 16;
-			files = (
-				89742D4D1B03A972EF804763 /* ChefMateWatch.app in Embed Watch Content */,
-			);
-			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -221,13 +202,11 @@
 				D48F16A3AF4709DEED6E1963 /* Frameworks */,
 				CAF1FC802341ECF352B35550 /* Resources */,
 				854859232F9B4505001123A9 /* Embed Foundation Extensions */,
-				CF216F6CBEE5BAF9E26F051A /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				854859212F9B4505001123A9 /* PBXTargetDependency */,
-				AB294C3639D80CD6988AAC3C /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				F940F28EAB4E596F4D32FBD2 /* iosApp */,
@@ -424,12 +403,6 @@
 			isa = PBXTargetDependency;
 			target = 854859172F9B4505001123A9 /* ShareExtension */;
 			targetProxy = 854859202F9B4505001123A9 /* PBXContainerItemProxy */;
-		};
-		AB294C3639D80CD6988AAC3C /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = ChefMateWatch;
-			target = CBF9AFC8E8726D886BBB926C /* ChefMateWatch */;
-			targetProxy = 9C8A6AC1AFD54FA71724960C /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
