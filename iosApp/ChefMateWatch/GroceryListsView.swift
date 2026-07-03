@@ -1,5 +1,4 @@
 import SwiftUI
-import WatchShared
 
 /// First screen: pick a grocery list.
 struct GroceryListsView: View {
@@ -25,6 +24,5 @@ struct GroceryListsView: View {
                 title: store.lists.first { $0.id == listId }?.name ?? "Groceries"
             )
         }
-        .task { await store.syncNow() }
     }
 }

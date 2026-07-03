@@ -8,9 +8,9 @@
 #
 #   bundle exec ruby scripts/add_watch_target.rb
 #
-# Mirrors the iOS app's KMP integration: a "Compile Kotlin Framework" run-script phase builds and
-# embeds the WatchShared framework via Gradle, and `import WatchShared` auto-links it (static
-# framework, same as ComposeApp on the phone).
+# The watch app is pure native Swift + WatchConnectivity — the iPhone is the source of truth and
+# bridges grocery data over WCSession, so there is NO Kotlin/Supabase on the watch (which is what
+# lets it build for the watch device arm64 slice that supabase-kt doesn't ship).
 
 require 'xcodeproj'
 
@@ -44,23 +44,6 @@ assets = group.new_reference('Assets.xcassets')
 watch.resources_build_phase.add_file_reference(assets)
 group.new_reference('Info.plist') # referenced via INFOPLIST_FILE, not a build phase
 
-# "Compile Kotlin Framework" run-script phase, run first (mirrors the iOS app).
-kotlin_phase = watch.new_shell_script_build_phase('Compile Kotlin Framework')
-kotlin_phase.shell_script = <<~SH
-  if [ "YES" = "$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED" ]; then
-    echo "Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\"YES\\""
-    exit 0
-  fi
-  cd "$SRCROOT/.."
-  if [ -z "$JAVA_HOME" ]; then
-    export JAVA_HOME="$HOME/.sdkman/candidates/java/current"
-  fi
-  ./gradlew :client:watchShared:embedAndSignAppleFrameworkForXcode
-SH
-kotlin_phase.always_out_of_date = '1'
-watch.build_phases.delete(kotlin_phase)
-watch.build_phases.insert(0, kotlin_phase)
-
 # Build settings.
 watch.build_configurations.each do |config|
   bs = config.build_settings
@@ -78,7 +61,7 @@ watch.build_configurations.each do |config|
   bs['DEVELOPMENT_TEAM'] = TEAM_ID
   bs['CURRENT_PROJECT_VERSION'] = '1'
   bs['MARKETING_VERSION'] = '1.0.0'
-  bs['OTHER_LDFLAGS'] = ['$(inherited)', '-lsqlite3']
+  bs['OTHER_LDFLAGS'] = ['$(inherited)']
   bs['LD_RUNPATH_SEARCH_PATHS'] = ['$(inherited)', '@executable_path/Frameworks']
   bs['SKIP_INSTALL'] = 'NO'
   bs['ENABLE_PREVIEWS'] = 'YES'

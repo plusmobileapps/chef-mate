@@ -14,10 +14,10 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     var backDispatcher: BackDispatcher = BackDispatcherKt.BackDispatcher()
     private var launchDeepLinkUrl: String?
 
-    /// Hands the Supabase session to the watch companion. Lazily created after `root` builds the
-    /// DI graph (which sets `RootBlocProvider.sessionRelay`).
-    private lazy var watchSessionSender = WatchSessionSender(
-        relay: RootBlocProvider.shared.sessionRelay
+    /// Serves grocery data to the watch companion. Lazily created after `root` builds the DI graph
+    /// (which sets `RootBlocProvider.watchDataBridge`).
+    private lazy var watchDataSender = WatchDataSender(
+        bridge: RootBlocProvider.shared.watchDataBridge
     )
 
     override init() {
@@ -34,9 +34,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
            url.host != "import" {
             launchDeepLinkUrl = url.absoluteString
         }
-        // Build the graph (which sets sessionRelay), then start the watch session bridge.
+        // Build the graph (which sets watchDataBridge), then start the watch data bridge.
         _ = root
-        _ = watchSessionSender
+        _ = watchDataSender
         return true
     }
 

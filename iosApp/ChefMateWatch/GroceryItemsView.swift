@@ -1,5 +1,4 @@
 import SwiftUI
-import WatchShared
 
 /// Second screen: view items for the selected list, toggle them, and add new ones.
 struct GroceryItemsView: View {
@@ -23,7 +22,7 @@ struct GroceryItemsView: View {
 
             ForEach(items, id: \.id) { item in
                 Button {
-                    Task { await store.setChecked(itemId: item.id, isChecked: !item.isChecked) }
+                    store.setChecked(itemId: item.id, isChecked: !item.isChecked)
                 } label: {
                     HStack {
                         Image(systemName: item.isChecked ? "checkmark.circle.fill" : "circle")
@@ -40,11 +39,9 @@ struct GroceryItemsView: View {
             }
         }
         .navigationTitle(title)
-        .onAppear { store.startObservingItems(listId: listId) }
-        .task { await store.syncNow() }
         .sheet(isPresented: $showingAdd) {
             AddItemView { name in
-                Task { await store.addItem(listId: listId, name: name) }
+                store.addItem(listId: listId, name: name)
             }
         }
     }

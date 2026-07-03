@@ -1,7 +1,8 @@
 import AppIntents
 
-/// "Hey Siri, add milk to my grocery list." Runs against the same shared controller as the app,
-/// so the item lands in the local DB and syncs to Supabase (and thus to the phone).
+/// "Hey Siri, add milk to my grocery list." Forwards the item to the iPhone over WatchConnectivity
+/// (queued via `transferUserInfo`, so it's delivered even if the phone is briefly unreachable); the
+/// phone adds it to the default list and syncs to Supabase.
 struct AddGroceryItemIntent: AppIntent {
     static var title: LocalizedStringResource = "Add Grocery Item"
     static var description = IntentDescription("Adds an item to your Chef Mate grocery list.")
@@ -15,20 +16,13 @@ struct AddGroceryItemIntent: AppIntent {
     }
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        let controller = SharedController.shared
-        // suspend functions returning a Kotlin primitive bridge to a boxed type (KotlinLong).
-        let listId = (try await controller.ensureDefaultList()).int64Value
-        try await controller.addItem(listId: listId, name: item)
-        try await controller.syncNow()
+        WatchConnectivityManager.shared.sendAddItem(listId: nil, name: item)
         return .result(dialog: "Added \(item) to your grocery list.")
     }
 }
 
 struct ChefMateAppShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
-        // Free-form String parameters can't be interpolated into Siri phrases (only AppEntity /
-        // AppEnum can), so the phrases are static and Siri prompts for the item via the
-        // parameter's `requestValueDialog`.
         AppShortcut(
             intent: AddGroceryItemIntent(),
             phrases: [
