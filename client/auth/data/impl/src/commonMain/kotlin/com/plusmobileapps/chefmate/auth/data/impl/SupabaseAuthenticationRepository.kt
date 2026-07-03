@@ -5,7 +5,6 @@ import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.auth.data.ChefMateUser
 import com.plusmobileapps.chefmate.auth.data.OtpFlow
-import com.plusmobileapps.chefmate.auth.data.SessionTokens
 import com.plusmobileapps.chefmate.auth.data.SignUpResult
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.Main
@@ -80,14 +79,6 @@ class SupabaseAuthenticationRepository(
             }
         }
     }
-
-    override suspend fun currentSessionTokens(): SessionTokens? =
-        supabaseClient.auth.currentSessionOrNull()?.let { session ->
-            SessionTokens(
-                accessToken = session.accessToken,
-                expiresAtEpochSeconds = session.expiresAt.epochSeconds,
-            )
-        }
 
     override suspend fun ensureSession(): Result<Unit> {
         if (_state.value is AuthState.Authenticated) return Result.success(Unit)

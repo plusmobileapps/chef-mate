@@ -18,13 +18,6 @@ interface AuthenticationRepository {
      */
     suspend fun ensureSession(): Result<Unit>
 
-    /**
-     * The current access token and its absolute expiry, or `null` when signed out. Used to hand a
-     * short-lived session to the watch companion over WatchConnectivity: only the phone holds the
-     * refresh token and drives refresh, so the watch never rotates the shared token chain.
-     */
-    suspend fun currentSessionTokens(): SessionTokens?
-
     suspend fun signInWithEmailAndPassword(email: String, password: String): Result<Unit>
 
     suspend fun signUpWithEmailAndPassword(email: String, password: String): Result<SignUpResult>
@@ -54,9 +47,6 @@ interface AuthenticationRepository {
 
     suspend fun resendOtp(email: String, flow: OtpFlow): Result<Unit>
 }
-
-/** A short-lived Supabase session snapshot for the watch handoff. */
-data class SessionTokens(val accessToken: String, val expiresAtEpochSeconds: Long)
 
 sealed class SignUpResult {
     data object Success : SignUpResult()
