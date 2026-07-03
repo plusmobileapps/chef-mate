@@ -106,11 +106,24 @@ embed.dst_path = '$(CONTENTS_FOLDER_PATH)/Watch'
 build_file = embed.add_file_reference(watch.product_reference)
 build_file.settings = { 'ATTRIBUTES' => ['RemoveHeadersOnCopy'] }
 
-# --- shared scheme so `xcodebuild -scheme ChefMateWatch` works ----------------------------------
-scheme = Xcodeproj::XCScheme.new
-scheme.add_build_target(watch)
-scheme.set_launch_target(watch)
-scheme.save_as(PROJECT_PATH, TARGET_NAME, true)
+# --- shared schemes -----------------------------------------------------------------------------
+# Adding the watch scheme makes it the project's first *shared* scheme, which disables Xcode's
+# on-demand generation of the (unshared) iosApp / ShareExtension schemes. In CI (fresh checkout,
+# no user schemes) `fastlane build_app --scheme iosApp` would then fail to find it and fall back to
+# the only scheme present. So share every runnable target's scheme.
+{ watch => true, ios_target => true }.each do |target, launch|
+  scheme = Xcodeproj::XCScheme.new
+  scheme.add_build_target(target)
+  scheme.set_launch_target(target) if launch
+  scheme.save_as(PROJECT_PATH, target.name, true)
+end
+# ShareExtension can't launch standalone — a build-only shared scheme is enough.
+share_ext = project.targets.find { |t| t.name == 'ShareExtension' }
+if share_ext
+  scheme = Xcodeproj::XCScheme.new
+  scheme.add_build_target(share_ext)
+  scheme.save_as(PROJECT_PATH, share_ext.name, true)
+end
 
 project.save
 puts "Added '#{TARGET_NAME}' watchOS target and embedded it in the iOS app."
