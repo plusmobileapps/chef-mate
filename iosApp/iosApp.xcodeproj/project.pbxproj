@@ -8,12 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		11FE675F19E9CC0656E93D9B /* AddItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750DC6FC6FC31992A18795C0 /* AddItemView.swift */; };
+		229CA7748DE59FD1D77F232E /* ChefMateWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 8725AFBF3A257499229E57E1 /* ChefMateWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		24FF1CCB90D0CD0AB589B77F /* AddGroceryItemIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 825160EF3E8D371F08DD6532 /* AddGroceryItemIntent.swift */; };
+		37939589E99256E5C1D87455 /* WatchModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 513624CF89CC72DEDE2D411D /* WatchModels.swift */; };
 		45271137CF1F716C66193C8B /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64F2A7A6357964DEE24CC265 /* WatchConnectivityManager.swift */; };
 		4937AE697F9348F50E9030D7 /* ChefMateWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BEF74BEACFD1A2B404CE647 /* ChefMateWatchApp.swift */; };
 		4BA24F0A3D82A194319FD800 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B9C41D88FCAFE935A1F2856A /* Foundation.framework */; };
 		5DA185BE6CE5D2A755647382 /* GroceryListsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 205D39F6B226E5F6DD48DF53 /* GroceryListsView.swift */; };
-		72B99845AB05682D56D1513E /* SharedController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23090A19EBF22FAF83D7F78C /* SharedController.swift */; };
 		7B98E0F5B887BC1A44E24940 /* GroceryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B1047D42000AA001D2B573 /* GroceryStore.swift */; };
 		853E04942F8986CD00955A73 /* Bugsnag in Frameworks */ = {isa = PBXBuildFile; productRef = 853E04932F8986CD00955A73 /* Bugsnag */; };
 		853E04962F8986CD00955A73 /* BugsnagNetworkRequestPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = 853E04952F8986CD00955A73 /* BugsnagNetworkRequestPlugin */; };
@@ -30,9 +31,27 @@
 			remoteGlobalIDString = 854859172F9B4505001123A9;
 			remoteInfo = ShareExtension;
 		};
+		C39681C8C4DF58B47A02D53B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CDB0B4ADAA143F5F0B669BBA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CBF9AFC8E8726D886BBB926C;
+			remoteInfo = ChefMateWatch;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		2DEC643011287C4EFA5B6B25 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				229CA7748DE59FD1D77F232E /* ChefMateWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		854859232F9B4505001123A9 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -48,8 +67,8 @@
 
 /* Begin PBXFileReference section */
 		205D39F6B226E5F6DD48DF53 /* GroceryListsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GroceryListsView.swift; sourceTree = "<group>"; };
-		23090A19EBF22FAF83D7F78C /* SharedController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SharedController.swift; sourceTree = "<group>"; };
 		4BEF74BEACFD1A2B404CE647 /* ChefMateWatchApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChefMateWatchApp.swift; sourceTree = "<group>"; };
+		513624CF89CC72DEDE2D411D /* WatchModels.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchModels.swift; sourceTree = "<group>"; };
 		64F2A7A6357964DEE24CC265 /* WatchConnectivityManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchConnectivityManager.swift; sourceTree = "<group>"; };
 		6706F1DC1D7DE83A34FB8DCD /* GroceryItemsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GroceryItemsView.swift; sourceTree = "<group>"; };
 		750DC6FC6FC31992A18795C0 /* AddItemView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AddItemView.swift; sourceTree = "<group>"; };
@@ -151,10 +170,10 @@
 				6706F1DC1D7DE83A34FB8DCD /* GroceryItemsView.swift */,
 				205D39F6B226E5F6DD48DF53 /* GroceryListsView.swift */,
 				98B1047D42000AA001D2B573 /* GroceryStore.swift */,
-				23090A19EBF22FAF83D7F78C /* SharedController.swift */,
 				64F2A7A6357964DEE24CC265 /* WatchConnectivityManager.swift */,
 				C9D044ECA48AE60D90F4FCE2 /* Assets.xcassets */,
 				E84435B955C3CE5732B9C29B /* Info.plist */,
+				513624CF89CC72DEDE2D411D /* WatchModels.swift */,
 			);
 			name = ChefMateWatch;
 			path = ChefMateWatch;
@@ -202,11 +221,13 @@
 				D48F16A3AF4709DEED6E1963 /* Frameworks */,
 				CAF1FC802341ECF352B35550 /* Resources */,
 				854859232F9B4505001123A9 /* Embed Foundation Extensions */,
+				2DEC643011287C4EFA5B6B25 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				854859212F9B4505001123A9 /* PBXTargetDependency */,
+				92B7C6F101FB51CF207A4588 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				F940F28EAB4E596F4D32FBD2 /* iosApp */,
@@ -244,7 +265,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 7D0CB3CB0B357CBD682D2E61 /* Build configuration list for PBXNativeTarget "ChefMateWatch" */;
 			buildPhases = (
-				935045027029126D8DF14705 /* Compile Kotlin Framework */,
 				F8987A537A351F3685548B0A /* Sources */,
 				0F8842F01A3B3A272E0624BF /* Frameworks */,
 				E4921239CA63268FAD350665 /* Resources */,
@@ -326,25 +346,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		935045027029126D8DF14705 /* Compile Kotlin Framework */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Compile Kotlin Framework";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\ncd \"$SRCROOT/..\"\nif [ -z \"$JAVA_HOME\" ]; then\n  export JAVA_HOME=\"$HOME/.sdkman/candidates/java/current\"\nfi\n./gradlew :client:watchShared:embedAndSignAppleFrameworkForXcode\n";
-		};
 		E61EFD183216E09BDCB678AC /* Compile Kotlin Framework */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -391,8 +392,8 @@
 				B7E9C9113F8FBD3BF7F3AFFC /* GroceryItemsView.swift in Sources */,
 				5DA185BE6CE5D2A755647382 /* GroceryListsView.swift in Sources */,
 				7B98E0F5B887BC1A44E24940 /* GroceryStore.swift in Sources */,
-				72B99845AB05682D56D1513E /* SharedController.swift in Sources */,
 				45271137CF1F716C66193C8B /* WatchConnectivityManager.swift in Sources */,
+				37939589E99256E5C1D87455 /* WatchModels.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -403,6 +404,12 @@
 			isa = PBXTargetDependency;
 			target = 854859172F9B4505001123A9 /* ShareExtension */;
 			targetProxy = 854859202F9B4505001123A9 /* PBXContainerItemProxy */;
+		};
+		92B7C6F101FB51CF207A4588 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = ChefMateWatch;
+			target = CBF9AFC8E8726D886BBB926C /* ChefMateWatch */;
+			targetProxy = C39681C8C4DF58B47A02D53B /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -426,10 +433,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-lsqlite3",
-				);
+				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.plusmobileapps.chefmate.ChefMate.watchkitapp;
 				PRODUCT_NAME = ChefMateWatch;
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=watchos*]" = "match AppStore com.plusmobileapps.chefmate.ChefMate.watchkitapp";
@@ -653,10 +657,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-lsqlite3",
-				);
+				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.plusmobileapps.chefmate.ChefMate.watchkitapp;
 				PRODUCT_NAME = ChefMateWatch;
 				SDKROOT = watchos;

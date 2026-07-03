@@ -207,5 +207,3 @@ include(":client:util:impl")
 include(":client:util:public")
 
 include(":client:util:testing")
-
-include(":client:watchShared")
