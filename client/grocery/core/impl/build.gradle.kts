@@ -11,6 +11,7 @@ kotlin {
             implementation(projects.client.grocery.data.public)
             implementation(projects.client.grocery.core.public)
             implementation(projects.client.text.public)
+            implementation(projects.client.toast.public)
             implementation(projects.client.ui.public)
             implementation(projects.client.shared)
             implementation(libs.arkivanov.decompose.core)
@@ -18,7 +19,10 @@ kotlin {
             implementation(projects.client.database.core)
             implementation(compose.components.resources)
         }
-        commonTest.dependencies { implementation(libs.multiplatform.settings.test) }
+        commonTest.dependencies {
+            implementation(projects.client.grocery.data.testing)
+            implementation(libs.multiplatform.settings.test)
+        }
     }
 }
 

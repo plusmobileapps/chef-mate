@@ -9,4 +9,5 @@ object GroceryListTestTags {
     const val LIST_SELECTOR = "grocery_list_selector_title"
     const val ITEM_INPUT = "grocery_list_item_input"
     const val ITEM_SUGGESTION = "grocery_list_item_suggestion"
+    const val SAVE_AUTOCOMPLETE = "grocery_list_save_autocomplete"
 }

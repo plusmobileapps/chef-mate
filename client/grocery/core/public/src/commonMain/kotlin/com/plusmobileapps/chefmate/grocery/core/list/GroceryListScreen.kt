@@ -129,6 +129,7 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_list_filt
 import chefmate.client.grocery.core.public.generated.resources.grocery_my_lists
 import chefmate.client.grocery.core.public.generated.resources.grocery_pending_invite_message
 import chefmate.client.grocery.core.public.generated.resources.grocery_reject
+import chefmate.client.grocery.core.public.generated.resources.grocery_save_autocomplete
 import chefmate.client.grocery.core.public.generated.resources.grocery_shared_badge
 import chefmate.client.grocery.core.public.generated.resources.grocery_shared_with_you
 import chefmate.client.grocery.core.public.generated.resources.grocery_sort_aisle
@@ -391,6 +392,7 @@ fun GroceryListScreen(
                             awaitingAddedItem = true
                             bloc.saveGroceryItem()
                         },
+                        onSaveAutocompleteItem = bloc::onSaveAutocompleteItem,
                         forceShowSuggestions = forceShowAutocompleteSuggestions,
                     )
                 }
@@ -849,6 +851,7 @@ private fun GroceryListInput(
     suggestions: List<String>,
     onNameChange: (String) -> Unit,
     onAddClick: () -> Unit,
+    onSaveAutocompleteItem: (String) -> Unit,
     modifier: Modifier = Modifier,
     forceShowSuggestions: Boolean = false,
 ) {
@@ -856,7 +859,14 @@ private fun GroceryListInput(
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     var isFocused by remember { mutableStateOf(false) }
-    val expanded = (isFocused || forceShowSuggestions) && suggestions.isNotEmpty()
+    val trimmedQuery = state.value.trim()
+    // Offer to save the typed text only when it isn't already one of the suggestions (a saved
+    // custom item or a built-in already suggests it, so re-saving would be redundant).
+    val saveQuery = trimmedQuery.takeIf { q ->
+        q.isNotEmpty() && suggestions.none { it.equals(q, ignoreCase = true) }
+    }
+    val expanded =
+        (isFocused || forceShowSuggestions) && (suggestions.isNotEmpty() || saveQuery != null)
     val dismissKeyboard: () -> Unit = {
         focusManager.clearFocus()
         keyboardController?.hide()
@@ -869,7 +879,12 @@ private fun GroceryListInput(
         // field/Done row so the Done button only centers against the field, not the suggestion
         // list.
         if (expanded) {
-            AutocompleteSuggestionRows(suggestions = suggestions, onNameChange = onNameChange)
+            AutocompleteSuggestionRows(
+                suggestions = suggestions,
+                onNameChange = onNameChange,
+                saveQuery = saveQuery,
+                onSaveClick = { saveQuery?.let(onSaveAutocompleteItem) },
+            )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             GroceryItemNameTextField(
@@ -894,7 +909,12 @@ private fun GroceryListInput(
 }
 
 @Composable
-private fun AutocompleteSuggestionRows(suggestions: List<String>, onNameChange: (String) -> Unit) {
+private fun AutocompleteSuggestionRows(
+    suggestions: List<String>,
+    onNameChange: (String) -> Unit,
+    saveQuery: String?,
+    onSaveClick: () -> Unit,
+) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraSmall,
@@ -913,6 +933,25 @@ private fun AutocompleteSuggestionRows(suggestions: List<String>, onNameChange: 
                         Modifier.focusProperties { canFocus = false }
                             .clickable { onNameChange(suggestion) }
                             .testTag(GroceryListTestTags.ITEM_SUGGESTION),
+                )
+            }
+            if (saveQuery != null) {
+                val saveLabel =
+                    PhraseModel(
+                            Res.string.grocery_save_autocomplete,
+                            "item" to FixedString(saveQuery),
+                        )
+                        .localized()
+                ListItem(
+                    headlineContent = { Text(saveLabel) },
+                    leadingContent = {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = null)
+                    },
+                    // Same canFocus = false rationale as the suggestion rows above.
+                    modifier =
+                        Modifier.focusProperties { canFocus = false }
+                            .clickable { onSaveClick() }
+                            .testTag(GroceryListTestTags.SAVE_AUTOCOMPLETE),
                 )
             }
         }

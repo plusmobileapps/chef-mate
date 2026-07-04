@@ -14,8 +14,10 @@ import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
+import com.plusmobileapps.chefmate.grocery.data.testing.FakeGroceryAutocompleteRepository
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
+import com.plusmobileapps.chefmate.toast.ToastService
 import com.russhwolf.settings.MapSettings
 import dev.mokkery.MockMode
 import dev.mokkery.answering.returns
@@ -23,6 +25,7 @@ import dev.mokkery.every
 import dev.mokkery.everySuspend
 import dev.mokkery.mock
 import dev.mokkery.verifySuspend
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlin.test.Test
@@ -31,6 +34,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 
 class GroceryListBlocTest {
@@ -47,6 +51,8 @@ class GroceryListBlocTest {
         every { getPendingInvitations() } returns kotlinx.coroutines.flow.flowOf(emptyList())
         everySuspend { ensureDefaultList() } returns 1L
     }
+    val autocompleteRepository = FakeGroceryAutocompleteRepository()
+    val toastService: ToastService = mock(MockMode.autoUnit)
 
     var detailItemId: Long? = null
     var detailOutput: Consumer<GroceryDetailBloc.Output> = Consumer {}
@@ -69,6 +75,8 @@ class GroceryListBlocTest {
                 GroceryListViewModel(
                     mainContext = context.mainContext,
                     repository = repository,
+                    autocompleteRepository = autocompleteRepository,
+                    toastService = toastService,
                     settings = settings,
                     coachMarkController = coachMarkController,
                 )
@@ -375,6 +383,38 @@ class GroceryListBlocTest {
     }
 
     @Test
+    fun When_custom_autocomplete_item_saved_Then_it_surfaces_in_suggestions() = runTest {
+        bloc.state.test {
+            awaitItem() shouldBe GroceryListBloc.Model()
+            groceries.emit(
+                listOf(
+                    GroceryItem(
+                        id = 1,
+                        name = "Eggs",
+                        displayName = "Eggs",
+                        category = GroceryCategory.DAIRY,
+                    )
+                )
+            )
+            awaitItem()
+
+            // "Zeppole" isn't in the built-in vocabulary — it only suggests once saved.
+            autocompleteRepository.addItem("Zeppole")
+            bloc.onNewGroceryItemNameChange("zep")
+
+            awaitItem().autocompleteSuggestions shouldBe listOf("Zeppole")
+        }
+    }
+
+    @Test
+    fun When_onSaveAutocompleteItem_Then_name_is_persisted() = runTest {
+        bloc.onSaveAutocompleteItem("Cold brew concentrate")
+
+        autocompleteRepository.observeItems().first().map { it.name } shouldContain
+            "Cold brew concentrate"
+    }
+
+    @Test
     fun When_clear_filters_applied_Then_recipe_filter_is_also_cleared() = runTest {
         val items =
             listOf(
@@ -499,6 +539,8 @@ class GroceryListBlocTest {
                     GroceryListViewModel(
                         mainContext = freshContext.mainContext,
                         repository = repository,
+                        autocompleteRepository = autocompleteRepository,
+                        toastService = toastService,
                         settings = MapSettings(),
                         coachMarkController = controller,
                     )

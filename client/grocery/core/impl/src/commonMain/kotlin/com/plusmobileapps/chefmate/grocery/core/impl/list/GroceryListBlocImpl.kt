@@ -104,6 +104,10 @@ class GroceryListBlocImpl(
         viewModel.saveGroceryItem()
     }
 
+    override fun onSaveAutocompleteItem(name: String) {
+        viewModel.saveAutocompleteItem(name)
+    }
+
     override fun onGroceryItemClicked(item: GroceryItem) {
         sheetNavigation.activate(SheetConfig.GroceryDetail(item.id))
     }

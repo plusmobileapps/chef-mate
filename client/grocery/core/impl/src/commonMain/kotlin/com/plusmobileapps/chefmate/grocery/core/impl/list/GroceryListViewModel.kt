@@ -2,6 +2,8 @@
 
 package com.plusmobileapps.chefmate.grocery.core.impl.list
 
+import chefmate.client.grocery.core.public.generated.resources.Res
+import chefmate.client.grocery.core.public.generated.resources.grocery_autocomplete_saved
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.combineStates
 import com.plusmobileapps.chefmate.di.CoachMarkController
@@ -11,12 +13,15 @@ import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryFilter
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GroceryGroup
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc.GrocerySort
+import com.plusmobileapps.chefmate.grocery.data.GroceryAutocompleteRepository
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListInvite
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.grocery.data.IngredientParser
 import com.plusmobileapps.chefmate.grocery.data.ListRole
+import com.plusmobileapps.chefmate.text.ResourceString
+import com.plusmobileapps.chefmate.toast.ToastService
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.string
 import dev.zacsweers.metro.Inject
@@ -29,6 +34,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -36,6 +42,8 @@ import kotlinx.coroutines.launch
 class GroceryListViewModel(
     @Main mainContext: CoroutineContext,
     private val repository: GroceryRepository,
+    private val autocompleteRepository: GroceryAutocompleteRepository,
+    private val toastService: ToastService,
     settings: Settings,
     private val coachMarkController: CoachMarkController,
 ) : ViewModel(mainContext) {
@@ -52,6 +60,10 @@ class GroceryListViewModel(
     private val _sort = MutableStateFlow(initialSort)
     private val _filter = MutableStateFlow(initialFilter)
     private val _recipeFilter = MutableStateFlow<String?>(null)
+
+    // The user's saved autocomplete entries, folded into the suggestion pool below. Kept as its own
+    // flow so edits from the settings screen re-trigger the suggestion combine reactively.
+    private val customAutocompleteNames = MutableStateFlow<List<String>>(emptyList())
 
     // The sync coach mark only shows while it's the active mark in the shared controller, so at
     // most one coach mark is ever visible across the app at a time.
@@ -87,6 +99,18 @@ class GroceryListViewModel(
         }
 
         scope.launch {
+            autocompleteRepository.observeItems().collect { items ->
+                customAutocompleteNames.value = items.map { it.name }
+            }
+        }
+
+        scope.launch {
+            // Pre-combine the query with the user's saved items so the outer combine stays within
+            // the 5-arg typed overload.
+            val queryWithCustom =
+                combine(_newGroceryItemName, customAutocompleteNames) { query, custom ->
+                    query to custom
+                }
             combine(
                     selectedListId.flatMapLatest { listId ->
                         if (listId != null) {
@@ -98,12 +122,16 @@ class GroceryListViewModel(
                     _filter,
                     _sort,
                     _recipeFilter,
-                    _newGroceryItemName,
-                ) { items, filter, sort, recipeFilter, newGroceryItemName ->
+                    queryWithCustom,
+                ) { items, filter, sort, recipeFilter, (newGroceryItemName, customNames) ->
                     val availableRecipes = items.mapNotNull { it.recipeName }.distinct().sorted()
                     val hasNoRecipeItems = items.any { it.recipeName == null }
                     val autocompleteSuggestions =
-                        buildAutocompleteSuggestions(query = newGroceryItemName, items = items)
+                        buildAutocompleteSuggestions(
+                            query = newGroceryItemName,
+                            items = items,
+                            customItems = customNames,
+                        )
                     val filtered =
                         when (filter) {
                             GroceryFilter.ALL -> items
@@ -190,6 +218,16 @@ class GroceryListViewModel(
         val listId = selectedListId.value ?: return
         scope.launch { repository.addGrocery(listId, name) }
         _newGroceryItemName.value = ""
+    }
+
+    /** Saves the current query text as a reusable autocomplete entry, confirming with a toast. */
+    fun saveAutocompleteItem(name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isBlank()) return
+        scope.launch {
+            autocompleteRepository.addItem(trimmed)
+            toastService.show(ResourceString(Res.string.grocery_autocomplete_saved))
+        }
     }
 
     fun onSyncClicked() {
@@ -366,6 +404,7 @@ class GroceryListViewModel(
         private fun buildAutocompleteSuggestions(
             query: String,
             items: List<GroceryItem>,
+            customItems: List<String>,
         ): List<String> {
             val normalizedQuery = IngredientParser.parse(query).name.trim().lowercase()
             if (normalizedQuery.isBlank()) return emptyList()
@@ -378,7 +417,17 @@ class GroceryListViewModel(
                     .distinctBy { it.lowercase() }
                     .filter { it.lowercase().startsWith(normalizedQuery) }
 
+            // The user's saved autocomplete entries rank right after items already on the list and
+            // ahead of the built-in vocabulary.
+            val customSuggestions =
+                customItems
+                    .asSequence()
+                    .map { it.trim() }
+                    .filter { it.isNotBlank() }
+                    .filter { it.lowercase().startsWith(normalizedQuery) }
+
             return (existingItemSuggestions +
+                    customSuggestions +
                     IngredientParser.suggestedNamesFor(query).asSequence())
                 .distinctBy { it.lowercase() }
                 .filter { it.lowercase() != normalizedQuery }

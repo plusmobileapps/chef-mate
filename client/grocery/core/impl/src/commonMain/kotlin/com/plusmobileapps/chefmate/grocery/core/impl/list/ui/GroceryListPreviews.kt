@@ -78,6 +78,8 @@ private fun groceryListBloc(
 
         override fun saveGroceryItem() = Unit
 
+        override fun onSaveAutocompleteItem(name: String) = Unit
+
         override fun onGroceryItemClicked(item: GroceryItem) = Unit
 
         override fun onDismissSheet() = Unit
