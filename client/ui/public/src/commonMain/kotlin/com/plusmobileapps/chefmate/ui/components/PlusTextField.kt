@@ -4,23 +4,26 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.KeyboardActionHandler
+import androidx.compose.foundation.text.input.OutputTransformation
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.ImeAction
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
@@ -40,27 +43,40 @@ fun PlusTextField(
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
     focusRequester: FocusRequester? = null,
-    visualTransformation: VisualTransformation = VisualTransformation.None,
+    outputTransformation: OutputTransformation? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
     val isError = error != null
 
-    // The cursor/selection is owned locally rather than driven by the hoisted `value` String. When
-    // the value round-trips through a Bloc (onValueChange -> StateFlow -> collectAsState), a
-    // controlled String field receives a one-frame-stale echo of each keystroke; on iOS that
-    // surfaces as the cursor jumping to the front of the field after typing. Keeping a local
-    // TextFieldValue means our own keystroke echoes can never move the cursor.
-    var textFieldValue by remember {
-        mutableStateOf(TextFieldValue(text = value, selection = TextRange(value.length)))
+    // Back the field with a TextFieldState so the field itself owns its text *and* its
+    // cursor/selection. This is the pairing Compose Multiplatform's native iOS text input expects:
+    // the native UIView and Compose share a single buffer, so the caret can't desync from the text.
+    //
+    // The previous value/onValueChange + local-TextFieldValue bridge kept the *logical* selection
+    // correct (text still inserted in order) but the native iOS input rendered its caret at the
+    // start of the field, because that experimental input path doesn't honor Compose-driven
+    // selection pushed through the TextFieldValue overload. TextFieldState removes that round-trip
+    // entirely.
+    val state = rememberTextFieldState(initialText = value)
+
+    // Long-lived collectors below must always see the latest hoisted value/callback without
+    // restarting, so read them through rememberUpdatedState.
+    val currentValue by rememberUpdatedState(value)
+    val currentOnValueChange by rememberUpdatedState(onValueChange)
+
+    // Push local edits out to the caller. The guard means the value catching up to what the user
+    // just typed (the Bloc round-trip echo) never re-notifies or loops.
+    LaunchedEffect(state) {
+        snapshotFlow { state.text.toString() }
+            .collect { text -> if (text != currentValue) currentOnValueChange(text) }
     }
 
-    // Only adopt genuine upstream changes (autofill, form reset, clearing) — keyed on `value` so
-    // this reacts to real changes, not every recomposition. The guard skips the case where local
-    // edits have already produced this text.
+    // Adopt genuine upstream changes (clearing the query, a form reset, autofill) without moving
+    // the cursor on ordinary keystroke round-trips.
     LaunchedEffect(value) {
-        if (value != textFieldValue.text) {
-            textFieldValue = TextFieldValue(text = value, selection = TextRange(value.length))
+        if (value != state.text.toString()) {
+            state.setTextAndPlaceCursorAtEnd(value)
         }
     }
 
@@ -69,29 +85,30 @@ fun PlusTextField(
             if (focusRequester != null) it.focusRequester(focusRequester) else it
         }
 
+    val lineLimits =
+        if (singleLine) {
+            TextFieldLineLimits.SingleLine
+        } else {
+            TextFieldLineLimits.MultiLine(minHeightInLines = minLines, maxHeightInLines = maxLines)
+        }
+
     Column(modifier = modifier) {
         OutlinedTextField(
-            value = textFieldValue,
-            onValueChange = { newValue ->
-                textFieldValue = newValue
-                if (newValue.text != value) {
-                    onValueChange(newValue.text)
-                }
-            },
+            state = state,
             modifier = fieldModifier,
-            label = label,
+            enabled = enabled,
+            readOnly = readOnly,
+            // The state-based overload's label carries a TextFieldLabelScope receiver; adapt the
+            // plain slot callers pass so PlusTextField's public API stays receiver-free.
+            label = label?.let { slot -> { slot() } },
             placeholder = placeholder,
             leadingIcon = leadingIcon,
             trailingIcon = trailingIcon,
             isError = isError,
-            enabled = enabled,
-            readOnly = readOnly,
-            singleLine = singleLine,
-            maxLines = maxLines,
-            minLines = minLines,
-            visualTransformation = visualTransformation,
+            lineLimits = lineLimits,
+            outputTransformation = outputTransformation,
             keyboardOptions = keyboardOptions.withNativeTextInput(),
-            keyboardActions = keyboardActions,
+            onKeyboardAction = keyboardActions.toKeyboardActionHandler(keyboardOptions.imeAction),
         )
         AnimatedVisibility(visible = isError) {
             error?.let {
@@ -107,5 +124,30 @@ fun PlusTextField(
                 )
             }
         }
+    }
+}
+
+/**
+ * Bridges the legacy [KeyboardActions] callbacks onto the [androidx.compose.foundation.text.input]
+ * API's single [KeyboardActionHandler], dispatching to the lambda that matches the field's
+ * [imeAction]. Returns null when no matching action is set, so the platform default runs.
+ */
+private fun KeyboardActions.toKeyboardActionHandler(imeAction: ImeAction): KeyboardActionHandler? {
+    val action: (KeyboardActionScope.() -> Unit) =
+        when (imeAction) {
+            ImeAction.Done -> onDone
+            ImeAction.Go -> onGo
+            ImeAction.Next -> onNext
+            ImeAction.Previous -> onPrevious
+            ImeAction.Search -> onSearch
+            ImeAction.Send -> onSend
+            else -> null
+        } ?: return null
+    return KeyboardActionHandler { performDefault ->
+        val scope =
+            object : KeyboardActionScope {
+                override fun defaultKeyboardAction(imeAction: ImeAction) = performDefault()
+            }
+        scope.action()
     }
 }
