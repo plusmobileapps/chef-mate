@@ -3,9 +3,14 @@ import ComposeApp
 
 @main
 struct iOSApp: App {
+    // Must live on the `App` struct: `@UIApplicationDelegateAdaptor` is only honored here, not on a
+    // child `View`. Placed on a `View` it silently no-ops ("used outside of an App or Scene"), so
+    // `didFinishLaunchingWithOptions` never fires and the watch data bridge never starts.
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate: AppDelegate
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(appDelegate: appDelegate)
         }
     }
 }
