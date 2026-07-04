@@ -1,4 +1,5 @@
 import Foundation
+import os
 import WatchConnectivity
 
 /// The watch's only link to its data: WatchConnectivity to the iPhone. The phone pushes grocery
@@ -11,6 +12,8 @@ import WatchConnectivity
 final class WatchConnectivityManager: NSObject, WCSessionDelegate {
     static let shared = WatchConnectivityManager()
 
+    private let log = Logger(subsystem: "com.plusmobileapps.chefmate.watch", category: "connectivity")
+
     /// Set by the store; invoked on the main queue whenever a fresh snapshot arrives.
     var onSnapshot: ((WatchSnapshot) -> Void)?
 
@@ -22,12 +25,31 @@ final class WatchConnectivityManager: NSObject, WCSessionDelegate {
     }
 
     /// Ask the phone for the latest snapshot (call when the watch becomes active).
+    ///
+    /// When the phone is reachable we use `sendMessage` for an immediate reply. When it isn't (the
+    /// common case — the phone app is backgrounded or killed), we fall back to a queued
+    /// `transferUserInfo` request so the phone still wakes, pushes a fresh snapshot, and the watch
+    /// can recover on its own instead of getting stuck on the "Open Chef Mate on iPhone" prompt.
     func requestSnapshot() {
         let session = WCSession.default
-        guard session.activationState == .activated, session.isReachable else { return }
-        session.sendMessage(["type": "requestSnapshot"], replyHandler: { [weak self] reply in
-            self?.decode(reply)
-        }, errorHandler: nil)
+        guard session.activationState == .activated else {
+            log.info("requestSnapshot skipped: session not activated")
+            return
+        }
+        if session.isReachable {
+            session.sendMessage(["type": "requestSnapshot"], replyHandler: { [weak self] reply in
+                self?.decode(reply)
+            }, errorHandler: { [weak self] error in
+                self?.log.error("sendMessage failed, falling back to userInfo: \(error.localizedDescription)")
+                self?.requestSnapshotViaUserInfo()
+            })
+        } else {
+            requestSnapshotViaUserInfo()
+        }
+    }
+
+    private func requestSnapshotViaUserInfo() {
+        WCSession.default.transferUserInfo(["type": "requestSnapshot"])
     }
 
     func sendSetChecked(itemId: Int64, isChecked: Bool) {

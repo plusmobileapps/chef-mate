@@ -1,4 +1,5 @@
 import ComposeApp
+import os
 import WatchConnectivity
 
 /// iPhone side of the watch companion. The phone is the source of truth: it pushes grocery
@@ -7,6 +8,7 @@ import WatchConnectivity
 final class WatchDataSender: NSObject, WCSessionDelegate {
     private let bridge: WatchDataBridge
     private var cancelObserve: (() -> Void)?
+    private let log = Logger(subsystem: "com.plusmobileapps.chefmate", category: "watch")
 
     init(bridge: WatchDataBridge) {
         self.bridge = bridge
@@ -17,8 +19,20 @@ final class WatchDataSender: NSObject, WCSessionDelegate {
     }
 
     private func push(_ json: String) {
-        guard WCSession.default.activationState == .activated else { return }
-        try? WCSession.default.updateApplicationContext(["snapshot": json])
+        let session = WCSession.default
+        guard session.activationState == .activated else {
+            log.info("push skipped: session not activated")
+            return
+        }
+        // Surface failures instead of swallowing them: a thrown error here (e.g. the phone thinks
+        // the watch app isn't installed) is exactly why the watch can silently never sync.
+        do {
+            try session.updateApplicationContext(["snapshot": json])
+        } catch {
+            log.error(
+                "updateApplicationContext failed (paired=\(session.isPaired), watchAppInstalled=\(session.isWatchAppInstalled)): \(error.localizedDescription)"
+            )
+        }
     }
 
     func session(
@@ -26,6 +40,9 @@ final class WatchDataSender: NSObject, WCSessionDelegate {
         activationDidCompleteWith activationState: WCSessionActivationState,
         error: Error?
     ) {
+        if let error {
+            log.error("activation failed: \(error.localizedDescription)")
+        }
         // Push a fresh snapshot to the watch on every grocery data change.
         cancelObserve = bridge.observeSnapshot { [weak self] json in self?.push(json) }
     }
@@ -43,9 +60,13 @@ final class WatchDataSender: NSObject, WCSessionDelegate {
         }
     }
 
-    // Watch toggle/add actions (queued, reliable).
+    // Watch toggle/add actions plus its queued snapshot request (all reliable, delivered even when
+    // the phone was unreachable when the watch acted).
     func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
         switch userInfo["type"] as? String {
+        case "requestSnapshot":
+            // Watch asked while we were unreachable; push the current snapshot so it can load.
+            bridge.currentSnapshot { [weak self] json in self?.push(json) }
         case "setChecked":
             if let itemId = (userInfo["itemId"] as? NSNumber)?.int64Value,
                let isChecked = userInfo["isChecked"] as? Bool {
