@@ -89,6 +89,18 @@ class CookModeViewModel(
         scope.launch { sessionRepository.markSelected(recipeId) }
     }
 
+    /**
+     * Clears every cooking session, then invokes [onDone] so the caller can finish the screen. The
+     * callback runs only after the clear completes so it isn't cancelled by the screen tearing
+     * down.
+     */
+    fun finishCooking(onDone: () -> Unit) {
+        scope.launch {
+            sessionRepository.stopAll()
+            onDone()
+        }
+    }
+
     fun toggleLayout() {
         val next =
             if (_state.value.layoutMode == CookModeBloc.LayoutMode.Stacked) {

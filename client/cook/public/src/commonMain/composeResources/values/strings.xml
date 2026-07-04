@@ -1,6 +1,11 @@
 <resources>
     <string name="cook_mode_title">Cook Mode</string>
     <string name="cook_mode_close">Close cook mode</string>
+    <string name="cook_mode_finish">Finish cooking</string>
+    <string name="cook_mode_finish_confirm_title">Finish cooking?</string>
+    <string name="cook_mode_finish_confirm_message">This clears every recipe from cook mode.</string>
+    <string name="cook_mode_finish_confirm_button">Finish</string>
+    <string name="cook_mode_finish_cancel_button">Cancel</string>
     <string name="cook_mode_whats_cooking">What’s Cooking</string>
     <string name="cook_mode_ingredients">Ingredients</string>
     <string name="cook_mode_directions">Directions</string>

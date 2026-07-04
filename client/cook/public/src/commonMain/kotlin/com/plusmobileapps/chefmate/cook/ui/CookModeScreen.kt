@@ -42,6 +42,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.ViewAgenda
 import androidx.compose.material.icons.filled.ViewWeek
@@ -92,6 +93,11 @@ import androidx.compose.ui.unit.sp
 import chefmate.client.cook.public.generated.resources.Res
 import chefmate.client.cook.public.generated.resources.cook_mode_allow_screen_off
 import chefmate.client.cook.public.generated.resources.cook_mode_directions
+import chefmate.client.cook.public.generated.resources.cook_mode_finish
+import chefmate.client.cook.public.generated.resources.cook_mode_finish_cancel_button
+import chefmate.client.cook.public.generated.resources.cook_mode_finish_confirm_button
+import chefmate.client.cook.public.generated.resources.cook_mode_finish_confirm_message
+import chefmate.client.cook.public.generated.resources.cook_mode_finish_confirm_title
 import chefmate.client.cook.public.generated.resources.cook_mode_ingredients
 import chefmate.client.cook.public.generated.resources.cook_mode_keep_screen_on
 import chefmate.client.cook.public.generated.resources.cook_mode_keep_screen_on_onboarding
@@ -110,6 +116,7 @@ import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.KeepScreenOn
+import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusOnboardingTooltip
@@ -169,6 +176,34 @@ private fun CookModeCoachMark(
         placement = PlusTooltipPlacement.BELOW,
         anchor = anchor,
     )
+}
+
+/**
+ * Check-mark control that ends cook mode. Tapping it opens a confirmation dialog first; confirming
+ * runs [onFinish], which clears every recipe from cook mode and closes the screen.
+ */
+@Composable
+private fun CookModeFinishButton(onFinish: () -> Unit) {
+    var showConfirm by remember { mutableStateOf(false) }
+    IconButton(onClick = { showConfirm = true }) {
+        Icon(
+            imageVector = Icons.Default.Check,
+            contentDescription = stringResource(Res.string.cook_mode_finish),
+        )
+    }
+    if (showConfirm) {
+        PlusDialog(
+            title = Res.string.cook_mode_finish_confirm_title.asTextData(),
+            message = Res.string.cook_mode_finish_confirm_message.asTextData(),
+            confirmButtonText = Res.string.cook_mode_finish_confirm_button.asTextData(),
+            dismissButtonText = Res.string.cook_mode_finish_cancel_button.asTextData(),
+            onConfirmClick = {
+                showConfirm = false
+                onFinish()
+            },
+            onDismissRequest = { showConfirm = false },
+        )
+    }
 }
 
 @Composable
@@ -241,6 +276,7 @@ private fun CookModeTabletLayout(
                                     )
                                 }
                             }
+                            CookModeFinishButton(onFinish = bloc::onFinishClicked)
                         },
                 ),
             modifier = Modifier.fillMaxSize(),
@@ -395,6 +431,7 @@ private fun CookModeMobileLayout(
                                         )
                                     }
                                 }
+                                CookModeFinishButton(onFinish = bloc::onFinishClicked)
                             },
                     ),
                 modifier = Modifier.fillMaxSize(),

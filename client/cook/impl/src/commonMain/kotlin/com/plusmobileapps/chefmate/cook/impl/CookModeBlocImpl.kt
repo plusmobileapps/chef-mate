@@ -57,6 +57,10 @@ class CookModeBlocImpl(
         output.onNext(CookModeBloc.Output.Finished)
     }
 
+    override fun onFinishClicked() {
+        viewModel.finishCooking { output.onNext(CookModeBloc.Output.Finished) }
+    }
+
     override fun onRecipeChipClicked(recipeId: Long) {
         viewModel.selectRecipe(recipeId)
     }
