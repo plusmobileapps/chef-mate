@@ -15,6 +15,7 @@ import dev.mokkery.every
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
 import dev.mokkery.mock
+import dev.mokkery.verifySuspend
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -29,6 +30,7 @@ class CookModeViewModelTest {
         every { observeRecipeIds() } returns MutableStateFlow(emptyList())
         everySuspend { start(any()) } returns Unit
         everySuspend { markSelected(any()) } returns Unit
+        everySuspend { stopAll() } returns Unit
     }
 
     private fun createViewModel(
@@ -59,6 +61,17 @@ class CookModeViewModelTest {
 
         controller.hasSeen(CoachMarkId.COOK_MODE_KEEP_SCREEN_ON) shouldBe true
         vm.state.value.activeCoachMark shouldBe CoachMarkId.COOK_MODE_LAYOUT
+    }
+
+    @Test
+    fun When_finish_cooking_Then_all_sessions_cleared_and_callback_run() {
+        val vm = createViewModel()
+        var finished = false
+
+        vm.finishCooking { finished = true }
+
+        verifySuspend { sessionRepository.stopAll() }
+        finished shouldBe true
     }
 
     @Test

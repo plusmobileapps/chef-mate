@@ -23,6 +23,9 @@ interface CookModeBloc : BackClickBloc, ComposeScreen {
 
     fun onCloseClicked()
 
+    /** Clears every recipe from cook mode and finishes the session. */
+    fun onFinishClicked()
+
     fun onRecipeChipClicked(recipeId: Long)
 
     fun onLayoutToggled()
