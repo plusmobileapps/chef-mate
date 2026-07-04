@@ -70,11 +70,21 @@ platform :ios do
       api_key: api_key,
     )
 
+    # Xcode 26 renamed the App Store export method to "app-store-connect", but fastlane's gym still
+    # validates export_method against the pre-Xcode-16 names (and always forces the
+    # exportOptionsPlist `method` to whatever export_method is). Relax that one validation so we can
+    # pass the new value; otherwise `xcodebuild -exportArchive` fails with
+    # `exportOptionsPlist error for key "method" ... found app-store`.
+    require "gym"
+    Gym::Options.available_options
+      .find { |option| option.key == :export_method }
+      &.instance_variable_set(:@verify_block, nil)
+
     build_app(
       project: "iosApp/iosApp.xcodeproj",
       scheme: "iosApp",
       configuration: "Release",
-      export_method: "app-store",
+      export_method: "app-store-connect",
       output_directory: "build/ios",
       xcargs: "TEAM_ID=#{ENV['TEAM_ID']} DEVELOPMENT_TEAM=#{ENV['TEAM_ID']}",
       export_options: {
