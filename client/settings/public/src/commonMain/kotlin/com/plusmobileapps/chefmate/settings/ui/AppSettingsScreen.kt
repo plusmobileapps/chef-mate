@@ -24,6 +24,8 @@ import chefmate.client.settings.public.generated.resources.app_settings_clear_hi
 import chefmate.client.settings.public.generated.resources.app_settings_clear_history_dialog_confirm
 import chefmate.client.settings.public.generated.resources.app_settings_clear_history_dialog_message
 import chefmate.client.settings.public.generated.resources.app_settings_clear_history_dialog_title
+import chefmate.client.settings.public.generated.resources.app_settings_grocery_autocomplete
+import chefmate.client.settings.public.generated.resources.app_settings_grocery_section
 import chefmate.client.settings.public.generated.resources.app_settings_navigation_section
 import chefmate.client.settings.public.generated.resources.app_settings_recipe_categories
 import chefmate.client.settings.public.generated.resources.app_settings_recipes_section
@@ -79,6 +81,12 @@ fun AppSettingsScreen(bloc: AppSettingsBloc, modifier: Modifier = Modifier) {
             SettingsRow(
                 name = Res.string.app_settings_recipe_categories.asTextData(),
                 onClick = bloc::onRecipeCategoriesClicked,
+            )
+            HorizontalDivider()
+            SectionHeader(name = Res.string.app_settings_grocery_section.asTextData())
+            SettingsRow(
+                name = Res.string.app_settings_grocery_autocomplete.asTextData(),
+                onClick = bloc::onGroceryAutocompleteClicked,
             )
             HorizontalDivider()
             SectionHeader(name = Res.string.app_settings_backup_section.asTextData())

@@ -12,6 +12,7 @@ import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
+import com.plusmobileapps.chefmate.grocery.autocomplete.GroceryAutocompleteBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
 import com.plusmobileapps.chefmate.recipe.categories.RecipeCategoriesBloc
 import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc
@@ -37,6 +38,7 @@ class SettingsRootBlocImpl(
     private val importRecipes: ImportRecipesBloc.Factory,
     private val exportRecipes: ExportRecipesBloc.Factory,
     private val recipeCategories: RecipeCategoriesBloc.Factory,
+    private val groceryAutocomplete: GroceryAutocompleteBloc.Factory,
 ) : SettingsRootBloc, BlocContext by context {
 
     private val navigation = StackNavigation<Configuration>()
@@ -100,6 +102,15 @@ class SettingsRootBlocImpl(
                             output = ::handleRecipeCategoriesOutput,
                         )
                 )
+
+            Configuration.GroceryAutocomplete ->
+                SettingsRootBloc.Child.GroceryAutocomplete(
+                    bloc =
+                        groceryAutocomplete.create(
+                            context = context,
+                            output = ::handleGroceryAutocompleteOutput,
+                        )
+                )
         }
 
     private fun handleAppSettingsOutput(output: AppSettingsBloc.Output) {
@@ -113,6 +124,8 @@ class SettingsRootBlocImpl(
                 navigation.bringToFront(Configuration.ExportRecipes)
             AppSettingsBloc.Output.OpenRecipeCategories ->
                 navigation.bringToFront(Configuration.RecipeCategories)
+            AppSettingsBloc.Output.OpenGroceryAutocomplete ->
+                navigation.bringToFront(Configuration.GroceryAutocomplete)
         }
     }
 
@@ -143,6 +156,12 @@ class SettingsRootBlocImpl(
         }
     }
 
+    private fun handleGroceryAutocompleteOutput(output: GroceryAutocompleteBloc.Output) {
+        when (output) {
+            GroceryAutocompleteBloc.Output.Back -> navigation.pop()
+        }
+    }
+
     @Serializable
     private sealed class Configuration {
         @Serializable data object AppSettings : Configuration()
@@ -154,5 +173,7 @@ class SettingsRootBlocImpl(
         @Serializable data object ExportRecipes : Configuration()
 
         @Serializable data object RecipeCategories : Configuration()
+
+        @Serializable data object GroceryAutocomplete : Configuration()
     }
 }

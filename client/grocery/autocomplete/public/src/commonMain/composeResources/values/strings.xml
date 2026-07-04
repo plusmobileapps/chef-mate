@@ -1,0 +1,18 @@
+<resources>
+    <!-- Grocery autocomplete management screen (Settings → Grocery autocomplete) -->
+    <string name="grocery_autocomplete_title">Grocery autocomplete</string>
+    <string name="grocery_autocomplete_back">Back</string>
+    <string name="grocery_autocomplete_section_user">Your items</string>
+    <string name="grocery_autocomplete_section_defaults">Defaults</string>
+    <string name="grocery_autocomplete_create_a11y">Add item</string>
+    <string name="grocery_autocomplete_create_placeholder">New item name</string>
+    <string name="grocery_autocomplete_create_confirm_a11y">Save item</string>
+    <string name="grocery_autocomplete_create_cancel_a11y">Cancel</string>
+    <string name="grocery_autocomplete_empty_user">No custom items yet — tap the + button to add one.</string>
+    <string name="grocery_autocomplete_more_a11y">More actions for {item}</string>
+    <string name="grocery_autocomplete_delete">Delete</string>
+    <string name="grocery_autocomplete_delete_title">Delete item?</string>
+    <string name="grocery_autocomplete_delete_message">{item} will no longer be suggested when adding groceries.</string>
+    <string name="grocery_autocomplete_delete_confirm">Delete</string>
+    <string name="grocery_autocomplete_delete_cancel">Cancel</string>
+</resources>
