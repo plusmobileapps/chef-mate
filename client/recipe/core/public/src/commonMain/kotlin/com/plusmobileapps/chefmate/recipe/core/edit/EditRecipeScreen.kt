@@ -32,7 +32,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -106,6 +105,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusMarkdownEditor
 import com.plusmobileapps.chefmate.ui.components.PlusOnboardingTooltip
 import com.plusmobileapps.chefmate.ui.components.PlusOutlinedContainer
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
+import com.plusmobileapps.chefmate.ui.components.PlusTextField
 import com.plusmobileapps.chefmate.ui.components.PlusTooltipPlacement
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -333,7 +333,7 @@ private fun RecipeMoreDetailsSection(
 private fun RecipeTitleField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     val title by bloc.title.collectAsState()
 
-    OutlinedTextField(
+    PlusTextField(
         value = title,
         onValueChange = bloc::onTitleChanged,
         label = { Text(stringResource(Res.string.edit_recipe_field_title)) },
@@ -530,11 +530,10 @@ private fun RecipePhotoUploader(bloc: EditRecipeBloc, modifier: Modifier = Modif
     val pickPhoto = rememberImagePickerLauncher { picked ->
         if (picked != null) {
             scope.launch {
-                val bitmap =
-                    runCatching {
-                            withContext(Dispatchers.Default) { decodeImageBitmap(picked.bytes) }
-                        }
-                        .getOrNull()
+                val bitmap = runCatching {
+                    withContext(Dispatchers.Default) { decodeImageBitmap(picked.bytes) }
+                }
+                    .getOrNull()
                 if (bitmap != null) {
                     pendingCrop = PendingCrop(bytes = picked.bytes, bitmap = bitmap)
                 }
@@ -617,7 +616,7 @@ private fun UploadErrorDialog(
 private fun RecipeImageUrlField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     val imageUrl by bloc.imageUrl.collectAsState()
 
-    OutlinedTextField(
+    PlusTextField(
         value = imageUrl,
         onValueChange = bloc::onImageUrlChanged,
         label = { Text(stringResource(Res.string.edit_recipe_field_image_url)) },
@@ -631,7 +630,7 @@ private fun RecipeImageUrlField(bloc: EditRecipeBloc, modifier: Modifier = Modif
 private fun RecipeSourceUrlField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     val sourceUrl by bloc.sourceUrl.collectAsState()
 
-    OutlinedTextField(
+    PlusTextField(
         value = sourceUrl,
         onValueChange = bloc::onSourceUrlChanged,
         label = { Text(stringResource(Res.string.edit_recipe_field_source_url)) },
@@ -645,7 +644,7 @@ private fun RecipeSourceUrlField(bloc: EditRecipeBloc, modifier: Modifier = Modi
 private fun RecipeServingsField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     val servings by bloc.servings.collectAsState()
 
-    OutlinedTextField(
+    PlusTextField(
         value = servings,
         onValueChange = bloc::onServingsChanged,
         label = { Text(stringResource(Res.string.edit_recipe_field_servings)) },
@@ -660,7 +659,7 @@ private fun RecipeServingsField(bloc: EditRecipeBloc, modifier: Modifier = Modif
 private fun RecipePrepTimeField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     val prepTime by bloc.prepTime.collectAsState()
 
-    OutlinedTextField(
+    PlusTextField(
         value = prepTime,
         onValueChange = bloc::onPrepTimeChanged,
         label = { Text(stringResource(Res.string.edit_recipe_field_prep_time)) },
@@ -675,7 +674,7 @@ private fun RecipePrepTimeField(bloc: EditRecipeBloc, modifier: Modifier = Modif
 private fun RecipeCookTimeField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     val cookTime by bloc.cookTime.collectAsState()
 
-    OutlinedTextField(
+    PlusTextField(
         value = cookTime,
         onValueChange = bloc::onCookTimeChanged,
         label = { Text(stringResource(Res.string.edit_recipe_field_cook_time)) },
@@ -690,7 +689,7 @@ private fun RecipeCookTimeField(bloc: EditRecipeBloc, modifier: Modifier = Modif
 private fun RecipeTotalTimeField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     val totalTime by bloc.totalTime.collectAsState()
 
-    OutlinedTextField(
+    PlusTextField(
         value = totalTime,
         onValueChange = bloc::onTotalTimeChanged,
         label = { Text(stringResource(Res.string.edit_recipe_field_total_time)) },
@@ -705,7 +704,7 @@ private fun RecipeTotalTimeField(bloc: EditRecipeBloc, modifier: Modifier = Modi
 private fun RecipeCaloriesField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
     val calories by bloc.calories.collectAsState()
 
-    OutlinedTextField(
+    PlusTextField(
         value = calories,
         onValueChange = bloc::onCaloriesChanged,
         label = { Text(stringResource(Res.string.edit_recipe_field_calories)) },

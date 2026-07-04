@@ -33,7 +33,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -45,7 +44,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
@@ -67,6 +65,7 @@ import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
+import com.plusmobileapps.chefmate.ui.components.PlusTextField
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
 
@@ -311,7 +310,7 @@ private fun CategoryPickerCreateFieldRow(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
     ) {
-        OutlinedTextField(
+        PlusTextField(
             value = text,
             onValueChange = onTextChanged,
             placeholder = {
@@ -321,7 +320,8 @@ private fun CategoryPickerCreateFieldRow(
             keyboardOptions =
                 KeyboardOptions(imeAction = ImeAction.Done, autoCorrectEnabled = false),
             keyboardActions = KeyboardActions(onDone = { onSubmit() }),
-            modifier = Modifier.weight(1f).focusRequester(focusRequester),
+            focusRequester = focusRequester,
+            modifier = Modifier.weight(1f),
         )
         IconButton(onClick = onCancel) {
             Icon(

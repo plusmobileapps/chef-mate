@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,7 +14,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.ImeAction
 import chefmate.client.recipe.categories.public.generated.resources.Res
 import chefmate.client.recipe.categories.public.generated.resources.category_delete_confirm
@@ -32,6 +30,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusButton
 import com.plusmobileapps.chefmate.ui.components.PlusButtonVariant
 import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusDialogScaffold
+import com.plusmobileapps.chefmate.ui.components.PlusTextField
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
 
@@ -44,7 +43,7 @@ fun RenameCategoryDialog(initialName: String, onConfirm: (String) -> Unit, onDis
         onDismissRequest = onDismiss,
         header = { Text(stringResource(Res.string.category_rename_title)) },
         content = {
-            OutlinedTextField(
+            PlusTextField(
                 value = name,
                 onValueChange = { name = it },
                 placeholder = { Text(stringResource(Res.string.category_rename_placeholder)) },
@@ -53,7 +52,8 @@ fun RenameCategoryDialog(initialName: String, onConfirm: (String) -> Unit, onDis
                     KeyboardOptions(imeAction = ImeAction.Done, autoCorrectEnabled = false),
                 keyboardActions =
                     KeyboardActions(onDone = { if (name.isNotBlank()) onConfirm(name) }),
-                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+                focusRequester = focusRequester,
+                modifier = Modifier.fillMaxWidth(),
             )
         },
         footer = {

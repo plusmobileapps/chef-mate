@@ -14,7 +14,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -29,6 +28,7 @@ import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
+import com.plusmobileapps.chefmate.ui.components.PlusTextField
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
@@ -50,7 +50,7 @@ fun RecipePickerScreen(
             ),
         scrollEnabled = false,
     ) {
-        OutlinedTextField(
+        PlusTextField(
             value = state.searchQuery,
             onValueChange = bloc::onSearchQueryChanged,
             placeholder = { Text(stringResource(Res.string.add_meal_plan_search_recipes)) },

@@ -31,7 +31,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,7 +43,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
@@ -84,6 +82,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainerDefaults
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
+import com.plusmobileapps.chefmate.ui.components.PlusTextField
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
 
@@ -278,7 +277,7 @@ private fun CreateFieldRow(
                         .heightIn(min = 56.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                OutlinedTextField(
+                PlusTextField(
                     value = text,
                     onValueChange = onTextChanged,
                     placeholder = {
@@ -288,10 +287,8 @@ private fun CreateFieldRow(
                     keyboardOptions =
                         KeyboardOptions(imeAction = ImeAction.Done, autoCorrectEnabled = false),
                     keyboardActions = KeyboardActions(onDone = { onSubmit() }),
-                    modifier =
-                        Modifier.weight(1f)
-                            .focusRequester(focusRequester)
-                            .testTag(RecipeCategoriesTestTags.CREATE_FIELD),
+                    focusRequester = focusRequester,
+                    modifier = Modifier.weight(1f).testTag(RecipeCategoriesTestTags.CREATE_FIELD),
                 )
                 IconButton(onClick = { if (text.isNotBlank()) onSubmit() }) {
                     Icon(

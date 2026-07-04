@@ -29,7 +29,6 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.Add
@@ -76,7 +75,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -96,8 +94,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -195,10 +191,10 @@ import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.components.PlusOnboardingTooltip
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
+import com.plusmobileapps.chefmate.ui.components.PlusTextField
 import com.plusmobileapps.chefmate.ui.components.PlusTooltipPlacement
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
-import com.plusmobileapps.chefmate.ui.components.withNativeTextInput
 import com.plusmobileapps.chefmate.ui.text.toInlineMarkdownAnnotatedString
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import com.plusmobileapps.chefmate.util.rememberImagePickerLauncher
@@ -1198,37 +1194,11 @@ private fun SearchBar(
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
-    // The cursor/selection is owned locally rather than driven by the hoisted `query` String. The
-    // query round-trips through the Bloc (onQueryChanged -> StateFlow -> collectAsState), so a
-    // controlled String field receives a one-frame-stale echo of each keystroke; on iOS that
-    // surfaces as the cursor jumping to the front of the field after typing. Keeping a local
-    // TextFieldValue means our own keystroke echoes can never move the cursor.
-    var textFieldValue by remember {
-        mutableStateOf(TextFieldValue(text = query, selection = TextRange(query.length)))
-    }
-
-    // Only adopt genuine upstream changes (e.g. clearing the query) — keyed on `query` so this
-    // reacts to real changes, not every recomposition. The guard skips the case where local edits
-    // have already produced this text.
-    LaunchedEffect(query) {
-        if (query != textFieldValue.text) {
-            textFieldValue = TextFieldValue(text = query, selection = TextRange(query.length))
-        }
-    }
-
-    OutlinedTextField(
-        value = textFieldValue,
-        onValueChange = { newValue ->
-            textFieldValue = newValue
-            if (newValue.text != query) {
-                onQueryChanged(newValue.text)
-            }
-        },
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .focusRequester(focusRequester),
+    PlusTextField(
+        value = query,
+        onValueChange = onQueryChanged,
+        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        focusRequester = focusRequester,
         placeholder = { Text(stringResource(Res.string.recipe_list_search_placeholder)) },
         leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) },
         trailingIcon = {
@@ -1240,7 +1210,6 @@ private fun SearchBar(
             }
         },
         singleLine = true,
-        keyboardOptions = KeyboardOptions.Default.withNativeTextInput(),
     )
 }
 
