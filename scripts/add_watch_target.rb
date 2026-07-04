@@ -63,7 +63,7 @@ watch.build_configurations.each do |config|
   bs['MARKETING_VERSION'] = '1.0.0'
   bs['OTHER_LDFLAGS'] = ['$(inherited)']
   bs['LD_RUNPATH_SEARCH_PATHS'] = ['$(inherited)', '@executable_path/Frameworks']
-  bs['SKIP_INSTALL'] = 'NO'
+  bs['SKIP_INSTALL'] = 'YES' # embedded in the iOS app; must not be a top-level archive product
   bs['ENABLE_PREVIEWS'] = 'YES'
   bs['SWIFT_EMIT_LOC_STRINGS'] = 'YES'
 
