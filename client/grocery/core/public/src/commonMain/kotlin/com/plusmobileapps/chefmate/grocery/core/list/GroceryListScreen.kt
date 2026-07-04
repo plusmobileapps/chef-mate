@@ -156,6 +156,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.components.PlusOnboardingTooltip
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveModal
+import com.plusmobileapps.chefmate.ui.components.PlusTextField
 import com.plusmobileapps.chefmate.ui.components.PlusTooltipPlacement
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -796,7 +797,7 @@ private fun CreateListDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit)
         onDismissRequest = onDismiss,
         title = { Text(stringResource(Res.string.grocery_create_list_title)) },
         text = {
-            OutlinedTextField(
+            PlusTextField(
                 value = listName,
                 onValueChange = { listName = it },
                 label = { Text(stringResource(Res.string.grocery_create_list_hint)) },

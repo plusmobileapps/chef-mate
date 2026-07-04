@@ -43,6 +43,7 @@ import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
+import com.plusmobileapps.chefmate.ui.components.PlusTextField
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
 
@@ -89,14 +90,14 @@ private fun GroceryDetailFields(item: GroceryItem, bloc: GroceryDetailBloc) {
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
     ) {
-        OutlinedTextField(
+        PlusTextField(
             modifier = Modifier.fillMaxWidth(),
             value = item.displayName,
             onValueChange = bloc::onGroceryNameChanged,
             label = { Text(stringResource(Res.string.grocery_detail_name_label)) },
             singleLine = true,
         )
-        OutlinedTextField(
+        PlusTextField(
             modifier = Modifier.fillMaxWidth(),
             value = item.quantity.orEmpty(),
             onValueChange = bloc::onGroceryQuantityChanged,
