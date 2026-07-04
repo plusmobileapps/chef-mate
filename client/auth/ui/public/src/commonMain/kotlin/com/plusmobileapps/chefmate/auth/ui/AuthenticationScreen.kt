@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -42,8 +43,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import chefmate.client.auth.ui.public.generated.resources.Res
 import chefmate.client.auth.ui.public.generated.resources.auth_button_email_me_a_code
@@ -380,6 +379,13 @@ fun EmailField(
     )
 }
 
+// Masks the field's contents with bullets for the state-based text field. Replacing 1:1 keeps the
+// caret mapping identity, so the cursor stays put. Mirrors PasswordVisualTransformation from the
+// legacy value/onValueChange API.
+private val PasswordOutputTransformation = OutputTransformation {
+    replace(0, length, "•".repeat(length))
+}
+
 @Composable
 fun PasswordField(
     modifier: Modifier = Modifier,
@@ -398,8 +404,7 @@ fun PasswordField(
         label = { Text(label) },
         error = error,
         singleLine = true,
-        visualTransformation =
-            if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+        outputTransformation = if (passwordVisible) null else PasswordOutputTransformation,
         keyboardOptions =
             KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = imeAction),
         keyboardActions = KeyboardActions(onNext = { onImeAction() }, onDone = { onImeAction() }),
