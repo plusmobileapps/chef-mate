@@ -1,0 +1,42 @@
+import kotlin.Boolean;
+
+-- User-defined grocery autocomplete entries. These augment the built-in
+-- IngredientParser vocabulary so a user's own staples autocomplete on the
+-- grocery list.
+--
+-- `remoteId`, `clientId`, `isDirty`, and `ownerId` mirror the Category table's
+-- sync scaffolding. They are unused while this feature is local-only; a
+-- follow-up wires Supabase sync without needing a schema migration.
+CREATE TABLE GroceryAutocompleteItem (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+    remoteId TEXT UNIQUE,
+    clientId TEXT,
+    isDirty INTEGER AS Boolean NOT NULL DEFAULT 0,
+    ownerId TEXT
+);
+
+-- Case-insensitive uniqueness keeps the user list free of "Milk"/"milk" dupes.
+CREATE UNIQUE INDEX idx_grocery_autocomplete_name ON GroceryAutocompleteItem(name COLLATE NOCASE);
+
+getAll:
+SELECT * FROM GroceryAutocompleteItem ORDER BY name COLLATE NOCASE ASC;
+
+getById:
+SELECT * FROM GroceryAutocompleteItem WHERE id = ?;
+
+getByName:
+SELECT * FROM GroceryAutocompleteItem WHERE name = ? COLLATE NOCASE;
+
+insertOrIgnore:
+INSERT OR IGNORE INTO GroceryAutocompleteItem (name, ownerId) VALUES (?, ?);
+
+lastInsertId:
+SELECT MAX(id) FROM GroceryAutocompleteItem;
+
+deleteById:
+DELETE FROM GroceryAutocompleteItem WHERE id = ?;
+
+deleteAll:
+DELETE FROM GroceryAutocompleteItem;

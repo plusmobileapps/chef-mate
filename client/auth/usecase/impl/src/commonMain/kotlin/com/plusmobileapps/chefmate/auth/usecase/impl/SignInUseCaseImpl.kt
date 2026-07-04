@@ -5,6 +5,7 @@ import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.auth.usecase.SignInUseCase
 import com.plusmobileapps.chefmate.di.AppScope
+import com.plusmobileapps.chefmate.grocery.data.GroceryAutocompleteRepository
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.meal.data.MealPlanRepository
 import com.plusmobileapps.chefmate.recipe.data.CategoryRepository
@@ -23,6 +24,7 @@ class SignInUseCaseImpl(
     private val mealPlanRepository: MealPlanRepository,
     private val recipeRepository: RecipeRepository,
     private val categoryRepository: CategoryRepository,
+    private val groceryAutocompleteRepository: GroceryAutocompleteRepository,
     private val aiChatLocalDataCleaner: AiChatLocalDataCleaner,
 ) : SignInUseCase {
 
@@ -46,6 +48,7 @@ class SignInUseCaseImpl(
         mealPlanRepository.clearLocalData()
         recipeRepository.clearLocalData()
         categoryRepository.clearLocalData()
+        groceryAutocompleteRepository.clearLocalData()
         groceryRepository.clearLocalData()
         groceryRepository.ensureDefaultList()
         aiChatLocalDataCleaner.clearLocalData()

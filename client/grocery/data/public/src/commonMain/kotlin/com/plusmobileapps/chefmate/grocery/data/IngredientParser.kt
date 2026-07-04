@@ -51,6 +51,20 @@ object IngredientParser {
             .toList()
     }
 
+    /**
+     * Every built-in ingredient name, as display strings, sorted case-insensitively. Used by the
+     * grocery autocomplete settings screen to show the read-only "defaults" section beneath the
+     * user's own entries.
+     */
+    fun allSuggestionNames(): List<String> =
+        CATEGORY_MAP.asSequence()
+            .map { it.first }
+            .distinct()
+            .map { it.toSuggestionDisplayName() }
+            .distinct()
+            .sortedBy { it.lowercase() }
+            .toList()
+
     private val PARENTHETICAL_PATTERN = Regex("""\s*\([^)]*\)""")
 
     private fun String.toSuggestionDisplayName(): String =
