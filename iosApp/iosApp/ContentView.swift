@@ -16,8 +16,7 @@ struct ComposeView: UIViewControllerRepresentable {
 }
 
 struct ContentView: View {
-    @UIApplicationDelegateAdaptor(AppDelegate.self)
-    var appDelegate: AppDelegate
+    let appDelegate: AppDelegate
 
     var body: some View {
         ComposeView(
