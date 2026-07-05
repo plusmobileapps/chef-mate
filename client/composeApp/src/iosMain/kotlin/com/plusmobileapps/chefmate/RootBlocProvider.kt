@@ -27,6 +27,14 @@ object RootBlocProvider {
     lateinit var watchDataBridge: WatchDataBridge
         private set
 
+    /**
+     * Non-throwing view of [watchDataBridge] for callers that may run before the graph is built —
+     * e.g. the Siri "add grocery item" App Intent, which can background-launch the app. Null until
+     * [buildRootBloc] has run; reading [watchDataBridge] directly in that window would crash.
+     */
+    val watchDataBridgeOrNull: WatchDataBridge?
+        get() = if (::watchDataBridge.isInitialized) watchDataBridge else null
+
     fun buildRootBloc(
         componentContext: ComponentContext,
         application: UIApplication,
