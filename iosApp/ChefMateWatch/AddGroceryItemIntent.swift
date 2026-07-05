@@ -16,8 +16,14 @@ struct AddGroceryItemIntent: AppIntent {
     }
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        WatchConnectivityManager.shared.sendAddItem(listId: nil, name: item)
-        return .result(dialog: "Added \(item) to your grocery list.")
+        let name = item.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else {
+            return .result(dialog: "I didn't catch what to add.")
+        }
+        // Await WCSession activation: on a cold Siri launch the session isn't activated yet, and
+        // firing the transfer before then drops the add.
+        await WatchConnectivityManager.shared.sendAddItemAwaitingActivation(listId: nil, name: name)
+        return .result(dialog: "Added \(name) to your grocery list.")
     }
 }
 

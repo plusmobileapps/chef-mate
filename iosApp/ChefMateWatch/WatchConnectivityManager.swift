@@ -57,10 +57,33 @@ final class WatchConnectivityManager: NSObject, WCSessionDelegate {
     }
 
     /// `listId == nil` tells the phone to use the default list (used by the Siri intent).
+    ///
+    /// Guards on activation state because `transferUserInfo` before the session is activated is a
+    /// programmer error (it throws). On a cold Siri launch use `sendAddItemAwaitingActivation`, which
+    /// waits for activation first.
     func sendAddItem(listId: Int64?, name: String) {
+        guard WCSession.default.activationState == .activated else {
+            log.info("sendAddItem skipped: session not activated")
+            return
+        }
         var info: [String: Any] = ["type": "addItem", "name": name]
         if let listId { info["listId"] = listId }
         WCSession.default.transferUserInfo(info)
+    }
+
+    /// Adds an item, waiting up to ~5s for the session to activate first.
+    ///
+    /// The Siri `AddGroceryItemIntent` can cold-launch the watch app in the background. In that case
+    /// the singleton's `activate()` (in `init`) hasn't finished — activation completes asynchronously
+    /// in `activationDidCompleteWith` — so a plain `sendAddItem` would hit the not-activated guard and
+    /// silently drop the add. Awaiting activation also keeps the intent's `perform()` alive until the
+    /// transfer is handed to the system daemon, which is what makes queued delivery reliable.
+    func sendAddItemAwaitingActivation(listId: Int64?, name: String) async {
+        for _ in 0 ..< 50 {  // up to ~5s
+            if WCSession.default.activationState == .activated { break }
+            try? await Task.sleep(nanoseconds: 100_000_000)  // 0.1s
+        }
+        sendAddItem(listId: listId, name: name)
     }
 
     private func decode(_ payload: [String: Any]) {
