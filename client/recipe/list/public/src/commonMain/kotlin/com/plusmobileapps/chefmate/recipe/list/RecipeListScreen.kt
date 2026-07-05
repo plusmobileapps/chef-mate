@@ -1194,23 +1194,31 @@ private fun SearchBar(
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
-    PlusTextField(
-        value = query,
-        onValueChange = onQueryChanged,
+    Row(
         modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-        focusRequester = focusRequester,
-        placeholder = { Text(stringResource(Res.string.recipe_list_search_placeholder)) },
-        leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) },
-        trailingIcon = {
-            IconButton(onClick = onClear) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = stringResource(Res.string.recipe_list_search_clear),
-                )
-            }
-        },
-        singleLine = true,
-    )
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        PlusTextField(
+            value = query,
+            onValueChange = onQueryChanged,
+            modifier = Modifier.weight(1f),
+            focusRequester = focusRequester,
+            placeholder = { Text(stringResource(Res.string.recipe_list_search_placeholder)) },
+            leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) },
+            singleLine = true,
+        )
+        // The clear/close control lives OUTSIDE PlusTextField rather than in its trailing slot. On
+        // iOS the field renders through the native text input (usingNativeTextInput), whose UIView
+        // covers the field's bounds and swallows taps landing on any control drawn inside it — so a
+        // trailing IconButton there never fired and the search wouldn't close. As a sibling it sits
+        // outside that native view and reliably clears the query and dismisses the search bar.
+        IconButton(onClick = onClear) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = stringResource(Res.string.recipe_list_search_clear),
+            )
+        }
+    }
 }
 
 @Composable
