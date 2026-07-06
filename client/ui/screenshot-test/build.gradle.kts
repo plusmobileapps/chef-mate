@@ -44,6 +44,7 @@ dependencies {
     implementation(project(":client:cook:impl"))
     implementation(project(":client:grocery:core:public"))
     implementation(project(":client:grocery:core:impl"))
+    implementation(project(":client:grocery:autocomplete:public"))
     implementation(project(":client:meal:core:public"))
     implementation(project(":client:meal:core:impl"))
     implementation(project(":client:meal:data:public"))

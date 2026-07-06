@@ -4,6 +4,7 @@ import com.plusmobileapps.chefmate.aichat.AiChatLocalDataCleaner
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.auth.usecase.SignOutUseCase
 import com.plusmobileapps.chefmate.di.AppScope
+import com.plusmobileapps.chefmate.grocery.data.GroceryAutocompleteRepository
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.meal.data.MealPlanRepository
 import com.plusmobileapps.chefmate.recipe.data.CategoryRepository
@@ -23,6 +24,7 @@ class SignOutUseCaseImpl(
     private val recipeRepository: RecipeRepository,
     private val recipeBookRepository: RecipeBookRepository,
     private val categoryRepository: CategoryRepository,
+    private val groceryAutocompleteRepository: GroceryAutocompleteRepository,
     private val aiChatLocalDataCleaner: AiChatLocalDataCleaner,
 ) : SignOutUseCase {
     override suspend fun invoke() {
@@ -31,6 +33,7 @@ class SignOutUseCaseImpl(
         recipeRepository.clearLocalData()
         recipeBookRepository.clearLocalData()
         categoryRepository.clearLocalData()
+        groceryAutocompleteRepository.clearLocalData()
         groceryRepository.clearLocalData()
         groceryRepository.ensureDefaultList()
         aiChatLocalDataCleaner.clearLocalData()

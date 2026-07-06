@@ -37,6 +37,11 @@ interface GroceryListBloc : ComposeScreen {
 
     fun saveGroceryItem()
 
+    /**
+     * Saves [name] as a reusable custom autocomplete entry (the "+" in the suggestion dropdown).
+     */
+    fun onSaveAutocompleteItem(name: String)
+
     fun onGroceryItemClicked(item: GroceryItem)
 
     fun onDismissSheet()

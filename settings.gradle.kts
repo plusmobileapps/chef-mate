@@ -82,6 +82,12 @@ include(":client:featureflag:testing")
 
 include(":client:database:testing")
 
+include(":client:grocery:autocomplete:impl")
+
+include(":client:grocery:autocomplete:impl-robots")
+
+include(":client:grocery:autocomplete:public")
+
 include(":client:grocery:core:impl")
 
 include(":client:grocery:core:impl-robots")

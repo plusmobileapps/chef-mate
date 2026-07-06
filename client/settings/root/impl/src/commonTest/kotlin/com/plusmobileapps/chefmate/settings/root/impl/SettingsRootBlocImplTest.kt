@@ -3,6 +3,7 @@
 package com.plusmobileapps.chefmate.settings.root.impl
 
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.grocery.autocomplete.GroceryAutocompleteBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
 import com.plusmobileapps.chefmate.recipe.categories.RecipeCategoriesBloc
 import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc
@@ -24,6 +25,7 @@ class SettingsRootBlocImplTest {
     var importRecipesOutput: Consumer<ImportRecipesBloc.Output> = Consumer {}
     var exportRecipesOutput: Consumer<ExportRecipesBloc.Output> = Consumer {}
     var recipeCategoriesOutput: Consumer<RecipeCategoriesBloc.Output> = Consumer {}
+    var groceryAutocompleteOutput: Consumer<GroceryAutocompleteBloc.Output> = Consumer {}
 
     var rootOutput: SettingsRootBloc.Output? = null
 
@@ -49,6 +51,10 @@ class SettingsRootBlocImplTest {
             },
             recipeCategories = { _, output ->
                 recipeCategoriesOutput = output
+                mock()
+            },
+            groceryAutocomplete = { _, output ->
+                groceryAutocompleteOutput = output
                 mock()
             },
         )
@@ -114,6 +120,20 @@ class SettingsRootBlocImplTest {
     fun Given_recipe_categories_When_it_outputs_back_Then_app_settings_is_shown() {
         appSettingsOutput.onNext(AppSettingsBloc.Output.OpenRecipeCategories)
         recipeCategoriesOutput.onNext(RecipeCategoriesBloc.Output.Back)
+        bloc.instance() should instanceOf<SettingsRootBloc.Child.AppSettings>()
+    }
+
+    @Test
+    fun When_app_settings_opens_grocery_autocomplete_Then_grocery_autocomplete_is_shown() {
+        appSettingsOutput.onNext(AppSettingsBloc.Output.OpenGroceryAutocomplete)
+        bloc.instance() should instanceOf<SettingsRootBloc.Child.GroceryAutocomplete>()
+        bloc.routerState.value.backStack.size shouldBe 1
+    }
+
+    @Test
+    fun Given_grocery_autocomplete_When_it_outputs_back_Then_app_settings_is_shown() {
+        appSettingsOutput.onNext(AppSettingsBloc.Output.OpenGroceryAutocomplete)
+        groceryAutocompleteOutput.onNext(GroceryAutocompleteBloc.Output.Back)
         bloc.instance() should instanceOf<SettingsRootBloc.Child.AppSettings>()
     }
 
