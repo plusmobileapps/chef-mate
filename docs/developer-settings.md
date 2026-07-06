@@ -86,8 +86,15 @@ The "Developer Settings" row only appears when `BuildConfig.IS_DEBUG` is `true`.
 |---|---|
 | `./gradlew :client:composeApp:installDebug` | `true` |
 | `./gradlew :client:composeApp:run` (desktop) | `true` |
+| `./gradlew :client:composeApp:packageDmg` (desktop debug package) | `true` |
 | `./gradlew :client:composeApp:bundleRelease` | `false` |
+| `./gradlew :client:composeApp:packageReleaseDmg` (desktop release package) | `false` |
 | IDE sync (no tasks) | `true` |
+
+> **Desktop packaging caveat:** the plain `packageDmg` / `packageMsi` / `packageDeb` tasks do **not**
+> contain "Release", so they ship with the developer UI visible. The desktop release workflow uses the
+> `packageRelease*` variants (output under `build/compose/binaries/main-release/`) precisely so
+> `IS_DEBUG` is `false`. See [deployment.md](deployment.md).
 
 ## Architecture notes
 

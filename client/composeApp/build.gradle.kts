@@ -247,6 +247,17 @@ compose.desktop {
         // Pass deep link URI as argument when app is launched via URL scheme
         args += listOf()
 
+        // Ship distributables via the release packaging tasks (packageReleaseDmg/Msi/Deb) so the
+        // requested task name contains "Release". That marker is what flips BuildConfig.IS_DEBUG to
+        // false and hides the developer-only UI — see client/shared/build.gradle.kts. Keep
+        // R8/ProGuard
+        // OFF: this app relies on reflection (Ktor, Supabase, kotlinx.serialization, SQLDelight,
+        // Bugsnag, Decompose) and minification would strip classes those libraries look up at
+        // runtime.
+        buildTypes.release.proguard {
+            isEnabled.set(false)
+        }
+
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Chef Mate"
