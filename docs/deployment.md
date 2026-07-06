@@ -138,9 +138,15 @@ releaseStorePassword=YOUR_STORE_PASSWORD
 
 **What it does:**
 1. Builds native packages in parallel on three runners:
-   - `macos-15` — builds `.dmg` via `./gradlew :client:composeApp:packageDmg`
-   - `windows-latest` — builds `.msi` via `./gradlew :client:composeApp:packageMsi`
-   - `ubuntu-latest` — builds `.deb` via `./gradlew :client:composeApp:packageDeb`
+   - `macos-15` — builds `.dmg` via `./gradlew :client:composeApp:packageReleaseDmg`
+   - `windows-latest` — builds `.msi` via `./gradlew :client:composeApp:packageReleaseMsi`
+   - `ubuntu-latest` — builds `.deb` via `./gradlew :client:composeApp:packageReleaseDeb`
+
+   These `packageRelease*` tasks (not the plain `package*` variants) are required so the requested
+   task name contains "Release", which sets `BuildConfig.IS_DEBUG = false` and hides the developer-only
+   UI. R8/ProGuard minification is disabled for the release build type in
+   `client/composeApp/build.gradle.kts`, so the binary is functionally identical to the old debug
+   packaging — it just carries the release marker.
 2. Uploads each package as a build artifact
 3. Creates a GitHub Release from the tag with all three packages attached
 4. Auto-generates release notes from commits since the last tag
@@ -321,10 +327,12 @@ If you have a `keystore.properties` file at the project root, no environment var
 # iOS — run the full lane (requires match setup and Xcode)
 bundle exec fastlane ios release
 
-# Desktop — build packages for your current OS
-./gradlew :client:composeApp:packageDmg    # macOS
-./gradlew :client:composeApp:packageMsi    # Windows
-./gradlew :client:composeApp:packageDeb    # Linux
+# Desktop — build release packages for your current OS (hides developer-only UI).
+# Output lands in build/compose/binaries/main-release/. Use the plain package* tasks
+# only for local debug builds where you want the Developer Settings row visible.
+./gradlew :client:composeApp:packageReleaseDmg    # macOS
+./gradlew :client:composeApp:packageReleaseMsi    # Windows
+./gradlew :client:composeApp:packageReleaseDeb    # Linux
 ```
 
 ## Version Management

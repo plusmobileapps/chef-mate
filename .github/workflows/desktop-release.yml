@@ -11,17 +11,17 @@ jobs:
       matrix:
         include:
           - os: macos-15
-            task: packageDmg
+            task: packageReleaseDmg
             artifact-name: desktop-macos
-            artifact-path: client/composeApp/build/compose/binaries/main/dmg/*.dmg
+            artifact-path: client/composeApp/build/compose/binaries/main-release/dmg/*.dmg
           - os: windows-latest
-            task: packageMsi
+            task: packageReleaseMsi
             artifact-name: desktop-windows
-            artifact-path: client/composeApp/build/compose/binaries/main/msi/*.msi
+            artifact-path: client/composeApp/build/compose/binaries/main-release/msi/*.msi
           - os: ubuntu-latest
-            task: packageDeb
+            task: packageReleaseDeb
             artifact-name: desktop-linux
-            artifact-path: client/composeApp/build/compose/binaries/main/deb/*.deb
+            artifact-path: client/composeApp/build/compose/binaries/main-release/deb/*.deb
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
