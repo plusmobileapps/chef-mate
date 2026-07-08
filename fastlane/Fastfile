@@ -36,9 +36,13 @@ platform :mac do
 
     setup_ci
 
+    # A Developer ID app is directly distributed and uses no provisioning profiles, so fetch only the
+    # certificate. Without this, match tries to resolve `Direct_*` profiles for the Matchfile's app
+    # identifiers and fails under `readonly`.
     match(
       type: "developer_id",
       readonly: options.fetch(:readonly, true),
+      skip_provisioning_profiles: true,
       api_key: api_key,
     )
   end
