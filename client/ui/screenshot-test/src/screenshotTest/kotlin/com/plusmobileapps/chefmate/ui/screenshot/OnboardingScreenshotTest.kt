@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
+import com.plusmobileapps.chefmate.onboarding.OnboardingNavBar
 import com.plusmobileapps.chefmate.onboarding.impl.ui.previewCookModeBloc
 import com.plusmobileapps.chefmate.onboarding.impl.ui.previewGroceryListBloc
 import com.plusmobileapps.chefmate.onboarding.impl.ui.previewMealPlanningBloc
@@ -24,6 +25,31 @@ private fun OnboardingScreenshot(content: @Composable () -> Unit, darkTheme: Boo
             content()
         }
     }
+}
+
+// ── Nav bar ────────────────────────────────────────────────────────────────
+
+@PreviewTest
+@Preview(showBackground = true)
+@Composable
+fun OnboardingNavBarLightScreenshot() {
+    OnboardingScreenshot(
+        content = {
+            OnboardingNavBar(currentStep = 1, totalSteps = 6, onBackClick = {}, onSkipClick = {})
+        }
+    )
+}
+
+@PreviewTest
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun OnboardingNavBarDarkScreenshot() {
+    OnboardingScreenshot(
+        content = {
+            OnboardingNavBar(currentStep = 1, totalSteps = 6, onBackClick = {}, onSkipClick = {})
+        },
+        darkTheme = true,
+    )
 }
 
 // ── Welcome ────────────────────────────────────────────────────────────────

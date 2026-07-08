@@ -8,6 +8,7 @@ import com.plusmobileapps.chefmate.onboarding.GroceryListBloc
 import com.plusmobileapps.chefmate.onboarding.GroceryListScreen
 import com.plusmobileapps.chefmate.onboarding.MealPlanningBloc
 import com.plusmobileapps.chefmate.onboarding.MealPlanningScreen
+import com.plusmobileapps.chefmate.onboarding.OnboardingNavBar
 import com.plusmobileapps.chefmate.onboarding.SaveRecipesBloc
 import com.plusmobileapps.chefmate.onboarding.SaveRecipesScreen
 import com.plusmobileapps.chefmate.onboarding.StartCookingBloc
@@ -24,8 +25,6 @@ val previewWelcomeBloc: WelcomeBloc =
         override fun onGetStartedClicked() = Unit
 
         override fun onSignInClicked() = Unit
-
-        override fun onSkipClicked() = Unit
     }
 
 val previewSaveRecipesBloc: SaveRecipesBloc =
@@ -52,6 +51,14 @@ val previewStartCookingBloc: StartCookingBloc =
     object : StartCookingBloc {
         override fun onStartCookingClicked() = Unit
     }
+
+@Preview
+@Composable
+internal fun OnboardingNavBarPreview() {
+    ChefMateTheme {
+        OnboardingNavBar(currentStep = 1, totalSteps = 6, onBackClick = {}, onSkipClick = {})
+    }
+}
 
 @Preview
 @Composable
