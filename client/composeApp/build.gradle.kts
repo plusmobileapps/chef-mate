@@ -277,6 +277,16 @@ compose.desktop {
                 dockName = "Chef Mate"
 
                 iconFile.set(project.file("src/jvmMain/resources/app-icon.icns"))
+
+                // Sign with a Developer ID Application certificate when an identity is
+                // provided via env var (set in CI). Left unset for local/unsigned builds.
+                // Hardened runtime + the default Compose entitlements (allow-jit,
+                // unsigned-executable-memory, disable-library-validation) are applied
+                // automatically when signing is enabled — required for notarization.
+                signing {
+                    sign.set(System.getenv("MACOS_SIGN_IDENTITY") != null)
+                    identity.set(System.getenv("MACOS_SIGN_IDENTITY"))
+                }
             }
 
             // Linux configuration

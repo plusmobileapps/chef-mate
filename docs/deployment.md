@@ -147,13 +147,74 @@ releaseStorePassword=YOUR_STORE_PASSWORD
    UI. R8/ProGuard minification is disabled for the release build type in
    `client/composeApp/build.gradle.kts`, so the binary is functionally identical to the old debug
    packaging — it just carries the release marker.
-2. Uploads each package as a build artifact
-3. Creates a GitHub Release from the tag with all three packages attached
-4. Auto-generates release notes from commits since the last tag
-
-**No Fastlane:** Desktop distribution uses Gradle's Compose Desktop packaging plugin and GitHub Actions directly, since Fastlane is mobile-only.
+2. On macOS, signs and notarizes the DMG (see [Code signing](#desktop-macos-code-signing) below)
+3. Uploads each package as a build artifact
+4. Creates a GitHub Release from the tag with all three packages attached
+5. Auto-generates release notes from commits since the last tag
 
 **Package configuration:** Native distribution settings (package name, version, vendor, platform-specific options) are in `client/composeApp/build.gradle.kts` under the `compose.desktop.application.nativeDistributions` block.
+
+#### Desktop macOS code signing
+
+The macOS DMG is signed with a **Developer ID Application** certificate and notarized so it opens without a Gatekeeper warning. Windows and Linux packages remain unsigned.
+
+**Certificate:** Stored and fetched via Fastlane `match` (`type: "developer_id"`) from the same private certificates repo used for iOS. The `mac certificates` lane (`fastlane/Fastfile`) runs `setup_ci` + `match` (readonly) to import the cert into a temporary CI keychain.
+
+**Signing:** Enabled in `client/composeApp/build.gradle.kts` via the `macOS { signing { ... } }` block, gated on the `MACOS_SIGN_IDENTITY` env var (resolved in CI from the keychain). Local builds without that var stay unsigned. Compose Desktop applies hardened runtime + default entitlements automatically when signing.
+
+**Notarization:** The workflow submits the built DMG with `xcrun notarytool submit --wait` and then `xcrun stapler staple`, reusing the App Store Connect API key (`ASC_*` secrets) — no app-specific password needed.
+
+**One-time bootstrap:** Apple does **not** allow creating a Developer ID Application certificate via
+the App Store Connect API (only the Account Holder can, through an interactive session), so the cert
+must be created manually once and then imported into the Match repo:
+
+1. Create the cert as the Account Holder — in Xcode: **Settings → Accounts → Manage Certificates → +
+   → Developer ID Application** (or via developer.apple.com → Certificates). This also places the
+   cert + private key in your login keychain.
+2. Download the certificate `.cer` (developer.apple.com → Certificates → the Developer ID Application
+   row → Download), e.g. `developerID_application.cer`.
+3. Export the private key from **Keychain Access** as a `.p12` (any password), then convert it to the
+   exact format `match` + `security import` expect — a **password-less PKCS#1 PEM key**:
+
+   ```bash
+   # strip the p12 password (OpenSSL 3 needs -legacy for Apple's RC2 container)
+   openssl pkcs12 -legacy -in developer_id.p12 -nodes -nocerts -out /tmp/nopass.pem   # enter export pw
+   # emit a bare PKCS#1 key ("BEGIN RSA PRIVATE KEY"); PKCS#8 ("BEGIN PRIVATE KEY") is rejected as
+   # "Unknown format" when the file has a .p12 extension, and bag-attribute preambles break pairing
+   openssl rsa -traditional -in /tmp/nopass.pem -out developer_id_key.p12
+   head -1 developer_id_key.p12   # MUST be: -----BEGIN RSA PRIVATE KEY-----
+   rm -f /tmp/nopass.pem
+   ```
+
+   Why: `match` stores the key as `<id>.p12` and installs it in CI with `security import … -P ""`
+   (empty password). That only works if the file is a bare PKCS#1 PEM key — a real PKCS12 container
+   fails MAC verification (OpenSSL↔Apple empty-password mismatch), and a PKCS#8 key is "Unknown
+   format" under the `.p12` extension.
+
+4. Import both into the certificates repo. **Unset the ASC API key env vars first** — `match` reads
+   `APP_STORE_CONNECT_API_KEY` as its `api_key` option and fails with `'api_key' value must be a Hash`:
+
+   ```bash
+   unset APP_STORE_CONNECT_API_KEY APP_STORE_CONNECT_API_KEY_ID APP_STORE_CONNECT_API_ISSUER_ID
+   export MATCH_PASSWORD=<match repo passphrase>
+
+   bundle exec fastlane match import \
+     --type developer_id \
+     --git_url git@github.com:Plus-Mobile-Apps/certificates.git
+   # Certificate (.cer): developerID_application.cer
+   # Private Key (.p12): developer_id_key.p12
+   # Provisioning Profile: <press Enter — Developer ID apps use none>
+   ```
+
+CI then consumes the stored cert read-only via `fastlane mac certificates`.
+
+**Intermediate CA:** a Developer ID leaf only forms a *valid* codesigning identity when its issuing
+intermediate is in the keychain. CI runners lack it, so the correct one (subject
+`CN=Developer ID Certification Authority, OU=Apple Certification Authority` — **not** the G2
+intermediate) is vendored at `.github/certs/DeveloperIDCA.pem` and imported by the workflow. If you
+rotate to a cert issued by a different intermediate, replace that file to match the new leaf's issuer.
+
+**Reused secrets:** `MATCH_PASSWORD`, `MATCH_GIT_BASIC_AUTHORIZATION`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY` (no new secrets required).
 
 ---
 
@@ -372,6 +433,6 @@ Run the script before tagging a new release.
 
 ## Known Limitations
 
-- **macOS DMG is unsigned** — Apple requires notarization for DMGs distributed outside the Mac App Store. Users may see a Gatekeeper warning. Adding notarization requires `compose.desktop` signing config and `xcrun notarytool`.
+- **Windows MSI and Linux DEB are unsigned** — only the macOS DMG is signed/notarized (see [Desktop macOS code signing](#desktop-macos-code-signing)). Windows users may see a SmartScreen warning.
 - **R8/ProGuard is disabled** — Android release builds are not minified. Enabling R8 requires ProGuard rules for KMP libraries (Ktor, Supabase, kotlinx.serialization, Decompose).
 - **No CI version bumping** — versions are bumped locally via `scripts/bump-version.sh` before tagging; there is no automatic version increment in CI.

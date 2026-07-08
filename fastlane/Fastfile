@@ -21,6 +21,33 @@ platform :android do
   end
 end
 
+platform :mac do
+  desc "Install the Developer ID cert into the keychain for desktop signing."
+  desc "Read-only by default (CI). Run once locally with `readonly:false` to generate & store the cert."
+  lane :certificates do |options|
+    # Build the App Store Connect API key Hash `match` expects. Running `fastlane match` standalone
+    # instead picks up a String from the environment and fails with "'api_key' value must be a Hash".
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY"],
+      is_key_content_base64: true,
+    )
+
+    setup_ci
+
+    # A Developer ID app is directly distributed and uses no provisioning profiles, so fetch only the
+    # certificate. Without this, match tries to resolve `Direct_*` profiles for the Matchfile's app
+    # identifiers and fails under `readonly`.
+    match(
+      type: "developer_id",
+      readonly: options.fetch(:readonly, true),
+      skip_provisioning_profiles: true,
+      api_key: api_key,
+    )
+  end
+end
+
 platform :ios do
   # Builds the App Store Connect API key Hash `match` and `build_app` expect. Running
   # `fastlane match` on its own does not set this up (and picks up a String from the environment,

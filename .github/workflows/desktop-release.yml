@@ -33,12 +33,69 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - uses: ruby/setup-ruby@v1
+        if: matrix.os == 'macos-15'
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+
+      - name: Install signing certificate (macOS)
+        if: matrix.os == 'macos-15'
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.ASC_API_KEY }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          MATCH_GIT_URL: https://github.com/Plus-Mobile-Apps/certificates.git
+        run: bundle exec fastlane mac certificates
+
+      - name: Resolve signing identity (macOS)
+        if: matrix.os == 'macos-15'
+        run: |
+          # A Developer ID leaf cert only forms a *valid* codesigning identity when its issuing
+          # "Developer ID Certification Authority" intermediate is present to complete the chain to
+          # Apple Root CA. CI runners don't ship it, so import the vendored copy (this cert's issuer
+          # is OU=Apple Certification Authority, NOT the G2 intermediate).
+          security import .github/certs/DeveloperIDCA.pem -k "$HOME/Library/Keychains/login.keychain-db" 2>/dev/null || true
+          TMP_KEYCHAIN="$HOME/Library/Keychains/fastlane_tmp_keychain-db"
+          [ -f "$TMP_KEYCHAIN" ] && security import .github/certs/DeveloperIDCA.pem -k "$TMP_KEYCHAIN" 2>/dev/null || true
+
+          IDENTITY=$(security find-identity -v -p codesigning \
+            | grep "Developer ID Application" | head -1 \
+            | sed -E 's/.*"(.*)"/\1/')
+          echo "Resolved signing identity: '$IDENTITY'"
+          echo "MACOS_SIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
+
       - name: Build native package
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           BUGSNAG_API_KEY: ${{ secrets.BUGSNAG_API_KEY }}
         run: ./gradlew :client:composeApp:${{ matrix.task }}
+
+      - name: Dump codesign logs on failure (macOS)
+        if: failure() && matrix.os == 'macos-15'
+        run: |
+          echo "== compose signing logs =="
+          for f in client/composeApp/build/compose/logs/createReleaseDistributable/*.txt; do
+            echo "----- $f -----"
+            cat "$f" || true
+          done
+
+      - name: Notarize and staple DMG (macOS)
+        if: matrix.os == 'macos-15'
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
+        run: |
+          echo "$ASC_API_KEY" | base64 -d > AuthKey.p8
+          DMG=$(ls client/composeApp/build/compose/binaries/main-release/dmg/*.dmg | head -1)
+          xcrun notarytool submit "$DMG" \
+            --key AuthKey.p8 --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID" --wait
+          xcrun stapler staple "$DMG"
+          rm -f AuthKey.p8
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
