@@ -57,8 +57,14 @@ class OnboardingRootBlocImpl(
 
     override val routerState: Value<ChildStack<*, OnboardingRootBloc.Child>> = stack
 
+    override val totalSteps: Int = STEP_COUNT
+
     override fun onBackClicked() {
         navigation.pop()
+    }
+
+    override fun onSkipClicked() {
+        finishOnboarding()
     }
 
     private fun createChild(config: Configuration, context: BlocContext): OnboardingRootBloc.Child =
@@ -106,8 +112,6 @@ class OnboardingRootBlocImpl(
             WelcomeBloc.Output.GetStarted -> advanceTo(Configuration.SaveRecipes)
             // The root opens the auth flow; on success it tears down onboarding for us.
             WelcomeBloc.Output.SignIn -> this.output.onNext(Output.SignIn)
-            // Skipping is the same as finishing: mark complete so it never shows again.
-            WelcomeBloc.Output.Skip -> finishOnboarding()
         }
     }
 
@@ -145,6 +149,11 @@ class OnboardingRootBlocImpl(
     private fun finishOnboarding() {
         onboardingRepository.setOnboardingCompleted()
         output.onNext(Output.Finished)
+    }
+
+    private companion object {
+        /** Welcome, Save recipes, Cook mode, Grocery list, Meal planning, Start cooking. */
+        const val STEP_COUNT = 6
     }
 
     @Serializable

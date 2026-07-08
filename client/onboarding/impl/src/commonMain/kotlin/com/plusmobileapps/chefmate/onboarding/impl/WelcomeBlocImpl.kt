@@ -22,8 +22,4 @@ class WelcomeBlocImpl(
     override fun onSignInClicked() {
         output.onNext(WelcomeBloc.Output.SignIn)
     }
-
-    override fun onSkipClicked() {
-        output.onNext(WelcomeBloc.Output.Skip)
-    }
 }

@@ -104,11 +104,24 @@ class OnboardingRootBlocImplTest {
     }
 
     @Test
-    fun When_welcome_outputs_skip_Then_onboarding_is_completed_and_finished_emitted() {
-        welcomeOutput.onNext(WelcomeBloc.Output.Skip)
+    fun When_skip_clicked_Then_onboarding_is_completed_and_finished_emitted() {
+        // Skip lives in the shared nav bar and can be tapped from any step.
+        welcomeOutput.onNext(WelcomeBloc.Output.GetStarted)
+
+        bloc.onSkipClicked()
 
         onboardingRepository.hasCompletedOnboarding shouldBe true
         rootOutput shouldBe OnboardingRootBloc.Output.Finished
+    }
+
+    @Test
+    fun When_back_clicked_Then_returns_to_the_previous_step() {
+        welcomeOutput.onNext(WelcomeBloc.Output.GetStarted)
+        bloc.instance() should instanceOf<OnboardingRootBloc.Child.SaveRecipes>()
+
+        bloc.onBackClicked()
+
+        bloc.instance() should instanceOf<OnboardingRootBloc.Child.Welcome>()
     }
 
     @Test
