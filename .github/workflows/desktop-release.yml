@@ -61,12 +61,10 @@ jobs:
           TMP_KEYCHAIN="$HOME/Library/Keychains/fastlane_tmp_keychain-db"
           [ -f "$TMP_KEYCHAIN" ] && security import .github/certs/DeveloperIDCA.pem -k "$TMP_KEYCHAIN" 2>/dev/null || true
 
-          echo "== valid codesigning identities =="
-          security find-identity -v -p codesigning
           IDENTITY=$(security find-identity -v -p codesigning \
             | grep "Developer ID Application" | head -1 \
             | sed -E 's/.*"(.*)"/\1/')
-          echo "Resolved identity: '$IDENTITY'"
+          echo "Resolved signing identity: '$IDENTITY'"
           echo "MACOS_SIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
 
       - name: Build native package
