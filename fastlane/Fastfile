@@ -22,8 +22,11 @@ platform :android do
 end
 
 platform :mac do
-  desc "Install Developer ID cert into the CI keychain for desktop signing"
-  lane :certificates do
+  desc "Install the Developer ID cert into the keychain for desktop signing."
+  desc "Read-only by default (CI). Run once locally with `readonly:false` to generate & store the cert."
+  lane :certificates do |options|
+    # Build the App Store Connect API key Hash `match` expects. Running `fastlane match` standalone
+    # instead picks up a String from the environment and fails with "'api_key' value must be a Hash".
     api_key = app_store_connect_api_key(
       key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
       issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
@@ -35,7 +38,7 @@ platform :mac do
 
     match(
       type: "developer_id",
-      readonly: true,
+      readonly: options.fetch(:readonly, true),
       api_key: api_key,
     )
   end

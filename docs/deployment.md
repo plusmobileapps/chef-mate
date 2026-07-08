@@ -164,13 +164,29 @@ The macOS DMG is signed with a **Developer ID Application** certificate and nota
 
 **Notarization:** The workflow submits the built DMG with `xcrun notarytool submit --wait` and then `xcrun stapler staple`, reusing the App Store Connect API key (`ASC_*` secrets) — no app-specific password needed.
 
-**One-time bootstrap:** Generate and store the Developer ID cert once, locally, with an account-holder ASC API key:
+**One-time bootstrap:** Apple does **not** allow creating a Developer ID Application certificate via
+the App Store Connect API (only the Account Holder can, through an interactive session), so the cert
+must be created manually once and then imported into the Match repo:
 
-```bash
-bundle exec fastlane match developer_id \
-  --git_url git@github.com:Plus-Mobile-Apps/certificates.git \
-  --username andrew@plusmobileapps.com
-```
+1. Create the cert as the Account Holder — in Xcode: **Settings → Accounts → Manage Certificates → +
+   → Developer ID Application** (or via developer.apple.com → Certificates). This also places the
+   cert + private key in your login keychain.
+2. In **Keychain Access**, export the certificate as `developer_id.cer` and its private key as
+   `developer_id.p12` (set a password).
+3. Import both into the certificates repo (stores them encrypted; no account-holder API call needed):
+
+   ```bash
+   export MATCH_PASSWORD=<match repo passphrase>
+
+   bundle exec fastlane match import \
+     --type developer_id \
+     --git_url git@github.com:Plus-Mobile-Apps/certificates.git
+   # Certificate (.cer): developer_id.cer
+   # Private Key (.p12): developer_id.p12
+   # Provisioning Profile: <press Enter — Developer ID apps use none>
+   ```
+
+CI then consumes the stored cert read-only via `fastlane mac certificates`.
 
 **Reused secrets:** `MATCH_PASSWORD`, `MATCH_GIT_BASIC_AUTHORIZATION`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY` (no new secrets required).
 

@@ -26,6 +26,21 @@ Build release AAB and upload to Play Store internal track
 ----
 
 
+## Mac
+
+### mac certificates
+
+```sh
+[bundle exec] fastlane mac certificates
+```
+
+Install the Developer ID cert into the keychain for desktop signing.
+
+Read-only by default (CI). Run once locally with `readonly:false` to generate & store the cert.
+
+----
+
+
 ## iOS
 
 ### ios certificates
