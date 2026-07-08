@@ -53,9 +53,12 @@ jobs:
       - name: Resolve signing identity (macOS)
         if: matrix.os == 'macos-15'
         run: |
+          echo "== valid codesigning identities =="
+          security find-identity -v -p codesigning
           IDENTITY=$(security find-identity -v -p codesigning \
             | grep "Developer ID Application" | head -1 \
             | sed -E 's/.*"(.*)"/\1/')
+          echo "Resolved identity: '$IDENTITY'"
           echo "MACOS_SIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
 
       - name: Build native package
@@ -64,6 +67,15 @@ jobs:
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           BUGSNAG_API_KEY: ${{ secrets.BUGSNAG_API_KEY }}
         run: ./gradlew :client:composeApp:${{ matrix.task }}
+
+      - name: Dump codesign logs on failure (macOS)
+        if: failure() && matrix.os == 'macos-15'
+        run: |
+          echo "== compose signing logs =="
+          for f in client/composeApp/build/compose/logs/createReleaseDistributable/*.txt; do
+            echo "----- $f -----"
+            cat "$f" || true
+          done
 
       - name: Notarize and staple DMG (macOS)
         if: matrix.os == 'macos-15'
