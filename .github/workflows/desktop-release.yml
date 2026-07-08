@@ -53,6 +53,14 @@ jobs:
       - name: Resolve signing identity (macOS)
         if: matrix.os == 'macos-15'
         run: |
+          # A Developer ID leaf cert only forms a *valid* codesigning identity when Apple's
+          # "Developer ID Certification Authority" intermediate is present to complete the chain.
+          # CI runners don't ship it, so install it into the keychains in the search list.
+          curl -fsSL -o /tmp/DeveloperIDG2CA.cer https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer
+          security import /tmp/DeveloperIDG2CA.cer -k "$HOME/Library/Keychains/login.keychain-db" 2>/dev/null || true
+          TMP_KEYCHAIN="$HOME/Library/Keychains/fastlane_tmp_keychain-db"
+          [ -f "$TMP_KEYCHAIN" ] && security import /tmp/DeveloperIDG2CA.cer -k "$TMP_KEYCHAIN" 2>/dev/null || true
+
           echo "== valid codesigning identities =="
           security find-identity -v -p codesigning
           IDENTITY=$(security find-identity -v -p codesigning \
