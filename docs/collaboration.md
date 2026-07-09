@@ -120,6 +120,30 @@ For users who don't have an account yet, the `invited_email` is stored with `use
 database trigger on `auth.users` INSERT automatically migrates pending invitations when the user
 signs up.
 
+### Email notification on invite
+
+An invitee is emailed out-of-band when they're invited, so they don't have to already be in the
+app to discover a pending invite. Because every client inserts the invite directly into the member
+table, this is done entirely on the backend and requires no app-side code:
+
+- An `AFTER INSERT` trigger on `grocery_list_members` (and `recipe_book_members`) calls
+  `notify_invite_email()`, which fires `pg_net` at the `send-invite-email` edge function for each
+  new `status='pending'` row. `net.http_post` is async, so a slow or failing email never blocks or
+  rolls back the invite insert.
+- The edge function resolves the list/book name and the inviter's display name with the
+  service-role client and sends the mail via Resend.
+- **Re-invites don't re-email**: the `UNIQUE(list_id, invited_email)` constraint makes a repeat
+  invite an UPDATE, not an INSERT, so the trigger doesn't fire.
+
+**Setup:** deploy the function (`supabase functions deploy send-invite-email`), set its secrets
+(`RESEND_API_KEY`, `INVITE_HOOK_SECRET`; `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` are
+auto-injected), verify the Resend sending domain, and store two Vault secrets the trigger reads —
+`project_url` and `invite_hook_secret` (the latter matching `INVITE_HOOK_SECRET`). Vault secrets go
+through the Dashboard's SQL Editor, not the CLI. See the header of
+`supabase/migrations/20260707_invite_email_notification.sql` for the exact `vault.create_secret`
+calls, how to verify they landed, and how to rotate `invite_hook_secret` (via `vault.update_secret`
+— `create_secret` errors on a duplicate name).
+
 ## Sync Strategy
 
 The existing offline-first sync is extended for collaboration:
@@ -159,6 +183,8 @@ The existing offline-first sync is extended for collaboration:
 | Concern | Path |
 |---------|------|
 | Supabase migration | `supabase/migrations/20260425_add_collaboration.sql` |
+| Invite-email migration | `supabase/migrations/20260707_invite_email_notification.sql` |
+| Invite-email edge function | `supabase/functions/send-invite-email/index.ts` |
 | SQLDelight migration | `client/database/core/src/commonMain/sqldelight/.../database/6.sqm` |
 | Member queries | `client/database/core/src/commonMain/sqldelight/.../GroceryListMember.sq` |
 | Collaboration models | `client/grocery/data/public/.../CollaborationModels.kt` |
