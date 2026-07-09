@@ -23,7 +23,11 @@ class OnboardingRobot(private val test: ComposeUiTest) {
 
     fun clickSignIn(): OnboardingRobot = click(OnboardingTestTags.WELCOME_SIGN_IN_BUTTON)
 
-    fun clickSkip(): OnboardingRobot = click(OnboardingTestTags.WELCOME_SKIP_BUTTON)
+    /** Skip lives in the shared top nav bar, so it's available from every step. */
+    fun clickSkip(): OnboardingRobot = click(OnboardingTestTags.NAV_SKIP_BUTTON)
+
+    /** Back lives in the shared top nav bar; hidden on the first (Welcome) step. */
+    fun clickBack(): OnboardingRobot = click(OnboardingTestTags.NAV_BACK_BUTTON)
 
     fun assertSaveRecipesDisplayed(): OnboardingRobot =
         assertDisplayed(OnboardingTestTags.SAVE_RECIPES_SCREEN)

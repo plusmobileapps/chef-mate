@@ -2,10 +2,14 @@ package com.plusmobileapps.chefmate.onboarding
 
 /** Stable test tags for the onboarding screens, used by snapshot and robot UI tests. */
 object OnboardingTestTags {
+    // Shared top nav bar (rendered by the onboarding root, present on every step).
+    const val NAV_BACK_BUTTON = "onboarding_nav_back_button"
+    const val NAV_SKIP_BUTTON = "onboarding_nav_skip_button"
+    const val NAV_PROGRESS = "onboarding_nav_progress"
+
     const val WELCOME_SCREEN = "onboarding_welcome_screen"
     const val WELCOME_GET_STARTED_BUTTON = "onboarding_welcome_get_started_button"
     const val WELCOME_SIGN_IN_BUTTON = "onboarding_welcome_sign_in_button"
-    const val WELCOME_SKIP_BUTTON = "onboarding_welcome_skip_button"
 
     const val SAVE_RECIPES_SCREEN = "onboarding_save_recipes_screen"
     const val SAVE_RECIPES_NEXT_BUTTON = "onboarding_save_recipes_next_button"

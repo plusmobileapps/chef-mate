@@ -1,18 +1,19 @@
 package com.plusmobileapps.chefmate.onboarding
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import chefmate.client.onboarding.public.generated.resources.Res
 import chefmate.client.onboarding.public.generated.resources.onboarding_meal_planning_message
 import chefmate.client.onboarding.public.generated.resources.onboarding_meal_planning_title
 import chefmate.client.onboarding.public.generated.resources.onboarding_next
+import chefmate.client.onboarding.public.generated.resources.onboarding_preview_meal_planning
+import chefmate.client.onboarding.public.generated.resources.onboarding_preview_meal_planning_dark
 
 @Composable
 fun MealPlanningScreen(bloc: MealPlanningBloc, modifier: Modifier = Modifier) {
     OnboardingInfoLayout(
-        icon = Icons.Default.CalendarMonth,
+        previewLight = Res.drawable.onboarding_preview_meal_planning,
+        previewDark = Res.drawable.onboarding_preview_meal_planning_dark,
         title = Res.string.onboarding_meal_planning_title,
         message = Res.string.onboarding_meal_planning_message,
         buttonText = Res.string.onboarding_next,

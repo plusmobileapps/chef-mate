@@ -23,10 +23,16 @@ import com.plusmobileapps.chefmate.ui.ComposeScreen
 interface OnboardingRootBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
     val routerState: Value<ChildStack<*, Child>>
 
+    /** Total number of steps in the flow, used to render the nav bar's progress indicator. */
+    val totalSteps: Int
+
     @Composable
     override fun Content(modifier: Modifier) {
         OnboardingRootScreen(bloc = this, modifier = modifier)
     }
+
+    /** Skip the rest of onboarding; equivalent to finishing it. Surfaced in the top nav bar. */
+    fun onSkipClicked()
 
     sealed class Child {
 
