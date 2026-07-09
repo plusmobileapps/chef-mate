@@ -1,29 +1,27 @@
 package com.plusmobileapps.chefmate.onboarding
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusButton
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Shared layout for the informational onboarding steps: a centered icon, title, and body, with a
- * single primary "Next"-style button pinned to the bottom of the screen. Each step screen supplies
- * its own content, icon, and test tags.
+ * Shared layout for the informational onboarding steps: a framed preview of the real feature
+ * screen, a title, and a body, with a single primary "Next"-style button pinned to the bottom of
+ * the screen. Each step screen supplies its own preview captures, content, and test tags.
  */
 @Composable
 internal fun OnboardingInfoLayout(
-    icon: ImageVector,
+    previewLight: DrawableResource,
+    previewDark: DrawableResource,
     title: StringResource,
     message: StringResource,
     buttonText: StringResource,
@@ -43,12 +41,7 @@ internal fun OnboardingInfoLayout(
             )
         },
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(72.dp),
-        )
+        OnboardingPreviewImage(light = previewLight, dark = previewDark)
         Text(
             text = stringResource(title),
             style = MaterialTheme.typography.headlineMedium,
