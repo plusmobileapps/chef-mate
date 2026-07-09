@@ -113,6 +113,9 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
         data class OpenEditRecipeBook(val bookId: Long?) : Output()
 
         data class OpenEditGroceryList(val listId: Long) : Output()
+
+        /** Deep link into app settings, opened directly on the saved autocomplete items screen. */
+        data object OpenGroceryAutocompleteSettings : Output()
     }
 
     fun interface Factory {

@@ -388,6 +388,7 @@ fun GroceryListScreen(
                     GroceryListInput(
                         name = bloc.newGroceryItemName,
                         suggestions = state.autocompleteSuggestions,
+                        queryMatchesSavedAutocomplete = state.queryMatchesSavedAutocomplete,
                         onNameChange = bloc::onNewGroceryItemNameChange,
                         onAddClick = {
                             awaitingAddedItem = true
@@ -850,6 +851,7 @@ private fun DeleteItemsDialog(
 private fun GroceryListInput(
     name: StateFlow<String>,
     suggestions: List<String>,
+    queryMatchesSavedAutocomplete: Boolean,
     onNameChange: (String) -> Unit,
     onAddClick: () -> Unit,
     onSaveAutocompleteItem: (String) -> Unit,
@@ -862,12 +864,19 @@ private fun GroceryListInput(
     var isFocused by remember { mutableStateOf(false) }
     val trimmedQuery = state.value.trim()
     // Offer to save the typed text only when it isn't already one of the suggestions (a saved
-    // custom item or a built-in already suggests it, so re-saving would be redundant).
+    // custom item or a built-in already suggests it, so re-saving would be redundant) and it isn't
+    // already in the saved autocomplete library.
     val saveQuery = trimmedQuery.takeIf { q ->
-        q.isNotEmpty() && suggestions.none { it.equals(q, ignoreCase = true) }
+        q.isNotEmpty() &&
+            !queryMatchesSavedAutocomplete &&
+            suggestions.none { it.equals(q, ignoreCase = true) }
     }
+    // Hide the whole dropdown once the entered text matches a saved library item — there is nothing
+    // left to suggest or save. This is also what collapses the menu right after the user saves.
     val expanded =
-        (isFocused || forceShowSuggestions) && (suggestions.isNotEmpty() || saveQuery != null)
+        (isFocused || forceShowSuggestions) &&
+            !queryMatchesSavedAutocomplete &&
+            (suggestions.isNotEmpty() || saveQuery != null)
     val dismissKeyboard: () -> Unit = {
         focusManager.clearFocus()
         keyboardController?.hide()

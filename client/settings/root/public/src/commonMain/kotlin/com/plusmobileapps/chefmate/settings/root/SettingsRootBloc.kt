@@ -15,6 +15,7 @@ import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc
 import com.plusmobileapps.chefmate.recipe.importer.ImportRecipesBloc
 import com.plusmobileapps.chefmate.settings.AppSettingsBloc
 import com.plusmobileapps.chefmate.ui.ComposeScreen
+import kotlinx.serialization.Serializable
 
 interface SettingsRootBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
     val routerState: Value<ChildStack<*, Child>>
@@ -45,7 +46,21 @@ interface SettingsRootBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
         data object Back : Output()
     }
 
+    /** Which screen the settings stack opens on. */
+    @Serializable
+    sealed class Props {
+        /** Land on the top-level app settings list (the normal entry point). */
+        @Serializable data object Default : Props()
+
+        /** Deep link straight to the saved autocomplete items, with app settings underneath. */
+        @Serializable data object GroceryAutocomplete : Props()
+    }
+
     fun interface Factory {
-        fun create(context: BlocContext, output: Consumer<Output>): SettingsRootBloc
+        fun create(
+            context: BlocContext,
+            props: Props,
+            output: Consumer<Output>,
+        ): SettingsRootBloc
     }
 }

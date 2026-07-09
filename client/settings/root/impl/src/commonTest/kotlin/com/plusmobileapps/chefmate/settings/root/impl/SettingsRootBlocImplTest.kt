@@ -2,6 +2,7 @@
 
 package com.plusmobileapps.chefmate.settings.root.impl
 
+import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.grocery.autocomplete.GroceryAutocompleteBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavOrderBloc
@@ -29,9 +30,17 @@ class SettingsRootBlocImplTest {
 
     var rootOutput: SettingsRootBloc.Output? = null
 
-    val bloc =
+    val bloc = createBloc()
+
+    // Each bloc needs its own context — Decompose registers the child stack under a fixed key, so
+    // two blocs sharing one context would clash.
+    private fun createBloc(
+        props: SettingsRootBloc.Props = SettingsRootBloc.Props.Default,
+        context: BlocContext = this.context,
+    ) =
         SettingsRootBlocImpl(
             context = context,
+            props = props,
             output = { rootOutput = it },
             appSettings = { _, output ->
                 appSettingsOutput = output
@@ -135,6 +144,15 @@ class SettingsRootBlocImplTest {
         appSettingsOutput.onNext(AppSettingsBloc.Output.OpenGroceryAutocomplete)
         groceryAutocompleteOutput.onNext(GroceryAutocompleteBloc.Output.Back)
         bloc.instance() should instanceOf<SettingsRootBloc.Child.AppSettings>()
+    }
+
+    @Test
+    fun When_started_with_grocery_autocomplete_props_Then_it_opens_over_app_settings() {
+        val deepLinked =
+            createBloc(SettingsRootBloc.Props.GroceryAutocomplete, TestBlocContext.create())
+        deepLinked.instance() should instanceOf<SettingsRootBloc.Child.GroceryAutocomplete>()
+        // App settings sits underneath so Back returns there rather than out of settings.
+        deepLinked.routerState.value.backStack.size shouldBe 1
     }
 
     @Test

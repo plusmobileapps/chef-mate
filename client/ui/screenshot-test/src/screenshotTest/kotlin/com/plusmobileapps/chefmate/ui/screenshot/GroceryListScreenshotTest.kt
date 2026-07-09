@@ -8,12 +8,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
-import com.plusmobileapps.chefmate.grocery.core.list.GroceryListScreen
 import com.plusmobileapps.chefmate.grocery.core.impl.list.ui.previewGroceryListBloc
 import com.plusmobileapps.chefmate.grocery.core.impl.list.ui.previewGroceryListBlocAutocomplete
+import com.plusmobileapps.chefmate.grocery.core.impl.list.ui.previewGroceryListBlocAutocompleteSaved
 import com.plusmobileapps.chefmate.grocery.core.impl.list.ui.previewGroceryListBlocEmpty
 import com.plusmobileapps.chefmate.grocery.core.impl.list.ui.previewGroceryListBlocFilteredEmpty
 import com.plusmobileapps.chefmate.grocery.core.list.GroceryListBloc
+import com.plusmobileapps.chefmate.grocery.core.list.GroceryListScreen
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
@@ -34,6 +35,20 @@ private fun GroceryListAutocompleteScreenshot(darkTheme: Boolean = false) {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             GroceryListScreen(
                 bloc = previewGroceryListBlocAutocomplete,
+                forceShowAutocompleteSuggestions = true,
+            )
+        }
+    }
+}
+
+// The typed text already matches a saved autocomplete item, so the dropdown is suppressed even with
+// suggestions present and forceShowAutocompleteSuggestions = true — regression coverage for #371.
+@Composable
+private fun GroceryListAutocompleteSavedScreenshot(darkTheme: Boolean = false) {
+    ChefMateTheme(darkTheme = darkTheme) {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            GroceryListScreen(
+                bloc = previewGroceryListBlocAutocompleteSaved,
                 forceShowAutocompleteSuggestions = true,
             )
         }
@@ -61,6 +76,13 @@ fun GroceryListPhonePortraitDarkScreenshot() {
 @Composable
 fun GroceryListAutocompletePhonePortraitLightScreenshot() {
     GroceryListAutocompleteScreenshot()
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+fun GroceryListAutocompleteSavedPhonePortraitLightScreenshot() {
+    GroceryListAutocompleteSavedScreenshot()
 }
 
 // ── Empty state — regression coverage for the "Browse my recipes" CTA ──────

@@ -104,6 +104,12 @@ interface GroceryListBloc : ComposeScreen {
         val recipeFilter: String? = null,
         val availableRecipes: ImmutableList<String> = persistentListOf(),
         val autocompleteSuggestions: ImmutableList<String> = persistentListOf(),
+        /**
+         * True when the current input text exactly matches an item already in the user's saved
+         * autocomplete library. The suggestion dropdown is hidden in this case — there is nothing
+         * new to add and the exact match is redundant.
+         */
+        val queryMatchesSavedAutocomplete: Boolean = false,
         val hasNoRecipeItems: Boolean = false,
         val isSyncing: Boolean = false,
         val lists: ImmutableList<GroceryListModel> = persistentListOf(),
@@ -120,6 +126,9 @@ interface GroceryListBloc : ComposeScreen {
         data object OpenRecipes : Output()
 
         data class OpenEditList(val listId: Long) : Output()
+
+        /** Deep link to the settings screen listing all saved autocomplete items. */
+        data object OpenAutocompleteSettings : Output()
     }
 
     sealed class Sheet {

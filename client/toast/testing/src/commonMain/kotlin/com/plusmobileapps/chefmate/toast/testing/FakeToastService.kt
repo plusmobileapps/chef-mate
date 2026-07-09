@@ -25,6 +25,16 @@ class FakeToastService : ToastService {
 
     private val _shown = mutableListOf<TextData>()
 
+    /** Every action label passed to [show], in order (null when a message had no action). */
+    val shownActionLabels: List<TextData?>
+        get() = _shownActionLabels
+
+    private val _shownActionLabels = mutableListOf<TextData?>()
+
+    /** The action callback from the most recent [show], so tests can invoke a toast's action. */
+    var lastOnAction: (() -> Unit)? = null
+        private set
+
     override fun show(
         message: TextData,
         actionLabel: TextData?,
@@ -32,6 +42,8 @@ class FakeToastService : ToastService {
         onAction: (() -> Unit)?,
     ) {
         _shown += message
+        _shownActionLabels += actionLabel
+        lastOnAction = onAction
         _queue.update { it.enqueue(message, actionLabel, duration, onAction) }
     }
 

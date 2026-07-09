@@ -1,5 +1,8 @@
 package com.plusmobileapps.chefmate.grocery.core.impl.list
 
+import chefmate.client.grocery.core.public.generated.resources.Res
+import chefmate.client.grocery.core.public.generated.resources.grocery_autocomplete_manage
+import chefmate.client.grocery.core.public.generated.resources.grocery_autocomplete_saved
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
@@ -19,6 +22,8 @@ import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.grocery.data.GroceryListInvite
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.mapState
+import com.plusmobileapps.chefmate.text.ResourceString
+import com.plusmobileapps.chefmate.toast.ToastService
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
@@ -37,6 +42,7 @@ class GroceryListBlocImpl(
     @Assisted private val output: Consumer<GroceryListBloc.Output>,
     viewModelFactory: Provider<GroceryListViewModel>,
     private val groceryDetailFactory: GroceryDetailBloc.Factory,
+    private val toastService: ToastService,
 ) : GroceryListBloc, BlocContext by context {
 
     private val viewModel = instanceKeeper.getViewModel { viewModelFactory() }
@@ -69,6 +75,7 @@ class GroceryListBlocImpl(
                 recipeFilter = it.recipeFilter,
                 availableRecipes = it.availableRecipes.toImmutableList(),
                 autocompleteSuggestions = it.autocompleteSuggestions.toImmutableList(),
+                queryMatchesSavedAutocomplete = it.queryMatchesSavedAutocomplete,
                 hasNoRecipeItems = it.hasNoRecipeItems,
                 isSyncing = it.isSyncing,
                 lists = it.lists.toImmutableList(),
@@ -105,7 +112,16 @@ class GroceryListBlocImpl(
     }
 
     override fun onSaveAutocompleteItem(name: String) {
+        if (name.isBlank()) return
         viewModel.saveAutocompleteItem(name)
+        // Confirm the save and offer a jump to the settings screen that lists every saved item. The
+        // action routes through the app-scoped output rather than capturing this screen, since the
+        // toast callback outlives the composition.
+        toastService.show(
+            message = ResourceString(Res.string.grocery_autocomplete_saved),
+            actionLabel = ResourceString(Res.string.grocery_autocomplete_manage),
+            onAction = { output.onNext(GroceryListBloc.Output.OpenAutocompleteSettings) },
+        )
     }
 
     override fun onGroceryItemClicked(item: GroceryItem) {
