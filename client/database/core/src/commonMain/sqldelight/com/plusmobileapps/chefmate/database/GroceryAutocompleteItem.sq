@@ -5,8 +5,9 @@ import kotlin.Boolean;
 -- grocery list.
 --
 -- `remoteId`, `clientId`, `isDirty`, and `ownerId` mirror the Category table's
--- sync scaffolding. They are unused while this feature is local-only; a
--- follow-up wires Supabase sync without needing a schema migration.
+-- sync scaffolding. Items are add/delete only (never renamed), so `isDirty` is
+-- unused — there is no local edit to reconcile — but it is kept for symmetry
+-- with Category and to avoid a future migration should editing be added.
 CREATE TABLE GroceryAutocompleteItem (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -29,11 +30,34 @@ SELECT * FROM GroceryAutocompleteItem WHERE id = ?;
 getByName:
 SELECT * FROM GroceryAutocompleteItem WHERE name = ? COLLATE NOCASE;
 
+getByRemoteId:
+SELECT * FROM GroceryAutocompleteItem WHERE remoteId = ?;
+
+getByClientId:
+SELECT * FROM GroceryAutocompleteItem WHERE clientId = ?;
+
 insertOrIgnore:
-INSERT OR IGNORE INTO GroceryAutocompleteItem (name, ownerId) VALUES (?, ?);
+INSERT OR IGNORE INTO GroceryAutocompleteItem (name, clientId, ownerId) VALUES (?, ?, ?);
+
+createWithRemoteId:
+INSERT INTO GroceryAutocompleteItem (name, remoteId, clientId, ownerId)
+VALUES (?, ?, ?, ?)
+ON CONFLICT(remoteId) DO UPDATE SET
+    name = excluded.name,
+    clientId = excluded.clientId,
+    ownerId = excluded.ownerId;
 
 lastInsertId:
 SELECT MAX(id) FROM GroceryAutocompleteItem;
+
+getUnsynced:
+SELECT * FROM GroceryAutocompleteItem WHERE remoteId IS NULL;
+
+updateRemoteId:
+UPDATE GroceryAutocompleteItem SET remoteId = ?, isDirty = 0 WHERE id = ?;
+
+updateClientId:
+UPDATE GroceryAutocompleteItem SET clientId = ? WHERE id = ?;
 
 deleteById:
 DELETE FROM GroceryAutocompleteItem WHERE id = ?;
