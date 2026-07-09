@@ -2,8 +2,14 @@
 
 package com.plusmobileapps.chefmate
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -21,6 +27,9 @@ import com.arkivanov.essenty.backhandler.BackDispatcher
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import com.plusmobileapps.chefmate.buildconfig.BuildConfig
 import com.plusmobileapps.chefmate.root.DeepLink
+import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import com.plusmobileapps.chefmate.update.DesktopUpdater
+import com.plusmobileapps.chefmate.update.UpdateBanner
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
@@ -40,6 +49,7 @@ fun main(args: Array<String>) {
     val lifecycle = LifecycleRegistry()
     val backDispatcher = BackDispatcher()
     val appComponent = dev.zacsweers.metro.createGraph<JvmApplicationComponent>()
+    val updater = DesktopUpdater()
 
     val settings = appComponent.settings
     val initialSize =
@@ -103,8 +113,13 @@ fun main(args: Array<String>) {
                 }
         }
 
+        LaunchedEffect(Unit) { updater.checkForUpdates() }
+
         Window(
-            onCloseRequest = ::exitApplication,
+            onCloseRequest = {
+                updater.close()
+                exitApplication()
+            },
             state = windowState,
             title = "Chef Mate",
             icon = painterResource("app-icon.png"),
@@ -116,7 +131,19 @@ fun main(args: Array<String>) {
                 }
             },
         ) {
-            App(rootBloc = rootBloc, toastService = appComponent.toastService)
+            Box(modifier = Modifier.fillMaxSize()) {
+                App(rootBloc = rootBloc, toastService = appComponent.toastService)
+                val updateState by updater.state.collectAsState()
+                ChefMateTheme {
+                    UpdateBanner(
+                        state = updateState,
+                        onDownload = updater::startDownload,
+                        onInstall = updater::install,
+                        onDismiss = updater::dismiss,
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                    )
+                }
+            }
         }
     }
 }
