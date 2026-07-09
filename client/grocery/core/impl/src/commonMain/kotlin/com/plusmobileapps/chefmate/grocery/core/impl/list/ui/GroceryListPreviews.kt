@@ -177,6 +177,24 @@ val previewGroceryListBlocAutocomplete: GroceryListBloc =
         pendingInput = "stra",
     )
 
+/**
+ * The typed text exactly matches an item already saved in the autocomplete library
+ * (`queryMatchesSavedAutocomplete = true`), so the suggestion dropdown must stay hidden even though
+ * suggestions are present and the field is "focused". Regression coverage for #371.
+ */
+val previewGroceryListBlocAutocompleteSaved: GroceryListBloc =
+    groceryListBloc(
+        model =
+            GroceryListBloc.Model(
+                groupedItems = sampleGroups,
+                autocompleteSuggestions = persistentListOf("Strawberry jam", "Strawberry yogurt"),
+                queryMatchesSavedAutocomplete = true,
+                lists = persistentListOf(sampleList),
+                selectedList = sampleList,
+            ),
+        pendingInput = "Strawberries",
+    )
+
 @Preview(showBackground = true, heightDp = 1100)
 @Composable
 internal fun GroceryListPreview() {
@@ -201,6 +219,17 @@ internal fun GroceryListAutocompletePreview() {
     ChefMateTheme {
         GroceryListScreen(
             bloc = previewGroceryListBlocAutocomplete,
+            forceShowAutocompleteSuggestions = true,
+        )
+    }
+}
+
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+internal fun GroceryListAutocompleteSavedPreview() {
+    ChefMateTheme {
+        GroceryListScreen(
+            bloc = previewGroceryListBlocAutocompleteSaved,
             forceShowAutocompleteSuggestions = true,
         )
     }
