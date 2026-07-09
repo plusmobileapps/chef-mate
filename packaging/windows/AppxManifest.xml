@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MSIX manifest for the Microsoft Store build of Chef Mate.
+
+  The __TOKENS__ below are substituted by the "Package MSIX" step in
+  .github/workflows/desktop-release.yml before makeappx runs:
+    __IDENTITY_NAME__ -> Partner Center "Package/Identity Name" (STORE_IDENTITY_NAME secret)
+    __PUBLISHER__     -> Partner Center "Publisher" CN string    (STORE_PUBLISHER secret)
+    __VERSION__       -> release version as 4-part x.y.z.0
+
+  When the Store secrets are absent the step falls back to placeholder identity
+  values so the MSIX still builds as an artifact (it just can't be submitted).
+-->
+<Package
+    xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+    xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+    xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+
+  <Identity Name="__IDENTITY_NAME__"
+            Publisher="__PUBLISHER__"
+            Version="__VERSION__"
+            ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>Chef Mate+</DisplayName>
+    <PublisherDisplayName>Plus Mobile Apps LLC</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0"
+                        MaxVersionTested="10.0.22621.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+
+  <Applications>
+    <Application Id="ChefMate"
+                 Executable="Chef Mate.exe"
+                 EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+          DisplayName="Chef Mate+"
+          Description="Chef Mate - Your AI Cooking Assistant"
+          BackgroundColor="transparent"
+          Square150x150Logo="Assets\Square150x150Logo.png"
+          Square44x44Logo="Assets\Square44x44Logo.png" />
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <!-- Win32 (Desktop Bridge) apps with a bundled JRE must run unsandboxed -->
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

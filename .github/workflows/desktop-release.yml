@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     strategy:
+      # Don't let one platform's failure cancel the others (e.g. keep building the
+      # Windows MSIX even if the macOS leg fails).
+      fail-fast: false
       matrix:
         include:
           - os: macos-15
@@ -97,14 +100,69 @@ jobs:
           xcrun stapler staple "$DMG"
           rm -f AuthKey.p8
 
+      - name: Build app image for MSIX (Windows)
+        if: runner.os == 'Windows'
+        run: ./gradlew :client:composeApp:createReleaseDistributable
+
+      - name: Package MSIX (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          STORE_IDENTITY_NAME: ${{ secrets.STORE_IDENTITY_NAME }}
+          STORE_PUBLISHER: ${{ secrets.STORE_PUBLISHER }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $img = "client/composeApp/build/compose/binaries/main-release/app/Chef Mate"
+
+          # Resolve the release version (tag on push; build.gradle.kts otherwise) as 4-part x.y.z.0
+          if ($env:GITHUB_REF -like 'refs/tags/v*') {
+            $version = $env:GITHUB_REF_NAME.TrimStart('v')
+          } else {
+            $version = (Select-String 'versionName = "(.+?)"' client/composeApp/build.gradle.kts).Matches[0].Groups[1].Value
+          }
+          $msixVersion = "$version.0"
+
+          # Identity from Store secrets, with placeholders so the MSIX still builds when unset
+          $idName = if ($env:STORE_IDENTITY_NAME) { $env:STORE_IDENTITY_NAME } else { "PlusMobileApps.ChefMate" }
+          $publisher = if ($env:STORE_PUBLISHER) { $env:STORE_PUBLISHER } else { "CN=Plus Mobile Apps" }
+
+          # Substitute manifest tokens and drop it next to the app image
+          (Get-Content packaging/windows/AppxManifest.xml -Raw) `
+            -replace '__IDENTITY_NAME__', $idName `
+            -replace '__PUBLISHER__', $publisher `
+            -replace '__VERSION__', $msixVersion |
+            Set-Content "$img/AppxManifest.xml"
+
+          # Reuse the existing app icon for the required Store logo assets (replace with
+          # correctly-sized PNGs for Store certification).
+          New-Item -ItemType Directory -Force -Path "$img/Assets" | Out-Null
+          $icon = "client/composeApp/src/jvmMain/resources/app-icon.png"
+          Copy-Item $icon "$img/Assets/StoreLogo.png"
+          Copy-Item $icon "$img/Assets/Square150x150Logo.png"
+          Copy-Item $icon "$img/Assets/Square44x44Logo.png"
+
+          $makeappx = (Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\makeappx.exe" |
+                       Sort-Object FullName -Descending | Select-Object -First 1).FullName
+          & $makeappx pack /d "$img" /p "$env:RUNNER_TEMP\ChefMate.msix" /o
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact-name }}
           path: ${{ matrix.artifact-path }}
 
+      - name: Upload MSIX artifact (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-windows-msix
+          path: ${{ runner.temp }}/ChefMate.msix
+
   release:
     needs: build
+    # Only publish a GitHub Release for tag pushes; a manual workflow_dispatch on a
+    # branch just builds artifacts (e.g. to grab the MSIX) without cutting a release.
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -114,8 +172,66 @@ jobs:
           path: artifacts
           merge-multiple: true
 
+      - name: Generate update feed
+        # Windows is intentionally omitted: it ships via the Microsoft Store and updates there,
+        # so the in-app updater is inert on Windows and never reads this feed.
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          BASE="https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}"
+          DMG=$(cd artifacts && ls *.dmg)
+          DEB=$(cd artifacts && ls *.deb)
+          cat > artifacts/latest.json <<EOF
+          {
+            "version": "${VERSION}",
+            "notesUrl": "https://github.com/${{ github.repository }}/releases/tag/${GITHUB_REF_NAME}",
+            "downloads": {
+              "macos": "${BASE}/${DMG}",
+              "linux": "${BASE}/${DEB}"
+            }
+          }
+          EOF
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: artifacts/*
           generate_release_notes: true
+
+  # Submits the MSIX to the Microsoft Store. Runs only on tag pushes, and each step
+  # no-ops unless STORE_PRODUCT_ID is configured. The very first submission for a new
+  # app must still be made manually in Partner Center to create the listing.
+  publish-store:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: windows-latest
+    env:
+      STORE_PRODUCT_ID: ${{ secrets.STORE_PRODUCT_ID }}
+    steps:
+      - uses: actions/download-artifact@v4
+        if: env.STORE_PRODUCT_ID != ''
+        with:
+          name: desktop-windows-msix
+          path: msix
+
+      # NOTE: verify the action ref against the current MSStore CLI docs before relying on it.
+      - name: Setup MSStore CLI
+        if: env.STORE_PRODUCT_ID != ''
+        uses: microsoft/setup-msstore-cli@v1
+
+      - name: Configure MSStore CLI
+        if: env.STORE_PRODUCT_ID != ''
+        run: >
+          msstore reconfigure
+          --tenantId ${{ secrets.PARTNER_CENTER_TENANT_ID }}
+          --sellerId ${{ secrets.PARTNER_CENTER_SELLER_ID }}
+          --clientId ${{ secrets.PARTNER_CENTER_CLIENT_ID }}
+          --clientSecret ${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}
+
+      - name: Publish to Microsoft Store
+        if: env.STORE_PRODUCT_ID != ''
+        shell: pwsh
+        run: |
+          $msix = (Get-ChildItem msix/*.msix | Select-Object -First 1).FullName
+          # -id is the Partner Center app/product id; adjust if your account uses a separate Store ID.
+          msstore publish -i $msix -id $env:STORE_PRODUCT_ID
