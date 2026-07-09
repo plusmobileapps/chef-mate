@@ -10,13 +10,24 @@
 -- Safe to re-run (idempotent). Run in the Supabase SQL editor / via `supabase db push`.
 --
 -- OPERATOR SETUP — before this does anything, store two Vault secrets the trigger reads (the
--- edge function itself reads RESEND_API_KEY / INVITE_HOOK_SECRET from function secrets separately):
+-- edge function itself reads RESEND_API_KEY / INVITE_HOOK_SECRET from function secrets separately).
+-- Run these in the Supabase Dashboard's SQL Editor (they use the `vault` schema, not exposed via
+-- the CLI):
 --
 --   select vault.create_secret('https://<project-ref>.supabase.co', 'project_url');
 --   select vault.create_secret('<same value as INVITE_HOOK_SECRET>', 'invite_hook_secret');
 --
--- To rotate, delete and recreate the named secret. `project_url` is the base URL; the trigger
--- appends `/functions/v1/send-invite-email`.
+-- `project_url` is the base URL; the trigger appends `/functions/v1/send-invite-email`.
+--
+-- Verify the secrets landed (prints only the names, not the plaintext):
+--   select name from vault.decrypted_secrets;
+--
+-- To rotate: `vault.create_secret` errors on a duplicate name, so update in place instead —
+--   select vault.update_secret(
+--     (select id from vault.secrets where name = 'invite_hook_secret'),
+--     '<new-secret>'
+--   );
+-- and set the matching new value with `supabase secrets set INVITE_HOOK_SECRET=<new-secret>`.
 -- ============================================================
 
 CREATE EXTENSION IF NOT EXISTS pg_net;

@@ -138,9 +138,11 @@ table, this is done entirely on the backend and requires no app-side code:
 **Setup:** deploy the function (`supabase functions deploy send-invite-email`), set its secrets
 (`RESEND_API_KEY`, `INVITE_HOOK_SECRET`; `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` are
 auto-injected), verify the Resend sending domain, and store two Vault secrets the trigger reads —
-`project_url` and `invite_hook_secret` (the latter matching `INVITE_HOOK_SECRET`). See the header
-of `supabase/migrations/20260707_invite_email_notification.sql` for the exact `vault.create_secret`
-calls.
+`project_url` and `invite_hook_secret` (the latter matching `INVITE_HOOK_SECRET`). Vault secrets go
+through the Dashboard's SQL Editor, not the CLI. See the header of
+`supabase/migrations/20260707_invite_email_notification.sql` for the exact `vault.create_secret`
+calls, how to verify they landed, and how to rotate `invite_hook_secret` (via `vault.update_secret`
+— `create_secret` errors on a duplicate name).
 
 ## Sync Strategy
 
