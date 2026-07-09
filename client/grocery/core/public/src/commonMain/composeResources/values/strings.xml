@@ -97,4 +97,5 @@
     <string name="grocery_invite_error">Couldn’t send that invite. Check the email — they may already be on the list.</string>
     <string name="grocery_save_autocomplete">Save “{item}” for autocomplete</string>
     <string name="grocery_autocomplete_saved">Saved to autocomplete</string>
+    <string name="grocery_autocomplete_manage">Manage</string>
 </resources>

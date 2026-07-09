@@ -4,6 +4,9 @@
 package com.plusmobileapps.chefmate.grocery.core.impl.list
 
 import app.cash.turbine.test
+import chefmate.client.grocery.core.public.generated.resources.Res
+import chefmate.client.grocery.core.public.generated.resources.grocery_autocomplete_manage
+import chefmate.client.grocery.core.public.generated.resources.grocery_autocomplete_saved
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.CoachMarkController
 import com.plusmobileapps.chefmate.di.CoachMarkId
@@ -17,7 +20,8 @@ import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.grocery.data.testing.FakeGroceryAutocompleteRepository
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
-import com.plusmobileapps.chefmate.toast.ToastService
+import com.plusmobileapps.chefmate.text.ResourceString
+import com.plusmobileapps.chefmate.toast.testing.FakeToastService
 import com.russhwolf.settings.MapSettings
 import dev.mokkery.MockMode
 import dev.mokkery.answering.returns
@@ -52,7 +56,7 @@ class GroceryListBlocTest {
         everySuspend { ensureDefaultList() } returns 1L
     }
     val autocompleteRepository = FakeGroceryAutocompleteRepository()
-    val toastService: ToastService = mock(MockMode.autoUnit)
+    val toastService = FakeToastService()
 
     var detailItemId: Long? = null
     var detailOutput: Consumer<GroceryDetailBloc.Output> = Consumer {}
@@ -76,12 +80,12 @@ class GroceryListBlocTest {
                     mainContext = context.mainContext,
                     repository = repository,
                     autocompleteRepository = autocompleteRepository,
-                    toastService = toastService,
                     settings = settings,
                     coachMarkController = coachMarkController,
                 )
             },
             groceryDetailFactory = groceryDetailFactory,
+            toastService = toastService,
         )
 
     @Test
@@ -415,6 +419,54 @@ class GroceryListBlocTest {
     }
 
     @Test
+    fun When_onSaveAutocompleteItem_Then_toast_shown_with_manage_action() = runTest {
+        bloc.onSaveAutocompleteItem("Cold brew concentrate")
+
+        toastService.shown shouldContain ResourceString(Res.string.grocery_autocomplete_saved)
+        toastService.shownActionLabels shouldContain
+            ResourceString(Res.string.grocery_autocomplete_manage)
+
+        // Tapping the toast action deep links to the autocomplete settings screen.
+        toastService.lastOnAction?.invoke()
+        output.lastValue shouldBe GroceryListBloc.Output.OpenAutocompleteSettings
+    }
+
+    @Test
+    fun When_blank_autocomplete_item_saved_Then_no_toast_and_nothing_persisted() = runTest {
+        bloc.onSaveAutocompleteItem("   ")
+
+        toastService.shown shouldBe emptyList()
+        autocompleteRepository.observeItems().first() shouldBe emptyList()
+    }
+
+    @Test
+    fun When_query_matches_saved_autocomplete_item_Then_flag_is_set() = runTest {
+        bloc.state.test {
+            awaitItem() shouldBe GroceryListBloc.Model()
+            groceries.emit(
+                listOf(
+                    GroceryItem(
+                        id = 1,
+                        name = "Eggs",
+                        displayName = "Eggs",
+                        category = GroceryCategory.DAIRY,
+                    )
+                )
+            )
+            awaitItem()
+
+            autocompleteRepository.addItem("Zeppole")
+            // A partial query keeps the dropdown open (flag stays false)…
+            bloc.onNewGroceryItemNameChange("zep")
+            awaitItem().queryMatchesSavedAutocomplete shouldBe false
+
+            // …but once the text exactly matches the saved library item, the menu is suppressed.
+            bloc.onNewGroceryItemNameChange("Zeppole")
+            awaitItem().queryMatchesSavedAutocomplete shouldBe true
+        }
+    }
+
+    @Test
     fun When_clear_filters_applied_Then_recipe_filter_is_also_cleared() = runTest {
         val items =
             listOf(
@@ -540,12 +592,12 @@ class GroceryListBlocTest {
                         mainContext = freshContext.mainContext,
                         repository = repository,
                         autocompleteRepository = autocompleteRepository,
-                        toastService = toastService,
                         settings = MapSettings(),
                         coachMarkController = controller,
                     )
                 },
                 groceryDetailFactory = groceryDetailFactory,
+                toastService = toastService,
             )
 
         tooltipBloc.state.value.showSyncTooltip shouldBe true

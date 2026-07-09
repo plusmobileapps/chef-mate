@@ -35,6 +35,7 @@ class RootBlocTest {
     var recipeOutput: Consumer<RecipeRootBloc.Output> = Consumer {}
     var recipeProps: RecipeRootBloc.Props? = null
     var settingsRootOutput: Consumer<SettingsRootBloc.Output> = Consumer {}
+    var settingsRootProps: SettingsRootBloc.Props? = null
     var manageProfileOutput:
         Consumer<com.plusmobileapps.chefmate.profile.ManageProfileBloc.Output> =
         Consumer {}
@@ -100,7 +101,8 @@ class RootBlocTest {
                 otpOutput = output
                 mock()
             },
-            settingsRoot = { _, output ->
+            settingsRoot = { _, props, output ->
+                settingsRootProps = props
                 settingsRootOutput = output
                 mock()
             },
@@ -234,6 +236,15 @@ class RootBlocTest {
         bottomNavOutput.onNext(BottomNavBloc.Output.OpenAppSettings)
         rootBloc.instance() should instanceOf<RootBloc.Child.SettingsRoot>()
         rootBloc.state.value.backStack.size shouldBe 1
+        settingsRootProps shouldBe SettingsRootBloc.Props.Default
+    }
+
+    @Test
+    fun When_bottom_nav_opens_grocery_autocomplete_settings_Then_settings_root_deep_links() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenGroceryAutocompleteSettings)
+        rootBloc.instance() should instanceOf<RootBloc.Child.SettingsRoot>()
+        rootBloc.state.value.backStack.size shouldBe 1
+        settingsRootProps shouldBe SettingsRootBloc.Props.GroceryAutocomplete
     }
 
     @Test

@@ -21,6 +21,7 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(projects.client.grocery.data.testing)
+            implementation(projects.client.toast.testing)
             implementation(libs.multiplatform.settings.test)
         }
     }

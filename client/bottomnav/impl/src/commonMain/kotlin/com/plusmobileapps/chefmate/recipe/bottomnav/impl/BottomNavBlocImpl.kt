@@ -213,6 +213,9 @@ class BottomNavBlocImpl(
             is GroceryListBloc.Output.OpenEditList -> {
                 this.output.onNext(BottomNavBloc.Output.OpenEditGroceryList(output.listId))
             }
+            GroceryListBloc.Output.OpenAutocompleteSettings -> {
+                this.output.onNext(BottomNavBloc.Output.OpenGroceryAutocompleteSettings)
+            }
         }
     }
 

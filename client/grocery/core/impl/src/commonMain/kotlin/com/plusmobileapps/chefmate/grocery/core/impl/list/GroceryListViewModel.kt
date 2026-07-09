@@ -2,8 +2,6 @@
 
 package com.plusmobileapps.chefmate.grocery.core.impl.list
 
-import chefmate.client.grocery.core.public.generated.resources.Res
-import chefmate.client.grocery.core.public.generated.resources.grocery_autocomplete_saved
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.combineStates
 import com.plusmobileapps.chefmate.di.CoachMarkController
@@ -20,8 +18,6 @@ import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.grocery.data.IngredientParser
 import com.plusmobileapps.chefmate.grocery.data.ListRole
-import com.plusmobileapps.chefmate.text.ResourceString
-import com.plusmobileapps.chefmate.toast.ToastService
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.string
 import dev.zacsweers.metro.Inject
@@ -43,7 +39,6 @@ class GroceryListViewModel(
     @Main mainContext: CoroutineContext,
     private val repository: GroceryRepository,
     private val autocompleteRepository: GroceryAutocompleteRepository,
-    private val toastService: ToastService,
     settings: Settings,
     private val coachMarkController: CoachMarkController,
 ) : ViewModel(mainContext) {
@@ -132,6 +127,11 @@ class GroceryListViewModel(
                             items = items,
                             customItems = customNames,
                         )
+                    val queryMatchesSavedAutocomplete =
+                        queryMatchesSavedAutocomplete(
+                            query = newGroceryItemName,
+                            customItems = customNames,
+                        )
                     val filtered =
                         when (filter) {
                             GroceryFilter.ALL -> items
@@ -178,6 +178,7 @@ class GroceryListViewModel(
                         groupedItems = grouped,
                         availableRecipes = availableRecipes,
                         autocompleteSuggestions = autocompleteSuggestions,
+                        queryMatchesSavedAutocomplete = queryMatchesSavedAutocomplete,
                         hasNoRecipeItems = hasNoRecipeItems,
                     )
                 }
@@ -187,6 +188,7 @@ class GroceryListViewModel(
                             groupedItems = content.groupedItems,
                             availableRecipes = content.availableRecipes,
                             autocompleteSuggestions = content.autocompleteSuggestions,
+                            queryMatchesSavedAutocomplete = content.queryMatchesSavedAutocomplete,
                             hasNoRecipeItems = content.hasNoRecipeItems,
                         )
                     }
@@ -220,14 +222,14 @@ class GroceryListViewModel(
         _newGroceryItemName.value = ""
     }
 
-    /** Saves the current query text as a reusable autocomplete entry, confirming with a toast. */
+    /**
+     * Saves the current query text as a reusable autocomplete entry. Confirmation (and the deep
+     * link to the autocomplete settings) is surfaced by the BLoC, which owns the navigation output.
+     */
     fun saveAutocompleteItem(name: String) {
         val trimmed = name.trim()
         if (trimmed.isBlank()) return
-        scope.launch {
-            autocompleteRepository.addItem(trimmed)
-            toastService.show(ResourceString(Res.string.grocery_autocomplete_saved))
-        }
+        scope.launch { autocompleteRepository.addItem(trimmed) }
     }
 
     fun onSyncClicked() {
@@ -377,6 +379,7 @@ class GroceryListViewModel(
         val recipeFilter: String? = null,
         val availableRecipes: List<String> = emptyList(),
         val autocompleteSuggestions: List<String> = emptyList(),
+        val queryMatchesSavedAutocomplete: Boolean = false,
         val hasNoRecipeItems: Boolean = false,
         val isSyncing: Boolean = false,
         val lists: List<GroceryListModel> = emptyList(),
@@ -393,6 +396,7 @@ class GroceryListViewModel(
         val groupedItems: List<GroceryGroup>,
         val availableRecipes: List<String>,
         val autocompleteSuggestions: List<String>,
+        val queryMatchesSavedAutocomplete: Boolean,
         val hasNoRecipeItems: Boolean,
     )
 
@@ -433,6 +437,20 @@ class GroceryListViewModel(
                 .filter { it.lowercase() != normalizedQuery }
                 .take(MAX_AUTOCOMPLETE_SUGGESTIONS)
                 .toList()
+        }
+
+        /**
+         * True when [query] resolves to an item already saved in the user's autocomplete library.
+         * Used to hide the suggestion dropdown entirely — there is nothing to add and the exact
+         * match would otherwise dangle as a redundant "Save …" row.
+         */
+        private fun queryMatchesSavedAutocomplete(
+            query: String,
+            customItems: List<String>,
+        ): Boolean {
+            val normalizedQuery = IngredientParser.parse(query).name.trim().lowercase()
+            if (normalizedQuery.isBlank()) return false
+            return customItems.any { it.trim().lowercase() == normalizedQuery }
         }
     }
 }

@@ -105,7 +105,7 @@ class RootBlocImpl(
             is DeepLink.RecipeDetail ->
                 listOf(Configuration.BottomNavigation, RecipeRoot(Detail(deepLink.recipeId)))
             DeepLink.AppSettings ->
-                listOf(Configuration.BottomNavigation, Configuration.SettingsRoot)
+                listOf(Configuration.BottomNavigation, Configuration.SettingsRoot())
             DeepLink.SignIn ->
                 listOf(
                     Configuration.BottomNavigation,
@@ -202,10 +202,14 @@ class RootBlocImpl(
                         )
                 )
 
-            Configuration.SettingsRoot ->
+            is Configuration.SettingsRoot ->
                 RootBloc.Child.SettingsRoot(
                     bloc =
-                        settingsRoot.create(context = context, output = ::handleSettingsRootOutput)
+                        settingsRoot.create(
+                            context = context,
+                            props = config.props,
+                            output = ::handleSettingsRootOutput,
+                        )
                 )
 
             Configuration.ManageProfile ->
@@ -346,7 +350,13 @@ class RootBlocImpl(
             }
 
             BottomNavBloc.Output.OpenAppSettings -> {
-                navigation.bringToFront(Configuration.SettingsRoot)
+                navigation.bringToFront(Configuration.SettingsRoot())
+            }
+
+            BottomNavBloc.Output.OpenGroceryAutocompleteSettings -> {
+                navigation.bringToFront(
+                    Configuration.SettingsRoot(SettingsRootBloc.Props.GroceryAutocomplete)
+                )
             }
 
             BottomNavBloc.Output.OpenAiChat -> {
@@ -557,7 +567,10 @@ class RootBlocImpl(
 
         @Serializable data class MealPlanner(val props: MealPlannerRootBloc.Props) : Configuration()
 
-        @Serializable data object SettingsRoot : Configuration()
+        @Serializable
+        data class SettingsRoot(
+            val props: SettingsRootBloc.Props = SettingsRootBloc.Props.Default
+        ) : Configuration()
 
         @Serializable data object ManageProfile : Configuration()
 

@@ -32,6 +32,7 @@ import kotlinx.serialization.Serializable
 )
 class SettingsRootBlocImpl(
     @Assisted context: BlocContext,
+    @Assisted private val props: SettingsRootBloc.Props,
     @Assisted private val output: Consumer<Output>,
     private val appSettings: AppSettingsBloc.Factory,
     private val bottomNavOrder: BottomNavOrderBloc.Factory,
@@ -47,11 +48,20 @@ class SettingsRootBlocImpl(
         childStack(
             source = navigation,
             serializer = Configuration.serializer(),
-            initialStack = { listOf(Configuration.AppSettings) },
+            initialStack = { initialStackFor(props) },
             handleBackButton = true,
             key = "SettingsRootRouter",
             childFactory = ::createChild,
         )
+
+    // Deep links keep AppSettings underneath the requested screen so Back returns there rather than
+    // straight out of settings.
+    private fun initialStackFor(props: SettingsRootBloc.Props): List<Configuration> =
+        when (props) {
+            SettingsRootBloc.Props.Default -> listOf(Configuration.AppSettings)
+            SettingsRootBloc.Props.GroceryAutocomplete ->
+                listOf(Configuration.AppSettings, Configuration.GroceryAutocomplete)
+        }
 
     override val routerState: Value<ChildStack<*, SettingsRootBloc.Child>> = stack
 
