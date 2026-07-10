@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -38,7 +39,15 @@ fun OnboardingRootScreen(bloc: OnboardingRootBloc, modifier: Modifier = Modifier
             stack = bloc.routerState,
             animation = backAnimation(backHandler = bloc.backHandler, onBack = bloc::onBackClicked),
         ) { child ->
-            child.instance.bloc.Content()
+            // Each step needs its own opaque surface: when the flow is re-entered on top of the
+            // app, the slide/predictive-back animation draws two steps at once, and without a
+            // background the outgoing/incoming pages would show the app (or each other) through.
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = ChefMateTheme.colorScheme.background,
+            ) {
+                child.instance.bloc.Content()
+            }
         }
     }
 }

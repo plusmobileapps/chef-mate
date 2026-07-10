@@ -82,7 +82,7 @@ class OnboardingRootBlocImpl(
                     bloc =
                         welcome.create(
                             context = context,
-                            showSignIn = props.showSignIn,
+                            showSignIn = !props.isSignedIn,
                             output = ::handleWelcomeOutput,
                         )
                 )
@@ -111,7 +111,11 @@ class OnboardingRootBlocImpl(
             Configuration.StartCooking ->
                 OnboardingRootBloc.Child.StartCooking(
                     bloc =
-                        startCooking.create(context = context, output = ::handleStartCookingOutput)
+                        startCooking.create(
+                            context = context,
+                            showSignUp = !props.isSignedIn,
+                            output = ::handleStartCookingOutput,
+                        )
                 )
         }
 

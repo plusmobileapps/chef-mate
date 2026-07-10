@@ -30,6 +30,7 @@ class OnboardingRootBlocImplTest {
     var groceryListOutput: Consumer<GroceryListBloc.Output> = Consumer {}
     var mealPlanningOutput: Consumer<MealPlanningBloc.Output> = Consumer {}
     var startCookingOutput: Consumer<StartCookingBloc.Output> = Consumer {}
+    var startCookingShowSignUp: Boolean? = null
 
     var rootOutput: OnboardingRootBloc.Output? = null
 
@@ -64,7 +65,8 @@ class OnboardingRootBlocImplTest {
                 mealPlanningOutput = output
                 mock()
             },
-            startCooking = { _, output ->
+            startCooking = { _, showSignUp, output ->
+                startCookingShowSignUp = showSignUp
                 startCookingOutput = output
                 mock()
             },
@@ -73,6 +75,15 @@ class OnboardingRootBlocImplTest {
     val bloc = createBloc()
 
     fun OnboardingRootBloc.instance(): OnboardingRootBloc.Child = routerState.value.active.instance
+
+    /** Steps the most-recently-created bloc through the tour to the final StartCooking step. */
+    fun advanceToStartCooking() {
+        welcomeOutput.onNext(WelcomeBloc.Output.GetStarted)
+        saveRecipesOutput.onNext(SaveRecipesBloc.Output.Next)
+        cookModeOutput.onNext(CookModeBloc.Output.Next)
+        groceryListOutput.onNext(GroceryListBloc.Output.Next)
+        mealPlanningOutput.onNext(MealPlanningBloc.Output.Next)
+    }
 
     @Test
     fun When_initialized_Then_welcome_is_shown() {
@@ -155,25 +166,28 @@ class OnboardingRootBlocImplTest {
     }
 
     @Test
-    fun When_props_hide_sign_in_Then_welcome_is_created_without_sign_in() {
-        createBloc(OnboardingRootBloc.Props(showSignIn = false))
+    fun When_signed_in_Then_welcome_and_start_cooking_hide_their_auth_buttons() {
+        val bloc = createBloc(OnboardingRootBloc.Props(isSignedIn = true))
 
         welcomeShowSignIn shouldBe false
+
+        advanceToStartCooking()
+        bloc.instance() should instanceOf<OnboardingRootBloc.Child.StartCooking>()
+        startCookingShowSignUp shouldBe false
     }
 
     @Test
-    fun When_default_props_Then_flow_is_not_dismissible_and_sign_in_shown() {
+    fun When_default_props_Then_not_dismissible_and_auth_buttons_shown() {
         bloc.isDismissible shouldBe false
         welcomeShowSignIn shouldBe true
+
+        advanceToStartCooking()
+        startCookingShowSignUp shouldBe true
     }
 
     @Test
     fun When_start_cooking_outputs_sign_up_Then_sign_up_emitted_without_completing() {
-        welcomeOutput.onNext(WelcomeBloc.Output.GetStarted)
-        saveRecipesOutput.onNext(SaveRecipesBloc.Output.Next)
-        cookModeOutput.onNext(CookModeBloc.Output.Next)
-        groceryListOutput.onNext(GroceryListBloc.Output.Next)
-        mealPlanningOutput.onNext(MealPlanningBloc.Output.Next)
+        advanceToStartCooking()
 
         startCookingOutput.onNext(StartCookingBloc.Output.SignUp)
 

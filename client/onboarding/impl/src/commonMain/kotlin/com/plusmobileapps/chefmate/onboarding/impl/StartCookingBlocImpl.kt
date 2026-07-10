@@ -15,8 +15,11 @@ import dev.zacsweers.metro.AssistedInject
 )
 class StartCookingBlocImpl(
     @Assisted context: BlocContext,
+    @Assisted showSignUp: Boolean,
     @Assisted private val output: Consumer<StartCookingBloc.Output>,
 ) : StartCookingBloc, BlocContext by context {
+
+    override val showSignUp: Boolean = showSignUp
 
     override fun onStartCookingClicked() {
         output.onNext(StartCookingBloc.Output.StartCooking)

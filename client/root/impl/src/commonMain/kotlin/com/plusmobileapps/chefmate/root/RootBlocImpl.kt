@@ -142,8 +142,8 @@ class RootBlocImpl(
                                 OnboardingRootBloc.Props(
                                     // Re-entered flows can be backed out of; a first run can't.
                                     isDismissible = config.reentry,
-                                    // A signed-in (non-anonymous) user can't sign in again.
-                                    showSignIn = !isSignedIn(),
+                                    // A signed-in (non-anonymous) user can't sign in or up again.
+                                    isSignedIn = isSignedIn(),
                                 ),
                             output = ::handleOnboardingOutput,
                         )

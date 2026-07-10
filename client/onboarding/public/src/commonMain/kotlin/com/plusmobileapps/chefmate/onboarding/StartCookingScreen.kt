@@ -33,13 +33,16 @@ fun StartCookingScreen(bloc: StartCookingBloc, modifier: Modifier = Modifier) {
         screenTestTag = OnboardingTestTags.START_COOKING_SCREEN,
         modifier = modifier,
         footer = {
-            PlusButton(
-                text = Res.string.onboarding_start_cooking_sign_up.asTextData(),
-                onClick = bloc::onSignUpClicked,
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .testTag(OnboardingTestTags.START_COOKING_SIGN_UP_BUTTON),
-            )
+            // Hidden when an already signed-in user re-enters the flow — they can't sign up again.
+            if (bloc.showSignUp) {
+                PlusButton(
+                    text = Res.string.onboarding_start_cooking_sign_up.asTextData(),
+                    onClick = bloc::onSignUpClicked,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .testTag(OnboardingTestTags.START_COOKING_SIGN_UP_BUTTON),
+                )
+            }
             PlusButton(
                 text = Res.string.onboarding_start_cooking_button.asTextData(),
                 variant = PlusButtonVariant.SECONDARY,

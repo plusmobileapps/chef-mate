@@ -167,30 +167,30 @@ class RootBlocTest {
     }
 
     @Test
-    fun When_signed_in_user_reopens_onboarding_Then_it_is_dismissible_without_sign_in() {
+    fun When_signed_in_user_reopens_onboarding_Then_it_is_dismissible_and_marked_signed_in() {
         authRepository.setAuthenticated()
 
         bottomNavOutput.onNext(BottomNavBloc.Output.OpenOnboarding)
 
         rootBloc.instance() should instanceOf<RootBloc.Child.Onboarding>()
-        onboardingProps shouldBe OnboardingRootBloc.Props(isDismissible = true, showSignIn = false)
+        onboardingProps shouldBe OnboardingRootBloc.Props(isDismissible = true, isSignedIn = true)
     }
 
     @Test
-    fun When_anonymous_user_reopens_onboarding_Then_sign_in_is_still_offered() {
+    fun When_anonymous_user_reopens_onboarding_Then_it_is_not_marked_signed_in() {
         authRepository.setAnonymous()
 
         bottomNavOutput.onNext(BottomNavBloc.Output.OpenOnboarding)
 
-        // Anonymous users can still sign in to upgrade, so keep the sign-in button.
-        onboardingProps shouldBe OnboardingRootBloc.Props(isDismissible = true, showSignIn = true)
+        // Anonymous users can still sign in/up to upgrade, so they aren't treated as signed in.
+        onboardingProps shouldBe OnboardingRootBloc.Props(isDismissible = true, isSignedIn = false)
     }
 
     @Test
-    fun When_first_run_onboarding_Then_it_is_not_dismissible_and_offers_sign_in() {
+    fun When_first_run_onboarding_Then_it_is_not_dismissible_and_not_signed_in() {
         createRoot(onboardingCompleted = false)
 
-        onboardingProps shouldBe OnboardingRootBloc.Props(isDismissible = false, showSignIn = true)
+        onboardingProps shouldBe OnboardingRootBloc.Props(isDismissible = false, isSignedIn = false)
     }
 
     @Test

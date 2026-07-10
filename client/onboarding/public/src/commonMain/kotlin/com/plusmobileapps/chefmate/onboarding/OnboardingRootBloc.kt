@@ -23,8 +23,8 @@ import com.plusmobileapps.chefmate.ui.ComposeScreen
  *
  * The flow can also be re-entered from within the app (e.g. Settings → replay onboarding). In that
  * case [Props.isDismissible] is true, so the first step shows a back arrow that exits the flow
- * ([Output.Dismissed]) instead of hiding it, and [Props.showSignIn] can be false so an already
- * signed-in user isn't offered a sign-in they can't use.
+ * ([Output.Dismissed]) instead of hiding it, and [Props.isSignedIn] can be true so an already
+ * signed-in user isn't offered a sign-in or sign-up they can't use.
  */
 interface OnboardingRootBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
     val routerState: Value<ChildStack<*, Child>>
@@ -90,14 +90,15 @@ interface OnboardingRootBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
     }
 
     /**
-     * How the flow was entered. Defaults describe a first run: not dismissible, sign-in offered.
+     * How the flow was entered. Defaults describe a first run: not dismissible, not signed in.
      *
      * @property isDismissible drives the first step's back arrow — true when re-entered from within
      *   the app so the user can back out.
-     * @property showSignIn whether the welcome step offers a sign-in button — false when the user
-     *   is already signed in and can't sign in again.
+     * @property isSignedIn true when a real (non-anonymous) user re-entered the flow. They can't
+     *   sign in or sign up again, so the welcome step hides its sign-in button and the final step
+     *   hides its sign-up button.
      */
-    data class Props(val isDismissible: Boolean = false, val showSignIn: Boolean = true)
+    data class Props(val isDismissible: Boolean = false, val isSignedIn: Boolean = false)
 
     fun interface Factory {
         fun create(
