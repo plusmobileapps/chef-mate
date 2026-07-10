@@ -2,6 +2,7 @@
 
 package com.plusmobileapps.chefmate.onboarding.impl
 
+import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.OnboardingRepository
 import com.plusmobileapps.chefmate.onboarding.CookModeBloc
@@ -20,10 +21,10 @@ import io.kotest.matchers.types.instanceOf
 import kotlin.test.Test
 
 class OnboardingRootBlocImplTest {
-    val context = TestBlocContext.create()
     val onboardingRepository = OnboardingRepository(MapSettings())
 
     var welcomeOutput: Consumer<WelcomeBloc.Output> = Consumer {}
+    var welcomeShowSignIn: Boolean? = null
     var saveRecipesOutput: Consumer<SaveRecipesBloc.Output> = Consumer {}
     var cookModeOutput: Consumer<CookModeBloc.Output> = Consumer {}
     var groceryListOutput: Consumer<GroceryListBloc.Output> = Consumer {}
@@ -32,12 +33,18 @@ class OnboardingRootBlocImplTest {
 
     var rootOutput: OnboardingRootBloc.Output? = null
 
-    val bloc =
+    // Each bloc needs its own context; sharing one would register the router key twice.
+    fun createBloc(
+        props: OnboardingRootBloc.Props = OnboardingRootBloc.Props(),
+        context: BlocContext = TestBlocContext.create(),
+    ) =
         OnboardingRootBlocImpl(
             context = context,
+            props = props,
             output = { rootOutput = it },
             onboardingRepository = onboardingRepository,
-            welcome = { _, output ->
+            welcome = { _, showSignIn, output ->
+                welcomeShowSignIn = showSignIn
                 welcomeOutput = output
                 mock()
             },
@@ -62,6 +69,8 @@ class OnboardingRootBlocImplTest {
                 mock()
             },
         )
+
+    val bloc = createBloc()
 
     fun OnboardingRootBloc.instance(): OnboardingRootBloc.Child = routerState.value.active.instance
 
@@ -131,6 +140,31 @@ class OnboardingRootBlocImplTest {
         rootOutput shouldBe OnboardingRootBloc.Output.SignIn
         // Completion is deferred to the root once auth actually succeeds.
         onboardingRepository.hasCompletedOnboarding shouldBe false
+    }
+
+    @Test
+    fun When_dismissible_and_dismiss_clicked_Then_dismissed_emitted_without_completing() {
+        val bloc = createBloc(OnboardingRootBloc.Props(isDismissible = true))
+
+        bloc.isDismissible shouldBe true
+        bloc.onDismissClicked()
+
+        rootOutput shouldBe OnboardingRootBloc.Output.Dismissed
+        // Backing out of a re-entered flow doesn't change the already-completed state.
+        onboardingRepository.hasCompletedOnboarding shouldBe false
+    }
+
+    @Test
+    fun When_props_hide_sign_in_Then_welcome_is_created_without_sign_in() {
+        createBloc(OnboardingRootBloc.Props(showSignIn = false))
+
+        welcomeShowSignIn shouldBe false
+    }
+
+    @Test
+    fun When_default_props_Then_flow_is_not_dismissible_and_sign_in_shown() {
+        bloc.isDismissible shouldBe false
+        welcomeShowSignIn shouldBe true
     }
 
     @Test

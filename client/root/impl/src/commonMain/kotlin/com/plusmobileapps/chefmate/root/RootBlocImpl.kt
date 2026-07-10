@@ -12,6 +12,8 @@ import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.aichat.AiChatRootBloc
+import com.plusmobileapps.chefmate.auth.data.AuthState
+import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.auth.data.OtpFlow
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
 import com.plusmobileapps.chefmate.auth.ui.otp.OtpBloc
@@ -46,6 +48,7 @@ class RootBlocImpl(
     @Assisted context: BlocContext,
     @Assisted deepLink: DeepLink,
     private val onboardingRepository: OnboardingRepository,
+    private val authenticationRepository: AuthenticationRepository,
     private val onboardingRoot: OnboardingRootBloc.Factory,
     private val bottomNav: BottomNavBloc.Factory,
     private val browserRootBlocFactory: BrowserRootBloc.Factory,
@@ -92,7 +95,7 @@ class RootBlocImpl(
         // First run: show onboarding before anything else. Deep links are honored once onboarding
         // has been completed on a previous launch.
         if (!onboardingRepository.hasCompletedOnboarding) {
-            return listOf(Configuration.Onboarding)
+            return listOf(Configuration.Onboarding())
         }
         return when (deepLink) {
             DeepLink.None,
@@ -130,10 +133,20 @@ class RootBlocImpl(
 
     private fun createChild(config: Configuration, context: BlocContext): RootBloc.Child =
         when (config) {
-            Configuration.Onboarding ->
+            is Configuration.Onboarding ->
                 RootBloc.Child.Onboarding(
                     bloc =
-                        onboardingRoot.create(context = context, output = ::handleOnboardingOutput)
+                        onboardingRoot.create(
+                            context = context,
+                            props =
+                                OnboardingRootBloc.Props(
+                                    // Re-entered flows can be backed out of; a first run can't.
+                                    isDismissible = config.reentry,
+                                    // A signed-in (non-anonymous) user can't sign in again.
+                                    showSignIn = !isSignedIn(),
+                                ),
+                            output = ::handleOnboardingOutput,
+                        )
                 )
 
             Configuration.BottomNavigation ->
@@ -285,12 +298,19 @@ class RootBlocImpl(
                 )
         }
 
+    /** A real (non-anonymous) session — an anonymous user can still sign in to upgrade. */
+    private fun isSignedIn(): Boolean =
+        (authenticationRepository.state.value as? AuthState.Authenticated)?.user?.isAnonymous ==
+            false
+
     private fun handleOnboardingOutput(output: OnboardingRootBloc.Output) {
         when (output) {
             // Onboarding marks itself completed; swap the whole stack for the main app so back
             // can't return to the flow.
             OnboardingRootBloc.Output.Finished ->
                 navigation.replaceAll(Configuration.BottomNavigation)
+            // Re-entered flow backed out from the first step: pop it off, back to where they were.
+            OnboardingRootBloc.Output.Dismissed -> navigation.pop()
             // Open the auth flow on top of onboarding. On success, handleAuthenticationOutput tears
             // the onboarding stack down for us.
             OnboardingRootBloc.Output.SignIn ->
@@ -368,7 +388,7 @@ class RootBlocImpl(
             }
 
             BottomNavBloc.Output.OpenOnboarding -> {
-                navigation.bringToFront(Configuration.Onboarding)
+                navigation.bringToFront(Configuration.Onboarding(reentry = true))
             }
 
             is BottomNavBloc.Output.OpenCookMode -> {
@@ -551,7 +571,10 @@ class RootBlocImpl(
 
     @Serializable
     private sealed class Configuration {
-        @Serializable data object Onboarding : Configuration()
+        /**
+         * [reentry] is true when opened from within the app (e.g. Settings → replay onboarding).
+         */
+        @Serializable data class Onboarding(val reentry: Boolean = false) : Configuration()
 
         @Serializable data object BottomNavigation : Configuration()
 

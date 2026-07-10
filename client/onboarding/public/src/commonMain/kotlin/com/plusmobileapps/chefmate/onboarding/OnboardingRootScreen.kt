@@ -23,8 +23,14 @@ fun OnboardingRootScreen(bloc: OnboardingRootBloc, modifier: Modifier = Modifier
         OnboardingNavBar(
             currentStep = currentStep,
             totalSteps = bloc.totalSteps,
-            // Nothing to go back to on the first step; the arrow is hidden there.
-            onBackClick = if (currentStep == 0) null else bloc::onBackClicked,
+            // On the first step there's no previous step to return to, so the arrow is hidden —
+            // unless the flow was re-entered from within the app, where it backs out of onboarding.
+            onBackClick =
+                when {
+                    currentStep > 0 -> bloc::onBackClicked
+                    bloc.isDismissible -> bloc::onDismissClicked
+                    else -> null
+                },
             onSkipClick = bloc::onSkipClicked,
         )
         Children(

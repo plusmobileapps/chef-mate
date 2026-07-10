@@ -6,6 +6,7 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.aichat.AiChatRootBloc
 import com.plusmobileapps.chefmate.auth.data.OtpFlow
+import com.plusmobileapps.chefmate.auth.data.testing.FakeAuthenticationRepository
 import com.plusmobileapps.chefmate.auth.ui.AuthenticationBloc
 import com.plusmobileapps.chefmate.auth.ui.otp.OtpBloc
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
@@ -50,6 +51,8 @@ class RootBlocTest {
     var exportRecipesProps: ExportRecipesBloc.Props? = null
     var bottomNavInitialTab: BottomNavBloc.Tab? = null
     var onboardingOutput: Consumer<OnboardingRootBloc.Output> = Consumer {}
+    var onboardingProps: OnboardingRootBloc.Props? = null
+    val authRepository = FakeAuthenticationRepository()
     lateinit var onboardingRepository: OnboardingRepository
 
     fun createRoot(
@@ -64,7 +67,9 @@ class RootBlocTest {
                 OnboardingRepository(MapSettings())
                     .apply { if (onboardingCompleted) setOnboardingCompleted() }
                     .also { onboardingRepository = it },
-            onboardingRoot = { _, output ->
+            authenticationRepository = authRepository,
+            onboardingRoot = { _, props, output ->
+                onboardingProps = props
                 onboardingOutput = output
                 mock()
             },
@@ -159,6 +164,44 @@ class RootBlocTest {
         bottomNavOutput.onNext(BottomNavBloc.Output.OpenOnboarding)
         rootBloc.instance() should instanceOf<RootBloc.Child.Onboarding>()
         rootBloc.state.value.backStack.size shouldBe 1
+    }
+
+    @Test
+    fun When_signed_in_user_reopens_onboarding_Then_it_is_dismissible_without_sign_in() {
+        authRepository.setAuthenticated()
+
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenOnboarding)
+
+        rootBloc.instance() should instanceOf<RootBloc.Child.Onboarding>()
+        onboardingProps shouldBe OnboardingRootBloc.Props(isDismissible = true, showSignIn = false)
+    }
+
+    @Test
+    fun When_anonymous_user_reopens_onboarding_Then_sign_in_is_still_offered() {
+        authRepository.setAnonymous()
+
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenOnboarding)
+
+        // Anonymous users can still sign in to upgrade, so keep the sign-in button.
+        onboardingProps shouldBe OnboardingRootBloc.Props(isDismissible = true, showSignIn = true)
+    }
+
+    @Test
+    fun When_first_run_onboarding_Then_it_is_not_dismissible_and_offers_sign_in() {
+        createRoot(onboardingCompleted = false)
+
+        onboardingProps shouldBe OnboardingRootBloc.Props(isDismissible = false, showSignIn = true)
+    }
+
+    @Test
+    fun When_reopened_onboarding_is_dismissed_Then_it_is_popped() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenOnboarding)
+        rootBloc.instance() should instanceOf<RootBloc.Child.Onboarding>()
+
+        onboardingOutput.onNext(OnboardingRootBloc.Output.Dismissed)
+
+        rootBloc.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
+        rootBloc.state.value.backStack.size shouldBe 0
     }
 
     @Test

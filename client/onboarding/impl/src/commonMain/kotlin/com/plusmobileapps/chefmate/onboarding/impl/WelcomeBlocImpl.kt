@@ -12,8 +12,11 @@ import dev.zacsweers.metro.AssistedInject
 @ContributesAssistedFactory(scope = AppScope::class, assistedFactory = WelcomeBloc.Factory::class)
 class WelcomeBlocImpl(
     @Assisted context: BlocContext,
+    @Assisted showSignIn: Boolean,
     @Assisted private val output: Consumer<WelcomeBloc.Output>,
 ) : WelcomeBloc, BlocContext by context {
+
+    override val showSignIn: Boolean = showSignIn
 
     override fun onGetStartedClicked() {
         output.onNext(WelcomeBloc.Output.GetStarted)

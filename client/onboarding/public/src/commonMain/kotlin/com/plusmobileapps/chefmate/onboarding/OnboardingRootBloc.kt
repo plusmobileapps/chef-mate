@@ -20,12 +20,23 @@ import com.plusmobileapps.chefmate.ui.ComposeScreen
  * From the welcome screen the user can also choose to sign in; that is surfaced as [Output.SignIn]
  * so the root can open the authentication flow. From the final [StartCookingBloc] step, the user
  * can also choose to sign up for an account, surfaced as [Output.SignUp].
+ *
+ * The flow can also be re-entered from within the app (e.g. Settings → replay onboarding). In that
+ * case [Props.isDismissible] is true, so the first step shows a back arrow that exits the flow
+ * ([Output.Dismissed]) instead of hiding it, and [Props.showSignIn] can be false so an already
+ * signed-in user isn't offered a sign-in they can't use.
  */
 interface OnboardingRootBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
     val routerState: Value<ChildStack<*, Child>>
 
     /** Total number of steps in the flow, used to render the nav bar's progress indicator. */
     val totalSteps: Int
+
+    /**
+     * True when the flow was re-entered from within the app and can be exited via the first step's
+     * back arrow (see [onDismissClicked]). False on first run, where there's nowhere to go back to.
+     */
+    val isDismissible: Boolean
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -34,6 +45,12 @@ interface OnboardingRootBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
 
     /** Skip the rest of onboarding; equivalent to finishing it. Surfaced in the top nav bar. */
     fun onSkipClicked()
+
+    /**
+     * Exit the flow without completing it, from the first step's back arrow. Only meaningful when
+     * [isDismissible]; the root pops onboarding off its stack ([Output.Dismissed]).
+     */
+    fun onDismissClicked()
 
     sealed class Child {
 
@@ -58,6 +75,13 @@ interface OnboardingRootBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
          */
         data object Finished : Output()
 
+        /**
+         * The user backed out of a re-entered flow from the first step; the root should pop
+         * onboarding off its stack and return to wherever they came from. Onboarding stays marked
+         * completed, so this is distinct from [Finished].
+         */
+        data object Dismissed : Output()
+
         /** The user wants to sign in; the root should open the authentication flow. */
         data object SignIn : Output()
 
@@ -65,7 +89,21 @@ interface OnboardingRootBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
         data object SignUp : Output()
     }
 
+    /**
+     * How the flow was entered. Defaults describe a first run: not dismissible, sign-in offered.
+     *
+     * @property isDismissible drives the first step's back arrow — true when re-entered from within
+     *   the app so the user can back out.
+     * @property showSignIn whether the welcome step offers a sign-in button — false when the user
+     *   is already signed in and can't sign in again.
+     */
+    data class Props(val isDismissible: Boolean = false, val showSignIn: Boolean = true)
+
     fun interface Factory {
-        fun create(context: BlocContext, output: Consumer<Output>): OnboardingRootBloc
+        fun create(
+            context: BlocContext,
+            props: Props,
+            output: Consumer<Output>,
+        ): OnboardingRootBloc
     }
 }
