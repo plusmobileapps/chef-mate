@@ -31,24 +31,14 @@ class SettingsViewModel(
     private val aiChatEnabled: StateFlow<Boolean> =
         featureFlags.isEnabled(FeatureFlagRegistry.AiChat)
 
-    private val onboardingEnabled: StateFlow<Boolean> =
-        featureFlags.isEnabled(FeatureFlagRegistry.Onboarding)
-
     init {
         observeAuthState()
         observeAiChatFlag()
-        observeOnboardingFlag()
     }
 
     private fun observeAiChatFlag() {
         aiChatEnabled
             .onEach { enabled -> _state.update { it.copy(isAiChatEnabled = enabled) } }
-            .launchIn(scope)
-    }
-
-    private fun observeOnboardingFlag() {
-        onboardingEnabled
-            .onEach { enabled -> _state.update { it.copy(isOnboardingEnabled = enabled) } }
             .launchIn(scope)
     }
 
@@ -120,6 +110,5 @@ class SettingsViewModel(
         val emailAwaitingVerification: String? = null,
         val showSignOutConfirmationDialog: Boolean = false,
         val isAiChatEnabled: Boolean = false,
-        val isOnboardingEnabled: Boolean = false,
     )
 }

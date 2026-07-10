@@ -18,7 +18,8 @@ import com.plusmobileapps.chefmate.ui.ComposeScreen
  * root can load the rest of the app.
  *
  * From the welcome screen the user can also choose to sign in; that is surfaced as [Output.SignIn]
- * so the root can open the authentication flow.
+ * so the root can open the authentication flow. From the final [StartCookingBloc] step, the user
+ * can also choose to sign up for an account, surfaced as [Output.SignUp].
  */
 interface OnboardingRootBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
     val routerState: Value<ChildStack<*, Child>>
@@ -59,6 +60,9 @@ interface OnboardingRootBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
 
         /** The user wants to sign in; the root should open the authentication flow. */
         data object SignIn : Output()
+
+        /** The user wants to create an account; the root should open the sign-up flow. */
+        data object SignUp : Output()
     }
 
     fun interface Factory {

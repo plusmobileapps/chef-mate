@@ -142,6 +142,8 @@ class OnboardingRootBlocImpl(
     private fun handleStartCookingOutput(output: StartCookingBloc.Output) {
         when (output) {
             StartCookingBloc.Output.StartCooking -> finishOnboarding()
+            // The root opens the auth flow; on success it tears down onboarding for us.
+            StartCookingBloc.Output.SignUp -> this.output.onNext(Output.SignUp)
         }
     }
 

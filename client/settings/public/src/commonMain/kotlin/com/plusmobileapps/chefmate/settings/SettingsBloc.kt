@@ -53,8 +53,6 @@ interface SettingsBloc : ComposeScreen {
         val showSignOutConfirmationDialog: Boolean = false,
         val isDebugBuild: Boolean = false,
         val isAiChatEnabled: Boolean = false,
-        /** Gates the "View Onboarding Again" row behind the onboarding feature flag. */
-        val isOnboardingEnabled: Boolean = false,
         val versionName: String = "",
     )
 

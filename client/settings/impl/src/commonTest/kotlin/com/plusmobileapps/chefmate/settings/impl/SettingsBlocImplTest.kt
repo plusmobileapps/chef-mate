@@ -130,25 +130,6 @@ class SettingsBlocImplTest {
     }
 
     @Test
-    fun When_onboarding_flag_off_Then_isOnboardingEnabled_is_false() = runTest {
-        // Flag defaults to off — the replay row should be hidden.
-        bloc.state.value.isOnboardingEnabled shouldBe false
-    }
-
-    @Test
-    fun When_onboarding_flag_on_Then_isOnboardingEnabled_is_true() = runTest {
-        featureFlags.set(FeatureFlagRegistry.Onboarding, true)
-
-        bloc.state.test {
-            val initial = awaitItem()
-            if (!initial.isOnboardingEnabled) {
-                awaitItem().isOnboardingEnabled shouldBe true
-            }
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
     fun When_authenticated_Then_state_reflects_authenticated() = runTest {
         bloc.state.test {
             awaitItem().isAuthenticated shouldBe false

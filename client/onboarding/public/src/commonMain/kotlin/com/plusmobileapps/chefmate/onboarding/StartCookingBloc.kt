@@ -10,6 +10,8 @@ import com.plusmobileapps.chefmate.ui.ComposeScreen
 interface StartCookingBloc : ComposeScreen {
     fun onStartCookingClicked()
 
+    fun onSignUpClicked()
+
     @Composable
     override fun Content(modifier: Modifier) {
         StartCookingScreen(bloc = this, modifier = modifier)
@@ -18,6 +20,9 @@ interface StartCookingBloc : ComposeScreen {
     sealed class Output {
         /** The user is done with onboarding and wants to start using the app. */
         data object StartCooking : Output()
+
+        /** The user wants to create an account; the root should open the sign-up flow. */
+        data object SignUp : Output()
     }
 
     fun interface Factory {

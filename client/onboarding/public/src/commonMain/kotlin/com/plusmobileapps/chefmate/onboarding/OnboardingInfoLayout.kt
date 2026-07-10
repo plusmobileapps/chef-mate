@@ -41,7 +41,6 @@ internal fun OnboardingInfoLayout(
             )
         },
     ) {
-        OnboardingPreviewImage(light = previewLight, dark = previewDark)
         Text(
             text = stringResource(title),
             style = MaterialTheme.typography.headlineMedium,
@@ -53,5 +52,8 @@ internal fun OnboardingInfoLayout(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
+        // Placed after the text (rather than above it) so the screen visibly has more content below
+        // the fold, making it obvious the step scrolls.
+        OnboardingPreviewImage(light = previewLight, dark = previewDark)
     }
 }

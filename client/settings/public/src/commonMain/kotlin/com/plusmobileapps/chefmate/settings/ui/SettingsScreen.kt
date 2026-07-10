@@ -150,20 +150,20 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
             HorizontalDivider()
             SettingsRow(
                 name = Res.string.terms_of_use.asTextData(),
-                onClick = { bloc.onUrlClicked("https://chefmate.plusmobileapps.com/terms-of-use/") },
+                onClick = {
+                    bloc.onUrlClicked("https://chefmate.plusmobileapps.com/terms-of-use/")
+                },
             )
             HorizontalDivider()
             SettingsRow(
                 name = Res.string.about.asTextData(),
                 onClick = { bloc.onUrlClicked("https://chefmate.plusmobileapps.com/") },
             )
-            if (viewState.isOnboardingEnabled) {
-                HorizontalDivider()
-                SettingsRow(
-                    name = Res.string.settings_replay_onboarding.asTextData(),
-                    onClick = bloc::onReplayOnboardingClicked,
-                )
-            }
+            HorizontalDivider()
+            SettingsRow(
+                name = Res.string.settings_replay_onboarding.asTextData(),
+                onClick = bloc::onReplayOnboardingClicked,
+            )
             if (viewState.isDebugBuild) {
                 HorizontalDivider()
                 SettingsRow(

@@ -15,9 +15,11 @@ import androidx.compose.ui.unit.dp
 import chefmate.client.onboarding.public.generated.resources.Res
 import chefmate.client.onboarding.public.generated.resources.onboarding_start_cooking_button
 import chefmate.client.onboarding.public.generated.resources.onboarding_start_cooking_message
+import chefmate.client.onboarding.public.generated.resources.onboarding_start_cooking_sign_up
 import chefmate.client.onboarding.public.generated.resources.onboarding_start_cooking_title
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusButton
+import com.plusmobileapps.chefmate.ui.components.PlusButtonVariant
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -27,7 +29,15 @@ fun StartCookingScreen(bloc: StartCookingBloc, modifier: Modifier = Modifier) {
         modifier = modifier,
         footer = {
             PlusButton(
+                text = Res.string.onboarding_start_cooking_sign_up.asTextData(),
+                onClick = bloc::onSignUpClicked,
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .testTag(OnboardingTestTags.START_COOKING_SIGN_UP_BUTTON),
+            )
+            PlusButton(
                 text = Res.string.onboarding_start_cooking_button.asTextData(),
+                variant = PlusButtonVariant.SECONDARY,
                 onClick = bloc::onStartCookingClicked,
                 modifier = Modifier.fillMaxWidth().testTag(OnboardingTestTags.START_COOKING_BUTTON),
             )
