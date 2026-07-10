@@ -41,6 +41,12 @@
                 <data android:scheme="chefmate" />
             </intent-filter>
         </activity>
+
+        <!-- Digital Asset Links affiliation for password-manager credential sharing with
+             chefmate.plusmobileapps.com (login autofill). Must be an <application> child. -->
+        <meta-data
+                android:name="asset_statements"
+                android:resource="@string/asset_statements" />
     </application>
 
 </manifest>

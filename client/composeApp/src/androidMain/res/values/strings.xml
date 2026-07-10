@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Chef Mate</string>
+    <!--
+      Declares the app's affiliation with chefmate.plusmobileapps.com so password managers share
+      login credentials between the website and this app (autofill). This is the reverse half of the
+      Digital Asset Links pairing; the site hosts the matching /.well-known/assetlinks.json with the
+      delegate_permission/common.get_login_creds relation for this package + signing cert.
+    -->
+    <string name="asset_statements" translatable="false">
+        [{ \"include\": \"https://chefmate.plusmobileapps.com/.well-known/assetlinks.json\" }]
+    </string>
 </resources>
