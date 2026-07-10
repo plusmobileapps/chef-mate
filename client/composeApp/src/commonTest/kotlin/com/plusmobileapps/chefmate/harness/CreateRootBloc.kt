@@ -12,7 +12,6 @@ import com.plusmobileapps.chefmate.App
 import com.plusmobileapps.chefmate.DefaultBlocContext
 import com.plusmobileapps.chefmate.di.TestApplicationComponent
 import com.plusmobileapps.chefmate.di.createTestApplicationComponent
-import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
 import com.plusmobileapps.chefmate.fixtures.TestRecipes
 import com.plusmobileapps.chefmate.root.DeepLink
 import com.plusmobileapps.chefmate.root.RootBloc
@@ -59,12 +58,9 @@ fun runRootBlocTest(
     // flags leak across tests. Clear it up front for deterministic, isolated runs.
     app.settings.clear()
     app.applyUserState(userState)
-    if (showOnboarding) {
-        // First-run state: enable the gating flag and leave onboarding incomplete so the root
-        // boots into the onboarding flow.
-        app.testFeatureFlags.set(FeatureFlagRegistry.Onboarding, true)
-    } else {
-        // Default to a returning user so tests boot straight into the main app.
+    if (!showOnboarding) {
+        // Default to a returning user so tests boot straight into the main app. Leaving onboarding
+        // incomplete (the showOnboarding = true case) is enough to boot into the onboarding flow.
         app.onboardingRepository.setOnboardingCompleted()
     }
     beforeContent(app)

@@ -55,6 +55,9 @@ class OnboardingRobot(private val test: ComposeUiTest) {
 
     fun clickStartCooking(): OnboardingRobot = click(OnboardingTestTags.START_COOKING_BUTTON)
 
+    fun clickStartCookingSignUp(): OnboardingRobot =
+        click(OnboardingTestTags.START_COOKING_SIGN_UP_BUTTON)
+
     private fun assertDisplayed(tag: String): OnboardingRobot = apply {
         test.waitUntilExactlyOneExists(hasTestTag(tag))
     }

@@ -25,4 +25,5 @@ object OnboardingTestTags {
 
     const val START_COOKING_SCREEN = "onboarding_start_cooking_screen"
     const val START_COOKING_BUTTON = "onboarding_start_cooking_button"
+    const val START_COOKING_SIGN_UP_BUTTON = "onboarding_start_cooking_sign_up_button"
 }

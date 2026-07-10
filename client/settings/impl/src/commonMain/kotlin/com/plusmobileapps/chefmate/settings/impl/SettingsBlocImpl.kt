@@ -40,7 +40,6 @@ class SettingsBlocImpl(
                 showSignOutConfirmationDialog = it.showSignOutConfirmationDialog,
                 isDebugBuild = isDebugBuild,
                 isAiChatEnabled = it.isAiChatEnabled,
-                isOnboardingEnabled = it.isOnboardingEnabled,
                 versionName = BuildConfig.VERSION_NAME,
             )
         }

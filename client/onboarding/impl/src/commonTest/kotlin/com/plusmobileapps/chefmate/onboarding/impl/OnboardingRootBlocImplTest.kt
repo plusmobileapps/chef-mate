@@ -132,4 +132,19 @@ class OnboardingRootBlocImplTest {
         // Completion is deferred to the root once auth actually succeeds.
         onboardingRepository.hasCompletedOnboarding shouldBe false
     }
+
+    @Test
+    fun When_start_cooking_outputs_sign_up_Then_sign_up_emitted_without_completing() {
+        welcomeOutput.onNext(WelcomeBloc.Output.GetStarted)
+        saveRecipesOutput.onNext(SaveRecipesBloc.Output.Next)
+        cookModeOutput.onNext(CookModeBloc.Output.Next)
+        groceryListOutput.onNext(GroceryListBloc.Output.Next)
+        mealPlanningOutput.onNext(MealPlanningBloc.Output.Next)
+
+        startCookingOutput.onNext(StartCookingBloc.Output.SignUp)
+
+        rootOutput shouldBe OnboardingRootBloc.Output.SignUp
+        // Completion is deferred to the root once auth actually succeeds.
+        onboardingRepository.hasCompletedOnboarding shouldBe false
+    }
 }

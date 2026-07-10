@@ -11,7 +11,6 @@ import com.plusmobileapps.chefmate.auth.ui.otp.OtpBloc
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.di.OnboardingRepository
-import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
 import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
 import com.plusmobileapps.chefmate.onboarding.OnboardingRootBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
@@ -57,7 +56,6 @@ class RootBlocTest {
         deepLink: DeepLink = DeepLink.None,
         context: BlocContext = TestBlocContext.create(),
         onboardingCompleted: Boolean = true,
-        onboardingFlagEnabled: Boolean = true,
     ): RootBlocImpl =
         RootBlocImpl(
             context = context,
@@ -115,8 +113,7 @@ class RootBlocTest {
                 mock()
             },
             cookMode = CookModeBloc.Factory { _, _, _ -> mock() },
-            featureFlags =
-                FakeFeatureFlags(mapOf(FeatureFlagRegistry.Onboarding to onboardingFlagEnabled)),
+            featureFlags = FakeFeatureFlags(),
             featureFlagsBlocFactory = { _, _ -> mock() },
             aiChat = { _, output ->
                 aiChatOutput = output
@@ -149,13 +146,6 @@ class RootBlocTest {
     }
 
     @Test
-    fun When_onboarding_flag_disabled_Then_bottom_nav_is_shown_even_if_not_completed() {
-        val root = createRoot(onboardingCompleted = false, onboardingFlagEnabled = false)
-        root.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
-        root.state.value.backStack.size shouldBe 0
-    }
-
-    @Test
     fun When_onboarding_finishes_Then_bottom_nav_replaces_the_stack() {
         val root = createRoot(onboardingCompleted = false)
         onboardingOutput.onNext(OnboardingRootBloc.Output.Finished)
@@ -177,6 +167,15 @@ class RootBlocTest {
         onboardingOutput.onNext(OnboardingRootBloc.Output.SignIn)
         root.instance() should instanceOf<RootBloc.Child.Authentication>()
         authProps shouldBe AuthenticationBloc.Props.SignIn
+        root.state.value.backStack.size shouldBe 1
+    }
+
+    @Test
+    fun When_onboarding_outputs_sign_up_Then_authentication_is_pushed() {
+        val root = createRoot(onboardingCompleted = false)
+        onboardingOutput.onNext(OnboardingRootBloc.Output.SignUp)
+        root.instance() should instanceOf<RootBloc.Child.Authentication>()
+        authProps shouldBe AuthenticationBloc.Props.SignUp
         root.state.value.backStack.size shouldBe 1
     }
 

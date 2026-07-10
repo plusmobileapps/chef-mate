@@ -23,4 +23,5 @@
     <string name="onboarding_start_cooking_title">You’re all set</string>
     <string name="onboarding_start_cooking_message">That’s the whole tour. Save your favorite recipes, plan out your week, and build grocery lists that keep you organized — all from one app. Jump in whenever you’re ready; you can revisit these features any time from the app.</string>
     <string name="onboarding_start_cooking_button">Start cooking</string>
+    <string name="onboarding_start_cooking_sign_up">Sign up for an account</string>
 </resources>

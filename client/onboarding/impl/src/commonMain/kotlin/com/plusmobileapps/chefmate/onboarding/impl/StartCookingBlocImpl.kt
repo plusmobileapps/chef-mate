@@ -21,4 +21,8 @@ class StartCookingBlocImpl(
     override fun onStartCookingClicked() {
         output.onNext(StartCookingBloc.Output.StartCooking)
     }
+
+    override fun onSignUpClicked() {
+        output.onNext(StartCookingBloc.Output.SignUp)
+    }
 }

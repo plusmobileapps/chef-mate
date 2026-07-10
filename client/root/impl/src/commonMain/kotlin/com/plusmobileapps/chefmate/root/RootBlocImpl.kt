@@ -20,10 +20,8 @@ import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.OnboardingRepository
-import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
 import com.plusmobileapps.chefmate.featureflag.FeatureFlags
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagsBloc
-import com.plusmobileapps.chefmate.featureflag.isEnabled
 import com.plusmobileapps.chefmate.grocery.core.edit.EditGroceryListBloc
 import com.plusmobileapps.chefmate.onboarding.OnboardingRootBloc
 import com.plusmobileapps.chefmate.profile.ManageProfileBloc
@@ -91,11 +89,9 @@ class RootBlocImpl(
         )
 
     private fun initialStackFor(deepLink: DeepLink): List<Configuration> {
-        // First run: show onboarding before anything else, but only when the feature flag is on.
-        // Deep links are honored once onboarding has been completed on a previous launch (or when
-        // the flag is off).
-        val onboardingEnabled = featureFlags.isEnabled(FeatureFlagRegistry.Onboarding).value
-        if (onboardingEnabled && !onboardingRepository.hasCompletedOnboarding) {
+        // First run: show onboarding before anything else. Deep links are honored once onboarding
+        // has been completed on a previous launch.
+        if (!onboardingRepository.hasCompletedOnboarding) {
             return listOf(Configuration.Onboarding)
         }
         return when (deepLink) {
@@ -300,6 +296,10 @@ class RootBlocImpl(
             OnboardingRootBloc.Output.SignIn ->
                 navigation.bringToFront(
                     Configuration.Authentication(AuthenticationBloc.Props.SignIn)
+                )
+            OnboardingRootBloc.Output.SignUp ->
+                navigation.bringToFront(
+                    Configuration.Authentication(AuthenticationBloc.Props.SignUp)
                 )
         }
     }

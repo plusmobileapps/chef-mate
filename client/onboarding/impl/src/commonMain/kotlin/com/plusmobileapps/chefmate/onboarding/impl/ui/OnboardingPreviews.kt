@@ -50,6 +50,8 @@ val previewMealPlanningBloc: MealPlanningBloc =
 val previewStartCookingBloc: StartCookingBloc =
     object : StartCookingBloc {
         override fun onStartCookingClicked() = Unit
+
+        override fun onSignUpClicked() = Unit
     }
 
 @Preview
