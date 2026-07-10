@@ -29,13 +29,16 @@ fun WelcomeScreen(bloc: WelcomeBloc, modifier: Modifier = Modifier) {
                 modifier =
                     Modifier.fillMaxWidth().testTag(OnboardingTestTags.WELCOME_GET_STARTED_BUTTON),
             )
-            PlusButton(
-                text = Res.string.onboarding_welcome_sign_in.asTextData(),
-                variant = PlusButtonVariant.SECONDARY,
-                onClick = bloc::onSignInClicked,
-                modifier =
-                    Modifier.fillMaxWidth().testTag(OnboardingTestTags.WELCOME_SIGN_IN_BUTTON),
-            )
+            // Hidden when an already signed-in user re-enters the flow — they can't sign in again.
+            if (bloc.showSignIn) {
+                PlusButton(
+                    text = Res.string.onboarding_welcome_sign_in.asTextData(),
+                    variant = PlusButtonVariant.SECONDARY,
+                    onClick = bloc::onSignInClicked,
+                    modifier =
+                        Modifier.fillMaxWidth().testTag(OnboardingTestTags.WELCOME_SIGN_IN_BUTTON),
+                )
+            }
         },
     ) {
         Text(

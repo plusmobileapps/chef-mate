@@ -33,6 +33,7 @@ import kotlinx.serialization.Serializable
 )
 class OnboardingRootBlocImpl(
     @Assisted context: BlocContext,
+    @Assisted private val props: OnboardingRootBloc.Props,
     @Assisted private val output: Consumer<Output>,
     private val onboardingRepository: OnboardingRepository,
     private val welcome: WelcomeBloc.Factory,
@@ -59,6 +60,8 @@ class OnboardingRootBlocImpl(
 
     override val totalSteps: Int = STEP_COUNT
 
+    override val isDismissible: Boolean = props.isDismissible
+
     override fun onBackClicked() {
         navigation.pop()
     }
@@ -67,11 +70,21 @@ class OnboardingRootBlocImpl(
         finishOnboarding()
     }
 
+    override fun onDismissClicked() {
+        // The flow stays marked completed; just hand control back so the root can pop it.
+        output.onNext(Output.Dismissed)
+    }
+
     private fun createChild(config: Configuration, context: BlocContext): OnboardingRootBloc.Child =
         when (config) {
             Configuration.Welcome ->
                 OnboardingRootBloc.Child.Welcome(
-                    bloc = welcome.create(context = context, output = ::handleWelcomeOutput)
+                    bloc =
+                        welcome.create(
+                            context = context,
+                            showSignIn = !props.isSignedIn,
+                            output = ::handleWelcomeOutput,
+                        )
                 )
 
             Configuration.SaveRecipes ->
@@ -98,7 +111,11 @@ class OnboardingRootBlocImpl(
             Configuration.StartCooking ->
                 OnboardingRootBloc.Child.StartCooking(
                     bloc =
-                        startCooking.create(context = context, output = ::handleStartCookingOutput)
+                        startCooking.create(
+                            context = context,
+                            showSignUp = !props.isSignedIn,
+                            output = ::handleStartCookingOutput,
+                        )
                 )
         }
 

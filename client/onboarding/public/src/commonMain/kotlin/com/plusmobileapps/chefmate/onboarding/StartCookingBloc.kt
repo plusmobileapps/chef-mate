@@ -8,6 +8,13 @@ import com.plusmobileapps.chefmate.ui.ComposeScreen
 
 /** Final screen of the onboarding flow — confirms setup and launches the rest of the app. */
 interface StartCookingBloc : ComposeScreen {
+    /**
+     * Whether to offer a sign-up button. False when the flow is re-entered by an already signed-in
+     * user, who can't sign up again. Defaults to true so previews and simple fakes need no changes.
+     */
+    val showSignUp: Boolean
+        get() = true
+
     fun onStartCookingClicked()
 
     fun onSignUpClicked()
@@ -26,6 +33,10 @@ interface StartCookingBloc : ComposeScreen {
     }
 
     fun interface Factory {
-        fun create(context: BlocContext, output: Consumer<Output>): StartCookingBloc
+        fun create(
+            context: BlocContext,
+            showSignUp: Boolean,
+            output: Consumer<Output>,
+        ): StartCookingBloc
     }
 }

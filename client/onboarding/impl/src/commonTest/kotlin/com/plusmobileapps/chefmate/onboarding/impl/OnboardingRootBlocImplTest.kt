@@ -2,6 +2,7 @@
 
 package com.plusmobileapps.chefmate.onboarding.impl
 
+import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.OnboardingRepository
 import com.plusmobileapps.chefmate.onboarding.CookModeBloc
@@ -20,24 +21,31 @@ import io.kotest.matchers.types.instanceOf
 import kotlin.test.Test
 
 class OnboardingRootBlocImplTest {
-    val context = TestBlocContext.create()
     val onboardingRepository = OnboardingRepository(MapSettings())
 
     var welcomeOutput: Consumer<WelcomeBloc.Output> = Consumer {}
+    var welcomeShowSignIn: Boolean? = null
     var saveRecipesOutput: Consumer<SaveRecipesBloc.Output> = Consumer {}
     var cookModeOutput: Consumer<CookModeBloc.Output> = Consumer {}
     var groceryListOutput: Consumer<GroceryListBloc.Output> = Consumer {}
     var mealPlanningOutput: Consumer<MealPlanningBloc.Output> = Consumer {}
     var startCookingOutput: Consumer<StartCookingBloc.Output> = Consumer {}
+    var startCookingShowSignUp: Boolean? = null
 
     var rootOutput: OnboardingRootBloc.Output? = null
 
-    val bloc =
+    // Each bloc needs its own context; sharing one would register the router key twice.
+    fun createBloc(
+        props: OnboardingRootBloc.Props = OnboardingRootBloc.Props(),
+        context: BlocContext = TestBlocContext.create(),
+    ) =
         OnboardingRootBlocImpl(
             context = context,
+            props = props,
             output = { rootOutput = it },
             onboardingRepository = onboardingRepository,
-            welcome = { _, output ->
+            welcome = { _, showSignIn, output ->
+                welcomeShowSignIn = showSignIn
                 welcomeOutput = output
                 mock()
             },
@@ -57,13 +65,25 @@ class OnboardingRootBlocImplTest {
                 mealPlanningOutput = output
                 mock()
             },
-            startCooking = { _, output ->
+            startCooking = { _, showSignUp, output ->
+                startCookingShowSignUp = showSignUp
                 startCookingOutput = output
                 mock()
             },
         )
 
+    val bloc = createBloc()
+
     fun OnboardingRootBloc.instance(): OnboardingRootBloc.Child = routerState.value.active.instance
+
+    /** Steps the most-recently-created bloc through the tour to the final StartCooking step. */
+    fun advanceToStartCooking() {
+        welcomeOutput.onNext(WelcomeBloc.Output.GetStarted)
+        saveRecipesOutput.onNext(SaveRecipesBloc.Output.Next)
+        cookModeOutput.onNext(CookModeBloc.Output.Next)
+        groceryListOutput.onNext(GroceryListBloc.Output.Next)
+        mealPlanningOutput.onNext(MealPlanningBloc.Output.Next)
+    }
 
     @Test
     fun When_initialized_Then_welcome_is_shown() {
@@ -134,12 +154,40 @@ class OnboardingRootBlocImplTest {
     }
 
     @Test
+    fun When_dismissible_and_dismiss_clicked_Then_dismissed_emitted_without_completing() {
+        val bloc = createBloc(OnboardingRootBloc.Props(isDismissible = true))
+
+        bloc.isDismissible shouldBe true
+        bloc.onDismissClicked()
+
+        rootOutput shouldBe OnboardingRootBloc.Output.Dismissed
+        // Backing out of a re-entered flow doesn't change the already-completed state.
+        onboardingRepository.hasCompletedOnboarding shouldBe false
+    }
+
+    @Test
+    fun When_signed_in_Then_welcome_and_start_cooking_hide_their_auth_buttons() {
+        val bloc = createBloc(OnboardingRootBloc.Props(isSignedIn = true))
+
+        welcomeShowSignIn shouldBe false
+
+        advanceToStartCooking()
+        bloc.instance() should instanceOf<OnboardingRootBloc.Child.StartCooking>()
+        startCookingShowSignUp shouldBe false
+    }
+
+    @Test
+    fun When_default_props_Then_not_dismissible_and_auth_buttons_shown() {
+        bloc.isDismissible shouldBe false
+        welcomeShowSignIn shouldBe true
+
+        advanceToStartCooking()
+        startCookingShowSignUp shouldBe true
+    }
+
+    @Test
     fun When_start_cooking_outputs_sign_up_Then_sign_up_emitted_without_completing() {
-        welcomeOutput.onNext(WelcomeBloc.Output.GetStarted)
-        saveRecipesOutput.onNext(SaveRecipesBloc.Output.Next)
-        cookModeOutput.onNext(CookModeBloc.Output.Next)
-        groceryListOutput.onNext(GroceryListBloc.Output.Next)
-        mealPlanningOutput.onNext(MealPlanningBloc.Output.Next)
+        advanceToStartCooking()
 
         startCookingOutput.onNext(StartCookingBloc.Output.SignUp)
 

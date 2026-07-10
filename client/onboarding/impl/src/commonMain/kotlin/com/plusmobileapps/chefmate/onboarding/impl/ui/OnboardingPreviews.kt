@@ -27,6 +27,17 @@ val previewWelcomeBloc: WelcomeBloc =
         override fun onSignInClicked() = Unit
     }
 
+// Re-entry variant (e.g. Settings → replay) for an already signed-in user: the sign-in button is
+// hidden because they can't sign in again.
+val previewWelcomeSignedInBloc: WelcomeBloc =
+    object : WelcomeBloc {
+        override val showSignIn: Boolean = false
+
+        override fun onGetStartedClicked() = Unit
+
+        override fun onSignInClicked() = Unit
+    }
+
 val previewSaveRecipesBloc: SaveRecipesBloc =
     object : SaveRecipesBloc {
         override fun onNextClicked() = Unit
@@ -54,6 +65,17 @@ val previewStartCookingBloc: StartCookingBloc =
         override fun onSignUpClicked() = Unit
     }
 
+// Re-entry variant for an already signed-in user: the sign-up button is hidden because they can't
+// sign up again.
+val previewStartCookingSignedInBloc: StartCookingBloc =
+    object : StartCookingBloc {
+        override val showSignUp: Boolean = false
+
+        override fun onStartCookingClicked() = Unit
+
+        override fun onSignUpClicked() = Unit
+    }
+
 @Preview
 @Composable
 internal fun OnboardingNavBarPreview() {
@@ -66,6 +88,12 @@ internal fun OnboardingNavBarPreview() {
 @Composable
 internal fun WelcomeScreenPreview() {
     ChefMateTheme { WelcomeScreen(bloc = previewWelcomeBloc) }
+}
+
+@Preview
+@Composable
+internal fun WelcomeScreenSignedInPreview() {
+    ChefMateTheme { WelcomeScreen(bloc = previewWelcomeSignedInBloc) }
 }
 
 @Preview
@@ -96,4 +124,10 @@ internal fun MealPlanningScreenPreview() {
 @Composable
 internal fun StartCookingScreenPreview() {
     ChefMateTheme { StartCookingScreen(bloc = previewStartCookingBloc) }
+}
+
+@Preview
+@Composable
+internal fun StartCookingScreenSignedInPreview() {
+    ChefMateTheme { StartCookingScreen(bloc = previewStartCookingSignedInBloc) }
 }

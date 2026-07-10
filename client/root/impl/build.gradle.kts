@@ -25,6 +25,7 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
         }
         commonTest.dependencies {
+            implementation(projects.client.auth.data.testing)
             implementation(projects.client.featureflag.testing)
             implementation(libs.multiplatform.settings.test)
         }
