@@ -27,6 +27,17 @@ val previewWelcomeBloc: WelcomeBloc =
         override fun onSignInClicked() = Unit
     }
 
+// Re-entry variant (e.g. Settings → replay) for an already signed-in user: the sign-in button is
+// hidden because they can't sign in again.
+val previewWelcomeSignedInBloc: WelcomeBloc =
+    object : WelcomeBloc {
+        override val showSignIn: Boolean = false
+
+        override fun onGetStartedClicked() = Unit
+
+        override fun onSignInClicked() = Unit
+    }
+
 val previewSaveRecipesBloc: SaveRecipesBloc =
     object : SaveRecipesBloc {
         override fun onNextClicked() = Unit
@@ -66,6 +77,12 @@ internal fun OnboardingNavBarPreview() {
 @Composable
 internal fun WelcomeScreenPreview() {
     ChefMateTheme { WelcomeScreen(bloc = previewWelcomeBloc) }
+}
+
+@Preview
+@Composable
+internal fun WelcomeScreenSignedInPreview() {
+    ChefMateTheme { WelcomeScreen(bloc = previewWelcomeSignedInBloc) }
 }
 
 @Preview
