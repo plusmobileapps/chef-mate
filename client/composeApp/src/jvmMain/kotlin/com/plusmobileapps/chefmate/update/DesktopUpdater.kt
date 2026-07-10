@@ -8,6 +8,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.isSuccess
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.readRemaining
 import java.awt.Desktop
@@ -98,6 +99,12 @@ class DesktopUpdater(
         val fileName = target.downloadUrl.substringAfterLast('/')
         val dest = File(System.getProperty("java.io.tmpdir"), fileName)
         http.prepareGet(target.downloadUrl).execute { response ->
+            // A stale/misbuilt feed can point at a URL that 404s. Without this guard we'd stream
+            // the error page into the .dmg and hand macOS a "disk image is corrupted" dialog.
+            // Fail loudly so startDownload() reverts to the retryable Available banner instead.
+            if (!response.status.isSuccess()) {
+                error("Download failed: HTTP ${response.status.value} for ${target.downloadUrl}")
+            }
             val total = response.headers["Content-Length"]?.toLongOrNull() ?: -1L
             val channel: ByteReadChannel = response.bodyAsChannel()
             var read = 0L
