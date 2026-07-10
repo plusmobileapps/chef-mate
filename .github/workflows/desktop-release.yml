@@ -179,7 +179,15 @@ jobs:
           set -euo pipefail
           VERSION="${GITHUB_REF_NAME#v}"
           BASE="https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}"
+          # Compose names the macOS artifact "Chef Mate-<ver>.dmg" (packageName has a space).
+          # GitHub rewrites spaces to periods on asset upload, so a feed URL built from the raw
+          # local name 404s at download time. Rename the space out *before* both feed generation
+          # and the release upload (files: artifacts/*) so the served name matches the feed exactly.
           DMG=$(cd artifacts && ls *.dmg)
+          if [ "$DMG" != "${DMG// /.}" ]; then
+            (cd artifacts && mv "$DMG" "${DMG// /.}")
+            DMG="${DMG// /.}"
+          fi
           DEB=$(cd artifacts && ls *.deb)
           cat > artifacts/latest.json <<EOF
           {
