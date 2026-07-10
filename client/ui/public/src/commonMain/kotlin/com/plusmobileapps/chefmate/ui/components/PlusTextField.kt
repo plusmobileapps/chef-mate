@@ -21,8 +21,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -46,6 +49,7 @@ fun PlusTextField(
     outputTransformation: OutputTransformation? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
+    contentType: ContentType? = null,
 ) {
     val isError = error != null
 
@@ -80,10 +84,20 @@ fun PlusTextField(
         }
     }
 
+    // Capture into a local so the null-check smart-casts inside the semantics lambda. The autofill
+    // hint must land on the text field node itself (not the outer Column) so the platform autofill
+    // service can identify the field and offer to save/fill credentials for it.
+    val autofillContentType = contentType
     val fieldModifier =
-        Modifier.fillMaxWidth().let {
-            if (focusRequester != null) it.focusRequester(focusRequester) else it
-        }
+        Modifier.fillMaxWidth()
+            .let { if (focusRequester != null) it.focusRequester(focusRequester) else it }
+            .let {
+                if (autofillContentType != null) {
+                    it.semantics { this.contentType = autofillContentType }
+                } else {
+                    it
+                }
+            }
 
     val lineLimits =
         if (singleLine) {
