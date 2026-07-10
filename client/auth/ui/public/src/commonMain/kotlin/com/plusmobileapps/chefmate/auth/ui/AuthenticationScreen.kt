@@ -38,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -214,6 +215,9 @@ private fun AuthenticationBody(
             modifier = Modifier.focusRequester(passwordFocusRequester),
             password = password,
             onPasswordChanged = onPasswordChanged,
+            // Signing in fills the saved password; signing up asks the manager to generate/save a
+            // new one.
+            contentType = if (isSignIn) ContentType.Password else ContentType.NewPassword,
             error = model.passwordError,
             imeAction = if (isSignIn) ImeAction.Done else ImeAction.Next,
             onImeAction = {
@@ -253,6 +257,7 @@ private fun AuthenticationBody(
                     modifier = Modifier.focusRequester(confirmPasswordFocusRequester),
                     password = confirmPassword,
                     onPasswordChanged = onConfirmPasswordChanged,
+                    contentType = ContentType.NewPassword,
                     label = stringResource(Res.string.auth_label_confirm_password),
                     error = model.confirmPasswordError,
                     imeAction = ImeAction.Done,
@@ -376,6 +381,9 @@ fun EmailField(
         keyboardOptions =
             KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
         keyboardActions = KeyboardActions(onNext = { onImeAction() }),
+        // Users sign in with their email, so hint both so password managers match either the
+        // username or email-address field they saved for the account.
+        contentType = ContentType.EmailAddress + ContentType.Username,
     )
 }
 
@@ -391,6 +399,7 @@ fun PasswordField(
     modifier: Modifier = Modifier,
     password: String,
     onPasswordChanged: (String) -> Unit,
+    contentType: ContentType,
     label: String = stringResource(Res.string.auth_label_password),
     error: TextData? = null,
     imeAction: ImeAction,
@@ -408,6 +417,7 @@ fun PasswordField(
         keyboardOptions =
             KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = imeAction),
         keyboardActions = KeyboardActions(onNext = { onImeAction() }, onDone = { onImeAction() }),
+        contentType = contentType,
         trailingIcon = {
             val image =
                 if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
