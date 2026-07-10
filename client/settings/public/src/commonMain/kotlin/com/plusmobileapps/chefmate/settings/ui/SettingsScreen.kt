@@ -31,6 +31,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import chefmate.client.settings.public.generated.resources.Res
 import chefmate.client.settings.public.generated.resources.about
+import chefmate.client.settings.public.generated.resources.contact_us
 import chefmate.client.settings.public.generated.resources.developer_settings
 import chefmate.client.settings.public.generated.resources.greeting_authenticated
 import chefmate.client.settings.public.generated.resources.manage_profile
@@ -59,10 +60,15 @@ import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
+import com.plusmobileapps.chefmate.util.rememberEmailLauncher
+
+/** Support inbox surfaced by the "Contact Us" row in the More tab. */
+private const val SUPPORT_EMAIL = "support@plusmobileapps.com"
 
 @Composable
 fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
     val viewState by bloc.state.collectAsState()
+    val launchEmail = rememberEmailLauncher()
 
     if (viewState.showSignOutConfirmationDialog) {
         PlusDialog(
@@ -158,6 +164,11 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
             SettingsRow(
                 name = Res.string.about.asTextData(),
                 onClick = { bloc.onUrlClicked("https://chefmate.plusmobileapps.com/") },
+            )
+            HorizontalDivider()
+            SettingsRow(
+                name = Res.string.contact_us.asTextData(),
+                onClick = { launchEmail(SUPPORT_EMAIL) },
             )
             HorizontalDivider()
             SettingsRow(
