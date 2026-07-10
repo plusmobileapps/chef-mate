@@ -65,6 +65,17 @@ val previewStartCookingBloc: StartCookingBloc =
         override fun onSignUpClicked() = Unit
     }
 
+// Re-entry variant for an already signed-in user: the sign-up button is hidden because they can't
+// sign up again.
+val previewStartCookingSignedInBloc: StartCookingBloc =
+    object : StartCookingBloc {
+        override val showSignUp: Boolean = false
+
+        override fun onStartCookingClicked() = Unit
+
+        override fun onSignUpClicked() = Unit
+    }
+
 @Preview
 @Composable
 internal fun OnboardingNavBarPreview() {
@@ -113,4 +124,10 @@ internal fun MealPlanningScreenPreview() {
 @Composable
 internal fun StartCookingScreenPreview() {
     ChefMateTheme { StartCookingScreen(bloc = previewStartCookingBloc) }
+}
+
+@Preview
+@Composable
+internal fun StartCookingScreenSignedInPreview() {
+    ChefMateTheme { StartCookingScreen(bloc = previewStartCookingSignedInBloc) }
 }

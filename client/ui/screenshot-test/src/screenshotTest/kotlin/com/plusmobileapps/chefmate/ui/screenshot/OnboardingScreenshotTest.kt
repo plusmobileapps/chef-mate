@@ -14,6 +14,7 @@ import com.plusmobileapps.chefmate.onboarding.impl.ui.previewGroceryListBloc
 import com.plusmobileapps.chefmate.onboarding.impl.ui.previewMealPlanningBloc
 import com.plusmobileapps.chefmate.onboarding.impl.ui.previewSaveRecipesBloc
 import com.plusmobileapps.chefmate.onboarding.impl.ui.previewStartCookingBloc
+import com.plusmobileapps.chefmate.onboarding.impl.ui.previewStartCookingSignedInBloc
 import com.plusmobileapps.chefmate.onboarding.impl.ui.previewWelcomeBloc
 import com.plusmobileapps.chefmate.onboarding.impl.ui.previewWelcomeSignedInBloc
 import com.plusmobileapps.chefmate.ui.Content
@@ -163,4 +164,20 @@ fun OnboardingStartCookingLightScreenshot() {
 @Composable
 fun OnboardingStartCookingDarkScreenshot() {
     OnboardingScreenshot(content = { previewStartCookingBloc.Content() }, darkTheme = true)
+}
+
+// Re-entry variant for an already signed-in user — the sign-up button is hidden.
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+fun OnboardingStartCookingSignedInLightScreenshot() {
+    OnboardingScreenshot(content = { previewStartCookingSignedInBloc.Content() })
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun OnboardingStartCookingSignedInDarkScreenshot() {
+    OnboardingScreenshot(content = { previewStartCookingSignedInBloc.Content() }, darkTheme = true)
 }
