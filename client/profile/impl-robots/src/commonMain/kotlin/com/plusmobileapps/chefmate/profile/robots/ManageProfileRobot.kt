@@ -5,6 +5,8 @@ package com.plusmobileapps.chefmate.profile.robots
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasTestTag
@@ -44,6 +46,29 @@ class ManageProfileRobot(private val test: ComposeUiTest) {
 
     fun tapDeleteAccount(): ManageProfileRobot = apply {
         test.onNode(hasTestTag(ManageProfileTestTags.DELETE_ACCOUNT) and onScreen).performClick()
+    }
+
+    fun typeDeleteConfirmation(email: String): ManageProfileRobot = apply {
+        // The test tag sits on the PlusTextField wrapper; the editable node is the descendant that
+        // owns the set-text action.
+        test
+            .onNode(
+                hasSetTextAction() and
+                    hasAnyAncestor(hasTestTag(ManageProfileTestTags.DELETE_CONFIRMATION))
+            )
+            .performTextReplacement(email)
+    }
+
+    fun tapConfirmDelete(): ManageProfileRobot = apply {
+        test.onNode(hasTestTag(ManageProfileTestTags.DELETE_CONFIRM)).performClick()
+    }
+
+    fun assertConfirmDeleteEnabled(): ManageProfileRobot = apply {
+        test.onNode(hasTestTag(ManageProfileTestTags.DELETE_CONFIRM)).assertIsEnabled()
+    }
+
+    fun assertConfirmDeleteDisabled(): ManageProfileRobot = apply {
+        test.onNode(hasTestTag(ManageProfileTestTags.DELETE_CONFIRM)).assertIsNotEnabled()
     }
 
     fun assertDisplayed(): ManageProfileRobot = apply {

@@ -28,4 +28,20 @@ class ManageProfileNavigationUiTest {
         // Saving pops back to the More tab.
         more().awaitDisplayed()
     }
+
+    @Test
+    fun delete_confirm_is_gated_until_the_account_email_is_typed() = runRootBlocTest {
+        bottomNav().clickMoreTab()
+        more().awaitDisplayed().clickManageProfileRow()
+
+        // The default authenticated test user's email (see FakeAuthenticationRepository.fakeUser).
+        manageProfile()
+            .awaitDisplayed()
+            .tapDeleteAccount()
+            .assertConfirmDeleteDisabled()
+            .typeDeleteConfirmation("nope@example.com")
+            .assertConfirmDeleteDisabled()
+            .typeDeleteConfirmation("test@example.com")
+            .assertConfirmDeleteEnabled()
+    }
 }
