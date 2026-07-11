@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.settings.impl.ui.previewAppSettingsBloc
+import com.plusmobileapps.chefmate.settings.impl.ui.previewAppSettingsEnginePickerBloc
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
@@ -24,4 +25,11 @@ fun AppSettingsLightScreenshot() {
 @Composable
 fun AppSettingsDarkScreenshot() {
     ChefMateTheme(darkTheme = true) { previewAppSettingsBloc.Content() }
+}
+
+@PreviewTest
+@Preview(showBackground = true)
+@Composable
+fun AppSettingsEnginePickerScreenshot() {
+    ChefMateTheme { previewAppSettingsEnginePickerBloc.Content() }
 }
