@@ -27,6 +27,8 @@ interface ManageProfileBloc : ComposeScreen {
 
     fun onDeleteAccountClicked()
 
+    fun onDeleteConfirmationChanged(confirmation: String)
+
     fun onDeleteConfirmed()
 
     fun onDeleteDismissed()
@@ -41,12 +43,21 @@ interface ManageProfileBloc : ComposeScreen {
         val isSaving: Boolean = false,
         val saveError: TextData? = null,
         val showDeleteDialog: Boolean = false,
+        /** What the user has typed into the delete-confirmation field; must match [email]. */
+        val deleteConfirmation: String = "",
         val isDeleting: Boolean = false,
         val deleteError: TextData? = null,
     ) {
         /** Save is enabled once a non-blank name exists and no save/delete is in flight. */
         val canSave: Boolean
             get() = displayName.isNotBlank() && !isSaving && !isDeleting
+
+        /**
+         * Deletion is only allowed once the typed confirmation matches the account email
+         * (case-insensitive, trimmed) — the guard against accidental account deletion.
+         */
+        val canConfirmDelete: Boolean
+            get() = email.isNotBlank() && deleteConfirmation.trim().equals(email, ignoreCase = true)
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -58,6 +69,7 @@ interface ManageProfileBloc : ComposeScreen {
             if (isSaving != other.isSaving) return false
             if (saveError != other.saveError) return false
             if (showDeleteDialog != other.showDeleteDialog) return false
+            if (deleteConfirmation != other.deleteConfirmation) return false
             if (isDeleting != other.isDeleting) return false
             if (deleteError != other.deleteError) return false
             return true
@@ -71,6 +83,7 @@ interface ManageProfileBloc : ComposeScreen {
             result = 31 * result + isSaving.hashCode()
             result = 31 * result + (saveError?.hashCode() ?: 0)
             result = 31 * result + showDeleteDialog.hashCode()
+            result = 31 * result + deleteConfirmation.hashCode()
             result = 31 * result + isDeleting.hashCode()
             result = 31 * result + (deleteError?.hashCode() ?: 0)
             return result
