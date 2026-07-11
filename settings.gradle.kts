@@ -56,6 +56,8 @@ include(":client:auth:usecase:public")
 
 include(":client:browser:impl")
 
+include(":client:browser:impl-robots")
+
 include(":client:browser:public")
 
 include(":client:browser:testing")
