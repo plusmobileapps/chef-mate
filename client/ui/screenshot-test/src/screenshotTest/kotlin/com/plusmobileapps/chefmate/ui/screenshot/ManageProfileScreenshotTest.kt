@@ -6,6 +6,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.profile.impl.ui.previewManageProfileBloc
 import com.plusmobileapps.chefmate.profile.impl.ui.previewManageProfileDeleteDialogBloc
+import com.plusmobileapps.chefmate.profile.impl.ui.previewManageProfileDeleteDialogConfirmableBloc
 import com.plusmobileapps.chefmate.profile.impl.ui.previewManageProfileSavingBloc
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -36,4 +37,11 @@ fun ManageProfileSavingScreenshot() {
 @Composable
 fun ManageProfileDeleteDialogScreenshot() {
     ChefMateTheme { previewManageProfileDeleteDialogBloc.Content() }
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 800)
+@Composable
+fun ManageProfileDeleteDialogConfirmableScreenshot() {
+    ChefMateTheme { previewManageProfileDeleteDialogConfirmableBloc.Content() }
 }
