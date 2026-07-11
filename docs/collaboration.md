@@ -144,6 +144,11 @@ through the Dashboard's SQL Editor, not the CLI. See the header of
 calls, how to verify they landed, and how to rotate `invite_hook_secret` (via `vault.update_secret`
 — `create_secret` errors on a duplicate name).
 
+The verified sending domain is `plusmobileapps.com` and the default sender is
+`noreply@plusmobileapps.com` (see `DEFAULT_FROM` in the edge function; override at runtime with the
+`RESEND_FROM` secret). Resend authorizes any address at that exact domain — a subdomain such as
+`chefmate.plusmobileapps.com` would need separate verification.
+
 ## Sync Strategy
 
 The existing offline-first sync is extended for collaboration:

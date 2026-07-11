@@ -27,8 +27,8 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const DEFAULT_FROM = "Chef Mate <invites@chefmate.app>";
-const DEFAULT_APP_URL = "https://chefmate.app";
+const DEFAULT_FROM = "Chef Mate <noreply@plusmobileapps.com>";
+const DEFAULT_APP_URL = "https://chefmate.plusmobileapps.com";
 
 interface InvitePayload {
   kind: "grocery" | "recipe_book";
