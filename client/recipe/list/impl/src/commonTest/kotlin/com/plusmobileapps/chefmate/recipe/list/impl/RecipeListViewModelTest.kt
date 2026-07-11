@@ -316,15 +316,15 @@ class RecipeListViewModelTest {
     }
 
     @Test
-    fun When_sort_top_rated_Then_rated_recipes_sorted_descending() {
-        val unrated = recipe(1, starRating = null)
-        val threeStars = recipe(2, starRating = 3)
-        val fiveStars = recipe(3, starRating = 5)
-        recipes.value = listOf(unrated, threeStars, fiveStars)
+    fun When_sort_top_rated_Then_rated_first_descending_then_unrated_alphabetical() {
+        val unratedZ = recipe(1, title = "Zucchini", starRating = null)
+        val threeStars = recipe(2, title = "Bread", starRating = 3)
+        val fiveStars = recipe(3, title = "Cake", starRating = 5)
+        val unratedA = recipe(4, title = "Apple", starRating = null)
+        recipes.value = listOf(unratedZ, threeStars, fiveStars, unratedA)
         viewModel.updateSort(RecipeSortOption.TOP_RATED)
-        val rated =
-            viewModel.state.value.displayRecipes.filter { it.starRating != null }.map { it.id }
-        rated shouldBe listOf(3L, 2L)
+        // Highest rating first, descending by stars, then unrated at the bottom alphabetically.
+        viewModel.state.value.displayRecipes.map { it.id } shouldBe listOf(3L, 2L, 4L, 1L)
     }
 
     @Test
