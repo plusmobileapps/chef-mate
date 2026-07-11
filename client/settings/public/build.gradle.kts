@@ -11,6 +11,7 @@ kotlin {
             api(projects.client.text.public)
             api(projects.client.browser.public)
             implementation(projects.client.ui.public)
+            implementation(projects.client.util.public)
             implementation(compose.components.resources)
         }
     }
