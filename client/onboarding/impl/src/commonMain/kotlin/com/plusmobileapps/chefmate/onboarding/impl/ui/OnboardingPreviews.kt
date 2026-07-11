@@ -2,15 +2,20 @@ package com.plusmobileapps.chefmate.onboarding.impl.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import com.plusmobileapps.chefmate.onboarding.AddToGroceryBloc
+import com.plusmobileapps.chefmate.onboarding.AddToGroceryScreen
 import com.plusmobileapps.chefmate.onboarding.CookModeBloc
 import com.plusmobileapps.chefmate.onboarding.CookModeScreen
-import com.plusmobileapps.chefmate.onboarding.GroceryListBloc
-import com.plusmobileapps.chefmate.onboarding.GroceryListScreen
+import com.plusmobileapps.chefmate.onboarding.GroceryListsBloc
+import com.plusmobileapps.chefmate.onboarding.GroceryListsScreen
 import com.plusmobileapps.chefmate.onboarding.MealPlanningBloc
 import com.plusmobileapps.chefmate.onboarding.MealPlanningScreen
 import com.plusmobileapps.chefmate.onboarding.OnboardingNavBar
+import com.plusmobileapps.chefmate.onboarding.RecipeBooksBloc
+import com.plusmobileapps.chefmate.onboarding.RecipeBooksScreen
 import com.plusmobileapps.chefmate.onboarding.SaveRecipesBloc
 import com.plusmobileapps.chefmate.onboarding.SaveRecipesScreen
+import com.plusmobileapps.chefmate.onboarding.ShareRecipesScreen
 import com.plusmobileapps.chefmate.onboarding.StartCookingBloc
 import com.plusmobileapps.chefmate.onboarding.StartCookingScreen
 import com.plusmobileapps.chefmate.onboarding.WelcomeBloc
@@ -43,18 +48,28 @@ val previewSaveRecipesBloc: SaveRecipesBloc =
         override fun onNextClicked() = Unit
     }
 
-val previewCookModeBloc: CookModeBloc =
-    object : CookModeBloc {
-        override fun onNextClicked() = Unit
-    }
-
-val previewGroceryListBloc: GroceryListBloc =
-    object : GroceryListBloc {
+val previewAddToGroceryBloc: AddToGroceryBloc =
+    object : AddToGroceryBloc {
         override fun onNextClicked() = Unit
     }
 
 val previewMealPlanningBloc: MealPlanningBloc =
     object : MealPlanningBloc {
+        override fun onNextClicked() = Unit
+    }
+
+val previewCookModeBloc: CookModeBloc =
+    object : CookModeBloc {
+        override fun onNextClicked() = Unit
+    }
+
+val previewRecipeBooksBloc: RecipeBooksBloc =
+    object : RecipeBooksBloc {
+        override fun onNextClicked() = Unit
+    }
+
+val previewGroceryListsBloc: GroceryListsBloc =
+    object : GroceryListsBloc {
         override fun onNextClicked() = Unit
     }
 
@@ -80,7 +95,7 @@ val previewStartCookingSignedInBloc: StartCookingBloc =
 @Composable
 internal fun OnboardingNavBarPreview() {
     ChefMateTheme {
-        OnboardingNavBar(currentStep = 1, totalSteps = 6, onBackClick = {}, onSkipClick = {})
+        OnboardingNavBar(currentStep = 1, totalSteps = 9, onBackClick = {}, onSkipClick = {})
     }
 }
 
@@ -96,10 +111,36 @@ internal fun WelcomeScreenSignedInPreview() {
     ChefMateTheme { WelcomeScreen(bloc = previewWelcomeSignedInBloc) }
 }
 
+// Share recipes is platform-specific, so it's previewed by variant rather than through a fake Bloc.
+
+@Preview
+@Composable
+internal fun ShareRecipesScreenMobilePreview() {
+    ChefMateTheme { ShareRecipesScreen(isDesktop = false, onNextClick = {}) }
+}
+
+@Preview
+@Composable
+internal fun ShareRecipesScreenDesktopPreview() {
+    ChefMateTheme { ShareRecipesScreen(isDesktop = true, onNextClick = {}) }
+}
+
 @Preview
 @Composable
 internal fun SaveRecipesScreenPreview() {
     ChefMateTheme { SaveRecipesScreen(bloc = previewSaveRecipesBloc) }
+}
+
+@Preview
+@Composable
+internal fun AddToGroceryScreenPreview() {
+    ChefMateTheme { AddToGroceryScreen(bloc = previewAddToGroceryBloc) }
+}
+
+@Preview
+@Composable
+internal fun MealPlanningScreenPreview() {
+    ChefMateTheme { MealPlanningScreen(bloc = previewMealPlanningBloc) }
 }
 
 @Preview
@@ -110,14 +151,14 @@ internal fun CookModeScreenPreview() {
 
 @Preview
 @Composable
-internal fun GroceryListScreenPreview() {
-    ChefMateTheme { GroceryListScreen(bloc = previewGroceryListBloc) }
+internal fun RecipeBooksScreenPreview() {
+    ChefMateTheme { RecipeBooksScreen(bloc = previewRecipeBooksBloc) }
 }
 
 @Preview
 @Composable
-internal fun MealPlanningScreenPreview() {
-    ChefMateTheme { MealPlanningScreen(bloc = previewMealPlanningBloc) }
+internal fun GroceryListsScreenPreview() {
+    ChefMateTheme { GroceryListsScreen(bloc = previewGroceryListsBloc) }
 }
 
 @Preview

@@ -13,12 +13,15 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.OnboardingRepository
+import com.plusmobileapps.chefmate.onboarding.AddToGroceryBloc
 import com.plusmobileapps.chefmate.onboarding.CookModeBloc
-import com.plusmobileapps.chefmate.onboarding.GroceryListBloc
+import com.plusmobileapps.chefmate.onboarding.GroceryListsBloc
 import com.plusmobileapps.chefmate.onboarding.MealPlanningBloc
 import com.plusmobileapps.chefmate.onboarding.OnboardingRootBloc
 import com.plusmobileapps.chefmate.onboarding.OnboardingRootBloc.Output
+import com.plusmobileapps.chefmate.onboarding.RecipeBooksBloc
 import com.plusmobileapps.chefmate.onboarding.SaveRecipesBloc
+import com.plusmobileapps.chefmate.onboarding.ShareRecipesBloc
 import com.plusmobileapps.chefmate.onboarding.StartCookingBloc
 import com.plusmobileapps.chefmate.onboarding.WelcomeBloc
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
@@ -37,10 +40,13 @@ class OnboardingRootBlocImpl(
     @Assisted private val output: Consumer<Output>,
     private val onboardingRepository: OnboardingRepository,
     private val welcome: WelcomeBloc.Factory,
+    private val shareRecipes: ShareRecipesBloc.Factory,
     private val saveRecipes: SaveRecipesBloc.Factory,
-    private val cookMode: CookModeBloc.Factory,
-    private val groceryList: GroceryListBloc.Factory,
+    private val addToGrocery: AddToGroceryBloc.Factory,
     private val mealPlanning: MealPlanningBloc.Factory,
+    private val cookMode: CookModeBloc.Factory,
+    private val recipeBooks: RecipeBooksBloc.Factory,
+    private val groceryLists: GroceryListsBloc.Factory,
     private val startCooking: StartCookingBloc.Factory,
 ) : OnboardingRootBloc, BlocContext by context {
 
@@ -87,9 +93,27 @@ class OnboardingRootBlocImpl(
                         )
                 )
 
+            Configuration.ShareRecipes ->
+                OnboardingRootBloc.Child.ShareRecipes(
+                    bloc =
+                        shareRecipes.create(context = context, output = ::handleShareRecipesOutput)
+                )
+
             Configuration.SaveRecipes ->
                 OnboardingRootBloc.Child.SaveRecipes(
                     bloc = saveRecipes.create(context = context, output = ::handleSaveRecipesOutput)
+                )
+
+            Configuration.AddToGrocery ->
+                OnboardingRootBloc.Child.AddToGrocery(
+                    bloc =
+                        addToGrocery.create(context = context, output = ::handleAddToGroceryOutput)
+                )
+
+            Configuration.MealPlanning ->
+                OnboardingRootBloc.Child.MealPlanning(
+                    bloc =
+                        mealPlanning.create(context = context, output = ::handleMealPlanningOutput)
                 )
 
             Configuration.CookMode ->
@@ -97,15 +121,15 @@ class OnboardingRootBlocImpl(
                     bloc = cookMode.create(context = context, output = ::handleCookModeOutput)
                 )
 
-            Configuration.GroceryList ->
-                OnboardingRootBloc.Child.GroceryList(
-                    bloc = groceryList.create(context = context, output = ::handleGroceryListOutput)
+            Configuration.RecipeBooks ->
+                OnboardingRootBloc.Child.RecipeBooks(
+                    bloc = recipeBooks.create(context = context, output = ::handleRecipeBooksOutput)
                 )
 
-            Configuration.MealPlanning ->
-                OnboardingRootBloc.Child.MealPlanning(
+            Configuration.GroceryLists ->
+                OnboardingRootBloc.Child.GroceryLists(
                     bloc =
-                        mealPlanning.create(context = context, output = ::handleMealPlanningOutput)
+                        groceryLists.create(context = context, output = ::handleGroceryListsOutput)
                 )
 
             Configuration.StartCooking ->
@@ -126,33 +150,51 @@ class OnboardingRootBlocImpl(
 
     private fun handleWelcomeOutput(output: WelcomeBloc.Output) {
         when (output) {
-            WelcomeBloc.Output.GetStarted -> advanceTo(Configuration.SaveRecipes)
+            WelcomeBloc.Output.GetStarted -> advanceTo(Configuration.ShareRecipes)
             // The root opens the auth flow; on success it tears down onboarding for us.
             WelcomeBloc.Output.SignIn -> this.output.onNext(Output.SignIn)
         }
     }
 
+    private fun handleShareRecipesOutput(output: ShareRecipesBloc.Output) {
+        when (output) {
+            ShareRecipesBloc.Output.Next -> advanceTo(Configuration.SaveRecipes)
+        }
+    }
+
     private fun handleSaveRecipesOutput(output: SaveRecipesBloc.Output) {
         when (output) {
-            SaveRecipesBloc.Output.Next -> advanceTo(Configuration.CookMode)
+            SaveRecipesBloc.Output.Next -> advanceTo(Configuration.AddToGrocery)
         }
     }
 
-    private fun handleCookModeOutput(output: CookModeBloc.Output) {
+    private fun handleAddToGroceryOutput(output: AddToGroceryBloc.Output) {
         when (output) {
-            CookModeBloc.Output.Next -> advanceTo(Configuration.GroceryList)
-        }
-    }
-
-    private fun handleGroceryListOutput(output: GroceryListBloc.Output) {
-        when (output) {
-            GroceryListBloc.Output.Next -> advanceTo(Configuration.MealPlanning)
+            AddToGroceryBloc.Output.Next -> advanceTo(Configuration.MealPlanning)
         }
     }
 
     private fun handleMealPlanningOutput(output: MealPlanningBloc.Output) {
         when (output) {
-            MealPlanningBloc.Output.Next -> advanceTo(Configuration.StartCooking)
+            MealPlanningBloc.Output.Next -> advanceTo(Configuration.CookMode)
+        }
+    }
+
+    private fun handleCookModeOutput(output: CookModeBloc.Output) {
+        when (output) {
+            CookModeBloc.Output.Next -> advanceTo(Configuration.RecipeBooks)
+        }
+    }
+
+    private fun handleRecipeBooksOutput(output: RecipeBooksBloc.Output) {
+        when (output) {
+            RecipeBooksBloc.Output.Next -> advanceTo(Configuration.GroceryLists)
+        }
+    }
+
+    private fun handleGroceryListsOutput(output: GroceryListsBloc.Output) {
+        when (output) {
+            GroceryListsBloc.Output.Next -> advanceTo(Configuration.StartCooking)
         }
     }
 
@@ -171,21 +213,30 @@ class OnboardingRootBlocImpl(
     }
 
     private companion object {
-        /** Welcome, Save recipes, Cook mode, Grocery list, Meal planning, Start cooking. */
-        const val STEP_COUNT = 6
+        /**
+         * Welcome, Share recipes, Save recipes, Add to grocery, Meal planning, Cook mode, Recipe
+         * books, Grocery lists, Start cooking.
+         */
+        const val STEP_COUNT = 9
     }
 
     @Serializable
     private sealed class Configuration {
         @Serializable data object Welcome : Configuration()
 
+        @Serializable data object ShareRecipes : Configuration()
+
         @Serializable data object SaveRecipes : Configuration()
+
+        @Serializable data object AddToGrocery : Configuration()
+
+        @Serializable data object MealPlanning : Configuration()
 
         @Serializable data object CookMode : Configuration()
 
-        @Serializable data object GroceryList : Configuration()
+        @Serializable data object RecipeBooks : Configuration()
 
-        @Serializable data object MealPlanning : Configuration()
+        @Serializable data object GroceryLists : Configuration()
 
         @Serializable data object StartCooking : Configuration()
     }

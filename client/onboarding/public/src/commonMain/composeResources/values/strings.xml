@@ -8,17 +8,27 @@
     <string name="onboarding_welcome_get_started">Get started</string>
     <string name="onboarding_welcome_sign_in">I already have an account</string>
 
-    <string name="onboarding_save_recipes_title">Save recipes from anywhere</string>
-    <string name="onboarding_save_recipes_message">Browse the web without leaving ChefMate using the built-in browser. When you land on a recipe you like, tap Download and ChefMate pulls in the ingredients, steps, and photo automatically — no copying and pasting. Every recipe you save syncs to your account so it’s ready on all your devices.</string>
+    <string name="onboarding_share_recipes_title">Save recipes from any browser</string>
+    <string name="onboarding_share_recipes_message_mobile">Found a recipe while browsing in Safari, Chrome, or any app? Tap the share button and choose ChefMate. The recipe’s photo, ingredients, and steps come straight into your collection — no copying and pasting.</string>
+    <string name="onboarding_share_recipes_message_desktop">Found a recipe out on the web? Copy its address from your browser’s address bar and paste it into ChefMate. It pulls in the photo, ingredients, and steps automatically — no copying and pasting the page.</string>
 
-    <string name="onboarding_cook_mode_title">Cook hands-free</string>
-    <string name="onboarding_cook_mode_message">Open any saved recipe and tap Cook Mode to enter a distraction-free, step-by-step view built for the kitchen. Text stays large and easy to read from a distance, and your screen won’t dim mid-recipe, so you can keep both hands on the food and glance over whenever you’re ready for the next step.</string>
+    <string name="onboarding_save_recipes_title">Or search without leaving ChefMate</string>
+    <string name="onboarding_save_recipes_message">Prefer to stay in the app? Open the built-in browser to search the web for recipes. When you land on one you like, tap Download and ChefMate saves the ingredients, steps, and photo directly to your account.</string>
 
-    <string name="onboarding_grocery_list_title">Build your grocery list</string>
-    <string name="onboarding_grocery_list_message">Add a recipe’s ingredients to your grocery list with a single tap, and ChefMate combines duplicates so you’re not buying the same thing twice. Items are grouped to make shopping quick, and you can tick them off as you go so nothing gets left behind at the store.</string>
+    <string name="onboarding_add_to_grocery_title">Add to your grocery list</string>
+    <string name="onboarding_add_to_grocery_message">Open any recipe and tap the cart in the toolbar to send its ingredients straight to a grocery list. ChefMate combines duplicates so you never buy the same thing twice.</string>
 
-    <string name="onboarding_meal_planning_title">Plan your week</string>
-    <string name="onboarding_meal_planning_message">Drop recipes into breakfast, lunch, dinner, or snacks for any day of the week to map out what you’ll cook. Seeing the whole week at a glance takes the guesswork out of “what’s for dinner,” and you can send a plan’s ingredients straight to your grocery list when it’s time to shop.</string>
+    <string name="onboarding_meal_planning_title">Add it to your meal plan</string>
+    <string name="onboarding_meal_planning_message">Tap the calendar in the recipe toolbar to drop a recipe onto any day of the week. Map out breakfast, lunch, and dinner so there’s never a question of what’s for dinner.</string>
+
+    <string name="onboarding_cook_mode_title">Start cooking, hands-free</string>
+    <string name="onboarding_cook_mode_message">When you’re ready to cook, tap Start Cooking in the toolbar for a distraction-free, step-by-step view. Text stays large and your screen won’t dim, so you can keep both hands on the food.</string>
+
+    <string name="onboarding_recipe_books_title">Organize with recipe books</string>
+    <string name="onboarding_recipe_books_message">Group your recipes into as many books as you like — weeknight dinners, holiday baking, family favorites. Share a book with friends and family so everyone can cook from the same collection.</string>
+
+    <string name="onboarding_grocery_lists_title">Shop together with shared lists</string>
+    <string name="onboarding_grocery_lists_message">Keep more than one grocery list — one for the week, one for a party, one for the hardware run. Share a list with family or roommates and everyone’s changes stay in sync as you shop.</string>
 
     <string name="onboarding_start_cooking_title">You’re all set</string>
     <string name="onboarding_start_cooking_message">That’s the whole tour. Save your favorite recipes, plan out your week, and build grocery lists that keep you organized — all from one app. Jump in whenever you’re ready; you can revisit these features any time from the app.</string>

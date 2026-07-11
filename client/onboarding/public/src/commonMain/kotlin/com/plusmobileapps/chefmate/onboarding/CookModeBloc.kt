@@ -6,7 +6,10 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.ui.ComposeScreen
 
-/** Onboarding step explaining how to start Cook Mode from the recipe detail screen. */
+/**
+ * Onboarding step calling out the recipe detail toolbar's "start cooking" action, which opens the
+ * hands-free, step-by-step Cook Mode view.
+ */
 interface CookModeBloc : ComposeScreen {
     fun onNextClicked()
 

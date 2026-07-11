@@ -6,13 +6,16 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.ui.ComposeScreen
 
-/** Onboarding step explaining how to add a recipe’s ingredients to the grocery list. */
-interface GroceryListBloc : ComposeScreen {
+/**
+ * Onboarding step introducing grocery lists: keeping more than one list and collaborating on a
+ * shared list with friends in real time.
+ */
+interface GroceryListsBloc : ComposeScreen {
     fun onNextClicked()
 
     @Composable
     override fun Content(modifier: Modifier) {
-        GroceryListScreen(bloc = this, modifier = modifier)
+        GroceryListsScreen(bloc = this, modifier = modifier)
     }
 
     sealed class Output {
@@ -21,6 +24,6 @@ interface GroceryListBloc : ComposeScreen {
     }
 
     fun interface Factory {
-        fun create(context: BlocContext, output: Consumer<Output>): GroceryListBloc
+        fun create(context: BlocContext, output: Consumer<Output>): GroceryListsBloc
     }
 }
