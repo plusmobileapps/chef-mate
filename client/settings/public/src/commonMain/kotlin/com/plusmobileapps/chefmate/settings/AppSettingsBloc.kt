@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.browser.SearchEngine
 import com.plusmobileapps.chefmate.settings.ui.AppSettingsScreen
 import com.plusmobileapps.chefmate.ui.ComposeScreen
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +21,12 @@ interface AppSettingsBloc : BackHandlerOwner, ComposeScreen {
     fun onBack()
 
     fun onHistoryEnabledChanged(enabled: Boolean)
+
+    fun onDefaultSearchEngineClicked()
+
+    fun onSearchEngineSelected(engine: SearchEngine)
+
+    fun onSearchEnginePickerDismissed()
 
     fun onClearHistoryClicked()
 
@@ -40,6 +47,9 @@ interface AppSettingsBloc : BackHandlerOwner, ComposeScreen {
     data class Model(
         val isHistoryEnabled: Boolean = true,
         val showClearHistoryDialog: Boolean = false,
+        /** The current default search engine, or null until the user picks one. */
+        val selectedSearchEngine: SearchEngine? = null,
+        val showSearchEnginePicker: Boolean = false,
     )
 
     sealed class Output {

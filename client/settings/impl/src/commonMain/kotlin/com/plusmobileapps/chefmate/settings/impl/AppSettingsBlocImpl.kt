@@ -2,6 +2,7 @@ package com.plusmobileapps.chefmate.settings.impl
 
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.browser.SearchEngine
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.settings.AppSettingsBloc
@@ -33,6 +34,18 @@ class AppSettingsBlocImpl(
 
     override fun onHistoryEnabledChanged(enabled: Boolean) {
         viewModel.setHistoryEnabled(enabled)
+    }
+
+    override fun onDefaultSearchEngineClicked() {
+        viewModel.showSearchEnginePicker()
+    }
+
+    override fun onSearchEngineSelected(engine: SearchEngine) {
+        viewModel.setDefaultSearchEngine(engine)
+    }
+
+    override fun onSearchEnginePickerDismissed() {
+        viewModel.dismissSearchEnginePicker()
     }
 
     override fun onClearHistoryClicked() {
