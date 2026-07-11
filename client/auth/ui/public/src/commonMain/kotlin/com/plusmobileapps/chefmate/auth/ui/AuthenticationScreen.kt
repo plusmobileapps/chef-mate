@@ -381,9 +381,11 @@ fun EmailField(
         keyboardOptions =
             KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
         keyboardActions = KeyboardActions(onNext = { onImeAction() }),
-        // Users sign in with their email, so hint both so password managers match either the
-        // username or email-address field they saved for the account.
-        contentType = ContentType.EmailAddress + ContentType.Username,
+        // Username-primary (with email as a secondary hint): some password managers (e.g.
+        // Bitwarden) anchor their on-focus inline suggestion off the field's primary content type
+        // and only proactively offer to fill fields they classify as "username". Leading with
+        // EmailAddress left the field recognized for manual autofill but not offered automatically.
+        contentType = ContentType.Username + ContentType.EmailAddress,
     )
 }
 
