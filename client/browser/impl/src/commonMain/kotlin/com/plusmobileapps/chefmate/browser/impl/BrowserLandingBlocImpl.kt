@@ -4,10 +4,12 @@ import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.browser.BrowserLandingBloc
+import com.plusmobileapps.chefmate.browser.BrowserPreferences
+import com.plusmobileapps.chefmate.browser.SearchEngine
+import com.plusmobileapps.chefmate.combineStates
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.CoachMarkController
 import com.plusmobileapps.chefmate.di.CoachMarkId
-import com.plusmobileapps.chefmate.mapState
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
@@ -22,11 +24,18 @@ class BrowserLandingBlocImpl(
     @Assisted context: BlocContext,
     @Assisted private val output: Consumer<BrowserLandingBloc.Output>,
     private val coachMarkController: CoachMarkController,
+    private val browserPreferences: BrowserPreferences,
 ) : BrowserLandingBloc, BlocContext by context {
 
     override val state: StateFlow<BrowserLandingBloc.Model> =
-        coachMarkController.activeCoachMark.mapState {
-            BrowserLandingBloc.Model(activeCoachMark = it)
+        combineStates(
+            coachMarkController.activeCoachMark,
+            browserPreferences.defaultSearchEngine,
+        ) { activeCoachMark, engine ->
+            BrowserLandingBloc.Model(
+                activeCoachMark = activeCoachMark,
+                selectedEngine = engine ?: SearchEngine.GOOGLE,
+            )
         }
 
     init {
@@ -42,6 +51,10 @@ class BrowserLandingBlocImpl(
 
     override fun onCoachMarkDismissed(id: String) {
         dismissCoachMark(id)
+    }
+
+    override fun onSearchEngineSelected(engine: SearchEngine) {
+        browserPreferences.setDefaultSearchEngine(engine)
     }
 
     /** Mark a coach mark seen, but only if it's the one currently showing. */

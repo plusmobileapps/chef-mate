@@ -4,6 +4,8 @@ import kotlinx.coroutines.flow.Flow
 
 const val BROWSER_HISTORY_ENABLED_KEY = "browser.history.enabled"
 
+const val BROWSER_SEARCH_ENGINE_KEY = "browser.search.engine"
+
 data class BrowserHistoryEntry(val id: Long, val url: String, val visitedAt: String)
 
 interface BrowserHistoryRepository {

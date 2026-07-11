@@ -22,8 +22,10 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.browser.BrowserEditQueryBloc
 import com.plusmobileapps.chefmate.browser.BrowserLandingBloc
+import com.plusmobileapps.chefmate.browser.BrowserPreferences
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.browser.BrowserRootScreen
+import com.plusmobileapps.chefmate.browser.BrowserSelectEngineBloc
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
@@ -49,6 +51,8 @@ class BrowserRootBlocImpl(
     private val browserBlocFactory: BrowserBloc.Factory,
     private val landingBlocFactory: BrowserLandingBloc.Factory,
     private val editQueryBlocFactory: BrowserEditQueryBloc.Factory,
+    private val selectEngineBlocFactory: BrowserSelectEngineBloc.Factory,
+    private val browserPreferences: BrowserPreferences,
 ) : BrowserRootBloc, BlocContext by context {
 
     private val navigation = StackNavigation<Configuration>()
@@ -67,8 +71,12 @@ class BrowserRootBlocImpl(
             source = navigation,
             serializer = Configuration.serializer(),
             initialStack = {
-                if (initialUrl != null) listOf(Configuration.Browser(initialUrl))
-                else listOf(Configuration.Landing)
+                when {
+                    initialUrl != null -> listOf(Configuration.Browser(initialUrl))
+                    browserPreferences.defaultSearchEngine.value == null ->
+                        listOf(Configuration.SelectEngine)
+                    else -> listOf(Configuration.Landing)
+                }
             },
             handleBackButton = true,
             key = "BrowserRootRouter",
@@ -133,6 +141,15 @@ class BrowserRootBlocImpl(
 
     private fun createChild(config: Configuration, context: BlocContext): BrowserRootBloc.Child =
         when (config) {
+            Configuration.SelectEngine ->
+                BrowserRootBloc.Child.SelectEngine(
+                    selectEngineBlocFactory.create(context) { selectOutput ->
+                        when (selectOutput) {
+                            BrowserSelectEngineBloc.Output.EngineSelected ->
+                                navigation.replaceAll(Configuration.Landing)
+                        }
+                    }
+                )
             Configuration.Landing ->
                 BrowserRootBloc.Child.Landing(
                     landingBlocFactory.create(context) { landingOutput ->
@@ -210,6 +227,8 @@ class BrowserRootBlocImpl(
 
     @Serializable
     private sealed class Configuration {
+        @Serializable data object SelectEngine : Configuration()
+
         @Serializable data object Landing : Configuration()
 
         @Serializable data class EditQuery(val initialText: String) : Configuration()

@@ -30,6 +30,7 @@ interface BrowserEditQueryBloc : ComposeScreen {
     data class Model(
         val searchText: String = "",
         val history: ImmutableList<BrowserHistoryEntry> = persistentListOf(),
+        val searchEngine: SearchEngine = SearchEngine.GOOGLE,
     )
 
     sealed class Output {

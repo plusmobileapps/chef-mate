@@ -1,7 +1,9 @@
 package com.plusmobileapps.chefmate.browser.impl
 
 import com.plusmobileapps.chefmate.browser.BROWSER_HISTORY_ENABLED_KEY
+import com.plusmobileapps.chefmate.browser.BROWSER_SEARCH_ENGINE_KEY
 import com.plusmobileapps.chefmate.browser.BrowserPreferences
+import com.plusmobileapps.chefmate.browser.SearchEngine
 import com.plusmobileapps.chefmate.di.AppScope
 import com.russhwolf.settings.Settings
 import dev.zacsweers.metro.ContributesBinding
@@ -21,8 +23,18 @@ class BrowserPreferencesImpl(private val settings: Settings) : BrowserPreference
 
     override val isHistoryEnabled: StateFlow<Boolean> = _isHistoryEnabled.asStateFlow()
 
+    private val _defaultSearchEngine =
+        MutableStateFlow(SearchEngine.fromId(settings.getStringOrNull(BROWSER_SEARCH_ENGINE_KEY)))
+
+    override val defaultSearchEngine: StateFlow<SearchEngine?> = _defaultSearchEngine.asStateFlow()
+
     override fun setHistoryEnabled(enabled: Boolean) {
         settings.putBoolean(BROWSER_HISTORY_ENABLED_KEY, enabled)
         _isHistoryEnabled.value = enabled
+    }
+
+    override fun setDefaultSearchEngine(engine: SearchEngine) {
+        settings.putString(BROWSER_SEARCH_ENGINE_KEY, engine.id)
+        _defaultSearchEngine.value = engine
     }
 }

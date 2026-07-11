@@ -6,6 +6,7 @@ package com.plusmobileapps.chefmate.browser.impl
 import com.plusmobileapps.chefmate.browser.BrowserEditQueryBloc
 import com.plusmobileapps.chefmate.browser.BrowserHistoryEntry
 import com.plusmobileapps.chefmate.browser.BrowserHistoryRepository
+import com.plusmobileapps.chefmate.browser.SearchEngine
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
 import com.russhwolf.settings.MapSettings
@@ -84,7 +85,7 @@ class BrowserEditQueryBlocImplTest {
     }
 
     @Test
-    fun When_navigate_with_search_query_Then_routed_to_google_search() {
+    fun When_navigate_with_search_query_Then_routed_to_google_search_by_default() {
         val bloc = createBloc()
         bloc.onSearchTextChanged("serious eats soup")
         bloc.onNavigate()
@@ -92,6 +93,16 @@ class BrowserEditQueryBlocImplTest {
             BrowserEditQueryBloc.Output.Navigate(
                 "https://www.google.com/search?q=serious+eats+soup"
             )
+    }
+
+    @Test
+    fun When_navigate_with_search_query_and_duckduckgo_default_Then_routed_to_duckduckgo() {
+        browserPreferences.setDefaultSearchEngine(SearchEngine.DUCK_DUCK_GO)
+        val bloc = createBloc()
+        bloc.onSearchTextChanged("serious eats soup")
+        bloc.onNavigate()
+        output.lastValue shouldBe
+            BrowserEditQueryBloc.Output.Navigate("https://duckduckgo.com/?q=serious+eats+soup")
     }
 
     @Test

@@ -51,6 +51,8 @@ import chefmate.client.browser.public.generated.resources.browser_back
 import chefmate.client.browser.public.generated.resources.browser_clear
 import chefmate.client.browser.public.generated.resources.browser_history_delete
 import chefmate.client.browser.public.generated.resources.browser_landing_hint
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.PhraseModel
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -95,7 +97,15 @@ fun BrowserEditQueryScreen(
             },
             modifier =
                 Modifier.fillMaxWidth().then(sharedFieldModifier).focusRequester(focusRequester),
-            placeholder = { Text(stringResource(Res.string.browser_landing_hint)) },
+            placeholder = {
+                Text(
+                    PhraseModel(
+                            Res.string.browser_landing_hint,
+                            "engine" to FixedString(state.searchEngine.displayName),
+                        )
+                        .localized()
+                )
+            },
             leadingIcon = {
                 IconButton(
                     onClick = {
