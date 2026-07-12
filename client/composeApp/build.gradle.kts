@@ -268,7 +268,12 @@ compose.desktop {
             description = "Chef Mate - Your AI Cooking Assistant"
             vendor = "Plus Mobile Apps"
 
-            modules("java.sql", "java.naming", "jdk.jsobject")
+            // jdk.unsupported.desktop provides jdk.swing.interop.SwingInterOpUtils, which
+            // JavaFX's Swing interop (JFXPanel, used by the desktop browser's WebView) loads at
+            // runtime. Without it the jlink/jpackage runtime image omits the class and the browser
+            // crashes with NoClassDefFoundError the first time the cursor updates over the WebView
+            // (see issue #400). Not needed for `./gradlew run`, which uses the full JDK.
+            modules("java.sql", "java.naming", "jdk.jsobject", "jdk.unsupported.desktop")
 
             // macOS configuration
             macOS {
