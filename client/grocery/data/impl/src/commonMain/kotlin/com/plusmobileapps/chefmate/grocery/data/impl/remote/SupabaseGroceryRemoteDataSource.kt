@@ -13,6 +13,17 @@ import dev.zacsweers.metro.SingleIn
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.realtime.PostgresAction
+import io.github.jan.supabase.realtime.channel
+import io.github.jan.supabase.realtime.postgresChangeFlow
+import io.github.jan.supabase.realtime.realtime
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -23,6 +34,25 @@ import kotlinx.serialization.json.put
 @ContributesBinding(AppScope::class)
 class SupabaseGroceryRemoteDataSource(private val supabaseClient: SupabaseClient) :
     GroceryRemoteDataSource {
+
+    override fun observeChanges(): Flow<Unit> {
+        val channel = supabaseClient.channel(REALTIME_CHANNEL)
+        // Register a Postgres-change binding per table before subscribing — the SDK requires
+        // bindings to exist when the channel joins. Row-level security scopes each stream to the
+        // lists this user can access, so we simply re-reconcile on any emission.
+        val tableChanges = REALTIME_TABLES.map { table ->
+            channel.postgresChangeFlow<PostgresAction>(schema = "public") { this.table = table }
+        }
+        return merge(*tableChanges.toTypedArray())
+            .map {}
+            .onStart { channel.subscribe() }
+            .onCompletion {
+                // Runs on cancellation too (e.g. sign-out). Force the leave through even though the
+                // collecting coroutine is being cancelled, so the server-side channel is released
+                // before a same-named channel is recreated on the next sign-in.
+                withContext(NonCancellable) { supabaseClient.realtime.removeChannel(channel) }
+            }
+    }
 
     override suspend fun ensureDefaultList(ownerId: String): String {
         val existing =
@@ -57,6 +87,27 @@ class SupabaseGroceryRemoteDataSource(private val supabaseClient: SupabaseClient
                 }
             }
             .decodeSingle<RemoteGroceryItem>()
+
+    override suspend fun updateGroceryItem(item: RemoteGroceryItem): RemoteGroceryItem {
+        val remoteId = requireNotNull(item.id) { "updateGroceryItem requires a remote id" }
+        // Send only the mutable columns. Building the payload explicitly (rather than passing the
+        // whole RemoteGroceryItem) keeps immutable columns like created_at out of the UPDATE, so an
+        // edit can't fail a NOT NULL constraint on the conflict-update path.
+        val payload = buildJsonObject {
+            put("name", item.name)
+            put("is_checked", item.isChecked)
+            item.updatedAt?.let { put("updated_at", it) }
+            put("aisle", item.aisle)
+            put("recipe_name", item.recipeName)
+        }
+        return supabaseClient
+            .from("grocery_items")
+            .update(payload) {
+                select()
+                filter { eq("id", remoteId) }
+            }
+            .decodeSingle<RemoteGroceryItem>()
+    }
 
     override suspend fun deleteGroceryItem(remoteId: String) {
         supabaseClient.from("grocery_items").delete { filter { eq("id", remoteId) } }
@@ -136,5 +187,10 @@ class SupabaseGroceryRemoteDataSource(private val supabaseClient: SupabaseClient
 
     override suspend fun removeFromList(memberId: String) {
         supabaseClient.from("grocery_list_members").delete { filter { eq("id", memberId) } }
+    }
+
+    private companion object {
+        const val REALTIME_CHANNEL = "grocery-sync"
+        val REALTIME_TABLES = listOf("grocery_items", "grocery_lists", "grocery_list_members")
     }
 }

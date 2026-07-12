@@ -8,12 +8,19 @@ import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryListInvite
 import com.plusmobileapps.chefmate.grocery.data.remote.RemoteGroceryListMember
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 
 @OptIn(ExperimentalUuidApi::class)
 class FakeGroceryRemoteDataSource : GroceryRemoteDataSource {
     val remoteLists = mutableMapOf<String, MutableList<RemoteGroceryList>>()
     val remoteItems = mutableMapOf<String, MutableList<RemoteGroceryItem>>()
     private var nextListId = 1
+
+    /** Emit here to simulate a realtime change arriving from another device. */
+    val changes = MutableSharedFlow<Unit>(extraBufferCapacity = 16)
+
+    override fun observeChanges(): Flow<Unit> = changes
 
     override suspend fun ensureDefaultList(ownerId: String): String {
         val lists = remoteLists.getOrPut(ownerId) { mutableListOf() }
@@ -38,6 +45,14 @@ class FakeGroceryRemoteDataSource : GroceryRemoteDataSource {
             items.add(result)
         }
         return result
+    }
+
+    override suspend fun updateGroceryItem(item: RemoteGroceryItem): RemoteGroceryItem {
+        remoteItems.values.forEach { items ->
+            val index = items.indexOfFirst { it.id == item.id }
+            if (index >= 0) items[index] = item
+        }
+        return item
     }
 
     override suspend fun deleteGroceryItem(remoteId: String) {

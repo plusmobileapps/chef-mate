@@ -23,6 +23,7 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 
 class GroceryRepositoryImplTest {
@@ -699,5 +700,84 @@ class GroceryRepositoryImplTest {
             repository.deletePurchasedGroceries(listId)
 
             repository.getGroceries(listId).test { awaitItem().size shouldBe 2 }
+        }
+
+    @Test
+    fun realtime_change_pulls_a_remote_item_without_re_signing_in() =
+        runTest(testDispatcher) {
+            // Local default list linked to a remote list on sign-in.
+            repository.ensureDefaultList()
+            val remoteListId = "remote-list-realtime"
+            fakeRemote.remoteLists["user-1"] =
+                mutableListOf(
+                    RemoteGroceryList(
+                        id = remoteListId,
+                        name = "My Grocery List",
+                        ownerId = "user-1",
+                    )
+                )
+            fakeAuth.setState(
+                AuthState.Authenticated(
+                    ChefMateUser(
+                        userId = "user-1",
+                        userName = "Test",
+                        userEmail = "test@test.com",
+                        userProfileImageUrl = null,
+                    )
+                )
+            )
+            advanceUntilIdle()
+
+            // The initial sign-in sync pulled an empty list.
+            repository.getGroceries().first().size shouldBe 0
+
+            // Another device adds an item, then a realtime change notification arrives.
+            fakeRemote.remoteItems[remoteListId] =
+                mutableListOf(
+                    RemoteGroceryItem(
+                        id = "item-remote-1",
+                        listId = remoteListId,
+                        name = "Milk",
+                        clientId = Uuid.random().toString(),
+                    )
+                )
+            fakeRemote.changes.tryEmit(Unit)
+            advanceUntilIdle()
+
+            // The live subscription re-reconciled and pulled the new item on its own.
+            repository.getGroceries().test {
+                val items = awaitItem()
+                items.size shouldBe 1
+                items.first().name shouldBe "Milk"
+            }
+        }
+
+    @Test
+    fun updateChecked_pushes_the_new_checked_state_to_the_backend() =
+        runTest(testDispatcher) {
+            fakeAuth.setState(
+                AuthState.Authenticated(
+                    ChefMateUser(
+                        userId = "user-1",
+                        userName = "Test",
+                        userEmail = "test@test.com",
+                        userProfileImageUrl = null,
+                    )
+                )
+            )
+            val listId = repository.ensureDefaultList()
+            repository.addGrocery(listId, "Milk")
+            advanceUntilIdle()
+
+            // The add synced, so the local item now has a remote id.
+            val item = repository.getGroceries(listId).first().first { it.name == "Milk" }
+            item.isChecked shouldBe false
+
+            repository.updateChecked(item, isChecked = true)
+            advanceUntilIdle()
+
+            // The checked state reached the backend via updateGroceryItem.
+            val remote = fakeRemote.remoteItems.values.flatten().first { it.name == "Milk" }
+            remote.isChecked shouldBe true
         }
 }
