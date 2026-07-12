@@ -5,10 +5,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
@@ -22,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import chefmate.client.profile.public.generated.resources.Res
@@ -30,6 +33,8 @@ import chefmate.client.profile.public.generated.resources.manage_profile_change_
 import chefmate.client.profile.public.generated.resources.manage_profile_delete_account
 import chefmate.client.profile.public.generated.resources.manage_profile_delete_dialog_cancel
 import chefmate.client.profile.public.generated.resources.manage_profile_delete_dialog_confirm
+import chefmate.client.profile.public.generated.resources.manage_profile_delete_dialog_confirmation_hint
+import chefmate.client.profile.public.generated.resources.manage_profile_delete_dialog_confirmation_prompt
 import chefmate.client.profile.public.generated.resources.manage_profile_delete_dialog_message
 import chefmate.client.profile.public.generated.resources.manage_profile_delete_dialog_title
 import chefmate.client.profile.public.generated.resources.manage_profile_display_name_hint
@@ -38,10 +43,12 @@ import chefmate.client.profile.public.generated.resources.manage_profile_email_l
 import chefmate.client.profile.public.generated.resources.manage_profile_save
 import chefmate.client.profile.public.generated.resources.manage_profile_title
 import coil3.compose.AsyncImage
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusButton
 import com.plusmobileapps.chefmate.ui.components.PlusButtonVariant
-import com.plusmobileapps.chefmate.ui.components.PlusDialog
+import com.plusmobileapps.chefmate.ui.components.PlusDialogScaffold
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusTextField
@@ -55,11 +62,11 @@ fun ManageProfileScreen(bloc: ManageProfileBloc, modifier: Modifier = Modifier) 
     val pickPhoto = rememberImagePickerLauncher { picked -> picked?.let(bloc::onPhotoPicked) }
 
     if (state.showDeleteDialog) {
-        PlusDialog(
-            title = Res.string.manage_profile_delete_dialog_title.asTextData(),
-            message = Res.string.manage_profile_delete_dialog_message.asTextData(),
-            confirmButtonText = Res.string.manage_profile_delete_dialog_confirm.asTextData(),
-            dismissButtonText = Res.string.manage_profile_delete_dialog_cancel.asTextData(),
+        DeleteAccountDialog(
+            email = state.email,
+            confirmation = state.deleteConfirmation,
+            canConfirm = state.canConfirmDelete,
+            onConfirmationChange = bloc::onDeleteConfirmationChanged,
             onConfirmClick = bloc::onDeleteConfirmed,
             onDismissRequest = bloc::onDeleteDismissed,
         )
@@ -142,6 +149,64 @@ fun ManageProfileScreen(bloc: ManageProfileBloc, modifier: Modifier = Modifier) 
                     enabled = !state.isSaving && !state.isDeleting,
                     isLoading = state.isDeleting,
                     onClick = bloc::onDeleteAccountClicked,
+                )
+            }
+        },
+    )
+}
+
+@Composable
+private fun DeleteAccountDialog(
+    email: String,
+    confirmation: String,
+    canConfirm: Boolean,
+    onConfirmationChange: (String) -> Unit,
+    onConfirmClick: () -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    PlusDialogScaffold(
+        onDismissRequest = onDismissRequest,
+        header = { Text(Res.string.manage_profile_delete_dialog_title.asTextData().localized()) },
+        content = {
+            Column(verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingNormal)) {
+                Text(Res.string.manage_profile_delete_dialog_message.asTextData().localized())
+                Text(
+                    PhraseModel(
+                            Res.string.manage_profile_delete_dialog_confirmation_prompt,
+                            "email" to FixedString(email),
+                        )
+                        .localized()
+                )
+                PlusTextField(
+                    value = confirmation,
+                    onValueChange = onConfirmationChange,
+                    modifier =
+                        Modifier.fillMaxWidth().testTag(ManageProfileTestTags.DELETE_CONFIRMATION),
+                    placeholder = {
+                        Text(
+                            Res.string.manage_profile_delete_dialog_confirmation_hint
+                                .asTextData()
+                                .localized()
+                        )
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                )
+            }
+        },
+        footer = {
+            Row(horizontalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingNormal)) {
+                PlusButton(
+                    text = Res.string.manage_profile_delete_dialog_cancel.asTextData(),
+                    variant = PlusButtonVariant.SECONDARY,
+                    onClick = onDismissRequest,
+                )
+                PlusButton(
+                    text = Res.string.manage_profile_delete_dialog_confirm.asTextData(),
+                    variant = PlusButtonVariant.DESTRUCTIVE,
+                    enabled = canConfirm,
+                    modifier = Modifier.testTag(ManageProfileTestTags.DELETE_CONFIRM),
+                    onClick = onConfirmClick,
                 )
             }
         },

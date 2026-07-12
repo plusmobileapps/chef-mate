@@ -108,15 +108,31 @@ class ManageProfileViewModel(
     }
 
     fun showDeleteDialog() {
-        _state.update { it.copy(showDeleteDialog = true, deleteError = null) }
+        _state.update {
+            it.copy(showDeleteDialog = true, deleteConfirmation = "", deleteError = null)
+        }
+    }
+
+    fun setDeleteConfirmation(confirmation: String) {
+        _state.update { it.copy(deleteConfirmation = confirmation) }
     }
 
     fun dismissDeleteDialog() {
-        _state.update { it.copy(showDeleteDialog = false) }
+        _state.update { it.copy(showDeleteDialog = false, deleteConfirmation = "") }
     }
 
     fun deleteAccount() {
-        _state.update { it.copy(showDeleteDialog = false, isDeleting = true, deleteError = null) }
+        // Guard against deletion unless the typed email matches — mirrors the disabled confirm
+        // button so a stray call (e.g. an IME action) can't bypass the confirmation gate.
+        if (!_state.value.canConfirmDelete) return
+        _state.update {
+            it.copy(
+                showDeleteDialog = false,
+                deleteConfirmation = "",
+                isDeleting = true,
+                deleteError = null,
+            )
+        }
         scope.launch {
             deleteAccountUseCase()
                 .onSuccess { _outputs.send(Output.Deleted) }

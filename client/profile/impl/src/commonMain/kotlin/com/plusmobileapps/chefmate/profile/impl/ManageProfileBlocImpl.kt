@@ -63,6 +63,10 @@ class ManageProfileBlocImpl(
         viewModel.showDeleteDialog()
     }
 
+    override fun onDeleteConfirmationChanged(confirmation: String) {
+        viewModel.setDeleteConfirmation(confirmation)
+    }
+
     override fun onDeleteConfirmed() {
         viewModel.deleteAccount()
     }

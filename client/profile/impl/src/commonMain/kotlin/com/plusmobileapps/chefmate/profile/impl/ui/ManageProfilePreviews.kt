@@ -24,6 +24,8 @@ private fun manageProfileBloc(model: Model): ManageProfileBloc =
 
         override fun onDeleteAccountClicked() = Unit
 
+        override fun onDeleteConfirmationChanged(confirmation: String) = Unit
+
         override fun onDeleteConfirmed() = Unit
 
         override fun onDeleteDismissed() = Unit
@@ -42,6 +44,16 @@ val previewManageProfileSavingBloc: ManageProfileBloc =
 val previewManageProfileDeleteDialogBloc: ManageProfileBloc =
     manageProfileBloc(
         Model(displayName = "Julia Child", email = "julia@example.com", showDeleteDialog = true)
+    )
+
+val previewManageProfileDeleteDialogConfirmableBloc: ManageProfileBloc =
+    manageProfileBloc(
+        Model(
+            displayName = "Julia Child",
+            email = "julia@example.com",
+            showDeleteDialog = true,
+            deleteConfirmation = "julia@example.com",
+        )
     )
 
 val previewManageProfileErrorBloc: ManageProfileBloc =

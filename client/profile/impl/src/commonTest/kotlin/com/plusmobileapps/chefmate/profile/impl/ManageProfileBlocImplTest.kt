@@ -165,11 +165,48 @@ class ManageProfileBlocImplTest {
     }
 
     @Test
-    fun When_delete_confirmed_Then_account_deleted_and_output_emitted() = runTest {
+    fun When_delete_confirmed_with_matching_email_Then_account_deleted_and_output_emitted() =
+        runTest {
+            bloc.onDeleteAccountClicked()
+            bloc.onDeleteConfirmationChanged("chef@example.com")
+            bloc.onDeleteConfirmed()
+
+            deleteCalled shouldBe true
+            output.lastValue shouldBe ManageProfileBloc.Output.AccountDeleted
+        }
+
+    @Test
+    fun When_confirmation_matches_email_ignoring_case_and_whitespace_Then_delete_is_enabled() =
+        runTest {
+            bloc.onDeleteAccountClicked()
+            bloc.onDeleteConfirmationChanged("  CHEF@example.com  ")
+
+            bloc.state.value.canConfirmDelete shouldBe true
+        }
+
+    @Test
+    fun When_confirmation_does_not_match_email_Then_delete_is_blocked() = runTest {
         bloc.onDeleteAccountClicked()
+        bloc.onDeleteConfirmationChanged("wrong@example.com")
+        bloc.state.value.canConfirmDelete shouldBe false
+
         bloc.onDeleteConfirmed()
 
-        deleteCalled shouldBe true
-        output.lastValue shouldBe ManageProfileBloc.Output.AccountDeleted
+        deleteCalled shouldBe false
+        output.values.isEmpty() shouldBe true
+    }
+
+    @Test
+    fun When_delete_dismissed_Then_confirmation_is_cleared() = runTest {
+        bloc.state.test {
+            awaitItem()
+            bloc.onDeleteAccountClicked()
+            awaitItem().showDeleteDialog shouldBe true
+            bloc.onDeleteConfirmationChanged("chef@example.com")
+            awaitItem().deleteConfirmation shouldBe "chef@example.com"
+            bloc.onDeleteDismissed()
+            awaitItem().deleteConfirmation shouldBe ""
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 }
