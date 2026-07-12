@@ -512,5 +512,10 @@ private fun applySort(recipes: List<Recipe>, sort: RecipeSortOption): List<Recip
         RecipeSortOption.ALPHABETICAL_ASC -> recipes.sortedBy { it.title.lowercase() }
         RecipeSortOption.ALPHABETICAL_DESC -> recipes.sortedByDescending { it.title.lowercase() }
         RecipeSortOption.TOP_RATED ->
-            recipes.sortedWith(compareByDescending<Recipe, Int?>(nullsLast()) { it.starRating })
+            // Highest rating first, descending by stars, then unrated recipes at the bottom.
+            // Alphabetical title breaks ties, so unrated recipes are ordered alphabetically.
+            recipes.sortedWith(
+                compareByDescending<Recipe> { it.starRating ?: Int.MIN_VALUE }
+                    .thenBy { it.title.lowercase() }
+            )
     }
