@@ -47,6 +47,14 @@ class FakeGroceryRemoteDataSource : GroceryRemoteDataSource {
         return result
     }
 
+    override suspend fun updateGroceryItem(item: RemoteGroceryItem): RemoteGroceryItem {
+        remoteItems.values.forEach { items ->
+            val index = items.indexOfFirst { it.id == item.id }
+            if (index >= 0) items[index] = item
+        }
+        return item
+    }
+
     override suspend fun deleteGroceryItem(remoteId: String) {
         remoteItems.values.forEach { it.removeAll { item -> item.id == remoteId } }
     }

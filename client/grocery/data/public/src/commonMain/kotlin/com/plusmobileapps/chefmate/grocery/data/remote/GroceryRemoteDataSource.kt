@@ -15,6 +15,13 @@ interface GroceryRemoteDataSource {
 
     suspend fun upsertGroceryItem(item: RemoteGroceryItem): RemoteGroceryItem
 
+    /**
+     * Updates an existing item's mutable columns (name, checked state, aisle, recipe) by its remote
+     * id. Unlike [upsertGroceryItem] this never sends immutable columns such as `created_at`, so an
+     * edit can't trip a NOT NULL / conflict-update constraint. [item].id must be non-null.
+     */
+    suspend fun updateGroceryItem(item: RemoteGroceryItem): RemoteGroceryItem
+
     suspend fun deleteGroceryItem(remoteId: String)
 
     suspend fun fetchAllGroceryItems(listId: String): List<RemoteGroceryItem>

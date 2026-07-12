@@ -88,6 +88,27 @@ class SupabaseGroceryRemoteDataSource(private val supabaseClient: SupabaseClient
             }
             .decodeSingle<RemoteGroceryItem>()
 
+    override suspend fun updateGroceryItem(item: RemoteGroceryItem): RemoteGroceryItem {
+        val remoteId = requireNotNull(item.id) { "updateGroceryItem requires a remote id" }
+        // Send only the mutable columns. Building the payload explicitly (rather than passing the
+        // whole RemoteGroceryItem) keeps immutable columns like created_at out of the UPDATE, so an
+        // edit can't fail a NOT NULL constraint on the conflict-update path.
+        val payload = buildJsonObject {
+            put("name", item.name)
+            put("is_checked", item.isChecked)
+            item.updatedAt?.let { put("updated_at", it) }
+            put("aisle", item.aisle)
+            put("recipe_name", item.recipeName)
+        }
+        return supabaseClient
+            .from("grocery_items")
+            .update(payload) {
+                select()
+                filter { eq("id", remoteId) }
+            }
+            .decodeSingle<RemoteGroceryItem>()
+    }
+
     override suspend fun deleteGroceryItem(remoteId: String) {
         supabaseClient.from("grocery_items").delete { filter { eq("id", remoteId) } }
     }

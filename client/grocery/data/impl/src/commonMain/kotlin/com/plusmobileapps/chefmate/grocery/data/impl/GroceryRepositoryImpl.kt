@@ -2,6 +2,7 @@ package com.plusmobileapps.chefmate.grocery.data.impl
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import co.touchlab.kermit.Logger
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.database.Grocery
@@ -276,7 +277,10 @@ class GroceryRepositoryImpl(
             scope.launch {
                 try {
                     remoteDataSource.deleteGroceryItem(remoteId)
-                } catch (_: Exception) {}
+                } catch (t: Throwable) {
+                    if (t is CancellationException) throw t
+                    Logger.e(throwable = t, tag = TAG) { "grocery remote sync operation failed" }
+                }
             }
         }
     }
@@ -330,7 +334,10 @@ class GroceryRepositoryImpl(
             scope.launch {
                 try {
                     remoteDataSource.deleteGroceryList(remoteId)
-                } catch (_: Exception) {}
+                } catch (t: Throwable) {
+                    if (t is CancellationException) throw t
+                    Logger.e(throwable = t, tag = TAG) { "grocery remote sync operation failed" }
+                }
             }
         }
     }
@@ -376,7 +383,10 @@ class GroceryRepositoryImpl(
                         RemoteGroceryList(name = entity.name, ownerId = authState.user.userId)
                     )
                 listQueries.updateRemoteId(remoteId = remoteList.id!!, id = localId)
-            } catch (_: Exception) {}
+            } catch (t: Throwable) {
+                if (t is CancellationException) throw t
+                Logger.e(throwable = t, tag = TAG) { "grocery remote sync operation failed" }
+            }
         }
     }
 
@@ -395,7 +405,10 @@ class GroceryRepositoryImpl(
                     )
                 )
                 listQueries.clearDirty(localId)
-            } catch (_: Exception) {}
+            } catch (t: Throwable) {
+                if (t is CancellationException) throw t
+                Logger.e(throwable = t, tag = TAG) { "grocery remote sync operation failed" }
+            }
         }
     }
 
@@ -442,7 +455,10 @@ class GroceryRepositoryImpl(
                         syncingIds.update { it - match.id }
                     }
                 }
-            } catch (_: Exception) {}
+            } catch (t: Throwable) {
+                if (t is CancellationException) throw t
+                Logger.e(throwable = t, tag = TAG) { "grocery remote sync operation failed" }
+            }
         }
     }
 
@@ -456,7 +472,7 @@ class GroceryRepositoryImpl(
                 val listId = entity.listRemoteId ?: return@launch
                 syncingIds.update { it + localId }
                 try {
-                    remoteDataSource.upsertGroceryItem(
+                    remoteDataSource.updateGroceryItem(
                         RemoteGroceryItem(
                             id = remoteId,
                             listId = listId,
@@ -472,7 +488,11 @@ class GroceryRepositoryImpl(
                 } finally {
                     syncingIds.update { it - localId }
                 }
-            } catch (_: Exception) {}
+            } catch (t: Throwable) {
+                Logger.e(throwable = t, tag = TAG) {
+                    "pushUpdateToRemote failed (localId=$localId)"
+                }
+            }
         }
     }
 
@@ -558,7 +578,10 @@ class GroceryRepositoryImpl(
                     withContext(ioContext) {
                         listQueries.updateRemoteId(remoteId = remoteList.id!!, id = list.id)
                     }
-                } catch (_: Exception) {}
+                } catch (t: Throwable) {
+                    if (t is CancellationException) throw t
+                    Logger.e(throwable = t, tag = TAG) { "grocery remote sync operation failed" }
+                }
             }
 
             // Push dirty owned lists only
@@ -571,7 +594,10 @@ class GroceryRepositoryImpl(
                         RemoteGroceryList(id = remoteId, name = list.name, ownerId = userId)
                     )
                     withContext(ioContext) { listQueries.clearDirty(list.id) }
-                } catch (_: Exception) {}
+                } catch (t: Throwable) {
+                    if (t is CancellationException) throw t
+                    Logger.e(throwable = t, tag = TAG) { "grocery remote sync operation failed" }
+                }
             }
 
             // Sync members for shared lists
@@ -622,7 +648,12 @@ class GroceryRepositoryImpl(
                         } finally {
                             syncingIds.update { it - item.id }
                         }
-                    } catch (_: Exception) {}
+                    } catch (t: Throwable) {
+                        if (t is CancellationException) throw t
+                        Logger.e(throwable = t, tag = TAG) {
+                            "grocery remote sync operation failed"
+                        }
+                    }
                 }
 
                 // Push dirty items for this list
@@ -636,7 +667,7 @@ class GroceryRepositoryImpl(
                         val itemListId = item.listRemoteId ?: listRemoteId
                         syncingIds.update { it + item.id }
                         try {
-                            remoteDataSource.upsertGroceryItem(
+                            remoteDataSource.updateGroceryItem(
                                 RemoteGroceryItem(
                                     id = remoteId,
                                     listId = itemListId,
@@ -652,7 +683,11 @@ class GroceryRepositoryImpl(
                         } finally {
                             syncingIds.update { it - item.id }
                         }
-                    } catch (_: Exception) {}
+                    } catch (t: Throwable) {
+                        Logger.e(throwable = t, tag = TAG) {
+                            "syncWithRemote: push dirty item failed (localId=${item.id})"
+                        }
+                    }
                 }
 
                 // Pull remote items for this list
@@ -704,7 +739,10 @@ class GroceryRepositoryImpl(
                     }
                 }
             }
-        } catch (_: Exception) {}
+        } catch (t: Throwable) {
+            if (t is CancellationException) throw t
+            Logger.e(throwable = t, tag = TAG) { "grocery remote sync operation failed" }
+        }
     }
 
     override suspend fun deleteAllGroceries(listId: Long) {
@@ -733,7 +771,10 @@ class GroceryRepositoryImpl(
             for (remoteId in remoteIds) {
                 try {
                     remoteDataSource.deleteGroceryItem(remoteId)
-                } catch (_: Exception) {}
+                } catch (t: Throwable) {
+                    if (t is CancellationException) throw t
+                    Logger.e(throwable = t, tag = TAG) { "grocery remote sync operation failed" }
+                }
             }
         }
     }
@@ -873,7 +914,10 @@ class GroceryRepositoryImpl(
                         )
                     }
                 }
-            } catch (_: Exception) {}
+            } catch (t: Throwable) {
+                if (t is CancellationException) throw t
+                Logger.e(throwable = t, tag = TAG) { "grocery remote sync operation failed" }
+            }
         }
     }
 
@@ -966,6 +1010,7 @@ class GroceryRepositoryImpl(
     }
 
     private companion object {
+        const val TAG = "GroceryRepositoryImpl"
         const val REALTIME_DEBOUNCE_MS = 300L
         const val REALTIME_RETRY_DELAY_MS = 3_000L
     }
