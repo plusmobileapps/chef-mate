@@ -156,6 +156,7 @@ kotlin {
             implementation(projects.client.auth.data.testing)
             implementation(projects.client.aichat.implRobots)
             implementation(projects.client.bottomnav.implRobots)
+            implementation(projects.client.browser.implRobots)
             implementation(projects.client.featureflag.testing)
             implementation(projects.client.recipe.categories.implRobots)
             implementation(projects.client.grocery.autocomplete.implRobots)

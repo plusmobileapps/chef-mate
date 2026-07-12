@@ -39,7 +39,9 @@ class BrowserEditQueryBlocImpl(
     override fun onNavigate() {
         val url = viewModel.state.value.searchText
         if (url.isBlank()) return
-        output.onNext(BrowserEditQueryBloc.Output.Navigate(url.toNavigationUrl()))
+        output.onNext(
+            BrowserEditQueryBloc.Output.Navigate(url.toNavigationUrl(viewModel.currentSearchEngine))
+        )
     }
 
     override fun onCancel() {

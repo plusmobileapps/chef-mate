@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.settings.impl
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.browser.BrowserHistoryRepository
 import com.plusmobileapps.chefmate.browser.BrowserPreferences
+import com.plusmobileapps.chefmate.browser.SearchEngine
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.settings.AppSettingsBloc
 import dev.zacsweers.metro.Inject
@@ -29,10 +30,26 @@ class AppSettingsViewModel(
         browserPreferences.isHistoryEnabled
             .onEach { enabled -> _state.update { it.copy(isHistoryEnabled = enabled) } }
             .launchIn(scope)
+        browserPreferences.defaultSearchEngine
+            .onEach { engine -> _state.update { it.copy(selectedSearchEngine = engine) } }
+            .launchIn(scope)
     }
 
     fun setHistoryEnabled(enabled: Boolean) {
         browserPreferences.setHistoryEnabled(enabled)
+    }
+
+    fun showSearchEnginePicker() {
+        _state.update { it.copy(showSearchEnginePicker = true) }
+    }
+
+    fun dismissSearchEnginePicker() {
+        _state.update { it.copy(showSearchEnginePicker = false) }
+    }
+
+    fun setDefaultSearchEngine(engine: SearchEngine) {
+        browserPreferences.setDefaultSearchEngine(engine)
+        _state.update { it.copy(showSearchEnginePicker = false) }
     }
 
     fun showClearHistoryDialog() {

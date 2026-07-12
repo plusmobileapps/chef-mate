@@ -5,6 +5,7 @@ package com.plusmobileapps.chefmate.settings.impl
 
 import com.plusmobileapps.chefmate.browser.BrowserHistoryEntry
 import com.plusmobileapps.chefmate.browser.BrowserHistoryRepository
+import com.plusmobileapps.chefmate.browser.SearchEngine
 import com.plusmobileapps.chefmate.browser.testing.FakeBrowserPreferences
 import com.plusmobileapps.chefmate.settings.AppSettingsBloc
 import com.plusmobileapps.chefmate.testing.TestBlocContext
@@ -84,6 +85,38 @@ class AppSettingsBlocImplTest {
         bloc.onClearHistoryConfirmed()
         bloc.state.value.showClearHistoryDialog shouldBe false
         verifySuspend { historyRepository.clearAll() }
+    }
+
+    @Test
+    fun initial_state_reflects_default_search_engine_preference() {
+        browserPreferences.setDefaultSearchEngine(SearchEngine.BING)
+        val bloc = createBloc()
+        bloc.state.value.selectedSearchEngine shouldBe SearchEngine.BING
+    }
+
+    @Test
+    fun When_default_search_engine_clicked_Then_picker_shown() {
+        val bloc = createBloc()
+        bloc.onDefaultSearchEngineClicked()
+        bloc.state.value.showSearchEnginePicker shouldBe true
+    }
+
+    @Test
+    fun When_search_engine_selected_Then_preference_updated_and_picker_hidden() {
+        val bloc = createBloc()
+        bloc.onDefaultSearchEngineClicked()
+        bloc.onSearchEngineSelected(SearchEngine.BRAVE)
+        browserPreferences.defaultSearchEngine.value shouldBe SearchEngine.BRAVE
+        bloc.state.value.selectedSearchEngine shouldBe SearchEngine.BRAVE
+        bloc.state.value.showSearchEnginePicker shouldBe false
+    }
+
+    @Test
+    fun When_search_engine_picker_dismissed_Then_picker_hidden() {
+        val bloc = createBloc()
+        bloc.onDefaultSearchEngineClicked()
+        bloc.onSearchEnginePickerDismissed()
+        bloc.state.value.showSearchEnginePicker shouldBe false
     }
 
     @Test

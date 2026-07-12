@@ -29,6 +29,11 @@ fun BrowserRootScreen(bloc: BrowserRootBloc, modifier: Modifier = Modifier) {
             label = "browser-root",
         ) { instance ->
             when (instance) {
+                is BrowserRootBloc.Child.SelectEngine ->
+                    BrowserSelectEngineScreen(
+                        bloc = instance.bloc,
+                        modifier = Modifier.fillMaxSize(),
+                    )
                 is BrowserRootBloc.Child.Landing ->
                     BrowserLandingScreen(
                         bloc = instance.bloc,

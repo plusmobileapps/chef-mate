@@ -20,9 +20,14 @@ interface BrowserLandingBloc : ComposeScreen {
     /** Marks the first-run coach mark with [id] as seen so it never shows again. */
     fun onCoachMarkDismissed(id: String)
 
+    /** Changes the default search engine from the landing dropdown. */
+    fun onSearchEngineSelected(engine: SearchEngine)
+
     data class Model(
         /** Id of the first-run coach mark currently allowed to show, or null when none. */
-        val activeCoachMark: String? = null
+        val activeCoachMark: String? = null,
+        /** The current default search engine, reflected in the dropdown and search hint. */
+        val selectedEngine: SearchEngine = SearchEngine.GOOGLE,
     )
 
     sealed class Output {

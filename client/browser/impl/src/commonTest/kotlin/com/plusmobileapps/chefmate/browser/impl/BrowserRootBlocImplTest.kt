@@ -8,9 +8,12 @@ import com.plusmobileapps.chefmate.browser.BrowserBloc
 import com.plusmobileapps.chefmate.browser.BrowserEditQueryBloc
 import com.plusmobileapps.chefmate.browser.BrowserLandingBloc
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
+import com.plusmobileapps.chefmate.browser.BrowserSelectEngineBloc
+import com.plusmobileapps.chefmate.browser.SearchEngine
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
+import com.russhwolf.settings.MapSettings
 import dev.mokkery.MockMode
 import dev.mokkery.answering.returns
 import dev.mokkery.every
@@ -28,11 +31,14 @@ class BrowserRootBlocImplTest {
     private var browserOutput: Consumer<BrowserBloc.Output> = Consumer {}
     private var landingOutput: Consumer<BrowserLandingBloc.Output> = Consumer {}
     private var editQueryOutput: Consumer<BrowserEditQueryBloc.Output> = Consumer {}
+    private var selectEngineOutput: Consumer<BrowserSelectEngineBloc.Output> = Consumer {}
     private var lastEditQueryInitialText: String? = null
 
+    /** Defaults to a chosen engine so most tests bypass the first-run picker. */
     private fun createBloc(
         initialUrl: String? = null,
         showControls: Boolean = true,
+        selectedEngine: SearchEngine? = SearchEngine.GOOGLE,
     ): BrowserRootBlocImpl =
         BrowserRootBlocImpl(
             context = context,
@@ -67,6 +73,15 @@ class BrowserRootBlocImplTest {
                     lastEditQueryInitialText = initialText
                     mock(MockMode.autoUnit)
                 },
+            selectEngineBlocFactory =
+                BrowserSelectEngineBloc.Factory { _, output ->
+                    selectEngineOutput = output
+                    mock(MockMode.autoUnit)
+                },
+            browserPreferences =
+                BrowserPreferencesImpl(MapSettings()).apply {
+                    selectedEngine?.let { setDefaultSearchEngine(it) }
+                },
         )
 
     private fun BrowserRootBloc.activeChild(): BrowserRootBloc.Child =
@@ -75,8 +90,29 @@ class BrowserRootBlocImplTest {
     private fun BrowserRootBloc.stackSize(): Int = routerState.value.items.size
 
     @Test
-    fun When_no_initial_url_Then_landing_is_shown() {
-        val bloc = createBloc(initialUrl = null)
+    fun When_no_initial_url_and_engine_selected_Then_landing_is_shown() {
+        val bloc = createBloc(initialUrl = null, selectedEngine = SearchEngine.GOOGLE)
+        bloc.activeChild().shouldBeInstanceOf<BrowserRootBloc.Child.Landing>()
+        bloc.stackSize() shouldBe 1
+    }
+
+    @Test
+    fun When_no_engine_selected_Then_select_engine_is_shown() {
+        val bloc = createBloc(initialUrl = null, selectedEngine = null)
+        bloc.activeChild().shouldBeInstanceOf<BrowserRootBloc.Child.SelectEngine>()
+        bloc.stackSize() shouldBe 1
+    }
+
+    @Test
+    fun When_initial_url_present_Then_select_engine_is_skipped() {
+        val bloc = createBloc(initialUrl = "https://example.com", selectedEngine = null)
+        bloc.activeChild().shouldBeInstanceOf<BrowserRootBloc.Child.Browser>()
+    }
+
+    @Test
+    fun When_engine_selected_output_Then_landing_replaces_select_engine() {
+        val bloc = createBloc(initialUrl = null, selectedEngine = null)
+        selectEngineOutput.onNext(BrowserSelectEngineBloc.Output.EngineSelected)
         bloc.activeChild().shouldBeInstanceOf<BrowserRootBloc.Child.Landing>()
         bloc.stackSize() shouldBe 1
     }

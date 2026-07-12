@@ -23,6 +23,8 @@ interface BrowserRootBloc : ComposeScreen {
 
         abstract val bloc: ComposeScreen
 
+        data class SelectEngine(override val bloc: BrowserSelectEngineBloc) : Child()
+
         data class Landing(override val bloc: BrowserLandingBloc) : Child()
 
         data class EditQuery(override val bloc: BrowserEditQueryBloc) : Child()

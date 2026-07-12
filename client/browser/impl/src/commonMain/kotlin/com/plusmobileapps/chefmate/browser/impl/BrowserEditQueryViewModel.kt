@@ -7,6 +7,7 @@ import com.plusmobileapps.chefmate.browser.BrowserEditQueryBloc
 import com.plusmobileapps.chefmate.browser.BrowserHistoryEntry
 import com.plusmobileapps.chefmate.browser.BrowserHistoryRepository
 import com.plusmobileapps.chefmate.browser.BrowserPreferences
+import com.plusmobileapps.chefmate.browser.SearchEngine
 import com.plusmobileapps.chefmate.di.Main
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
@@ -29,7 +30,12 @@ class BrowserEditQueryViewModel(
     private val browserPreferences: BrowserPreferences,
 ) : ViewModel(mainContext) {
 
-    private val _state = MutableStateFlow(BrowserEditQueryBloc.Model())
+    /** The engine to route a typed search query through, falling back to Google. */
+    val currentSearchEngine: SearchEngine
+        get() = browserPreferences.defaultSearchEngine.value ?: SearchEngine.GOOGLE
+
+    private val _state =
+        MutableStateFlow(BrowserEditQueryBloc.Model(searchEngine = currentSearchEngine))
     val state: StateFlow<BrowserEditQueryBloc.Model> = _state.asStateFlow()
 
     init {
