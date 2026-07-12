@@ -1,6 +1,9 @@
 package com.plusmobileapps.chefmate.browser
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,11 +30,19 @@ val previewBrowserSelectEngineBloc: BrowserSelectEngineBloc =
 @Preview
 @Composable
 internal fun BrowserLandingScreenPreview() {
-    ChefMateTheme { BrowserLandingScreen(bloc = previewBrowserLandingBloc) }
+    ChefMateTheme {
+        Surface(modifier = Modifier.fillMaxSize()) {
+            BrowserLandingScreen(bloc = previewBrowserLandingBloc)
+        }
+    }
 }
 
 @Preview
 @Composable
 internal fun BrowserSelectEngineScreenPreview() {
-    ChefMateTheme { BrowserSelectEngineScreen(bloc = previewBrowserSelectEngineBloc) }
+    ChefMateTheme {
+        Surface(modifier = Modifier.fillMaxSize()) {
+            BrowserSelectEngineScreen(bloc = previewBrowserSelectEngineBloc)
+        }
+    }
 }

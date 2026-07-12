@@ -1,7 +1,10 @@
 package com.plusmobileapps.chefmate.ui.screenshot
 
 import android.content.res.Configuration
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.browser.previewBrowserLandingBloc
@@ -13,26 +16,34 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 @Preview(showBackground = true)
 @Composable
 fun BrowserSelectEngineLightScreenshot() {
-    ChefMateTheme { previewBrowserSelectEngineBloc.Content() }
+    ChefMateTheme {
+        Surface(modifier = Modifier.fillMaxSize()) { previewBrowserSelectEngineBloc.Content() }
+    }
 }
 
 @PreviewTest
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun BrowserSelectEngineDarkScreenshot() {
-    ChefMateTheme(darkTheme = true) { previewBrowserSelectEngineBloc.Content() }
+    ChefMateTheme(darkTheme = true) {
+        Surface(modifier = Modifier.fillMaxSize()) { previewBrowserSelectEngineBloc.Content() }
+    }
 }
 
 @PreviewTest
 @Preview(showBackground = true)
 @Composable
 fun BrowserLandingLightScreenshot() {
-    ChefMateTheme { previewBrowserLandingBloc.Content() }
+    ChefMateTheme {
+        Surface(modifier = Modifier.fillMaxSize()) { previewBrowserLandingBloc.Content() }
+    }
 }
 
 @PreviewTest
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun BrowserLandingDarkScreenshot() {
-    ChefMateTheme(darkTheme = true) { previewBrowserLandingBloc.Content() }
+    ChefMateTheme(darkTheme = true) {
+        Surface(modifier = Modifier.fillMaxSize()) { previewBrowserLandingBloc.Content() }
+    }
 }
