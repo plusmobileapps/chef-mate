@@ -751,4 +751,33 @@ class GroceryRepositoryImplTest {
                 items.first().name shouldBe "Milk"
             }
         }
+
+    @Test
+    fun updateChecked_pushes_the_new_checked_state_to_the_backend() =
+        runTest(testDispatcher) {
+            fakeAuth.setState(
+                AuthState.Authenticated(
+                    ChefMateUser(
+                        userId = "user-1",
+                        userName = "Test",
+                        userEmail = "test@test.com",
+                        userProfileImageUrl = null,
+                    )
+                )
+            )
+            val listId = repository.ensureDefaultList()
+            repository.addGrocery(listId, "Milk")
+            advanceUntilIdle()
+
+            // The add synced, so the local item now has a remote id.
+            val item = repository.getGroceries(listId).first().first { it.name == "Milk" }
+            item.isChecked shouldBe false
+
+            repository.updateChecked(item, isChecked = true)
+            advanceUntilIdle()
+
+            // The checked state reached the backend via updateGroceryItem.
+            val remote = fakeRemote.remoteItems.values.flatten().first { it.name == "Milk" }
+            remote.isChecked shouldBe true
+        }
 }
