@@ -697,7 +697,26 @@ class GroceryRepositoryImpl(
                     for (remoteItem in remoteItems) {
                         val remoteId = remoteItem.id ?: continue
                         val existing = queries.getByRemoteId(remoteId).executeAsOneOrNull()
-                        if (existing != null) continue
+                        if (existing != null) {
+                            // Item already known locally — reconcile remote edits (e.g. a
+                            // "purchased" toggle made on another device) into the local row.
+                            // Skip rows with unpushed local changes: their dirty edit is pushed
+                            // earlier in this reconcile, and overwriting here would drop a change
+                            // made concurrently while we were fetching.
+                            if (!existing.isDirty) {
+                                queries.updateFromRemote(
+                                    name = remoteItem.name,
+                                    isChecked = remoteItem.isChecked,
+                                    updatedAt = remoteItem.updatedAt ?: existing.updatedAt,
+                                    listRemoteId = listRemoteId,
+                                    listId = list.id,
+                                    recipeName = remoteItem.recipeName,
+                                    aisle = remoteItem.aisle,
+                                    id = existing.id,
+                                )
+                            }
+                            continue
+                        }
 
                         val matchedByClientId =
                             remoteItem.clientId?.let { clientId ->
