@@ -1,6 +1,16 @@
 package com.plusmobileapps.chefmate.grocery.data.remote
 
+import kotlinx.coroutines.flow.Flow
+
 interface GroceryRemoteDataSource {
+    /**
+     * Emits once per remote change (INSERT/UPDATE/DELETE) on the grocery tables the signed-in user
+     * can access. Collectors respond by re-running a full reconcile so a change made on another
+     * device lands in the local cache. The underlying realtime channel subscribes on first
+     * collection and tears down when collection stops.
+     */
+    fun observeChanges(): Flow<Unit>
+
     suspend fun ensureDefaultList(ownerId: String): String
 
     suspend fun upsertGroceryItem(item: RemoteGroceryItem): RemoteGroceryItem
