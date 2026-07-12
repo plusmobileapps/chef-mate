@@ -753,6 +753,79 @@ class GroceryRepositoryImplTest {
         }
 
     @Test
+    fun realtime_change_pulls_an_updated_checked_state_for_an_existing_item() =
+        runTest(testDispatcher) {
+            // Local list already linked to a remote list with one synced, unchecked item —
+            // simulates Device B that previously synced the item.
+            val localListId = repository.ensureDefaultList()
+            val remoteListId = "remote-list-checked-sync"
+            val now = "2026-01-01T00:00:00"
+            db.groceryListQueries.updateRemoteId(remoteId = remoteListId, id = localListId)
+            db.groceryQueries.createWithRemoteId(
+                name = "Milk",
+                isChecked = false,
+                createdAt = now,
+                updatedAt = now,
+                remoteId = "remote-milk",
+                listRemoteId = remoteListId,
+                clientId = "client-milk",
+                listId = localListId,
+                recipeName = null,
+                aisle = null,
+            )
+            fakeRemote.remoteLists["user-1"] =
+                mutableListOf(
+                    RemoteGroceryList(
+                        id = remoteListId,
+                        name = "My Grocery List",
+                        ownerId = "user-1",
+                    )
+                )
+            fakeRemote.remoteItems[remoteListId] =
+                mutableListOf(
+                    RemoteGroceryItem(
+                        id = "remote-milk",
+                        listId = remoteListId,
+                        name = "Milk",
+                        isChecked = false,
+                        clientId = "client-milk",
+                    )
+                )
+            fakeAuth.setState(
+                AuthState.Authenticated(
+                    ChefMateUser(
+                        userId = "user-1",
+                        userName = "Test",
+                        userEmail = "test@test.com",
+                        userProfileImageUrl = null,
+                    )
+                )
+            )
+            advanceUntilIdle()
+            repository.getGroceries(localListId).first().first().isChecked shouldBe false
+
+            // Device A marks the item as purchased, then a realtime change arrives.
+            fakeRemote.remoteItems[remoteListId] =
+                mutableListOf(
+                    RemoteGroceryItem(
+                        id = "remote-milk",
+                        listId = remoteListId,
+                        name = "Milk",
+                        isChecked = true,
+                        updatedAt = "2026-01-02T00:00:00",
+                        clientId = "client-milk",
+                    )
+                )
+            fakeRemote.changes.tryEmit(Unit)
+            advanceUntilIdle()
+
+            // The heartbeat re-reconciled and the local item now reflects the purchased state.
+            repository.getGroceries(localListId).test {
+                awaitItem().first().isChecked shouldBe true
+            }
+        }
+
+    @Test
     fun updateChecked_pushes_the_new_checked_state_to_the_backend() =
         runTest(testDispatcher) {
             fakeAuth.setState(
