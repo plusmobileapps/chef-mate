@@ -5,11 +5,14 @@ package com.plusmobileapps.chefmate.onboarding.impl
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.OnboardingRepository
+import com.plusmobileapps.chefmate.onboarding.AddToGroceryBloc
 import com.plusmobileapps.chefmate.onboarding.CookModeBloc
-import com.plusmobileapps.chefmate.onboarding.GroceryListBloc
+import com.plusmobileapps.chefmate.onboarding.GroceryListsBloc
 import com.plusmobileapps.chefmate.onboarding.MealPlanningBloc
 import com.plusmobileapps.chefmate.onboarding.OnboardingRootBloc
+import com.plusmobileapps.chefmate.onboarding.RecipeBooksBloc
 import com.plusmobileapps.chefmate.onboarding.SaveRecipesBloc
+import com.plusmobileapps.chefmate.onboarding.ShareRecipesBloc
 import com.plusmobileapps.chefmate.onboarding.StartCookingBloc
 import com.plusmobileapps.chefmate.onboarding.WelcomeBloc
 import com.plusmobileapps.chefmate.testing.TestBlocContext
@@ -25,10 +28,13 @@ class OnboardingRootBlocImplTest {
 
     var welcomeOutput: Consumer<WelcomeBloc.Output> = Consumer {}
     var welcomeShowSignIn: Boolean? = null
+    var shareRecipesOutput: Consumer<ShareRecipesBloc.Output> = Consumer {}
     var saveRecipesOutput: Consumer<SaveRecipesBloc.Output> = Consumer {}
-    var cookModeOutput: Consumer<CookModeBloc.Output> = Consumer {}
-    var groceryListOutput: Consumer<GroceryListBloc.Output> = Consumer {}
+    var addToGroceryOutput: Consumer<AddToGroceryBloc.Output> = Consumer {}
     var mealPlanningOutput: Consumer<MealPlanningBloc.Output> = Consumer {}
+    var cookModeOutput: Consumer<CookModeBloc.Output> = Consumer {}
+    var recipeBooksOutput: Consumer<RecipeBooksBloc.Output> = Consumer {}
+    var groceryListsOutput: Consumer<GroceryListsBloc.Output> = Consumer {}
     var startCookingOutput: Consumer<StartCookingBloc.Output> = Consumer {}
     var startCookingShowSignUp: Boolean? = null
 
@@ -49,20 +55,32 @@ class OnboardingRootBlocImplTest {
                 welcomeOutput = output
                 mock()
             },
+            shareRecipes = { _, output ->
+                shareRecipesOutput = output
+                mock()
+            },
             saveRecipes = { _, output ->
                 saveRecipesOutput = output
+                mock()
+            },
+            addToGrocery = { _, output ->
+                addToGroceryOutput = output
+                mock()
+            },
+            mealPlanning = { _, output ->
+                mealPlanningOutput = output
                 mock()
             },
             cookMode = { _, output ->
                 cookModeOutput = output
                 mock()
             },
-            groceryList = { _, output ->
-                groceryListOutput = output
+            recipeBooks = { _, output ->
+                recipeBooksOutput = output
                 mock()
             },
-            mealPlanning = { _, output ->
-                mealPlanningOutput = output
+            groceryLists = { _, output ->
+                groceryListsOutput = output
                 mock()
             },
             startCooking = { _, showSignUp, output ->
@@ -79,10 +97,13 @@ class OnboardingRootBlocImplTest {
     /** Steps the most-recently-created bloc through the tour to the final StartCooking step. */
     fun advanceToStartCooking() {
         welcomeOutput.onNext(WelcomeBloc.Output.GetStarted)
+        shareRecipesOutput.onNext(ShareRecipesBloc.Output.Next)
         saveRecipesOutput.onNext(SaveRecipesBloc.Output.Next)
-        cookModeOutput.onNext(CookModeBloc.Output.Next)
-        groceryListOutput.onNext(GroceryListBloc.Output.Next)
+        addToGroceryOutput.onNext(AddToGroceryBloc.Output.Next)
         mealPlanningOutput.onNext(MealPlanningBloc.Output.Next)
+        cookModeOutput.onNext(CookModeBloc.Output.Next)
+        recipeBooksOutput.onNext(RecipeBooksBloc.Output.Next)
+        groceryListsOutput.onNext(GroceryListsBloc.Output.Next)
     }
 
     @Test
@@ -94,28 +115,33 @@ class OnboardingRootBlocImplTest {
     @Test
     fun When_the_user_steps_through_the_tour_Then_each_screen_is_shown_in_order() {
         welcomeOutput.onNext(WelcomeBloc.Output.GetStarted)
+        bloc.instance() should instanceOf<OnboardingRootBloc.Child.ShareRecipes>()
+
+        shareRecipesOutput.onNext(ShareRecipesBloc.Output.Next)
         bloc.instance() should instanceOf<OnboardingRootBloc.Child.SaveRecipes>()
 
         saveRecipesOutput.onNext(SaveRecipesBloc.Output.Next)
-        bloc.instance() should instanceOf<OnboardingRootBloc.Child.CookMode>()
+        bloc.instance() should instanceOf<OnboardingRootBloc.Child.AddToGrocery>()
 
-        cookModeOutput.onNext(CookModeBloc.Output.Next)
-        bloc.instance() should instanceOf<OnboardingRootBloc.Child.GroceryList>()
-
-        groceryListOutput.onNext(GroceryListBloc.Output.Next)
+        addToGroceryOutput.onNext(AddToGroceryBloc.Output.Next)
         bloc.instance() should instanceOf<OnboardingRootBloc.Child.MealPlanning>()
 
         mealPlanningOutput.onNext(MealPlanningBloc.Output.Next)
+        bloc.instance() should instanceOf<OnboardingRootBloc.Child.CookMode>()
+
+        cookModeOutput.onNext(CookModeBloc.Output.Next)
+        bloc.instance() should instanceOf<OnboardingRootBloc.Child.RecipeBooks>()
+
+        recipeBooksOutput.onNext(RecipeBooksBloc.Output.Next)
+        bloc.instance() should instanceOf<OnboardingRootBloc.Child.GroceryLists>()
+
+        groceryListsOutput.onNext(GroceryListsBloc.Output.Next)
         bloc.instance() should instanceOf<OnboardingRootBloc.Child.StartCooking>()
     }
 
     @Test
     fun When_start_cooking_clicked_Then_onboarding_is_completed_and_finished_emitted() {
-        welcomeOutput.onNext(WelcomeBloc.Output.GetStarted)
-        saveRecipesOutput.onNext(SaveRecipesBloc.Output.Next)
-        cookModeOutput.onNext(CookModeBloc.Output.Next)
-        groceryListOutput.onNext(GroceryListBloc.Output.Next)
-        mealPlanningOutput.onNext(MealPlanningBloc.Output.Next)
+        advanceToStartCooking()
 
         startCookingOutput.onNext(StartCookingBloc.Output.StartCooking)
 
@@ -137,7 +163,7 @@ class OnboardingRootBlocImplTest {
     @Test
     fun When_back_clicked_Then_returns_to_the_previous_step() {
         welcomeOutput.onNext(WelcomeBloc.Output.GetStarted)
-        bloc.instance() should instanceOf<OnboardingRootBloc.Child.SaveRecipes>()
+        bloc.instance() should instanceOf<OnboardingRootBloc.Child.ShareRecipes>()
 
         bloc.onBackClicked()
 

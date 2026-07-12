@@ -7,15 +7,15 @@ import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.ui.ComposeScreen
 
 /**
- * Onboarding step calling out the recipe detail toolbar's "add to meal plan" action, which drops a
- * recipe onto a day of the week.
+ * Onboarding step calling out the recipe detail toolbar's "add to grocery list" action, which sends
+ * a recipe's ingredients straight to a grocery list.
  */
-interface MealPlanningBloc : ComposeScreen {
+interface AddToGroceryBloc : ComposeScreen {
     fun onNextClicked()
 
     @Composable
     override fun Content(modifier: Modifier) {
-        MealPlanningScreen(bloc = this, modifier = modifier)
+        AddToGroceryScreen(bloc = this, modifier = modifier)
     }
 
     sealed class Output {
@@ -24,6 +24,6 @@ interface MealPlanningBloc : ComposeScreen {
     }
 
     fun interface Factory {
-        fun create(context: BlocContext, output: Consumer<Output>): MealPlanningBloc
+        fun create(context: BlocContext, output: Consumer<Output>): AddToGroceryBloc
     }
 }

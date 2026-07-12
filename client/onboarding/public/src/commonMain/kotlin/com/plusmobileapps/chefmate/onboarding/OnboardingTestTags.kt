@@ -11,17 +11,26 @@ object OnboardingTestTags {
     const val WELCOME_GET_STARTED_BUTTON = "onboarding_welcome_get_started_button"
     const val WELCOME_SIGN_IN_BUTTON = "onboarding_welcome_sign_in_button"
 
+    const val SHARE_RECIPES_SCREEN = "onboarding_share_recipes_screen"
+    const val SHARE_RECIPES_NEXT_BUTTON = "onboarding_share_recipes_next_button"
+
     const val SAVE_RECIPES_SCREEN = "onboarding_save_recipes_screen"
     const val SAVE_RECIPES_NEXT_BUTTON = "onboarding_save_recipes_next_button"
+
+    const val ADD_TO_GROCERY_SCREEN = "onboarding_add_to_grocery_screen"
+    const val ADD_TO_GROCERY_NEXT_BUTTON = "onboarding_add_to_grocery_next_button"
+
+    const val MEAL_PLANNING_SCREEN = "onboarding_meal_planning_screen"
+    const val MEAL_PLANNING_NEXT_BUTTON = "onboarding_meal_planning_next_button"
 
     const val COOK_MODE_SCREEN = "onboarding_cook_mode_screen"
     const val COOK_MODE_NEXT_BUTTON = "onboarding_cook_mode_next_button"
 
-    const val GROCERY_LIST_SCREEN = "onboarding_grocery_list_screen"
-    const val GROCERY_LIST_NEXT_BUTTON = "onboarding_grocery_list_next_button"
+    const val RECIPE_BOOKS_SCREEN = "onboarding_recipe_books_screen"
+    const val RECIPE_BOOKS_NEXT_BUTTON = "onboarding_recipe_books_next_button"
 
-    const val MEAL_PLANNING_SCREEN = "onboarding_meal_planning_screen"
-    const val MEAL_PLANNING_NEXT_BUTTON = "onboarding_meal_planning_next_button"
+    const val GROCERY_LISTS_SCREEN = "onboarding_grocery_lists_screen"
+    const val GROCERY_LISTS_NEXT_BUTTON = "onboarding_grocery_lists_next_button"
 
     const val START_COOKING_SCREEN = "onboarding_start_cooking_screen"
     const val START_COOKING_BUTTON = "onboarding_start_cooking_button"

@@ -12,10 +12,10 @@ import com.plusmobileapps.chefmate.ui.ComposeScreen
 
 /**
  * Navigation BLoC that drives the first-run onboarding flow. It owns a Decompose router that walks
- * the user from the [WelcomeBloc] through a series of feature tours ([SaveRecipesBloc],
- * [CookModeBloc], [GroceryListBloc], [MealPlanningBloc]) to the final [StartCookingBloc]. When the
- * user finishes (or skips), it marks onboarding as completed and emits [Output.Finished] so the
- * root can load the rest of the app.
+ * the user from the [WelcomeBloc] through a series of feature tours ([ShareRecipesBloc],
+ * [SaveRecipesBloc], [AddToGroceryBloc], [MealPlanningBloc], [CookModeBloc], [RecipeBooksBloc],
+ * [GroceryListsBloc]) to the final [StartCookingBloc]. When the user finishes (or skips), it marks
+ * onboarding as completed and emits [Output.Finished] so the root can load the rest of the app.
  *
  * From the welcome screen the user can also choose to sign in; that is surfaced as [Output.SignIn]
  * so the root can open the authentication flow. From the final [StartCookingBloc] step, the user
@@ -58,13 +58,19 @@ interface OnboardingRootBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
 
         data class Welcome(override val bloc: WelcomeBloc) : Child()
 
+        data class ShareRecipes(override val bloc: ShareRecipesBloc) : Child()
+
         data class SaveRecipes(override val bloc: SaveRecipesBloc) : Child()
+
+        data class AddToGrocery(override val bloc: AddToGroceryBloc) : Child()
+
+        data class MealPlanning(override val bloc: MealPlanningBloc) : Child()
 
         data class CookMode(override val bloc: CookModeBloc) : Child()
 
-        data class GroceryList(override val bloc: GroceryListBloc) : Child()
+        data class RecipeBooks(override val bloc: RecipeBooksBloc) : Child()
 
-        data class MealPlanning(override val bloc: MealPlanningBloc) : Child()
+        data class GroceryLists(override val bloc: GroceryListsBloc) : Child()
 
         data class StartCooking(override val bloc: StartCookingBloc) : Child()
     }

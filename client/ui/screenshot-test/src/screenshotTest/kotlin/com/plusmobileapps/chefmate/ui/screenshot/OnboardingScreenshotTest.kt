@@ -9,9 +9,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.onboarding.OnboardingNavBar
+import com.plusmobileapps.chefmate.onboarding.ShareRecipesScreen
+import com.plusmobileapps.chefmate.onboarding.impl.ui.previewAddToGroceryBloc
 import com.plusmobileapps.chefmate.onboarding.impl.ui.previewCookModeBloc
-import com.plusmobileapps.chefmate.onboarding.impl.ui.previewGroceryListBloc
+import com.plusmobileapps.chefmate.onboarding.impl.ui.previewGroceryListsBloc
 import com.plusmobileapps.chefmate.onboarding.impl.ui.previewMealPlanningBloc
+import com.plusmobileapps.chefmate.onboarding.impl.ui.previewRecipeBooksBloc
 import com.plusmobileapps.chefmate.onboarding.impl.ui.previewSaveRecipesBloc
 import com.plusmobileapps.chefmate.onboarding.impl.ui.previewStartCookingBloc
 import com.plusmobileapps.chefmate.onboarding.impl.ui.previewStartCookingSignedInBloc
@@ -37,7 +40,7 @@ private fun OnboardingScreenshot(content: @Composable () -> Unit, darkTheme: Boo
 fun OnboardingNavBarLightScreenshot() {
     OnboardingScreenshot(
         content = {
-            OnboardingNavBar(currentStep = 1, totalSteps = 6, onBackClick = {}, onSkipClick = {})
+            OnboardingNavBar(currentStep = 1, totalSteps = 9, onBackClick = {}, onSkipClick = {})
         }
     )
 }
@@ -48,7 +51,7 @@ fun OnboardingNavBarLightScreenshot() {
 fun OnboardingNavBarDarkScreenshot() {
     OnboardingScreenshot(
         content = {
-            OnboardingNavBar(currentStep = 1, totalSteps = 6, onBackClick = {}, onSkipClick = {})
+            OnboardingNavBar(currentStep = 1, totalSteps = 9, onBackClick = {}, onSkipClick = {})
         },
         darkTheme = true,
     )
@@ -86,7 +89,45 @@ fun OnboardingWelcomeSignedInDarkScreenshot() {
     OnboardingScreenshot(content = { previewWelcomeSignedInBloc.Content() }, darkTheme = true)
 }
 
-// ── Save recipes ─────────────────────────────────────────────────────────────
+// ── Share recipes (own browser) ──────────────────────────────────────────────
+// Platform-specific copy: the mobile variant describes the share sheet, desktop describes copying
+// the address bar. Both are captured directly since the guidance is chosen by platform, not Bloc.
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+fun OnboardingShareRecipesMobileLightScreenshot() {
+    OnboardingScreenshot(content = { ShareRecipesScreen(isDesktop = false, onNextClick = {}) })
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun OnboardingShareRecipesMobileDarkScreenshot() {
+    OnboardingScreenshot(
+        content = { ShareRecipesScreen(isDesktop = false, onNextClick = {}) },
+        darkTheme = true,
+    )
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+fun OnboardingShareRecipesDesktopLightScreenshot() {
+    OnboardingScreenshot(content = { ShareRecipesScreen(isDesktop = true, onNextClick = {}) })
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun OnboardingShareRecipesDesktopDarkScreenshot() {
+    OnboardingScreenshot(
+        content = { ShareRecipesScreen(isDesktop = true, onNextClick = {}) },
+        darkTheme = true,
+    )
+}
+
+// ── Save recipes (in-app browser) ─────────────────────────────────────────────
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 900)
@@ -102,39 +143,23 @@ fun OnboardingSaveRecipesDarkScreenshot() {
     OnboardingScreenshot(content = { previewSaveRecipesBloc.Content() }, darkTheme = true)
 }
 
-// ── Cook mode ────────────────────────────────────────────────────────────────
+// ── Add to grocery list ──────────────────────────────────────────────────────
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 900)
 @Composable
-fun OnboardingCookModeLightScreenshot() {
-    OnboardingScreenshot(content = { previewCookModeBloc.Content() })
+fun OnboardingAddToGroceryLightScreenshot() {
+    OnboardingScreenshot(content = { previewAddToGroceryBloc.Content() })
 }
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 900, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun OnboardingCookModeDarkScreenshot() {
-    OnboardingScreenshot(content = { previewCookModeBloc.Content() }, darkTheme = true)
+fun OnboardingAddToGroceryDarkScreenshot() {
+    OnboardingScreenshot(content = { previewAddToGroceryBloc.Content() }, darkTheme = true)
 }
 
-// ── Grocery list ─────────────────────────────────────────────────────────────
-
-@PreviewTest
-@Preview(showBackground = true, heightDp = 900)
-@Composable
-fun OnboardingGroceryListLightScreenshot() {
-    OnboardingScreenshot(content = { previewGroceryListBloc.Content() })
-}
-
-@PreviewTest
-@Preview(showBackground = true, heightDp = 900, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun OnboardingGroceryListDarkScreenshot() {
-    OnboardingScreenshot(content = { previewGroceryListBloc.Content() }, darkTheme = true)
-}
-
-// ── Meal planning ────────────────────────────────────────────────────────────
+// ── Add to meal plan ─────────────────────────────────────────────────────────
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 900)
@@ -150,7 +175,55 @@ fun OnboardingMealPlanningDarkScreenshot() {
     OnboardingScreenshot(content = { previewMealPlanningBloc.Content() }, darkTheme = true)
 }
 
-// ── Start cooking ────────────────────────────────────────────────────────────
+// ── Start cooking (Cook Mode) ─────────────────────────────────────────────────
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+fun OnboardingCookModeLightScreenshot() {
+    OnboardingScreenshot(content = { previewCookModeBloc.Content() })
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun OnboardingCookModeDarkScreenshot() {
+    OnboardingScreenshot(content = { previewCookModeBloc.Content() }, darkTheme = true)
+}
+
+// ── Recipe books ─────────────────────────────────────────────────────────────
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+fun OnboardingRecipeBooksLightScreenshot() {
+    OnboardingScreenshot(content = { previewRecipeBooksBloc.Content() })
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun OnboardingRecipeBooksDarkScreenshot() {
+    OnboardingScreenshot(content = { previewRecipeBooksBloc.Content() }, darkTheme = true)
+}
+
+// ── Grocery lists ────────────────────────────────────────────────────────────
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+fun OnboardingGroceryListsLightScreenshot() {
+    OnboardingScreenshot(content = { previewGroceryListsBloc.Content() })
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun OnboardingGroceryListsDarkScreenshot() {
+    OnboardingScreenshot(content = { previewGroceryListsBloc.Content() }, darkTheme = true)
+}
+
+// ── You're all set ───────────────────────────────────────────────────────────
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 900)
