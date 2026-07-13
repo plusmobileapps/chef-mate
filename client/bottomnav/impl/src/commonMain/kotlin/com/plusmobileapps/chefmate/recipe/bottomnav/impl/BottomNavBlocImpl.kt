@@ -87,7 +87,11 @@ class BottomNavBlocImpl(
 
     override val state: StateFlow<BottomNavBloc.Model> =
         viewModel.state.mapState {
-            BottomNavBloc.Model(selectedTab = it.selectedTab, tabs = it.tabs.toImmutableList())
+            BottomNavBloc.Model(
+                selectedTab = it.selectedTab,
+                tabs = it.tabs.toImmutableList(),
+                notificationCount = it.notificationCount,
+            )
         }
 
     override val content: Value<ChildStack<*, BottomNavBloc.Child>> = stack
@@ -235,6 +239,7 @@ class BottomNavBlocImpl(
             SettingsBloc.Output.OpenSignIn -> OpenSignIn
             SettingsBloc.Output.OpenSignUp -> OpenSignUp
             SettingsBloc.Output.OpenManageProfile -> OpenManageProfile
+            SettingsBloc.Output.OpenNotifications -> BottomNavBloc.Output.OpenNotifications
             SettingsBloc.Output.OpenAppSettings -> OpenAppSettings
             SettingsBloc.Output.OpenAiChat -> BottomNavBloc.Output.OpenAiChat
             SettingsBloc.Output.OpenDeveloperSettings -> BottomNavBloc.Output.OpenDeveloperSettings

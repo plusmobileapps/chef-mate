@@ -118,6 +118,18 @@ include(":client:meal:data:public")
 
 include(":client:meal:data:testing")
 
+include(":client:notifications:data:impl")
+
+include(":client:notifications:data:public")
+
+include(":client:notifications:data:testing")
+
+include(":client:notifications:impl")
+
+include(":client:notifications:impl-robots")
+
+include(":client:notifications:public")
+
 include(":client:recipe:categories:impl")
 
 include(":client:recipe:categories:impl-robots")

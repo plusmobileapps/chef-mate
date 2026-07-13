@@ -87,7 +87,11 @@ Deno.serve(async (req) => {
     const inviterId = payload.invitedBy ?? (parent.owner_id as string | null);
     const inviterName = await resolveInviterName(admin, inviterId);
 
-    const appUrl = Deno.env.get("APP_INVITE_URL") ?? DEFAULT_APP_URL;
+    const baseUrl = Deno.env.get("APP_INVITE_URL") ?? DEFAULT_APP_URL;
+    // Deep link straight to the in-app Notifications screen via Universal Link / App Link. The app
+    // verifies chefmate.plusmobileapps.com, so this opens the app when installed and falls back to
+    // the web page otherwise. Trailing slash trimmed so we don't emit a double slash.
+    const appUrl = `${baseUrl.replace(/\/+$/, "")}/notifications`;
     const from = Deno.env.get("RESEND_FROM") ?? DEFAULT_FROM;
     const subject = `${inviterName} invited you to “${listName}” on Chef Mate`;
 

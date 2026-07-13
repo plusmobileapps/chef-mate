@@ -13,6 +13,7 @@ kotlin {
             implementation(libs.arkivanov.decompose.core)
             implementation(libs.arkivanov.decompose.compose.extensions)
             implementation(projects.client.shared)
+            implementation(projects.client.notifications.data.public)
             implementation(libs.kotlinx.serialization.json)
             implementation(compose.components.resources)
             api(projects.client.browser.public)
@@ -21,7 +22,10 @@ kotlin {
             api(projects.client.recipe.list.public)
             api(projects.client.settings.public)
         }
-        commonTest.dependencies { implementation(libs.multiplatform.settings.test) }
+        commonTest.dependencies {
+            implementation(projects.client.notifications.data.testing)
+            implementation(libs.multiplatform.settings.test)
+        }
     }
 }
 

@@ -153,10 +153,19 @@ class FakeGroceryRepository : GroceryRepository {
 
     override suspend fun removeCollaborator(listId: Long, collaboratorId: Long) {}
 
-    override suspend fun acceptInvitation(memberId: String) {}
+    val pendingInvitations = MutableStateFlow<List<GroceryListInvite>>(emptyList())
+    val acceptedInvitations: MutableList<String> = mutableListOf()
+    val rejectedInvitations: MutableList<String> = mutableListOf()
 
-    override suspend fun rejectInvitation(memberId: String) {}
+    override suspend fun acceptInvitation(memberId: String) {
+        acceptedInvitations += memberId
+        pendingInvitations.update { invites -> invites.filterNot { it.memberId == memberId } }
+    }
 
-    override fun getPendingInvitations(): Flow<List<GroceryListInvite>> =
-        MutableStateFlow(emptyList())
+    override suspend fun rejectInvitation(memberId: String) {
+        rejectedInvitations += memberId
+        pendingInvitations.update { invites -> invites.filterNot { it.memberId == memberId } }
+    }
+
+    override fun getPendingInvitations(): Flow<List<GroceryListInvite>> = pendingInvitations
 }

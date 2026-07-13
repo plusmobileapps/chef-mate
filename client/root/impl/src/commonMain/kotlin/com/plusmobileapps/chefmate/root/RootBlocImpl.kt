@@ -25,6 +25,7 @@ import com.plusmobileapps.chefmate.di.OnboardingRepository
 import com.plusmobileapps.chefmate.featureflag.FeatureFlags
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagsBloc
 import com.plusmobileapps.chefmate.grocery.core.edit.EditGroceryListBloc
+import com.plusmobileapps.chefmate.notifications.NotificationsBloc
 import com.plusmobileapps.chefmate.onboarding.OnboardingRootBloc
 import com.plusmobileapps.chefmate.profile.ManageProfileBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
@@ -58,6 +59,7 @@ class RootBlocImpl(
     private val otpBloc: OtpBloc.Factory,
     private val settingsRoot: SettingsRootBloc.Factory,
     private val manageProfile: ManageProfileBloc.Factory,
+    private val notifications: NotificationsBloc.Factory,
     private val developerSettings: DeveloperSettingsBloc.Factory,
     private val cookMode: CookModeBloc.Factory,
     private val featureFlags: FeatureFlags,
@@ -105,6 +107,8 @@ class RootBlocImpl(
                 listOf(Configuration.BottomNavigation, RecipeRoot(Detail(deepLink.recipeId)))
             DeepLink.AppSettings ->
                 listOf(Configuration.BottomNavigation, Configuration.SettingsRoot())
+            DeepLink.Notifications ->
+                listOf(Configuration.BottomNavigation, Configuration.Notifications)
             DeepLink.SignIn ->
                 listOf(
                     Configuration.BottomNavigation,
@@ -129,6 +133,43 @@ class RootBlocImpl(
             stack.value.items.map { it.instance }.filterIsInstance<BottomNavigation>().firstOrNull()
         bottomNavChild?.bloc?.handleSharedUrl(url)
         navigation.bringToFront(Configuration.BottomNavigation)
+    }
+
+    override fun handleDeepLink(url: String) {
+        // Only routed once past onboarding — a first-run user has no populated stack to return to.
+        if (!onboardingRepository.hasCompletedOnboarding) return
+        when (val deepLink = DeepLink.parse(url)) {
+            DeepLink.Notifications -> navigation.bringToFront(Configuration.Notifications)
+            DeepLink.AppSettings -> navigation.bringToFront(Configuration.SettingsRoot())
+            is DeepLink.RecipeDetail ->
+                navigation.bringToFront(RecipeRoot(Detail(deepLink.recipeId)))
+            DeepLink.Groceries -> {
+                selectBottomNavTab(BottomNavBloc.Tab.GROCERIES)
+                navigation.bringToFront(Configuration.BottomNavigation)
+            }
+            DeepLink.MealPlanner -> {
+                selectBottomNavTab(BottomNavBloc.Tab.MEALS)
+                navigation.bringToFront(Configuration.BottomNavigation)
+            }
+            DeepLink.SignIn ->
+                navigation.bringToFront(
+                    Configuration.Authentication(AuthenticationBloc.Props.SignIn)
+                )
+            DeepLink.SignUp ->
+                navigation.bringToFront(
+                    Configuration.Authentication(AuthenticationBloc.Props.SignUp)
+                )
+            DeepLink.None -> Unit
+        }
+    }
+
+    private fun selectBottomNavTab(tab: BottomNavBloc.Tab) {
+        stack.value.items
+            .map { it.instance }
+            .filterIsInstance<BottomNavigation>()
+            .firstOrNull()
+            ?.bloc
+            ?.onTabSelected(tab)
     }
 
     private fun createChild(config: Configuration, context: BlocContext): RootBloc.Child =
@@ -227,6 +268,15 @@ class RootBlocImpl(
                         manageProfile.create(
                             context = context,
                             output = ::handleManageProfileOutput,
+                        )
+                )
+
+            Configuration.Notifications ->
+                RootBloc.Child.Notifications(
+                    bloc =
+                        notifications.create(
+                            context = context,
+                            output = ::handleNotificationsOutput,
                         )
                 )
 
@@ -369,6 +419,10 @@ class RootBlocImpl(
                 navigation.bringToFront(Configuration.ManageProfile)
             }
 
+            BottomNavBloc.Output.OpenNotifications -> {
+                navigation.bringToFront(Configuration.Notifications)
+            }
+
             BottomNavBloc.Output.OpenAppSettings -> {
                 navigation.bringToFront(Configuration.SettingsRoot())
             }
@@ -457,6 +511,12 @@ class RootBlocImpl(
             // on its own once the auth state flips.
             ManageProfileBloc.Output.Back,
             ManageProfileBloc.Output.AccountDeleted -> navigation.pop()
+        }
+    }
+
+    private fun handleNotificationsOutput(output: NotificationsBloc.Output) {
+        when (output) {
+            NotificationsBloc.Output.Back -> navigation.pop()
         }
     }
 
@@ -596,6 +656,8 @@ class RootBlocImpl(
         ) : Configuration()
 
         @Serializable data object ManageProfile : Configuration()
+
+        @Serializable data object Notifications : Configuration()
 
         @Serializable data object DeveloperSettings : Configuration()
 

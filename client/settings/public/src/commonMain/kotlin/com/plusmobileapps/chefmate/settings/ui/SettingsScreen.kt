@@ -40,6 +40,7 @@ import chefmate.client.settings.public.generated.resources.privacy_policy
 import chefmate.client.settings.public.generated.resources.settings
 import chefmate.client.settings.public.generated.resources.settings_ai_chat
 import chefmate.client.settings.public.generated.resources.settings_guest_banner
+import chefmate.client.settings.public.generated.resources.settings_notifications
 import chefmate.client.settings.public.generated.resources.settings_replay_onboarding
 import chefmate.client.settings.public.generated.resources.sign_in
 import chefmate.client.settings.public.generated.resources.sign_out
@@ -133,6 +134,15 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
                         onClick = bloc::onSignUpClicked,
                     )
                 }
+            }
+            // Notifications aggregate collaboration invites, which are addressed to a real account
+            // — so the row is only meaningful for a signed-in, non-anonymous user.
+            if (viewState.isAuthenticated && !viewState.isAnonymous) {
+                HorizontalDivider()
+                SettingsRow(
+                    name = Res.string.settings_notifications.asTextData(),
+                    onClick = bloc::onNotificationsClicked,
+                )
             }
             HorizontalDivider()
             SettingsRow(
@@ -301,6 +311,8 @@ private val previewBlocUnauthenticated =
 
         override fun onManageProfileClicked() = Unit
 
+        override fun onNotificationsClicked() = Unit
+
         override fun onUrlClicked(url: String) = Unit
 
         override fun onAppSettingsClicked() = Unit
@@ -339,6 +351,8 @@ private val previewBlocAuthenticated =
 
         override fun onManageProfileClicked() = Unit
 
+        override fun onNotificationsClicked() = Unit
+
         override fun onUrlClicked(url: String) = Unit
 
         override fun onAppSettingsClicked() = Unit
@@ -372,6 +386,8 @@ private val previewBlocAnonymous =
         override fun onSignOutDismissed() = Unit
 
         override fun onManageProfileClicked() = Unit
+
+        override fun onNotificationsClicked() = Unit
 
         override fun onUrlClicked(url: String) = Unit
 

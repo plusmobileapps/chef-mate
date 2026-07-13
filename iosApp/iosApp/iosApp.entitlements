@@ -5,6 +5,7 @@
 	<key>com.apple.developer.associated-domains</key>
 	<array>
 		<string>webcredentials:chefmate.plusmobileapps.com</string>
+		<string>applinks:chefmate.plusmobileapps.com</string>
 	</array>
 </dict>
 </plist>

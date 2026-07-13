@@ -30,6 +30,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
+        // A warm app (launchMode=singleTask) receives tapped deep links here rather than through a
+        // fresh onCreate, so route them to the running RootBloc.
+        if (intent.action == Intent.ACTION_VIEW) {
+            intent.data?.toString()?.let { rootBloc.handleDeepLink(it) }
+        }
         handleShareIntent(intent)
     }
 
