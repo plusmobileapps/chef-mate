@@ -5,6 +5,7 @@ import app.cash.sqldelight.coroutines.mapToList
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.database.MealPlanQueries
+import com.plusmobileapps.chefmate.database.RecipeQueries
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.meal.data.MealPlanItem
@@ -35,6 +36,7 @@ import kotlinx.coroutines.withContext
 @ContributesBinding(AppScope::class)
 class MealPlanRepositoryImpl(
     private val queries: MealPlanQueries,
+    private val recipeQueries: RecipeQueries,
     @IO private val ioContext: CoroutineContext,
     private val dateTimeUtil: DateTimeUtil,
     private val remoteDataSource: MealPlanRemoteDataSource,
@@ -120,6 +122,9 @@ class MealPlanRepositoryImpl(
                 val entity =
                     withContext(ioContext) { queries.getById(localId).executeAsOneOrNull() }
                         ?: return@launch
+                // The remote references the recipe by its UUID, not the device-local id. If the
+                // recipe hasn't synced yet the meal stays unsynced and is retried on the next sync.
+                val recipeRemoteId = recipeRemoteId(entity.recipeId) ?: return@launch
                 val clientId =
                     entity.clientId
                         ?: Uuid.random().toString().also { newId ->
@@ -131,7 +136,7 @@ class MealPlanRepositoryImpl(
                     remoteDataSource.upsertMealPlan(
                         RemoteMealPlan(
                             ownerId = authState.user.userId,
-                            recipeId = entity.recipeId,
+                            recipeId = recipeRemoteId,
                             date = entity.date,
                             mealType = entity.mealType,
                             createdAt = entity.createdAt,
@@ -152,6 +157,9 @@ class MealPlanRepositoryImpl(
             val unsynced = withContext(ioContext) { queries.getUnsynced().executeAsList() }
             for (meal in unsynced) {
                 try {
+                    // Skip meals whose recipe hasn't synced yet — retried once the recipe has a
+                    // remote UUID to reference.
+                    val recipeRemoteId = recipeRemoteId(meal.recipeId) ?: continue
                     val clientId =
                         meal.clientId
                             ?: Uuid.random().toString().also { newId ->
@@ -163,7 +171,7 @@ class MealPlanRepositoryImpl(
                         remoteDataSource.upsertMealPlan(
                             RemoteMealPlan(
                                 ownerId = userId,
-                                recipeId = meal.recipeId,
+                                recipeId = recipeRemoteId,
                                 date = meal.date,
                                 mealType = meal.mealType,
                                 createdAt = meal.createdAt,
@@ -192,8 +200,13 @@ class MealPlanRepositoryImpl(
                     if (matchedByClientId != null) {
                         queries.updateRemoteId(remoteId = remoteId, id = matchedByClientId.id)
                     } else {
+                        // Resolve the recipe UUID to its local id. If the recipe isn't present
+                        // locally yet the meal is skipped and picked up on a later sync.
+                        val localRecipeId =
+                            recipeQueries.getByRemoteId(remote.recipeId).executeAsOneOrNull()?.id
+                                ?: continue
                         queries.insertWithRemoteId(
-                            recipeId = remote.recipeId,
+                            recipeId = localRecipeId,
                             date = remote.date,
                             mealType = remote.mealType,
                             clientId = remote.clientId,
@@ -207,6 +220,16 @@ class MealPlanRepositoryImpl(
             }
         } catch (_: Exception) {}
     }
+
+    /**
+     * Resolves a device-local recipe id to the recipe's remote UUID, or null when the recipe has
+     * not been synced yet (no remoteId). Meal plans reference recipes by UUID on the backend so
+     * they resolve to the correct recipe on every device.
+     */
+    private suspend fun recipeRemoteId(localRecipeId: Long): String? =
+        withContext(ioContext) {
+            recipeQueries.getById(localRecipeId).executeAsOneOrNull()?.remoteId
+        }
 }
 
 private fun com.plusmobileapps.chefmate.database.GetByDate.toMealPlanItem(): MealPlanItem =
