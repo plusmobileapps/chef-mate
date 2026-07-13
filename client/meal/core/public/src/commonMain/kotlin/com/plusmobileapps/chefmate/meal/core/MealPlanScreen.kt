@@ -911,7 +911,10 @@ private fun SyncActionButton(
 ) {
     IconButton(onClick = onClick, enabled = !isSyncing, modifier = modifier) {
         if (isSyncing) {
-            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+            PlusLoadingIndicator(
+                contentDescription = stringResource(Res.string.meal_plan_sync_syncing),
+                modifier = Modifier.size(24.dp),
+            )
         } else {
             Icon(
                 imageVector = Icons.Default.Sync,
