@@ -108,6 +108,10 @@ Deno.serve(async (req) => {
 
     if (!resendResponse.ok) {
       const detail = await resendResponse.text();
+      // Surface Resend failures in the function logs (they otherwise only land in
+      // net._http_response). Logging `from` makes sender/domain misconfiguration obvious — e.g. a
+      // RESEND_FROM pointing at the `onboarding@resend.dev` sandbox forces a 403 "testing" error.
+      console.error(`Resend failed (${resendResponse.status}) from="${from}": ${detail}`);
       return json({ error: `Resend failed (${resendResponse.status}): ${detail}` }, 502);
     }
 

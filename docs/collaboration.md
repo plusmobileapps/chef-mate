@@ -149,6 +149,13 @@ The verified sending domain is `plusmobileapps.com` and the default sender is
 `RESEND_FROM` secret). Resend authorizes any address at that exact domain — a subdomain such as
 `chefmate.plusmobileapps.com` would need separate verification.
 
+> **Gotcha:** if `RESEND_FROM` is set to Resend's sandbox sender `onboarding@resend.dev`, every send
+> is restricted to the account owner's own address and all other invites fail with
+> `403 "You can only send testing emails to your own email address"`. Either leave `RESEND_FROM`
+> unset (so `DEFAULT_FROM` wins) or point it at an address on the verified domain — never the
+> sandbox. The Resend failure is now logged (status + `from`) in the function logs to make this
+> obvious.
+
 ## Sync Strategy
 
 The existing offline-first sync is extended for collaboration:
