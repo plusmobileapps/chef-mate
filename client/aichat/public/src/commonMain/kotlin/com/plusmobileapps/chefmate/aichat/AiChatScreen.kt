@@ -40,7 +40,6 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -86,6 +85,7 @@ import com.mikepenz.markdown.model.rememberMarkdownState
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
+import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
 import com.plusmobileapps.chefmate.ui.isIosPlatform
 import com.plusmobileapps.chefmate.util.rememberImagePickerLauncher
 import kotlinx.coroutines.delay
@@ -292,7 +292,7 @@ private fun MessageBubble(
                     }
                     if (showProgress) {
                         Spacer(modifier = Modifier.size(6.dp))
-                        CircularProgressIndicator(
+                        PlusLoadingIndicator(
                             modifier = Modifier.size(10.dp),
                             strokeWidth = 1.5.dp,
                             color = contentColor,
@@ -325,7 +325,7 @@ private fun ThinkingBubble(modifier: Modifier = Modifier) {
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.testTag(AiChatTestTags.THINKING_INDICATOR),
         ) {
-            CircularProgressIndicator(
+            PlusLoadingIndicator(
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp).size(16.dp),
                 strokeWidth = 2.dp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -391,7 +391,7 @@ private fun AddRecipePill(isLoading: Boolean, onClick: () -> Unit, modifier: Mod
             },
             leadingIcon = {
                 if (isLoading) {
-                    CircularProgressIndicator(
+                    PlusLoadingIndicator(
                         modifier = Modifier.size(AssistChipDefaults.IconSize),
                         strokeWidth = 2.dp,
                     )
@@ -473,7 +473,7 @@ private fun AiChatInput(
             modifier = Modifier.testTag(AiChatTestTags.ATTACH_PHOTO_BUTTON),
         ) {
             if (isExtracting) {
-                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                PlusLoadingIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
             } else {
                 Icon(
                     imageVector = Icons.Default.AddPhotoAlternate,

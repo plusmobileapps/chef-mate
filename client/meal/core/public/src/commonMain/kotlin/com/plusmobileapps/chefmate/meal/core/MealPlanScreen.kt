@@ -34,7 +34,6 @@ import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -52,8 +51,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -903,9 +900,9 @@ private fun SyncStatusIcon(syncStatus: SyncStatus, modifier: Modifier = Modifier
                 modifier = modifier.size(20.dp),
             )
         SyncStatus.SYNCING ->
-            CircularProgressIndicator(
-                modifier =
-                    modifier.size(16.dp).semantics { contentDescription = syncingDescription },
+            PlusLoadingIndicator(
+                modifier = modifier.size(16.dp),
+                contentDescription = syncingDescription,
                 strokeWidth = 2.dp,
             )
         SyncStatus.SYNCED ->
