@@ -84,6 +84,7 @@ import chefmate.client.meal.core.public.generated.resources.meal_plan_replace_co
 import chefmate.client.meal.core.public.generated.resources.meal_plan_replace_cook_mode_message
 import chefmate.client.meal.core.public.generated.resources.meal_plan_replace_cook_mode_title
 import chefmate.client.meal.core.public.generated.resources.meal_plan_snacks
+import chefmate.client.meal.core.public.generated.resources.meal_plan_sync_action
 import chefmate.client.meal.core.public.generated.resources.meal_plan_sync_not_synced
 import chefmate.client.meal.core.public.generated.resources.meal_plan_sync_synced
 import chefmate.client.meal.core.public.generated.resources.meal_plan_sync_syncing
@@ -145,18 +146,24 @@ fun MealPlanScreen(bloc: MealPlanBloc, modifier: Modifier = Modifier) {
                     title = Res.string.meal_plan_title.asTextData(),
                     trailingAccessory =
                         PlusHeaderData.TrailingAccessory.Custom {
-                            MealPlanCoachMark(
-                                id = CoachMarkId.MEAL_PLAN_ADD_MEAL,
-                                text = Res.string.meal_plan_add_meal_onboarding.asTextData(),
-                                activeCoachMark = state.activeCoachMark,
-                                onDismiss = bloc::onCoachMarkDismissed,
-                            ) {
-                                IconButton(onClick = bloc::onAddMealClicked) {
-                                    Icon(
-                                        imageVector = Icons.Default.Add,
-                                        contentDescription =
-                                            stringResource(Res.string.meal_plan_add_meal),
-                                    )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                SyncActionButton(
+                                    isSyncing = state.isSyncing,
+                                    onClick = bloc::onSyncClicked,
+                                )
+                                MealPlanCoachMark(
+                                    id = CoachMarkId.MEAL_PLAN_ADD_MEAL,
+                                    text = Res.string.meal_plan_add_meal_onboarding.asTextData(),
+                                    activeCoachMark = state.activeCoachMark,
+                                    onDismiss = bloc::onCoachMarkDismissed,
+                                ) {
+                                    IconButton(onClick = bloc::onAddMealClicked) {
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription =
+                                                stringResource(Res.string.meal_plan_add_meal),
+                                        )
+                                    }
                                 }
                             }
                         },
@@ -888,6 +895,29 @@ private fun EmptyMealsMessage(modifier: Modifier = Modifier) {
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+    }
+}
+
+/**
+ * Explicit "sync now" action for the header. Shows a spinner in place of the icon while a sync is
+ * in flight and disables re-triggering until it settles. Backs the same
+ * [MealPlanBloc.onSyncClicked] as pull-to-refresh, giving a more discoverable entry point.
+ */
+@Composable
+private fun SyncActionButton(
+    isSyncing: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    IconButton(onClick = onClick, enabled = !isSyncing, modifier = modifier) {
+        if (isSyncing) {
+            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+        } else {
+            Icon(
+                imageVector = Icons.Default.Sync,
+                contentDescription = stringResource(Res.string.meal_plan_sync_action),
+            )
+        }
     }
 }
 

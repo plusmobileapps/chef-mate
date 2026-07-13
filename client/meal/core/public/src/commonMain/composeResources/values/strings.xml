@@ -24,6 +24,7 @@
     <string name="meal_plan_sync_not_synced">Not synced</string>
     <string name="meal_plan_sync_syncing">Syncing</string>
     <string name="meal_plan_sync_synced">Synced</string>
+    <string name="meal_plan_sync_action">Sync meal plans</string>
     <string name="meal_plan_replace_cook_mode">Replace cook mode</string>
     <string name="meal_plan_add_to_cook_mode">Add to cook mode</string>
     <string name="meal_plan_continue_cooking">Continue cooking</string>
