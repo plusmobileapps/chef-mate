@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
@@ -27,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -71,7 +73,7 @@ fun EditRecipeBookScreen(bloc: EditRecipeBookBloc, modifier: Modifier = Modifier
     val model by bloc.state.collectAsState()
 
     PlusHeaderContainer(
-        modifier = modifier.testTag(EditRecipeBookTestTags.SCREEN),
+        modifier = modifier.testTag(EditRecipeBookTestTags.SCREEN).imePadding(),
         data = PlusHeaderData.Modal(title = model.title, onCloseClick = bloc::onCloseClicked),
         contentPadding = PaddingValues(horizontal = ChefMateTheme.dimens.paddingNormal),
     ) {
@@ -123,6 +125,7 @@ fun EditRecipeBookScreen(bloc: EditRecipeBookBloc, modifier: Modifier = Modifier
 
 @Composable
 private fun CollaboratorsSection(bloc: EditRecipeBookBloc, model: EditRecipeBookBloc.Model) {
+    val focusManager = LocalFocusManager.current
     Column(
         modifier =
             Modifier.fillMaxWidth()
@@ -175,9 +178,15 @@ private fun CollaboratorsSection(bloc: EditRecipeBookBloc, model: EditRecipeBook
                     KeyboardOptions(
                         keyboardType = KeyboardType.Email,
                         capitalization = KeyboardCapitalization.None,
-                        imeAction = ImeAction.Done,
+                        imeAction = ImeAction.Send,
                     ),
-                keyboardActions = KeyboardActions(onDone = { bloc.onInviteClicked() }),
+                keyboardActions =
+                    KeyboardActions(
+                        onSend = {
+                            bloc.onInviteClicked()
+                            focusManager.clearFocus()
+                        }
+                    ),
             )
 
             FlowRow(
