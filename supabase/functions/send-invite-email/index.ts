@@ -20,6 +20,7 @@
 //          RESEND_FROM and APP_INVITE_URL are optional overrides for the sender / call-to-action.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { APP_ICON_BASE64, APP_ICON_CONTENT_ID, APP_ICON_FILENAME } from "./icon.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -107,6 +108,17 @@ Deno.serve(async (req) => {
         subject,
         html: htmlBody(inviterName, listName, kindLabel, appUrl),
         text: textBody(inviterName, listName, kindLabel, appUrl),
+        // Inline the app icon as a CID attachment. Email clients (Gmail included)
+        // block `data:` image URIs but render `cid:` inline attachments, so the icon
+        // ships with the message rather than being hotlinked from a web host.
+        attachments: [
+          {
+            filename: APP_ICON_FILENAME,
+            content: APP_ICON_BASE64,
+            content_id: APP_ICON_CONTENT_ID,
+            content_type: "image/png",
+          },
+        ],
       }),
     });
 
@@ -141,6 +153,8 @@ async function resolveInviterName(
 function htmlBody(inviter: string, listName: string, kindLabel: string, appUrl: string): string {
   return `
     <div style="font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1a1a1a;">
+      <img src="cid:${APP_ICON_CONTENT_ID}" alt="Chef Mate" width="64" height="64"
+        style="width: 64px; height: 64px; border-radius: 14px; display: block; margin-bottom: 16px;" />
       <h2 style="margin-bottom: 8px;">You’ve been invited to collaborate</h2>
       <p><strong>${escapeHtml(inviter)}</strong> invited you to the ${kindLabel}
         <strong>“${escapeHtml(listName)}”</strong> on Chef Mate.</p>
