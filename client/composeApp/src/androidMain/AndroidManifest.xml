@@ -40,6 +40,20 @@
 
                 <data android:scheme="chefmate" />
             </intent-filter>
+
+            <!-- Verified https App Links for invite emails. Domain ownership is proven by the
+                 hosted https://chefmate.plusmobileapps.com/.well-known/assetlinks.json. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                        android:scheme="https"
+                        android:host="chefmate.plusmobileapps.com"
+                        android:pathPrefix="/notifications" />
+            </intent-filter>
         </activity>
 
         <!-- Digital Asset Links affiliation for password-manager credential sharing with

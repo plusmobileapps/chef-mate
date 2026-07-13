@@ -14,6 +14,8 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBarItem
@@ -93,7 +95,9 @@ private fun SideNavContent(
                 NavRailItem(
                     label = it.getLabel().asTextData(),
                     selected = it == currentState.selectedTab,
-                    icon = { Icon(imageVector = it.getIcon(), contentDescription = null) },
+                    icon = {
+                        TabIcon(tab = it, notificationCount = currentState.notificationCount)
+                    },
                     onClick = { bloc.onTabSelected(it) },
                 )
             }
@@ -164,9 +168,34 @@ private fun PlusBottomBar(state: BottomNavBloc.Model, onClick: (BottomNavBloc.Ta
                         color = ChefMateTheme.colorScheme.onSurface,
                     )
                 },
-                icon = { Icon(imageVector = tab.getIcon(), contentDescription = null) },
+                icon = { TabIcon(tab = tab, notificationCount = state.notificationCount) },
             )
         }
+    }
+}
+
+/**
+ * Renders just the bottom navigation bar for screenshot tests, with [notificationCount] driving the
+ * More-tab badge. Not used in production — the app always renders the bar through
+ * [BottomNavigationScreen].
+ */
+@Composable
+fun BottomNavBarPreview(notificationCount: Int) {
+    PlusBottomBar(state = BottomNavBloc.Model(notificationCount = notificationCount), onClick = {})
+}
+
+/**
+ * A tab's icon, wrapped in a count badge on the More ([SETTINGS]) tab when notifications are
+ * pending. Shared by the bottom bar and the side nav rail so both surfaces stay in sync.
+ */
+@Composable
+private fun TabIcon(tab: BottomNavBloc.Tab, notificationCount: Int) {
+    if (tab == SETTINGS && notificationCount > 0) {
+        BadgedBox(badge = { Badge { Text(notificationCount.toString()) } }) {
+            Icon(imageVector = tab.getIcon(), contentDescription = null)
+        }
+    } else {
+        Icon(imageVector = tab.getIcon(), contentDescription = null)
     }
 }
 

@@ -68,6 +68,10 @@ class SettingsBlocImpl(
         output.onNext(Output.OpenManageProfile)
     }
 
+    override fun onNotificationsClicked() {
+        output.onNext(Output.OpenNotifications)
+    }
+
     override fun onUrlClicked(url: String) {
         output.onNext(Output.OpenUrl(url))
     }

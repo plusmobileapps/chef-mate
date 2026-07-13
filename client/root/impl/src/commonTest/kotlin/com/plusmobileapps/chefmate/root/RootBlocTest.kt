@@ -13,6 +13,7 @@ import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.di.OnboardingRepository
 import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
+import com.plusmobileapps.chefmate.notifications.NotificationsBloc
 import com.plusmobileapps.chefmate.onboarding.OnboardingRootBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
@@ -38,6 +39,9 @@ class RootBlocTest {
     var settingsRootProps: SettingsRootBloc.Props? = null
     var manageProfileOutput:
         Consumer<com.plusmobileapps.chefmate.profile.ManageProfileBloc.Output> =
+        Consumer {}
+    var notificationsOutput:
+        Consumer<com.plusmobileapps.chefmate.notifications.NotificationsBloc.Output> =
         Consumer {}
     var developerSettingsOutput:
         Consumer<com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc.Output> =
@@ -111,6 +115,10 @@ class RootBlocTest {
             },
             manageProfile = { _, output ->
                 manageProfileOutput = output
+                mock()
+            },
+            notifications = { _, output ->
+                notificationsOutput = output
                 mock()
             },
             developerSettings = { _, output ->
@@ -282,6 +290,21 @@ class RootBlocTest {
     }
 
     @Test
+    fun When_bottom_nav_outputs_open_notifications_Then_notifications_is_shown() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenNotifications)
+        rootBloc.instance() should instanceOf<RootBloc.Child.Notifications>()
+        rootBloc.state.value.backStack.size shouldBe 1
+    }
+
+    @Test
+    fun Given_notifications_When_back_outputted_Then_bottom_nav_is_shown() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenNotifications)
+        rootBloc.instance() should instanceOf<RootBloc.Child.Notifications>()
+        notificationsOutput.onNext(NotificationsBloc.Output.Back)
+        rootBloc.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
+    }
+
+    @Test
     fun When_bottom_nav_opens_grocery_autocomplete_settings_Then_settings_root_deep_links() {
         bottomNavOutput.onNext(BottomNavBloc.Output.OpenGroceryAutocompleteSettings)
         rootBloc.instance() should instanceOf<RootBloc.Child.SettingsRoot>()
@@ -434,6 +457,19 @@ class RootBlocTest {
         val root = createRoot(DeepLink.AppSettings)
         root.instance() should instanceOf<RootBloc.Child.SettingsRoot>()
         root.state.value.backStack.size shouldBe 1
+    }
+
+    @Test
+    fun Given_notifications_deeplink_When_initialized_Then_notifications_is_on_top() {
+        val root = createRoot(DeepLink.Notifications)
+        root.instance() should instanceOf<RootBloc.Child.Notifications>()
+        root.state.value.backStack.size shouldBe 1
+    }
+
+    @Test
+    fun Given_running_app_When_notifications_deeplink_handled_Then_notifications_is_shown() {
+        rootBloc.handleDeepLink("https://chefmate.plusmobileapps.com/notifications")
+        rootBloc.instance() should instanceOf<RootBloc.Child.Notifications>()
     }
 
     @Test

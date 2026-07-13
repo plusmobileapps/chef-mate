@@ -30,6 +30,8 @@ class MoreRobot(private val test: ComposeUiTest) {
 
     fun clickManageProfileRow(): MoreRobot = clickRow("Manage Profile")
 
+    fun clickNotificationsRow(): MoreRobot = clickRow("Notifications")
+
     private fun clickRow(label: String): MoreRobot = apply {
         test.waitUntilExactlyOneExists(hasText(label) and onScreen)
         test.onNode(hasText(label) and onScreen).performClick()

@@ -13,6 +13,7 @@ import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagsBloc
 import com.plusmobileapps.chefmate.grocery.core.edit.EditGroceryListBloc
+import com.plusmobileapps.chefmate.notifications.NotificationsBloc
 import com.plusmobileapps.chefmate.onboarding.OnboardingRootBloc
 import com.plusmobileapps.chefmate.profile.ManageProfileBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
@@ -27,6 +28,13 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
     val state: Value<ChildStack<*, Child>>
 
     fun handleSharedUrl(url: String)
+
+    /**
+     * Route an incoming deep link while the app is already running (Android `onNewIntent`, iOS
+     * `continueUserActivity`/`onOpenURL`). Cold-launch links are handled by the initial stack; this
+     * covers the warm-start case where that stack was already built.
+     */
+    fun handleDeepLink(url: String)
 
     sealed class Child {
 
@@ -49,6 +57,8 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
         data class SettingsRoot(override val bloc: SettingsRootBloc) : Child()
 
         data class ManageProfile(override val bloc: ManageProfileBloc) : Child()
+
+        data class Notifications(override val bloc: NotificationsBloc) : Child()
 
         data class DeveloperSettings(override val bloc: DeveloperSettingsBloc) : Child()
 

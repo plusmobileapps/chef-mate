@@ -49,6 +49,8 @@ dependencies {
     implementation(project(":client:meal:core:public"))
     implementation(project(":client:meal:core:impl"))
     implementation(project(":client:meal:data:public"))
+    implementation(project(":client:notifications:public"))
+    implementation(project(":client:notifications:impl"))
     implementation(project(":client:onboarding:public"))
     implementation(project(":client:onboarding:impl"))
     implementation(project(":client:recipe:categories:public"))

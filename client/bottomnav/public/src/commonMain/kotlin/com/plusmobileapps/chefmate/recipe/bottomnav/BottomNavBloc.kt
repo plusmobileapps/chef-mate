@@ -43,6 +43,10 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
     data class Model(
         val selectedTab: Tab = Tab.RECIPES,
         val tabs: ImmutableList<Tab> = Tab.entries.toImmutableList(),
+        /**
+         * Pending in-app notifications; drives the count badge on the More ([Tab.SETTINGS]) tab.
+         */
+        val notificationCount: Int = 0,
     )
 
     enum class Tab {
@@ -84,6 +88,8 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
         data object OpenSignUp : Output()
 
         data object OpenManageProfile : Output()
+
+        data object OpenNotifications : Output()
 
         data object OpenAppSettings : Output()
 

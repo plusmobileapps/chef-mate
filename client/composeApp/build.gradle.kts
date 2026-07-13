@@ -97,6 +97,8 @@ kotlin {
             api(projects.client.grocery.core.public)
             api(projects.client.meal.data.impl)
             api(projects.client.meal.core.impl)
+            api(projects.client.notifications.data.impl)
+            api(projects.client.notifications.impl)
             api(projects.client.onboarding.impl)
             api(projects.client.onboarding.public)
             implementation(libs.kotlinx.serialization.json)
@@ -166,6 +168,7 @@ kotlin {
             implementation(projects.client.settings.implRobots)
             implementation(projects.client.settings.root.implRobots)
             implementation(projects.client.profile.implRobots)
+            implementation(projects.client.notifications.implRobots)
             implementation(projects.client.onboarding.implRobots)
         }
         val jvmTest by getting {
