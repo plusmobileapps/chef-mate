@@ -128,6 +128,18 @@ val previewMealPlanBlocEmpty: MealPlanBloc =
         )
     )
 
+/** Day view mid-sync — the header sync action shows a spinner and is disabled. */
+val previewMealPlanBlocSyncing: MealPlanBloc =
+    mealPlanBloc(
+        MealPlanBloc.Model(
+            isLoading = false,
+            viewMode = MealPlanBloc.ViewMode.DAY,
+            dateLabel = FixedString("Apr 17, 2026"),
+            dayMeals = sampleDayMeals,
+            isSyncing = true,
+        )
+    )
+
 /**
  * Week view — section headers should NOT show the cook-mode buttons, since a week-day group mixes
  * meal types and isn't a meaningful "queue this for cooking" unit.

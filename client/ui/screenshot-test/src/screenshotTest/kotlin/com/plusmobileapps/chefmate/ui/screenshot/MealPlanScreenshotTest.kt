@@ -12,6 +12,7 @@ import com.plusmobileapps.chefmate.meal.core.MealPlanBloc
 import com.plusmobileapps.chefmate.meal.core.impl.ui.previewMealPlanBloc
 import com.plusmobileapps.chefmate.meal.core.impl.ui.previewMealPlanBlocCooking
 import com.plusmobileapps.chefmate.meal.core.impl.ui.previewMealPlanBlocEmpty
+import com.plusmobileapps.chefmate.meal.core.impl.ui.previewMealPlanBlocSyncing
 import com.plusmobileapps.chefmate.meal.core.impl.ui.previewMealPlanBlocWeek
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -54,6 +55,14 @@ fun MealPlanCookingSessionScreenshot() {
 @Composable
 fun MealPlanEmptyScreenshot() {
     MealPlanScreenshot(bloc = previewMealPlanBlocEmpty)
+}
+
+// Syncing — header sync action renders a spinner in place of the icon.
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+fun MealPlanSyncingScreenshot() {
+    MealPlanScreenshot(bloc = previewMealPlanBlocSyncing)
 }
 
 // Week view — locks in that section headers do NOT carry the replace/add cook-mode buttons.

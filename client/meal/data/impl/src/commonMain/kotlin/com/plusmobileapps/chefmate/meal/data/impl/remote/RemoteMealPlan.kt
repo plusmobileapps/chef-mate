@@ -7,7 +7,8 @@ import kotlinx.serialization.Serializable
 data class RemoteMealPlan(
     val id: String? = null,
     @SerialName("owner_id") val ownerId: String,
-    @SerialName("recipe_id") val recipeId: Long,
+    /** The recipe's remote UUID (recipes.id), not a device-local recipe id. */
+    @SerialName("recipe_id") val recipeId: String,
     val date: String,
     @SerialName("meal_type") val mealType: String,
     @SerialName("created_at") val createdAt: String? = null,
