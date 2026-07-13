@@ -175,6 +175,16 @@ private fun PlusBottomBar(state: BottomNavBloc.Model, onClick: (BottomNavBloc.Ta
 }
 
 /**
+ * Renders just the bottom navigation bar for screenshot tests, with [notificationCount] driving the
+ * More-tab badge. Not used in production — the app always renders the bar through
+ * [BottomNavigationScreen].
+ */
+@Composable
+fun BottomNavBarPreview(notificationCount: Int) {
+    PlusBottomBar(state = BottomNavBloc.Model(notificationCount = notificationCount), onClick = {})
+}
+
+/**
  * A tab's icon, wrapped in a count badge on the More ([SETTINGS]) tab when notifications are
  * pending. Shared by the bottom bar and the side nav rail so both surfaces stay in sync.
  */
