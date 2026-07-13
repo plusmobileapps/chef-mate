@@ -16,7 +16,6 @@ import androidx.compose.material.icons.automirrored.filled.PlaylistAddCheck
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -55,6 +54,7 @@ import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
+import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import com.plusmobileapps.chefmate.util.rememberZipPickerLauncher
 
@@ -147,7 +147,7 @@ private fun StatusContent(message: String) {
         modifier = Modifier.fillMaxWidth().padding(ChefMateTheme.dimens.paddingLarge),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        CircularProgressIndicator()
+        PlusLoadingIndicator()
         Spacer(Modifier.height(ChefMateTheme.dimens.paddingNormal))
         Text(message, style = ChefMateTheme.typography.bodyMedium)
     }
@@ -222,7 +222,7 @@ private fun ReviewContent(
                 .testTag(ImportRecipesTestTags.IMPORT_BUTTON),
     ) {
         if (phase.isImporting) {
-            CircularProgressIndicator(modifier = Modifier.size(20.dp))
+            PlusLoadingIndicator(modifier = Modifier.size(20.dp))
         } else {
             Text(
                 PhraseModel(

@@ -63,7 +63,6 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -188,6 +187,7 @@ import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusDialogScaffold
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
+import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.components.PlusOnboardingTooltip
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
@@ -638,7 +638,7 @@ private fun ScanningDialog() {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                PlusLoadingIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
                 Text(stringResource(Res.string.recipe_list_scanning_message))
             }
         },
@@ -1640,9 +1640,9 @@ private fun SyncStatusIcon(syncStatus: SyncStatus, modifier: Modifier = Modifier
                 modifier = modifier.size(16.dp),
             )
         SyncStatus.SYNCING ->
-            CircularProgressIndicator(
-                modifier =
-                    modifier.size(14.dp).semantics { contentDescription = syncingDescription },
+            PlusLoadingIndicator(
+                modifier = modifier.size(14.dp),
+                contentDescription = syncingDescription,
                 strokeWidth = 2.dp,
             )
         SyncStatus.SYNCED ->

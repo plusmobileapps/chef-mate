@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -42,6 +41,7 @@ import chefmate.client.recipe.core.public.generated.resources.Res
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_crop_cancel
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_crop_confirm
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_crop_title
+import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlin.math.max
 import kotlin.math.min
@@ -175,7 +175,7 @@ fun CropPhotoOverlay(
                     },
                 ) {
                     if (isProcessing) {
-                        CircularProgressIndicator(
+                        PlusLoadingIndicator(
                             modifier = Modifier.size(16.dp),
                             strokeWidth = 2.dp,
                             color = MaterialTheme.colorScheme.onPrimary,

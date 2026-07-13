@@ -51,7 +51,6 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.BottomSheetScaffold
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -119,6 +118,7 @@ import com.plusmobileapps.chefmate.ui.KeepScreenOn
 import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
+import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
 import com.plusmobileapps.chefmate.ui.components.PlusOnboardingTooltip
 import com.plusmobileapps.chefmate.ui.components.PlusTooltipPlacement
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
@@ -560,7 +560,7 @@ private fun LoadingState(modifier: Modifier) {
     val padding = ChefMateTheme.dimens.paddingNormal
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            CircularProgressIndicator()
+            PlusLoadingIndicator()
             Spacer(Modifier.height(padding))
             Text(stringResource(Res.string.cook_mode_loading))
         }

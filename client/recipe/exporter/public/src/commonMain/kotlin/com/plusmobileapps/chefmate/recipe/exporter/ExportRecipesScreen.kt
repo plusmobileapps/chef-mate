@@ -19,7 +19,6 @@ import androidx.compose.material.icons.automirrored.filled.PlaylistAddCheck
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -55,6 +54,7 @@ import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
+import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import com.plusmobileapps.chefmate.util.rememberZipSaveLauncher
@@ -132,7 +132,7 @@ private fun ExportFab(selectedCount: Int, isExporting: Boolean, onClick: () -> U
         modifier = Modifier.testTag(ExportRecipesTestTags.EXPORT_BUTTON),
     ) {
         if (isExporting) {
-            CircularProgressIndicator(
+            PlusLoadingIndicator(
                 modifier = Modifier.size(20.dp),
                 color = ChefMateTheme.colorScheme.onPrimaryContainer,
             )
@@ -179,7 +179,7 @@ private fun StatusContent(message: String) {
         modifier = Modifier.fillMaxWidth().padding(ChefMateTheme.dimens.paddingLarge),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        CircularProgressIndicator()
+        PlusLoadingIndicator()
         Spacer(Modifier.height(ChefMateTheme.dimens.paddingNormal))
         Text(message, style = ChefMateTheme.typography.bodyMedium)
     }
