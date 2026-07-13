@@ -6,8 +6,11 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.FilterChip
@@ -22,7 +25,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import chefmate.client.grocery.core.public.generated.resources.Res
 import chefmate.client.grocery.core.public.generated.resources.grocery_cancel
@@ -71,7 +78,7 @@ fun EditGroceryListScreen(bloc: EditGroceryListBloc, modifier: Modifier = Modifi
     val dimens = ChefMateTheme.dimens
 
     PlusHeaderContainer(
-        modifier = modifier.testTag(EditGroceryListTestTags.SCREEN).fillMaxWidth(),
+        modifier = modifier.testTag(EditGroceryListTestTags.SCREEN).fillMaxWidth().imePadding(),
         data =
             PlusHeaderData.Modal(
                 title = Res.string.grocery_edit_list_title.asTextData(),
@@ -281,6 +288,7 @@ private fun MemberRow(
 @Composable
 private fun InviteRow(state: EditGroceryListBloc.Model, bloc: EditGroceryListBloc) {
     val dimens = ChefMateTheme.dimens
+    val focusManager = LocalFocusManager.current
     Column(
         modifier = Modifier.fillMaxWidth().padding(top = dimens.paddingSmall),
         verticalArrangement = Arrangement.spacedBy(dimens.paddingSmall),
@@ -291,6 +299,19 @@ private fun InviteRow(state: EditGroceryListBloc.Model, bloc: EditGroceryListBlo
             label = { Text(stringResource(Res.string.grocery_invite_hint)) },
             singleLine = true,
             error = state.inviteError,
+            keyboardOptions =
+                KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    capitalization = KeyboardCapitalization.None,
+                    imeAction = ImeAction.Send,
+                ),
+            keyboardActions =
+                KeyboardActions(
+                    onSend = {
+                        bloc.onInviteClicked()
+                        focusManager.clearFocus()
+                    }
+                ),
             modifier = Modifier.fillMaxWidth().testTag(EditGroceryListTestTags.INVITE_FIELD),
         )
         FlowRow(horizontalArrangement = Arrangement.spacedBy(dimens.paddingSmall)) {
