@@ -9,6 +9,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -46,13 +48,16 @@ import platform.UIKit.UITextSpellCheckingType
  * passwords key) when genuine `UITextField`s for the login and password are present on screen —
  * Compose's own text input does not satisfy it yet (JetBrains CMP-5802, targeted 1.13.0).
  *
- * The native field is made transparent and placed inside [OutlinedTextFieldDefaults.DecorationBox]
- * so it keeps the Material outline, floating label, error, and trailing icon that the rest of the
- * app uses; Compose draws the decoration, the user types into the native field.
+ * The native field is placed inside [OutlinedTextFieldDefaults.DecorationBox] so it keeps the
+ * Material outline, floating label, error, and trailing icon that the rest of the app uses; Compose
+ * draws the decoration, the user types into the native field.
  *
- * Known caveat: interop views don't yet composite with a truly transparent background in every case
- * (CMP-3154). Our auth fields sit on the surface color, so a clear background reads correctly;
- * revisit if these fields are ever placed over a gradient/image.
+ * Background: interop views don't yet composite with a truly transparent background (CMP-3154), so
+ * a `clearColor` field renders as an opaque system background (solid white/black) that stands out
+ * against the screen. Instead we paint the native field with the resolved Compose [background]
+ * color so it blends into the surface it sits on. The color is re-applied on every recompose so it
+ * tracks light/dark theme changes. Revisit (and switch back to a clear background) once CMP-3154
+ * ships, or if these fields are ever placed over a gradient/image where a solid fill won't match.
  */
 @Composable
 actual fun PlusAutofillTextField(
@@ -70,6 +75,11 @@ actual fun PlusAutofillTextField(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isSecure = fieldType.isSecure(passwordVisible)
+    // The color the field sits on. Painted onto the native field (see class doc) because the
+    // interop
+    // layer can't render a transparent background, and re-applied in `update` to follow theme
+    // changes.
+    val fieldBackground = MaterialTheme.colorScheme.background
 
     // Latest hoisted callbacks, read from inside the once-built native action handlers.
     val callbacks = remember { NativeFieldCallbacks() }
@@ -82,7 +92,8 @@ actual fun PlusAutofillTextField(
         remember(fieldType) {
             UITextField().apply {
                 borderStyle = UITextBorderStyle.UITextBorderStyleNone
-                backgroundColor = UIColor.clearColor
+                // Initial fill; kept in sync with the theme in `update` below.
+                backgroundColor = fieldBackground.toUIColor()
                 setOpaque(false)
                 autocapitalizationType =
                     UITextAutocapitalizationType.UITextAutocapitalizationTypeNone
@@ -151,6 +162,7 @@ actual fun PlusAutofillTextField(
                     factory = { textField },
                     modifier = Modifier.fillMaxWidth().height(24.dp),
                     update = { field ->
+                        field.backgroundColor = fieldBackground.toUIColor()
                         if (field.text != value) field.setText(value)
                         if (field.secureTextEntry != isSecure) {
                             field.secureTextEntry = isSecure
@@ -182,6 +194,15 @@ actual fun PlusAutofillTextField(
         )
     }
 }
+
+/** Bridges a Compose [Color] to the equivalent sRGB [UIColor] for the native field's background. */
+private fun Color.toUIColor(): UIColor =
+    UIColor(
+        red = red.toDouble(),
+        green = green.toDouble(),
+        blue = blue.toDouble(),
+        alpha = alpha.toDouble(),
+    )
 
 /** Holds the latest hoisted callbacks + the in-flight focus interaction for the native field. */
 private class NativeFieldCallbacks {
