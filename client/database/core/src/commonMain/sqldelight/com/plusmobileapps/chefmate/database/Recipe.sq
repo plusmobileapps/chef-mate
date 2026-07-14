@@ -21,7 +21,8 @@ CREATE TABLE Recipe (
     clientId TEXT,
     isDirty INTEGER AS Boolean NOT NULL DEFAULT 0,
     ownerId TEXT,
-    isPendingDelete INTEGER AS Boolean NOT NULL DEFAULT 0
+    isPendingDelete INTEGER AS Boolean NOT NULL DEFAULT 0,
+    isPublic INTEGER AS Boolean NOT NULL DEFAULT 0
 );
 
 getAll:
@@ -41,8 +42,8 @@ INSERT INTO Recipe (title, description, ingredients, directions, imageUrl, sourc
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 createWithRemoteId:
-INSERT INTO Recipe (title, description, ingredients, directions, imageUrl, sourceUrl, servings, prepTime, cookTime, totalTime, calories, starRating, isFavorite, createdAt, updatedAt, remoteId, clientId, ownerId)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO Recipe (title, description, ingredients, directions, imageUrl, sourceUrl, servings, prepTime, cookTime, totalTime, calories, starRating, isFavorite, createdAt, updatedAt, remoteId, clientId, ownerId, isPublic)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(remoteId) DO UPDATE SET
     title = excluded.title,
     description = excluded.description,
@@ -59,7 +60,8 @@ ON CONFLICT(remoteId) DO UPDATE SET
     isFavorite = excluded.isFavorite,
     updatedAt = excluded.updatedAt,
     clientId = excluded.clientId,
-    ownerId = excluded.ownerId;
+    ownerId = excluded.ownerId,
+    isPublic = excluded.isPublic;
 
 lastInsertId:
 SELECT MAX(id) FROM Recipe;
@@ -91,6 +93,9 @@ UPDATE Recipe SET isPendingDelete = 1, isDirty = 0 WHERE id = ?;
 
 getPendingDeletes:
 SELECT * FROM Recipe WHERE isPendingDelete = 1 AND remoteId IS NOT NULL;
+
+setPublic:
+UPDATE Recipe SET isPublic = ?, isDirty = 1, updatedAt = ? WHERE id = ?;
 
 updateRemoteId:
 UPDATE Recipe SET remoteId = ?, isDirty = 0 WHERE id = ?;
