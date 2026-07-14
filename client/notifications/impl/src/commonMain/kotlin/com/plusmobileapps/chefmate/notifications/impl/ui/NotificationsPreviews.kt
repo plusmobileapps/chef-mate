@@ -21,6 +21,10 @@ private fun notificationsBloc(model: Model): NotificationsBloc =
         override fun onAccept(notification: AppNotification) = Unit
 
         override fun onDecline(notification: AppNotification) = Unit
+
+        override fun onSignInClicked() = Unit
+
+        override fun onSignUpClicked() = Unit
     }
 
 val previewNotificationsBloc: NotificationsBloc =
@@ -74,4 +78,10 @@ internal fun NotificationsPreview() {
 @Composable
 internal fun NotificationsEmptyPreview() {
     ChefMateTheme { previewNotificationsEmptyBloc.Content(Modifier) }
+}
+
+@Preview
+@Composable
+internal fun NotificationsSignedOutPreview() {
+    ChefMateTheme { previewNotificationsSignedOutBloc.Content(Modifier) }
 }

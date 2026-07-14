@@ -40,4 +40,12 @@ class NotificationsBlocImpl(
     override fun onDecline(notification: AppNotification) {
         viewModel.decline(notification)
     }
+
+    override fun onSignInClicked() {
+        output.onNext(Output.OpenSignIn)
+    }
+
+    override fun onSignUpClicked() {
+        output.onNext(Output.OpenSignUp)
+    }
 }

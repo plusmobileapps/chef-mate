@@ -110,6 +110,20 @@ class NotificationsBlocImplTest {
     }
 
     @Test
+    fun When_sign_in_clicked_Then_open_sign_in_output_emitted() {
+        bloc.onSignInClicked()
+
+        output.lastValue shouldBe NotificationsBloc.Output.OpenSignIn
+    }
+
+    @Test
+    fun When_sign_up_clicked_Then_open_sign_up_output_emitted() {
+        bloc.onSignUpClicked()
+
+        output.lastValue shouldBe NotificationsBloc.Output.OpenSignUp
+    }
+
+    @Test
     fun When_anonymous_Then_state_is_signed_out() = runTest {
         authRepository.setState(
             AuthState.Authenticated(

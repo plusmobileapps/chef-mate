@@ -25,6 +25,10 @@ struct ContentView: View {
         )
         .ignoresSafeArea(.all)
         .ignoresSafeArea(.keyboard)
+        // SwiftUI delivers BOTH custom-scheme links (chefmate://…) and https Universal Links
+        // (https://chefmate.plusmobileapps.com/notifications from the invite emails) here, for
+        // cold and warm launches alike. The invite deep link previously fell through because this
+        // only forwarded scheme == "chefmate" and dropped the https URL.
         .onOpenURL { url in
             // The share extension re-enters via chefmate://import?url=… — hand that to the browser.
             if url.scheme == "chefmate", url.host == "import",
@@ -33,13 +37,13 @@ struct ContentView: View {
                 appDelegate.root.handleSharedUrl(url: sharedUrl)
                 return
             }
-            // Any other custom-scheme deep link (e.g. chefmate://notifications) while running.
-            if url.scheme == "chefmate" {
-                appDelegate.root.handleDeepLink(url: url.absoluteString)
-            }
+            // Any other deep link — custom scheme or https Universal Link. DeepLink.parse validates
+            // the host/scheme and yields DeepLink.None (a no-op) for anything unrecognized.
+            appDelegate.root.handleDeepLink(url: url.absoluteString)
         }
-        // Universal Links (https://chefmate.plusmobileapps.com/…) arrive as a browsing user
-        // activity, for both cold launch and while the app is already running.
+        // Secondary net: some iOS versions surface Universal Links as a browsing NSUserActivity
+        // through this modifier instead of .onOpenURL. Whichever fires, handleDeepLink is
+        // idempotent (it just brings the destination to the front), so double routing is harmless.
         .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
             if let url = activity.webpageURL {
                 appDelegate.root.handleDeepLink(url: url.absoluteString)

@@ -15,4 +15,6 @@
     <string name="plus_outlined_container_expand_a11y">Expand %1$s</string>
     <string name="plus_outlined_container_collapse_a11y">Collapse %1$s</string>
     <string name="coach_mark_dismiss">Got it</string>
+    <string name="sign_in">Sign In</string>
+    <string name="sign_up">Sign Up</string>
 </resources>

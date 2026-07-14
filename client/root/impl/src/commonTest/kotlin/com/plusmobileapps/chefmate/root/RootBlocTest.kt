@@ -313,6 +313,22 @@ class RootBlocTest {
     }
 
     @Test
+    fun Given_notifications_When_open_sign_in_outputted_Then_authentication_is_shown() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenNotifications)
+        notificationsOutput.onNext(NotificationsBloc.Output.OpenSignIn)
+        rootBloc.instance() should instanceOf<RootBloc.Child.Authentication>()
+        authProps shouldBe AuthenticationBloc.Props.SignIn
+    }
+
+    @Test
+    fun Given_notifications_When_open_sign_up_outputted_Then_authentication_is_shown() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenNotifications)
+        notificationsOutput.onNext(NotificationsBloc.Output.OpenSignUp)
+        rootBloc.instance() should instanceOf<RootBloc.Child.Authentication>()
+        authProps shouldBe AuthenticationBloc.Props.SignUp
+    }
+
+    @Test
     fun When_bottom_nav_opens_grocery_autocomplete_settings_Then_settings_root_deep_links() {
         bottomNavOutput.onNext(BottomNavBloc.Output.OpenGroceryAutocompleteSettings)
         rootBloc.instance() should instanceOf<RootBloc.Child.SettingsRoot>()

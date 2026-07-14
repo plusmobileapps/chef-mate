@@ -56,8 +56,6 @@ import chefmate.client.grocery.core.public.generated.resources.grocery_rename_sa
 import chefmate.client.grocery.core.public.generated.resources.grocery_role_editor
 import chefmate.client.grocery.core.public.generated.resources.grocery_role_owner
 import chefmate.client.grocery.core.public.generated.resources.grocery_role_viewer
-import chefmate.client.grocery.core.public.generated.resources.grocery_sign_in
-import chefmate.client.grocery.core.public.generated.resources.grocery_sign_up
 import com.plusmobileapps.chefmate.grocery.data.CollaborationStatus
 import com.plusmobileapps.chefmate.grocery.data.ListCollaborator
 import com.plusmobileapps.chefmate.grocery.data.ListRole
@@ -69,6 +67,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusTextField
+import com.plusmobileapps.chefmate.ui.components.SignedOutPrompt
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -163,28 +162,15 @@ private fun CollaborationSection(state: EditGroceryListBloc.Model, bloc: EditGro
         )
 
         if (!state.isAuthenticated) {
-            Text(
-                text = stringResource(Res.string.grocery_collab_signed_out_title),
-                style = MaterialTheme.typography.titleSmall,
+            SignedOutPrompt(
+                title = Res.string.grocery_collab_signed_out_title.asTextData(),
+                message = Res.string.grocery_collab_signed_out_message.asTextData(),
+                onSignInClick = bloc::onSignInClicked,
+                onSignUpClick = bloc::onSignUpClicked,
+                modifier = Modifier.fillMaxWidth(),
+                signInButtonModifier = Modifier.testTag(EditGroceryListTestTags.SIGN_IN_BUTTON),
+                signUpButtonModifier = Modifier.testTag(EditGroceryListTestTags.SIGN_UP_BUTTON),
             )
-            Text(
-                text = stringResource(Res.string.grocery_collab_signed_out_message),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(dimens.paddingSmall)) {
-                PlusButton(
-                    text = Res.string.grocery_sign_in.asTextData(),
-                    onClick = bloc::onSignInClicked,
-                    modifier = Modifier.testTag(EditGroceryListTestTags.SIGN_IN_BUTTON),
-                )
-                PlusButton(
-                    text = Res.string.grocery_sign_up.asTextData(),
-                    variant = PlusButtonVariant.SECONDARY,
-                    onClick = bloc::onSignUpClicked,
-                    modifier = Modifier.testTag(EditGroceryListTestTags.SIGN_UP_BUTTON),
-                )
-            }
             return@Column
         }
 
