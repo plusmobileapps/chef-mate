@@ -41,6 +41,7 @@ import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_bo
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_group_viewers
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_invite_button
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_invite_email_label
+import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_member_declined
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_member_pending
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_name_label
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_remove_cancel
@@ -53,6 +54,7 @@ import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_bo
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_role_viewer
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_save
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookMember
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBookMemberStatus
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookRole
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
@@ -237,20 +239,23 @@ private fun MemberGroup(
 
 @Composable
 private fun MemberRow(member: RecipeBookMember, canManage: Boolean, onRemove: (String) -> Unit) {
-    // name → email, with pending invites dimmed and tagged. Role is conveyed by the group header
-    // above, so it isn't repeated per row. Pending invites have no account, so they fall back to
-    // the email as the primary line.
+    // name → email, with pending/declined invites dimmed and tagged. Role is conveyed by the group
+    // header above, so it isn't repeated per row. Pending invites have no account, so they fall
+    // back
+    // to the email as the primary line. A declined invite stays visible so the owner can see the
+    // recipient turned it down (and can then remove or re-invite them).
     val name = member.name?.takeIf { it.isNotBlank() }
+    val pending = member.status == RecipeBookMemberStatus.PENDING
+    val declined = member.status == RecipeBookMemberStatus.REJECTED
     val secondary =
         listOfNotNull(
                 member.email.takeIf { name != null },
-                stringResource(Res.string.edit_recipe_book_member_pending).takeIf {
-                    !member.accepted
-                },
+                stringResource(Res.string.edit_recipe_book_member_pending).takeIf { pending },
+                stringResource(Res.string.edit_recipe_book_member_declined).takeIf { declined },
             )
             .joinToString(" · ")
     Row(
-        modifier = Modifier.fillMaxWidth().alpha(if (member.accepted) 1f else 0.5f),
+        modifier = Modifier.fillMaxWidth().alpha(if (pending || declined) 0.5f else 1f),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
     ) {
