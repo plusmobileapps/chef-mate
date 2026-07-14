@@ -78,7 +78,8 @@ class EditRecipeBookViewModelTest {
                     id = "m1",
                     email = "alex@example.com",
                     role = com.plusmobileapps.chefmate.recipebook.data.RecipeBookRole.EDITOR,
-                    accepted = true,
+                    status =
+                        com.plusmobileapps.chefmate.recipebook.data.RecipeBookMemberStatus.ACCEPTED,
                 )
             )
             val vm =
@@ -107,7 +108,8 @@ class EditRecipeBookViewModelTest {
                     id = "m1",
                     email = "alex@example.com",
                     role = com.plusmobileapps.chefmate.recipebook.data.RecipeBookRole.EDITOR,
-                    accepted = true,
+                    status =
+                        com.plusmobileapps.chefmate.recipebook.data.RecipeBookMemberStatus.ACCEPTED,
                 )
             )
             val vm =

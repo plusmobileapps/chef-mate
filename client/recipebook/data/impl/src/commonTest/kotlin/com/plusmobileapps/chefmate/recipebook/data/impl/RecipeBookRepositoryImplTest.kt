@@ -226,5 +226,7 @@ class RecipeBookRepositoryImplTest {
             emptyList()
 
         override suspend fun acceptInvite(memberId: String, userId: String) = Unit
+
+        override suspend fun rejectInvite(memberId: String) = Unit
     }
 }

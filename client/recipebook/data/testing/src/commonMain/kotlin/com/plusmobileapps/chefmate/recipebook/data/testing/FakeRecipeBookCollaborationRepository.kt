@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.recipebook.data.testing
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookCollaborationRepository
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookInvite
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookMember
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBookMemberStatus
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookRole
 
 class FakeRecipeBookCollaborationRepository(
@@ -23,7 +24,12 @@ class FakeRecipeBookCollaborationRepository(
     override suspend fun invite(bookId: Long, email: String, role: RecipeBookRole) {
         invited += Triple(bookId, email, role)
         members +=
-            RecipeBookMember(id = "m-${members.size}", email = email, role = role, accepted = false)
+            RecipeBookMember(
+                id = "m-${members.size}",
+                email = email,
+                role = role,
+                status = RecipeBookMemberStatus.PENDING,
+            )
     }
 
     override suspend fun removeMember(memberId: String) {
