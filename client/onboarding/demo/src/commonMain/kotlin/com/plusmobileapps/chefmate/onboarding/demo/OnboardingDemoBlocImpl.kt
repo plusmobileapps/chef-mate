@@ -53,6 +53,7 @@ class OnboardingDemoBlocImpl(
                     bloc =
                         onboardingRootFactory.create(
                             context = context,
+                            props = OnboardingRootBloc.Props(),
                             output = ::handleOnboardingOutput,
                         )
                 )
@@ -60,10 +61,12 @@ class OnboardingDemoBlocImpl(
 
     private fun handleOnboardingOutput(output: OnboardingRootBloc.Output) {
         when (output) {
-            // Both terminal outcomes return to the debug landing screen so the flow can be
+            // Every terminal outcome returns to the debug landing screen so the flow can be
             // relaunched; the demo has no real app or auth flow to hand off to.
             OnboardingRootBloc.Output.Finished,
-            OnboardingRootBloc.Output.SignIn -> navigation.bringToFront(Configuration.Landing)
+            OnboardingRootBloc.Output.Dismissed,
+            OnboardingRootBloc.Output.SignIn,
+            OnboardingRootBloc.Output.SignUp -> navigation.bringToFront(Configuration.Landing)
         }
     }
 
