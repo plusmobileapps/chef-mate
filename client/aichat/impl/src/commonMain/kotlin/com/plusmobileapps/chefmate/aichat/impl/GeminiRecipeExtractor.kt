@@ -1,7 +1,7 @@
 package com.plusmobileapps.chefmate.aichat.impl
 
 import com.plusmobileapps.chefmate.aichat.ChatMessage
-import com.plusmobileapps.chefmate.aichat.impl.di.GeminiApiKey
+import com.plusmobileapps.chefmate.aichat.impl.di.AiChatFunctionConfig
 import com.plusmobileapps.chefmate.aichat.impl.di.GeminiHttpClient
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
@@ -14,10 +14,14 @@ import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.binding
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import io.ktor.util.encodeBase64
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -41,6 +45,10 @@ interface GeminiRecipeExtractor {
  * a single image ([RecipeImageExtractor.extractFromImage], used by the chat photo-attach button and
  * the standalone "Scan from photo" flow). Both share the same structured-output request and
  * parsing; only the request `contents` differ.
+ *
+ * Requests go through the `ai-chat` Supabase Edge Function (which holds the Gemini API key) rather
+ * than Gemini directly. The function returns Gemini's `:generateContent` JSON verbatim, so the
+ * `candidates` parsing below is unchanged from the direct-to-Gemini days.
  */
 @Inject
 @SingleIn(AppScope::class)
@@ -48,7 +56,7 @@ interface GeminiRecipeExtractor {
 @ContributesBinding(AppScope::class, binding = binding<RecipeImageExtractor>())
 class RealGeminiRecipeExtractor(
     @GeminiHttpClient private val httpClient: HttpClient,
-    @GeminiApiKey private val apiKey: String,
+    private val functionConfig: AiChatFunctionConfig,
 ) : GeminiRecipeExtractor, RecipeImageExtractor {
 
     private val json = Json {
@@ -93,21 +101,37 @@ class RealGeminiRecipeExtractor(
      * [RecipeExtractionException] carrying a typed [RecipeExtractionError].
      */
     private suspend fun generate(contents: List<GeminiContent>): ExtractedRecipeData {
-        if (apiKey.isBlank()) throw RecipeExtractionException(RecipeExtractionError.MISSING_API_KEY)
-
-        val request = GeminiRequest(contents = contents, generationConfig = recipeGenerationConfig)
+        val request =
+            ChatRequest(
+                stream = false,
+                contents = contents,
+                generationConfig = recipeGenerationConfig,
+            )
+        val token = functionConfig.accessToken()
 
         val response: GeminiResponse =
             try {
-                httpClient
-                    .post(
-                        "https://generativelanguage.googleapis.com/v1beta/models/" +
-                            "$MODEL_ID:generateContent?key=$apiKey"
-                    ) {
+                val httpResponse =
+                    httpClient.post(functionConfig.functionUrl) {
                         contentType(ContentType.Application.Json)
+                        headers {
+                            append("apikey", functionConfig.anonKey)
+                            append(HttpHeaders.Authorization, "Bearer $token")
+                        }
                         setBody(request)
                     }
-                    .body<GeminiResponse>()
+                // The edge function returns 503 when the server-side Gemini key isn't configured;
+                // surface that as the same "no API key" state the UI showed when the key was a
+                // build variable. Any other non-2xx is a generic request failure.
+                if (httpResponse.status == HttpStatusCode.ServiceUnavailable) {
+                    throw RecipeExtractionException(RecipeExtractionError.MISSING_API_KEY)
+                }
+                if (!httpResponse.status.isSuccess()) {
+                    throw RecipeExtractionException(RecipeExtractionError.REQUEST_FAILED)
+                }
+                httpResponse.body<GeminiResponse>()
+            } catch (e: RecipeExtractionException) {
+                throw e
             } catch (e: Throwable) {
                 throw RecipeExtractionException(RecipeExtractionError.REQUEST_FAILED, e)
             }
@@ -116,11 +140,12 @@ class RealGeminiRecipeExtractor(
             response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
                 ?: throw RecipeExtractionException(RecipeExtractionError.EMPTY_RESPONSE)
 
-        val recipe =
-            runCatching { json.decodeFromString(RecipeJson.serializer(), payload) }
-                .getOrElse {
-                    throw RecipeExtractionException(RecipeExtractionError.MALFORMED_JSON, it)
-                }
+        val recipe = runCatching {
+            json.decodeFromString(RecipeJson.serializer(), payload)
+        }
+            .getOrElse {
+                throw RecipeExtractionException(RecipeExtractionError.MALFORMED_JSON, it)
+            }
 
         if (recipe.title.isBlank() || recipe.ingredients.isEmpty() || recipe.directions.isEmpty()) {
             throw RecipeExtractionException(RecipeExtractionError.INCOMPLETE_RECIPE)
@@ -153,7 +178,8 @@ class RealGeminiRecipeExtractor(
         )
 
     @Serializable
-    private data class GeminiRequest(
+    private data class ChatRequest(
+        val stream: Boolean,
         val contents: List<GeminiContent>,
         val generationConfig: JsonObject,
     )
@@ -190,8 +216,6 @@ class RealGeminiRecipeExtractor(
     )
 
     companion object {
-        private const val MODEL_ID = "gemini-2.5-flash"
-
         private const val IMAGE_EXTRACTION_INSTRUCTION =
             "Extract the recipe shown in this image as JSON matching the response schema. The " +
                 "image may be a cookbook page, food label, screenshot, or handwritten card. Use " +

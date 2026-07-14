@@ -1,11 +1,14 @@
 package com.plusmobileapps.chefmate.aichat.impl.di
 
-import com.plusmobileapps.chefmate.buildconfig.BuildConfig
 import com.plusmobileapps.chefmate.di.AppScope
+import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.Qualifier
 import dev.zacsweers.metro.SingleIn
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.sse.SSE
@@ -30,18 +33,50 @@ import kotlinx.serialization.json.Json
 annotation class GeminiHttpClient
 
 /**
- * Qualifier for the Gemini API key. Provided from [BuildConfig] but injected (rather than read
- * directly) so the Gemini clients can be unit-tested with a fixed key instead of depending on the
- * build-time value.
+ * Connection details for the `ai-chat` Supabase Edge Function that proxies to Gemini.
+ *
+ * The Gemini API key used to live in the client build
+ * ([com.plusmobileapps.chefmate.buildconfig.BuildConfig]), which leaked it to anyone who cracked
+ * the binary. It now lives only in the edge function; the client just needs the function URL and
+ * Supabase auth headers, which this abstraction supplies. Injected (rather than reading
+ * [SupabaseClient] directly in the Gemini clients) so those clients stay unit-testable against a
+ * plain fake.
  */
-@Qualifier
-@Target(
-    AnnotationTarget.PROPERTY_GETTER,
-    AnnotationTarget.FUNCTION,
-    AnnotationTarget.VALUE_PARAMETER,
-    AnnotationTarget.TYPE,
-)
-annotation class GeminiApiKey
+interface AiChatFunctionConfig {
+    /**
+     * Absolute URL of the `ai-chat` edge function, e.g.
+     * `https://xyz.supabase.co/functions/v1/ai-chat`.
+     */
+    val functionUrl: String
+
+    /** Supabase anon/public key, sent as the `apikey` header. */
+    val anonKey: String
+
+    /**
+     * Bearer token for the `Authorization` header: the current user's access token (the app is
+     * always signed in, anonymously at minimum), falling back to the anon key.
+     */
+    fun accessToken(): String
+}
+
+@Inject
+@SingleIn(AppScope::class)
+@ContributesBinding(AppScope::class)
+class SupabaseAiChatFunctionConfig(private val supabaseClient: SupabaseClient) :
+    AiChatFunctionConfig {
+
+    override val functionUrl: String =
+        "${supabaseClient.supabaseHttpUrl}/functions/v1/$FUNCTION_NAME"
+
+    override val anonKey: String = supabaseClient.supabaseKey
+
+    override fun accessToken(): String =
+        supabaseClient.auth.currentAccessTokenOrNull() ?: supabaseClient.supabaseKey
+
+    companion object {
+        private const val FUNCTION_NAME = "ai-chat"
+    }
+}
 
 @ContributesTo(AppScope::class)
 interface GeminiHttpClientComponent {
@@ -60,6 +95,4 @@ interface GeminiHttpClientComponent {
             )
         }
     }
-
-    @Provides @GeminiApiKey fun providesGeminiApiKey(): String = BuildConfig.GEMINI_API_KEY
 }

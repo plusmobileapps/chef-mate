@@ -1,5 +1,6 @@
 package com.plusmobileapps.chefmate.aichat.impl
 
+import com.plusmobileapps.chefmate.aichat.impl.di.AiChatFunctionConfig
 import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionError
 import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionException
 import io.kotest.assertions.throwables.shouldThrow
@@ -55,8 +56,13 @@ class GeminiRecipeExtractorImageTest {
     }
 
     @Test
-    fun extractFromImage_blank_api_key_throws_missing_api_key() = runTest {
-        val extractor = extractorReturning(geminiResponse("{}"), apiKey = "")
+    fun extractFromImage_server_missing_key_503_throws_missing_api_key() = runTest {
+        // The edge function returns 503 when GEMINI_API_KEY isn't configured server-side.
+        val extractor =
+            extractorReturning(
+                """{"error":"MISSING_API_KEY"}""",
+                status = HttpStatusCode.ServiceUnavailable,
+            )
 
         val error =
             shouldThrow<RecipeExtractionException> {
@@ -113,23 +119,21 @@ class GeminiRecipeExtractorImageTest {
     }
 
     /** Wraps [recipeJson] (the structured-output payload) in Gemini's candidate envelope. */
-    private fun geminiResponse(recipeJson: String): String =
-        buildJsonObject {
-                putJsonArray("candidates") {
-                    addJsonObject {
-                        putJsonObject("content") {
-                            put("role", "model")
-                            putJsonArray("parts") { addJsonObject { put("text", recipeJson) } }
-                        }
-                    }
+    private fun geminiResponse(recipeJson: String): String = buildJsonObject {
+        putJsonArray("candidates") {
+            addJsonObject {
+                putJsonObject("content") {
+                    put("role", "model")
+                    putJsonArray("parts") { addJsonObject { put("text", recipeJson) } }
                 }
             }
-            .toString()
+        }
+    }
+        .toString()
 
     private fun extractorReturning(
         responseBody: String,
         status: HttpStatusCode = HttpStatusCode.OK,
-        apiKey: String = "test-key",
     ): RealGeminiRecipeExtractor {
         val engine = MockEngine { request ->
             lastRequestBody = (request.body as TextContent).text
@@ -150,6 +154,13 @@ class GeminiRecipeExtractorImageTest {
                     )
                 }
             }
-        return RealGeminiRecipeExtractor(client, apiKey)
+        return RealGeminiRecipeExtractor(client, FakeAiChatFunctionConfig)
+    }
+
+    private object FakeAiChatFunctionConfig : AiChatFunctionConfig {
+        override val functionUrl = "https://test.supabase.co/functions/v1/ai-chat"
+        override val anonKey = "test-anon-key"
+
+        override fun accessToken() = "test-access-token"
     }
 }

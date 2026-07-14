@@ -11,7 +11,7 @@
     <string name="aichat_done">Done</string>
     <string name="aichat_empty_title">Start a conversation</string>
     <string name="aichat_empty_description">Ask Gemini about recipes, ingredients, or anything else.</string>
-    <string name="aichat_error_no_api_key">Gemini API key missing. Set gemini.key in your gradle properties.</string>
+    <string name="aichat_error_no_api_key">AI features aren’t available right now. Please try again later.</string>
     <string name="aichat_error_generic">Something went wrong. Try again.</string>
     <string name="aichat_role_you">You</string>
     <string name="aichat_role_gemini">Gemini</string>
