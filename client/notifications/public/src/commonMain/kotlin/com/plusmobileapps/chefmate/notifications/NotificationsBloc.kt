@@ -27,6 +27,10 @@ interface NotificationsBloc : ComposeScreen {
 
     fun onDecline(notification: AppNotification)
 
+    fun onSignInClicked()
+
+    fun onSignUpClicked()
+
     data class Model(
         val notifications: ImmutableList<AppNotification> = persistentListOf(),
         val isLoading: Boolean = true,
@@ -45,6 +49,12 @@ interface NotificationsBloc : ComposeScreen {
     sealed class Output {
         /** Pop back to the More tab. */
         data object Back : Output()
+
+        /** Signed-out user tapped Sign In on the prompt — open the auth flow. */
+        data object OpenSignIn : Output()
+
+        /** Signed-out user tapped Sign Up on the prompt — open the auth flow. */
+        data object OpenSignUp : Output()
     }
 
     fun interface Factory {

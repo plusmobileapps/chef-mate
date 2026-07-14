@@ -6,6 +6,7 @@
     <string name="notifications_decline">Decline</string>
     <string name="notifications_empty_title">You’re all caught up</string>
     <string name="notifications_empty_message">Invitations to shared grocery lists and recipe books will show up here.</string>
+    <string name="notifications_signed_out_title">You’re signed out</string>
     <string name="notifications_signed_out">Sign in to see invitations addressed to your account.</string>
     <string name="notifications_accept_error">Couldn’t accept the invitation. Please try again.</string>
     <string name="notifications_decline_error">Couldn’t decline the invitation. Please try again.</string>

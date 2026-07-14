@@ -537,6 +537,14 @@ class RootBlocImpl(
     private fun handleNotificationsOutput(output: NotificationsBloc.Output) {
         when (output) {
             NotificationsBloc.Output.Back -> navigation.pop()
+            NotificationsBloc.Output.OpenSignIn ->
+                navigation.bringToFront(
+                    Configuration.Authentication(AuthenticationBloc.Props.SignIn)
+                )
+            NotificationsBloc.Output.OpenSignUp ->
+                navigation.bringToFront(
+                    Configuration.Authentication(AuthenticationBloc.Props.SignUp)
+                )
         }
     }
 
