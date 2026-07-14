@@ -13,7 +13,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -74,6 +77,12 @@ actual fun PlusAutofillTextField(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isSecure = fieldType.isSecure(passwordVisible)
+    // The Material resting label sits in the center of the field, but the opaque native field
+    // composites over it (see class doc) so it's invisible until focus floats it up to the outline.
+    // To show a resting hint we set the native field's own placeholder, and clear it while focused
+    // so
+    // it doesn't collide with the Material label that's floating up onto the border.
+    var isFocused by remember { mutableStateOf(false) }
     // The color the field sits on. Painted onto the native field (see class doc) because the
     // interop
     // layer can't render a transparent background, and re-applied in `update` to follow theme
@@ -118,9 +127,10 @@ actual fun PlusAutofillTextField(
                     UIAction.actionWithHandler { _ -> callbacks.onImeAction() },
                     forControlEvents = UIControlEventEditingDidEndOnExit,
                 )
-                // Drive the Material label float from native focus changes.
+                // Drive the Material label float (and the resting placeholder) from native focus.
                 addAction(
                     UIAction.actionWithHandler { _ ->
+                        isFocused = true
                         val focus = FocusInteraction.Focus()
                         callbacks.focus = focus
                         interactionSource.tryEmit(focus)
@@ -129,6 +139,7 @@ actual fun PlusAutofillTextField(
                 )
                 addAction(
                     UIAction.actionWithHandler { _ ->
+                        isFocused = false
                         callbacks.focus?.let {
                             interactionSource.tryEmit(FocusInteraction.Unfocus(it))
                         }
@@ -161,6 +172,10 @@ actual fun PlusAutofillTextField(
                     modifier = Modifier.fillMaxWidth().height(24.dp),
                     update = { field ->
                         field.backgroundColor = fieldBackground.toUIColor()
+                        // Resting hint (unfocused, empty). Cleared on focus so it doesn't double up
+                        // with the Material label floating onto the outline; iOS hides it once the
+                        // user types.
+                        field.placeholder = if (isFocused) null else label
                         if (field.text != value) field.setText(value)
                         if (field.secureTextEntry != isSecure) {
                             field.secureTextEntry = isSecure
