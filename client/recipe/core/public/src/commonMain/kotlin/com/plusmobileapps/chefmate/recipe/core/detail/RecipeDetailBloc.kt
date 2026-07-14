@@ -11,10 +11,18 @@ import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryList
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.ComposeScreen
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 interface RecipeDetailBloc : BackClickBloc, ComposeScreen {
     val state: StateFlow<Model>
+
+    /**
+     * One-shot share-link URLs to hand to the platform share sheet. Emitted after the recipe is
+     * successfully made public (or immediately if it already was). The screen collects this and
+     * passes each URL to `rememberShareLauncher`.
+     */
+    val shareLink: Flow<String>
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -50,12 +58,28 @@ interface RecipeDetailBloc : BackClickBloc, ComposeScreen {
 
     fun onSourceUrlClicked(url: String)
 
+    /**
+     * Share a Chef Mate link to this recipe. Prompts to make it public first if it isn't already.
+     */
+    fun onShareLinkClicked()
+
+    /** Confirm the "make this recipe public" prompt, then share the link. */
+    fun onShareConfirmed()
+
+    /** Dismiss the "make this recipe public" prompt without sharing. */
+    fun onShareDismissed()
+
+    /** Make a shared recipe private again so its link stops resolving for others. */
+    fun onStopSharingClicked()
+
     fun onDismissSheet()
 
     data class Model(
         val isLoading: Boolean,
         val isDeleting: Boolean,
         val showDeleteConfirmationDialog: Boolean,
+        /** True while the "anyone with the link can view this" confirmation dialog is shown. */
+        val showShareConfirmation: Boolean = false,
         val recipe: Recipe,
         val createdAt: TextData,
         val updatedAt: TextData,

@@ -101,12 +101,15 @@ class RecipeDetailBlocImpl(
         fullImageRouter.subscribe { slot -> fullImageBackCallback.isEnabled = slot.child != null }
     }
 
+    override val shareLink = viewModel.shareLink
+
     override val state: StateFlow<RecipeDetailBloc.Model> =
         viewModel.state.mapState {
             RecipeDetailBloc.Model(
                 isLoading = it.isLoading,
                 isDeleting = it.isDeleting,
                 showDeleteConfirmationDialog = it.showDeleteConfirmationDialog,
+                showShareConfirmation = it.showShareConfirmation,
                 recipe = it.recipe,
                 createdAt = FixedString(dateTimeUtil.formatDateTime(instant = it.recipe.createdAt)),
                 updatedAt = FixedString(dateTimeUtil.formatDateTime(instant = it.recipe.updatedAt)),
@@ -174,6 +177,22 @@ class RecipeDetailBlocImpl(
 
     override fun onSourceUrlClicked(url: String) {
         output.onNext(Output.OpenUrl(url))
+    }
+
+    override fun onShareLinkClicked() {
+        viewModel.onShareLinkClicked()
+    }
+
+    override fun onShareConfirmed() {
+        viewModel.onShareConfirmed()
+    }
+
+    override fun onShareDismissed() {
+        viewModel.onShareDismissed()
+    }
+
+    override fun onStopSharingClicked() {
+        viewModel.onStopSharing()
     }
 
     override fun onDismissSheet() {

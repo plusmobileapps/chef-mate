@@ -55,6 +55,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
@@ -140,9 +141,15 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_prep
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_remove_favorite
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_servings
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_cancel
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_confirm_body
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_confirm_button
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_confirm_title
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_link
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_text
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_url
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_source
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_stop_sharing
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_timestamps
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_total_time
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_updated
@@ -167,6 +174,7 @@ import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.LocalAnimatedVisibilityScope
 import com.plusmobileapps.chefmate.ui.LocalSecondaryAnimatedVisibilityScope
 import com.plusmobileapps.chefmate.ui.LocalSharedTransitionScope
+import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
@@ -182,6 +190,7 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
@@ -191,9 +200,33 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val shareLauncher = rememberShareLauncher()
+    val toastService = LocalToastService.current
 
     // The "added to grocery list" toast (with its View action) is fired from the BLoC through the
     // app-wide ToastService; the "copied to clipboard" toast below goes through the same service.
+
+    // Hand each share-link URL emitted by the BLoC to the platform share sheet. On desktop the
+    // launcher copies to the clipboard and returns true, so we show the same "copied" toast used by
+    // the other share options.
+    LaunchedEffect(bloc) {
+        bloc.shareLink.collect { url ->
+            if (shareLauncher(url)) {
+                toastService.show(ResourceString(Res.string.recipe_detail_copied_to_clipboard))
+            }
+        }
+    }
+
+    // "Anyone with the link can view this" confirmation before a recipe is first made public.
+    if (state.showShareConfirmation) {
+        PlusDialog(
+            title = ResourceString(Res.string.recipe_detail_share_confirm_title),
+            message = ResourceString(Res.string.recipe_detail_share_confirm_body),
+            confirmButtonText = ResourceString(Res.string.recipe_detail_share_confirm_button),
+            dismissButtonText = ResourceString(Res.string.recipe_detail_share_cancel),
+            onConfirmClick = bloc::onShareConfirmed,
+            onDismissRequest = bloc::onShareDismissed,
+        )
+    }
 
     // Delete confirmation dialog
     if (state.showDeleteConfirmationDialog) {
@@ -288,8 +321,9 @@ private fun RecipeDetailBody(
                             PlusHeaderData.TrailingAccessory.Custom {
                                 RecipeDetailActions(
                                     recipe = state.recipe,
-                                    // Compact collapses into the three-dot overflow; wider windows
-                                    // have the app-bar room to surface the actions directly.
+                                    // Compact collapses Edit/Delete into the three-dot overflow;
+                                    // wider windows surface them directly. The Share button is
+                                    // always its own dedicated control in both layouts.
                                     inlineActions = !isCompact,
                                     showOverflowMenu = showOverflowMenu,
                                     onShowOverflowMenuChange = onShowOverflowMenuChange,
@@ -300,6 +334,8 @@ private fun RecipeDetailBody(
                                             toastService.show(copiedMessage)
                                         }
                                     },
+                                    onShareLink = bloc::onShareLinkClicked,
+                                    onStopSharing = bloc::onStopSharingClicked,
                                 )
                             },
                     ),
@@ -479,52 +515,57 @@ private fun RecipeDetailActions(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onShare: (String) -> Unit,
+    onShareLink: () -> Unit,
+    onStopSharing: () -> Unit,
 ) {
+    // A single Share button owns every share option in both layouts. Edit/Delete are surfaced
+    // inline on wide windows and collapsed into a three-dot overflow on compact ones.
     if (inlineActions) {
-        InlineRecipeActions(
+        IconButton(onClick = onEdit) {
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = stringResource(Res.string.recipe_detail_edit),
+            )
+        }
+        ShareActionButton(
             recipe = recipe,
-            onEdit = onEdit,
-            onDelete = onDelete,
             onShare = onShare,
+            onShareLink = onShareLink,
+            onStopSharing = onStopSharing,
         )
+        IconButton(onClick = onDelete) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = stringResource(Res.string.recipe_detail_delete),
+            )
+        }
     } else {
-        OverflowRecipeActions(
+        ShareActionButton(
             recipe = recipe,
+            onShare = onShare,
+            onShareLink = onShareLink,
+            onStopSharing = onStopSharing,
+        )
+        EditDeleteOverflow(
             expanded = showOverflowMenu,
             onExpandedChange = onShowOverflowMenuChange,
             onEdit = onEdit,
             onDelete = onDelete,
-            onShare = onShare,
         )
     }
 }
 
-/** Tablet/wide layout: Edit, Share, and Delete laid out directly in the app bar. */
+/**
+ * The single Share affordance: an icon button whose dropdown offers every share option — a Chef
+ * Mate link, the source URL (when present), the full recipe text, and, once shared, stop-sharing.
+ */
 @Composable
-private fun InlineRecipeActions(
+private fun ShareActionButton(
     recipe: Recipe,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit,
     onShare: (String) -> Unit,
+    onShareLink: () -> Unit,
+    onStopSharing: () -> Unit,
 ) {
-    IconButton(onClick = onEdit) {
-        Icon(
-            imageVector = Icons.Default.Edit,
-            contentDescription = stringResource(Res.string.recipe_detail_edit),
-        )
-    }
-    ShareActionButton(recipe = recipe, onShare = onShare)
-    IconButton(onClick = onDelete) {
-        Icon(
-            imageVector = Icons.Default.Delete,
-            contentDescription = stringResource(Res.string.recipe_detail_delete),
-        )
-    }
-}
-
-/** Share icon button that owns its own dropdown for picking the source URL or the recipe text. */
-@Composable
-private fun ShareActionButton(recipe: Recipe, onShare: (String) -> Unit) {
     Box {
         var showShareMenu by remember { mutableStateOf(false) }
         IconButton(onClick = { showShareMenu = true }) {
@@ -538,20 +579,20 @@ private fun ShareActionButton(recipe: Recipe, onShare: (String) -> Unit) {
                 recipe = recipe,
                 onClose = { showShareMenu = false },
                 onShare = onShare,
+                onShareLink = onShareLink,
+                onStopSharing = onStopSharing,
             )
         }
     }
 }
 
-/** Compact layout: every action collapsed behind a single three-dot overflow menu. */
+/** Compact layout: Edit and Delete collapsed behind a single three-dot overflow menu. */
 @Composable
-private fun OverflowRecipeActions(
-    recipe: Recipe,
+private fun EditDeleteOverflow(
     expanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-    onShare: (String) -> Unit,
 ) {
     Box {
         IconButton(onClick = { onExpandedChange(true) }) {
@@ -569,11 +610,6 @@ private fun OverflowRecipeActions(
                     onEdit()
                 },
             )
-            RecipeShareMenuItems(
-                recipe = recipe,
-                onClose = { onExpandedChange(false) },
-                onShare = onShare,
-            )
             DropdownMenuItem(
                 text = { Text(stringResource(Res.string.recipe_detail_delete)) },
                 leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
@@ -587,15 +623,27 @@ private fun OverflowRecipeActions(
 }
 
 /**
- * The two share entries — the source URL (only when present) and the full recipe text — shared by
- * both the compact overflow menu and the tablet Share button's own dropdown.
+ * The share entries in the Share button's dropdown: a Chef Mate recipe link (always), the source
+ * URL (only when present), the full recipe text, and — once the recipe is public — a stop-sharing
+ * entry. The link and stop-sharing actions route through the BLoC (they toggle public visibility);
+ * the URL and text actions share content directly via [onShare].
  */
 @Composable
 private fun RecipeShareMenuItems(
     recipe: Recipe,
     onClose: () -> Unit,
     onShare: (String) -> Unit,
+    onShareLink: () -> Unit,
+    onStopSharing: () -> Unit,
 ) {
+    DropdownMenuItem(
+        text = { Text(stringResource(Res.string.recipe_detail_share_link)) },
+        leadingIcon = { Icon(Icons.Default.Share, contentDescription = null) },
+        onClick = {
+            onClose()
+            onShareLink()
+        },
+    )
     recipe.sourceUrl?.let { url ->
         DropdownMenuItem(
             text = { Text(stringResource(Res.string.recipe_detail_share_url)) },
@@ -614,6 +662,16 @@ private fun RecipeShareMenuItems(
             onShare(formatRecipeAsText(recipe))
         },
     )
+    if (recipe.isPublic) {
+        DropdownMenuItem(
+            text = { Text(stringResource(Res.string.recipe_detail_stop_sharing)) },
+            leadingIcon = { Icon(Icons.Default.LinkOff, contentDescription = null) },
+            onClick = {
+                onClose()
+                onStopSharing()
+            },
+        )
+    }
 }
 
 /**
@@ -1839,6 +1897,8 @@ val previewRecipeDetailBloc: RecipeDetailBloc =
                     showDeleteConfirmationDialog = false,
                 )
             )
+        override val shareLink = emptyFlow<String>()
+
         override val childSlot: Value<ChildSlot<*, RecipeDetailBloc.Sheet>> =
             MutableValue(ChildSlot<Any, RecipeDetailBloc.Sheet>(null))
 
@@ -1891,6 +1951,22 @@ val previewRecipeDetailBloc: RecipeDetailBloc =
 
         override fun onSourceUrlClicked(url: String) {
             TODO("Not yet implemented")
+        }
+
+        override fun onShareLinkClicked() {
+            // Preview no-op
+        }
+
+        override fun onShareConfirmed() {
+            // Preview no-op
+        }
+
+        override fun onShareDismissed() {
+            // Preview no-op
+        }
+
+        override fun onStopSharingClicked() {
+            // Preview no-op
         }
 
         override fun onDismissSheet() {
