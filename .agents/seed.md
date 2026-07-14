@@ -14,6 +14,11 @@ This file provides shared guidance to Claude Code and Codex when working with co
 # Desktop (JVM)
 ./gradlew :client:composeApp:run
 
+# Feature demo apps (standalone, isolated builds — see "Demo apps" below)
+./gradlew :client:onboarding:demo:installDebug   # run a feature demo on Android
+./gradlew :client:onboarding:demo:run            # run a feature demo on desktop (JVM)
+./gradlew :client:onboarding:demo:assembleDebug  # compile-check a demo without a device
+
 # Server
 ./gradlew :server:run
 
@@ -55,6 +60,8 @@ Every feature is split into three module types:
 - `public` — API contracts (interfaces, models, UI screens). May depend on other `public` modules only.
 - `impl` — Production implementation. Depends on `public` modules only. Every new `impl` module must be added to `client/composeApp/build.gradle.kts` under `commonMain` to register it in the DI graph.
 - `testing` — Fake/stub implementations for use in other modules' tests.
+
+A feature may also have an optional `demo` module (e.g. `:client:onboarding:demo`) — a standalone Compose Multiplatform **application** (Android + JVM desktop) that renders one feature in isolation so it can be built and run without the full `:client:composeApp`. It applies the `plusApplication` convention plugin and wires the feature's **real** BLoCs through a small per-demo Metro `@DependencyGraph(AppScope::class)` that `@Provides` **fakes** (from the `testing` modules) for any heavy leaf dependencies, keeping the build minimal and fast. (A self-contained feature like onboarding needs no `@Provides` at all — the graph just exposes the root BLoC factory.) See the `add-demo-app` skill. Demo modules are standalone — do **not** add them to `client/composeApp`.
 
 The `plusLibrary` extension in each module's `build.gradle.kts` controls convention plugin features:
 - `enableDi = true` — sets up Metro (kotlin-inject) dependency injection

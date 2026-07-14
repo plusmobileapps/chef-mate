@@ -112,6 +112,8 @@ include(":client:onboarding:impl-robots")
 
 include(":client:onboarding:public")
 
+include(":client:onboarding:demo")
+
 include(":client:meal:data:impl")
 
 include(":client:meal:data:public")
