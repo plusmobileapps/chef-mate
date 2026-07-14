@@ -96,4 +96,12 @@ class SupabaseRecipeBookMemberRemoteDataSource(private val supabaseClient: Supab
             filter { eq("id", memberId) }
         }
     }
+
+    override suspend fun rejectInvite(memberId: String) {
+        supabaseClient.from("recipe_book_members").update(
+            JsonObject(mapOf("status" to JsonPrimitive("rejected")))
+        ) {
+            filter { eq("id", memberId) }
+        }
+    }
 }

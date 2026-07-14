@@ -10,6 +10,7 @@ import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookCollaborationRepository
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookInvite
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookMember
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBookMemberStatus
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookRepository
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookRole
 import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RecipeBookMemberRemoteDataSource
@@ -56,7 +57,12 @@ class RecipeBookCollaborationRepositoryImpl(
                 id = it.memberId,
                 email = it.email,
                 role = RecipeBookRole.fromWire(it.role),
-                accepted = it.status == "accepted",
+                status =
+                    when (it.status) {
+                        "accepted" -> RecipeBookMemberStatus.ACCEPTED
+                        "rejected" -> RecipeBookMemberStatus.REJECTED
+                        else -> RecipeBookMemberStatus.PENDING
+                    },
                 name = if (isCurrentUser) me.userName else it.name,
                 isOwner = it.isOwner,
                 avatarUrl =
@@ -99,6 +105,9 @@ class RecipeBookCollaborationRepositoryImpl(
     }
 
     override suspend fun declineInvite(memberId: String) {
-        remote.deleteMember(memberId)
+        // Mark the invite rejected rather than deleting the row, so the owner can see the recipient
+        // turned it down. The invitee loses book access either way (access requires status =
+        // 'accepted'); the owner can still remove the row later to clear it out.
+        remote.rejectInvite(memberId)
     }
 }

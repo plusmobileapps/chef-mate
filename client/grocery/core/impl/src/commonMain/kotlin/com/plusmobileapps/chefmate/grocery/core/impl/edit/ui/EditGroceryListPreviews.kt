@@ -40,6 +40,13 @@ private val sampleCollaborators =
             role = ListRole.VIEWER,
             status = CollaborationStatus.ACCEPTED,
         ),
+        ListCollaborator(
+            id = 5L,
+            email = "jordan@example.com",
+            displayName = "Jordan Kim",
+            role = ListRole.VIEWER,
+            status = CollaborationStatus.REJECTED,
+        ),
     )
 
 private fun fakeEditBloc(model: EditGroceryListBloc.Model): EditGroceryListBloc =

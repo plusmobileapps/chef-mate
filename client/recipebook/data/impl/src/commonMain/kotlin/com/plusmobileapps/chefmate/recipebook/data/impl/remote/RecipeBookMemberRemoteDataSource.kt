@@ -21,4 +21,9 @@ interface RecipeBookMemberRemoteDataSource {
 
     /** Accepts invite [memberId]: stamps [userId] and flips status to accepted. */
     suspend fun acceptInvite(memberId: String, userId: String)
+
+    /**
+     * Rejects invite [memberId]: flips status to rejected, keeping the row for the owner to see.
+     */
+    suspend fun rejectInvite(memberId: String)
 }

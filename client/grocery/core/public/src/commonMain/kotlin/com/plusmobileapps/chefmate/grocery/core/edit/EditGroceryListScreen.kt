@@ -33,6 +33,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import chefmate.client.grocery.core.public.generated.resources.Res
 import chefmate.client.grocery.core.public.generated.resources.grocery_cancel
+import chefmate.client.grocery.core.public.generated.resources.grocery_collab_declined
 import chefmate.client.grocery.core.public.generated.resources.grocery_collab_group_editors
 import chefmate.client.grocery.core.public.generated.resources.grocery_collab_group_owners
 import chefmate.client.grocery.core.public.generated.resources.grocery_collab_group_viewers
@@ -240,20 +241,23 @@ private fun MemberRow(
     canManage: Boolean,
     onRemove: (ListCollaborator) -> Unit,
 ) {
-    // name → email, with pending invites dimmed and tagged. Role is conveyed by the group header
-    // above, so it isn't repeated per row. Pending invites have no account yet, so they fall back
-    // to the email as the primary line.
+    // name → email, with pending/declined invites dimmed and tagged. Role is conveyed by the group
+    // header above, so it isn't repeated per row. Pending invites have no account yet, so they fall
+    // back to the email as the primary line. A declined invite stays visible so the owner can see
+    // the person turned it down (and can then remove or re-invite them).
     val dimens = ChefMateTheme.dimens
     val name = collaborator.displayName?.takeIf { it.isNotBlank() }
     val pending = collaborator.status == CollaborationStatus.PENDING
+    val declined = collaborator.status == CollaborationStatus.REJECTED
     val secondary =
         listOfNotNull(
                 collaborator.email.takeIf { name != null },
                 stringResource(Res.string.grocery_collab_pending).takeIf { pending },
+                stringResource(Res.string.grocery_collab_declined).takeIf { declined },
             )
             .joinToString(" · ")
     Row(
-        modifier = Modifier.fillMaxWidth().alpha(if (pending) 0.5f else 1f),
+        modifier = Modifier.fillMaxWidth().alpha(if (pending || declined) 0.5f else 1f),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(dimens.paddingSmall),
     ) {
