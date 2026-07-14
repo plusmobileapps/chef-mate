@@ -20,6 +20,7 @@ data class RemoteRecipe(
     val calories: Int? = null,
     @SerialName("star_rating") val starRating: Int? = null,
     @SerialName("is_favorite") val isFavorite: Boolean = false,
+    @SerialName("is_public") val isPublic: Boolean = false,
     @SerialName("created_at") val createdAt: String? = null,
     @SerialName("updated_at") val updatedAt: String? = null,
     @SerialName("client_id") val clientId: String? = null,

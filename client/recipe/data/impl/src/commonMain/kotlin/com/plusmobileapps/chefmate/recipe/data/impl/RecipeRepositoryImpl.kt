@@ -178,6 +178,35 @@ class RecipeRepositoryImpl(
             .map { row -> row?.takeUnless { it.isPendingDelete }?.toRecipe() }
             .flowOn(ioContext)
 
+    override suspend fun getRecipeByRemoteId(remoteId: String): Recipe? =
+        withContext(ioContext) {
+            db.getByRemoteId(remoteId)
+                .executeAsOneOrNull()
+                ?.takeUnless { it.isPendingDelete }
+                ?.toRecipe()
+        }
+
+    override suspend fun fetchPublicRecipe(remoteId: String): Result<Recipe> = runCatching {
+        val remote =
+            remoteDataSource.fetchPublicRecipe(remoteId)
+                ?: throw NoSuchElementException("No public recipe with id $remoteId")
+        remote.toPublicPreview()
+    }
+
+    override suspend fun setRecipePublic(id: Long, isPublic: Boolean): String? {
+        // Publishing requires a remote row (the share link embeds the remote id), which requires
+        // auth. Bail early so the caller can prompt the user to sign in.
+        if (authRepository.state.value !is AuthState.Authenticated) return null
+        withContext(ioContext) {
+            db.setPublic(isPublic = isPublic, updatedAt = dateTimeUtil.now.toString(), id = id)
+        }
+        val existingRemoteId =
+            withContext(ioContext) { db.getById(id).executeAsOneOrNull()?.remoteId }
+        // Create the remote row on first publish, otherwise push the flag change.
+        if (existingRemoteId == null) pushAddToRemote(id) else pushUpdateToRemote(id)
+        return withContext(ioContext) { db.getById(id).executeAsOneOrNull()?.remoteId }
+    }
+
     override suspend fun deleteRecipe(id: Long) {
         val entity = withContext(ioContext) { db.getById(id).executeAsOneOrNull() } ?: return
         val remoteId = entity.remoteId
@@ -244,6 +273,7 @@ class RecipeRepositoryImpl(
                             calories = entity.calories?.toInt(),
                             starRating = entity.starRating?.toInt(),
                             isFavorite = entity.isFavorite,
+                            isPublic = entity.isPublic,
                             createdAt = entity.createdAt,
                             updatedAt = entity.updatedAt,
                             clientId = clientId,
@@ -293,6 +323,7 @@ class RecipeRepositoryImpl(
                         calories = entity.calories?.toInt(),
                         starRating = entity.starRating?.toInt(),
                         isFavorite = entity.isFavorite,
+                        isPublic = entity.isPublic,
                         updatedAt = entity.updatedAt,
                         clientId = entity.clientId,
                     )
@@ -349,6 +380,7 @@ class RecipeRepositoryImpl(
                                 calories = recipe.calories?.toInt(),
                                 starRating = recipe.starRating?.toInt(),
                                 isFavorite = recipe.isFavorite,
+                                isPublic = recipe.isPublic,
                                 createdAt = recipe.createdAt,
                                 updatedAt = recipe.updatedAt,
                                 clientId = clientId,
@@ -392,6 +424,7 @@ class RecipeRepositoryImpl(
                             calories = recipe.calories?.toInt(),
                             starRating = recipe.starRating?.toInt(),
                             isFavorite = recipe.isFavorite,
+                            isPublic = recipe.isPublic,
                             updatedAt = recipe.updatedAt,
                             clientId = recipe.clientId,
                         )
@@ -441,6 +474,7 @@ class RecipeRepositoryImpl(
                             // Preserve the real owner so shared recipes aren't mistaken for the
                             // current user's own; defensively fall back to the syncing user.
                             ownerId = remote.ownerId.ifBlank { userId },
+                            isPublic = remote.isPublic,
                         )
                     }
                 }
@@ -619,10 +653,38 @@ class RecipeRepositoryImpl(
             categories = attachedCategories.toSet(),
             recipeBookIds = bookJoinDb.getBookIdsForRecipe(id).executeAsList().toSet(),
             syncStatus = syncStatus,
+            remoteId = remoteId,
+            isPublic = isPublic,
             createdAt = Instant.parse(createdAt),
             updatedAt = Instant.parse(updatedAt),
         )
     }
+
+    /** Maps a remotely-fetched public recipe into a transient (unsaved) domain [Recipe]. */
+    private fun RemoteRecipe.toPublicPreview(): Recipe =
+        Recipe(
+            id = -1,
+            title = title,
+            description = description,
+            ingredients = ingredients.orEmpty(),
+            directions = directions.orEmpty(),
+            imageUrl = imageUrl,
+            sourceUrl = sourceUrl,
+            servings = servings,
+            prepTime = prepTime,
+            cookTime = cookTime,
+            totalTime = totalTime,
+            calories = calories,
+            starRating = starRating,
+            isFavorite = false,
+            categories = emptySet(),
+            recipeBookIds = emptySet(),
+            syncStatus = SyncStatus.SYNCED,
+            remoteId = id,
+            isPublic = isPublic,
+            createdAt = createdAt?.let { Instant.parse(it) } ?: Instant.DISTANT_PAST,
+            updatedAt = updatedAt?.let { Instant.parse(it) } ?: Instant.DISTANT_PAST,
+        )
 
     private companion object {
         const val TAG = "RecipeRepositoryImpl"

@@ -26,6 +26,7 @@ import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 
@@ -404,6 +405,63 @@ class RecipeRepositoryImplTest {
         return db.recipeBookQueries.lastInsertId().executeAsOne().MAX!!
     }
 
+    @Test
+    fun setRecipePublic_when_authenticated_flags_public_and_returns_remote_id() =
+        runTest(testDispatcher) {
+            fakeAuth.setAuthenticated()
+            val created = recipeRepository.createRecipe(blankRecipe("Shared Stew"))
+
+            val remoteId = recipeRepository.setRecipePublic(created.id, isPublic = true)
+
+            remoteId shouldBe recipeRepository.getRecipe(created.id).first()?.remoteId
+            (remoteId != null) shouldBe true
+            recipeRepository.getRecipe(created.id).first()?.isPublic shouldBe true
+        }
+
+    @Test
+    fun setRecipePublic_when_unauthenticated_returns_null() =
+        runTest(testDispatcher) {
+            val created = recipeRepository.createRecipe(blankRecipe("Private Pie"))
+            recipeRepository.setRecipePublic(created.id, isPublic = true) shouldBe null
+        }
+
+    @Test
+    fun fetchPublicRecipe_maps_a_public_remote_recipe() =
+        runTest(testDispatcher) {
+            recipeRemote.publicRecipe =
+                RemoteRecipe(
+                    id = "pub-1",
+                    ownerId = "another-user",
+                    title = "Public Pancakes",
+                    ingredients = "flour",
+                    directions = "mix",
+                    isPublic = true,
+                )
+
+            val result = recipeRepository.fetchPublicRecipe("pub-1")
+
+            result.isSuccess shouldBe true
+            result.getOrNull()?.title shouldBe "Public Pancakes"
+            result.getOrNull()?.remoteId shouldBe "pub-1"
+            result.getOrNull()?.isPublic shouldBe true
+        }
+
+    @Test
+    fun fetchPublicRecipe_fails_when_recipe_is_not_public() =
+        runTest(testDispatcher) {
+            recipeRepository.fetchPublicRecipe("missing").isFailure shouldBe true
+        }
+
+    @Test
+    fun getRecipeByRemoteId_returns_the_local_recipe() =
+        runTest(testDispatcher) {
+            fakeAuth.setAuthenticated()
+            val created = recipeRepository.createRecipe(blankRecipe("Findable"))
+            val remoteId = recipeRepository.getRecipe(created.id).first()?.remoteId
+
+            recipeRepository.getRecipeByRemoteId(remoteId!!)?.title shouldBe "Findable"
+        }
+
     private fun blankRecipe(title: String, categories: Set<Category> = emptySet()) =
         Recipe(
             id = -1,
@@ -446,6 +504,13 @@ class RecipeRepositoryImplTest {
         }
 
         override suspend fun fetchAccessibleRecipes(): List<RemoteRecipe> = fetchResult
+
+        var publicRecipe: RemoteRecipe? = null
+
+        override suspend fun fetchPublicRecipe(remoteId: String): RemoteRecipe? =
+            publicRecipe?.takeIf {
+                it.id == remoteId
+            }
 
         override suspend fun setRecipeCategories(
             recipeRemoteId: String,

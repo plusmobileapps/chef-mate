@@ -24,6 +24,28 @@ interface RecipeRepository {
 
     suspend fun getRecipe(id: Long): Flow<Recipe?>
 
+    /**
+     * Looks up a locally-stored recipe by its global [remoteId], or null if none is stored. Used to
+     * resolve a shared recipe link to a recipe the current user already owns or collaborates on so
+     * it opens in the normal detail screen instead of the read-only public preview.
+     */
+    suspend fun getRecipeByRemoteId(remoteId: String): Recipe?
+
+    /**
+     * Fetches a public recipe by its global [remoteId] from the remote source, for a recipient
+     * opening a share link to a recipe they don't have locally. The returned [Recipe] is transient
+     * (not persisted; local [Recipe.id] is -1) — call [createRecipe] to save an owned copy. Fails
+     * when the recipe isn't public/accessible or the fetch errors (e.g. offline).
+     */
+    suspend fun fetchPublicRecipe(remoteId: String): Result<Recipe>
+
+    /**
+     * Marks the recipe [id] public or private, ensuring it is pushed to the remote first (so it has
+     * a [Recipe.remoteId]). Returns the recipe's remote id — the identifier a share link embeds —
+     * or null if it couldn't be synced (e.g. signed out, or the push failed).
+     */
+    suspend fun setRecipePublic(id: Long, isPublic: Boolean): String?
+
     suspend fun deleteRecipe(id: Long)
 
     suspend fun clearLocalData()
