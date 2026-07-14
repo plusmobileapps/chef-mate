@@ -2,6 +2,7 @@
 
 package com.plusmobileapps.chefmate.root
 
+import com.plusmobileapps.chefmate.ChefMateUrls
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 
@@ -29,10 +30,24 @@ class DeepLinkTest {
     }
 
     @Test
-    fun parse_recipe_detail_returns_none_when_id_is_missing_or_invalid() {
+    fun parse_recipe_detail_returns_none_when_id_segment_is_missing() {
         DeepLink.parse("chefmate://recipe") shouldBe DeepLink.None
         DeepLink.parse("chefmate://recipe/") shouldBe DeepLink.None
-        DeepLink.parse("chefmate://recipe/abc") shouldBe DeepLink.None
+    }
+
+    @Test
+    fun parse_non_numeric_recipe_segment_is_a_public_share_link() {
+        // A non-numeric id is a global remote UUID from a cross-user share link, not a local id.
+        DeepLink.parse("chefmate://recipe/abc") shouldBe DeepLink.PublicRecipe("abc")
+        val uuid = "3f2504e0-4f89-41d3-9a0c-0305e82c3301"
+        DeepLink.parse("https://chefmate.plusmobileapps.com/recipe/$uuid") shouldBe
+            DeepLink.PublicRecipe(uuid)
+    }
+
+    @Test
+    fun recipe_share_url_round_trips_through_parse() {
+        val uuid = "3f2504e0-4f89-41d3-9a0c-0305e82c3301"
+        DeepLink.parse(ChefMateUrls.recipeShareUrl(uuid)) shouldBe DeepLink.PublicRecipe(uuid)
     }
 
     @Test

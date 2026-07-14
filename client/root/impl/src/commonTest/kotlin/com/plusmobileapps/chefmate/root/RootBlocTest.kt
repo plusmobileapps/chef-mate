@@ -18,6 +18,7 @@ import com.plusmobileapps.chefmate.onboarding.OnboardingRootBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
+import com.plusmobileapps.chefmate.recipe.core.share.PublicRecipeBloc
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc
 import com.plusmobileapps.chefmate.settings.root.SettingsRootBloc
@@ -35,6 +36,8 @@ class RootBlocTest {
     var bottomNavOutput: Consumer<BottomNavBloc.Output> = Consumer {}
     var recipeOutput: Consumer<RecipeRootBloc.Output> = Consumer {}
     var recipeProps: RecipeRootBloc.Props? = null
+    var publicRecipeOutput: Consumer<PublicRecipeBloc.Output> = Consumer {}
+    var publicRecipeRemoteId: String? = null
     var settingsRootOutput: Consumer<SettingsRootBloc.Output> = Consumer {}
     var settingsRootProps: SettingsRootBloc.Props? = null
     var manageProfileOutput:
@@ -95,6 +98,11 @@ class RootBlocTest {
             recipeRoot = { _, props, output ->
                 recipeOutput = output
                 recipeProps = props
+                mock()
+            },
+            publicRecipe = { _, remoteId, output ->
+                publicRecipeRemoteId = remoteId
+                publicRecipeOutput = output
                 mock()
             },
             mealPlannerRoot = MealPlannerRootBloc.Factory { _, _, _ -> mock() },
@@ -434,6 +442,23 @@ class RootBlocTest {
         root.instance() should instanceOf<RootBloc.Child.RecipeRoot>()
         root.state.value.backStack.size shouldBe 1
         recipeProps shouldBe RecipeRootBloc.Props.Detail(recipeId = 42L)
+    }
+
+    @Test
+    fun Given_public_recipe_deeplink_When_initialized_Then_public_recipe_is_on_top() {
+        val uuid = "3f2504e0-4f89-41d3-9a0c-0305e82c3301"
+        val root = createRoot(DeepLink.PublicRecipe(remoteId = uuid))
+        root.instance() should instanceOf<RootBloc.Child.PublicRecipe>()
+        root.state.value.backStack.size shouldBe 1
+        publicRecipeRemoteId shouldBe uuid
+    }
+
+    @Test
+    fun Given_running_app_When_public_recipe_deeplink_handled_Then_public_recipe_is_shown() {
+        val uuid = "3f2504e0-4f89-41d3-9a0c-0305e82c3301"
+        rootBloc.handleDeepLink("https://chefmate.plusmobileapps.com/recipe/$uuid")
+        rootBloc.instance() should instanceOf<RootBloc.Child.PublicRecipe>()
+        publicRecipeRemoteId shouldBe uuid
     }
 
     @Test

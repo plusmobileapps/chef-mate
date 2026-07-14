@@ -53,6 +53,10 @@
                         android:scheme="https"
                         android:host="chefmate.plusmobileapps.com"
                         android:pathPrefix="/notifications" />
+                <data
+                        android:scheme="https"
+                        android:host="chefmate.plusmobileapps.com"
+                        android:pathPrefix="/recipe" />
             </intent-filter>
         </activity>
 

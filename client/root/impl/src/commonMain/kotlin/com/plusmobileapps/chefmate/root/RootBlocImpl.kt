@@ -9,6 +9,7 @@ import com.arkivanov.decompose.router.stack.bringToFront
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.replaceAll
+import com.arkivanov.decompose.router.stack.replaceCurrent
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.aichat.AiChatRootBloc
@@ -32,6 +33,7 @@ import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc.Props.Detail
+import com.plusmobileapps.chefmate.recipe.core.share.PublicRecipeBloc
 import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc
 import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookBloc
 import com.plusmobileapps.chefmate.root.RootBloc.Child.BottomNavigation
@@ -54,6 +56,7 @@ class RootBlocImpl(
     private val bottomNav: BottomNavBloc.Factory,
     private val browserRootBlocFactory: BrowserRootBloc.Factory,
     private val recipeRoot: RecipeRootBloc.Factory,
+    private val publicRecipe: PublicRecipeBloc.Factory,
     private val mealPlannerRoot: MealPlannerRootBloc.Factory,
     private val authentication: AuthenticationBloc.Factory,
     private val otpBloc: OtpBloc.Factory,
@@ -105,6 +108,11 @@ class RootBlocImpl(
             DeepLink.MealPlanner -> listOf(Configuration.BottomNavigation)
             is DeepLink.RecipeDetail ->
                 listOf(Configuration.BottomNavigation, RecipeRoot(Detail(deepLink.recipeId)))
+            is DeepLink.PublicRecipe ->
+                listOf(
+                    Configuration.BottomNavigation,
+                    Configuration.PublicRecipe(deepLink.remoteId),
+                )
             DeepLink.AppSettings ->
                 listOf(Configuration.BottomNavigation, Configuration.SettingsRoot())
             DeepLink.Notifications ->
@@ -143,6 +151,8 @@ class RootBlocImpl(
             DeepLink.AppSettings -> navigation.bringToFront(Configuration.SettingsRoot())
             is DeepLink.RecipeDetail ->
                 navigation.bringToFront(RecipeRoot(Detail(deepLink.recipeId)))
+            is DeepLink.PublicRecipe ->
+                navigation.bringToFront(Configuration.PublicRecipe(deepLink.remoteId))
             DeepLink.Groceries -> {
                 selectBottomNavTab(BottomNavBloc.Tab.GROCERIES)
                 navigation.bringToFront(Configuration.BottomNavigation)
@@ -206,6 +216,16 @@ class RootBlocImpl(
                             context = context,
                             props = config.props,
                             output = ::handleRecipeRootOutput,
+                        )
+                )
+
+            is Configuration.PublicRecipe ->
+                RootBloc.Child.PublicRecipe(
+                    bloc =
+                        publicRecipe.create(
+                            context = context,
+                            remoteId = config.remoteId,
+                            output = ::handlePublicRecipeOutput,
                         )
                 )
 
@@ -587,6 +607,17 @@ class RootBlocImpl(
         }
     }
 
+    private fun handlePublicRecipeOutput(output: PublicRecipeBloc.Output) {
+        when (output) {
+            PublicRecipeBloc.Output.Finished -> navigation.pop()
+            // Replace the preview with the real detail screen — the recipe is now in the user's
+            // library (either already owned, or just saved as a copy), so back shouldn't return to
+            // the read-only preview.
+            is PublicRecipeBloc.Output.OpenRecipe ->
+                navigation.replaceCurrent(RecipeRoot(Detail(output.recipeId)))
+        }
+    }
+
     private fun handleAuthenticationOutput(output: AuthenticationBloc.Output) {
         when (output) {
             AuthenticationBloc.Output.Finished -> navigation.pop()
@@ -639,6 +670,8 @@ class RootBlocImpl(
         @Serializable data object BottomNavigation : Configuration()
 
         @Serializable data class RecipeRoot(val props: RecipeRootBloc.Props) : Configuration()
+
+        @Serializable data class PublicRecipe(val remoteId: String) : Configuration()
 
         @Serializable
         data class Authentication(val props: AuthenticationBloc.Props) : Configuration()

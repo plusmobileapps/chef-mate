@@ -19,6 +19,7 @@ import com.plusmobileapps.chefmate.profile.ManageProfileBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
+import com.plusmobileapps.chefmate.recipe.core.share.PublicRecipeBloc
 import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc
 import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookBloc
 import com.plusmobileapps.chefmate.settings.root.SettingsRootBloc
@@ -45,6 +46,8 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
         data class BottomNavigation(override val bloc: BottomNavBloc) : Child()
 
         data class RecipeRoot(override val bloc: RecipeRootBloc) : Child()
+
+        data class PublicRecipe(override val bloc: PublicRecipeBloc) : Child()
 
         data class Authentication(override val bloc: AuthenticationBloc) : Child()
 
