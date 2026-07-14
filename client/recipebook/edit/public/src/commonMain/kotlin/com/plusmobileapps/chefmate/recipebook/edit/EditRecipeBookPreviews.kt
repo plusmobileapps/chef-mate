@@ -7,6 +7,7 @@ import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_bo
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_edit_title
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_name_error
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookMember
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBookMemberStatus
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookRole
 import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookBloc.Model
 import com.plusmobileapps.chefmate.text.asTextData
@@ -81,7 +82,7 @@ val previewEditRecipeBookCollaboratorsBloc: EditRecipeBookBloc =
                         id = null,
                         email = "you@example.com",
                         role = RecipeBookRole.OWNER,
-                        accepted = true,
+                        status = RecipeBookMemberStatus.ACCEPTED,
                         name = "Jordan Lee",
                         isOwner = true,
                     ),
@@ -89,14 +90,21 @@ val previewEditRecipeBookCollaboratorsBloc: EditRecipeBookBloc =
                         id = "1",
                         email = "alex@example.com",
                         role = RecipeBookRole.EDITOR,
-                        accepted = true,
+                        status = RecipeBookMemberStatus.ACCEPTED,
                         name = "Alex Rivera",
                     ),
                     RecipeBookMember(
                         id = "2",
                         email = "sam@example.com",
                         role = RecipeBookRole.VIEWER,
-                        accepted = false,
+                        status = RecipeBookMemberStatus.PENDING,
+                    ),
+                    RecipeBookMember(
+                        id = "3",
+                        email = "jordan@example.com",
+                        role = RecipeBookRole.EDITOR,
+                        status = RecipeBookMemberStatus.REJECTED,
+                        name = "Jordan Kim",
                     ),
                 ),
         )
@@ -116,7 +124,7 @@ val previewEditRecipeBookMemberViewBloc: EditRecipeBookBloc =
                         id = null,
                         email = "casey@example.com",
                         role = RecipeBookRole.OWNER,
-                        accepted = true,
+                        status = RecipeBookMemberStatus.ACCEPTED,
                         name = "Casey Morgan",
                         isOwner = true,
                     ),
@@ -124,14 +132,14 @@ val previewEditRecipeBookMemberViewBloc: EditRecipeBookBloc =
                         id = "1",
                         email = "you@example.com",
                         role = RecipeBookRole.EDITOR,
-                        accepted = true,
+                        status = RecipeBookMemberStatus.ACCEPTED,
                         name = "Jordan Lee",
                     ),
                     RecipeBookMember(
                         id = "2",
                         email = "sam@example.com",
                         role = RecipeBookRole.VIEWER,
-                        accepted = false,
+                        status = RecipeBookMemberStatus.PENDING,
                     ),
                 ),
         )
@@ -151,7 +159,7 @@ val previewEditRecipeBookRemoveConfirmBloc: EditRecipeBookBloc =
                         id = null,
                         email = "you@example.com",
                         role = RecipeBookRole.OWNER,
-                        accepted = true,
+                        status = RecipeBookMemberStatus.ACCEPTED,
                         name = "Jordan Lee",
                         isOwner = true,
                     ),
@@ -159,7 +167,7 @@ val previewEditRecipeBookRemoveConfirmBloc: EditRecipeBookBloc =
                         id = "1",
                         email = "alex@example.com",
                         role = RecipeBookRole.EDITOR,
-                        accepted = true,
+                        status = RecipeBookMemberStatus.ACCEPTED,
                         name = "Alex Rivera",
                     ),
                 ),
@@ -168,7 +176,7 @@ val previewEditRecipeBookRemoveConfirmBloc: EditRecipeBookBloc =
                     id = "1",
                     email = "alex@example.com",
                     role = RecipeBookRole.EDITOR,
-                    accepted = true,
+                    status = RecipeBookMemberStatus.ACCEPTED,
                     name = "Alex Rivera",
                 ),
         )
