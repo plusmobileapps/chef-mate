@@ -12,6 +12,13 @@ interface RecipeRemoteDataSource {
     suspend fun fetchAccessibleRecipes(): List<RemoteRecipe>
 
     /**
+     * Fetches a single recipe by its remote id, but only if it has been marked public. Returns null
+     * when no public recipe with that id exists (missing, or private and outside RLS access). Used
+     * to render a shared recipe link for a recipient who doesn't own or collaborate on it.
+     */
+    suspend fun fetchPublicRecipe(remoteId: String): RemoteRecipe?
+
+    /**
      * Replaces the recipe's attached-category set in the `recipe_categories` join table: deletes
      * any rows for [recipeRemoteId] whose `category_id` isn't in [categoryRemoteIds], then inserts
      * the missing rows. Idempotent — safe to call repeatedly with the same set.

@@ -1,0 +1,4 @@
+-- Public recipe sharing: flags a recipe as viewable by anyone with its share link.
+-- Mirrors the server-side `recipes.is_public` column (see the Supabase migration
+-- 20260713_add_recipe_public_sharing.sql). Private (0) is the default.
+ALTER TABLE Recipe ADD COLUMN isPublic INTEGER NOT NULL DEFAULT 0;

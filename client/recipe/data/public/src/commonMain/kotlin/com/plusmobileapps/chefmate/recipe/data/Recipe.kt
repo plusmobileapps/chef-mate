@@ -27,6 +27,10 @@ data class Recipe(
      */
     val recipeBookIds: Set<Long> = emptySet(),
     val syncStatus: SyncStatus = SyncStatus.NOT_SYNCED,
+    /** The recipe's global Supabase id, present once synced; the identifier used in share links. */
+    val remoteId: String? = null,
+    /** True when the owner has published this recipe so anyone with its share link can view it. */
+    val isPublic: Boolean = false,
     val createdAt: Instant,
     val updatedAt: Instant,
 ) {

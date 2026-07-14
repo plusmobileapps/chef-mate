@@ -45,8 +45,29 @@
     <string name="recipe_detail_share">Share recipe</string>
 <string name="recipe_detail_share_url">Share recipe URL</string>
 <string name="recipe_detail_share_text">Share recipe text</string>
+    <string name="recipe_detail_share_link">Share recipe link</string>
+    <string name="recipe_detail_stop_sharing">Stop sharing link</string>
+    <string name="recipe_detail_public_badge">Shared</string>
+    <string name="recipe_detail_share_confirm_title">Share this recipe?</string>
+    <string name="recipe_detail_share_confirm_body">Anyone with the link will be able to view this recipe. You can stop sharing it at any time.</string>
+    <string name="recipe_detail_share_confirm_button">Share link</string>
+    <string name="recipe_detail_share_cancel">Cancel</string>
+    <string name="recipe_detail_share_sign_in_required">Sign in to share a recipe link.</string>
+    <string name="recipe_detail_share_failed">Couldn’t create a share link. Please try again.</string>
     <string name="recipe_detail_copied_to_clipboard">Copied to clipboard</string>
     <string name="recipe_full_image_close">Close</string>
+
+    <!-- Public recipe preview (opened from a shared link) -->
+    <string name="public_recipe_title">Shared recipe</string>
+    <string name="public_recipe_save">Save to my recipes</string>
+    <string name="public_recipe_saving">Saving…</string>
+    <string name="public_recipe_not_found_title">Recipe unavailable</string>
+    <string name="public_recipe_not_found_body">This recipe isn’t shared, or the link is no longer valid.</string>
+    <string name="public_recipe_offline_title">Couldn’t load recipe</string>
+    <string name="public_recipe_offline_body">Check your connection and try again.</string>
+    <string name="public_recipe_retry">Try again</string>
+    <string name="public_recipe_ingredients">Ingredients</string>
+    <string name="public_recipe_directions">Directions</string>
 
     <!-- Add to Meal Plan -->
     <string name="recipe_detail_add_to_meal_plan">Add to meal plan</string>

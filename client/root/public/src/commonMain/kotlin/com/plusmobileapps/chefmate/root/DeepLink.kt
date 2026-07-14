@@ -1,9 +1,18 @@
 package com.plusmobileapps.chefmate.root
 
+import com.plusmobileapps.chefmate.ChefMateUrls
+
 sealed class DeepLink {
     data object None : DeepLink()
 
     data class RecipeDetail(val recipeId: Long) : DeepLink()
+
+    /**
+     * A shared recipe link keyed by the recipe's global [remoteId] (a Supabase UUID). Distinct from
+     * [RecipeDetail], whose id is a device-local `Long` only meaningful to the current user; this
+     * is the cross-user share form (`https://chefmate.plusmobileapps.com/recipe/<uuid>`).
+     */
+    data class PublicRecipe(val remoteId: String) : DeepLink()
 
     data object Groceries : DeepLink()
 
@@ -18,13 +27,13 @@ sealed class DeepLink {
     data object SignUp : DeepLink()
 
     companion object {
-        const val SCHEME: String = "chefmate"
+        const val SCHEME: String = ChefMateUrls.SCHEME
 
         /**
          * Host of the Universal Link / App Link web domain, e.g.
          * https://chefmate.plusmobileapps.com.
          */
-        const val WEB_HOST: String = "chefmate.plusmobileapps.com"
+        const val WEB_HOST: String = ChefMateUrls.WEB_HOST
 
         fun parse(uri: String?): DeepLink {
             if (uri.isNullOrBlank()) return None
@@ -32,8 +41,10 @@ sealed class DeepLink {
             val host = segments.firstOrNull() ?: return None
             return when (host) {
                 "recipe" -> {
-                    val id = segments.getOrNull(1)?.toLongOrNull() ?: return None
-                    RecipeDetail(id)
+                    val segment = segments.getOrNull(1) ?: return None
+                    // A numeric id is the device-local RecipeDetail (dev/internal navigation); a
+                    // non-numeric segment is a global remote UUID from a cross-user share link.
+                    segment.toLongOrNull()?.let { RecipeDetail(it) } ?: PublicRecipe(segment)
                 }
                 "groceries" -> Groceries
                 "meal-planner" -> MealPlanner

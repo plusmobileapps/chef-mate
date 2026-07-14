@@ -3,6 +3,8 @@
 
 package com.plusmobileapps.chefmate.recipe.core.impl.detail
 
+import chefmate.client.recipe.core.public.generated.resources.Res
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_sign_in_required
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.CoachMarkController
@@ -14,6 +16,7 @@ import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
 import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.toast.testing.FakeToastService
 import com.plusmobileapps.chefmate.util.TimeFormatterUtil
 import com.plusmobileapps.chefmate.util.testing.FakeDateTimeUtil
@@ -27,7 +30,9 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlin.test.Test
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 
 class RecipeDetailBlocImplTest {
 
@@ -35,6 +40,7 @@ class RecipeDetailBlocImplTest {
     private val output = TestConsumer<RecipeDetailBloc.Output>()
     private val recipes = MutableStateFlow<List<Recipe>>(emptyList())
     private val repository = FakeRecipeRepository(recipes)
+    private val toastService = FakeToastService()
 
     private val sampleRecipe =
         Recipe(
@@ -71,6 +77,7 @@ class RecipeDetailBlocImplTest {
                 mainContext = context.mainContext,
                 repository = repository,
                 coachMarkController = coachMarkController,
+                toastService = toastService,
             )
         }
         val dateTimeUtil = FakeDateTimeUtil()
@@ -178,5 +185,61 @@ class RecipeDetailBlocImplTest {
         bloc.onAddToGroceryListClicked()
         coachMarkController.hasSeen(CoachMarkId.RECIPE_DETAIL_ADD_TO_GROCERY) shouldBe false
         bloc.state.value.activeCoachMark shouldBe CoachMarkId.RECIPE_DETAIL_COOK_MODE
+    }
+
+    @Test
+    fun When_share_link_clicked_on_private_recipe_Then_confirmation_is_shown() {
+        val bloc = createBloc(sampleRecipe.copy(isPublic = false))
+        bloc.onShareLinkClicked()
+        bloc.state.value.showShareConfirmation shouldBe true
+    }
+
+    @Test
+    fun When_share_confirmed_Then_recipe_is_made_public_and_link_is_emitted() {
+        repository.setPublicResult = "abc-remote-id"
+        val bloc = createBloc(sampleRecipe.copy(isPublic = false))
+        val emitted = mutableListOf<String>()
+        val job =
+            CoroutineScope(context.mainContext).launch { bloc.shareLink.collect { emitted += it } }
+
+        bloc.onShareLinkClicked()
+        bloc.onShareConfirmed()
+
+        bloc.state.value.showShareConfirmation shouldBe false
+        repository.lastSetPublic shouldBe (sampleRecipe.id to true)
+        emitted shouldBe listOf("https://chefmate.plusmobileapps.com/recipe/abc-remote-id")
+        job.cancel()
+    }
+
+    @Test
+    fun When_share_confirmed_but_not_signed_in_Then_sign_in_toast_is_shown() {
+        // A null remote id models "couldn't publish" (e.g. signed out).
+        repository.setPublicResult = null
+        val bloc = createBloc(sampleRecipe.copy(isPublic = false))
+        bloc.onShareLinkClicked()
+        bloc.onShareConfirmed()
+        toastService.shown shouldBe
+            listOf(ResourceString(Res.string.recipe_detail_share_sign_in_required))
+    }
+
+    @Test
+    fun When_share_link_clicked_on_already_public_recipe_Then_link_emitted_without_confirmation() {
+        val bloc = createBloc(sampleRecipe.copy(isPublic = true, remoteId = "already-public"))
+        val emitted = mutableListOf<String>()
+        val job =
+            CoroutineScope(context.mainContext).launch { bloc.shareLink.collect { emitted += it } }
+
+        bloc.onShareLinkClicked()
+
+        bloc.state.value.showShareConfirmation shouldBe false
+        emitted shouldBe listOf("https://chefmate.plusmobileapps.com/recipe/already-public")
+        job.cancel()
+    }
+
+    @Test
+    fun When_stop_sharing_clicked_Then_recipe_is_made_private() {
+        val bloc = createBloc(sampleRecipe.copy(isPublic = true, remoteId = "already-public"))
+        bloc.onStopSharingClicked()
+        repository.lastSetPublic shouldBe (sampleRecipe.id to false)
     }
 }

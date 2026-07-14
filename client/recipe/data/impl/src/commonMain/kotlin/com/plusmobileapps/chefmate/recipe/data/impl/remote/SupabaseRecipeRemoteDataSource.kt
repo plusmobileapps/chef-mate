@@ -32,6 +32,17 @@ class SupabaseRecipeRemoteDataSource(private val supabaseClient: SupabaseClient)
     override suspend fun fetchAccessibleRecipes(): List<RemoteRecipe> =
         supabaseClient.from("recipes").select().decodeList<RemoteRecipe>()
 
+    override suspend fun fetchPublicRecipe(remoteId: String): RemoteRecipe? =
+        supabaseClient
+            .from("recipes")
+            .select {
+                filter {
+                    eq("id", remoteId)
+                    eq("is_public", true)
+                }
+            }
+            .decodeSingleOrNull<RemoteRecipe>()
+
     override suspend fun setRecipeCategories(
         recipeRemoteId: String,
         categoryRemoteIds: Set<String>,

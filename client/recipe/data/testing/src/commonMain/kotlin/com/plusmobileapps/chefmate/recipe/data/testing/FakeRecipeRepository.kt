@@ -11,6 +11,18 @@ import kotlinx.coroutines.flow.map
 class FakeRecipeRepository(
     private val recipes: MutableStateFlow<List<Recipe>> = MutableStateFlow(emptyList())
 ) : RecipeRepository {
+
+    /** Public recipes reachable by remote id via [fetchPublicRecipe], keyed by remote id. */
+    val publicRecipes: MutableMap<String, Recipe> = mutableMapOf()
+
+    /**
+     * Remote id returned by [setRecipePublic]; null simulates an unauthenticated/failed publish.
+     */
+    var setPublicResult: String? = "remote-id"
+
+    /** Records the last [setRecipePublic] invocation for assertions. */
+    var lastSetPublic: Pair<Long, Boolean>? = null
+
     override fun getRecipes(): Flow<List<Recipe>> = recipes.asStateFlow()
 
     override fun getRecipes(presets: Set<BuiltinCategory>?): Flow<List<Recipe>> =
@@ -36,6 +48,19 @@ class FakeRecipeRepository(
     override suspend fun getRecipe(id: Long): Flow<Recipe?> =
         recipes.value.firstOrNull { it.id == id }?.let { MutableStateFlow(it) }
             ?: MutableStateFlow(null)
+
+    override suspend fun getRecipeByRemoteId(remoteId: String): Recipe? =
+        recipes.value.firstOrNull { it.remoteId == remoteId }
+
+    override suspend fun fetchPublicRecipe(remoteId: String): Result<Recipe> =
+        publicRecipes[remoteId]?.let { Result.success(it) }
+            ?: Result.failure(NoSuchElementException("No public recipe with id $remoteId"))
+
+    override suspend fun setRecipePublic(id: Long, isPublic: Boolean): String? {
+        lastSetPublic = id to isPublic
+        recipes.value = recipes.value.map { if (it.id == id) it.copy(isPublic = isPublic) else it }
+        return setPublicResult
+    }
 
     override suspend fun deleteRecipe(id: Long) {
         recipes.value = recipes.value.filterNot { it.id == id }

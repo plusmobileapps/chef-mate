@@ -18,6 +18,8 @@ class FakeRecipeRemoteDataSource : RecipeRemoteDataSource {
 
     override suspend fun fetchAccessibleRecipes(): List<RemoteRecipe> = emptyList()
 
+    override suspend fun fetchPublicRecipe(remoteId: String): RemoteRecipe? = null
+
     override suspend fun setRecipeCategories(
         recipeRemoteId: String,
         categoryRemoteIds: Set<String>,

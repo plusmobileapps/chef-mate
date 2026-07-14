@@ -1,5 +1,8 @@
 package com.plusmobileapps.chefmate.recipe.core.impl.detail
 
+import chefmate.client.recipe.core.public.generated.resources.Res
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_sign_in_required
+import com.plusmobileapps.chefmate.ChefMateUrls
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.combineStates
 import com.plusmobileapps.chefmate.di.CoachMarkController
@@ -7,6 +10,8 @@ import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
+import com.plusmobileapps.chefmate.text.ResourceString
+import com.plusmobileapps.chefmate.toast.ToastService
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -26,10 +31,14 @@ class RecipeDetailViewModel(
     @Main mainContext: CoroutineContext,
     private val repository: RecipeRepository,
     private val coachMarkController: CoachMarkController,
+    private val toastService: ToastService,
 ) : ViewModel(mainContext) {
 
     private val _output = Channel<Output>(Channel.BUFFERED)
     val output: Flow<Output> = _output.receiveAsFlow()
+
+    private val _shareLink = Channel<String>(Channel.BUFFERED)
+    val shareLink: Flow<String> = _shareLink.receiveAsFlow()
 
     private val _state = MutableStateFlow(State())
 
@@ -75,11 +84,45 @@ class RecipeDetailViewModel(
         }
     }
 
+    fun onShareLinkClicked() {
+        val recipe = _state.value.recipe
+        val remoteId = recipe.remoteId
+        // Already shared: skip the confirmation and share the existing link straight away.
+        if (recipe.isPublic && remoteId != null) {
+            scope.launch { _shareLink.send(ChefMateUrls.recipeShareUrl(remoteId)) }
+        } else {
+            _state.update { it.copy(showShareConfirmation = true) }
+        }
+    }
+
+    fun onShareConfirmed() {
+        _state.update { it.copy(showShareConfirmation = false) }
+        scope.launch {
+            val remoteId = repository.setRecipePublic(recipeId, isPublic = true)
+            if (remoteId != null) {
+                _shareLink.send(ChefMateUrls.recipeShareUrl(remoteId))
+            } else {
+                // setRecipePublic returns null when the recipe can't be synced — the common cause
+                // is being signed out, since a share link needs a remote (global) recipe id.
+                toastService.show(ResourceString(Res.string.recipe_detail_share_sign_in_required))
+            }
+        }
+    }
+
+    fun onShareDismissed() {
+        _state.update { it.copy(showShareConfirmation = false) }
+    }
+
+    fun onStopSharing() {
+        scope.launch { repository.setRecipePublic(recipeId, isPublic = false) }
+    }
+
     override fun onCleared() {
         super.onCleared()
         // Leaving the screen without dismissing frees the queue so other coach marks can show.
         CoachMarkId.recipeDetailSequence.forEach(coachMarkController::release)
         _output.close()
+        _shareLink.close()
     }
 
     /**
@@ -97,6 +140,7 @@ class RecipeDetailViewModel(
         val isLoading: Boolean = true,
         val isDeleting: Boolean = false,
         val showDeleteConfirmationDialog: Boolean = false,
+        val showShareConfirmation: Boolean = false,
         val recipe: Recipe = Recipe.Empty,
         val activeCoachMark: String? = null,
     )
