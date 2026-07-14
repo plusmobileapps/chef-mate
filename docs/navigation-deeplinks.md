@@ -10,14 +10,21 @@ For the unrelated Supabase email-verification flow (`chefmate://auth/...`), see 
 
 | URI | Lands on |
 |---|---|
-| `chefmate://recipe/{id}` | Recipe detail for the given recipe id (`Long`) |
+| `chefmate://recipe/{id}` | Recipe detail for the given **local** recipe id (`Long`) — dev/internal navigation only; a local id is meaningless to another user |
+| `chefmate://recipe/{remoteId}` / `https://chefmate.plusmobileapps.com/recipe/{remoteId}` | **Public recipe share link.** A non-numeric segment is treated as the recipe's global Supabase id (UUID). If the recipe is already in the user's library it opens the normal detail screen; otherwise it opens the read-only public preview with a "Save to my recipes" action. See [Public recipe sharing](#public-recipe-sharing). |
 | `chefmate://groceries` | Bottom-nav `Groceries` tab |
 | `chefmate://meal-planner` | Bottom-nav `Meals` tab |
 | `chefmate://settings` | App settings root screen (the destination reached via Settings tab → "App Settings") |
 | `chefmate://signin` | Authentication screen in sign-in mode |
 | `chefmate://signup` | Authentication screen in sign-up mode |
 
-Unknown URIs, missing/invalid path segments (`chefmate://recipe`, `chefmate://recipe/abc`), and non-`chefmate://` URIs all fall back to `DeepLink.None` and the app launches normally on the recipes tab.
+Unknown URIs, a missing recipe segment (`chefmate://recipe`, `chefmate://recipe/`), and non-`chefmate://` / non-web-host URIs all fall back to `DeepLink.None` and the app launches normally on the recipes tab. Note `chefmate://recipe/abc` is **not** `None` — a non-numeric segment is parsed as a public-recipe share link (see below).
+
+## Public recipe sharing
+
+Recipes are private by default (RLS-scoped to the owner and accepted recipe-book collaborators). The **Share → "Share recipe link"** action on the recipe detail screen makes a recipe public (after a confirmation dialog) and shares `https://chefmate.plusmobileapps.com/recipe/{remoteId}`, where `remoteId` is the recipe's global Supabase UUID. "Stop sharing link" makes it private again. Backing pieces: `recipes.is_public` + an additive `SELECT` RLS policy (`supabase/migrations/20260713_add_recipe_public_sharing.sql`), and `RecipeRepository.setRecipePublic` / `fetchPublicRecipe`.
+
+A recipient opening the link routes to `DeepLink.PublicRecipe(remoteId)` → `RootBloc.Child.PublicRecipe` (`PublicRecipeBloc`): if they already have the recipe locally it opens the normal detail screen; otherwise it fetches the public row and shows a read-only preview with **"Save to my recipes"** (which files an owned copy via `createRecipe`).
 
 ## Android
 
@@ -78,4 +85,11 @@ The `chefmate://import?url=...` share flow still goes through the existing `onOp
 3. If the target lives behind the bottom nav, also update the `initialBottomNavTab` mapping.
 4. Add coverage in `DeepLinkTest` (parser) and `RootBlocTest` (initial stack).
 
-Platform entry points already forward any parsed deeplink, so no changes are required on Android/JVM/iOS for additional URIs.
+Platform entry points already forward any parsed deeplink, so no changes are required on Android/JVM/iOS for additional `chefmate://` URIs.
+
+### `https://` App Links / Universal Links
+
+Opening an `https://chefmate.plusmobileapps.com/...` link from a browser or email (rather than the `chefmate://` scheme) additionally requires the path to be registered for verified deep linking:
+
+- **Android:** add the path prefix to the `autoVerify` `<intent-filter>` in `AndroidManifest.xml` (e.g. `/recipe`, `/notifications`). Domain ownership is proven by the hosted `.well-known/assetlinks.json`, which is domain-level and needs no per-path change.
+- **iOS:** the `applinks:chefmate.plusmobileapps.com` entitlement is not path-scoped, but the **externally hosted** `apple-app-site-association` file (in the `chefmate-site` repo, not this one) must list the path (e.g. add `/recipe/*`) for Universal Links to open the app. This is a separate deploy from the app.
