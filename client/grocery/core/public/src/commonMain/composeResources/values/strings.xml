@@ -86,8 +86,6 @@
     <string name="grocery_delete_list_confirm">Delete</string>
     <string name="grocery_collab_signed_out_title">Collaborate on this list</string>
     <string name="grocery_collab_signed_out_message">Sharing a grocery list with other people requires an account. Sign in or sign up to invite collaborators by email.</string>
-    <string name="grocery_sign_in">Sign in</string>
-    <string name="grocery_sign_up">Sign up</string>
     <string name="grocery_collab_group_owners">Owners</string>
     <string name="grocery_collab_group_editors">Editors</string>
     <string name="grocery_collab_group_viewers">Viewers</string>
