@@ -8,6 +8,7 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.client.database.core)
             implementation(projects.client.meal.data.public)
+            implementation(projects.client.recipe.data.public)
             implementation(projects.client.shared)
             implementation(projects.client.auth.data.public)
             api(projects.client.util.public)

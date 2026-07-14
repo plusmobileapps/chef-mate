@@ -14,6 +14,7 @@ import com.plusmobileapps.chefmate.meal.data.MealType
 import com.plusmobileapps.chefmate.meal.data.SyncStatus
 import com.plusmobileapps.chefmate.meal.data.impl.remote.MealPlanRemoteDataSource
 import com.plusmobileapps.chefmate.meal.data.impl.remote.RemoteMealPlan
+import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import com.plusmobileapps.chefmate.util.DateTimeUtil
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -41,6 +42,7 @@ class MealPlanRepositoryImpl(
     private val dateTimeUtil: DateTimeUtil,
     private val remoteDataSource: MealPlanRemoteDataSource,
     private val authRepository: AuthenticationRepository,
+    private val recipeRepository: RecipeRepository,
 ) : MealPlanRepository {
 
     private val scope = CoroutineScope(ioContext + SupervisorJob())
@@ -153,6 +155,14 @@ class MealPlanRepositoryImpl(
 
     private suspend fun syncWithRemote(userId: String) = syncMutex.withLock {
         try {
+            // Meal plans reference their recipe by the recipe's remote UUID, so the recipes have
+            // to be present locally before we pull meals — otherwise every remote meal is skipped
+            // (its recipe can't be resolved to a local id) and isn't retried until the next sync.
+            // On sign-in the recipe and meal syncs both react to the same auth-state emission and
+            // race, so ensure recipes have synced first. Recipe sync is guarded by its own mutex
+            // and is idempotent, so this coalesces with any in-flight recipe sync.
+            recipeRepository.syncAllUnsynced()
+
             // Push unsynced meal plans (no remoteId yet)
             val unsynced = withContext(ioContext) { queries.getUnsynced().executeAsList() }
             for (meal in unsynced) {
