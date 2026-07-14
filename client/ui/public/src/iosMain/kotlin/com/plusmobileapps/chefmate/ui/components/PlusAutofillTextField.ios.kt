@@ -36,7 +36,6 @@ import platform.UIKit.UIReturnKeyType
 import platform.UIKit.UITextAutocapitalizationType
 import platform.UIKit.UITextAutocorrectionType
 import platform.UIKit.UITextBorderStyle
-import platform.UIKit.UITextContentTypeNewPassword
 import platform.UIKit.UITextContentTypePassword
 import platform.UIKit.UITextContentTypeUsername
 import platform.UIKit.UITextField
@@ -107,7 +106,6 @@ actual fun PlusAutofillTextField(
                         textContentType = UITextContentTypeUsername
                     }
                     AutofillFieldType.PASSWORD -> textContentType = UITextContentTypePassword
-                    AutofillFieldType.NEW_PASSWORD -> textContentType = UITextContentTypeNewPassword
                 }
 
                 // Native -> Compose: forward every keystroke (and system autofill) to the caller.

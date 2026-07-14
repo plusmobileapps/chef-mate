@@ -211,10 +211,11 @@ private fun AuthenticationBody(
             modifier = Modifier.focusRequester(passwordFocusRequester),
             password = password,
             onPasswordChanged = onPasswordChanged,
-            // Signing in fills the saved password; signing up asks the manager to generate/save a
-            // new one.
-            fieldType =
-                if (isSignIn) AutofillFieldType.PASSWORD else AutofillFieldType.NEW_PASSWORD,
+            // Both modes hint a plain login password so third-party managers offer to fill the
+            // existing credential. (We intentionally don't use a "new password" hint on sign up:
+            // iOS only surfaces that via iCloud Keychain, so with a third-party manager it shows
+            // nothing, whereas a plain password field lets the manager fill an existing login.)
+            fieldType = AutofillFieldType.PASSWORD,
             error = model.passwordError,
             imeAction = if (isSignIn) ImeAction.Done else ImeAction.Next,
             onImeAction = {
@@ -254,7 +255,7 @@ private fun AuthenticationBody(
                     modifier = Modifier.focusRequester(confirmPasswordFocusRequester),
                     password = confirmPassword,
                     onPasswordChanged = onConfirmPasswordChanged,
-                    fieldType = AutofillFieldType.NEW_PASSWORD,
+                    fieldType = AutofillFieldType.PASSWORD,
                     label = stringResource(Res.string.auth_label_confirm_password),
                     error = model.confirmPasswordError,
                     imeAction = ImeAction.Done,
