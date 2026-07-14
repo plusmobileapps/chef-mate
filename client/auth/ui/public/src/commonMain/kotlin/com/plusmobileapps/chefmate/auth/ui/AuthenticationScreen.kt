@@ -12,9 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -38,12 +35,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import chefmate.client.auth.ui.public.generated.resources.Res
 import chefmate.client.auth.ui.public.generated.resources.auth_button_email_me_a_code
@@ -72,10 +67,11 @@ import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.text.TextData
+import com.plusmobileapps.chefmate.ui.components.AutofillFieldType
+import com.plusmobileapps.chefmate.ui.components.PlusAutofillTextField
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingDialog
-import com.plusmobileapps.chefmate.ui.components.PlusTextField
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
 
@@ -217,7 +213,8 @@ private fun AuthenticationBody(
             onPasswordChanged = onPasswordChanged,
             // Signing in fills the saved password; signing up asks the manager to generate/save a
             // new one.
-            contentType = if (isSignIn) ContentType.Password else ContentType.NewPassword,
+            fieldType =
+                if (isSignIn) AutofillFieldType.PASSWORD else AutofillFieldType.NEW_PASSWORD,
             error = model.passwordError,
             imeAction = if (isSignIn) ImeAction.Done else ImeAction.Next,
             onImeAction = {
@@ -257,7 +254,7 @@ private fun AuthenticationBody(
                     modifier = Modifier.focusRequester(confirmPasswordFocusRequester),
                     password = confirmPassword,
                     onPasswordChanged = onConfirmPasswordChanged,
-                    contentType = ContentType.NewPassword,
+                    fieldType = AutofillFieldType.NEW_PASSWORD,
                     label = stringResource(Res.string.auth_label_confirm_password),
                     error = model.confirmPasswordError,
                     imeAction = ImeAction.Done,
@@ -371,29 +368,16 @@ fun EmailField(
     onEmailChanged: (String) -> Unit,
     onImeAction: () -> Unit,
 ) {
-    PlusTextField(
+    PlusAutofillTextField(
         modifier = modifier.fillMaxWidth(),
         value = email,
         onValueChange = onEmailChanged,
-        label = { Text(stringResource(Res.string.auth_label_email)) },
+        fieldType = AutofillFieldType.EMAIL,
+        label = stringResource(Res.string.auth_label_email),
         error = error,
-        singleLine = true,
-        keyboardOptions =
-            KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
-        keyboardActions = KeyboardActions(onNext = { onImeAction() }),
-        // This is the account's login identifier, which password managers store as the "username"
-        // even though users type their email into it. Hinting plain Username (rather than also
-        // EmailAddress) classifies it unambiguously as a login field, so managers like Bitwarden
-        // proactively offer the on-focus inline suggestion instead of only filling it on demand.
-        contentType = ContentType.Username,
+        imeAction = ImeAction.Next,
+        onImeAction = onImeAction,
     )
-}
-
-// Masks the field's contents with bullets for the state-based text field. Replacing 1:1 keeps the
-// caret mapping identity, so the cursor stays put. Mirrors PasswordVisualTransformation from the
-// legacy value/onValueChange API.
-private val PasswordOutputTransformation = OutputTransformation {
-    replace(0, length, "•".repeat(length))
 }
 
 @Composable
@@ -401,25 +385,23 @@ fun PasswordField(
     modifier: Modifier = Modifier,
     password: String,
     onPasswordChanged: (String) -> Unit,
-    contentType: ContentType,
+    fieldType: AutofillFieldType,
     label: String = stringResource(Res.string.auth_label_password),
     error: TextData? = null,
     imeAction: ImeAction,
     onImeAction: () -> Unit,
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
-    PlusTextField(
+    PlusAutofillTextField(
         modifier = modifier.fillMaxWidth(),
         value = password,
         onValueChange = onPasswordChanged,
-        label = { Text(label) },
+        fieldType = fieldType,
+        label = label,
         error = error,
-        singleLine = true,
-        outputTransformation = if (passwordVisible) null else PasswordOutputTransformation,
-        keyboardOptions =
-            KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = imeAction),
-        keyboardActions = KeyboardActions(onNext = { onImeAction() }, onDone = { onImeAction() }),
-        contentType = contentType,
+        passwordVisible = passwordVisible,
+        imeAction = imeAction,
+        onImeAction = onImeAction,
         trailingIcon = {
             val image =
                 if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
