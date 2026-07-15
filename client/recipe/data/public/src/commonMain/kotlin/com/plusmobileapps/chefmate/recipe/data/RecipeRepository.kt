@@ -32,6 +32,13 @@ interface RecipeRepository {
     suspend fun getRecipeByRemoteId(remoteId: String): Recipe?
 
     /**
+     * Looks up a locally-stored recipe by its device-generated [Recipe.clientId], or null if none
+     * is stored. Used to resolve a recipe-to-recipe link (`chefmate://recipe/<clientId>`) to the
+     * local recipe on whichever device the link is tapped.
+     */
+    suspend fun getRecipeByClientId(clientId: String): Recipe?
+
+    /**
      * Fetches a public recipe by its global [remoteId] from the remote source, for a recipient
      * opening a share link to a recipe they don't have locally. The returned [Recipe] is transient
      * (not persisted; local [Recipe.id] is -1) — call [createRecipe] to save an owned copy. Fails

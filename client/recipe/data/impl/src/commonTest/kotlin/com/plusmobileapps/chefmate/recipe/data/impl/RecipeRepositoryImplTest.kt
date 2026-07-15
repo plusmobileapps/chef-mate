@@ -20,6 +20,7 @@ import com.plusmobileapps.chefmate.recipebook.data.testing.FakeRecipeBookReposit
 import com.plusmobileapps.chefmate.util.testing.FakeDateTimeUtil
 import com.plusmobileapps.chefmate.util.testing.FakeUnique
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlin.test.Test
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -460,6 +461,22 @@ class RecipeRepositoryImplTest {
             val remoteId = recipeRepository.getRecipe(created.id).first()?.remoteId
 
             recipeRepository.getRecipeByRemoteId(remoteId!!)?.title shouldBe "Findable"
+        }
+
+    @Test
+    fun getRecipeByClientId_returns_the_local_recipe() =
+        runTest(testDispatcher) {
+            val created = recipeRepository.createRecipe(blankRecipe("ByClient"))
+            val clientId = recipeRepository.getRecipe(created.id).first()?.clientId
+
+            clientId shouldNotBe null
+            recipeRepository.getRecipeByClientId(clientId!!)?.title shouldBe "ByClient"
+        }
+
+    @Test
+    fun getRecipeByClientId_returns_null_when_absent() =
+        runTest(testDispatcher) {
+            recipeRepository.getRecipeByClientId("no-such-client-id") shouldBe null
         }
 
     private fun blankRecipe(title: String, categories: Set<Category> = emptySet()) =

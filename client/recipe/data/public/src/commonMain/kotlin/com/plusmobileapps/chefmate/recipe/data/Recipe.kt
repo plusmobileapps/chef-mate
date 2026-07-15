@@ -29,6 +29,12 @@ data class Recipe(
     val syncStatus: SyncStatus = SyncStatus.NOT_SYNCED,
     /** The recipe's global Supabase id, present once synced; the identifier used in share links. */
     val remoteId: String? = null,
+    /**
+     * A device-generated UUID assigned when the recipe is first created (offline included) and
+     * preserved across sync and every device that pulls the recipe. Stable and owner-scoped, so it
+     * is the identifier embedded in recipe-to-recipe links (`chefmate://recipe/<clientId>`).
+     */
+    val clientId: String? = null,
     /** True when the owner has published this recipe so anyone with its share link can view it. */
     val isPublic: Boolean = false,
     val createdAt: Instant,

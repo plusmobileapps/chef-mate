@@ -186,6 +186,14 @@ class RecipeRepositoryImpl(
                 ?.toRecipe()
         }
 
+    override suspend fun getRecipeByClientId(clientId: String): Recipe? =
+        withContext(ioContext) {
+            db.getByClientId(clientId)
+                .executeAsOneOrNull()
+                ?.takeUnless { it.isPendingDelete }
+                ?.toRecipe()
+        }
+
     override suspend fun fetchPublicRecipe(remoteId: String): Result<Recipe> = runCatching {
         val remote =
             remoteDataSource.fetchPublicRecipe(remoteId)
@@ -654,6 +662,7 @@ class RecipeRepositoryImpl(
             recipeBookIds = bookJoinDb.getBookIdsForRecipe(id).executeAsList().toSet(),
             syncStatus = syncStatus,
             remoteId = remoteId,
+            clientId = clientId,
             isPublic = isPublic,
             createdAt = Instant.parse(createdAt),
             updatedAt = Instant.parse(updatedAt),

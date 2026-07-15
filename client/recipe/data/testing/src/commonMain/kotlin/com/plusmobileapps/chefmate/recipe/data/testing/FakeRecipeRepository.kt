@@ -52,6 +52,9 @@ class FakeRecipeRepository(
     override suspend fun getRecipeByRemoteId(remoteId: String): Recipe? =
         recipes.value.firstOrNull { it.remoteId == remoteId }
 
+    override suspend fun getRecipeByClientId(clientId: String): Recipe? =
+        recipes.value.firstOrNull { it.clientId == clientId }
+
     override suspend fun fetchPublicRecipe(remoteId: String): Result<Recipe> =
         publicRecipes[remoteId]?.let { Result.success(it) }
             ?: Result.failure(NoSuchElementException("No public recipe with id $remoteId"))
