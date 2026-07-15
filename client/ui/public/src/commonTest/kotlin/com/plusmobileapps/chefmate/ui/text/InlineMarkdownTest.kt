@@ -1,5 +1,6 @@
 package com.plusmobileapps.chefmate.ui.text
 
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import io.kotest.matchers.shouldBe
@@ -59,5 +60,47 @@ class InlineMarkdownTest {
         val result = "salt _ pepper".toInlineMarkdownAnnotatedString()
         result.text shouldBe "salt _ pepper"
         result.spanStyles.size shouldBe 0
+    }
+
+    @Test
+    fun linkWithoutHandlerRendersPlainLabel() {
+        val result = "add [Green Sauce](chefmate://recipe/abc)".toInlineMarkdownAnnotatedString()
+        result.text shouldBe "add Green Sauce"
+        result.getLinkAnnotations(0, result.length).size shouldBe 0
+    }
+
+    @Test
+    fun linkWithHandlerStripsMarkdownAndAnnotates() {
+        var clicked: String? = null
+        val result =
+            "add [Green Sauce](chefmate://recipe/abc)"
+                .toInlineMarkdownAnnotatedString(onLinkClick = { clicked = it })
+
+        result.text shouldBe "add Green Sauce"
+        val link = result.getLinkAnnotations(0, result.length).single()
+        link.start shouldBe 4
+        link.end shouldBe 15
+        val clickable = link.item as LinkAnnotation.Clickable
+        clickable.tag shouldBe "chefmate://recipe/abc"
+
+        clickable.linkInteractionListener!!.onClick(clickable)
+        clicked shouldBe "chefmate://recipe/abc"
+    }
+
+    @Test
+    fun linkLabelCanContainInlineStyles() {
+        val result =
+            "[**Bold** sauce](chefmate://recipe/abc)"
+                .toInlineMarkdownAnnotatedString(onLinkClick = {})
+        result.text shouldBe "Bold sauce"
+        result.getLinkAnnotations(0, result.length).size shouldBe 1
+        result.spanStyles.single().item.fontWeight shouldBe FontWeight.Bold
+    }
+
+    @Test
+    fun unmatchedLinkSyntaxIsLiteral() {
+        val result = "see [Sauce] later".toInlineMarkdownAnnotatedString(onLinkClick = {})
+        result.text shouldBe "see [Sauce] later"
+        result.getLinkAnnotations(0, result.length).size shouldBe 0
     }
 }

@@ -1,10 +1,13 @@
 package com.plusmobileapps.chefmate.ui.text
 
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 
 /**
@@ -18,19 +21,39 @@ const val ITALIC_MARKER: String = "_"
 
 /**
  * Parses a single line of lightweight inline markdown into an [AnnotatedString], supporting
- * `**bold**` and `_italic_` (nestable, e.g. `**bold _and italic_**`). Markers without a matching
- * partner are left as literal text, so plain recipe lines — and stray `*` or `_` characters —
- * render unchanged. This is intentionally inline-only: ingredients and directions stay one item per
- * line, so block markdown (headings, lists, etc.) is not interpreted.
+ * `**bold**`, `_italic_` (nestable, e.g. `**bold _and italic_**`), and `[label](url)` links.
+ * Markers without a matching partner are left as literal text, so plain recipe lines — and stray
+ * `*` or `_` characters — render unchanged. This is intentionally inline-only: ingredients and
+ * directions stay one item per line, so block markdown (headings, lists, etc.) is not interpreted.
+ *
+ * A `[label](url)` link always renders as just its [label] (the raw markdown is never shown). When
+ * [onLinkClick] is non-null the label is wrapped in a clickable [LinkAnnotation] — styled with
+ * [linkStyle] — whose listener is invoked with the link's `url`; when it is null (read-only
+ * surfaces like cook mode) the label renders as plain, inert text.
  */
-fun String.toInlineMarkdownAnnotatedString(): AnnotatedString = buildAnnotatedString {
-    appendInlineMarkdown(this@toInlineMarkdownAnnotatedString)
+fun String.toInlineMarkdownAnnotatedString(
+    linkStyle: SpanStyle? = null,
+    onLinkClick: ((String) -> Unit)? = null,
+): AnnotatedString = buildAnnotatedString {
+    appendInlineMarkdown(this@toInlineMarkdownAnnotatedString, linkStyle, onLinkClick)
 }
 
-private fun AnnotatedString.Builder.appendInlineMarkdown(text: String) {
+private fun AnnotatedString.Builder.appendInlineMarkdown(
+    text: String,
+    linkStyle: SpanStyle?,
+    onLinkClick: ((String) -> Unit)?,
+) {
     var literalStart = 0
     var i = 0
     while (i < text.length) {
+        val link = linkAt(text, i)
+        if (link != null) {
+            if (literalStart < i) append(text.substring(literalStart, i))
+            appendLink(link, linkStyle, onLinkClick)
+            i = link.end
+            literalStart = i
+            continue
+        }
         val marker = markerAt(text, i)
         if (marker == null) {
             i++
@@ -44,11 +67,52 @@ private fun AnnotatedString.Builder.appendInlineMarkdown(text: String) {
             continue
         }
         if (literalStart < i) append(text.substring(literalStart, i))
-        withStyle(styleFor(marker)) { appendInlineMarkdown(text.substring(contentStart, close)) }
+        withStyle(styleFor(marker)) {
+            appendInlineMarkdown(text.substring(contentStart, close), linkStyle, onLinkClick)
+        }
         i = close + marker.length
         literalStart = i
     }
     if (literalStart < text.length) append(text.substring(literalStart))
+}
+
+private fun AnnotatedString.Builder.appendLink(
+    link: InlineLink,
+    linkStyle: SpanStyle?,
+    onLinkClick: ((String) -> Unit)?,
+) {
+    if (onLinkClick == null) {
+        // No handler — render the label as plain (still inline-styled) text; the link is inert.
+        appendInlineMarkdown(link.label, linkStyle, null)
+        return
+    }
+    val annotation =
+        LinkAnnotation.Clickable(
+            tag = link.url,
+            styles = linkStyle?.let { TextLinkStyles(style = it) },
+            linkInteractionListener = { onLinkClick(link.url) },
+        )
+    withLink(annotation) { appendInlineMarkdown(link.label, linkStyle, onLinkClick) }
+}
+
+/** A parsed `[label](url)` link and the index just past its closing `)`. */
+private class InlineLink(val label: String, val url: String, val end: Int)
+
+/**
+ * Attempts to parse a `[label](url)` link starting at [index]. Uses the first `]` and first `)` so
+ * a non-link `[` (e.g. a stray bracket) falls through to literal text. Empty label or url is
+ * rejected.
+ */
+private fun linkAt(text: String, index: Int): InlineLink? {
+    if (text[index] != '[') return null
+    val labelEnd = text.indexOf(']', index + 1)
+    if (labelEnd == -1 || labelEnd + 1 >= text.length || text[labelEnd + 1] != '(') return null
+    val urlEnd = text.indexOf(')', labelEnd + 2)
+    if (urlEnd == -1) return null
+    val label = text.substring(index + 1, labelEnd)
+    val url = text.substring(labelEnd + 2, urlEnd)
+    if (label.isEmpty() || url.isEmpty()) return null
+    return InlineLink(label = label, url = url, end = urlEnd + 1)
 }
 
 private fun markerAt(text: String, index: Int): String? =
