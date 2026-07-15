@@ -1,6 +1,7 @@
 package com.plusmobileapps.chefmate.recipe.core.impl.detail
 
 import chefmate.client.recipe.core.public.generated.resources.Res
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_linked_recipe_not_found
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_sign_in_required
 import com.plusmobileapps.chefmate.ChefMateUrls
 import com.plusmobileapps.chefmate.ViewModel
@@ -117,6 +118,21 @@ class RecipeDetailViewModel(
         scope.launch { repository.setRecipePublic(recipeId, isPublic = false) }
     }
 
+    /**
+     * Resolve a tapped recipe-to-recipe link's [clientId] to a locally-stored recipe and open it. A
+     * miss (the target isn't in this device's collection) surfaces a toast instead of navigating.
+     */
+    fun onRecipeLinkClicked(clientId: String) {
+        scope.launch {
+            val target = repository.getRecipeByClientId(clientId)
+            if (target != null) {
+                _output.send(Output.OpenRecipe(target.id))
+            } else {
+                toastService.show(ResourceString(Res.string.recipe_detail_linked_recipe_not_found))
+            }
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         // Leaving the screen without dismissing frees the queue so other coach marks can show.
@@ -147,6 +163,9 @@ class RecipeDetailViewModel(
 
     sealed class Output {
         data object RecipeDeleted : Output()
+
+        /** A tapped recipe link resolved to the local recipe with this id. */
+        data class OpenRecipe(val recipeId: Long) : Output()
     }
 
     @AssistedFactory

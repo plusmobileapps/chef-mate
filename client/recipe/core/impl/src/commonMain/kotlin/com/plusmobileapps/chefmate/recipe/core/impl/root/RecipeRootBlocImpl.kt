@@ -116,6 +116,12 @@ class RecipeRootBlocImpl(
             is RecipeDetailBloc.Output.EditRecipe -> {
                 navigation.bringToFront(Configuration.Edit(output.recipeId, extracted = null))
             }
+            is RecipeDetailBloc.Output.OpenRecipe -> {
+                // Bring the linked recipe's detail to the front — reusing an existing entry when
+                // the
+                // recipe is already in the stack (e.g. A → B → A) so links can't grow it unbounded.
+                navigation.bringToFront(Configuration.Detail(output.recipeId))
+            }
             is RecipeDetailBloc.Output.OpenUrl -> {
                 this.output.onNext(RecipeRootBloc.Output.OpenUrl(output.url))
             }

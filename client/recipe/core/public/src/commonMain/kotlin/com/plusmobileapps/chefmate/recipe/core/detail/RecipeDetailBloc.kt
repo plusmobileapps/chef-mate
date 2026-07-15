@@ -59,6 +59,14 @@ interface RecipeDetailBloc : BackClickBloc, ComposeScreen {
     fun onSourceUrlClicked(url: String)
 
     /**
+     * Tap on a recipe-to-recipe link (`chefmate://recipe/<clientId>`) inside the ingredients or
+     * directions. Resolves the target recipe locally by its
+     * [com.plusmobileapps.chefmate.recipe.data.Recipe.clientId] and opens it, or shows a "recipe
+     * not found" message when it isn't in the local collection.
+     */
+    fun onRecipeLinkClicked(clientId: String)
+
+    /**
      * Share a Chef Mate link to this recipe. Prompts to make it public first if it isn't already.
      */
     fun onShareLinkClicked()
@@ -94,6 +102,9 @@ interface RecipeDetailBloc : BackClickBloc, ComposeScreen {
         data object Finished : Output()
 
         data class EditRecipe(val recipeId: Long) : Output()
+
+        /** Open another recipe's detail, e.g. from a tapped recipe-to-recipe link. */
+        data class OpenRecipe(val recipeId: Long) : Output()
 
         data class OpenUrl(val url: String) : Output()
 

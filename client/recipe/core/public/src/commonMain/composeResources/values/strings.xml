@@ -55,6 +55,7 @@
     <string name="recipe_detail_share_sign_in_required">Sign in to share a recipe link.</string>
     <string name="recipe_detail_share_failed">Couldn’t create a share link. Please try again.</string>
     <string name="recipe_detail_copied_to_clipboard">Copied to clipboard</string>
+    <string name="recipe_detail_linked_recipe_not_found">That linked recipe isn’t in your collection.</string>
     <string name="recipe_full_image_close">Close</string>
 
     <!-- Public recipe preview (opened from a shared link) -->
