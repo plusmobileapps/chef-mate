@@ -3,6 +3,7 @@
 package com.plusmobileapps.chefmate.recipe.core.impl.edit
 
 import co.touchlab.kermit.Logger
+import com.plusmobileapps.chefmate.ChefMateUrls
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.combineStates
 import com.plusmobileapps.chefmate.di.CoachMarkController
@@ -54,6 +55,12 @@ class EditRecipeViewModel(
 ) : ViewModel(mainContext) {
     private val _output = Channel<Output>(Channel.BUFFERED)
     val output: Flow<Output> = _output.receiveAsFlow()
+
+    // One-shot recipe links resolved from the picker, handed to the screen to splice into the field
+    // that requested them (caret-aware insertion lives in the editor, not here).
+    private val _recipeLinkPicked = Channel<RecipeLinkSelection>(Channel.BUFFERED)
+    val recipeLinkPicked: Flow<RecipeLinkSelection> = _recipeLinkPicked.receiveAsFlow()
+
     private val _state = MutableStateFlow(State())
 
     // Fold the shared controller's active mark into state so the screen shows at most one coach
@@ -183,6 +190,21 @@ class EditRecipeViewModel(
 
     fun updateDirections(value: String) {
         _directions.value = value
+    }
+
+    /**
+     * Resolve a recipe chosen in the link picker to a `[Title](chefmate://recipe/<clientId>)` link
+     * and emit it for the screen to splice into the targeted field. A recipe with no [clientId] yet
+     * (an older row awaiting sync backfill) can't be linked stably, so it is skipped.
+     */
+    fun onRecipeLinkPicked(recipeId: Long) {
+        scope.launch {
+            val recipe = repository.getRecipe(recipeId).first() ?: return@launch
+            val clientId = recipe.clientId ?: return@launch
+            _recipeLinkPicked.send(
+                RecipeLinkSelection(label = recipe.title, url = ChefMateUrls.recipeLink(clientId))
+            )
+        }
     }
 
     fun updateImageUrl(value: String) {
@@ -374,6 +396,7 @@ class EditRecipeViewModel(
         // Leaving the screen without dismissing frees the queue so other coach marks can show.
         CoachMarkId.editRecipeSequence.forEach(coachMarkController::release)
         _output.close()
+        _recipeLinkPicked.close()
     }
 
     private suspend fun loadRecipe(id: Long) {
@@ -475,6 +498,9 @@ class EditRecipeViewModel(
 
         data class Finished(val recipeId: Long) : Output()
     }
+
+    /** A resolved recipe link (`label` = recipe title, `url` = `chefmate://recipe/<clientId>`). */
+    data class RecipeLinkSelection(val label: String, val url: String)
 
     @AssistedFactory
     fun interface Factory {

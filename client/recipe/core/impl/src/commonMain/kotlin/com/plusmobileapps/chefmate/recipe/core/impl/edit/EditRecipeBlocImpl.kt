@@ -4,13 +4,22 @@ import chefmate.client.recipe.core.impl.generated.resources.Res
 import chefmate.client.recipe.core.impl.generated.resources.create_recipe
 import chefmate.client.recipe.core.impl.generated.resources.edit_recipe
 import chefmate.client.recipe.core.impl.generated.resources.edit_recipe_upload_failed
+import com.arkivanov.decompose.router.slot.ChildSlot
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.childSlot
+import com.arkivanov.decompose.router.slot.dismiss
+import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.getViewModel
 import com.plusmobileapps.chefmate.mapState
+import com.plusmobileapps.chefmate.recipe.core.addmeal.RecipePickerBloc
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc
+import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc.LinkField
+import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc.LinkInsertion
 import com.plusmobileapps.chefmate.recipe.core.edit.EditRecipeBloc.Output
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
@@ -20,8 +29,12 @@ import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 
 @AssistedInject
 @ContributesAssistedFactory(
@@ -36,12 +49,32 @@ class EditRecipeBlocImpl(
     @Assisted consumePendingPhoto: Boolean,
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: EditRecipeViewModel.Factory,
+    private val recipePickerFactory: RecipePickerBloc.Factory,
 ) : EditRecipeBloc, BlocContext by context {
     private val scope = createScope()
 
     private val viewModel: EditRecipeViewModel = instanceKeeper.getViewModel {
         viewModelFactory.create(recipeId, extractedRecipe, fromAi, consumePendingPhoto)
     }
+
+    // The field awaiting a picked link; paired with the resolved link when the picker returns.
+    private var pendingLinkField: LinkField? = null
+
+    private val pickerNavigation = SlotNavigation<PickerConfig>()
+    private val pickerRouter =
+        childSlot(
+            source = pickerNavigation,
+            serializer = PickerConfig.serializer(),
+            key = "EditRecipeBloc_LinkPicker",
+            childFactory = { _, childContext ->
+                recipePickerFactory.create(context = childContext, output = ::handlePickerOutput)
+            },
+        )
+
+    override val recipePickerSlot: Value<ChildSlot<*, RecipePickerBloc>> = pickerRouter
+
+    private val _linkInsertions = Channel<LinkInsertion>(Channel.BUFFERED)
+    override val linkInsertions: Flow<LinkInsertion> = _linkInsertions.receiveAsFlow()
 
     override val state: StateFlow<EditRecipeBloc.Model> =
         viewModel.state.mapState {
@@ -93,6 +126,23 @@ class EditRecipeBlocImpl(
                     }
                 }
             }
+        }
+        scope.launch {
+            viewModel.recipeLinkPicked.collect { selection ->
+                val field = pendingLinkField ?: return@collect
+                pendingLinkField = null
+                pickerNavigation.dismiss()
+                _linkInsertions.send(
+                    LinkInsertion(field = field, label = selection.label, url = selection.url)
+                )
+            }
+        }
+    }
+
+    private fun handlePickerOutput(pickerOutput: RecipePickerBloc.Output) {
+        when (pickerOutput) {
+            is RecipePickerBloc.Output.RecipeSelected ->
+                viewModel.onRecipeLinkPicked(pickerOutput.recipeId)
         }
     }
 
@@ -207,7 +257,19 @@ class EditRecipeBlocImpl(
         viewModel.dismissCoachMark(id)
     }
 
+    override fun onLinkRecipeClicked(field: LinkField) {
+        pendingLinkField = field
+        pickerNavigation.activate(PickerConfig)
+    }
+
+    override fun onLinkPickerDismissed() {
+        pendingLinkField = null
+        pickerNavigation.dismiss()
+    }
+
     override fun onBackClicked() {
         viewModel.tryToClose()
     }
+
+    @Serializable private data object PickerConfig
 }

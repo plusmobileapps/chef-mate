@@ -48,4 +48,23 @@ class MarkdownFormattingTest {
         result.text shouldBe "**preheat** the oven"
         result.selection shouldBe TextRange(2, 9)
     }
+
+    @Test
+    fun insertMarkdownLinkAtCursorPlacesLinkAndMovesCursorAfter() {
+        val value = TextFieldValue("serve with ", selection = TextRange(11))
+
+        val result = value.insertMarkdownLink("Green Sauce", "chefmate://recipe/abc")
+
+        result.text shouldBe "serve with [Green Sauce](chefmate://recipe/abc)"
+        result.selection shouldBe TextRange(result.text.length)
+    }
+
+    @Test
+    fun insertMarkdownLinkReplacesSelection() {
+        val value = TextFieldValue("serve with sauce", selection = TextRange(11, 16))
+
+        val result = value.insertMarkdownLink("Green Sauce", "chefmate://recipe/abc")
+
+        result.text shouldBe "serve with [Green Sauce](chefmate://recipe/abc)"
+    }
 }

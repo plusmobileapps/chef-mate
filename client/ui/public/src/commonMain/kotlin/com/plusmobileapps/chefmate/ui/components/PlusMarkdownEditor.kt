@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddLink
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.FormatBold
 import androidx.compose.material.icons.filled.FormatItalic
@@ -61,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import chefmate.client.ui.public.generated.resources.Res
 import chefmate.client.ui.public.generated.resources.markdown_editor_bold_a11y
 import chefmate.client.ui.public.generated.resources.markdown_editor_italic_a11y
+import chefmate.client.ui.public.generated.resources.markdown_editor_link_recipe_a11y
 import chefmate.client.ui.public.generated.resources.markdown_editor_mode_markdown
 import chefmate.client.ui.public.generated.resources.markdown_editor_mode_rich_text
 import chefmate.client.ui.public.generated.resources.markdown_editor_preview_empty
@@ -71,11 +73,26 @@ import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 import com.plusmobileapps.chefmate.ui.text.BOLD_MARKER
 import com.plusmobileapps.chefmate.ui.text.ITALIC_MARKER
+import com.plusmobileapps.chefmate.ui.text.insertMarkdownLink
 import com.plusmobileapps.chefmate.ui.text.toInlineMarkdownAnnotatedString
 import com.plusmobileapps.chefmate.ui.text.toggleInlineMarker
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
+
+/**
+ * Imperative handle for inserting a `[label](url)` link into a [PlusMarkdownEditor] from outside
+ * the composable — e.g. after a recipe picker returns a selection. Create one with `remember`, pass
+ * it to the editor, and call [insertLink]; the editor splices the link into the active mode (raw
+ * markdown at the caret, or a rendered link in rich-text mode).
+ */
+class PlusMarkdownEditorController {
+    internal var insertLinkImpl: ((label: String, url: String) -> Unit)? = null
+
+    fun insertLink(label: String, url: String) {
+        insertLinkImpl?.invoke(label, url)
+    }
+}
 
 /**
  * A shared, resizable editor for plain-text fields that carry inline markdown (`**bold**`,
@@ -103,6 +120,8 @@ fun PlusMarkdownEditor(
     minHeight: Dp = 160.dp,
     maxHeight: Dp = 480.dp,
     initialHeight: Dp = 200.dp,
+    controller: PlusMarkdownEditorController? = null,
+    onInsertLinkClick: (() -> Unit)? = null,
 ) {
     var heightDp by rememberSaveable { mutableStateOf(initialHeight.value) }
     var showPreview by rememberSaveable { mutableStateOf(false) }
@@ -156,6 +175,16 @@ fun PlusMarkdownEditor(
         else applyMarkdownMarker(ITALIC_MARKER)
     }
 
+    // Bind the imperative insert handle to the active mode. Reassigned every recomposition so it
+    // always closes over the current mode and field state.
+    controller?.insertLinkImpl = { label, url ->
+        if (richTextMode) {
+            richTextState.addLink(text = label, url = url)
+        } else {
+            updateMarkdown(fieldValue.insertMarkdownLink(label, url))
+        }
+    }
+
     // A light rounded outline groups each editor as one unit, so it's clear which toolbar/toggle
     // belongs to which field when several editors stack on the form.
     PlusOutlinedContainer(modifier = modifier) {
@@ -180,7 +209,11 @@ fun PlusMarkdownEditor(
         val showFormatButtons = richTextMode || !showPreview
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             if (showFormatButtons) {
-                MarkdownFormatToolbar(onBold = ::onBold, onItalic = ::onItalic)
+                MarkdownFormatToolbar(
+                    onBold = ::onBold,
+                    onItalic = ::onItalic,
+                    onInsertLinkClick = onInsertLinkClick,
+                )
             }
             Spacer(modifier = Modifier.weight(1f))
             if (!richTextMode) {
@@ -280,6 +313,7 @@ private fun WritePreviewToggle(
 private fun MarkdownFormatToolbar(
     onBold: () -> Unit,
     onItalic: () -> Unit,
+    onInsertLinkClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -296,6 +330,13 @@ private fun MarkdownFormatToolbar(
             contentDescription = stringResource(Res.string.markdown_editor_italic_a11y),
             onClick = onItalic,
         )
+        if (onInsertLinkClick != null) {
+            FormatButton(
+                icon = Icons.Default.AddLink,
+                contentDescription = stringResource(Res.string.markdown_editor_link_recipe_a11y),
+                onClick = onInsertLinkClick,
+            )
+        }
     }
 }
 
