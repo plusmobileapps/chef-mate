@@ -1925,6 +1925,7 @@ val previewRecipeDetailBloc: RecipeDetailBloc =
                                 - 2 garlic cloves, crushed
                                 - 400g minced beef
                                 - 800g canned tomatoes
+                                - A batch of [Garlic Bread](chefmate://recipe/garlic-bread-id)
                                 - Salt and **pepper** to taste
                                 """
                                     .trimIndent(),
