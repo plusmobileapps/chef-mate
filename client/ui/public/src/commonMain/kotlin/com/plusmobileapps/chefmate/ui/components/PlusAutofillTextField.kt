@@ -23,10 +23,14 @@ enum class AutofillFieldType {
      * password managers classify it unambiguously as a login field.
      */
     EMAIL,
-    /** An existing password to fill on sign in. */
+    /**
+     * A login password. Hinted so password managers offer to fill the account's saved password.
+     * Used for both sign in and sign up: a plain password hint (rather than a "new password" one)
+     * is what lets third-party managers surface an existing credential on the sign-up form too —
+     * iOS only offers its generate-a-new-password flow through iCloud Keychain, so a new-password
+     * hint shows nothing when a third-party manager is the AutoFill provider.
+     */
     PASSWORD,
-    /** A password being created on sign up, so the manager offers to generate and save it. */
-    NEW_PASSWORD,
 }
 
 /**
@@ -69,20 +73,19 @@ internal val AutofillFieldType.composeContentType: ContentType
         when (this) {
             // This is the account's login identifier, which password managers store as the
             // "username" even though users type their email into it. Hinting plain Username (rather
-            // than also EmailAddress) classifies it unambiguously as a login field, so managers like
+            // than also EmailAddress) classifies it unambiguously as a login field, so managers
+            // like
             // Bitwarden proactively offer the on-focus inline suggestion instead of only filling it
             // on demand.
             AutofillFieldType.EMAIL -> ContentType.Username
             AutofillFieldType.PASSWORD -> ContentType.Password
-            AutofillFieldType.NEW_PASSWORD -> ContentType.NewPassword
         }
 
 internal val AutofillFieldType.keyboardType: KeyboardType
     get() =
         when (this) {
             AutofillFieldType.EMAIL -> KeyboardType.Email
-            AutofillFieldType.PASSWORD,
-            AutofillFieldType.NEW_PASSWORD -> KeyboardType.Password
+            AutofillFieldType.PASSWORD -> KeyboardType.Password
         }
 
 // Masks secure input with bullets. Replacing 1:1 keeps the caret mapping identity, so the cursor
