@@ -116,7 +116,7 @@ val previewAiChatBlocError: AiChatBloc =
         AiChatBloc.Model(
             messages = sampleConversation,
             canAddRecipe = true,
-            error = FixedString("Gemini API key missing. Set gemini.key in gradle properties."),
+            error = FixedString("AI features aren’t available right now. Please try again later."),
         )
     )
 

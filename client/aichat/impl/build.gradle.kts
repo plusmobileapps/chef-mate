@@ -16,6 +16,8 @@ kotlin {
             implementation(projects.client.util.public)
             implementation(libs.arkivanov.decompose.core)
             implementation(libs.arkivanov.decompose.compose.extensions)
+            implementation(libs.supabase.client)
+            implementation(libs.supabase.auth)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.json)
