@@ -20,4 +20,24 @@ object ChefMateUrls {
      * id — is used so the link resolves to the same recipe for every user.
      */
     fun recipeShareUrl(remoteId: String): String = "https://$WEB_HOST/recipe/$remoteId"
+
+    /**
+     * An in-app recipe-to-recipe link embedded in ingredient/direction markdown, keyed by the
+     * target recipe's device-generated [clientId]. Unlike [recipeShareUrl] (a public https link
+     * keyed by remoteId), this is owner-scoped and resolved locally via
+     * `RecipeRepository.getRecipeByClientId`, so it works offline and survives sync to any device.
+     */
+    fun recipeLink(clientId: String): String = "$SCHEME://recipe/$clientId"
+
+    /**
+     * Extracts the target clientId from a [recipeLink], or null if [url] is not one. Only the
+     * custom `chefmate://recipe/<clientId>` scheme form matches; the public https share link (keyed
+     * by remoteId) is intentionally excluded so the two identifier spaces stay separate.
+     */
+    fun recipeLinkClientId(url: String): String? {
+        val prefix = "$SCHEME://recipe/"
+        if (!url.startsWith(prefix)) return null
+        val clientId = url.substring(prefix.length).substringBefore('/').substringBefore('?')
+        return clientId.ifBlank { null }
+    }
 }
