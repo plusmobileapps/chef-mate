@@ -22,10 +22,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
 import androidx.compose.material.icons.filled.AddLink
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.FormatBold
 import androidx.compose.material.icons.filled.FormatItalic
+import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -61,10 +63,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import chefmate.client.ui.public.generated.resources.Res
 import chefmate.client.ui.public.generated.resources.markdown_editor_bold_a11y
+import chefmate.client.ui.public.generated.resources.markdown_editor_bulleted_list_a11y
 import chefmate.client.ui.public.generated.resources.markdown_editor_italic_a11y
 import chefmate.client.ui.public.generated.resources.markdown_editor_link_recipe_a11y
 import chefmate.client.ui.public.generated.resources.markdown_editor_mode_markdown
 import chefmate.client.ui.public.generated.resources.markdown_editor_mode_rich_text
+import chefmate.client.ui.public.generated.resources.markdown_editor_numbered_list_a11y
 import chefmate.client.ui.public.generated.resources.markdown_editor_preview_empty
 import chefmate.client.ui.public.generated.resources.markdown_editor_resize_handle_a11y
 import chefmate.client.ui.public.generated.resources.markdown_editor_tab_preview
@@ -74,8 +78,11 @@ import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 import com.plusmobileapps.chefmate.ui.text.BOLD_MARKER
 import com.plusmobileapps.chefmate.ui.text.ITALIC_MARKER
 import com.plusmobileapps.chefmate.ui.text.insertMarkdownLink
-import com.plusmobileapps.chefmate.ui.text.toInlineMarkdownAnnotatedString
+import com.plusmobileapps.chefmate.ui.text.parseListLine
+import com.plusmobileapps.chefmate.ui.text.toDisplayAnnotatedString
+import com.plusmobileapps.chefmate.ui.text.toggleBulletList
 import com.plusmobileapps.chefmate.ui.text.toggleInlineMarker
+import com.plusmobileapps.chefmate.ui.text.toggleNumberedList
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -106,6 +113,9 @@ class PlusMarkdownEditorController {
  *   Write/Preview toggle (the switch animates). Toolbar buttons are non-focusable so tapping one
  *   never clears the field's selection.
  *
+ * [showListButtons] adds bulleted/numbered list buttons to the toolbar — meaningful for the
+ * one-item-per-line ingredient and direction fields, omitted for free-form fields like description.
+ *
  * A drag handle in the bottom-end corner resizes the editor between [minHeight] and [maxHeight].
  */
 @Composable
@@ -117,6 +127,7 @@ fun PlusMarkdownEditor(
     richTextMode: Boolean,
     onRichTextModeChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    showListButtons: Boolean = false,
     minHeight: Dp = 160.dp,
     maxHeight: Dp = 480.dp,
     initialHeight: Dp = 200.dp,
@@ -142,6 +153,11 @@ fun PlusMarkdownEditor(
 
     fun applyMarkdownMarker(marker: String) {
         updateMarkdown(fieldValue.toggleInlineMarker(marker))
+        scope.launch { runCatching { focusRequester.requestFocus() } }
+    }
+
+    fun applyMarkdownTransform(transform: (TextFieldValue) -> TextFieldValue) {
+        updateMarkdown(transform(fieldValue))
         scope.launch { runCatching { focusRequester.requestFocus() } }
     }
 
@@ -173,6 +189,16 @@ fun PlusMarkdownEditor(
     fun onItalic() {
         if (richTextMode) richTextState.toggleSpanStyle(SpanStyle(fontStyle = FontStyle.Italic))
         else applyMarkdownMarker(ITALIC_MARKER)
+    }
+
+    fun onBulletList() {
+        if (richTextMode) richTextState.toggleUnorderedList()
+        else applyMarkdownTransform { it.toggleBulletList() }
+    }
+
+    fun onNumberedList() {
+        if (richTextMode) richTextState.toggleOrderedList()
+        else applyMarkdownTransform { it.toggleNumberedList() }
     }
 
     // Bind the imperative insert handle to the active mode. Reassigned every recomposition so it
@@ -212,6 +238,9 @@ fun PlusMarkdownEditor(
                 MarkdownFormatToolbar(
                     onBold = ::onBold,
                     onItalic = ::onItalic,
+                    showListButtons = showListButtons,
+                    onBulletList = ::onBulletList,
+                    onNumberedList = ::onNumberedList,
                     onInsertLinkClick = onInsertLinkClick,
                 )
             }
@@ -313,6 +342,9 @@ private fun WritePreviewToggle(
 private fun MarkdownFormatToolbar(
     onBold: () -> Unit,
     onItalic: () -> Unit,
+    showListButtons: Boolean,
+    onBulletList: () -> Unit,
+    onNumberedList: () -> Unit,
     onInsertLinkClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
@@ -330,6 +362,18 @@ private fun MarkdownFormatToolbar(
             contentDescription = stringResource(Res.string.markdown_editor_italic_a11y),
             onClick = onItalic,
         )
+        if (showListButtons) {
+            FormatButton(
+                icon = Icons.AutoMirrored.Filled.FormatListBulleted,
+                contentDescription = stringResource(Res.string.markdown_editor_bulleted_list_a11y),
+                onClick = onBulletList,
+            )
+            FormatButton(
+                icon = Icons.Default.FormatListNumbered,
+                contentDescription = stringResource(Res.string.markdown_editor_numbered_list_a11y),
+                onClick = onNumberedList,
+            )
+        }
         if (onInsertLinkClick != null) {
             FormatButton(
                 icon = Icons.Default.AddLink,
@@ -374,7 +418,7 @@ private fun MarkdownPreview(text: String, modifier: Modifier = Modifier) {
             ) {
                 text.split("\n").forEach { line ->
                     Text(
-                        text = line.toInlineMarkdownAnnotatedString(),
+                        text = parseListLine(line).toDisplayAnnotatedString(),
                         style = MaterialTheme.typography.bodyLarge,
                     )
                 }
