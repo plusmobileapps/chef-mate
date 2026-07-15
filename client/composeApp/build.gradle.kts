@@ -277,7 +277,19 @@ compose.desktop {
             // runtime. Without it the jlink/jpackage runtime image omits the class and the browser
             // crashes with NoClassDefFoundError the first time the cursor updates over the WebView
             // (see issue #400). Not needed for `./gradlew run`, which uses the full JDK.
-            modules("java.sql", "java.naming", "jdk.jsobject", "jdk.unsupported.desktop")
+            //
+            // jdk.xml.dom exports the org.w3c.dom.{html,css,stylesheets,xpath} interfaces that
+            // JavaFX WebView's WebKit glue (com.sun.webkit.dom.*) implements to build the page
+            // document. Without it in the jlink runtime image the WebView renders every page as a
+            // blank white screen (see issue #432). Like #400, only packaged builds are affected —
+            // ./gradlew run uses the full JDK, which already has the module.
+            modules(
+                "java.sql",
+                "java.naming",
+                "jdk.jsobject",
+                "jdk.unsupported.desktop",
+                "jdk.xml.dom",
+            )
 
             // macOS configuration
             macOS {
