@@ -1212,6 +1212,7 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                 DirectionLineItem(
                     text = step.text,
                     number = step.number,
+                    isHeader = step.isHeader,
                     highlighted = directionHighlightedIndex == index,
                     onClick = {
                         directionHighlightedIndex =
@@ -1642,19 +1643,21 @@ private fun IngredientLineItem(
 }
 
 /**
- * One rendered directions line. [number] is the step number (1-based, reset per section); a null
- * [number] marks a section header (a line ending in `:`), which renders bold and is not numbered or
- * tappable.
+ * One rendered directions line. When [isHeader] is set (a line ending in `:`) it renders bold and
+ * is not tappable. Otherwise it's a step: [number] is the author's manually-typed enumerator
+ * rendered as a bold prefix when present, or null to render the text plainly — numbers are never
+ * auto-generated.
  */
 @Composable
 private fun DirectionLineItem(
     text: String,
     number: Int?,
+    isHeader: Boolean,
     highlighted: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (number == null) {
+    if (isHeader) {
         Text(
             text = text,
             style = MaterialTheme.typography.titleSmall,
@@ -1674,7 +1677,9 @@ private fun DirectionLineItem(
     val rendered =
         remember(text, number) {
             buildAnnotatedString {
-                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("$number. ") }
+                if (number != null) {
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("$number. ") }
+                }
                 append(text.toInlineMarkdownAnnotatedString())
             }
         }
@@ -1703,26 +1708,33 @@ private fun DirectionLineItem(
 }
 
 /**
- * A directions line with its display info: section headers (lines ending in `:`) carry a null
- * [number]; real steps are numbered 1-based and the counter resets after each header. Any manual
- * leading enumerator the author typed (e.g. "1. ") is stripped so we don't double-number.
+ * A directions line with its display info. Section headers (lines ending in `:`) set [isHeader] and
+ * render bold. Steps are never auto-numbered: [number] is populated only when the author actually
+ * typed a leading enumerator (e.g. "1. " or "2) "), which is stripped from [text] and re-rendered
+ * as a bold prefix. Steps without an enumerator carry a null [number] and render as plain lines —
+ * the same "only show numbers when present" behavior as Cook Mode.
  */
-internal data class DirectionStep(val text: String, val number: Int?)
+internal data class DirectionStep(val text: String, val number: Int?, val isHeader: Boolean)
 
-private val leadingEnumerator = Regex("""^\s*\d+[.)]\s+""")
+private val leadingEnumerator = Regex("""^\s*(\d+)[.)]\s+""")
 
-internal fun directionSteps(directions: String): List<DirectionStep> {
-    var counter = 0
-    return splitLines(directions).map { line ->
+internal fun directionSteps(directions: String): List<DirectionStep> =
+    splitLines(directions).map { line ->
         if (IngredientSection.isHeader(line)) {
-            counter = 0
-            DirectionStep(text = line, number = null)
+            DirectionStep(text = line, number = null, isHeader = true)
         } else {
-            counter += 1
-            DirectionStep(text = line.replaceFirst(leadingEnumerator, ""), number = counter)
+            val match = leadingEnumerator.find(line)
+            if (match != null) {
+                DirectionStep(
+                    text = line.removeRange(match.range),
+                    number = match.groupValues[1].toIntOrNull(),
+                    isHeader = false,
+                )
+            } else {
+                DirectionStep(text = line, number = null, isHeader = false)
+            }
         }
     }
-}
 
 @Composable
 private fun IngredientsContent(
@@ -1763,6 +1775,7 @@ private fun DirectionsContent(
             DirectionLineItem(
                 text = step.text,
                 number = step.number,
+                isHeader = step.isHeader,
                 highlighted = highlightedIndex == index,
                 onClick = {
                     onHighlightedIndexChanged(if (highlightedIndex == index) -1 else index)
