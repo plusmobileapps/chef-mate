@@ -103,10 +103,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -184,6 +182,10 @@ import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
 import com.plusmobileapps.chefmate.ui.components.PlusToolbar
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
 import com.plusmobileapps.chefmate.ui.components.WindowSizeClass
+import com.plusmobileapps.chefmate.ui.text.LineMarker
+import com.plusmobileapps.chefmate.ui.text.ListLine
+import com.plusmobileapps.chefmate.ui.text.parseListLine
+import com.plusmobileapps.chefmate.ui.text.toDisplayAnnotatedString
 import com.plusmobileapps.chefmate.ui.text.toInlineMarkdownAnnotatedString
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import com.plusmobileapps.chefmate.util.rememberShareLauncher
@@ -1231,8 +1233,8 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                 index,
                 step ->
                 DirectionLineItem(
-                    text = step.text,
-                    number = step.number,
+                    content = step.content,
+                    marker = step.marker,
                     isHeader = step.isHeader,
                     highlighted = directionHighlightedIndex == index,
                     onClick = {
@@ -1655,12 +1657,13 @@ private fun IngredientLineItem(
         )
         return
     }
+    val linkStyle = recipeLinkStyle()
+    val rendered =
+        remember(text, linkStyle, onRecipeLinkClick) {
+            parseListLine(text).toDisplayAnnotatedString(linkStyle, onRecipeLinkClick)
+        }
     Text(
-        text =
-            text.toInlineMarkdownAnnotatedString(
-                linkStyle = recipeLinkStyle(),
-                onLinkClick = onRecipeLinkClick,
-            ),
+        text = rendered,
         style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 22.sp),
         textDecoration = if (crossedOut) TextDecoration.LineThrough else TextDecoration.None,
         color =
@@ -1679,14 +1682,13 @@ private fun IngredientLineItem(
 
 /**
  * One rendered directions line. When [isHeader] is set (a line ending in `:`) it renders bold and
- * is not tappable. Otherwise it's a step: [number] is the author's manually-typed enumerator
- * rendered as a bold prefix when present, or null to render the text plainly — numbers are never
- * auto-generated.
+ * is not tappable. Otherwise it's a step whose [marker] adds a bold `•`/`N.` prefix when the author
+ * typed a bullet or enumerator — plain steps get no prefix.
  */
 @Composable
 private fun DirectionLineItem(
-    text: String,
-    number: Int?,
+    content: String,
+    marker: LineMarker,
     isHeader: Boolean,
     highlighted: Boolean,
     onClick: () -> Unit,
@@ -1695,7 +1697,7 @@ private fun DirectionLineItem(
 ) {
     if (isHeader) {
         Text(
-            text = text,
+            text = content,
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,
@@ -1712,18 +1714,8 @@ private fun DirectionLineItem(
     val dimens = ChefMateTheme.dimens
     val linkStyle = recipeLinkStyle()
     val rendered =
-        remember(text, number, linkStyle, onRecipeLinkClick) {
-            buildAnnotatedString {
-                if (number != null) {
-                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("$number. ") }
-                }
-                append(
-                    text.toInlineMarkdownAnnotatedString(
-                        linkStyle = linkStyle,
-                        onLinkClick = onRecipeLinkClick,
-                    )
-                )
-            }
+        remember(content, marker, linkStyle, onRecipeLinkClick) {
+            ListLine(marker, content).toDisplayAnnotatedString(linkStyle, onRecipeLinkClick)
         }
     Text(
         text = rendered,
@@ -1751,30 +1743,24 @@ private fun DirectionLineItem(
 
 /**
  * A directions line with its display info. Section headers (lines ending in `:`) set [isHeader] and
- * render bold. Steps are never auto-numbered: [number] is populated only when the author actually
- * typed a leading enumerator (e.g. "1. " or "2) "), which is stripped from [text] and re-rendered
- * as a bold prefix. Steps without an enumerator carry a null [number] and render as plain lines —
- * the same "only show numbers when present" behavior as Cook Mode.
+ * render bold. Otherwise it's a step: [marker] carries any list prefix the author actually typed —
+ * a `- ` bullet or a `1. ` enumerator — stripped from [content]. Numbers are never auto-generated,
+ * so a plain step has a [LineMarker.None] marker and renders as a plain line, the same "only show
+ * numbers when present" behavior as Cook Mode.
  */
-internal data class DirectionStep(val text: String, val number: Int?, val isHeader: Boolean)
-
-private val leadingEnumerator = Regex("""^\s*(\d+)[.)]\s+""")
+internal data class DirectionStep(
+    val content: String,
+    val marker: LineMarker,
+    val isHeader: Boolean,
+)
 
 internal fun directionSteps(directions: String): List<DirectionStep> =
     splitLines(directions).map { line ->
         if (IngredientSection.isHeader(line)) {
-            DirectionStep(text = line, number = null, isHeader = true)
+            DirectionStep(content = line, marker = LineMarker.None, isHeader = true)
         } else {
-            val match = leadingEnumerator.find(line)
-            if (match != null) {
-                DirectionStep(
-                    text = line.removeRange(match.range),
-                    number = match.groupValues[1].toIntOrNull(),
-                    isHeader = false,
-                )
-            } else {
-                DirectionStep(text = line, number = null, isHeader = false)
-            }
+            val parsed = parseListLine(line)
+            DirectionStep(content = parsed.content, marker = parsed.marker, isHeader = false)
         }
     }
 
@@ -1818,8 +1804,8 @@ private fun DirectionsContent(
     ) {
         steps.forEachIndexed { index, step ->
             DirectionLineItem(
-                text = step.text,
-                number = step.number,
+                content = step.content,
+                marker = step.marker,
                 isHeader = step.isHeader,
                 highlighted = highlightedIndex == index,
                 onClick = {
