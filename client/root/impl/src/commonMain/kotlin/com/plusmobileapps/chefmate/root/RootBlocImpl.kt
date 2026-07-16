@@ -623,6 +623,8 @@ class RootBlocImpl(
             // the read-only preview.
             is PublicRecipeBloc.Output.OpenRecipe ->
                 navigation.replaceCurrent(RecipeRoot(Detail(output.recipeId)))
+            is PublicRecipeBloc.Output.OpenUrl ->
+                navigation.bringToFront(Configuration.Browser(output.url))
         }
     }
 
