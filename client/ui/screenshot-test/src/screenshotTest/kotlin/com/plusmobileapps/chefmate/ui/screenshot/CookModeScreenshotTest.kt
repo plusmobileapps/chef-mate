@@ -10,6 +10,7 @@ import com.plusmobileapps.chefmate.cook.impl.ui.previewCookBlocLongTitle
 import com.plusmobileapps.chefmate.cook.impl.ui.previewCookBlocSections
 import com.plusmobileapps.chefmate.cook.impl.ui.previewCookBlocSplit
 import com.plusmobileapps.chefmate.cook.impl.ui.previewCookBlocStacked
+import com.plusmobileapps.chefmate.cook.impl.ui.previewCookBlocWithAiChat
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 
@@ -27,6 +28,14 @@ fun CookModePhonePortraitLightScreenshot() {
 @Composable
 fun CookModePhonePortraitDarkScreenshot() {
     ChefMateTheme(darkTheme = true) { previewCookBlocStacked.Content() }
+}
+
+// AI Chat feature flag on: the header shows the "Ask AI about this recipe" button.
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1100)
+@Composable
+fun CookModeAiChatButtonScreenshot() {
+    ChefMateTheme { previewCookBlocWithAiChat.Content() }
 }
 
 @PreviewTest
