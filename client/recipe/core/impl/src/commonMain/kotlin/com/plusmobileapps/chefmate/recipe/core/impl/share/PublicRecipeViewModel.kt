@@ -3,7 +3,9 @@ package com.plusmobileapps.chefmate.recipe.core.impl.share
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.recipe.core.share.PublicRecipeBloc
+import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
+import com.plusmobileapps.chefmate.util.TimeFormatterUtil
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -21,6 +23,7 @@ class PublicRecipeViewModel(
     @Assisted private val remoteId: String,
     @Main mainContext: CoroutineContext,
     private val repository: RecipeRepository,
+    private val timeFormatterUtil: TimeFormatterUtil,
 ) : ViewModel(mainContext) {
 
     private val _output = Channel<Output>(Channel.BUFFERED)
@@ -45,7 +48,7 @@ class PublicRecipeViewModel(
             repository
                 .fetchPublicRecipe(remoteId)
                 .onSuccess { recipe ->
-                    _state.value = PublicRecipeBloc.Model.Loaded(recipe = recipe)
+                    _state.value = recipe.toLoaded()
                 }
                 .onFailure { error ->
                     // A missing/private recipe is a definitive "not found"; anything else (network,
@@ -77,6 +80,14 @@ class PublicRecipeViewModel(
             _output.send(Output.OpenRecipe(saved.id))
         }
     }
+
+    private fun Recipe.toLoaded(): PublicRecipeBloc.Model.Loaded =
+        PublicRecipeBloc.Model.Loaded(
+            recipe = this,
+            formattedPrepTime = prepTime?.let(timeFormatterUtil::formatMinutes),
+            formattedCookTime = cookTime?.let(timeFormatterUtil::formatMinutes),
+            formattedTotalTime = totalTime?.let(timeFormatterUtil::formatMinutes),
+        )
 
     override fun onCleared() {
         super.onCleared()

@@ -6,6 +6,7 @@ import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.ComposeScreen
 import kotlinx.coroutines.flow.StateFlow
 
@@ -29,10 +30,23 @@ interface PublicRecipeBloc : BackClickBloc, ComposeScreen {
     /** Retries the fetch after a load failure. */
     fun onRetryClicked()
 
+    /** Opens the recipe's source [url] in the in-app browser. */
+    fun onSourceUrlClicked(url: String)
+
     sealed interface Model {
         data object Loading : Model
 
-        data class Loaded(val recipe: Recipe, val isSaving: Boolean = false) : Model
+        data class Loaded(
+            val recipe: Recipe,
+            val isSaving: Boolean = false,
+            /**
+             * Prep/cook/total times pre-formatted for display (e.g. "1 hr 30 min"), null when
+             * unset.
+             */
+            val formattedPrepTime: TextData? = null,
+            val formattedCookTime: TextData? = null,
+            val formattedTotalTime: TextData? = null,
+        ) : Model
 
         /** The recipe isn't public, was deleted, or the id is invalid. */
         data object NotFound : Model
@@ -49,6 +63,9 @@ interface PublicRecipeBloc : BackClickBloc, ComposeScreen {
          * recipient already had the recipe locally (resolved by remote id) and after saving a copy.
          */
         data class OpenRecipe(val recipeId: Long) : Output()
+
+        /** Open the recipe's source [url] in the in-app browser. */
+        data class OpenUrl(val url: String) : Output()
     }
 
     fun interface Factory {

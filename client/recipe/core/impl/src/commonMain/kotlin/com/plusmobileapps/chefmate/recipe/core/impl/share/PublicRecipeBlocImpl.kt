@@ -46,6 +46,10 @@ class PublicRecipeBlocImpl(
 
     override fun onRetryClicked() = viewModel.onRetry()
 
+    override fun onSourceUrlClicked(url: String) {
+        output.onNext(PublicRecipeBloc.Output.OpenUrl(url))
+    }
+
     override fun onBackClicked() {
         output.onNext(PublicRecipeBloc.Output.Finished)
     }

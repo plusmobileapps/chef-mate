@@ -8,6 +8,8 @@ import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.util.TimeFormatterUtil
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlin.test.Test
@@ -43,12 +45,20 @@ class PublicRecipeBlocImplTest {
             updatedAt = Instant.DISTANT_PAST,
         )
 
+    // Formats minutes as "<n> min" — enough to assert times are surfaced without pulling in the
+    // real localized formatter.
+    private val timeFormatterUtil =
+        object : TimeFormatterUtil {
+            override fun formatMinutes(totalMinutes: Int) = FixedString("$totalMinutes min")
+        }
+
     private fun createBloc(remoteId: String = "remote-1"): PublicRecipeBlocImpl {
         val viewModelFactory = PublicRecipeViewModel.Factory { id ->
             PublicRecipeViewModel(
                 remoteId = id,
                 mainContext = context.mainContext,
                 repository = repository,
+                timeFormatterUtil = timeFormatterUtil,
             )
         }
         return PublicRecipeBlocImpl(
@@ -90,5 +100,24 @@ class PublicRecipeBlocImplTest {
         // that a copy was created and an OpenRecipe output emitted.
         output.lastValue.shouldBeInstanceOf<PublicRecipeBloc.Output.OpenRecipe>()
         recipes.value.any { it.title == "Shared Soup" } shouldBe true
+    }
+
+    @Test
+    fun When_recipe_has_times_Then_they_are_formatted_in_loaded_state() {
+        repository.publicRecipes["remote-1"] =
+            publicRecipe.copy(prepTime = 10, cookTime = 20, totalTime = 30)
+        val bloc = createBloc()
+        val model = bloc.state.value.shouldBeInstanceOf<PublicRecipeBloc.Model.Loaded>()
+        model.formattedPrepTime shouldBe FixedString("10 min")
+        model.formattedCookTime shouldBe FixedString("20 min")
+        model.formattedTotalTime shouldBe FixedString("30 min")
+    }
+
+    @Test
+    fun When_source_url_clicked_Then_open_url_emitted() {
+        repository.publicRecipes["remote-1"] = publicRecipe
+        val bloc = createBloc()
+        bloc.onSourceUrlClicked("https://example.com/recipe")
+        output.lastValue shouldBe PublicRecipeBloc.Output.OpenUrl("https://example.com/recipe")
     }
 }
