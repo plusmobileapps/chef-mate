@@ -37,3 +37,16 @@ fun TextFieldValue.toggleInlineMarker(marker: String): TextFieldValue {
         )
     }
 }
+
+/**
+ * Replaces the current selection with a `[label](url)` markdown link and places the cursor just
+ * after it. With an empty selection the link is inserted at the caret.
+ */
+fun TextFieldValue.insertMarkdownLink(label: String, url: String): TextFieldValue {
+    val start = minOf(selection.start, selection.end)
+    val end = maxOf(selection.start, selection.end)
+    val markdown = "[$label]($url)"
+    val newText = text.substring(0, start) + markdown + text.substring(end)
+    val cursor = start + markdown.length
+    return TextFieldValue(text = newText, selection = TextRange(cursor))
+}

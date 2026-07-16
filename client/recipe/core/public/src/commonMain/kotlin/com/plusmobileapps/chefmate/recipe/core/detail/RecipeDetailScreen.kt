@@ -157,6 +157,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
+import com.plusmobileapps.chefmate.ChefMateUrls
 import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.letIfTrue
 import com.plusmobileapps.chefmate.recipe.categories.pickerLabelRes
@@ -307,6 +308,15 @@ private fun RecipeDetailBody(
 ) {
     val toastService = LocalToastService.current
     val copiedMessage = ResourceString(Res.string.recipe_detail_copied_to_clipboard)
+    // Links inside ingredients/directions: a chefmate://recipe/<clientId> link opens that recipe
+    // in-app; any other URL is treated like the source link and opened externally.
+    val onRecipeLinkClick: (String) -> Unit =
+        remember(bloc) {
+            { url ->
+                ChefMateUrls.recipeLinkClientId(url)?.let(bloc::onRecipeLinkClicked)
+                    ?: bloc.onSourceUrlClicked(url)
+            }
+        }
     Box(modifier = Modifier.fillMaxSize().testTag(RecipeDetailTestTags.SCREEN)) {
         PlusResponsiveContainer(modifier = Modifier.fillMaxSize()) { windowSizeClass ->
             val isCompact = windowSizeClass == WindowSizeClass.COMPACT
@@ -465,6 +475,7 @@ private fun RecipeDetailBody(
                                         formattedTotalTime = state.formattedTotalTime,
                                         onSourceUrlClicked = bloc::onSourceUrlClicked,
                                         onImageClicked = bloc::onImageClicked,
+                                        onRecipeLinkClick = onRecipeLinkClick,
                                     )
                                 isCompact ->
                                     RecipeDetailCompactContent(
@@ -476,6 +487,7 @@ private fun RecipeDetailBody(
                                         formattedTotalTime = state.formattedTotalTime,
                                         onSourceUrlClicked = bloc::onSourceUrlClicked,
                                         onImageClicked = bloc::onImageClicked,
+                                        onRecipeLinkClick = onRecipeLinkClick,
                                         modifier = Modifier.weight(1f),
                                     )
                                 else ->
@@ -488,6 +500,7 @@ private fun RecipeDetailBody(
                                         formattedTotalTime = state.formattedTotalTime,
                                         onSourceUrlClicked = bloc::onSourceUrlClicked,
                                         onImageClicked = bloc::onImageClicked,
+                                        onRecipeLinkClick = onRecipeLinkClick,
                                         metadataCollapsed = metadataCollapsed,
                                         onMetadataCollapsedChange = onMetadataCollapsedChange,
                                     )
@@ -756,6 +769,7 @@ private fun RecipeDetailCompactContent(
     formattedTotalTime: TextData?,
     onSourceUrlClicked: (String) -> Unit,
     onImageClicked: () -> Unit,
+    onRecipeLinkClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val pagerState = rememberPagerState(pageCount = { 2 })
@@ -852,6 +866,7 @@ private fun RecipeDetailCompactContent(
                             IngredientsContent(
                                 lines = ingredientLines,
                                 crossedOut = crossedOut,
+                                onRecipeLinkClick = onRecipeLinkClick,
                                 modifier =
                                     Modifier.fillMaxWidth().onSizeChanged {
                                         ingredientsHeightPx = it.height
@@ -862,6 +877,7 @@ private fun RecipeDetailCompactContent(
                                 directions = recipe.directions,
                                 highlightedIndex = highlightedDirectionIndex,
                                 onHighlightedIndexChanged = { highlightedDirectionIndex = it },
+                                onRecipeLinkClick = onRecipeLinkClick,
                                 modifier =
                                     Modifier.fillMaxWidth().onSizeChanged {
                                         directionsHeightPx = it.height
@@ -890,6 +906,7 @@ private fun ColumnScope.RecipeDetailLandscapeContent(
     formattedTotalTime: TextData?,
     onSourceUrlClicked: (String) -> Unit,
     onImageClicked: () -> Unit,
+    onRecipeLinkClick: (String) -> Unit,
 ) {
     val padding = ChefMateTheme.dimens.paddingNormal
     val navBarBottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
@@ -1020,6 +1037,7 @@ private fun ColumnScope.RecipeDetailLandscapeContent(
                             IngredientsContent(
                                 lines = ingredientLines,
                                 crossedOut = crossedOut,
+                                onRecipeLinkClick = onRecipeLinkClick,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                         1 ->
@@ -1027,6 +1045,7 @@ private fun ColumnScope.RecipeDetailLandscapeContent(
                                 directions = recipe.directions,
                                 highlightedIndex = highlightedDirectionIndex,
                                 onHighlightedIndexChanged = { highlightedDirectionIndex = it },
+                                onRecipeLinkClick = onRecipeLinkClick,
                                 modifier = Modifier.fillMaxWidth(),
                             )
                     }
@@ -1053,6 +1072,7 @@ private fun ColumnScope.RecipeDetailExpandedContent(
     formattedTotalTime: TextData?,
     onSourceUrlClicked: (String) -> Unit,
     onImageClicked: () -> Unit,
+    onRecipeLinkClick: (String) -> Unit,
     metadataCollapsed: Boolean,
     onMetadataCollapsedChange: (Boolean) -> Unit,
 ) {
@@ -1180,6 +1200,7 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                     text = line,
                     crossedOut = ingredientCrossedOut[index],
                     onClick = { ingredientCrossedOut[index] = !ingredientCrossedOut[index] },
+                    onRecipeLinkClick = onRecipeLinkClick,
                     modifier = Modifier.padding(horizontal = padding),
                 )
             }
@@ -1218,6 +1239,7 @@ private fun ColumnScope.RecipeDetailExpandedContent(
                         directionHighlightedIndex =
                             if (directionHighlightedIndex == index) -1 else index
                     },
+                    onRecipeLinkClick = onRecipeLinkClick,
                     modifier = Modifier.padding(horizontal = padding),
                 )
             }
@@ -1600,11 +1622,20 @@ private fun formatRecipeAsText(recipe: Recipe): String = buildString {
     }
 }
 
+/** The span style applied to recipe-to-recipe links inside ingredients/directions. */
+@Composable
+private fun recipeLinkStyle(): SpanStyle =
+    SpanStyle(
+        color = MaterialTheme.colorScheme.primary,
+        textDecoration = TextDecoration.Underline,
+    )
+
 @Composable
 private fun IngredientLineItem(
     text: String,
     crossedOut: Boolean,
     onClick: () -> Unit,
+    onRecipeLinkClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (IngredientSection.isHeader(text)) {
@@ -1625,7 +1656,11 @@ private fun IngredientLineItem(
         return
     }
     Text(
-        text = text.toInlineMarkdownAnnotatedString(),
+        text =
+            text.toInlineMarkdownAnnotatedString(
+                linkStyle = recipeLinkStyle(),
+                onLinkClick = onRecipeLinkClick,
+            ),
         style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 22.sp),
         textDecoration = if (crossedOut) TextDecoration.LineThrough else TextDecoration.None,
         color =
@@ -1655,6 +1690,7 @@ private fun DirectionLineItem(
     isHeader: Boolean,
     highlighted: Boolean,
     onClick: () -> Unit,
+    onRecipeLinkClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (isHeader) {
@@ -1674,13 +1710,19 @@ private fun DirectionLineItem(
         return
     }
     val dimens = ChefMateTheme.dimens
+    val linkStyle = recipeLinkStyle()
     val rendered =
-        remember(text, number) {
+        remember(text, number, linkStyle, onRecipeLinkClick) {
             buildAnnotatedString {
                 if (number != null) {
                     withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("$number. ") }
                 }
-                append(text.toInlineMarkdownAnnotatedString())
+                append(
+                    text.toInlineMarkdownAnnotatedString(
+                        linkStyle = linkStyle,
+                        onLinkClick = onRecipeLinkClick,
+                    )
+                )
             }
         }
     Text(
@@ -1740,6 +1782,7 @@ internal fun directionSteps(directions: String): List<DirectionStep> =
 private fun IngredientsContent(
     lines: List<String>,
     crossedOut: SnapshotStateList<Boolean>,
+    onRecipeLinkClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val dimens = ChefMateTheme.dimens
@@ -1752,6 +1795,7 @@ private fun IngredientsContent(
                 text = line,
                 crossedOut = crossedOut[index],
                 onClick = { crossedOut[index] = !crossedOut[index] },
+                onRecipeLinkClick = onRecipeLinkClick,
             )
         }
     }
@@ -1762,6 +1806,7 @@ private fun DirectionsContent(
     directions: String,
     highlightedIndex: Int,
     onHighlightedIndexChanged: (Int) -> Unit,
+    onRecipeLinkClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val steps = remember(directions) { directionSteps(directions) }
@@ -1780,6 +1825,7 @@ private fun DirectionsContent(
                 onClick = {
                     onHighlightedIndexChanged(if (highlightedIndex == index) -1 else index)
                 },
+                onRecipeLinkClick = onRecipeLinkClick,
             )
         }
     }
@@ -1879,6 +1925,7 @@ val previewRecipeDetailBloc: RecipeDetailBloc =
                                 - 2 garlic cloves, crushed
                                 - 400g minced beef
                                 - 800g canned tomatoes
+                                - A batch of [Garlic Bread](chefmate://recipe/garlic-bread-id)
                                 - Salt and **pepper** to taste
                                 """
                                     .trimIndent(),
@@ -1964,6 +2011,10 @@ val previewRecipeDetailBloc: RecipeDetailBloc =
 
         override fun onSourceUrlClicked(url: String) {
             TODO("Not yet implemented")
+        }
+
+        override fun onRecipeLinkClicked(clientId: String) {
+            // Preview no-op
         }
 
         override fun onShareLinkClicked() {

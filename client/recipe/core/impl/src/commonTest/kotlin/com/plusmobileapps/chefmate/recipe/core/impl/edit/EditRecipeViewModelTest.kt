@@ -463,6 +463,42 @@ class EditRecipeViewModelTest {
         vm.state.value.showDiscardChangesDialog shouldBe false
     }
 
+    @Test
+    fun When_recipe_link_picked_Then_client_id_link_is_emitted() = runTest {
+        recipes.value =
+            listOf(seedRecipe(id = 5, title = "Green Sauce", clientId = "sauce-client-id"))
+        val vm = createViewModel()
+
+        vm.onRecipeLinkPicked(recipeId = 5)
+
+        vm.recipeLinkPicked.first() shouldBe
+            EditRecipeViewModel.RecipeLinkSelection(
+                label = "Green Sauce",
+                url = "chefmate://recipe/sauce-client-id",
+            )
+    }
+
+    private fun seedRecipe(id: Long, title: String, clientId: String?) =
+        Recipe(
+            id = id,
+            title = title,
+            description = null,
+            ingredients = "",
+            directions = "",
+            imageUrl = null,
+            sourceUrl = null,
+            servings = null,
+            prepTime = null,
+            cookTime = null,
+            totalTime = null,
+            calories = null,
+            starRating = null,
+            isFavorite = false,
+            clientId = clientId,
+            createdAt = Instant.DISTANT_PAST,
+            updatedAt = Instant.DISTANT_PAST,
+        )
+
     private fun seedExistingRecipe(categories: Set<Category>) {
         recipes.value =
             listOf(

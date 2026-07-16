@@ -95,6 +95,13 @@ class RecipeRootBlocImplTest {
     }
 
     @Test
+    fun When_detail_outputs_open_recipe_Then_linked_recipe_detail_is_shown() {
+        val bloc = createBloc(RecipeRootBloc.Props.Detail(1L))
+        detailOutput.onNext(RecipeDetailBloc.Output.OpenRecipe(99L))
+        bloc.routerState.value.active.instance.shouldBeInstanceOf<RecipeRootBloc.Child.Detail>()
+    }
+
+    @Test
     fun When_edit_outputs_cancelled_from_create_Then_root_outputs_finished() {
         createBloc(RecipeRootBloc.Props.Create)
         editOutput.onNext(EditRecipeBloc.Output.Cancelled)

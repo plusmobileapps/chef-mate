@@ -4,6 +4,7 @@
 package com.plusmobileapps.chefmate.recipe.core.impl.detail
 
 import chefmate.client.recipe.core.public.generated.resources.Res
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_linked_recipe_not_found
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_sign_in_required
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
@@ -241,5 +242,27 @@ class RecipeDetailBlocImplTest {
         val bloc = createBloc(sampleRecipe.copy(isPublic = true, remoteId = "already-public"))
         bloc.onStopSharingClicked()
         repository.lastSetPublic shouldBe (sampleRecipe.id to false)
+    }
+
+    @Test
+    fun When_recipe_link_clicked_and_target_exists_Then_open_recipe_output_emitted() {
+        val bloc = createBloc()
+        val target = sampleRecipe.copy(id = 42L, clientId = "target-client-id")
+        recipes.value = recipes.value + target
+
+        bloc.onRecipeLinkClicked("target-client-id")
+
+        output.lastValue shouldBe RecipeDetailBloc.Output.OpenRecipe(42L)
+    }
+
+    @Test
+    fun When_recipe_link_clicked_and_target_missing_Then_not_found_toast_shown() {
+        val bloc = createBloc()
+
+        bloc.onRecipeLinkClicked("unknown-client-id")
+
+        output.values shouldBe emptyList()
+        toastService.shown shouldBe
+            listOf(ResourceString(Res.string.recipe_detail_linked_recipe_not_found))
     }
 }

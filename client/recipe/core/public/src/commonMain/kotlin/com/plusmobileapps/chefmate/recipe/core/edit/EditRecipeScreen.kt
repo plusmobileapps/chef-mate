@@ -30,10 +30,13 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -91,6 +94,7 @@ import chefmate.client.recipe.core.public.generated.resources.edit_recipe_sectio
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload_photo
 import chefmate.client.recipe.core.public.generated.resources.edit_recipe_upload_photo_dismiss
 import coil3.compose.AsyncImage
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.recipe.categories.pickerLabelRes
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
@@ -101,6 +105,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
 import com.plusmobileapps.chefmate.ui.components.PlusMarkdownEditor
+import com.plusmobileapps.chefmate.ui.components.PlusMarkdownEditorController
 import com.plusmobileapps.chefmate.ui.components.PlusOnboardingTooltip
 import com.plusmobileapps.chefmate.ui.components.PlusOutlinedContainer
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
@@ -128,6 +133,25 @@ fun EditRecipeScreen(
     moreDetailsInitiallyExpanded: Boolean = false,
 ) {
     val state by bloc.state.collectAsState()
+
+    // One controller per markdown field so a picked recipe link is spliced into whichever field
+    // requested it. Insertion events are single-consumer (a Channel), so collect them here — the
+    // one
+    // place that can see both controllers — rather than inside the field composables.
+    val ingredientsController = remember { PlusMarkdownEditorController() }
+    val directionsController = remember { PlusMarkdownEditorController() }
+    LaunchedEffect(bloc) {
+        bloc.linkInsertions.collect { insertion ->
+            val controller =
+                when (insertion.field) {
+                    EditRecipeBloc.LinkField.INGREDIENTS -> ingredientsController
+                    EditRecipeBloc.LinkField.DIRECTIONS -> directionsController
+                }
+            controller.insertLink(label = insertion.label, url = insertion.url)
+        }
+    }
+
+    RecipeLinkPickerSheet(bloc = bloc)
 
     if (state.showDiscardChangesDialog) {
         DiscardChangesDialog(
@@ -167,11 +191,15 @@ fun EditRecipeScreen(
                 WideEditRecipeContent(
                     bloc = bloc,
                     moreDetailsInitiallyExpanded = moreDetailsInitiallyExpanded,
+                    ingredientsController = ingredientsController,
+                    directionsController = directionsController,
                 )
             } else {
                 EditRecipeContent(
                     bloc = bloc,
                     moreDetailsInitiallyExpanded = moreDetailsInitiallyExpanded,
+                    ingredientsController = ingredientsController,
+                    directionsController = directionsController,
                 )
             }
         }
@@ -240,6 +268,8 @@ private fun LoadingIndicator(modifier: Modifier = Modifier) {
 private fun EditRecipeContent(
     bloc: EditRecipeBloc,
     moreDetailsInitiallyExpanded: Boolean,
+    ingredientsController: PlusMarkdownEditorController,
+    directionsController: PlusMarkdownEditorController,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -252,8 +282,8 @@ private fun EditRecipeContent(
         RecipeStarRatingField(bloc = bloc)
         RecipePhotoUploader(bloc = bloc)
         RecipeMoreDetailsSection(bloc = bloc, initiallyExpanded = moreDetailsInitiallyExpanded)
-        RecipeIngredientsField(bloc = bloc)
-        RecipeDirectionsField(bloc = bloc)
+        RecipeIngredientsField(bloc = bloc, controller = ingredientsController)
+        RecipeDirectionsField(bloc = bloc, controller = directionsController)
         // Clearance so the floating Save button never covers the last field.
         Spacer(modifier = Modifier.height(ChefMateTheme.dimens.fabClearance))
     }
@@ -268,6 +298,8 @@ private fun EditRecipeContent(
 private fun WideEditRecipeContent(
     bloc: EditRecipeBloc,
     moreDetailsInitiallyExpanded: Boolean,
+    ingredientsController: PlusMarkdownEditorController,
+    directionsController: PlusMarkdownEditorController,
     modifier: Modifier = Modifier,
 ) {
     val spacing = ChefMateTheme.dimens.paddingNormal
@@ -293,8 +325,12 @@ private fun WideEditRecipeContent(
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
-            Column(modifier = Modifier.weight(1f)) { RecipeIngredientsField(bloc = bloc) }
-            Column(modifier = Modifier.weight(1f)) { RecipeDirectionsField(bloc = bloc) }
+            Column(modifier = Modifier.weight(1f)) {
+                RecipeIngredientsField(bloc = bloc, controller = ingredientsController)
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                RecipeDirectionsField(bloc = bloc, controller = directionsController)
+            }
         }
         // Clearance so the floating Save button never covers the last field.
         Spacer(modifier = Modifier.height(ChefMateTheme.dimens.fabClearance))
@@ -715,7 +751,11 @@ private fun RecipeCaloriesField(bloc: EditRecipeBloc, modifier: Modifier = Modif
 }
 
 @Composable
-private fun RecipeIngredientsField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
+private fun RecipeIngredientsField(
+    bloc: EditRecipeBloc,
+    controller: PlusMarkdownEditorController,
+    modifier: Modifier = Modifier,
+) {
     val ingredients by bloc.ingredients.collectAsState()
     val richTextMode by bloc.richTextEditorMode.collectAsState()
 
@@ -729,11 +769,17 @@ private fun RecipeIngredientsField(bloc: EditRecipeBloc, modifier: Modifier = Mo
         modifier = modifier,
         initialHeight = 320.dp,
         maxHeight = 640.dp,
+        controller = controller,
+        onInsertLinkClick = { bloc.onLinkRecipeClicked(EditRecipeBloc.LinkField.INGREDIENTS) },
     )
 }
 
 @Composable
-private fun RecipeDirectionsField(bloc: EditRecipeBloc, modifier: Modifier = Modifier) {
+private fun RecipeDirectionsField(
+    bloc: EditRecipeBloc,
+    controller: PlusMarkdownEditorController,
+    modifier: Modifier = Modifier,
+) {
     val directions by bloc.directions.collectAsState()
     val richTextMode by bloc.richTextEditorMode.collectAsState()
     val model by bloc.state.collectAsState()
@@ -754,7 +800,25 @@ private fun RecipeDirectionsField(bloc: EditRecipeBloc, modifier: Modifier = Mod
             onRichTextModeChange = bloc::onRichTextEditorModeChanged,
             initialHeight = 320.dp,
             maxHeight = 640.dp,
+            controller = controller,
+            onInsertLinkClick = { bloc.onLinkRecipeClicked(EditRecipeBloc.LinkField.DIRECTIONS) },
         )
+    }
+}
+
+/**
+ * The recipe picker shown as a modal bottom sheet when the user taps "Link a recipe" on the
+ * ingredients or directions editor. Selecting a recipe inserts a link and closes the sheet; the
+ * bloc owns which field the link targets.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RecipeLinkPickerSheet(bloc: EditRecipeBloc) {
+    val slot by bloc.recipePickerSlot.subscribeAsState()
+    val picker = slot.child?.instance ?: return
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(onDismissRequest = bloc::onLinkPickerDismissed, sheetState = sheetState) {
+        picker.Content(modifier = Modifier.fillMaxWidth())
     }
 }
 
@@ -852,6 +916,23 @@ Salt for pasta water"""
         override val selectedBookIds: StateFlow<Set<Long>> = MutableStateFlow(setOf(1L))
         override val pendingPhotoBytes: StateFlow<ByteArray?> = MutableStateFlow(null)
         override val richTextEditorMode: StateFlow<Boolean> = MutableStateFlow(false)
+        override val recipePickerSlot:
+            com.arkivanov.decompose.value.Value<
+                com.arkivanov.decompose.router.slot.ChildSlot<
+                    *,
+                    com.plusmobileapps.chefmate.recipe.core.addmeal.RecipePickerBloc,
+                >
+            > =
+            com.arkivanov.decompose.value.MutableValue(
+                com.arkivanov.decompose.router.slot.ChildSlot<
+                    Any,
+                    com.plusmobileapps.chefmate.recipe.core.addmeal.RecipePickerBloc,
+                >(
+                    null
+                )
+            )
+        override val linkInsertions: kotlinx.coroutines.flow.Flow<EditRecipeBloc.LinkInsertion> =
+            kotlinx.coroutines.flow.emptyFlow()
 
         override fun onTitleChanged(title: String) {}
 
@@ -908,6 +989,10 @@ Salt for pasta water"""
         override fun onRichTextEditorModeChanged(richTextMode: Boolean) {}
 
         override fun onCoachMarkDismissed(id: String) {}
+
+        override fun onLinkRecipeClicked(field: EditRecipeBloc.LinkField) {}
+
+        override fun onLinkPickerDismissed() {}
 
         override fun onBackClicked() {}
 

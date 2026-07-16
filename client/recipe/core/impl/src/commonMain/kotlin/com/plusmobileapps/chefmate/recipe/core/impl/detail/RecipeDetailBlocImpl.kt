@@ -58,6 +58,8 @@ class RecipeDetailBlocImpl(
             viewModel.output.collect { viewModelOutput ->
                 when (viewModelOutput) {
                     RecipeDetailViewModel.Output.RecipeDeleted -> output.onNext(Output.Finished)
+                    is RecipeDetailViewModel.Output.OpenRecipe ->
+                        output.onNext(Output.OpenRecipe(viewModelOutput.recipeId))
                 }
             }
         }
@@ -177,6 +179,10 @@ class RecipeDetailBlocImpl(
 
     override fun onSourceUrlClicked(url: String) {
         output.onNext(Output.OpenUrl(url))
+    }
+
+    override fun onRecipeLinkClicked(clientId: String) {
+        viewModel.onRecipeLinkClicked(clientId)
     }
 
     override fun onShareLinkClicked() {

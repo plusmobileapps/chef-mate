@@ -2,15 +2,19 @@ package com.plusmobileapps.chefmate.recipe.core.edit
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.arkivanov.decompose.router.slot.ChildSlot
+import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
+import com.plusmobileapps.chefmate.recipe.core.addmeal.RecipePickerBloc
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.ComposeScreen
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 interface EditRecipeBloc : BackClickBloc, ComposeScreen {
@@ -63,6 +67,15 @@ interface EditRecipeBloc : BackClickBloc, ComposeScreen {
      * editor, false uses the raw markdown editor with a preview toggle. Persisted across launches.
      */
     val richTextEditorMode: StateFlow<Boolean>
+
+    /** The recipe picker shown when linking a recipe into ingredients or directions, when open. */
+    val recipePickerSlot: Value<ChildSlot<*, RecipePickerBloc>>
+
+    /**
+     * One-shot recipe links to splice into an editor field once the user picks a recipe. The screen
+     * collects these and calls the targeted field's editor controller so insertion is caret-aware.
+     */
+    val linkInsertions: Flow<LinkInsertion>
 
     fun onTitleChanged(title: String)
 
@@ -138,6 +151,12 @@ interface EditRecipeBloc : BackClickBloc, ComposeScreen {
     /** Marks the first-run coach mark with [id] as seen so it never shows again. */
     fun onCoachMarkDismissed(id: String)
 
+    /** Opens the recipe picker to insert a link into the given [field]. */
+    fun onLinkRecipeClicked(field: LinkField)
+
+    /** Dismisses the recipe-link picker without inserting anything. */
+    fun onLinkPickerDismissed()
+
     data class Model(
         val title: TextData,
         val isLoading: Boolean,
@@ -147,6 +166,15 @@ interface EditRecipeBloc : BackClickBloc, ComposeScreen {
         /** Id of the first-run coach mark currently allowed to show, or null when none. */
         val activeCoachMark: String? = null,
     )
+
+    /** The editor field a recipe link is being inserted into. */
+    enum class LinkField {
+        INGREDIENTS,
+        DIRECTIONS,
+    }
+
+    /** A resolved recipe link and the [field] it should be inserted into. */
+    data class LinkInsertion(val field: LinkField, val label: String, val url: String)
 
     sealed class Output {
         data class Finished(val recipeId: Long) : Output()
