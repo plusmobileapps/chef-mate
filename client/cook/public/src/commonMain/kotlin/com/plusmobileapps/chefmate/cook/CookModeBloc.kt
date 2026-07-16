@@ -28,6 +28,9 @@ interface CookModeBloc : BackClickBloc, ComposeScreen {
 
     fun onRecipeChipClicked(recipeId: Long)
 
+    /** Open the AI chat grounded in the active recipe. Only surfaced when [Model.showAiChat]. */
+    fun onAiChatClicked()
+
     fun onLayoutToggled()
 
     fun onKeepScreenOnToggled()
@@ -53,12 +56,17 @@ interface CookModeBloc : BackClickBloc, ComposeScreen {
         val keepScreenOn: Boolean = true,
         /** Id of the first-run coach mark currently allowed to show, or null when none. */
         val activeCoachMark: String? = null,
+        /** Gated on the AI Chat feature flag — hides the chat button entirely when off. */
+        val showAiChat: Boolean = false,
     ) {
         data class Chip(val recipeId: Long, val title: String, val isActive: Boolean)
     }
 
     sealed class Output {
         data object Finished : Output()
+
+        /** Open the AI chat grounded in the recipe with this id. */
+        data class OpenAiChat(val recipeId: Long) : Output()
     }
 
     fun interface Factory {

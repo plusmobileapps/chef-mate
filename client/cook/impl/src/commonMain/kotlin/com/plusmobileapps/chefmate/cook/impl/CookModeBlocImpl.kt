@@ -50,6 +50,8 @@ class CookModeBlocImpl(
                 layoutMode = vm.layoutMode,
                 keepScreenOn = vm.keepScreenOn,
                 activeCoachMark = vm.activeCoachMark,
+                // Only offer AI chat once a recipe is active — it's the context handed to the chat.
+                showAiChat = vm.showAiChat && active != null,
             )
         }
 
@@ -63,6 +65,11 @@ class CookModeBlocImpl(
 
     override fun onRecipeChipClicked(recipeId: Long) {
         viewModel.selectRecipe(recipeId)
+    }
+
+    override fun onAiChatClicked() {
+        val activeRecipeId = state.value.activeRecipe?.id ?: return
+        output.onNext(CookModeBloc.Output.OpenAiChat(activeRecipeId))
     }
 
     override fun onLayoutToggled() {

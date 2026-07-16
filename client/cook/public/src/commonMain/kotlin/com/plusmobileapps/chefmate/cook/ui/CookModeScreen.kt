@@ -42,6 +42,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.ViewAgenda
@@ -90,6 +91,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import chefmate.client.cook.public.generated.resources.Res
+import chefmate.client.cook.public.generated.resources.cook_mode_ai_chat
 import chefmate.client.cook.public.generated.resources.cook_mode_allow_screen_off
 import chefmate.client.cook.public.generated.resources.cook_mode_directions
 import chefmate.client.cook.public.generated.resources.cook_mode_finish
@@ -180,6 +182,21 @@ private fun CookModeCoachMark(
 }
 
 /**
+ * Header control that opens the AI chat grounded in the active recipe. Rendered only when the AI
+ * Chat feature flag is on (via [visible]); nothing is emitted otherwise.
+ */
+@Composable
+private fun CookModeAiChatButton(visible: Boolean, onClick: () -> Unit) {
+    if (!visible) return
+    IconButton(onClick = onClick) {
+        Icon(
+            imageVector = Icons.Default.AutoAwesome,
+            contentDescription = stringResource(Res.string.cook_mode_ai_chat),
+        )
+    }
+}
+
+/**
  * Check-mark control that ends cook mode. Tapping it opens a confirmation dialog first; confirming
  * runs [onFinish], which clears every recipe from cook mode and closes the screen.
  */
@@ -233,6 +250,10 @@ private fun CookModeTabletLayout(
                                     )
                                 }
                             }
+                            CookModeAiChatButton(
+                                visible = state.showAiChat,
+                                onClick = bloc::onAiChatClicked,
+                            )
                             CookModeCoachMark(
                                 id = CoachMarkId.COOK_MODE_KEEP_SCREEN_ON,
                                 text = Res.string.cook_mode_keep_screen_on_onboarding.asTextData(),
@@ -384,6 +405,10 @@ private fun CookModeMobileLayout(
                         onCloseClick = bloc::onCloseClicked,
                         trailingAccessory =
                             PlusHeaderData.TrailingAccessory.Custom {
+                                CookModeAiChatButton(
+                                    visible = state.showAiChat,
+                                    onClick = bloc::onAiChatClicked,
+                                )
                                 CookModeCoachMark(
                                     id = CoachMarkId.COOK_MODE_KEEP_SCREEN_ON,
                                     text =

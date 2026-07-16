@@ -13,6 +13,7 @@ kotlin {
             implementation(projects.client.database.core)
             implementation(projects.client.text.public)
             implementation(projects.client.ui.public)
+            implementation(projects.client.featureflag.public)
             implementation(libs.arkivanov.decompose.core)
             implementation(libs.arkivanov.decompose.compose.extensions)
             implementation(libs.kotlinx.serialization.json)
@@ -22,6 +23,7 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.multiplatform.settings.test)
             implementation(projects.client.recipe.data.testing)
+            implementation(projects.client.featureflag.testing)
         }
     }
 }
