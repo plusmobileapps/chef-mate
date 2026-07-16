@@ -8,6 +8,9 @@ import com.plusmobileapps.chefmate.di.CoachMarkController
 import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.di.KeepScreenOnRepository
 import com.plusmobileapps.chefmate.di.Main
+import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
+import com.plusmobileapps.chefmate.featureflag.FeatureFlags
+import com.plusmobileapps.chefmate.featureflag.isEnabled
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import com.russhwolf.settings.Settings
@@ -31,7 +34,10 @@ class CookModeViewModel(
     settings: Settings,
     private val keepScreenOnRepository: KeepScreenOnRepository,
     private val coachMarkController: CoachMarkController,
+    featureFlags: FeatureFlags,
 ) : ViewModel(mainContext) {
+
+    private val showAiChat = featureFlags.isEnabled(FeatureFlagRegistry.AiChat)
 
     // Split view is the default; users can toggle to the scrolling (Stacked) list, which persists.
     private var splitLayoutPref by settings.boolean(KEY_LAYOUT_SPLIT, defaultValue = true)
@@ -49,8 +55,13 @@ class CookModeViewModel(
     // Fold the shared controller's active mark into state so the screen shows at most one coach
     // mark at a time across the whole app.
     val state: StateFlow<State> =
-        combineStates(_state, coachMarkController.activeCoachMark) { state, activeCoachMark ->
-            state.copy(activeCoachMark = activeCoachMark)
+        combineStates(
+            combineStates(_state, coachMarkController.activeCoachMark) { state, activeCoachMark ->
+                state.copy(activeCoachMark = activeCoachMark)
+            },
+            showAiChat,
+        ) { state, showChat ->
+            state.copy(showAiChat = showChat)
         }
 
     init {
@@ -139,6 +150,7 @@ class CookModeViewModel(
         val layoutMode: CookModeBloc.LayoutMode = CookModeBloc.LayoutMode.Split,
         val keepScreenOn: Boolean = true,
         val activeCoachMark: String? = null,
+        val showAiChat: Boolean = false,
     )
 
     @AssistedFactory

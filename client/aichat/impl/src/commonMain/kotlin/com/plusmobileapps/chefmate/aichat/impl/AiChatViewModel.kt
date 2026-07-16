@@ -8,9 +8,11 @@ import com.plusmobileapps.chefmate.aichat.AiChatNoApiKeyError
 import com.plusmobileapps.chefmate.aichat.ChatMessage
 import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.recipe.data.PendingRecipePhotoStore
+import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionError
 import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionException
 import com.plusmobileapps.chefmate.recipe.data.RecipeImageExtractor
+import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.util.mimeTypeForImageExtension
 import dev.zacsweers.metro.Assisted
@@ -44,6 +46,7 @@ class AiChatViewModel(
     private val recipeExtractor: GeminiRecipeExtractor,
     private val imageExtractor: RecipeImageExtractor,
     private val pendingPhotoStore: PendingRecipePhotoStore,
+    private val recipeRepository: RecipeRepository,
 ) : ViewModel(mainContext) {
 
     private val _conversationId =
@@ -53,6 +56,14 @@ class AiChatViewModel(
                 is AiChatBloc.Props.ExistingConversation -> props.conversationId
             }
         )
+
+    private val recipeContextId = (props as? AiChatBloc.Props.NewConversation)?.recipeContextId
+
+    // The recipe this chat is grounded in (title drives the chip; full details are folded into the
+    // outgoing prompt). Loaded once from the local DB when a context recipe was supplied; stays
+    // null
+    // for the standalone chat or if the recipe can't be found.
+    private val _recipeContext = MutableStateFlow<Recipe?>(null)
     private val _inputText = MutableStateFlow("")
     private val _isSending = MutableStateFlow(false)
     private val _isExtractingRecipe = MutableStateFlow(false)
@@ -95,7 +106,17 @@ class AiChatViewModel(
                     error = error,
                 )
             }
+            .combine(_recipeContext) { model, recipe ->
+                model.copy(recipeContextTitle = recipe?.title?.takeIf { it.isNotBlank() })
+            }
             .stateIn(scope, SharingStarted.Eagerly, AiChatBloc.Model())
+
+    init {
+        // Load the context recipe (if any) so the chip and prompt preamble can use its details.
+        recipeContextId?.let { id ->
+            scope.launch { recipeRepository.getRecipe(id).collect { _recipeContext.value = it } }
+        }
+    }
 
     fun onInputChange(text: String) {
         _inputText.value = text
@@ -107,10 +128,15 @@ class AiChatViewModel(
         if (message.isEmpty() || _isSending.value) return
         _inputText.value = ""
         _error.value = null
+        val preamble = _recipeContext.value?.let(::recipeContextPreamble)
         scope.launch {
             _isSending.value = true
             try {
-                repository.sendMessage(_conversationId.value, message) { startedId ->
+                repository.sendMessage(
+                    conversationId = _conversationId.value,
+                    text = message,
+                    recipeContextPreamble = preamble,
+                ) { startedId ->
                     // Publish the conversation id as soon as the user message is persisted so the
                     // message list switches to observing it immediately, rather than waiting for
                     // the whole reply to stream back.
@@ -185,5 +211,25 @@ class AiChatViewModel(
     @AssistedFactory
     fun interface Factory {
         fun create(props: AiChatBloc.Props): AiChatViewModel
+    }
+}
+
+/**
+ * Builds the context preamble folded into the first outgoing user turn so Gemini's replies stay
+ * grounded in [recipe]. Kept out of the persisted messages — it only travels with the request.
+ */
+private fun recipeContextPreamble(recipe: Recipe): String = buildString {
+    append(
+        "The user is looking at the following recipe and may ask questions about it or how to " +
+            "adapt it. Use it as the context for your answers.\n\n"
+    )
+    append("Recipe: ${recipe.title}\n")
+    recipe.servings?.let { append("Servings: $it\n") }
+    recipe.description?.takeIf { it.isNotBlank() }?.let { append("Description: $it\n") }
+    if (recipe.ingredients.isNotBlank()) {
+        append("\nIngredients:\n${recipe.ingredients.trim()}\n")
+    }
+    if (recipe.directions.isNotBlank()) {
+        append("\nDirections:\n${recipe.directions.trim()}\n")
     }
 }

@@ -328,9 +328,14 @@ class RootBlocImpl(
                         )
                 )
 
-            Configuration.AiChat ->
+            is Configuration.AiChat ->
                 RootBloc.Child.AiChat(
-                    bloc = aiChat.create(context = context, output = ::handleAiChatOutput)
+                    bloc =
+                        aiChat.create(
+                            context = context,
+                            recipeContextId = config.recipeContextId,
+                            output = ::handleAiChatOutput,
+                        )
                 )
 
             is Configuration.ExportRecipes ->
@@ -454,7 +459,7 @@ class RootBlocImpl(
             }
 
             BottomNavBloc.Output.OpenAiChat -> {
-                navigation.bringToFront(Configuration.AiChat)
+                navigation.bringToFront(Configuration.AiChat())
             }
 
             BottomNavBloc.Output.OpenDeveloperSettings -> {
@@ -584,12 +589,17 @@ class RootBlocImpl(
             is RecipeRootBloc.Output.OpenCookMode -> {
                 navigation.bringToFront(Configuration.CookMode(output.recipeId))
             }
+            is RecipeRootBloc.Output.OpenAiChat -> {
+                navigation.bringToFront(Configuration.AiChat(recipeContextId = output.recipeId))
+            }
         }
     }
 
     private fun handleCookModeOutput(output: CookModeBloc.Output) {
         when (output) {
             CookModeBloc.Output.Finished -> navigation.pop()
+            is CookModeBloc.Output.OpenAiChat ->
+                navigation.bringToFront(Configuration.AiChat(recipeContextId = output.recipeId))
         }
     }
 
@@ -708,7 +718,7 @@ class RootBlocImpl(
 
         @Serializable data class CookMode(val recipeId: Long) : Configuration()
 
-        @Serializable data object AiChat : Configuration()
+        @Serializable data class AiChat(val recipeContextId: Long? = null) : Configuration()
 
         @Serializable data class ExportRecipes(val recipeIds: Set<Long>?) : Configuration()
 

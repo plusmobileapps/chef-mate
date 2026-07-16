@@ -7,6 +7,7 @@
     <string name="cook_mode_finish_confirm_button">Finish</string>
     <string name="cook_mode_finish_cancel_button">Cancel</string>
     <string name="cook_mode_whats_cooking">What’s Cooking</string>
+    <string name="cook_mode_ai_chat">Ask AI about this recipe</string>
     <string name="cook_mode_ingredients">Ingredients</string>
     <string name="cook_mode_directions">Directions</string>
     <string name="cook_mode_loading">Loading recipe…</string>

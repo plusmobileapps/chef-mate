@@ -44,12 +44,22 @@ interface AiChatBloc : BackClickBloc, ComposeScreen {
         val canAddRecipe: Boolean = false,
         val isExtractingRecipe: Boolean = false,
         val error: TextData? = null,
+        /**
+         * Title of the recipe this chat is grounded in, shown as a chip above the input. Non-null
+         * only when the chat was opened from a recipe (Cook Mode or the recipe detail screen); the
+         * recipe's details are also folded into the prompt so replies stay on-topic.
+         */
+        val recipeContextTitle: String? = null,
     )
 
     @Serializable
     sealed class Props {
-        /** A fresh chat — the conversation row is created lazily on first send. */
-        @Serializable data object NewConversation : Props()
+        /**
+         * A fresh chat — the conversation row is created lazily on first send. When
+         * [recipeContextId] is set, the chat is seeded with that recipe as context (a chip plus a
+         * prompt preamble) so the user can ask about or tweak it.
+         */
+        @Serializable data class NewConversation(val recipeContextId: Long? = null) : Props()
 
         /** Reopening an existing conversation by id. */
         @Serializable data class ExistingConversation(val conversationId: Long) : Props()

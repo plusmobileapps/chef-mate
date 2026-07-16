@@ -10,6 +10,8 @@ import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.CoachMarkController
 import com.plusmobileapps.chefmate.di.CoachMarkId
+import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
+import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.data.Recipe
@@ -68,10 +70,12 @@ class RecipeDetailBlocImplTest {
     private fun createBloc(
         recipe: Recipe? = sampleRecipe,
         cookModeTooltipSeen: Boolean = false,
+        aiChatEnabled: Boolean = false,
     ): RecipeDetailBlocImpl {
         if (recipe != null) recipes.value = listOf(recipe)
         coachMarkController = CoachMarkController(MapSettings())
         if (cookModeTooltipSeen) coachMarkController.dismiss(CoachMarkId.RECIPE_DETAIL_COOK_MODE)
+        val featureFlags = FakeFeatureFlags(mapOf(FeatureFlagRegistry.AiChat to aiChatEnabled))
         val viewModelFactory = RecipeDetailViewModel.Factory { id ->
             RecipeDetailViewModel(
                 recipeId = id,
@@ -79,6 +83,7 @@ class RecipeDetailBlocImplTest {
                 repository = repository,
                 coachMarkController = coachMarkController,
                 toastService = toastService,
+                featureFlags = featureFlags,
             )
         }
         val dateTimeUtil = FakeDateTimeUtil()
@@ -124,6 +129,25 @@ class RecipeDetailBlocImplTest {
         val bloc = createBloc(recipe = sampleRecipe.copy(imageUrl = null))
         bloc.onImageClicked()
         bloc.fullImageSlot.value.child shouldBe null
+    }
+
+    @Test
+    fun When_ai_chat_flag_off_Then_showAiChat_is_false() {
+        val bloc = createBloc(aiChatEnabled = false)
+        bloc.state.value.showAiChat shouldBe false
+    }
+
+    @Test
+    fun When_ai_chat_flag_on_Then_showAiChat_is_true() {
+        val bloc = createBloc(aiChatEnabled = true)
+        bloc.state.value.showAiChat shouldBe true
+    }
+
+    @Test
+    fun When_onAiChatClicked_Then_open_ai_chat_output_emitted_with_recipe_id() {
+        val bloc = createBloc()
+        bloc.onAiChatClicked()
+        output.lastValue shouldBe RecipeDetailBloc.Output.OpenAiChat(sampleRecipe.id)
     }
 
     @Test

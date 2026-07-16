@@ -136,7 +136,7 @@ class RootBlocTest {
             cookMode = CookModeBloc.Factory { _, _, _ -> mock() },
             featureFlags = FakeFeatureFlags(),
             featureFlagsBlocFactory = { _, _ -> mock() },
-            aiChat = { _, output ->
+            aiChat = { _, _, output ->
                 aiChatOutput = output
                 mock()
             },

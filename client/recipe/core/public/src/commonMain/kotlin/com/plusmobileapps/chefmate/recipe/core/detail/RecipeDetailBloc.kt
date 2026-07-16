@@ -51,6 +51,9 @@ interface RecipeDetailBloc : BackClickBloc, ComposeScreen {
 
     fun onCookModeClicked()
 
+    /** Open the AI chat grounded in this recipe. Only surfaced when [Model.showAiChat]. */
+    fun onAiChatClicked()
+
     fun onAddToMealPlanClicked()
 
     /** Dismiss the coach mark with the given [com.plusmobileapps.chefmate.di.CoachMarkId]. */
@@ -96,12 +99,17 @@ interface RecipeDetailBloc : BackClickBloc, ComposeScreen {
         val formattedTotalTime: TextData? = null,
         /** Id of the coach mark currently allowed to show on this screen, or null. */
         val activeCoachMark: String? = null,
+        /** Gated on the AI Chat feature flag — hides the chat button entirely when off. */
+        val showAiChat: Boolean = false,
     )
 
     sealed class Output {
         data object Finished : Output()
 
         data class EditRecipe(val recipeId: Long) : Output()
+
+        /** Open the AI chat grounded in the recipe with this id. */
+        data class OpenAiChat(val recipeId: Long) : Output()
 
         /** Open another recipe's detail, e.g. from a tapped recipe-to-recipe link. */
         data class OpenRecipe(val recipeId: Long) : Output()

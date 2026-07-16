@@ -38,6 +38,7 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Icon
@@ -66,6 +67,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import chefmate.client.aichat.public.generated.resources.Res
 import chefmate.client.aichat.public.generated.resources.aichat_add_recipe
@@ -76,6 +78,7 @@ import chefmate.client.aichat.public.generated.resources.aichat_empty_title
 import chefmate.client.aichat.public.generated.resources.aichat_extracting_recipe
 import chefmate.client.aichat.public.generated.resources.aichat_history
 import chefmate.client.aichat.public.generated.resources.aichat_input_hint
+import chefmate.client.aichat.public.generated.resources.aichat_recipe_context
 import chefmate.client.aichat.public.generated.resources.aichat_role_gemini
 import chefmate.client.aichat.public.generated.resources.aichat_role_you
 import chefmate.client.aichat.public.generated.resources.aichat_send
@@ -117,6 +120,14 @@ fun AiChatScreen(bloc: AiChatBloc, modifier: Modifier = Modifier) {
             ),
         scrollEnabled = false,
         content = {
+            state.recipeContextTitle?.let { title ->
+                RecipeContextChip(
+                    title = title,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 4.dp),
+                )
+            }
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 if (state.messages.isEmpty()) {
                     EmptyState(modifier = Modifier.fillMaxSize())
@@ -403,6 +414,35 @@ private fun AddRecipePill(isLoading: Boolean, onClick: () -> Unit, modifier: Mod
                     )
                 }
             },
+        )
+    }
+}
+
+/**
+ * Chip surfacing the recipe this chat is grounded in. Purely informational (non-clickable) — it
+ * mirrors the recipe context that is also folded into the prompt so the user can see what Gemini is
+ * answering about.
+ */
+@Composable
+private fun RecipeContextChip(title: String, modifier: Modifier = Modifier) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.Start) {
+        AssistChip(
+            onClick = {},
+            enabled = false,
+            modifier = Modifier.testTag(AiChatTestTags.RECIPE_CONTEXT_CHIP),
+            label = { Text(text = title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Restaurant,
+                    contentDescription = stringResource(Res.string.aichat_recipe_context),
+                    modifier = Modifier.size(AssistChipDefaults.IconSize),
+                )
+            },
+            colors =
+                AssistChipDefaults.assistChipColors(
+                    disabledLabelColor = MaterialTheme.colorScheme.onSurface,
+                    disabledLeadingIconContentColor = MaterialTheme.colorScheme.primary,
+                ),
         )
     }
 }

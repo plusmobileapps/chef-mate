@@ -50,6 +50,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuOpen
 import androidx.compose.material.icons.filled.AddShoppingCart
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -115,6 +116,7 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_to_grocery_onboarding
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_to_meal_plan
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_to_meal_plan_onboarding
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_ai_chat
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_calories
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_cook_mode
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_cook_mode_onboarding
@@ -448,6 +450,15 @@ private fun RecipeDetailBody(
                                                 stringResource(
                                                     Res.string.recipe_detail_add_to_meal_plan
                                                 ),
+                                        )
+                                    }
+                                }
+                                if (state.showAiChat) {
+                                    IconButton(onClick = bloc::onAiChatClicked) {
+                                        Icon(
+                                            imageVector = Icons.Default.AutoAwesome,
+                                            contentDescription =
+                                                stringResource(Res.string.recipe_detail_ai_chat),
                                         )
                                     }
                                 }
@@ -1991,6 +2002,10 @@ val previewRecipeDetailBloc: RecipeDetailBloc =
             TODO("Not yet implemented")
         }
 
+        override fun onAiChatClicked() {
+            TODO("Not yet implemented")
+        }
+
         override fun onCoachMarkDismissed(id: String) {
             TODO("Not yet implemented")
         }
@@ -2026,6 +2041,15 @@ val previewRecipeDetailBloc: RecipeDetailBloc =
         override fun onBackClicked() {
             TODO("Not yet implemented")
         }
+
+        @Composable override fun Content(modifier: Modifier) = RecipeDetailScreen(this, modifier)
+    }
+
+/** Same as [previewRecipeDetailBloc] but with the AI Chat toolbar button surfaced. */
+val previewRecipeDetailBlocWithAiChat: RecipeDetailBloc =
+    object : RecipeDetailBloc by previewRecipeDetailBloc {
+        override val state: StateFlow<RecipeDetailBloc.Model> =
+            MutableStateFlow(previewRecipeDetailBloc.state.value.copy(showAiChat = true))
 
         @Composable override fun Content(modifier: Modifier) = RecipeDetailScreen(this, modifier)
     }

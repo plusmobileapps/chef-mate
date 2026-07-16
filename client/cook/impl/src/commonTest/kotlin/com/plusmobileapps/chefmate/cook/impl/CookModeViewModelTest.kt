@@ -7,6 +7,8 @@ import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
 import com.plusmobileapps.chefmate.di.CoachMarkController
 import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.di.KeepScreenOnRepository
+import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
+import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import com.russhwolf.settings.MapSettings
@@ -34,7 +36,8 @@ class CookModeViewModelTest {
     }
 
     private fun createViewModel(
-        coachMarkController: CoachMarkController = CoachMarkController(MapSettings())
+        coachMarkController: CoachMarkController = CoachMarkController(MapSettings()),
+        featureFlags: FakeFeatureFlags = FakeFeatureFlags(),
     ) =
         CookModeViewModel(
             initialRecipeId = 1L,
@@ -44,6 +47,7 @@ class CookModeViewModelTest {
             settings = MapSettings(),
             keepScreenOnRepository = KeepScreenOnRepository(MapSettings()),
             coachMarkController = coachMarkController,
+            featureFlags = featureFlags,
         )
 
     @Test
@@ -61,6 +65,21 @@ class CookModeViewModelTest {
 
         controller.hasSeen(CoachMarkId.COOK_MODE_KEEP_SCREEN_ON) shouldBe true
         vm.state.value.activeCoachMark shouldBe CoachMarkId.COOK_MODE_LAYOUT
+    }
+
+    @Test
+    fun When_ai_chat_flag_off_Then_showAiChat_is_false() {
+        val vm = createViewModel()
+        vm.state.value.showAiChat shouldBe false
+    }
+
+    @Test
+    fun When_ai_chat_flag_on_Then_showAiChat_is_true() {
+        val vm =
+            createViewModel(
+                featureFlags = FakeFeatureFlags(mapOf(FeatureFlagRegistry.AiChat to true))
+            )
+        vm.state.value.showAiChat shouldBe true
     }
 
     @Test

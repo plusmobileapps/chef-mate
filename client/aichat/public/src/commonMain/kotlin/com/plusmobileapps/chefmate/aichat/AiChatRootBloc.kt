@@ -39,6 +39,14 @@ interface AiChatRootBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
     }
 
     fun interface Factory {
-        fun create(context: BlocContext, output: Consumer<Output>): AiChatRootBloc
+        /**
+         * [recipeContextId] seeds the initial chat with a recipe as context (chip + prompt
+         * preamble). Null for the standalone AI Chat entry (e.g. the More tab).
+         */
+        fun create(
+            context: BlocContext,
+            recipeContextId: Long?,
+            output: Consumer<Output>,
+        ): AiChatRootBloc
     }
 }

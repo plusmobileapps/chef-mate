@@ -45,6 +45,8 @@ private fun cookBloc(model: CookModeBloc.Model): CookModeBloc =
 
         override fun onRecipeChipClicked(recipeId: Long) = Unit
 
+        override fun onAiChatClicked() = Unit
+
         override fun onLayoutToggled() = Unit
 
         override fun onKeepScreenOnToggled() = Unit
@@ -88,6 +90,10 @@ val previewCookBlocStacked: CookModeBloc =
 
 val previewCookBlocSplit: CookModeBloc =
     cookBloc(previewCookBlocStacked.state.value.copy(layoutMode = CookModeBloc.LayoutMode.Split))
+
+// AI Chat feature flag on: the header surfaces the "Ask AI about this recipe" button.
+val previewCookBlocWithAiChat: CookModeBloc =
+    cookBloc(previewCookBlocStacked.state.value.copy(showAiChat = true))
 
 val previewCookBlocLoading: CookModeBloc = cookBloc(CookModeBloc.Model(isLoading = true))
 

@@ -7,6 +7,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailScreen
 import com.plusmobileapps.chefmate.recipe.core.detail.previewRecipeDetailBloc
+import com.plusmobileapps.chefmate.recipe.core.detail.previewRecipeDetailBlocWithAiChat
 import com.plusmobileapps.chefmate.toast.LocalToastService
 import com.plusmobileapps.chefmate.toast.testing.FakeToastService
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -14,12 +15,20 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 // RecipeDetailScreen reads LocalToastService.current directly, so it must be provided for the
 // screen to compose at all.
 @Composable
-private fun RecipeDetailPreview(darkTheme: Boolean = false) {
+private fun RecipeDetailPreview(
+    darkTheme: Boolean = false,
+    bloc: com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc = previewRecipeDetailBloc,
+) {
     CompositionLocalProvider(LocalToastService provides FakeToastService()) {
-        ChefMateTheme(darkTheme = darkTheme) {
-            RecipeDetailScreen(bloc = previewRecipeDetailBloc)
-        }
+        ChefMateTheme(darkTheme = darkTheme) { RecipeDetailScreen(bloc = bloc) }
     }
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 1000)
+@Composable
+fun RecipeDetailAiChatButtonScreenshot() {
+    RecipeDetailPreview(bloc = previewRecipeDetailBlocWithAiChat)
 }
 
 @PreviewTest

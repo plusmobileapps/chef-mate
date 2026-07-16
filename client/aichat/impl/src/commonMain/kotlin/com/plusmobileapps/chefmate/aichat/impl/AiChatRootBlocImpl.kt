@@ -28,6 +28,7 @@ import kotlinx.serialization.Serializable
 )
 class AiChatRootBlocImpl(
     @Assisted context: BlocContext,
+    @Assisted private val recipeContextId: Long?,
     @Assisted private val output: Consumer<AiChatRootBloc.Output>,
     private val chatFactory: AiChatBloc.Factory,
     private val historyFactory: AiChatHistoryBloc.Factory,
@@ -39,7 +40,9 @@ class AiChatRootBlocImpl(
         childStack(
             source = navigation,
             serializer = Configuration.serializer(),
-            initialStack = { listOf(Configuration.Chat(conversationId = null)) },
+            initialStack = {
+                listOf(Configuration.Chat(conversationId = null, recipeContextId = recipeContextId))
+            },
             handleBackButton = true,
             key = "AiChatRootRouter",
             childFactory = ::createChild,
@@ -67,7 +70,10 @@ class AiChatRootBlocImpl(
                             props =
                                 config.conversationId?.let {
                                     AiChatBloc.Props.ExistingConversation(it)
-                                } ?: AiChatBloc.Props.NewConversation,
+                                }
+                                    ?: AiChatBloc.Props.NewConversation(
+                                        recipeContextId = config.recipeContextId
+                                    ),
                             output = ::handleChatOutput,
                         )
                 )
@@ -103,7 +109,9 @@ class AiChatRootBlocImpl(
 
     @Serializable
     private sealed class Configuration {
-        @Serializable data class Chat(val conversationId: Long?) : Configuration()
+        @Serializable
+        data class Chat(val conversationId: Long?, val recipeContextId: Long? = null) :
+            Configuration()
 
         @Serializable data object History : Configuration()
     }

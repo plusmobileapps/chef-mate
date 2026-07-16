@@ -84,6 +84,16 @@ val previewAiChatBlocExtracting: AiChatBloc =
         )
     )
 
+/** Conversation grounded in a recipe — shows the recipe-context chip above the input. */
+val previewAiChatBlocWithRecipeContext: AiChatBloc =
+    aiChatBloc(
+        AiChatBloc.Model(
+            messages = sampleConversation,
+            canAddRecipe = true,
+            recipeContextTitle = "Pasta Carbonara",
+        )
+    )
+
 /** Streaming response — last model bubble is mid-stream and shows the progress indicator. */
 val previewAiChatBlocStreaming: AiChatBloc =
     aiChatBloc(
@@ -130,6 +140,12 @@ internal fun AiChatScreenPreview() {
 @Composable
 internal fun AiChatScreenEmptyPreview() {
     ChefMateTheme { previewAiChatBlocEmpty.Content() }
+}
+
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+internal fun AiChatScreenWithRecipeContextPreview() {
+    ChefMateTheme { previewAiChatBlocWithRecipeContext.Content() }
 }
 
 @Preview(showBackground = true, heightDp = 900)
