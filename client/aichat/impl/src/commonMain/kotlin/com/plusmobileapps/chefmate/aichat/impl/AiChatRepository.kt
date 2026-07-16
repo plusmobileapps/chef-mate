@@ -70,6 +70,7 @@ class AiChatRepository(
     suspend fun sendMessage(
         conversationId: Long?,
         text: String,
+        recipeContextPreamble: String? = null,
         onConversationStarted: (Long) -> Unit = {},
     ): Long? {
         val trimmed = text.trim()
@@ -123,6 +124,18 @@ class AiChatRepository(
                 }
             }
 
+        // Fold the recipe context into the first user turn (rather than sending it as an extra
+        // turn) so the request keeps strict user/model alternation while still grounding the reply.
+        // It only travels with the request — the persisted conversation is untouched.
+        val outgoingMessages =
+            if (recipeContextPreamble != null && historyMessages.isNotEmpty()) {
+                val first = historyMessages.first()
+                listOf(first.copy(content = recipeContextPreamble + "\n\n" + first.content)) +
+                    historyMessages.drop(1)
+            } else {
+                historyMessages
+            }
+
         var modelId: Long? = null
         val accumulated = StringBuilder()
         // Persisting every token re-runs the message query and recomposes the whole chat per token,
@@ -132,7 +145,7 @@ class AiChatRepository(
         // final flush below always persists the complete content.
         var lastWriteAt = 0L
         try {
-            geminiClient.streamReply(historyMessages).collect { delta ->
+            geminiClient.streamReply(outgoingMessages).collect { delta ->
                 accumulated.append(delta)
                 val content = accumulated.toString()
                 val id = modelId

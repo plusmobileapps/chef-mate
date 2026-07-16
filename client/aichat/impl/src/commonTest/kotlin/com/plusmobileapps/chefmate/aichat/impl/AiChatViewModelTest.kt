@@ -10,10 +10,12 @@ import com.plusmobileapps.chefmate.aichat.AiChatNoApiKeyError
 import com.plusmobileapps.chefmate.aichat.ChatMessage
 import com.plusmobileapps.chefmate.database.testing.createTestDatabase
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
+import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionError
 import com.plusmobileapps.chefmate.recipe.data.RecipeExtractionException
 import com.plusmobileapps.chefmate.recipe.data.RecipeImageExtractor
 import com.plusmobileapps.chefmate.recipe.data.testing.FakePendingRecipePhotoStore
+import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import com.plusmobileapps.chefmate.util.testing.FakeDateTimeUtil
 import dev.mokkery.answering.returns
 import dev.mokkery.answering.throws
@@ -25,6 +27,7 @@ import kotlin.test.Test
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -39,6 +42,8 @@ class AiChatViewModelTest {
     private val recipeExtractor = mock<GeminiRecipeExtractor>()
     private val imageExtractor = mock<RecipeImageExtractor>()
     private val pendingPhotoStore = FakePendingRecipePhotoStore()
+    private val recipes = MutableStateFlow<List<Recipe>>(emptyList())
+    private val recipeRepository = FakeRecipeRepository(recipes)
 
     private val repository =
         AiChatRepository(
@@ -49,7 +54,7 @@ class AiChatViewModelTest {
             ioContext = dispatcher,
         )
 
-    private fun newViewModel(props: AiChatBloc.Props = AiChatBloc.Props.NewConversation) =
+    private fun newViewModel(props: AiChatBloc.Props = AiChatBloc.Props.NewConversation()) =
         AiChatViewModel(
             mainContext = dispatcher,
             props = props,
@@ -57,6 +62,7 @@ class AiChatViewModelTest {
             recipeExtractor = recipeExtractor,
             imageExtractor = imageExtractor,
             pendingPhotoStore = pendingPhotoStore,
+            recipeRepository = recipeRepository,
         )
 
     @Test
@@ -250,6 +256,86 @@ class AiChatViewModelTest {
 
             gate.complete(Unit)
         }
+
+    @Test
+    fun recipe_context_exposes_title_and_folds_details_into_prompt() =
+        runTest(dispatcher) {
+            val capturing = CapturingGeminiClient()
+            val viewModel =
+                viewModelWith(
+                    geminiClient = capturing,
+                    props = AiChatBloc.Props.NewConversation(recipeContextId = 42L),
+                ) {
+                    recipes.value =
+                        listOf(
+                            Recipe.Sample.copy(
+                                id = 42L,
+                                title = "Grandma’s Lasagna",
+                                ingredients = "pasta\nsauce",
+                                directions = "layer it up",
+                            )
+                        )
+                }
+
+            viewModel.state.value.recipeContextTitle shouldBe "Grandma’s Lasagna"
+
+            viewModel.onInputChange("Can I make this gluten free?")
+            viewModel.send()
+
+            val sentFirstMessage = capturing.histories.single().first().content
+            sentFirstMessage.contains("Grandma’s Lasagna") shouldBe true
+            sentFirstMessage.contains("layer it up") shouldBe true
+            sentFirstMessage.contains("Can I make this gluten free?") shouldBe true
+        }
+
+    @Test
+    fun no_recipe_context_leaves_title_null_and_prompt_unchanged() =
+        runTest(dispatcher) {
+            val capturing = CapturingGeminiClient()
+            val viewModel = viewModelWith(geminiClient = capturing)
+
+            viewModel.state.value.recipeContextTitle shouldBe null
+
+            viewModel.onInputChange("hello")
+            viewModel.send()
+
+            capturing.histories.single().single().content shouldBe "hello"
+        }
+
+    /** Builds a view model backed by a real repository over [geminiClient], for prompt-capture. */
+    private fun viewModelWith(
+        geminiClient: GeminiClient,
+        props: AiChatBloc.Props = AiChatBloc.Props.NewConversation(),
+        seed: () -> Unit = {},
+    ): AiChatViewModel {
+        seed()
+        val repo =
+            AiChatRepository(
+                messageQueries = db.aiChatMessageQueries,
+                conversationQueries = db.aiChatConversationQueries,
+                geminiClient = geminiClient,
+                dateTimeUtil = dateTimeUtil,
+                ioContext = dispatcher,
+            )
+        return AiChatViewModel(
+            mainContext = dispatcher,
+            props = props,
+            repository = repo,
+            recipeExtractor = recipeExtractor,
+            imageExtractor = imageExtractor,
+            pendingPhotoStore = pendingPhotoStore,
+            recipeRepository = recipeRepository,
+        )
+    }
+
+    private class CapturingGeminiClient : GeminiClient {
+        val histories = mutableListOf<List<ChatMessage>>()
+
+        override fun streamReply(history: List<ChatMessage>): kotlinx.coroutines.flow.Flow<String> {
+            histories += history
+            return flow { emit("sure") }
+        }
+    }
 
     @Test
     fun existing_conversation_props_loads_history() =

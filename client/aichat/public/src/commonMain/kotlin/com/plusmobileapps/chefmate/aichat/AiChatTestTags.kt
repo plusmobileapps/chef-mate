@@ -9,6 +9,7 @@ object AiChatTestTags {
     const val THINKING_INDICATOR = "AiChatThinkingIndicator"
     const val ADD_RECIPE_PILL = "AiChatAddRecipePill"
     const val ATTACH_PHOTO_BUTTON = "AiChatAttachPhotoButton"
+    const val RECIPE_CONTEXT_CHIP = "AiChatRecipeContextChip"
 }
 
 object AiChatHistoryTestTags {

@@ -9,6 +9,7 @@
     <string name="aichat_extracting_recipe">Extracting recipe…</string>
     <string name="aichat_error_extract_recipe">Couldn’t pull a recipe from that reply. Try asking Gemini to be more specific.</string>
     <string name="aichat_done">Done</string>
+    <string name="aichat_recipe_context">Recipe in context</string>
     <string name="aichat_empty_title">Start a conversation</string>
     <string name="aichat_empty_description">Ask Gemini about recipes, ingredients, or anything else.</string>
     <string name="aichat_error_no_api_key">AI features aren’t available right now. Please try again later.</string>
