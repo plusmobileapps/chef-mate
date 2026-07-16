@@ -42,6 +42,8 @@ interface RecipeRootBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
         data class OpenMealPlanner(val props: MealPlannerRootBloc.Props) : Output()
 
         data class OpenCookMode(val recipeId: Long) : Output()
+
+        data class OpenAiChat(val recipeId: Long) : Output()
     }
 
     @Serializable

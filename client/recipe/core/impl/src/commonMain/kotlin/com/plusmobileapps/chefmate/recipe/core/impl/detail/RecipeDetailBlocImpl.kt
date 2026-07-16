@@ -122,6 +122,7 @@ class RecipeDetailBlocImpl(
                 formattedTotalTime =
                     it.recipe.totalTime?.let { time -> timeFormatterUtil.formatMinutes(time) },
                 activeCoachMark = it.activeCoachMark,
+                showAiChat = it.showAiChat,
             )
         }
 
@@ -171,6 +172,10 @@ class RecipeDetailBlocImpl(
     override fun onCookModeClicked() {
         viewModel.dismissCoachMark(CoachMarkId.RECIPE_DETAIL_COOK_MODE)
         output.onNext(Output.OpenCookMode(recipeId))
+    }
+
+    override fun onAiChatClicked() {
+        output.onNext(Output.OpenAiChat(recipeId))
     }
 
     override fun onCoachMarkDismissed(id: String) {

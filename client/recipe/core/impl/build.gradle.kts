@@ -13,6 +13,7 @@ kotlin {
             implementation(projects.client.recipe.categories.public)
             implementation(projects.client.ui.public)
             implementation(projects.client.toast.public)
+            implementation(projects.client.featureflag.public)
             implementation(libs.arkivanov.decompose.core)
             implementation(libs.arkivanov.decompose.compose.extensions)
             implementation(projects.client.shared)
@@ -30,6 +31,7 @@ kotlin {
             implementation(projects.client.recipebook.data.testing)
             implementation(projects.client.grocery.data.testing)
             implementation(projects.client.toast.testing)
+            implementation(projects.client.featureflag.testing)
             implementation(libs.multiplatform.settings.test)
         }
     }

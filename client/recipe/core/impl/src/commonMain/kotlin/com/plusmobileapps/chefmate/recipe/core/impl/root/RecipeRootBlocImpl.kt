@@ -138,6 +138,9 @@ class RecipeRootBlocImpl(
             is RecipeDetailBloc.Output.OpenCookMode -> {
                 this.output.onNext(RecipeRootBloc.Output.OpenCookMode(output.recipeId))
             }
+            is RecipeDetailBloc.Output.OpenAiChat -> {
+                this.output.onNext(RecipeRootBloc.Output.OpenAiChat(output.recipeId))
+            }
         }
     }
 

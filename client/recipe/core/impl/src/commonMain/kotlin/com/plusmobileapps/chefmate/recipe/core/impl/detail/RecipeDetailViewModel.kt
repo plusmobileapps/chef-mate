@@ -9,6 +9,9 @@ import com.plusmobileapps.chefmate.combineStates
 import com.plusmobileapps.chefmate.di.CoachMarkController
 import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.di.Main
+import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
+import com.plusmobileapps.chefmate.featureflag.FeatureFlags
+import com.plusmobileapps.chefmate.featureflag.isEnabled
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import com.plusmobileapps.chefmate.text.ResourceString
@@ -33,6 +36,7 @@ class RecipeDetailViewModel(
     private val repository: RecipeRepository,
     private val coachMarkController: CoachMarkController,
     private val toastService: ToastService,
+    featureFlags: FeatureFlags,
 ) : ViewModel(mainContext) {
 
     private val _output = Channel<Output>(Channel.BUFFERED)
@@ -43,11 +47,18 @@ class RecipeDetailViewModel(
 
     private val _state = MutableStateFlow(State())
 
+    private val showAiChat = featureFlags.isEnabled(FeatureFlagRegistry.AiChat)
+
     // Surface the shared controller's active mark so the screen can show one coach mark at a time;
     // only ids in CoachMarkId.recipeDetailSequence are anchored on this screen.
     val state: StateFlow<State> =
-        combineStates(_state, coachMarkController.activeCoachMark) { state, activeCoachMark ->
-            state.copy(activeCoachMark = activeCoachMark)
+        combineStates(
+            combineStates(_state, coachMarkController.activeCoachMark) { state, activeCoachMark ->
+                state.copy(activeCoachMark = activeCoachMark)
+            },
+            showAiChat,
+        ) { state, showChat ->
+            state.copy(showAiChat = showChat)
         }
 
     init {
@@ -159,6 +170,7 @@ class RecipeDetailViewModel(
         val showShareConfirmation: Boolean = false,
         val recipe: Recipe = Recipe.Empty,
         val activeCoachMark: String? = null,
+        val showAiChat: Boolean = false,
     )
 
     sealed class Output {
