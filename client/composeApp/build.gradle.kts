@@ -277,7 +277,35 @@ compose.desktop {
             // runtime. Without it the jlink/jpackage runtime image omits the class and the browser
             // crashes with NoClassDefFoundError the first time the cursor updates over the WebView
             // (see issue #400). Not needed for `./gradlew run`, which uses the full JDK.
-            modules("java.sql", "java.naming", "jdk.jsobject", "jdk.unsupported.desktop")
+            //
+            // java.net.http provides java.net.http.HttpClient, which JavaFX WebView's WebKit
+            // network stack (com.sun.webkit.network.NetworkContext.fwkLoad) uses to fetch every
+            // page. Without it in the jlink runtime image every page load throws
+            // NoClassDefFoundError: java/net/http/HttpRequest$BodyPublisher and the WebView stays a
+            // blank white screen (see issue #432). Like #400, only packaged builds are affected —
+            // ./gradlew run uses the full JDK, which already has the module.
+            //
+            // jdk.unsupported exports sun.misc, where sun.misc.Unsafe lives. JavaFX's Marlin
+            // rasterizer (com.sun.marlin.OffHeapArray) uses Unsafe for its off-heap buffers.
+            // Without it DMarlinRenderingEngine fails to initialize and every shape fill in the
+            // WebView throws NoClassDefFoundError from the QuantumRenderer thread, so page content
+            // never rasterizes. Note this is a *different* module from jdk.unsupported.desktop
+            // above — that one only exports jdk.swing.interop and does not pull this one in.
+            //
+            // jdk.xml.dom exports the org.w3c.dom.{html,css,stylesheets,xpath} interfaces that
+            // javafx.web's com.sun.webkit.dom.* classes implement, so Java-side DOM access
+            // resolves. No code here calls WebEngine.getDocument() today, so this one is
+            // precautionary rather than a demonstrated fix — it is kept because it was part of the
+            // module set the #432 repro was verified against.
+            modules(
+                "java.sql",
+                "java.naming",
+                "java.net.http",
+                "jdk.jsobject",
+                "jdk.unsupported",
+                "jdk.unsupported.desktop",
+                "jdk.xml.dom",
+            )
 
             // macOS configuration
             macOS {
