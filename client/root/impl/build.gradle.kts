@@ -23,11 +23,14 @@ kotlin {
             implementation(projects.client.recipebook.edit.public)
             implementation(projects.client.settings.root.public)
             implementation(projects.client.auth.ui.public)
+            implementation(projects.client.subscription.public)
+            implementation(projects.client.subscription.data.public)
             implementation(libs.kotlinx.serialization.json)
         }
         commonTest.dependencies {
             implementation(projects.client.auth.data.testing)
             implementation(projects.client.featureflag.testing)
+            implementation(projects.client.subscription.data.testing)
             implementation(libs.multiplatform.settings.test)
         }
     }

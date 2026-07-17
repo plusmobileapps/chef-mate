@@ -22,6 +22,9 @@ import com.plusmobileapps.chefmate.recipe.core.share.PublicRecipeBloc
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc
 import com.plusmobileapps.chefmate.settings.root.SettingsRootBloc
+import com.plusmobileapps.chefmate.subscription.SubscriptionBloc
+import com.plusmobileapps.chefmate.subscription.data.SubscriptionState
+import com.plusmobileapps.chefmate.subscription.data.testing.FakeSubscriptionRepository
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.russhwolf.settings.MapSettings
 import dev.mokkery.MockMode
@@ -60,15 +63,20 @@ class RootBlocTest {
     var bottomNavInitialTab: BottomNavBloc.Tab? = null
     var onboardingOutput: Consumer<OnboardingRootBloc.Output> = Consumer {}
     var onboardingProps: OnboardingRootBloc.Props? = null
+    var subscriptionOutput: Consumer<SubscriptionBloc.Output> = Consumer {}
     val authRepository = FakeAuthenticationRepository()
     lateinit var onboardingRepository: OnboardingRepository
+    lateinit var subscriptionRepository: FakeSubscriptionRepository
 
     fun createRoot(
         deepLink: DeepLink = DeepLink.None,
         context: BlocContext = TestBlocContext.create(),
         onboardingCompleted: Boolean = true,
-    ): RootBlocImpl =
-        RootBlocImpl(
+        premium: Boolean = true,
+    ): RootBlocImpl {
+        subscriptionRepository =
+            FakeSubscriptionRepository(SubscriptionState(isPremium = premium, isLoading = false))
+        return RootBlocImpl(
             context = context,
             deepLink = deepLink,
             onboardingRepository =
@@ -152,7 +160,13 @@ class RootBlocTest {
             },
             editRecipeBook = { _, _, _ -> mock() },
             editGroceryList = { _, _, _ -> mock() },
+            subscriptionRepository = subscriptionRepository,
+            subscription = { _, output ->
+                subscriptionOutput = output
+                mock()
+            },
         )
+    }
 
     val rootBloc = createRoot(context = context)
 
@@ -702,6 +716,65 @@ class RootBlocTest {
 
         rootBloc.instance() should instanceOf<RootBloc.Child.RecipeRoot>()
         rootBloc.state.value.backStack.size shouldBe backStackBefore
+    }
+
+    @Test
+    fun Given_premium_When_ai_chat_requested_Then_ai_chat_opens_without_dialog() {
+        val root = createRoot(premium = true)
+
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenAiChat)
+
+        root.instance() should instanceOf<RootBloc.Child.AiChat>()
+        root.premiumDialog.value shouldBe false
+    }
+
+    @Test
+    fun Given_not_premium_When_ai_chat_requested_Then_gate_dialog_shows_and_ai_chat_not_opened() {
+        val root = createRoot(premium = false)
+
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenAiChat)
+
+        root.premiumDialog.value shouldBe true
+        root.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
+    }
+
+    @Test
+    fun Given_gate_dialog_When_confirmed_Then_paywall_opens_and_dialog_dismissed() {
+        val root = createRoot(premium = false)
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenAiChat)
+
+        root.onPremiumDialogConfirmed()
+
+        root.premiumDialog.value shouldBe false
+        root.instance() should instanceOf<RootBloc.Child.Subscription>()
+    }
+
+    @Test
+    fun Given_gate_dialog_When_dismissed_Then_dialog_hidden_and_no_navigation() {
+        val root = createRoot(premium = false)
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenAiChat)
+
+        root.onPremiumDialogDismissed()
+
+        root.premiumDialog.value shouldBe false
+        root.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
+    }
+
+    @Test
+    fun When_bottom_nav_outputs_open_subscription_Then_paywall_is_shown() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenSubscription)
+        rootBloc.instance() should instanceOf<RootBloc.Child.Subscription>()
+        rootBloc.state.value.backStack.size shouldBe 1
+    }
+
+    @Test
+    fun Given_paywall_When_finished_Then_bottom_nav_is_shown() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenSubscription)
+        rootBloc.instance() should instanceOf<RootBloc.Child.Subscription>()
+
+        subscriptionOutput.onNext(SubscriptionBloc.Output.Finished)
+
+        rootBloc.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
     }
 }
 
