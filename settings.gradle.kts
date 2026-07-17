@@ -202,6 +202,18 @@ include(":client:settings:root:impl")
 
 include(":client:settings:root:impl-robots")
 
+include(":client:subscription:data:public")
+
+include(":client:subscription:data:impl")
+
+include(":client:subscription:data:testing")
+
+include(":client:subscription:public")
+
+include(":client:subscription:impl")
+
+include(":client:subscription:impl-robots")
+
 include(":client:developer-settings:impl")
 
 include(":client:developer-settings:public")
