@@ -5,10 +5,10 @@ package com.plusmobileapps.chefmate.util
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import java.awt.FileDialog
+import java.awt.Frame
 import java.io.File
-import javax.swing.JFileChooser
 import javax.swing.SwingUtilities
-import javax.swing.filechooser.FileNameExtensionFilter
 
 @Composable
 actual fun rememberZipSaveLauncher(
@@ -18,17 +18,18 @@ actual fun rememberZipSaveLauncher(
     return remember {
         { fileName, bytes ->
             SwingUtilities.invokeLater {
-                val chooser =
-                    JFileChooser().apply {
-                        dialogTitle = "Save recipe archive"
-                        fileFilter = FileNameExtensionFilter("Zip archives", "zip")
-                        selectedFile = File(fileName)
+                val dialog =
+                    FileDialog(null as Frame?, "Save recipe archive", FileDialog.SAVE).apply {
+                        file = fileName
+                        isVisible = true
                     }
-                if (chooser.showSaveDialog(null) != JFileChooser.APPROVE_OPTION) {
+                val directory = dialog.directory
+                val name = dialog.file
+                if (directory == null || name == null) {
                     currentOnResult.value(false)
                     return@invokeLater
                 }
-                val chosen = chooser.selectedFile
+                val chosen = File(directory, name)
                 val target =
                     if (chosen.name.endsWith(".zip", ignoreCase = true)) chosen
                     else File(chosen.parentFile, chosen.name + ".zip")

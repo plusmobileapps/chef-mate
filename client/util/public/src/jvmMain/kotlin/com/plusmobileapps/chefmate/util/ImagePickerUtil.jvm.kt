@@ -5,9 +5,13 @@ package com.plusmobileapps.chefmate.util
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import javax.swing.JFileChooser
+import java.awt.FileDialog
+import java.awt.Frame
+import java.io.File
+import java.io.FilenameFilter
 import javax.swing.SwingUtilities
-import javax.swing.filechooser.FileNameExtensionFilter
+
+private val imageExtensions = setOf("jpg", "jpeg", "png", "webp", "gif", "heic")
 
 @Composable
 actual fun rememberImagePickerLauncher(onResult: (PickedImage?) -> Unit): () -> Unit {
@@ -15,27 +19,21 @@ actual fun rememberImagePickerLauncher(onResult: (PickedImage?) -> Unit): () -> 
     return remember {
         {
             SwingUtilities.invokeLater {
-                val chooser =
-                    JFileChooser().apply {
-                        dialogTitle = "Select recipe photo"
-                        fileFilter =
-                            FileNameExtensionFilter(
-                                "Images",
-                                "jpg",
-                                "jpeg",
-                                "png",
-                                "webp",
-                                "gif",
-                                "heic",
-                            )
+                val dialog =
+                    FileDialog(null as Frame?, "Select recipe photo", FileDialog.LOAD).apply {
+                        filenameFilter = FilenameFilter { _, name ->
+                            name.substringAfterLast('.', "").lowercase() in imageExtensions
+                        }
+                        isVisible = true
                     }
-                val approved = chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION
-                if (!approved) {
+                val directory = dialog.directory
+                val name = dialog.file
+                if (directory == null || name == null) {
                     currentOnResult.value(null)
                     return@invokeLater
                 }
-                val file = chooser.selectedFile
-                if (file == null || !file.canRead()) {
+                val file = File(directory, name)
+                if (!file.canRead()) {
                     currentOnResult.value(null)
                     return@invokeLater
                 }
