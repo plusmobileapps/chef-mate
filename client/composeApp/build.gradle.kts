@@ -1,3 +1,4 @@
+import com.plusmobileapps.chefmate.linkSwiftBackCompatIntoIosTestBinaries
 import java.util.Properties
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
@@ -194,6 +195,9 @@ kotlin {
         }
     }
 }
+
+// RevenueCat is pulled in transitively via :client:subscription:data:impl.
+linkSwiftBackCompatIntoIosTestBinaries()
 
 android {
     namespace = "com.plusmobileapps.chefmate"

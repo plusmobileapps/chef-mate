@@ -1,3 +1,5 @@
+import com.plusmobileapps.chefmate.linkSwiftBackCompatIntoIosTestBinaries
+
 plugins { alias(libs.plugins.kmpLibrary) }
 
 kotlin {
@@ -20,6 +22,9 @@ kotlin {
         }
     }
 }
+
+// This module owns the RevenueCat dependency, so its own iOS test binaries link the Swift code.
+linkSwiftBackCompatIntoIosTestBinaries()
 
 plusLibrary {
     namespace = "com.plusmobileapps.chefmate.subscription.data.impl"
