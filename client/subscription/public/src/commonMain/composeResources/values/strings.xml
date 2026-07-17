@@ -1,0 +1,16 @@
+<resources>
+    <string name="subscription_title">ChefMate Premium</string>
+    <string name="subscription_subtitle">Unlock AI Chat and more with ChefMate Premium.</string>
+    <string name="subscription_subscribe">Subscribe</string>
+    <string name="subscription_restore">Restore Purchases</string>
+    <string name="subscription_close">Close</string>
+    <string name="subscription_active_title">You’re Premium!</string>
+    <string name="subscription_active_message">Thanks for subscribing — all premium features are unlocked.</string>
+    <string name="subscription_unavailable">Subscriptions aren’t available on this device.</string>
+    <string name="subscription_error_title">Something went wrong</string>
+    <string name="subscription_error_message">We couldn’t complete that. Please try again.</string>
+    <string name="subscription_premium_required_title">Premium required</string>
+    <string name="subscription_premium_required_message">AI Chat is a premium feature. Subscribe to ChefMate Premium to unlock it.</string>
+    <string name="subscription_premium_required_confirm">See Plans</string>
+    <string name="subscription_premium_required_dismiss">Not Now</string>
+</resources>
