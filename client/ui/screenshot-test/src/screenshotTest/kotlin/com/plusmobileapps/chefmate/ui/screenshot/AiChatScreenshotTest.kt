@@ -5,10 +5,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.aichat.AiChatBloc
+import com.plusmobileapps.chefmate.aichat.AiChatPresentation
+import com.plusmobileapps.chefmate.aichat.LocalAiChatPresentation
 import com.plusmobileapps.chefmate.aichat.impl.ui.previewAiChatBloc
 import com.plusmobileapps.chefmate.aichat.impl.ui.previewAiChatBlocEmpty
 import com.plusmobileapps.chefmate.aichat.impl.ui.previewAiChatBlocError
@@ -24,6 +27,20 @@ private fun AiChatScreenshot(bloc: AiChatBloc, darkTheme: Boolean = false) {
     ChefMateTheme(darkTheme = darkTheme) {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             bloc.Content()
+        }
+    }
+}
+
+/** Renders the collapsed sheet "peek" — recipe chip + input only, as before the sheet expands. */
+@Composable
+private fun AiChatPeekScreenshot(bloc: AiChatBloc, darkTheme: Boolean = false) {
+    ChefMateTheme(darkTheme = darkTheme) {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            CompositionLocalProvider(
+                LocalAiChatPresentation provides AiChatPresentation.SheetPeek
+            ) {
+                bloc.Content()
+            }
         }
     }
 }
@@ -96,4 +113,18 @@ fun AiChatErrorLightScreenshot() {
 @Composable
 fun AiChatExtractingPillLightScreenshot() {
     AiChatScreenshot(bloc = previewAiChatBlocExtracting)
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 240)
+@Composable
+fun AiChatPeekLightScreenshot() {
+    AiChatPeekScreenshot(bloc = previewAiChatBlocWithRecipeContext)
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 240, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun AiChatPeekDarkScreenshot() {
+    AiChatPeekScreenshot(bloc = previewAiChatBlocWithRecipeContext, darkTheme = true)
 }
