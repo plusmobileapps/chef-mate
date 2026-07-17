@@ -26,6 +26,8 @@ class MoreRobot(private val test: ComposeUiTest) {
 
     fun clickAiChatRow(): MoreRobot = clickRow("AI Chat")
 
+    fun clickSubscriptionRow(): MoreRobot = clickRow("ChefMate Premium")
+
     fun clickAppSettingsRow(): MoreRobot = clickRow("Settings")
 
     fun clickManageProfileRow(): MoreRobot = clickRow("Manage Profile")
