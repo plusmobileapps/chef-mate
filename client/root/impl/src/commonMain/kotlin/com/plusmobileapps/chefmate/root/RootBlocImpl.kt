@@ -3,6 +3,11 @@
 package com.plusmobileapps.chefmate.root
 
 import com.arkivanov.decompose.DelicateDecomposeApi
+import com.arkivanov.decompose.router.slot.ChildSlot
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.childSlot
+import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.bringToFront
@@ -11,6 +16,7 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.router.stack.replaceCurrent
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.backhandler.BackCallback
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.aichat.AiChatRootBloc
 import com.plusmobileapps.chefmate.auth.data.AuthState
@@ -132,8 +138,52 @@ class RootBlocImpl(
 
     override val state: Value<ChildStack<*, RootBloc.Child>> = stack
 
+    // The recipe-grounded AI chat lives in its own slot so it can be presented as a bottom sheet
+    // over the current screen, rather than a full-screen stack child (which the More-tab chat still
+    // uses via Configuration.AiChat).
+    private val aiChatSheetNavigation = SlotNavigation<AiChatSheetConfig>()
+    private val aiChatSheetRouter =
+        childSlot(
+            source = aiChatSheetNavigation,
+            serializer = AiChatSheetConfig.serializer(),
+            key = "RootRouter_AiChatSheet",
+            childFactory = { config, childContext ->
+                RootBloc.AiChatSheet.Chat(
+                    bloc =
+                        aiChat.create(
+                            context = childContext,
+                            recipeContextId = config.recipeContextId,
+                            output = ::handleAiChatSheetOutput,
+                        )
+                )
+            },
+        )
+
+    override val aiChatSheetSlot: Value<ChildSlot<*, RootBloc.AiChatSheet>> = aiChatSheetRouter
+
+    // Register after the stack's own back callback so a back press closes the sheet first.
+    private val aiChatSheetBackCallback =
+        BackCallback(isEnabled = aiChatSheetRouter.value.child != null) {
+            aiChatSheetNavigation.dismiss()
+        }
+
+    init {
+        backHandler.register(aiChatSheetBackCallback)
+        aiChatSheetRouter.subscribe { slot ->
+            aiChatSheetBackCallback.isEnabled = slot.child != null
+        }
+    }
+
     override fun onBackClicked() {
-        navigation.pop()
+        if (aiChatSheetRouter.value.child != null) {
+            aiChatSheetNavigation.dismiss()
+        } else {
+            navigation.pop()
+        }
+    }
+
+    override fun onAiChatSheetDismiss() {
+        aiChatSheetNavigation.dismiss()
     }
 
     override fun handleSharedUrl(url: String) {
@@ -590,7 +640,7 @@ class RootBlocImpl(
                 navigation.bringToFront(Configuration.CookMode(output.recipeId))
             }
             is RecipeRootBloc.Output.OpenAiChat -> {
-                navigation.bringToFront(Configuration.AiChat(recipeContextId = output.recipeId))
+                aiChatSheetNavigation.activate(AiChatSheetConfig(recipeContextId = output.recipeId))
             }
         }
     }
@@ -599,7 +649,25 @@ class RootBlocImpl(
         when (output) {
             CookModeBloc.Output.Finished -> navigation.pop()
             is CookModeBloc.Output.OpenAiChat ->
-                navigation.bringToFront(Configuration.AiChat(recipeContextId = output.recipeId))
+                aiChatSheetNavigation.activate(AiChatSheetConfig(recipeContextId = output.recipeId))
+        }
+    }
+
+    private fun handleAiChatSheetOutput(output: AiChatRootBloc.Output) {
+        when (output) {
+            AiChatRootBloc.Output.Finished -> aiChatSheetNavigation.dismiss()
+            is AiChatRootBloc.Output.AddAsRecipe -> {
+                aiChatSheetNavigation.dismiss()
+                navigation.bringToFront(
+                    RecipeRoot(
+                        RecipeRootBloc.Props.CreateFromExtracted(
+                            extracted = output.extracted,
+                            fromAi = true,
+                            consumePendingPhoto = output.consumePendingPhoto,
+                        )
+                    )
+                )
+            }
         }
     }
 
@@ -679,6 +747,9 @@ class RootBlocImpl(
             OtpBloc.Output.Cancelled -> navigation.pop()
         }
     }
+
+    /** Slot config for the recipe-grounded AI chat sheet. */
+    @Serializable private data class AiChatSheetConfig(val recipeContextId: Long?)
 
     @Serializable
     private sealed class Configuration {

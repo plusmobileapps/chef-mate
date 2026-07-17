@@ -1,5 +1,6 @@
 package com.plusmobileapps.chefmate.root
 
+import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackHandlerOwner
@@ -27,6 +28,16 @@ import com.plusmobileapps.chefmate.ui.ComposeScreen
 
 interface RootBloc : BackHandlerOwner, BackClickBloc {
     val state: Value<ChildStack<*, Child>>
+
+    /**
+     * The recipe-grounded AI chat, presented as an expandable bottom sheet over the current screen
+     * (recipe detail or cook mode). Null when no chat is open. The standalone chat opened from the
+     * More tab is a full-screen [Child.AiChat] instead.
+     */
+    val aiChatSheetSlot: Value<ChildSlot<*, AiChatSheet>>
+
+    /** Dismiss the AI chat sheet (scrim tap or sheet swiped down). */
+    fun onAiChatSheetDismiss()
 
     fun handleSharedUrl(url: String)
 
@@ -76,6 +87,14 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
         data class EditRecipeBook(override val bloc: EditRecipeBookBloc) : Child()
 
         data class EditGroceryList(override val bloc: EditGroceryListBloc) : Child()
+    }
+
+    /** Child of the [aiChatSheetSlot] — the AI chat rendered inside the bottom sheet. */
+    sealed class AiChatSheet {
+
+        abstract val bloc: ComposeScreen
+
+        data class Chat(override val bloc: AiChatRootBloc) : AiChatSheet()
     }
 
     fun interface Factory {
