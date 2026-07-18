@@ -38,4 +38,35 @@ class ChefMateUrlsTest {
         assertNull(ChefMateUrls.recipeLinkClientId("chefmate://recipe/"))
         assertNull(ChefMateUrls.recipeLinkClientId("chefmate://groceries"))
     }
+
+    @Test
+    fun recipeShareUrlRemoteId_round_trips_a_built_link() {
+        assertEquals(
+            "remote-uuid",
+            ChefMateUrls.recipeShareUrlRemoteId(ChefMateUrls.recipeShareUrl("remote-uuid")),
+        )
+    }
+
+    @Test
+    fun recipeShareUrlRemoteId_ignores_query_and_trailing_path() {
+        val base = "https://${ChefMateUrls.WEB_HOST}/recipe/id42"
+        assertEquals("id42", ChefMateUrls.recipeShareUrlRemoteId("$base/extra"))
+        assertEquals("id42", ChefMateUrls.recipeShareUrlRemoteId("$base?x=1"))
+    }
+
+    @Test
+    fun recipeShareUrlRemoteId_rejects_the_custom_scheme_link() {
+        // The chefmate:// link is keyed by clientId, a separate identifier space — not a share
+        // link.
+        assertNull(ChefMateUrls.recipeShareUrlRemoteId(ChefMateUrls.recipeLink("client-id")))
+    }
+
+    @Test
+    fun recipeShareUrlRemoteId_rejects_unrelated_and_blank_urls() {
+        assertNull(ChefMateUrls.recipeShareUrlRemoteId("https://example.com/recipe/x"))
+        assertNull(ChefMateUrls.recipeShareUrlRemoteId("https://${ChefMateUrls.WEB_HOST}/recipe/"))
+        assertNull(
+            ChefMateUrls.recipeShareUrlRemoteId("https://${ChefMateUrls.WEB_HOST}/groceries")
+        )
+    }
 }

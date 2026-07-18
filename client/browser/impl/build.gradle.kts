@@ -21,7 +21,10 @@ kotlin {
             implementation(libs.ktor.serialization.json)
             implementation(compose.components.resources)
         }
-        commonTest.dependencies { implementation(libs.multiplatform.settings.test) }
+        commonTest.dependencies {
+            implementation(libs.multiplatform.settings.test)
+            implementation(projects.client.recipe.data.testing)
+        }
         getByName("androidMain").dependencies { implementation(libs.ktor.client.cio) }
         getByName("jvmMain").dependencies { implementation(libs.ktor.client.cio) }
         getByName("iosMain").dependencies { implementation(libs.ktor.client.darwin) }

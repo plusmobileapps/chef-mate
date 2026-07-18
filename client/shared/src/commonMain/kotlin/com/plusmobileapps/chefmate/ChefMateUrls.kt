@@ -40,4 +40,21 @@ object ChefMateUrls {
         val clientId = url.substring(prefix.length).substringBefore('/').substringBefore('?')
         return clientId.ifBlank { null }
     }
+
+    /**
+     * Extracts the remoteId from a [recipeShareUrl], or null if [url] is not one. The share page
+     * itself renders its recipe content client-side (fetched from Supabase after load), so it has
+     * no server-rendered markup for a generic scraper to parse — callers that recognize our own
+     * share links should fetch the recipe directly instead (`RecipeRepository.fetchPublicRecipe`).
+     */
+    fun recipeShareUrlRemoteId(url: String): String? {
+        val prefix = "https://$WEB_HOST/recipe/"
+        if (!url.startsWith(prefix, ignoreCase = true)) return null
+        val remoteId =
+            url.substring(prefix.length)
+                .substringBefore('/')
+                .substringBefore('?')
+                .substringBefore('#')
+        return remoteId.ifBlank { null }
+    }
 }

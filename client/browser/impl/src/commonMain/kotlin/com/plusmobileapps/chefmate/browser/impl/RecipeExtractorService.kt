@@ -3,10 +3,13 @@ package com.plusmobileapps.chefmate.browser.impl
 import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.nodes.Element
 import com.fleeksoft.ksoup.parser.Parser
+import com.plusmobileapps.chefmate.ChefMateUrls
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.recipe.data.ExtractedRecipeData
 import com.plusmobileapps.chefmate.recipe.data.IngredientSection
+import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -33,8 +36,10 @@ interface RecipeExtractorService {
 @SingleIn(AppScope::class)
 @Inject
 @ContributesBinding(AppScope::class)
-class RecipeExtractorServiceImpl(@IO private val ioContext: CoroutineContext) :
-    RecipeExtractorService {
+class RecipeExtractorServiceImpl(
+    @IO private val ioContext: CoroutineContext,
+    private val recipeRepository: RecipeRepository,
+) : RecipeExtractorService {
 
     private val httpClient = HttpClient()
 
@@ -42,6 +47,16 @@ class RecipeExtractorServiceImpl(@IO private val ioContext: CoroutineContext) :
 
     override suspend fun extractRecipe(url: String): ExtractedRecipeData =
         withContext(ioContext) {
+            // Our own share links render their recipe content client-side after load (fetched from
+            // Supabase), so there's no server-rendered markup for the scraper below to parse —
+            // fetch the recipe directly instead of scraping the page.
+            ChefMateUrls.recipeShareUrlRemoteId(url)?.let { remoteId ->
+                return@withContext recipeRepository
+                    .fetchPublicRecipe(remoteId)
+                    .getOrElse { throw IllegalStateException("No recipe data found on this page") }
+                    .toExtractedRecipeData(url)
+            }
+
             val response = httpClient.get(url) { header("User-Agent", USER_AGENT) }
             if (!response.status.isSuccess()) {
                 throw IllegalStateException(
@@ -65,6 +80,23 @@ class RecipeExtractorServiceImpl(@IO private val ioContext: CoroutineContext) :
 
             throw IllegalStateException("No recipe data found on this page")
         }
+
+    private fun Recipe.toExtractedRecipeData(sourceUrl: String): ExtractedRecipeData =
+        ExtractedRecipeData(
+            title = title,
+            description = description,
+            ingredients = ingredients.splitLines(),
+            directions = directions.splitLines(),
+            imageUrl = imageUrl,
+            sourceUrl = sourceUrl,
+            servings = servings,
+            prepTime = prepTime,
+            cookTime = cookTime,
+            totalTime = totalTime,
+            calories = calories,
+        )
+
+    private fun String.splitLines(): List<String> = split("\n").filter { it.isNotBlank() }
 
     /**
      * Recovers grouped ingredients (with their sub-section headers) from WP Recipe Maker markup,
