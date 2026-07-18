@@ -2,13 +2,21 @@
 
 package com.plusmobileapps.chefmate.browser.impl
 
+import com.plusmobileapps.chefmate.ChefMateUrls
+import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.runTest
 
+@OptIn(ExperimentalTime::class)
 class RecipeExtractorServiceTest {
 
-    private val service = RecipeExtractorServiceImpl(Dispatchers.Default)
+    private val recipeRepository = FakeRecipeRepository()
+    private val service = RecipeExtractorServiceImpl(Dispatchers.Default, recipeRepository)
 
     // region parseDuration
 
@@ -211,6 +219,59 @@ class RecipeExtractorServiceTest {
         """<html><body>${groups.joinToString("")}</body></html>"""
 
     // endregion
+
+    // region own share links
+
+    @Test
+    fun When_url_is_our_own_share_link_Then_fetches_the_public_recipe_directly() = runTest {
+        val remoteId = "08c5daa3-5de0-4045-a660-ea396ce25d3e"
+        val url = ChefMateUrls.recipeShareUrl(remoteId)
+        recipeRepository.publicRecipes[remoteId] =
+            testRecipe(
+                title = "Weeknight Tacos",
+                ingredients = "For the tacos:\n1 lb ground beef\n8 tortillas",
+                directions = "Brown the beef.\nWarm the tortillas.",
+            )
+
+        val extracted = service.extractRecipe(url)
+
+        extracted.title shouldBe "Weeknight Tacos"
+        extracted.ingredients shouldBe listOf("For the tacos:", "1 lb ground beef", "8 tortillas")
+        extracted.directions shouldBe listOf("Brown the beef.", "Warm the tortillas.")
+        extracted.sourceUrl shouldBe url
+    }
+
+    @Test
+    fun When_our_own_share_link_has_no_matching_public_recipe_Then_throws() = runTest {
+        val url = ChefMateUrls.recipeShareUrl("missing-id")
+
+        val error = runCatching { service.extractRecipe(url) }.exceptionOrNull()
+
+        error?.message shouldBe "No recipe data found on this page"
+    }
+
+    // endregion
+
+    private fun testRecipe(title: String, ingredients: String, directions: String) =
+        Recipe(
+            id = 1L,
+            title = title,
+            description = null,
+            ingredients = ingredients,
+            directions = directions,
+            imageUrl = null,
+            sourceUrl = null,
+            servings = null,
+            prepTime = null,
+            cookTime = null,
+            totalTime = null,
+            calories = null,
+            starRating = null,
+            remoteId = "08c5daa3-5de0-4045-a660-ea396ce25d3e",
+            isPublic = true,
+            createdAt = Instant.DISTANT_PAST,
+            updatedAt = Instant.DISTANT_PAST,
+        )
 
     private fun recipeJson(
         name: String = "Test Recipe",
