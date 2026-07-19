@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.waitUntilExactlyOneExists
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailTestTags
 
@@ -25,6 +26,13 @@ class RecipeDetailRobot(private val test: ComposeUiTest) {
 
     fun assertRecipeDisplayed(recipeName: String): RecipeDetailRobot = apply {
         test.onNode(hasText(recipeName) and hasAnyAncestor(onScreen)).assertIsDisplayed()
+    }
+
+    /** Taps the AI chat action, opening the recipe-grounded chat sheet. */
+    fun tapAiChat(): RecipeDetailRobot = apply {
+        test
+            .onNode(hasTestTag(RecipeDetailTestTags.AI_CHAT_BUTTON) and hasAnyAncestor(onScreen))
+            .performClick()
     }
 }
 

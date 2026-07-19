@@ -454,7 +454,11 @@ private fun RecipeDetailBody(
                                     }
                                 }
                                 if (state.showAiChat) {
-                                    IconButton(onClick = bloc::onAiChatClicked) {
+                                    IconButton(
+                                        onClick = bloc::onAiChatClicked,
+                                        modifier =
+                                            Modifier.testTag(RecipeDetailTestTags.AI_CHAT_BUTTON),
+                                    ) {
                                         Icon(
                                             imageVector = Icons.Default.AutoAwesome,
                                             contentDescription =

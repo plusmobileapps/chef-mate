@@ -20,9 +20,25 @@ import com.plusmobileapps.chefmate.aichat.AiChatTestTags
 class AiChatRobot(private val test: ComposeUiTest) {
 
     private val onScreen = hasAnyAncestor(hasTestTag(AiChatTestTags.SCREEN))
+    private val onPeek = hasAnyAncestor(hasTestTag(AiChatTestTags.PEEK))
 
     fun typeMessage(text: String): AiChatRobot = apply {
         test.onNode(hasTestTag(AiChatTestTags.INPUT) and onScreen).performTextInput(text)
+    }
+
+    /** Waits for the collapsed sheet "peek" (input over the recipe, no header) to appear. */
+    fun awaitPeekShown(): AiChatRobot = apply {
+        test.waitUntilExactlyOneExists(hasTestTag(AiChatTestTags.PEEK))
+    }
+
+    /** Focuses the peek input, which asks the sheet to expand to the full-screen chat. */
+    fun expandFromPeek(): AiChatRobot = apply {
+        test.onNode(hasTestTag(AiChatTestTags.INPUT) and onPeek).performClick()
+    }
+
+    /** Waits for the expanded, full-screen chat (its header) to be shown. */
+    fun awaitExpanded(): AiChatRobot = apply {
+        test.waitUntilExactlyOneExists(hasTestTag(AiChatTestTags.SCREEN))
     }
 
     fun tapSend(): AiChatRobot = apply {

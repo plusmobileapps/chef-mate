@@ -1,11 +1,14 @@
 package com.plusmobileapps.chefmate.aichat.impl.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.plusmobileapps.chefmate.aichat.AiChatBloc
+import com.plusmobileapps.chefmate.aichat.AiChatPresentation
 import com.plusmobileapps.chefmate.aichat.AiChatScreen
 import com.plusmobileapps.chefmate.aichat.ChatMessage
+import com.plusmobileapps.chefmate.aichat.LocalAiChatPresentation
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -164,4 +167,17 @@ internal fun AiChatScreenThinkingPreview() {
 @Composable
 internal fun AiChatScreenErrorPreview() {
     ChefMateTheme { previewAiChatBlocError.Content() }
+}
+
+/**
+ * Collapsed sheet "peek" — only the recipe chip and input, as shown before the sheet is expanded.
+ */
+@Preview(showBackground = true, heightDp = 240)
+@Composable
+internal fun AiChatScreenPeekPreview() {
+    ChefMateTheme {
+        CompositionLocalProvider(LocalAiChatPresentation provides AiChatPresentation.SheetPeek) {
+            previewAiChatBlocWithRecipeContext.Content()
+        }
+    }
 }

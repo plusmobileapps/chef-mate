@@ -1,11 +1,21 @@
-@file:OptIn(FaultyDecomposeApi::class)
+@file:OptIn(FaultyDecomposeApi::class, ExperimentalMaterial3Api::class)
 
 package com.plusmobileapps.chefmate.root
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
 import com.arkivanov.decompose.FaultyDecomposeApi
@@ -16,6 +26,9 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimator
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.plusmobileapps.chefmate.aichat.AiChatPresentation
+import com.plusmobileapps.chefmate.aichat.LocalAiChatPresentation
+import com.plusmobileapps.chefmate.aichat.LocalAiChatRequestExpand
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.backAnimation
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -48,6 +61,56 @@ fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
             ) { child ->
                 child.instance.bloc.Content()
             }
+        }
+        // Recipe-grounded AI chat, layered over the current screen as an expandable bottom sheet.
+        AiChatSheet(rootBloc)
+    }
+}
+
+/**
+ * The recipe-grounded AI chat sheet. It opens as a small "peek" (just the input over the dimmed
+ * recipe) and grows to full screen once [AiChatPresentation.SheetExpanded] is requested — by
+ * focusing the input, dragging the peek strip up, or sending a message.
+ */
+@Composable
+private fun AiChatSheet(rootBloc: RootBloc) {
+    val slot by rootBloc.aiChatSheetSlot.subscribeAsState()
+    val child = slot.child?.instance
+
+    // Keep the last child in composition through the hide animation after the slot dismisses.
+    var sheetChild by remember { mutableStateOf(child) }
+    if (child != null) sheetChild = child
+
+    // Peek vs full is host state (not a Material detent) so the peek can hug just the input. Keyed
+    // on the child so each newly-opened chat starts collapsed, while staying stable (and expanded)
+    // through the dismiss animation.
+    var expanded by remember(sheetChild) { mutableStateOf(false) }
+
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    LaunchedEffect(child) {
+        if (child == null && sheetChild != null) {
+            sheetState.hide()
+            sheetChild = null
+        }
+    }
+
+    val currentChild = sheetChild ?: return
+    ModalBottomSheet(
+        onDismissRequest = rootBloc::onAiChatSheetDismiss,
+        sheetState = sheetState,
+        contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
+        // When expanded the chat's own header is the top of the sheet; the drag handle only shows
+        // in
+        // the peek, where it invites the drag-to-expand gesture.
+        dragHandle = if (expanded) null else ({ BottomSheetDefaults.DragHandle() }),
+    ) {
+        CompositionLocalProvider(
+            LocalAiChatPresentation provides
+                if (expanded) AiChatPresentation.SheetExpanded else AiChatPresentation.SheetPeek,
+            LocalAiChatRequestExpand provides { expanded = true },
+        ) {
+            currentChild.bloc.Content()
         }
     }
 }
