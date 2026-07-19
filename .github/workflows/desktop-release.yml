@@ -102,6 +102,14 @@ jobs:
 
       - name: Build app image for MSIX (Windows)
         if: runner.os == 'Windows'
+        # BuildKonfig reads these at Gradle configuration time via System.getenv, and GitHub
+        # Actions env vars are per-step. The MSIX is packed from THIS step's app image, so it
+        # needs the secrets too — without them BuildConfig regenerates with placeholder Supabase
+        # keys and every auth call fails at runtime.
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          BUGSNAG_API_KEY: ${{ secrets.BUGSNAG_API_KEY }}
         run: ./gradlew :client:composeApp:createReleaseDistributable
 
       - name: Package MSIX (Windows)
