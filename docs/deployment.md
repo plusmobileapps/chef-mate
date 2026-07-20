@@ -386,16 +386,25 @@ platform** on the existing app record instead of creating a new one.
 
 **Certificates & profile** (fetched via Fastlane `match`, `type: "appstore"`, `platform: "macos"`,
 from the same private certificates repo used for iOS):
-- **Apple Distribution** application cert — signs the `.app` bundle.
-- **Mac Installer Distribution** cert — signs the `.pkg` installer (fetched via match
-  `additional_cert_types: ["mac_installer_distribution"]`).
+- **Mac App Distribution** cert (CN `3rd Party Mac Developer Application: …`) — signs the `.app`
+  bundle. **Must be this cert, not the unified "Apple Distribution".** Compose's signer only matches
+  the legacy `3rd Party Mac Developer Application:` / `Developer ID Application:` names (true through
+  Compose 1.12.0-beta), so an "Apple Distribution" cert fails with `Could not find certificate … in
+  keychain []`.
+- **Mac Installer Distribution** cert (CN `3rd Party Mac Developer Installer: …`) — signs the `.pkg`
+  installer (fetched via match `additional_cert_types: ["mac_installer_distribution"]`).
 - **Mac App Store provisioning profile** — embedded in the `.app`. The `mac release` lane passes its
   path to Compose via `MACOS_PROVISIONING_PROFILE` / `MACOS_RUNTIME_PROVISIONING_PROFILE`.
 
-**Signing:** The `mac release` lane resolves the "Apple Distribution" identity from the keychain into
-`MACOS_SIGN_IDENTITY`. jpackage signs the app with that identity (passed as
-`--mac-signing-key-user-name`) and derives the matching "3rd Party Mac Developer Installer" identity
-from the keychain to sign the `.pkg`. Local builds without these env vars stay unsigned.
+**Signing:** The `mac release` lane resolves the **bare** cert name (org + team, no prefix) from the
+`3rd Party Mac Developer Application` cert into `MACOS_SIGN_IDENTITY`. Compose prepends
+`3rd Party Mac Developer Application: ` to sign the app; jpackage prepends
+`3rd Party Mac Developer Installer: ` (via `--mac-signing-key-user-name`) to sign the `.pkg`. Passing
+the bare name lets each tool add its own prefix. Local builds without these env vars stay unsigned.
+
+> If your account only has the unified "Apple Distribution" cert, create a **Mac App Distribution**
+> certificate at developer.apple.com → Certificates and re-run `fastlane mac certificates`. The lane
+> fails fast with that instruction if the `3rd Party Mac Developer Application` cert is missing.
 
 **App Sandbox (mandatory):** The Mac App Store requires App Sandbox. Entitlements live in
 `packaging/macos/entitlements.plist` (app: sandbox + `network.client` + `files.user-selected.read-write`
