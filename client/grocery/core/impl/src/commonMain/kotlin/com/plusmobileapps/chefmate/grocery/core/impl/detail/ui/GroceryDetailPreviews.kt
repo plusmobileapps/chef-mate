@@ -23,6 +23,8 @@ private fun groceryDetailBloc(item: GroceryItem): GroceryDetailBloc =
 
         override fun onAisleChanged(category: GroceryCategory) = Unit
 
+        override fun onAlwaysFileHereToggled(enabled: Boolean) = Unit
+
         override fun onSaveClicked() = Unit
 
         override fun onBackClicked() = Unit
@@ -67,6 +69,8 @@ val previewGroceryDetailBlocLoading: GroceryDetailBloc =
         override fun onGroceryCheckedChanged(isChecked: Boolean) = Unit
 
         override fun onAisleChanged(category: GroceryCategory) = Unit
+
+        override fun onAlwaysFileHereToggled(enabled: Boolean) = Unit
 
         override fun onSaveClicked() = Unit
 
