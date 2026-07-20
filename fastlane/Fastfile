@@ -22,28 +22,109 @@ platform :android do
 end
 
 platform :mac do
-  desc "Install the Developer ID cert into the keychain for desktop signing."
-  desc "Read-only by default (CI). Run once locally with `readonly:false` to generate & store the cert."
-  lane :certificates do |options|
-    # Build the App Store Connect API key Hash `match` expects. Running `fastlane match` standalone
-    # instead picks up a String from the environment and fails with "'api_key' value must be a Hash".
-    api_key = app_store_connect_api_key(
+  # The desktop app's bundle id (matches `macOS.bundleID` in composeApp/build.gradle.kts). Distinct
+  # from the iOS app id `com.plusmobileapps.chefmate.ChefMate`.
+  MAC_APP_IDENTIFIER = "com.plusmobileapps.chefmate"
+
+  def asc_api_key
+    # Build the App Store Connect API key Hash `match`/`upload_to_app_store` expect. Running match
+    # standalone picks up a String from the environment and fails with "'api_key' must be a Hash".
+    app_store_connect_api_key(
       key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
       issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
       key_content: ENV["APP_STORE_CONNECT_API_KEY"],
       is_key_content_base64: true,
     )
+  end
+
+  # Fetch (or generate) the Mac App Store signing assets into the keychain:
+  #   * "Apple Distribution" application cert  -> signs the .app bundle
+  #   * "Mac Installer Distribution" cert      -> signs the .pkg installer
+  #   * the Mac App Store provisioning profile -> embedded in the .app
+  # Read-only in CI; run the certificates lane (readonly:false) once to create and store them.
+  def fetch_mac_app_store_signing(api_key, readonly:, force: false)
+    match(
+      type: "appstore",
+      platform: "macos",
+      app_identifier: MAC_APP_IDENTIFIER,
+      additional_cert_types: ["mac_installer_distribution"],
+      readonly: readonly,
+      force: force,
+      api_key: api_key,
+    )
+  end
+
+  desc "Generate/refresh the Mac App Store certs + provisioning profile (read-write match)."
+  desc "Run once locally after creating the macOS App Store Connect record."
+  desc "Pass force:true to regenerate the profile after enabling a new capability on the App ID."
+  lane :certificates do |options|
+    api_key = asc_api_key
+
+    # match creates provisioning profiles but not App IDs, so register the desktop bundle id on the
+    # Developer Portal first. skip_itc — the App Store Connect record is created manually in the
+    # portal (see docs/deployment.md). Idempotent once the App ID exists.
+    produce(
+      app_identifier: MAC_APP_IDENTIFIER,
+      app_name: "Chef Mate",
+      platform: "osx",
+      skip_itc: true,
+      team_id: ENV["TEAM_ID"] || "Y89258SF5P",
+    )
+
+    fetch_mac_app_store_signing(api_key, readonly: false, force: options.fetch(:force, false))
+  end
+
+  desc "Build the Mac App Store .pkg and upload it to App Store Connect."
+  lane :release do
+    api_key = asc_api_key
 
     setup_ci
 
-    # A Developer ID app is directly distributed and uses no provisioning profiles, so fetch only the
-    # certificate. Without this, match tries to resolve `Direct_*` profiles for the Matchfile's app
-    # identifiers and fails under `readonly`.
-    match(
-      type: "developer_id",
-      readonly: options.fetch(:readonly, true),
-      skip_provisioning_profiles: true,
+    fetch_mac_app_store_signing(api_key, readonly: true)
+
+    # jpackage signs the app with the identity we pass as --mac-signing-key-user-name (Compose's
+    # macOS.signing.identity) and derives the matching "3rd Party Mac Developer Installer" identity
+    # from the keychain to sign the .pkg. Resolve the "Apple Distribution" identity match imported.
+    identity = sh(
+      "security find-identity -v -p codesigning | grep 'Apple Distribution' | head -1 | " \
+      "sed -E 's/.*\"(.*)\"/\\1/'"
+    ).strip
+    UI.user_error!("No 'Apple Distribution' signing identity found in keychain") if identity.empty?
+
+    # match writes the .provisionprofile to disk and exposes its path via a sigh_* env var. The
+    # macOS key carries a `_macos` segment; fall back to the unsuffixed name across fastlane versions.
+    profile =
+      ENV["sigh_#{MAC_APP_IDENTIFIER}_appstore_macos_profile-path"] ||
+      ENV["sigh_#{MAC_APP_IDENTIFIER}_appstore_profile-path"]
+    UI.user_error!("Mac App Store provisioning profile path not found in sigh_* env") if profile.nil?
+
+    # composeApp/build.gradle.kts reads these at Gradle configuration time via System.getenv. The
+    # runtime (nested JRE) bundle reuses the same profile as the app.
+    ENV["MACOS_SIGN_IDENTITY"] = identity
+    ENV["MACOS_PROVISIONING_PROFILE"] = profile
+    ENV["MACOS_RUNTIME_PROVISIONING_PROFILE"] = profile
+
+    gradle(task: ":client:composeApp:packageReleasePkg")
+
+    # Anchor to the repo root via the Fastfile location (__dir__ == fastlane/) so this is independent
+    # of fastlane's inconsistent working directory between the sh action and the gradle action.
+    pkg = Dir[
+      File.expand_path(
+        "../client/composeApp/build/compose/binaries/main-release/pkg/*.pkg", __dir__
+      )
+    ].first
+    UI.user_error!("No .pkg produced by packageReleasePkg") if pkg.nil?
+
+    upload_to_app_store(
       api_key: api_key,
+      app_identifier: MAC_APP_IDENTIFIER,
+      platform: "osx",
+      pkg: pkg,
+      skip_metadata: true,
+      skip_screenshots: true,
+      submit_for_review: false,
+      precheck_include_in_app_purchases: false,
+      force: true,
     )
   end
 end

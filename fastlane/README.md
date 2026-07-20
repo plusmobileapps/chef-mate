@@ -34,9 +34,19 @@ Build release AAB and upload to Play Store internal track
 [bundle exec] fastlane mac certificates
 ```
 
-Install the Developer ID cert into the keychain for desktop signing.
+Generate/refresh the Mac App Store certs + provisioning profile (read-write match).
 
-Read-only by default (CI). Run once locally with `readonly:false` to generate & store the cert.
+Run once locally after creating the macOS App Store Connect record.
+
+Pass force:true to regenerate the profile after enabling a new capability on the App ID.
+
+### mac release
+
+```sh
+[bundle exec] fastlane mac release
+```
+
+Build the Mac App Store .pkg and upload it to App Store Connect.
 
 ----
 
