@@ -30,11 +30,11 @@ private const val DEFAULT_FEED_URL =
 /**
  * Desktop-only self-update driver. Polls a `latest.json` feed published by CI, and when a newer
  * version exists, downloads the platform installer and opens it. Signed-installer model — we never
- * patch jars in place, so the macOS notarization staple stays intact.
+ * patch jars in place, so the installer's signature stays intact.
  *
- * Inert on Windows: that platform ships through the Microsoft Store, which both forbids
- * self-updating (Store certification policy) and sandboxes the MSIX install so it can't replace
- * itself anyway. Updates there are the Store's job.
+ * In-app updates run on **Linux only**. macOS ships through the Mac App Store and Windows through
+ * the Microsoft Store; both stores forbid self-updating (certification policy) and sandbox the
+ * install so it can't replace itself anyway. Updates on those platforms are the store's job.
  */
 class DesktopUpdater(
     private val currentVersion: String = BuildConfig.VERSION_NAME,
@@ -50,8 +50,8 @@ class DesktopUpdater(
 
     private var available: UpdateState.Available? = null
 
-    /** In-app updates run on macOS and Linux only; Windows defers to the Microsoft Store. */
-    private val isSupported: Boolean = platformKey() != "windows"
+    /** In-app updates run on Linux only; macOS and Windows defer to their respective app stores. */
+    private val isSupported: Boolean = platformKey() == "linux"
 
     fun checkForUpdates() {
         if (!isSupported) return
@@ -100,7 +100,7 @@ class DesktopUpdater(
         val dest = File(System.getProperty("java.io.tmpdir"), fileName)
         http.prepareGet(target.downloadUrl).execute { response ->
             // A stale/misbuilt feed can point at a URL that 404s. Without this guard we'd stream
-            // the error page into the .dmg and hand macOS a "disk image is corrupted" dialog.
+            // the error page into the .deb and hand the user a corrupt-package dialog on install.
             // Fail loudly so startDownload() reverts to the retryable Available banner instead.
             if (!response.status.isSuccess()) {
                 error("Download failed: HTTP ${response.status.value} for ${target.downloadUrl}")
