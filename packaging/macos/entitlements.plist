@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!--
+      App Sandbox is mandatory for the Mac App Store. This file REPLACES Compose's default
+      entitlements, so the JVM hardened-runtime exceptions Compose normally applies are repeated
+      here alongside the sandbox capabilities.
+    -->
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+
+    <!-- Outbound network: Supabase sync/auth, the update feed on Linux, Bugsnag, and the recipe
+         browser's WebView all make client HTTP requests. -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+
+    <!-- Recipe import/export (zip open + save) goes through native file dialogs, which grant the
+         sandbox access to whatever the user explicitly picks. -->
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+
+    <!--
+      JVM requirements. The HotSpot JIT writes then executes generated machine code, so it needs
+      both allow-jit and allow-unsigned-executable-memory. disable-library-validation lets the app
+      bundle load the nested JRE's native dylibs.
+
+      NOTE (review risk): allow-unsigned-executable-memory and disable-library-validation are
+      permitted with App Sandbox but are scrutinized in App Store review. If a submission is
+      rejected for these, revisit whether the bundled runtime can be signed such that library
+      validation passes without disabling it.
+    -->
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+</dict>
+</plist>

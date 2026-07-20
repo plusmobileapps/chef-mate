@@ -17,21 +17,22 @@ Either way, the tag triggers three independent workflows that run in parallel:
 |----------|----------|-------------|
 | Android | `android-release.yml` | Play Store (internal track) |
 | iOS | `ios-release.yml` | App Store Connect (TestFlight) |
-| Desktop | `desktop-release.yml` | GitHub Releases (signed DMG + DEB) and `latest.json` update feed |
+| Desktop | `desktop-release.yml` | macOS → App Store Connect (Mac App Store); Linux `.deb` + `latest.json` feed on GitHub Releases; Windows → Microsoft Store (MSIX) |
 
 All workflows also support manual triggering via the "Run workflow" button in the GitHub Actions UI (`workflow_dispatch`).
 
 ### Desktop update strategy
 
-Desktop uses **two different update channels** depending on platform:
+Desktop distribution + updates depend on platform:
 
 | Platform | Distribution | Updates |
 |----------|--------------|---------|
-| macOS | Notarized `.dmg` on GitHub Releases | **In-app updater** (`DesktopUpdater`) polls the `latest.json` feed and prompts the user to download + install |
-| Linux | `.deb` on GitHub Releases | **In-app updater** (same feed) |
-| Windows | **Microsoft Store** (MSIX) | **The Store** — the in-app updater is intentionally a no-op on Windows (Store policy forbids self-updating, and the MSIX sandbox can't replace its own install) |
+| macOS | **Mac App Store** (`.pkg` uploaded to App Store Connect) | **The Store** — the in-app updater is a no-op on macOS (Store policy forbids self-updating, and the sandbox can't replace its own install) |
+| Linux | `.deb` on GitHub Releases | **In-app updater** (`DesktopUpdater`) polls the `latest.json` feed and prompts the user to download + install |
+| Windows | **Microsoft Store** (MSIX) | **The Store** — the in-app updater is a no-op on Windows for the same reasons |
 
-See [Windows: Microsoft Store (MSIX)](#windows-microsoft-store-msix) for the Windows path.
+**Only Linux runs the in-app updater.** See [macOS: Mac App Store](#macos-mac-app-store) and
+[Windows: Microsoft Store (MSIX)](#windows-microsoft-store-msix) for the store paths.
 
 ---
 
@@ -94,7 +95,7 @@ These are read by BuildKonfig at build time. See [buildconfig-setup.md](buildcon
 
 #### Desktop Code Signing
 
-**macOS** desktop signing reuses the **existing iOS `MATCH_*` and `ASC_*` secrets** — no desktop-specific secrets are required. The `desktop-release.yml` workflow installs the Developer ID certificate via `fastlane mac certificates` (Fastlane match), resolves the identity into `MACOS_SIGN_IDENTITY` at runtime, signs during `packageReleaseDmg`, and notarizes/staples the DMG with `xcrun notarytool`. See [Desktop macOS code signing](#desktop-macos-code-signing).
+**macOS** desktop signing reuses the **existing iOS `MATCH_*` and `ASC_*` secrets** — no desktop-specific secrets are required. The `macos` job in `desktop-release.yml` runs `fastlane mac release`, which fetches the App Store certs + provisioning profile via Fastlane match, resolves the "Apple Distribution" identity into `MACOS_SIGN_IDENTITY`, builds a Store-signed `.pkg` with `packageReleasePkg`, and uploads it to App Store Connect. See [macOS: Mac App Store](#macos-mac-app-store).
 
 **Windows** code signing is **not required** — the Microsoft Store signs MSIX packages on ingestion.
 
@@ -169,8 +170,7 @@ releaseStorePassword=YOUR_STORE_PASSWORD
 **Workflow:** `.github/workflows/desktop-release.yml`
 
 **What it does:**
-1. Builds native packages in parallel on three runners:
-   - `macos-15` — builds `.dmg` via `./gradlew :client:composeApp:packageReleaseDmg`
+1. The `build` job builds native packages in parallel on two runners:
    - `windows-latest` — builds `.msi` via `./gradlew :client:composeApp:packageReleaseMsi`
    - `ubuntu-latest` — builds `.deb` via `./gradlew :client:composeApp:packageReleaseDeb`
 
@@ -179,27 +179,31 @@ releaseStorePassword=YOUR_STORE_PASSWORD
    UI. R8/ProGuard minification is disabled for the release build type in
    `client/composeApp/build.gradle.kts`, so the binary is functionally identical to the old debug
    packaging — it just carries the release marker.
-2. On macOS, signs and notarizes the DMG (see [Code signing](#desktop-macos-code-signing) below)
+2. The `macos` job (tag pushes only) runs `fastlane mac release`, which builds a Store-signed `.pkg`
+   via `./gradlew :client:composeApp:packageReleasePkg` and uploads it to App Store Connect (see
+   [macOS: Mac App Store](#macos-mac-app-store)).
 3. On Windows, also builds the app image (`createReleaseDistributable`) and packs an MSIX via `makeappx`
-4. Uploads each package (and, on Windows, the MSIX) as build artifacts
-5. Generates `latest.json` (the in-app update feed) with the macOS + Linux download URLs — **Windows is intentionally omitted** because it updates via the Store
-6. Creates a GitHub Release from the tag with the packages + `latest.json` attached
+4. Uploads the Windows/Linux packages (and the MSIX) as build artifacts. macOS emits no GitHub-Release
+   artifact — its `.pkg` goes straight to App Store Connect.
+5. Generates `latest.json` (the in-app update feed) with the **Linux** download URL only — macOS and
+   Windows are omitted because both ship via their app stores and the updater is a no-op there.
+6. Creates a GitHub Release from the tag with the Windows/Linux packages + `latest.json` attached
 7. Auto-generates release notes from commits since the last tag
 8. On tag pushes, the `publish-store` job submits the MSIX to the Microsoft Store via the MSStore CLI (no-ops until `STORE_PRODUCT_ID` is set)
 
-**Package configuration:** Native distribution settings (package name, version, vendor, platform-specific options) are in `client/composeApp/build.gradle.kts` under the `compose.desktop.application.nativeDistributions` block. The macOS `signing { }` / `notarization { }` blocks are gated on `MACOS_SIGN_IDENTITY` so local `packageDmg` works without a cert.
+**Package configuration:** Native distribution settings (package name, version, vendor, platform-specific options) are in `client/composeApp/build.gradle.kts` under the `compose.desktop.application.nativeDistributions` block. The macOS `signing { }` block and the provisioning-profile paths are gated on env vars (`MACOS_SIGN_IDENTITY`, `MACOS_PROVISIONING_PROFILE`) so a local `packageReleasePkg` works unsigned without certs.
 
-#### In-app updater (macOS + Linux)
+#### In-app updater (Linux only)
 
-The desktop app embeds `DesktopUpdater` (`client/composeApp/src/jvmMain/.../update/`). On launch it polls the stable feed URL:
+The desktop app embeds `DesktopUpdater` (`client/composeApp/src/jvmMain/.../update/`). On Linux it polls the stable feed URL on launch:
 
 ```
 https://github.com/Plus-Mobile-Apps/chef-mate/releases/latest/download/latest.json
 ```
 
-GitHub always serves `releases/latest/download/<asset>` from the newest non-prerelease release, so no separate hosting is needed. The updater compares the feed `version` against `BuildConfig.VERSION_NAME`; if newer, it surfaces a banner to download the platform installer and open it. It is a **no-op on Windows** by design.
+GitHub always serves `releases/latest/download/<asset>` from the newest non-prerelease release, so no separate hosting is needed. The updater compares the feed `version` against `BuildConfig.VERSION_NAME`; if newer, it surfaces a banner to download the `.deb` and open it. It is a **no-op on macOS and Windows** by design — both ship through app stores that forbid self-updating and sandbox the install.
 
-This is a *signed-installer* model (download + run the new signed package), **not** in-place jar patching — patching jars inside the bundle would invalidate the macOS notarization staple.
+This is a *signed-installer* model (download + run the new signed package), **not** in-place jar patching.
 
 **`latest.json` shape:**
 
@@ -208,22 +212,10 @@ This is a *signed-installer* model (download + run the new signed package), **no
   "version": "1.8.0",
   "notesUrl": "https://github.com/Plus-Mobile-Apps/chef-mate/releases/tag/v1.8.0",
   "downloads": {
-    "macos": "https://github.com/.../releases/download/v1.8.0/Chef-Mate-1.8.0.dmg",
     "linux": "https://github.com/.../releases/download/v1.8.0/chef-mate_1.8.0_amd64.deb"
   }
 }
 ```
-
-#### macOS notarization
-
-The `.p12` for `MACOS_CERT_P12_BASE64` is a "Developer ID Application" certificate exported from Keychain Access (include the private key). Export and encode:
-
-```bash
-# In Keychain Access: right-click the "Developer ID Application" cert → Export → .p12
-base64 -i DeveloperID.p12 | pbcopy   # store as MACOS_CERT_P12_BASE64
-```
-
-`APPLE_APP_PASSWORD` is an app-specific password generated at <https://appleid.apple.com> (Sign-In and Security → App-Specific Passwords). Without notarization, Gatekeeper refuses to launch the app ("damaged / cannot be opened").
 
 ---
 
@@ -375,67 +367,62 @@ The MSIX is then built by laying that directory next to an `AppxManifest.xml` an
 
 > **Status:** the MSIX packaging steps and `publish-store` job are wired into `desktop-release.yml`. The MSIX builds on every run (with placeholder identity until the Store secrets are set); submission only fires on tag pushes once `STORE_PRODUCT_ID` is configured. The unsigned `.msi` is still built as a fallback/sideload artifact.
 
-#### Desktop macOS code signing
+## macOS: Mac App Store
 
-The macOS DMG is signed with a **Developer ID Application** certificate and notarized so it opens without a Gatekeeper warning. Windows and Linux packages remain unsigned.
+macOS ships through the **Mac App Store** as a sandboxed `.pkg` uploaded to App Store Connect
+(TestFlight → release). The direct Developer-ID DMG has been retired. Compose builds the Store `.pkg`
+with `macOS { appStore = true }` in `client/composeApp/build.gradle.kts` (`packageReleasePkg`); the
+`macos` job in `desktop-release.yml` runs `fastlane mac release` to sign, build, and upload it.
 
-**Certificate:** Stored and fetched via Fastlane `match` (`type: "developer_id"`) from the same private certificates repo used for iOS. The `mac certificates` lane (`fastlane/Fastfile`) runs `setup_ci` + `match` (readonly) to import the cert into a temporary CI keychain.
+**Bundle ID:** `com.plusmobileapps.chefmate.ChefMate` — the **same** as the iOS app id, so macOS ships
+under the one "Chef Mate" App Store record (Universal Purchase / a single product page across iOS +
+Mac) rather than a separate listing. The App ID already exists from iOS; you enable the **macOS
+platform** on the existing app record instead of creating a new one.
 
-**Signing:** Enabled in `client/composeApp/build.gradle.kts` via the `macOS { signing { ... } }` block, gated on the `MACOS_SIGN_IDENTITY` env var (resolved in CI from the keychain). Local builds without that var stay unsigned. Compose Desktop applies hardened runtime + default entitlements automatically when signing.
+> The App ID's iOS capabilities (App Groups, Associated Domains, share-extension/watch relationships)
+> carry into the macOS App Store provisioning profile. That's normally fine — the profile is a
+> superset and the Mac entitlements simply don't claim them — but it's worth confirming the profile
+> builds cleanly on the first `mac certificates` run.
 
-**Notarization:** The workflow submits the built DMG with `xcrun notarytool submit --wait` and then `xcrun stapler staple`, reusing the App Store Connect API key (`ASC_*` secrets) — no app-specific password needed.
+**Certificates & profile** (fetched via Fastlane `match`, `type: "appstore"`, `platform: "macos"`,
+from the same private certificates repo used for iOS):
+- **Apple Distribution** application cert — signs the `.app` bundle.
+- **Mac Installer Distribution** cert — signs the `.pkg` installer (fetched via match
+  `additional_cert_types: ["mac_installer_distribution"]`).
+- **Mac App Store provisioning profile** — embedded in the `.app`. The `mac release` lane passes its
+  path to Compose via `MACOS_PROVISIONING_PROFILE` / `MACOS_RUNTIME_PROVISIONING_PROFILE`.
 
-**One-time bootstrap:** Apple does **not** allow creating a Developer ID Application certificate via
-the App Store Connect API (only the Account Holder can, through an interactive session), so the cert
-must be created manually once and then imported into the Match repo:
+**Signing:** The `mac release` lane resolves the "Apple Distribution" identity from the keychain into
+`MACOS_SIGN_IDENTITY`. jpackage signs the app with that identity (passed as
+`--mac-signing-key-user-name`) and derives the matching "3rd Party Mac Developer Installer" identity
+from the keychain to sign the `.pkg`. Local builds without these env vars stay unsigned.
 
-1. Create the cert as the Account Holder — in Xcode: **Settings → Accounts → Manage Certificates → +
-   → Developer ID Application** (or via developer.apple.com → Certificates). This also places the
-   cert + private key in your login keychain.
-2. Download the certificate `.cer` (developer.apple.com → Certificates → the Developer ID Application
-   row → Download), e.g. `developerID_application.cer`.
-3. Export the private key from **Keychain Access** as a `.p12` (any password), then convert it to the
-   exact format `match` + `security import` expect — a **password-less PKCS#1 PEM key**:
+**App Sandbox (mandatory):** The Mac App Store requires App Sandbox. Entitlements live in
+`packaging/macos/entitlements.plist` (app: sandbox + `network.client` + `files.user-selected.read-write`
++ JVM hardened-runtime exceptions) and `packaging/macos/runtime-entitlements.plist` (the nested JRE:
+sandbox-inherit + JVM exceptions), wired via `entitlementsFile` / `runtimeEntitlementsFile`.
 
+> **Known risk — validate before the first real submission.** This is a bundled-JRE app that uses a
+> JavaFX WebView (the recipe browser), native file dialogs, and Supabase networking. Sandboxed
+> JVM/JavaFX apps are a known source of runtime breakage and App Store review rejection, and the
+> `disable-library-validation` / `allow-unsigned-executable-memory` entitlements are scrutinized in
+> review. **Smoke-test the signed `.pkg` sandboxed** (WebView loads, file open/save works, sign-in +
+> sync work, no sandbox denials in Console.app) before submitting, and be prepared to iterate on the
+> entitlements or face rejection.
+
+**One-time bootstrap:**
+1. In **App Store Connect → the existing "Chef Mate" app → add the macOS platform** (Universal
+   Purchase) so Mac builds land under the same record. No new app record or App ID is created — both
+   already exist from iOS. The App ID needs **no extra capabilities** enabled (App Sandbox, network,
+   and file access come from the build's entitlements, not the portal).
+2. Generate the macOS certs + provisioning profile (run locally, read-write match):
    ```bash
-   # strip the p12 password (OpenSSL 3 needs -legacy for Apple's RC2 container)
-   openssl pkcs12 -legacy -in developer_id.p12 -nodes -nocerts -out /tmp/nopass.pem   # enter export pw
-   # emit a bare PKCS#1 key ("BEGIN RSA PRIVATE KEY"); PKCS#8 ("BEGIN PRIVATE KEY") is rejected as
-   # "Unknown format" when the file has a .p12 extension, and bag-attribute preambles break pairing
-   openssl rsa -traditional -in /tmp/nopass.pem -out developer_id_key.p12
-   head -1 developer_id_key.p12   # MUST be: -----BEGIN RSA PRIVATE KEY-----
-   rm -f /tmp/nopass.pem
+   bundle exec fastlane mac certificates            # match only; the App ID already exists
    ```
+   (Pass `force:true` after enabling a new capability on the App ID to regenerate the profile.)
+3. From then on CI consumes the stored assets read-only inside `fastlane mac release`.
 
-   Why: `match` stores the key as `<id>.p12` and installs it in CI with `security import … -P ""`
-   (empty password). That only works if the file is a bare PKCS#1 PEM key — a real PKCS12 container
-   fails MAC verification (OpenSSL↔Apple empty-password mismatch), and a PKCS#8 key is "Unknown
-   format" under the `.p12` extension.
-
-4. Import both into the certificates repo. **Unset the ASC API key env vars first** — `match` reads
-   `APP_STORE_CONNECT_API_KEY` as its `api_key` option and fails with `'api_key' value must be a Hash`:
-
-   ```bash
-   unset APP_STORE_CONNECT_API_KEY APP_STORE_CONNECT_API_KEY_ID APP_STORE_CONNECT_API_ISSUER_ID
-   export MATCH_PASSWORD=<match repo passphrase>
-
-   bundle exec fastlane match import \
-     --type developer_id \
-     --git_url git@github.com:Plus-Mobile-Apps/certificates.git
-   # Certificate (.cer): developerID_application.cer
-   # Private Key (.p12): developer_id_key.p12
-   # Provisioning Profile: <press Enter — Developer ID apps use none>
-   ```
-
-CI then consumes the stored cert read-only via `fastlane mac certificates`.
-
-**Intermediate CA:** a Developer ID leaf only forms a *valid* codesigning identity when its issuing
-intermediate is in the keychain. CI runners lack it, so the correct one (subject
-`CN=Developer ID Certification Authority, OU=Apple Certification Authority` — **not** the G2
-intermediate) is vendored at `.github/certs/DeveloperIDCA.pem` and imported by the workflow. If you
-rotate to a cert issued by a different intermediate, replace that file to match the new leaf's issuer.
-
-**Reused secrets:** `MATCH_PASSWORD`, `MATCH_GIT_BASIC_AUTHORIZATION`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY` (no new secrets required).
+**Reused secrets:** `MATCH_PASSWORD`, `MATCH_GIT_BASIC_AUTHORIZATION`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY`, `APPLE_TEAM_ID` (no new secrets required).
 
 ---
 
@@ -612,7 +599,7 @@ bundle exec fastlane ios release
 # Desktop — build release packages for your current OS (hides developer-only UI).
 # Output lands in build/compose/binaries/main-release/. Use the plain package* tasks
 # only for local debug builds where you want the Developer Settings row visible.
-./gradlew :client:composeApp:packageReleaseDmg    # macOS
+./gradlew :client:composeApp:packageReleasePkg    # macOS (Mac App Store .pkg; unsigned without certs)
 ./gradlew :client:composeApp:packageReleaseMsi    # Windows
 ./gradlew :client:composeApp:packageReleaseDeb    # Linux
 ```
@@ -663,7 +650,7 @@ CLI flags are also available for non-interactive use:
 
 ## Known Limitations
 
-- **Windows MSI and Linux DEB are unsigned** — only the macOS DMG is signed/notarized (see [Desktop macOS code signing](#desktop-macos-code-signing)). Windows ships via the Microsoft Store (Store-signed), so this only affects the fallback MSI.
+- **Windows MSI and Linux DEB are unsigned.** macOS ships a Store-signed `.pkg` to the Mac App Store (see [macOS: Mac App Store](#macos-mac-app-store)) and Windows ships via the Microsoft Store (Store-signed), so this only affects the fallback MSI and the Linux DEB.
 - **MSIX packaging logo assets are placeholders** — CI reuses the app icon for all three Store logos, which won't pass Store certification. Replace with correctly-sized PNGs (see [Windows: Microsoft Store (MSIX)](#windows-microsoft-store-msix)).
 - **MSStore CLI is in preview** — the `publish-store` job's action ref and `publish` flags should be verified against current docs on first real submission.
 - **Store releases lag** — Microsoft Store certification review delays Windows releases relative to the GitHub Release and mobile stores.

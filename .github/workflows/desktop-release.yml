@@ -13,10 +13,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-15
-            task: packageReleaseDmg
-            artifact-name: desktop-macos
-            artifact-path: client/composeApp/build/compose/binaries/main-release/dmg/*.dmg
           - os: windows-latest
             task: packageReleaseMsi
             artifact-name: desktop-windows
@@ -36,69 +32,12 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - uses: ruby/setup-ruby@v1
-        if: matrix.os == 'macos-15'
-        with:
-          ruby-version: "3.2"
-          bundler-cache: true
-
-      - name: Install signing certificate (macOS)
-        if: matrix.os == 'macos-15'
-        env:
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          APP_STORE_CONNECT_API_KEY: ${{ secrets.ASC_API_KEY }}
-          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
-          MATCH_GIT_URL: https://github.com/Plus-Mobile-Apps/certificates.git
-        run: bundle exec fastlane mac certificates
-
-      - name: Resolve signing identity (macOS)
-        if: matrix.os == 'macos-15'
-        run: |
-          # A Developer ID leaf cert only forms a *valid* codesigning identity when its issuing
-          # "Developer ID Certification Authority" intermediate is present to complete the chain to
-          # Apple Root CA. CI runners don't ship it, so import the vendored copy (this cert's issuer
-          # is OU=Apple Certification Authority, NOT the G2 intermediate).
-          security import .github/certs/DeveloperIDCA.pem -k "$HOME/Library/Keychains/login.keychain-db" 2>/dev/null || true
-          TMP_KEYCHAIN="$HOME/Library/Keychains/fastlane_tmp_keychain-db"
-          [ -f "$TMP_KEYCHAIN" ] && security import .github/certs/DeveloperIDCA.pem -k "$TMP_KEYCHAIN" 2>/dev/null || true
-
-          IDENTITY=$(security find-identity -v -p codesigning \
-            | grep "Developer ID Application" | head -1 \
-            | sed -E 's/.*"(.*)"/\1/')
-          echo "Resolved signing identity: '$IDENTITY'"
-          echo "MACOS_SIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
-
       - name: Build native package
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           BUGSNAG_API_KEY: ${{ secrets.BUGSNAG_API_KEY }}
         run: ./gradlew :client:composeApp:${{ matrix.task }}
-
-      - name: Dump codesign logs on failure (macOS)
-        if: failure() && matrix.os == 'macos-15'
-        run: |
-          echo "== compose signing logs =="
-          for f in client/composeApp/build/compose/logs/createReleaseDistributable/*.txt; do
-            echo "----- $f -----"
-            cat "$f" || true
-          done
-
-      - name: Notarize and staple DMG (macOS)
-        if: matrix.os == 'macos-15'
-        env:
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
-        run: |
-          echo "$ASC_API_KEY" | base64 -d > AuthKey.p8
-          DMG=$(ls client/composeApp/build/compose/binaries/main-release/dmg/*.dmg | head -1)
-          xcrun notarytool submit "$DMG" \
-            --key AuthKey.p8 --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID" --wait
-          xcrun stapler staple "$DMG"
-          rm -f AuthKey.p8
 
       - name: Build app image for MSIX (Windows)
         if: runner.os == 'Windows'
@@ -166,6 +105,45 @@ jobs:
           name: desktop-windows-msix
           path: ${{ runner.temp }}/ChefMate.msix
 
+  # Builds the Mac App Store .pkg and uploads it to App Store Connect. Tag pushes only — every
+  # upload creates a new build in App Store Connect, so we don't want manual dispatches doing it.
+  # (To test the signed .pkg build without uploading, run `bundle exec fastlane mac release` locally
+  # after generating the certs once with `bundle exec fastlane mac certificates`.)
+  macos:
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+
+      - name: Build .pkg and upload to App Store Connect
+        # The fastlane mac release lane fetches the App Store certs + provisioning profile via match,
+        # resolves the signing identity, runs packageReleasePkg (BuildKonfig reads the Supabase/
+        # Bugsnag secrets at Gradle configuration time), then uploads the .pkg to App Store Connect.
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.ASC_API_KEY }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+          MATCH_GIT_URL: https://github.com/Plus-Mobile-Apps/certificates.git
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          BUGSNAG_API_KEY: ${{ secrets.BUGSNAG_API_KEY }}
+        run: bundle exec fastlane mac release
+
   release:
     needs: build
     # Only publish a GitHub Release for tag pushes; a manual workflow_dispatch on a
@@ -181,28 +159,18 @@ jobs:
           merge-multiple: true
 
       - name: Generate update feed
-        # Windows is intentionally omitted: it ships via the Microsoft Store and updates there,
-        # so the in-app updater is inert on Windows and never reads this feed.
+        # Only Linux reads this feed. macOS ships via the Mac App Store and Windows via the
+        # Microsoft Store; the in-app updater is a no-op on both, so neither appears here.
         run: |
           set -euo pipefail
           VERSION="${GITHUB_REF_NAME#v}"
           BASE="https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}"
-          # Compose names the macOS artifact "Chef Mate-<ver>.dmg" (packageName has a space).
-          # GitHub rewrites spaces to periods on asset upload, so a feed URL built from the raw
-          # local name 404s at download time. Rename the space out *before* both feed generation
-          # and the release upload (files: artifacts/*) so the served name matches the feed exactly.
-          DMG=$(cd artifacts && ls *.dmg)
-          if [ "$DMG" != "${DMG// /.}" ]; then
-            (cd artifacts && mv "$DMG" "${DMG// /.}")
-            DMG="${DMG// /.}"
-          fi
           DEB=$(cd artifacts && ls *.deb)
           cat > artifacts/latest.json <<EOF
           {
             "version": "${VERSION}",
             "notesUrl": "https://github.com/${{ github.repository }}/releases/tag/${GITHUB_REF_NAME}",
             "downloads": {
-              "macos": "${BASE}/${DMG}",
               "linux": "${BASE}/${DEB}"
             }
           }

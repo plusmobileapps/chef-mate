@@ -254,7 +254,7 @@ compose.desktop {
         // Pass deep link URI as argument when app is launched via URL scheme
         args += listOf()
 
-        // Ship distributables via the release packaging tasks (packageReleaseDmg/Msi/Deb) so the
+        // Ship distributables via the release packaging tasks (packageReleasePkg/Msi/Deb) so the
         // requested task name contains "Release". That marker is what flips BuildConfig.IS_DEBUG to
         // false and hides the developer-only UI — see client/shared/build.gradle.kts. Keep
         // R8/ProGuard
@@ -266,7 +266,10 @@ compose.desktop {
         }
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            // macOS ships through the Mac App Store as a signed .pkg (Pkg, not Dmg — the direct
+            // Developer ID DMG was retired in favor of Store distribution). Msi/Deb are ignored on
+            // the OSes they don't apply to, so this one list is correct for all three legs.
+            targetFormats(TargetFormat.Pkg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Chef Mate"
             packageVersion = "1.9.24"
             description = "Chef Mate - Your AI Cooking Assistant"
@@ -307,19 +310,47 @@ compose.desktop {
                 "jdk.xml.dom",
             )
 
-            // macOS configuration
+            // macOS configuration — Mac App Store distribution
             macOS {
                 packageVersion = "1.9.24"
-                bundleID = "com.plusmobileapps.chefmate"
+                // Matches the iOS app id so macOS joins the same App Store record (Universal
+                // Purchase / one "Chef Mate" listing), NOT the Android-style id used above.
+                bundleID = "com.plusmobileapps.chefmate.ChefMate"
                 dockName = "Chef Mate"
+                // Mac App Store build: emits a Store-ready .pkg and makes jpackage apply the
+                // App Store signing/sandbox conventions (--mac-app-store).
+                // LSApplicationCategoryType
+                // is required for Store submission.
+                appStore = true
+                appCategory = "public.app-category.food-and-drink"
 
                 iconFile.set(project.file("src/jvmMain/resources/app-icon.icns"))
 
-                // Sign with a Developer ID Application certificate when an identity is
-                // provided via env var (set in CI). Left unset for local/unsigned builds.
-                // Hardened runtime + the default Compose entitlements (allow-jit,
-                // unsigned-executable-memory, disable-library-validation) are applied
-                // automatically when signing is enabled — required for notarization.
+                // App Sandbox is mandatory for the Mac App Store. The app and the bundled JRE are
+                // signed as separate nested bundles, so each gets its own entitlements: the app
+                // opts into the sandbox + the capabilities it actually uses (network client, user-
+                // selected files); the runtime inherits the sandbox so the JVM stays contained.
+                entitlementsFile.set(rootProject.file("packaging/macos/entitlements.plist"))
+                runtimeEntitlementsFile.set(
+                    rootProject.file("packaging/macos/runtime-entitlements.plist")
+                )
+
+                // Mac App Store provisioning profiles. Fetched by Fastlane match in CI and passed
+                // by
+                // path via env vars; unset for local/unsigned builds. Both are registered against
+                // the same App ID — the runtime profile signs the nested JRE bundle.
+                System.getenv("MACOS_PROVISIONING_PROFILE")?.let {
+                    provisioningProfile.set(rootProject.file(it))
+                }
+                System.getenv("MACOS_RUNTIME_PROVISIONING_PROFILE")?.let {
+                    runtimeProvisioningProfile.set(rootProject.file(it))
+                }
+
+                // Sign with the App Store distribution identity ("Apple Distribution: …") when one
+                // is
+                // provided via env var (resolved by the Fastlane mac lane in CI). Left unset for
+                // local/unsigned builds. jpackage derives the matching "3rd Party Mac Developer
+                // Installer" identity from the keychain to sign the .pkg installer.
                 signing {
                     sign.set(System.getenv("MACOS_SIGN_IDENTITY") != null)
                     identity.set(System.getenv("MACOS_SIGN_IDENTITY"))
