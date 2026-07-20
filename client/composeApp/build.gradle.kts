@@ -170,6 +170,7 @@ kotlin {
             implementation(projects.client.subscription.testing)
             implementation(projects.client.recipe.categories.implRobots)
             implementation(projects.client.grocery.autocomplete.implRobots)
+            implementation(projects.client.grocery.categoryRules.implRobots)
             implementation(projects.client.grocery.core.implRobots)
             implementation(projects.client.recipe.core.implRobots)
             implementation(projects.client.recipe.list.implRobots)
