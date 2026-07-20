@@ -90,6 +90,10 @@ include(":client:grocery:autocomplete:impl-robots")
 
 include(":client:grocery:autocomplete:public")
 
+include(":client:grocery:category-rules:impl")
+
+include(":client:grocery:category-rules:public")
+
 include(":client:grocery:core:impl")
 
 include(":client:grocery:core:impl-robots")

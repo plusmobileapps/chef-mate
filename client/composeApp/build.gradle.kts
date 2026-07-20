@@ -94,6 +94,8 @@ kotlin {
             api(projects.client.featureflag.public)
             api(projects.client.grocery.autocomplete.impl)
             api(projects.client.grocery.autocomplete.public)
+            api(projects.client.grocery.categoryRules.impl)
+            api(projects.client.grocery.categoryRules.public)
             api(projects.client.grocery.data.impl)
             api(projects.client.grocery.core.impl)
             api(projects.client.grocery.core.public)
