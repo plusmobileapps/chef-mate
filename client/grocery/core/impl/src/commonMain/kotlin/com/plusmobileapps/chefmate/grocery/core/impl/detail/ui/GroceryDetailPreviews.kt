@@ -10,10 +10,15 @@ import com.plusmobileapps.chefmate.grocery.data.GroceryItem
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 
-private fun groceryDetailBloc(item: GroceryItem): GroceryDetailBloc =
+private fun groceryDetailBloc(
+    item: GroceryItem,
+    alwaysFileHere: Boolean = false,
+): GroceryDetailBloc =
     object : GroceryDetailBloc {
         override val models =
-            MutableStateFlow<GroceryDetailBloc.Model>(GroceryDetailBloc.Model.Loaded(item))
+            MutableStateFlow<GroceryDetailBloc.Model>(
+                GroceryDetailBloc.Model.Loaded(item = item, alwaysFileHere = alwaysFileHere)
+            )
 
         override fun onGroceryNameChanged(name: String) = Unit
 
@@ -55,6 +60,10 @@ val previewGroceryDetailBlocPurchased: GroceryDetailBloc =
 /** Item linked to a recipe — exercises the "From: …" source line. */
 val previewGroceryDetailBlocFromRecipe: GroceryDetailBloc =
     groceryDetailBloc(sampleItem.copy(recipeName = "Pancakes"))
+
+/** "Always file here" rule active — exercises the checked category-rule row. */
+val previewGroceryDetailBlocAlwaysFileHere: GroceryDetailBloc =
+    groceryDetailBloc(sampleItem, alwaysFileHere = true)
 
 /** Loading state — exercises the spinner. */
 val previewGroceryDetailBlocLoading: GroceryDetailBloc =
