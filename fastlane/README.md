@@ -36,7 +36,7 @@ Build release AAB and upload to Play Store internal track
 
 Generate/refresh the Mac App Store certs + provisioning profile (read-write match).
 
-Run once locally after creating the macOS App Store Connect record.
+Run once locally after enabling the macOS platform on the Chef Mate App Store record.
 
 Pass force:true to regenerate the profile after enabling a new capability on the App ID.
 

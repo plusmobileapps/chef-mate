@@ -374,8 +374,15 @@ macOS ships through the **Mac App Store** as a sandboxed `.pkg` uploaded to App 
 with `macOS { appStore = true }` in `client/composeApp/build.gradle.kts` (`packageReleasePkg`); the
 `macos` job in `desktop-release.yml` runs `fastlane mac release` to sign, build, and upload it.
 
-**Bundle ID:** `com.plusmobileapps.chefmate` — distinct from the iOS app id
-`com.plusmobileapps.chefmate.ChefMate`. It needs its own App Store Connect record.
+**Bundle ID:** `com.plusmobileapps.chefmate.ChefMate` — the **same** as the iOS app id, so macOS ships
+under the one "Chef Mate" App Store record (Universal Purchase / a single product page across iOS +
+Mac) rather than a separate listing. The App ID already exists from iOS; you enable the **macOS
+platform** on the existing app record instead of creating a new one.
+
+> The App ID's iOS capabilities (App Groups, Associated Domains, share-extension/watch relationships)
+> carry into the macOS App Store provisioning profile. That's normally fine — the profile is a
+> superset and the Mac entitlements simply don't claim them — but it's worth confirming the profile
+> builds cleanly on the first `mac certificates` run.
 
 **Certificates & profile** (fetched via Fastlane `match`, `type: "appstore"`, `platform: "macos"`,
 from the same private certificates repo used for iOS):
@@ -404,11 +411,13 @@ sandbox-inherit + JVM exceptions), wired via `entitlementsFile` / `runtimeEntitl
 > entitlements or face rejection.
 
 **One-time bootstrap:**
-1. In **App Store Connect → Apps → +**, create a new **macOS** app for bundle id
-   `com.plusmobileapps.chefmate`.
-2. Register the App ID and generate the certs + provisioning profile (run locally, read-write match):
+1. In **App Store Connect → the existing "Chef Mate" app → add the macOS platform** (Universal
+   Purchase) so Mac builds land under the same record. No new app record or App ID is created — both
+   already exist from iOS. The App ID needs **no extra capabilities** enabled (App Sandbox, network,
+   and file access come from the build's entitlements, not the portal).
+2. Generate the macOS certs + provisioning profile (run locally, read-write match):
    ```bash
-   bundle exec fastlane mac certificates            # registers the App ID via produce, then match
+   bundle exec fastlane mac certificates            # match only; the App ID already exists
    ```
    (Pass `force:true` after enabling a new capability on the App ID to regenerate the profile.)
 3. From then on CI consumes the stored assets read-only inside `fastlane mac release`.

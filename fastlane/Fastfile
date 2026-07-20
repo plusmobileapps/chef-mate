@@ -22,9 +22,10 @@ platform :android do
 end
 
 platform :mac do
-  # The desktop app's bundle id (matches `macOS.bundleID` in composeApp/build.gradle.kts). Distinct
-  # from the iOS app id `com.plusmobileapps.chefmate.ChefMate`.
-  MAC_APP_IDENTIFIER = "com.plusmobileapps.chefmate"
+  # The desktop app's bundle id (matches `macOS.bundleID` in composeApp/build.gradle.kts). It is the
+  # SAME as the iOS app id so macOS ships under the one "Chef Mate" App Store record (Universal
+  # Purchase). The App ID already exists (created for iOS), so no `produce` registration is needed.
+  MAC_APP_IDENTIFIER = "com.plusmobileapps.chefmate.ChefMate"
 
   def asc_api_key
     # Build the App Store Connect API key Hash `match`/`upload_to_app_store` expect. Running match
@@ -55,22 +56,14 @@ platform :mac do
   end
 
   desc "Generate/refresh the Mac App Store certs + provisioning profile (read-write match)."
-  desc "Run once locally after creating the macOS App Store Connect record."
+  desc "Run once locally after enabling the macOS platform on the Chef Mate App Store record."
   desc "Pass force:true to regenerate the profile after enabling a new capability on the App ID."
   lane :certificates do |options|
     api_key = asc_api_key
 
-    # match creates provisioning profiles but not App IDs, so register the desktop bundle id on the
-    # Developer Portal first. skip_itc — the App Store Connect record is created manually in the
-    # portal (see docs/deployment.md). Idempotent once the App ID exists.
-    produce(
-      app_identifier: MAC_APP_IDENTIFIER,
-      app_name: "Chef Mate",
-      platform: "osx",
-      skip_itc: true,
-      team_id: ENV["TEAM_ID"] || "Y89258SF5P",
-    )
-
+    # The App ID already exists (shared with iOS), so no `produce` registration is needed — match
+    # only mints the macOS App Store provisioning profile + fetches the certs for it. If the App ID
+    # gained a capability, pass force:true to regenerate the profile.
     fetch_mac_app_store_signing(api_key, readonly: false, force: options.fetch(:force, false))
   end
 

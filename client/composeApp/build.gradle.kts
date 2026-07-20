@@ -313,7 +313,9 @@ compose.desktop {
             // macOS configuration — Mac App Store distribution
             macOS {
                 packageVersion = "1.9.24"
-                bundleID = "com.plusmobileapps.chefmate"
+                // Matches the iOS app id so macOS joins the same App Store record (Universal
+                // Purchase / one "Chef Mate" listing), NOT the Android-style id used above.
+                bundleID = "com.plusmobileapps.chefmate.ChefMate"
                 dockName = "Chef Mate"
                 // Mac App Store build: emits a Store-ready .pkg and makes jpackage apply the
                 // App Store signing/sandbox conventions (--mac-app-store).
