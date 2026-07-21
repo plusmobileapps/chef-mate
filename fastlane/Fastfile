@@ -39,16 +39,21 @@ platform :mac do
   end
 
   # Fetch (or generate) the Mac App Store signing assets into the keychain:
-  #   * "Apple Distribution" application cert  -> signs the .app bundle
-  #   * "Mac Installer Distribution" cert      -> signs the .pkg installer
-  #   * the Mac App Store provisioning profile -> embedded in the .app
+  #   * "3rd Party Mac Developer Application" cert -> signs the .app bundle
+  #   * "3rd Party Mac Developer Installer" cert   -> signs the .pkg installer
+  #   * the Mac App Store provisioning profile     -> embedded in the .app
   # Read-only in CI; run the certificates lane (readonly:false) once to create and store them.
+  #
+  # generate_apple_certs: false forces the LEGACY, platform-specific cert types instead of the
+  # unified "Apple Distribution" cert. Compose's MacSigner only understands the legacy
+  # "3rd Party Mac Developer Application:" name, so the modern unified cert can't sign the app.
   def fetch_mac_app_store_signing(api_key, readonly:, force: false)
     match(
       type: "appstore",
       platform: "macos",
       app_identifier: MAC_APP_IDENTIFIER,
       additional_cert_types: ["mac_installer_distribution"],
+      generate_apple_certs: false,
       readonly: readonly,
       force: force,
       api_key: api_key,
@@ -75,14 +80,27 @@ platform :mac do
 
     fetch_mac_app_store_signing(api_key, readonly: true)
 
-    # jpackage signs the app with the identity we pass as --mac-signing-key-user-name (Compose's
-    # macOS.signing.identity) and derives the matching "3rd Party Mac Developer Installer" identity
-    # from the keychain to sign the .pkg. Resolve the "Apple Distribution" identity match imported.
+    # Resolve the BARE cert name (org + team, no prefix). Compose's MacSigner signs the .app with
+    # "3rd Party Mac Developer Application: <name>" (it prepends that prefix in App Store mode), and
+    # jpackage signs the .pkg installer with "3rd Party Mac Developer Installer: <name>" (via
+    # --mac-signing-key-user-name). Passing the bare name lets each tool add its own prefix.
+    #
+    # IMPORTANT: Compose does NOT understand the unified "Apple Distribution" cert name — it only
+    # matches "3rd Party Mac Developer Application:". The App ID therefore needs a **Mac App
+    # Distribution** cert, which `fastlane mac certificates` fetches for platform macos.
     identity = sh(
-      "security find-identity -v -p codesigning | grep 'Apple Distribution' | head -1 | " \
-      "sed -E 's/.*\"(.*)\"/\\1/'"
+      "security find-identity -v -p codesigning | " \
+      "grep '3rd Party Mac Developer Application' | head -1 | " \
+      "sed -E 's/.*\"3rd Party Mac Developer Application: (.*)\"/\\1/'"
     ).strip
-    UI.user_error!("No 'Apple Distribution' signing identity found in keychain") if identity.empty?
+    if identity.empty?
+      UI.user_error!(
+        "No '3rd Party Mac Developer Application' certificate in the keychain. Compose cannot sign " \
+        "a Mac App Store build with the unified 'Apple Distribution' cert — create a 'Mac App " \
+        "Distribution' certificate (developer.apple.com > Certificates) and re-run " \
+        "`bundle exec fastlane mac certificates`."
+      )
+    end
 
     # match writes the .provisionprofile to disk and exposes its path via a sigh_* env var. The
     # macOS key carries a `_macos` segment; fall back to the unsuffixed name across fastlane versions.

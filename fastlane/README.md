@@ -63,6 +63,8 @@ Generate/refresh signing certificates and provisioning profiles (read-write matc
 
 Run this once after adding an app id (e.g. the watch app) so its profile is registered.
 
+Pass force:true to regenerate profiles after enabling a new capability on an App ID.
+
 ### ios release
 
 ```sh
