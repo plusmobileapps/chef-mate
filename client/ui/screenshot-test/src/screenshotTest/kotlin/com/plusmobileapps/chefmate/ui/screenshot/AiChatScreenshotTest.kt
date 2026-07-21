@@ -45,6 +45,23 @@ private fun AiChatPeekScreenshot(bloc: AiChatBloc, darkTheme: Boolean = false) {
     }
 }
 
+/**
+ * Renders the sheet dragged up to full height — the app bar drops the back arrow and carries
+ * History + a Close (X) on the right, with the input anchored at the bottom.
+ */
+@Composable
+private fun AiChatExpandedScreenshot(bloc: AiChatBloc, darkTheme: Boolean = false) {
+    ChefMateTheme(darkTheme = darkTheme) {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            CompositionLocalProvider(
+                LocalAiChatPresentation provides AiChatPresentation.SheetExpanded
+            ) {
+                bloc.Content()
+            }
+        }
+    }
+}
+
 @PreviewTest
 @Preview(showBackground = true, heightDp = 900)
 @Composable
@@ -113,6 +130,20 @@ fun AiChatErrorLightScreenshot() {
 @Composable
 fun AiChatExtractingPillLightScreenshot() {
     AiChatScreenshot(bloc = previewAiChatBlocExtracting)
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+fun AiChatExpandedLightScreenshot() {
+    AiChatExpandedScreenshot(bloc = previewAiChatBlocWithRecipeContext)
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun AiChatExpandedDarkScreenshot() {
+    AiChatExpandedScreenshot(bloc = previewAiChatBlocWithRecipeContext, darkTheme = true)
 }
 
 @PreviewTest

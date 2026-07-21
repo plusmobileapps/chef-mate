@@ -40,6 +40,7 @@ import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.AssistChip
@@ -75,6 +76,7 @@ import androidx.compose.ui.unit.dp
 import chefmate.client.aichat.public.generated.resources.Res
 import chefmate.client.aichat.public.generated.resources.aichat_add_recipe
 import chefmate.client.aichat.public.generated.resources.aichat_attach_photo
+import chefmate.client.aichat.public.generated.resources.aichat_close
 import chefmate.client.aichat.public.generated.resources.aichat_done
 import chefmate.client.aichat.public.generated.resources.aichat_empty_description
 import chefmate.client.aichat.public.generated.resources.aichat_empty_title
@@ -110,25 +112,42 @@ fun AiChatScreen(bloc: AiChatBloc, modifier: Modifier = Modifier) {
         return
     }
 
-    PlusHeaderContainer(
-        modifier = modifier.fillMaxSize().testTag(AiChatTestTags.SCREEN),
-        data =
+    // In the expanded sheet there's no navigation stack to pop, so the app bar drops the back
+    // arrow and instead carries History plus a Close (X) on the right; the X dismisses the whole
+    // sheet (onBackClicked finishes the chat, which the host tears down). The standalone,
+    // full-screen chat (More tab) keeps its back arrow.
+    val headerData =
+        if (LocalAiChatPresentation.current == AiChatPresentation.SheetExpanded) {
+            PlusHeaderData.Parent(
+                title = Res.string.aichat_title.asTextData(),
+                trailingAccessory =
+                    PlusHeaderData.TrailingAccessory.Custom {
+                        HistoryButton(onClick = bloc::onHistoryClick)
+                        IconButton(
+                            onClick = bloc::onBackClicked,
+                            modifier = Modifier.testTag(AiChatTestTags.CLOSE_BUTTON),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = stringResource(Res.string.aichat_close),
+                            )
+                        }
+                    },
+            )
+        } else {
             PlusHeaderData.Child(
                 title = Res.string.aichat_title.asTextData(),
                 onBackClick = bloc::onBackClicked,
                 trailingAccessory =
                     PlusHeaderData.TrailingAccessory.Custom {
-                        IconButton(
-                            onClick = bloc::onHistoryClick,
-                            modifier = Modifier.testTag(AiChatTestTags.HISTORY_BUTTON),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.History,
-                                contentDescription = stringResource(Res.string.aichat_history),
-                            )
-                        }
+                        HistoryButton(onClick = bloc::onHistoryClick)
                     },
-            ),
+            )
+        }
+
+    PlusHeaderContainer(
+        modifier = modifier.fillMaxSize().testTag(AiChatTestTags.SCREEN),
+        data = headerData,
         scrollEnabled = false,
         content = {
             state.recipeContextTitle?.let { title ->
@@ -181,6 +200,17 @@ fun AiChatScreen(bloc: AiChatBloc, modifier: Modifier = Modifier) {
             )
         },
     )
+}
+
+/** Opens the conversation-history list; shared by the standalone and expanded-sheet app bars. */
+@Composable
+private fun HistoryButton(onClick: () -> Unit) {
+    IconButton(onClick = onClick, modifier = Modifier.testTag(AiChatTestTags.HISTORY_BUTTON)) {
+        Icon(
+            imageVector = Icons.Default.History,
+            contentDescription = stringResource(Res.string.aichat_history),
+        )
+    }
 }
 
 /**
