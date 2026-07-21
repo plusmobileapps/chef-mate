@@ -403,11 +403,12 @@ from the same private certificates repo used for iOS):
 `3rd Party Mac Developer Installer: ` (via `--mac-signing-key-user-name`) to sign the `.pkg`. Passing
 the bare name lets each tool add its own prefix. Local builds without these env vars stay unsigned.
 
-> With `generate_apple_certs: false`, `fastlane mac certificates` mints the legacy Mac App
-> Distribution cert automatically. If you'd previously generated the Apple Distribution profile, run
-> `bundle exec fastlane mac certificates force:true` once to regenerate the provisioning profile
-> against the legacy cert. The lane fails fast if the `3rd Party Mac Developer Application` cert is
-> missing.
+> **Getting the legacy cert (one-time, fiddly).** Apple no longer *issues* the "Mac App
+> Distribution" cert through the automated flow — even with `generate_apple_certs: false`, match
+> reuses the unified "Apple Distribution" cert unless the legacy cert already exists in the repo. So
+> it must be **created by hand once** and imported (see the one-time bootstrap below). After that,
+> `generate_apple_certs: false` makes match resolve to it and generate a matching profile. The lane
+> fails fast if the `3rd Party Mac Developer Application` cert is missing.
 
 **App Sandbox (mandatory):** The Mac App Store requires App Sandbox. Entitlements live in
 `packaging/macos/entitlements.plist` (app: sandbox + `network.client` + `files.user-selected.read-write`
@@ -427,12 +428,30 @@ sandbox-inherit + JVM exceptions), wired via `entitlementsFile` / `runtimeEntitl
    Purchase) so Mac builds land under the same record. No new app record or App ID is created — both
    already exist from iOS. The App ID needs **no extra capabilities** enabled (App Sandbox, network,
    and file access come from the build's entitlements, not the portal).
-2. Generate the macOS certs + provisioning profile (run locally, read-write match):
+2. Create the **Mac App Distribution** certificate by hand (match won't — see the note above):
+   - In **Keychain Access → Certificate Assistant → Request a Certificate from a Certificate
+     Authority** ("Saved to disk"), generate a CSR (this also puts the private key in your login
+     keychain).
+   - At developer.apple.com → Certificates → ➕ → **Mac App Distribution**, upload the CSR, download
+     the `.cer`, and double-click it to install.
+3. Import that cert + its key into the match repo (its key isn't there yet since you made it by hand).
+   The key must be a bare PKCS#1 PEM (same conversion the Developer ID cert used — see below), then:
    ```bash
-   bundle exec fastlane mac certificates            # match only; the App ID already exists
+   unset APP_STORE_CONNECT_API_KEY APP_STORE_CONNECT_API_KEY_ID APP_STORE_CONNECT_API_ISSUER_ID
+   export MATCH_PASSWORD=<match repo passphrase>
+   bundle exec fastlane match import --type appstore --platform macos \
+     --git_url git@github.com:Plus-Mobile-Apps/certificates.git
+   # Certificate (.cer): the Mac App Distribution cert; Private Key (.p12): the converted key;
+   # Provisioning Profile: leave empty (generated next).
    ```
-   (Pass `force:true` after enabling a new capability on the App ID to regenerate the profile.)
-3. From then on CI consumes the stored assets read-only inside `fastlane mac release`.
+4. Generate the Mac App Store provisioning profile against the imported cert (re-export the `ASC_*`
+   values first, since step 3 unset them):
+   ```bash
+   bundle exec fastlane mac certificates force:true
+   ```
+   Confirm the output installs `3rd Party Mac Developer Application` and the profile's Certificate
+   Name is that cert (not Apple Distribution).
+5. From then on CI consumes the stored assets read-only inside `fastlane mac release`.
 
 **Reused secrets:** `MATCH_PASSWORD`, `MATCH_GIT_BASIC_AUTHORIZATION`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY`, `APPLE_TEAM_ID` (no new secrets required).
 
