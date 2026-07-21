@@ -2,8 +2,12 @@
 
 package com.plusmobileapps.chefmate.root
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
@@ -16,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
 import com.arkivanov.decompose.FaultyDecomposeApi
@@ -110,7 +115,19 @@ private fun AiChatSheet(rootBloc: RootBloc) {
                 if (expanded) AiChatPresentation.SheetExpanded else AiChatPresentation.SheetPeek,
             LocalAiChatRequestExpand provides { expanded = true },
         ) {
-            currentChild.bloc.Content()
+            // Grow (and shrink) the sheet smoothly between the compact peek and the full-height
+            // chat instead of snapping. Anchoring the size change to the bottom keeps the input
+            // pinned to the bottom edge while the app bar and messages fill in above as it expands.
+            Box(
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .animateContentSize(
+                            animationSpec = tween(),
+                            alignment = Alignment.BottomCenter,
+                        )
+            ) {
+                currentChild.bloc.Content()
+            }
         }
     }
 }

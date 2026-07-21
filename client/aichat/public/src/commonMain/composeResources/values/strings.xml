@@ -4,6 +4,7 @@
     <string name="aichat_input_hint">Ask anything…</string>
     <string name="aichat_send">Send</string>
     <string name="aichat_history">Conversation history</string>
+    <string name="aichat_close">Close</string>
     <string name="aichat_add_recipe">Add recipe</string>
     <string name="aichat_attach_photo">Scan recipe from a photo</string>
     <string name="aichat_extracting_recipe">Extracting recipe…</string>
