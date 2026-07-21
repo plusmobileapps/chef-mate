@@ -126,17 +126,23 @@ platform :mac do
     ].first
     UI.user_error!("No .pkg produced by packageReleasePkg") if pkg.nil?
 
-    upload_to_app_store(
-      api_key: api_key,
-      app_identifier: MAC_APP_IDENTIFIER,
-      platform: "osx",
-      pkg: pkg,
-      skip_metadata: true,
-      skip_screenshots: true,
-      submit_for_review: false,
-      precheck_include_in_app_purchases: false,
-      force: true,
-    )
+    # Upload only when explicitly enabled (tag releases set MAC_UPLOAD=true). A manual
+    # workflow_dispatch builds + signs the .pkg to validate signing without creating an ASC build.
+    if ENV["MAC_UPLOAD"] == "true"
+      upload_to_app_store(
+        api_key: api_key,
+        app_identifier: MAC_APP_IDENTIFIER,
+        platform: "osx",
+        pkg: pkg,
+        skip_metadata: true,
+        skip_screenshots: true,
+        submit_for_review: false,
+        precheck_include_in_app_purchases: false,
+        force: true,
+      )
+    else
+      UI.important("MAC_UPLOAD != true — built and signed #{File.basename(pkg)}, skipping App Store upload.")
+    end
   end
 end
 
