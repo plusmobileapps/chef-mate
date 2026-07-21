@@ -387,10 +387,11 @@ platform** on the existing app record instead of creating a new one.
 **Certificates & profile** (fetched via Fastlane `match`, `type: "appstore"`, `platform: "macos"`,
 from the same private certificates repo used for iOS):
 - **Mac App Distribution** cert (CN `3rd Party Mac Developer Application: …`) — signs the `.app`
-  bundle. **Must be this cert, not the unified "Apple Distribution".** Compose's signer only matches
-  the legacy `3rd Party Mac Developer Application:` / `Developer ID Application:` names (true through
-  Compose 1.12.0-beta), so an "Apple Distribution" cert fails with `Could not find certificate … in
-  keychain []`.
+  bundle. **Must be this legacy cert, not the unified "Apple Distribution".** Compose's signer only
+  matches the legacy `3rd Party Mac Developer Application:` / `Developer ID Application:` names (true
+  through Compose 1.12.0-beta), so an "Apple Distribution" cert fails with `Could not find certificate
+  … in keychain []`. The lane passes **`generate_apple_certs: false`** to match so it mints this
+  legacy cert instead of the modern unified one.
 - **Mac Installer Distribution** cert (CN `3rd Party Mac Developer Installer: …`) — signs the `.pkg`
   installer (fetched via match `additional_cert_types: ["mac_installer_distribution"]`).
 - **Mac App Store provisioning profile** — embedded in the `.app`. The `mac release` lane passes its
@@ -402,9 +403,11 @@ from the same private certificates repo used for iOS):
 `3rd Party Mac Developer Installer: ` (via `--mac-signing-key-user-name`) to sign the `.pkg`. Passing
 the bare name lets each tool add its own prefix. Local builds without these env vars stay unsigned.
 
-> If your account only has the unified "Apple Distribution" cert, create a **Mac App Distribution**
-> certificate at developer.apple.com → Certificates and re-run `fastlane mac certificates`. The lane
-> fails fast with that instruction if the `3rd Party Mac Developer Application` cert is missing.
+> With `generate_apple_certs: false`, `fastlane mac certificates` mints the legacy Mac App
+> Distribution cert automatically. If you'd previously generated the Apple Distribution profile, run
+> `bundle exec fastlane mac certificates force:true` once to regenerate the provisioning profile
+> against the legacy cert. The lane fails fast if the `3rd Party Mac Developer Application` cert is
+> missing.
 
 **App Sandbox (mandatory):** The Mac App Store requires App Sandbox. Entitlements live in
 `packaging/macos/entitlements.plist` (app: sandbox + `network.client` + `files.user-selected.read-write`

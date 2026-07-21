@@ -39,16 +39,21 @@ platform :mac do
   end
 
   # Fetch (or generate) the Mac App Store signing assets into the keychain:
-  #   * "Apple Distribution" application cert  -> signs the .app bundle
-  #   * "Mac Installer Distribution" cert      -> signs the .pkg installer
-  #   * the Mac App Store provisioning profile -> embedded in the .app
+  #   * "3rd Party Mac Developer Application" cert -> signs the .app bundle
+  #   * "3rd Party Mac Developer Installer" cert   -> signs the .pkg installer
+  #   * the Mac App Store provisioning profile     -> embedded in the .app
   # Read-only in CI; run the certificates lane (readonly:false) once to create and store them.
+  #
+  # generate_apple_certs: false forces the LEGACY, platform-specific cert types instead of the
+  # unified "Apple Distribution" cert. Compose's MacSigner only understands the legacy
+  # "3rd Party Mac Developer Application:" name, so the modern unified cert can't sign the app.
   def fetch_mac_app_store_signing(api_key, readonly:, force: false)
     match(
       type: "appstore",
       platform: "macos",
       app_identifier: MAC_APP_IDENTIFIER,
       additional_cert_types: ["mac_installer_distribution"],
+      generate_apple_certs: false,
       readonly: readonly,
       force: force,
       api_key: api_key,
