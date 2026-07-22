@@ -10,6 +10,21 @@
     <key>com.apple.security.app-sandbox</key>
     <true/>
 
+    <!--
+      App Store / TestFlight identity. Xcode normally injects these into the signature from the
+      provisioning profile; jpackage signs with this static file instead, so they must be declared
+      here or Apple rejects the build ("signature … is missing an application identifier but has an
+      application identifier in the provisioning profile"). The values are the Team ID + the app's
+      bundle id — must match `macOS.bundleID` and the team the profile is issued to. The profile also
+      carries associated-domains / application-groups / keychain-access-groups (inherited from the
+      shared iOS App ID), but the desktop app doesn't use them, so they are intentionally NOT signed
+      in — only the identifiers have to match.
+    -->
+    <key>com.apple.application-identifier</key>
+    <string>Y89258SF5P.com.plusmobileapps.chefmate.ChefMate</string>
+    <key>com.apple.developer.team-identifier</key>
+    <string>Y89258SF5P</string>
+
     <!-- Outbound network: Supabase sync/auth, the update feed on Linux, Bugsnag, and the recipe
          browser's WebView all make client HTTP requests. -->
     <key>com.apple.security.network.client</key>
