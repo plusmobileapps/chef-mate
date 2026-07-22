@@ -1,4 +1,5 @@
 import java.util.Properties
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -275,6 +276,11 @@ compose.desktop {
             description = "Chef Mate - Your AI Cooking Assistant"
             vendor = "Plus Mobile Apps"
 
+            // Staged app resources. The macOS-arm64 subdir gets the sqlite-jdbc native lib
+            // (see `extractSqliteJdbcMacDylib` at the bottom of this file) so it ships inside the
+            // signed .app instead of being extracted to an unsigned temp file at runtime.
+            appResourcesRootDir.set(layout.buildDirectory.dir("appResources"))
+
             // jdk.unsupported.desktop provides jdk.swing.interop.SwingInterOpUtils, which
             // JavaFX's Swing interop (JFXPanel, used by the desktop browser's WebView) loads at
             // runtime. Without it the jlink/jpackage runtime image omits the class and the browser
@@ -383,3 +389,48 @@ compose.desktop {
         }
     }
 }
+
+// --- Bundle the sqlite-jdbc macOS native library into the signed app image ---
+// The Mac App Store build is sandboxed, which forbids loading code that isn't part of the signed
+// bundle. sqlite-jdbc (pulled by SQLDelight's JVM driver) otherwise extracts its native .dylib to a
+// temp dir at runtime and dlopen()s it, which the sandbox blocks ("could not verify … free of
+// malware"). Extract the arm64 .dylib from the sqlite-jdbc jar into the Compose app-resources dir
+// so
+// jpackage code-signs it into the bundle; DriverFactory.jvm.kt then points sqlite-jdbc at this copy
+// (org.sqlite.lib.path) so it loads the signed lib instead of extracting an unsigned one.
+val sqliteJdbcNative: Configuration by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+}
+
+dependencies {
+    // sqldelight-drivers-jvm (app.cash.sqldelight:sqlite-driver) pulls org.xerial:sqlite-jdbc.
+    sqliteJdbcNative(libs.sqldelight.drivers.jvm)
+}
+
+val extractSqliteJdbcMacDylib by
+    tasks.registering(Sync::class) {
+        val sqliteJdbcJars =
+            sqliteJdbcNative.incoming
+                .artifactView {
+                    componentFilter {
+                        it is ModuleComponentIdentifier && it.moduleIdentifier.name == "sqlite-jdbc"
+                    }
+                }
+                .files
+        from(sqliteJdbcJars.map { zipTree(it) }) {
+            include("org/sqlite/native/Mac/aarch64/libsqlitejdbc.dylib")
+            // Flatten into the Compose macos-arm64 resources dir (staged into the app for that
+            // target).
+            eachFile { path = "macos-arm64/libsqlitejdbc.dylib" }
+            includeEmptyDirs = false
+        }
+        into(layout.buildDirectory.dir("appResources"))
+    }
+
+// Ensure the native lib is staged before Compose copies app resources into the image.
+tasks
+    .matching { it.name == "prepareAppResources" }
+    .configureEach {
+        dependsOn(extractSqliteJdbcMacDylib)
+    }

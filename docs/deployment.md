@@ -462,6 +462,15 @@ arm64-only Mac app unless it declares a minimum macOS of 12.0+, so `macOS.minimu
 universal (arm64+x86_64) binary — a much larger change (build both arches + a universal JRE, `lipo`
 them) that jpackage does not do natively.
 
+**Native libraries must be bundled + signed (App Store sandbox).** A sandboxed App Store app can only
+load code that's part of its signed bundle. `sqlite-jdbc` (via SQLDelight's JVM driver) otherwise
+extracts its native `libsqlitejdbc.dylib` to a temp dir at runtime and `dlopen`s it, which the
+sandbox blocks at launch ("could not verify … free of malware"). The `extractSqliteJdbcMacDylib` task
+in `build.gradle.kts` stages the arm64 `.dylib` into Compose's app resources so jpackage signs it
+into the bundle, and `DriverFactory.jvm.kt` points sqlite-jdbc at it via `org.sqlite.lib.path` so it
+loads the signed copy instead of extracting. Any **other** JVM library that extracts native code at
+runtime will hit the same wall and need the same treatment.
+
 **Validating signing without a release.** The `macos` job also runs on **workflow_dispatch**
 (Actions → Desktop Release → Run workflow). A manual run **builds + signs** the `.pkg` and uploads it
 as a `desktop-macos-pkg` artifact, but sets `MAC_UPLOAD=false` so it does **not** push to App Store
