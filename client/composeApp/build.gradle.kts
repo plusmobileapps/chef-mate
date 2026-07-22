@@ -323,6 +323,11 @@ compose.desktop {
                 // is required for Store submission.
                 appStore = true
                 appCategory = "public.app-category.food-and-drink"
+                // The App Store build is arm64-only (jpackage produces a single-arch app with a
+                // bundled arm64 JRE). Apple accepts an arm64-only Mac app only if it declares a
+                // minimum macOS of 12.0+ (LSMinimumSystemVersion) — otherwise it demands a
+                // universal arm64+x86_64 binary. This drops Intel Mac support.
+                minimumSystemVersion = "12.0"
 
                 iconFile.set(project.file("src/jvmMain/resources/app-icon.icns"))
 
