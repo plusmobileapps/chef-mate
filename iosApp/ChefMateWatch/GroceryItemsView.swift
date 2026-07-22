@@ -12,26 +12,37 @@ struct GroceryItemsView: View {
     private var groups: [WatchGroceryGroup] { store.items(for: listId).groupedByAisle() }
 
     var body: some View {
-        List {
-            Section {
-                AddItemRow { showingAdd = true }
-            }
-            .listRowInsets(EdgeInsets())
-            .listRowBackground(Color.clear)
+        // The list extends edge-to-edge horizontally so category headers can run the full width of
+        // the screen; `hInset` is the horizontal safe-area inset we then re-apply to the actual
+        // content (row + header text) so text still clears the display's rounded corners.
+        GeometryReader { proxy in
+            let hInset = max(proxy.safeAreaInsets.leading, proxy.safeAreaInsets.trailing, 8)
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 6, pinnedViews: [.sectionHeaders]) {
+                    AddItemRow { showingAdd = true }
+                        .padding(.horizontal, hInset)
+                        .padding(.top, 2)
 
-            ForEach(groups) { group in
-                Section {
-                    ForEach(group.items, id: \.id) { item in
-                        GroceryItemRow(item: item) {
-                            store.setChecked(itemId: item.id, isChecked: !item.isChecked)
+                    ForEach(groups) { group in
+                        Section {
+                            ForEach(Array(group.items.enumerated()), id: \.element.id) { index, item in
+                                GroceryItemRow(item: item) {
+                                    store.setChecked(itemId: item.id, isChecked: !item.isChecked)
+                                }
+                                .padding(.horizontal, hInset)
+                                if index < group.items.count - 1 {
+                                    Divider().padding(.leading, hInset)
+                                }
+                            }
+                        } header: {
+                            CategoryHeader(title: group.title, textInset: hInset)
                         }
                     }
-                } header: {
-                    CategoryHeader(title: group.title)
                 }
+                .padding(.bottom, 8)
             }
         }
-        .listStyle(.plain)
+        .ignoresSafeArea(.container, edges: .horizontal)
         .navigationTitle(title)
         .sheet(isPresented: $showingAdd) {
             AddItemView { name in
@@ -41,19 +52,20 @@ struct GroceryItemsView: View {
     }
 }
 
-/// Sticky section header styled like the Compose `CategoryHeader` (surfaceVariant pill,
-/// onSurfaceVariant label).
+/// Sticky section header styled like the Compose `CategoryHeader`: a surfaceVariant bar that spans
+/// the full screen width, with the label inset by the safe area so it lines up with the item text.
 private struct CategoryHeader: View {
     let title: String
+    let textInset: CGFloat
 
     var body: some View {
         Text(title)
             .font(.footnote.weight(.semibold))
             .foregroundStyle(WatchTheme.onSurfaceVariant)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 10)
+            .padding(.horizontal, textInset)
             .padding(.vertical, 5)
-            .background(WatchTheme.surfaceVariant, in: RoundedRectangle(cornerRadius: 8))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(WatchTheme.surfaceVariant)
     }
 }
 
@@ -80,6 +92,7 @@ private struct GroceryItemRow: View {
                 }
                 Spacer(minLength: 0)
             }
+            .padding(.vertical, 4)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
