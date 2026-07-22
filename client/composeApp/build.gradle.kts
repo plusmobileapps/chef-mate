@@ -337,6 +337,18 @@ compose.desktop {
 
                 iconFile.set(project.file("src/jvmMain/resources/app-icon.icns"))
 
+                // Declares no non-exempt encryption (matches iosApp/iosApp/Info.plist), so App
+                // Store Connect skips the manual export-compliance prompt before each TestFlight
+                // build is available to testers.
+                infoPlist {
+                    extraKeysRawXml =
+                        """
+                        <key>ITSAppUsesNonExemptEncryption</key>
+                        <false/>
+                        """
+                            .trimIndent()
+                }
+
                 // App Sandbox is mandatory for the Mac App Store. The app and the bundled JRE are
                 // signed as separate nested bundles, so each gets its own entitlements: the app
                 // opts into the sandbox + the capabilities it actually uses (network client, user-
