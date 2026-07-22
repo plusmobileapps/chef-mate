@@ -455,6 +455,22 @@ sandbox-inherit + JVM exceptions), wired via `entitlementsFile` / `runtimeEntitl
 
 **Reused secrets:** `MATCH_PASSWORD`, `MATCH_GIT_BASIC_AUTHORIZATION`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY`, `APPLE_TEAM_ID` (no new secrets required).
 
+**Validating signing without a release.** The `macos` job also runs on **workflow_dispatch**
+(Actions → Desktop Release → Run workflow). A manual run **builds + signs** the `.pkg` and uploads it
+as a `desktop-macos-pkg` artifact, but sets `MAC_UPLOAD=false` so it does **not** push to App Store
+Connect — use it to verify signing (e.g. after a cert rotation) without cutting a version tag. Only
+tag pushes set `MAC_UPLOAD=true` and upload. The build runs with `-Pcompose.desktop.verbose=true` so
+jpackage's internal `codesign` errors are visible in the log (otherwise they surface only as an
+opaque `codesign … exited with 1` `IOException`).
+
+**Signing pitfalls that bit us** (all handled by the `mac release` lane, noted here for cert
+rotation): Compose only matches the legacy `3rd Party Mac Developer Application:` cert name, so the
+lane resolves the **bare** identity and needs the **Mac App Distribution** cert (not the unified
+Apple Distribution — created + imported by hand, see bootstrap). Compose embeds the app profile via
+jpackage `--app-content`, which (a) splits the path on whitespace in its @arg-file and (b) keeps the
+filename — so the lane copies match's profile to a **space-free path named exactly
+`embedded.provisionprofile`** before building.
+
 ---
 
 ## First-Time Setup
