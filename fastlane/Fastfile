@@ -125,7 +125,13 @@ platform :mac do
     ENV["MACOS_PROVISIONING_PROFILE"] = safe_profile
     ENV["MACOS_RUNTIME_PROVISIONING_PROFILE"] = safe_profile
 
-    gradle(task: ":client:composeApp:packageReleasePkg")
+    # compose.desktop.verbose makes jpackage run with --verbose, which surfaces the underlying
+    # codesign stderr in the build log (otherwise a signing failure is just an opaque
+    # "codesign ... exited with 1" IOException).
+    gradle(
+      task: ":client:composeApp:packageReleasePkg",
+      flags: "-Pcompose.desktop.verbose=true",
+    )
 
     # Anchor to the repo root via the Fastfile location (__dir__ == fastlane/) so this is independent
     # of fastlane's inconsistent working directory between the sh action and the gradle action.
