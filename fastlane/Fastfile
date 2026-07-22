@@ -109,11 +109,21 @@ platform :mac do
       ENV["sigh_#{MAC_APP_IDENTIFIER}_appstore_profile-path"]
     UI.user_error!("Mac App Store provisioning profile path not found in sigh_* env") if profile.nil?
 
+    # Compose hands the app provisioning profile to jpackage via `--app-content <path>` in an
+    # @arg-file, and jpackage's arg-file parser splits on whitespace. match installs the profile
+    # under "~/Library/Developer/Xcode/UserData/Provisioning Profiles/…" (note the space), so
+    # jpackage truncates the path at the space and dies with NoSuchFileException. Copy it to a
+    # space-free path first. (Not hit locally because the local smoke build ran without a profile.)
+    require "fileutils"
+    safe_profile = File.expand_path("../build/macos/appstore.provisionprofile", __dir__)
+    FileUtils.mkdir_p(File.dirname(safe_profile))
+    FileUtils.cp(profile, safe_profile)
+
     # composeApp/build.gradle.kts reads these at Gradle configuration time via System.getenv. The
     # runtime (nested JRE) bundle reuses the same profile as the app.
     ENV["MACOS_SIGN_IDENTITY"] = identity
-    ENV["MACOS_PROVISIONING_PROFILE"] = profile
-    ENV["MACOS_RUNTIME_PROVISIONING_PROFILE"] = profile
+    ENV["MACOS_PROVISIONING_PROFILE"] = safe_profile
+    ENV["MACOS_RUNTIME_PROVISIONING_PROFILE"] = safe_profile
 
     gradle(task: ":client:composeApp:packageReleasePkg")
 
