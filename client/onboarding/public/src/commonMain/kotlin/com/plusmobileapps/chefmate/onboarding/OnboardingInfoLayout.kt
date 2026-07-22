@@ -9,19 +9,16 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusButton
-import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Shared layout for the informational onboarding steps: a framed preview of the real feature
- * screen, a title, and a body, with a single primary "Next"-style button pinned to the bottom of
- * the screen. Each step screen supplies its own preview captures, content, and test tags.
+ * Shared layout for the informational onboarding steps: a framed [preview] of the real feature (an
+ * image or gif), a title, and a body, with a single primary "Next"-style button pinned to the
+ * bottom of the screen. Each step screen supplies its own preview, content, and test tags.
  */
 @Composable
 internal fun OnboardingInfoLayout(
-    previewLight: DrawableResource,
-    previewDark: DrawableResource,
     title: StringResource,
     message: StringResource,
     buttonText: StringResource,
@@ -29,6 +26,7 @@ internal fun OnboardingInfoLayout(
     screenTestTag: String,
     buttonTestTag: String,
     modifier: Modifier = Modifier,
+    preview: @Composable () -> Unit,
 ) {
     OnboardingStepScaffold(
         screenTestTag = screenTestTag,
@@ -54,6 +52,6 @@ internal fun OnboardingInfoLayout(
         )
         // Placed after the text (rather than above it) so the screen visibly has more content below
         // the fold, making it obvious the step scrolls.
-        OnboardingPreviewImage(light = previewLight, dark = previewDark)
+        preview()
     }
 }
