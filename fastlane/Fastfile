@@ -109,13 +109,32 @@ platform :mac do
       ENV["sigh_#{MAC_APP_IDENTIFIER}_appstore_profile-path"]
     UI.user_error!("Mac App Store provisioning profile path not found in sigh_* env") if profile.nil?
 
+    # Copy match's profile to a build path before handing it to Compose, for two reasons:
+    #   1. Compose passes the app profile to jpackage via `--app-content <path>` in an @arg-file,
+    #      whose parser splits on whitespace — and match installs it under ".../Provisioning
+    #      Profiles/" (note the space), so jpackage truncates the path and fails NoSuchFileException.
+    #   2. jpackage's --app-content copies the file into Contents/ preserving its name, and a Mac
+    #      app's embedded profile MUST be named `embedded.provisionprofile` or codesign rejects it
+    #      ("code object is not signed at all / In subcomponent: .../<name>.provisionprofile").
+    # (Neither was hit by the local smoke build, which ran without a profile.)
+    require "fileutils"
+    safe_profile = File.expand_path("../build/macos/embedded.provisionprofile", __dir__)
+    FileUtils.mkdir_p(File.dirname(safe_profile))
+    FileUtils.cp(profile, safe_profile)
+
     # composeApp/build.gradle.kts reads these at Gradle configuration time via System.getenv. The
     # runtime (nested JRE) bundle reuses the same profile as the app.
     ENV["MACOS_SIGN_IDENTITY"] = identity
-    ENV["MACOS_PROVISIONING_PROFILE"] = profile
-    ENV["MACOS_RUNTIME_PROVISIONING_PROFILE"] = profile
+    ENV["MACOS_PROVISIONING_PROFILE"] = safe_profile
+    ENV["MACOS_RUNTIME_PROVISIONING_PROFILE"] = safe_profile
 
-    gradle(task: ":client:composeApp:packageReleasePkg")
+    # compose.desktop.verbose makes jpackage run with --verbose, which surfaces the underlying
+    # codesign stderr in the build log (otherwise a signing failure is just an opaque
+    # "codesign ... exited with 1" IOException).
+    gradle(
+      task: ":client:composeApp:packageReleasePkg",
+      flags: "-Pcompose.desktop.verbose=true",
+    )
 
     # Anchor to the repo root via the Fastfile location (__dir__ == fastlane/) so this is independent
     # of fastlane's inconsistent working directory between the sh action and the gradle action.
@@ -126,17 +145,23 @@ platform :mac do
     ].first
     UI.user_error!("No .pkg produced by packageReleasePkg") if pkg.nil?
 
-    upload_to_app_store(
-      api_key: api_key,
-      app_identifier: MAC_APP_IDENTIFIER,
-      platform: "osx",
-      pkg: pkg,
-      skip_metadata: true,
-      skip_screenshots: true,
-      submit_for_review: false,
-      precheck_include_in_app_purchases: false,
-      force: true,
-    )
+    # Upload only when explicitly enabled (tag releases set MAC_UPLOAD=true). A manual
+    # workflow_dispatch builds + signs the .pkg to validate signing without creating an ASC build.
+    if ENV["MAC_UPLOAD"] == "true"
+      upload_to_app_store(
+        api_key: api_key,
+        app_identifier: MAC_APP_IDENTIFIER,
+        platform: "osx",
+        pkg: pkg,
+        skip_metadata: true,
+        skip_screenshots: true,
+        submit_for_review: false,
+        precheck_include_in_app_purchases: false,
+        force: true,
+      )
+    else
+      UI.important("MAC_UPLOAD != true — built and signed #{File.basename(pkg)}, skipping App Store upload.")
+    end
   end
 end
 
