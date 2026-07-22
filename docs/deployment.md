@@ -455,6 +455,13 @@ sandbox-inherit + JVM exceptions), wired via `entitlementsFile` / `runtimeEntitl
 
 **Reused secrets:** `MATCH_PASSWORD`, `MATCH_GIT_BASIC_AUTHORIZATION`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_API_KEY`, `APPLE_TEAM_ID` (no new secrets required).
 
+**Architecture — arm64 only (Intel Macs not supported).** CI builds on an Apple-Silicon runner, so
+jpackage produces an **arm64-only** app with a bundled arm64 JRE. App Store Connect rejects an
+arm64-only Mac app unless it declares a minimum macOS of 12.0+, so `macOS.minimumSystemVersion =
+"12.0"` is set in `build.gradle.kts` (`LSMinimumSystemVersion`). Supporting Intel would require a
+universal (arm64+x86_64) binary — a much larger change (build both arches + a universal JRE, `lipo`
+them) that jpackage does not do natively.
+
 **Validating signing without a release.** The `macos` job also runs on **workflow_dispatch**
 (Actions → Desktop Release → Run workflow). A manual run **builds + signs** the `.pkg` and uploads it
 as a `desktop-macos-pkg` artifact, but sets `MAC_UPLOAD=false` so it does **not** push to App Store
