@@ -7,17 +7,25 @@ struct AddItemView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
 
+    private var isValid: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
+
     var body: some View {
         NavigationStack {
             Form {
                 TextField("Item", text: $name)
-                Button("Add") {
+                Button {
                     onAdd(name)
                     dismiss()
+                } label: {
+                    Text("Add")
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity)
                 }
-                .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+                .foregroundStyle(isValid ? WatchTheme.primary : WatchTheme.onSurfaceVariant)
+                .disabled(!isValid)
             }
             .navigationTitle("Add Item")
         }
+        .tint(WatchTheme.primary)
     }
 }

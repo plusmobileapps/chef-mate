@@ -8,15 +8,21 @@ struct GroceryListsView: View {
         List {
             if store.lists.isEmpty {
                 Text("No grocery lists yet.")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(WatchTheme.onSurfaceVariant)
             } else {
                 ForEach(store.lists, id: \.id) { list in
                     NavigationLink(value: list.id) {
-                        Label(list.name, systemImage: list.isShared ? "person.2" : "cart")
+                        Label {
+                            Text(list.name).foregroundStyle(WatchTheme.onSurface)
+                        } icon: {
+                            Image(systemName: list.isShared ? "person.2.fill" : "cart.fill")
+                                .foregroundStyle(WatchTheme.primary)
+                        }
                     }
                 }
             }
         }
+        .listStyle(.plain)
         .navigationTitle("Lists")
         .navigationDestination(for: Int64.self) { listId in
             GroceryItemsView(
