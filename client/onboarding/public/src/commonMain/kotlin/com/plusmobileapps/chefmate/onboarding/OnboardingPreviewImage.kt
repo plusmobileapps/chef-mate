@@ -7,12 +7,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -20,11 +20,18 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * A framed, phone-shaped preview of a real feature screen shown at the top of an onboarding step so
- * the user can see what the feature looks like. [light]/[dark] are the same captures used by the
- * feature snapshot tests; the variant is picked from the active theme (not the system setting) so
- * it stays correct even when the theme is forced. The image is cropped to its top so the meaningful
- * chrome (title bar, first rows) is what shows.
+ * The widest an onboarding preview (static image or gif) is allowed to grow. Capped at roughly a
+ * phone screen's width so the previews stay phone-sized and don't stretch tall on wide windows
+ * (desktop/tablet), where the step content can otherwise be up to 600dp across.
+ */
+private val PreviewMaxWidth: Dp = 560.dp
+
+/**
+ * A framed preview of a real feature screen shown at the top of an onboarding step so the user can
+ * see what the feature looks like. [light]/[dark] are the same captures used by the feature
+ * snapshot tests; the variant is picked from the active theme (not the system setting) so it stays
+ * correct even when the theme is forced. The frame wraps the whole capture — width is capped at
+ * [PreviewMaxWidth] and the height follows the image's own aspect ratio, so nothing is cropped.
  */
 @Composable
 internal fun OnboardingPreviewImage(
@@ -37,14 +44,14 @@ internal fun OnboardingPreviewImage(
     Image(
         painter = painterResource(if (isDark) dark else light),
         contentDescription = null, // decorative; the step title and body describe the feature
-        contentScale = ContentScale.Crop,
-        alignment = Alignment.TopCenter,
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .widthIn(max = 240.dp)
-                .aspectRatio(3f / 4f)
-                .onboardingPreviewFrame(),
+        // Fill the (capped) width and let the height follow the capture's aspect ratio — the whole
+        // screenshot shows, none of it is cropped off.
+        contentScale = ContentScale.FillWidth,
+        // widthIn must come before fillMaxWidth: fillMaxWidth fixes the width to the full available
+        // width (min == max), which a later widthIn can no longer shrink. Capping the incoming
+        // constraint first, then filling up to it, is what actually bounds the width on wide
+        // windows.
+        modifier = modifier.widthIn(max = PreviewMaxWidth).fillMaxWidth().onboardingPreviewFrame(),
     )
 }
 
@@ -65,7 +72,13 @@ internal fun OnboardingGifPreview(
         model = uri,
         contentDescription = null, // decorative; the step title and body describe the feature
         contentScale = ContentScale.Crop,
-        modifier = modifier.fillMaxWidth().aspectRatio(aspectRatio).onboardingPreviewFrame(),
+        // widthIn before fillMaxWidth — see OnboardingPreviewImage for why the order matters.
+        modifier =
+            modifier
+                .widthIn(max = PreviewMaxWidth)
+                .fillMaxWidth()
+                .aspectRatio(aspectRatio)
+                .onboardingPreviewFrame(),
     )
 }
 
