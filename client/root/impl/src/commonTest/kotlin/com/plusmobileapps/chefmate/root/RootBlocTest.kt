@@ -256,6 +256,32 @@ class RootBlocTest {
     }
 
     @Test
+    fun When_sign_up_otp_verified_from_onboarding_Then_bottom_nav_replaces_stack_and_completes() {
+        val root = createRoot(onboardingCompleted = false)
+        onboardingOutput.onNext(OnboardingRootBloc.Output.SignUp)
+        authOutput.onNext(AuthenticationBloc.Output.EmailVerificationRequired(EMAIL))
+        root.instance() should instanceOf<RootBloc.Child.OtpVerification>()
+
+        otpOutput.onNext(OtpBloc.Output.Verified)
+
+        root.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
+        root.state.value.backStack.size shouldBe 0
+        onboardingRepository.hasCompletedOnboarding shouldBe true
+    }
+
+    @Test
+    fun When_sign_up_otp_verified_in_app_Then_auth_and_otp_screens_are_popped() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenSignUp)
+        authOutput.onNext(AuthenticationBloc.Output.EmailVerificationRequired(EMAIL))
+        rootBloc.instance() should instanceOf<RootBloc.Child.OtpVerification>()
+
+        otpOutput.onNext(OtpBloc.Output.Verified)
+
+        rootBloc.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
+        rootBloc.state.value.backStack.size shouldBe 0
+    }
+
+    @Test
     fun When_bottom_nav_outputs_create_recipe_Then_recipe_root_shown_with_create_props() {
         bottomNavOutput.onNext(BottomNavBloc.Output.AddNewRecipe)
         rootBloc.instance() should instanceOf<RootBloc.Child.RecipeRoot>()
@@ -661,3 +687,5 @@ class RootBlocTest {
         recipeProps shouldBe RecipeRootBloc.Props.CreateFromExtracted(extracted, fromAi = true)
     }
 }
+
+private const val EMAIL = "chef@example.com"

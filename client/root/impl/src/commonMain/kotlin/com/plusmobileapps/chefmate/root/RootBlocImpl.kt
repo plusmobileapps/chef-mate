@@ -13,6 +13,7 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.bringToFront
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.popWhile
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.router.stack.replaceCurrent
 import com.arkivanov.decompose.value.Value
@@ -709,18 +710,7 @@ class RootBlocImpl(
     private fun handleAuthenticationOutput(output: AuthenticationBloc.Output) {
         when (output) {
             AuthenticationBloc.Output.Finished -> navigation.pop()
-            AuthenticationBloc.Output.AuthenticationSuccess -> {
-                val cameFromOnboarding =
-                    stack.value.items.any { it.instance is RootBloc.Child.Onboarding }
-                if (cameFromOnboarding) {
-                    // Signing in from onboarding counts as finishing it: mark complete and drop the
-                    // whole onboarding + auth stack so back can't return to the flow.
-                    onboardingRepository.setOnboardingCompleted()
-                    navigation.replaceAll(Configuration.BottomNavigation)
-                } else {
-                    navigation.pop()
-                }
-            }
+            AuthenticationBloc.Output.AuthenticationSuccess -> finishAuthentication()
             is AuthenticationBloc.Output.EmailVerificationRequired ->
                 navigation.bringToFront(
                     Configuration.OtpVerification(email = output.email, flow = OtpFlow.SignUp)
@@ -743,8 +733,33 @@ class RootBlocImpl(
 
     private fun handleOtpOutput(output: OtpBloc.Output) {
         when (output) {
-            OtpBloc.Output.Verified -> navigation.bringToFront(Configuration.BottomNavigation)
+            // Verifying the code is the last step of sign up / passwordless sign in, so it lands
+            // the
+            // user in the same place a password sign-in does — not on top of the auth stack.
+            OtpBloc.Output.Verified -> finishAuthentication()
             OtpBloc.Output.Cancelled -> navigation.pop()
+        }
+    }
+
+    /**
+     * Leaves the authentication flow after the user is signed in, whether that finished at the
+     * credentials screen (sign in) or at the OTP screen (sign up / passwordless).
+     *
+     * Signing in from onboarding counts as finishing it: mark complete and drop the whole
+     * onboarding
+     * + auth stack so back can't return to the flow, and so the next launch doesn't gate the
+     *   now-signed-in user behind onboarding again. Otherwise just unwind the auth screens,
+     *   preserving whatever the user was doing underneath (e.g. a deep-linked recipe).
+     */
+    private fun finishAuthentication() {
+        val cameFromOnboarding = stack.value.items.any { it.instance is RootBloc.Child.Onboarding }
+        if (cameFromOnboarding) {
+            onboardingRepository.setOnboardingCompleted()
+            navigation.replaceAll(Configuration.BottomNavigation)
+        } else {
+            navigation.popWhile {
+                it is Configuration.Authentication || it is Configuration.OtpVerification
+            }
         }
     }
 
