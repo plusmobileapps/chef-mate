@@ -1,8 +1,12 @@
 package com.plusmobileapps.chefmate.recipe.core.addgrocery
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -50,6 +54,10 @@ fun AddRecipeToGroceryListScreen(bloc: AddRecipeToGroceryListBloc, modifier: Mod
                 title = stringResource(Res.string.recipe_add_to_grocery_list).asTextData(),
                 onCloseClick = bloc::onBackClicked,
             ),
+        // This screen only ever renders inside the recipe detail's bottom sheet, whose drag handle
+        // already accounts for the status bar. Without dropping the top inset the app bar adds a
+        // second status-bar gap between the drag handle and the title.
+        headerWindowInsets = WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal),
         scrollEnabled = false,
         floatingActionButton = {
             if (!state.isLoading && state.hasSelectedIngredients) {
@@ -133,7 +141,8 @@ private fun GroceryListSelector(
             label = { Text(stringResource(Res.string.recipe_add_to_grocery_list_select_list)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier =
-                Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                    .fillMaxWidth(),
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             groceryLists.forEach { list ->
