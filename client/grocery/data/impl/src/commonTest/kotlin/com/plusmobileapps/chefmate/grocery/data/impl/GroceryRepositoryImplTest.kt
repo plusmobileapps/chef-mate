@@ -425,6 +425,36 @@ class GroceryRepositoryImplTest {
         }
 
     @Test
+    fun syncWithRemote_marks_freshly_pushed_default_list_as_owned_not_shared() =
+        runTest(testDispatcher) {
+            // New account: a local default list exists, and the remote has nothing yet.
+            repository.ensureDefaultList()
+
+            // Sign in. Sync pushes the local list to the remote, the fake mirrors the
+            // production trigger by inserting an owner member row, and syncListMembers runs.
+            fakeAuth.setState(
+                AuthState.Authenticated(
+                    ChefMateUser(
+                        userId = "user-1",
+                        userName = "Test",
+                        userEmail = "test@test.com",
+                        userProfileImageUrl = null,
+                    )
+                )
+            )
+            advanceUntilIdle()
+
+            // The user's own list must not be flagged as "shared with you".
+            repository.getGroceryLists().test {
+                val lists = awaitItem()
+                lists.size shouldBe 1
+                val defaultList = lists.first()
+                defaultList.name shouldBe "My Grocery List"
+                defaultList.isShared shouldBe false
+            }
+        }
+
+    @Test
     fun refreshListMembers_caches_pending_and_accepted_collaborators_from_remote() =
         runTest(testDispatcher) {
             val listId = repository.ensureDefaultList()

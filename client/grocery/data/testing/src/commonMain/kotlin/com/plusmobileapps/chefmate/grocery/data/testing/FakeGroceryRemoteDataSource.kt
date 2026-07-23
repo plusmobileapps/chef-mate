@@ -32,6 +32,7 @@ class FakeGroceryRemoteDataSource : GroceryRemoteDataSource {
                 ownerId = ownerId,
             )
         lists.add(newList)
+        addOwnerMember(newList)
         return newList.id!!
     }
 
@@ -66,7 +67,29 @@ class FakeGroceryRemoteDataSource : GroceryRemoteDataSource {
         val result = list.copy(id = list.id ?: "remote-list-${nextListId++}")
         val ownerLists = remoteLists.getOrPut(list.ownerId) { mutableListOf() }
         ownerLists.add(result)
+        addOwnerMember(result)
         return result
+    }
+
+    /**
+     * Mirrors the production DB trigger that auto-inserts an owner row into `grocery_list_members`
+     * whenever a list is created. Without this, `syncListMembers` would never observe the owner
+     * membership that revealed the "own list shows up under Shared with you" bug.
+     */
+    private fun addOwnerMember(list: RemoteGroceryList) {
+        val id = list.id ?: return
+        remoteMembers
+            .getOrPut(id) { mutableListOf() }
+            .add(
+                RemoteGroceryListMember(
+                    id = "remote-owner-${Uuid.random()}",
+                    listId = id,
+                    userId = list.ownerId,
+                    invitedEmail = "",
+                    role = "owner",
+                    status = "accepted",
+                )
+            )
     }
 
     override suspend fun fetchGroceryLists(ownerId: String): List<RemoteGroceryList> =

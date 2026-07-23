@@ -383,6 +383,15 @@ class GroceryRepositoryImpl(
                         RemoteGroceryList(name = entity.name, ownerId = authState.user.userId)
                     )
                 listQueries.updateRemoteId(remoteId = remoteList.id!!, id = localId)
+                // Record ownership locally right away. Without this the local ownerId
+                // stays NULL until a later pull, and syncListMembers would flag our own
+                // freshly-pushed list as "shared with you".
+                listQueries.updateOwnership(
+                    ownerId = authState.user.userId,
+                    role = "owner",
+                    isShared = false,
+                    id = localId,
+                )
             } catch (t: Throwable) {
                 if (t is CancellationException) throw t
                 Logger.e(throwable = t, tag = TAG) { "grocery remote sync operation failed" }
@@ -577,6 +586,14 @@ class GroceryRepositoryImpl(
                         )
                     withContext(ioContext) {
                         listQueries.updateRemoteId(remoteId = remoteList.id!!, id = list.id)
+                        // Record ownership locally so this just-pushed list isn't later
+                        // mistaken for a shared list when its local ownerId is still NULL.
+                        listQueries.updateOwnership(
+                            ownerId = userId,
+                            role = "owner",
+                            isShared = false,
+                            id = list.id,
+                        )
                     }
                 } catch (t: Throwable) {
                     if (t is CancellationException) throw t
@@ -925,10 +942,15 @@ class GroceryRepositoryImpl(
                 withContext(ioContext) {
                     val myMember = remoteMembers.firstOrNull { it.userId == userId }
                     if (myMember != null) {
+                        // Trust the member role rather than the local ownerId, which may
+                        // still be NULL right after we pushed the list (see pushListToRemote).
+                        // Deriving isShared from a NULL ownerId would flag our own list as
+                        // "shared with you".
+                        val isOwner = myMember.role == "owner"
                         listQueries.updateOwnership(
-                            ownerId = list.ownerId,
+                            ownerId = if (isOwner) userId else list.ownerId,
                             role = myMember.role,
-                            isShared = list.ownerId != userId,
+                            isShared = !isOwner,
                             id = list.id,
                         )
                     }
