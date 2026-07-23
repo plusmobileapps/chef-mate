@@ -340,11 +340,31 @@ compose.desktop {
                 // Declares no non-exempt encryption (matches iosApp/iosApp/Info.plist), so App
                 // Store Connect skips the manual export-compliance prompt before each TestFlight
                 // build is available to testers.
+                //
+                // CFBundleURLTypes registers the `chefmate://` custom scheme so LaunchServices
+                // routes `chefmate://…` opens to this app (the invite-email links land on the web
+                // page, which bounces the browser to this scheme — see the chefmate-site
+                // /notifications redirect). macOS delivers the URL as an Apple Event, caught by the
+                // `Desktop.setOpenURIHandler` registered in main.kt, not as a command-line arg.
+                // Windows/Linux register the same scheme at runtime instead (SchemeRegistrar),
+                // since
+                // jpackage has no equivalent for them.
                 infoPlist {
                     extraKeysRawXml =
                         """
                         <key>ITSAppUsesNonExemptEncryption</key>
                         <false/>
+                        <key>CFBundleURLTypes</key>
+                        <array>
+                            <dict>
+                                <key>CFBundleURLName</key>
+                                <string>com.plusmobileapps.chefmate.ChefMate</string>
+                                <key>CFBundleURLSchemes</key>
+                                <array>
+                                    <string>chefmate</string>
+                                </array>
+                            </dict>
+                        </array>
                         """
                             .trimIndent()
                 }

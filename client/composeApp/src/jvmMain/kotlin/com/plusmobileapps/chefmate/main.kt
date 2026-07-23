@@ -26,10 +26,14 @@ import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.backhandler.BackDispatcher
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import com.plusmobileapps.chefmate.buildconfig.BuildConfig
+import com.plusmobileapps.chefmate.deeplink.DeepLinkCoordinator
+import com.plusmobileapps.chefmate.deeplink.SchemeRegistrar
+import com.plusmobileapps.chefmate.deeplink.SingleInstance
 import com.plusmobileapps.chefmate.root.DeepLink
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import com.plusmobileapps.chefmate.update.DesktopUpdater
 import com.plusmobileapps.chefmate.update.UpdateBanner
+import java.awt.Desktop
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
@@ -42,6 +46,28 @@ private const val KEY_WINDOW_PLACEMENT = "window.placement"
 
 @OptIn(ExperimentalTime::class, FlowPreview::class)
 fun main(args: Array<String>) {
+    // Windows/Linux spawn a fresh process for every `chefmate://…` open. If another instance is
+    // already running, forward this launch's link to it and exit without opening a second window.
+    if (!SingleInstance.acquireOrForward(args)) return
+
+    // Make the OS route `chefmate://…` to this app. macOS uses the packaged Info.plist
+    // (CFBundleURLTypes) + the Apple Event handler below; Windows/Linux self-register at runtime.
+    SchemeRegistrar.registerIfPackaged()
+
+    // macOS delivers URL opens as Apple Events, not command-line args, both at cold launch and
+    // while
+    // running. Route them through the coordinator so the warm-delivery collector navigates the app.
+    // Throws on non-macOS / when unsupported, so it is guarded and swallowed.
+    runCatching {
+        val desktop = Desktop.getDesktop()
+        if (desktop.isSupported(Desktop.Action.APP_OPEN_URI)) {
+            desktop.setOpenURIHandler { event -> DeepLinkCoordinator.submit(event.uri.toString()) }
+        }
+    }
+
+    // Cold-start deep link from the launch arguments (Windows/Linux). On macOS argv is empty and
+    // the
+    // link instead arrives via the Apple Event handler above.
     val deepLink = DeepLink.parse(args.firstOrNull())
     // Initialize Bugsnag + Kermit logging for JVM
     BugsnagInitializer().initialize(BuildConfig.BUGSNAG_API_KEY)
@@ -131,6 +157,18 @@ fun main(args: Array<String>) {
                 }
             },
         ) {
+            // Deep links that arrive while the app is running (macOS Apple Events, or links
+            // forwarded
+            // from a second launch on Windows/Linux) route into the live RootBloc and raise the
+            // window. Cold-start links are already applied as the initial stack via [deepLink]
+            // above.
+            LaunchedEffect(rootBloc) {
+                DeepLinkCoordinator.links.collect { url ->
+                    rootBloc.handleDeepLink(url)
+                    window.toFront()
+                    window.requestFocus()
+                }
+            }
             Box(modifier = Modifier.fillMaxSize()) {
                 App(rootBloc = rootBloc, toastService = appComponent.toastService)
                 val updateState by updater.state.collectAsState()
