@@ -19,7 +19,6 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Arrangement.Absolute.spacedBy
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -33,22 +32,16 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.MenuOpen
 import androidx.compose.material.icons.filled.AddShoppingCart
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -58,7 +51,6 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.LocalFireDepartment
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Share
@@ -68,7 +60,6 @@ import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -78,9 +69,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -92,16 +81,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -130,8 +115,6 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_dele
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_delete_title
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_deleting_message
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_deleting_title
-import chefmate.client.recipe.core.public.generated.resources.recipe_detail_description
-import chefmate.client.recipe.core.public.generated.resources.recipe_detail_details
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_directions
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_edit
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_favorite_onboarding
@@ -148,9 +131,7 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_shar
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_link
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_text
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_url
-import chefmate.client.recipe.core.public.generated.resources.recipe_detail_source
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_stop_sharing
-import chefmate.client.recipe.core.public.generated.resources.recipe_detail_timestamps
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_total_time
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_updated
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -159,7 +140,6 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.ChefMateUrls
 import com.plusmobileapps.chefmate.di.CoachMarkId
-import com.plusmobileapps.chefmate.letIfTrue
 import com.plusmobileapps.chefmate.recipe.categories.pickerLabelRes
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
@@ -196,7 +176,6 @@ import kotlin.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -251,7 +230,6 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
     RecipeDetailSheet(bloc = bloc, sheetState = sheetState)
 
     var showOverflowMenu by remember { mutableStateOf(false) }
-    var metadataCollapsed by rememberSaveable { mutableStateOf(false) }
 
     val fullImageSlot by bloc.fullImageSlot.subscribeAsState()
     val fullImageActive = fullImageSlot.child?.instance as? RecipeDetailBloc.FullImage.Active
@@ -288,8 +266,6 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
                             state = state,
                             showOverflowMenu = showOverflowMenu,
                             onShowOverflowMenuChange = { showOverflowMenu = it },
-                            metadataCollapsed = metadataCollapsed,
-                            onMetadataCollapsedChange = { metadataCollapsed = it },
                             shareLauncher = shareLauncher,
                         )
                     }
@@ -306,8 +282,6 @@ private fun RecipeDetailBody(
     state: RecipeDetailBloc.Model,
     showOverflowMenu: Boolean,
     onShowOverflowMenuChange: (Boolean) -> Unit,
-    metadataCollapsed: Boolean,
-    onMetadataCollapsedChange: (Boolean) -> Unit,
     shareLauncher: (String) -> Boolean,
 ) {
     val toastService = LocalToastService.current
@@ -324,7 +298,6 @@ private fun RecipeDetailBody(
     Box(modifier = Modifier.fillMaxSize().testTag(RecipeDetailTestTags.SCREEN)) {
         PlusResponsiveContainer(modifier = Modifier.fillMaxSize()) { windowSizeClass ->
             val isCompact = windowSizeClass == WindowSizeClass.COMPACT
-            val showToolbar = isCompact || !metadataCollapsed
             PlusHeaderContainer(
                 modifier = Modifier.fillMaxSize(),
                 data =
@@ -356,174 +329,129 @@ private fun RecipeDetailBody(
                 verticalArrangement = spacedBy(ChefMateTheme.dimens.paddingNormal),
                 scrollEnabled = false,
                 maxContentWidth = if (isCompact) 600.dp else Dp.Unspecified,
-                floatingToolbar =
-                    letIfTrue(showToolbar) {
-                        {
-                            PlusToolbar(
-                                expanded = true,
-                                floatingActionButton = {
-                                    RecipeDetailCoachMark(
-                                        id = CoachMarkId.RECIPE_DETAIL_COOK_MODE,
-                                        text =
-                                            Res.string.recipe_detail_cook_mode_onboarding
-                                                .asTextData(),
-                                        activeCoachMark = state.activeCoachMark,
-                                        isLoading = state.isLoading,
-                                        onDismiss = bloc::onCoachMarkDismissed,
-                                    ) {
-                                        FloatingActionButton(
-                                            onClick = bloc::onCookModeClicked,
-                                            shape = ChefMateTheme.shapes.large,
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.SoupKitchen,
-                                                contentDescription =
-                                                    stringResource(
-                                                        Res.string.recipe_detail_cook_mode
-                                                    ),
-                                            )
-                                        }
-                                    }
-                                },
+                floatingToolbar = {
+                    PlusToolbar(
+                        expanded = true,
+                        floatingActionButton = {
+                            RecipeDetailCoachMark(
+                                id = CoachMarkId.RECIPE_DETAIL_COOK_MODE,
+                                text = Res.string.recipe_detail_cook_mode_onboarding.asTextData(),
+                                activeCoachMark = state.activeCoachMark,
+                                isLoading = state.isLoading,
+                                onDismiss = bloc::onCoachMarkDismissed,
                             ) {
-                                RecipeDetailCoachMark(
-                                    id = CoachMarkId.RECIPE_DETAIL_ADD_TO_GROCERY,
-                                    text =
-                                        Res.string.recipe_detail_add_to_grocery_onboarding
-                                            .asTextData(),
-                                    activeCoachMark = state.activeCoachMark,
-                                    isLoading = state.isLoading,
-                                    onDismiss = bloc::onCoachMarkDismissed,
+                                FloatingActionButton(
+                                    onClick = bloc::onCookModeClicked,
+                                    shape = ChefMateTheme.shapes.large,
                                 ) {
-                                    IconButton(onClick = bloc::onAddToGroceryListClicked) {
-                                        Icon(
-                                            imageVector = Icons.Default.AddShoppingCart,
-                                            contentDescription =
-                                                stringResource(
-                                                    Res.string.recipe_detail_add_to_grocery
-                                                ),
-                                        )
-                                    }
-                                }
-                                RecipeDetailCoachMark(
-                                    id = CoachMarkId.RECIPE_DETAIL_FAVORITE,
-                                    text =
-                                        Res.string.recipe_detail_favorite_onboarding.asTextData(),
-                                    activeCoachMark = state.activeCoachMark,
-                                    isLoading = state.isLoading,
-                                    onDismiss = bloc::onCoachMarkDismissed,
-                                ) {
-                                    IconButton(onClick = { bloc.onFavoriteToggled() }) {
-                                        Icon(
-                                            imageVector =
-                                                if (state.recipe.isFavorite) {
-                                                    Icons.Default.Favorite
-                                                } else {
-                                                    Icons.Default.FavoriteBorder
-                                                },
-                                            contentDescription =
-                                                if (state.recipe.isFavorite) {
-                                                    stringResource(
-                                                        Res.string.recipe_detail_remove_favorite
-                                                    )
-                                                } else {
-                                                    stringResource(
-                                                        Res.string.recipe_detail_add_favorite
-                                                    )
-                                                },
-                                        )
-                                    }
-                                }
-                                RecipeDetailCoachMark(
-                                    id = CoachMarkId.RECIPE_DETAIL_ADD_TO_MEAL_PLAN,
-                                    text =
-                                        Res.string.recipe_detail_add_to_meal_plan_onboarding
-                                            .asTextData(),
-                                    activeCoachMark = state.activeCoachMark,
-                                    isLoading = state.isLoading,
-                                    onDismiss = bloc::onCoachMarkDismissed,
-                                ) {
-                                    IconButton(onClick = { bloc.onAddToMealPlanClicked() }) {
-                                        Icon(
-                                            imageVector = Icons.Default.CalendarMonth,
-                                            contentDescription =
-                                                stringResource(
-                                                    Res.string.recipe_detail_add_to_meal_plan
-                                                ),
-                                        )
-                                    }
-                                }
-                                if (state.showAiChat) {
-                                    IconButton(
-                                        onClick = bloc::onAiChatClicked,
-                                        modifier =
-                                            Modifier.testTag(RecipeDetailTestTags.AI_CHAT_BUTTON),
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.AutoAwesome,
-                                            contentDescription =
-                                                stringResource(Res.string.recipe_detail_ai_chat),
-                                        )
-                                    }
+                                    Icon(
+                                        imageVector = Icons.Default.SoupKitchen,
+                                        contentDescription =
+                                            stringResource(Res.string.recipe_detail_cook_mode),
+                                    )
                                 }
                             }
+                        },
+                    ) {
+                        RecipeDetailCoachMark(
+                            id = CoachMarkId.RECIPE_DETAIL_ADD_TO_GROCERY,
+                            text = Res.string.recipe_detail_add_to_grocery_onboarding.asTextData(),
+                            activeCoachMark = state.activeCoachMark,
+                            isLoading = state.isLoading,
+                            onDismiss = bloc::onCoachMarkDismissed,
+                        ) {
+                            IconButton(onClick = bloc::onAddToGroceryListClicked) {
+                                Icon(
+                                    imageVector = Icons.Default.AddShoppingCart,
+                                    contentDescription =
+                                        stringResource(Res.string.recipe_detail_add_to_grocery),
+                                )
+                            }
                         }
-                    },
+                        RecipeDetailCoachMark(
+                            id = CoachMarkId.RECIPE_DETAIL_FAVORITE,
+                            text = Res.string.recipe_detail_favorite_onboarding.asTextData(),
+                            activeCoachMark = state.activeCoachMark,
+                            isLoading = state.isLoading,
+                            onDismiss = bloc::onCoachMarkDismissed,
+                        ) {
+                            IconButton(onClick = { bloc.onFavoriteToggled() }) {
+                                Icon(
+                                    imageVector =
+                                        if (state.recipe.isFavorite) {
+                                            Icons.Default.Favorite
+                                        } else {
+                                            Icons.Default.FavoriteBorder
+                                        },
+                                    contentDescription =
+                                        if (state.recipe.isFavorite) {
+                                            stringResource(Res.string.recipe_detail_remove_favorite)
+                                        } else {
+                                            stringResource(Res.string.recipe_detail_add_favorite)
+                                        },
+                                )
+                            }
+                        }
+                        RecipeDetailCoachMark(
+                            id = CoachMarkId.RECIPE_DETAIL_ADD_TO_MEAL_PLAN,
+                            text =
+                                Res.string.recipe_detail_add_to_meal_plan_onboarding.asTextData(),
+                            activeCoachMark = state.activeCoachMark,
+                            isLoading = state.isLoading,
+                            onDismiss = bloc::onCoachMarkDismissed,
+                        ) {
+                            IconButton(onClick = { bloc.onAddToMealPlanClicked() }) {
+                                Icon(
+                                    imageVector = Icons.Default.CalendarMonth,
+                                    contentDescription =
+                                        stringResource(Res.string.recipe_detail_add_to_meal_plan),
+                                )
+                            }
+                        }
+                        if (state.showAiChat) {
+                            IconButton(
+                                onClick = bloc::onAiChatClicked,
+                                modifier = Modifier.testTag(RecipeDetailTestTags.AI_CHAT_BUTTON),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AutoAwesome,
+                                    contentDescription =
+                                        stringResource(Res.string.recipe_detail_ai_chat),
+                                )
+                            }
+                        }
+                    }
+                },
             ) {
                 if (state.isLoading) {
                     Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                         PlusLoadingIndicator()
                     }
+                } else if (isCompact) {
+                    RecipeDetailCompactContent(
+                        recipe = state.recipe,
+                        createdAt = state.createdAt,
+                        updatedAt = state.updatedAt,
+                        formattedPrepTime = state.formattedPrepTime,
+                        formattedCookTime = state.formattedCookTime,
+                        formattedTotalTime = state.formattedTotalTime,
+                        onSourceUrlClicked = bloc::onSourceUrlClicked,
+                        onImageClicked = bloc::onImageClicked,
+                        onRecipeLinkClick = onRecipeLinkClick,
+                        modifier = Modifier.weight(1f),
+                    )
                 } else {
-                    // Height-aware layout pick: a phone in landscape (height < 500dp) gets a
-                    // dedicated 2-column layout — condensed hero on the left, tabs + pager on
-                    // the right — instead of the cramped stacked-compact or 3-col tablet view.
-                    BoxWithConstraints(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                        val isLandscapePhone = maxHeight < 500.dp
-                        Column(modifier = Modifier.fillMaxSize()) {
-                            when {
-                                isLandscapePhone ->
-                                    RecipeDetailLandscapeContent(
-                                        recipe = state.recipe,
-                                        createdAt = state.createdAt,
-                                        updatedAt = state.updatedAt,
-                                        formattedPrepTime = state.formattedPrepTime,
-                                        formattedCookTime = state.formattedCookTime,
-                                        formattedTotalTime = state.formattedTotalTime,
-                                        onSourceUrlClicked = bloc::onSourceUrlClicked,
-                                        onImageClicked = bloc::onImageClicked,
-                                        onRecipeLinkClick = onRecipeLinkClick,
-                                    )
-                                isCompact ->
-                                    RecipeDetailCompactContent(
-                                        recipe = state.recipe,
-                                        createdAt = state.createdAt,
-                                        updatedAt = state.updatedAt,
-                                        formattedPrepTime = state.formattedPrepTime,
-                                        formattedCookTime = state.formattedCookTime,
-                                        formattedTotalTime = state.formattedTotalTime,
-                                        onSourceUrlClicked = bloc::onSourceUrlClicked,
-                                        onImageClicked = bloc::onImageClicked,
-                                        onRecipeLinkClick = onRecipeLinkClick,
-                                        modifier = Modifier.weight(1f),
-                                    )
-                                else ->
-                                    RecipeDetailExpandedContent(
-                                        recipe = state.recipe,
-                                        createdAt = state.createdAt,
-                                        updatedAt = state.updatedAt,
-                                        formattedPrepTime = state.formattedPrepTime,
-                                        formattedCookTime = state.formattedCookTime,
-                                        formattedTotalTime = state.formattedTotalTime,
-                                        onSourceUrlClicked = bloc::onSourceUrlClicked,
-                                        onImageClicked = bloc::onImageClicked,
-                                        onRecipeLinkClick = onRecipeLinkClick,
-                                        metadataCollapsed = metadataCollapsed,
-                                        onMetadataCollapsedChange = onMetadataCollapsedChange,
-                                    )
-                            }
-                        }
-                    }
+                    RecipeDetailTwoColumnContent(
+                        recipe = state.recipe,
+                        createdAt = state.createdAt,
+                        updatedAt = state.updatedAt,
+                        formattedPrepTime = state.formattedPrepTime,
+                        formattedCookTime = state.formattedCookTime,
+                        formattedTotalTime = state.formattedTotalTime,
+                        onSourceUrlClicked = bloc::onSourceUrlClicked,
+                        onImageClicked = bloc::onImageClicked,
+                        onRecipeLinkClick = onRecipeLinkClick,
+                    )
                 }
             }
         }
@@ -772,9 +700,9 @@ private fun RecipeDetailSheet(
 }
 
 /**
- * Compact layout: LazyColumn with metadata items that scroll away, a sticky TabRow, and
- * ingredients/directions items laid out directly in the LazyColumn so the whole screen scrolls
- * together — no nested scroll conflicts.
+ * Compact layout: one linear scroll. Metadata scrolls away at the top, then ingredients and
+ * directions read straight down the page under sticky section headers — no tabs, no pager, so
+ * there's only ever one scroll position to keep track of while cooking.
  */
 @Composable
 private fun RecipeDetailCompactContent(
@@ -789,36 +717,23 @@ private fun RecipeDetailCompactContent(
     onRecipeLinkClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val pagerState = rememberPagerState(pageCount = { 2 })
-    val tabs =
-        listOf(
-            stringResource(Res.string.recipe_detail_ingredients),
-            stringResource(Res.string.recipe_detail_directions),
-        )
-    val scope = rememberCoroutineScope()
-    val padding = ChefMateTheme.dimens.paddingNormal
+    val dimens = ChefMateTheme.dimens
+    val padding = dimens.paddingNormal
 
     val ingredientLines = remember(recipe.ingredients) { splitLines(recipe.ingredients) }
     val crossedOut =
         remember(recipe.ingredients) {
             mutableStateListOf(*BooleanArray(ingredientLines.size) { false }.toTypedArray())
         }
+    val directionParagraphs = remember(recipe.directions) { directionSteps(recipe.directions) }
     var highlightedDirectionIndex by remember(recipe.directions) { mutableStateOf(-1) }
-
-    // Track each page's natural height so we can set both pages to the taller one's height.
-    // Without this, swiping between tabs of different lengths shifts the LazyColumn's content
-    // size and the visible scroll position appears to jump.
-    var ingredientsHeightPx by remember(recipe.ingredients) { mutableStateOf(0) }
-    var directionsHeightPx by remember(recipe.directions) { mutableStateOf(0) }
-    val density = LocalDensity.current
-    val pagerMinHeight = with(density) { maxOf(ingredientsHeightPx, directionsHeightPx).toDp() }
 
     val navBarBottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        verticalArrangement = spacedBy(padding),
-        contentPadding = PaddingValues(bottom = 96.dp + navBarBottom),
+        verticalArrangement = spacedBy(dimens.paddingSmall),
+        contentPadding = PaddingValues(bottom = dimens.fabClearance + navBarBottom),
     ) {
         // Hero section: image + key details side by side
         item(key = "hero") {
@@ -856,231 +771,31 @@ private fun RecipeDetailCompactContent(
             }
         }
 
-        // Sticky TabRow
-        stickyHeader(key = "tab_row") {
-            SecondaryTabRow(selectedTabIndex = pagerState.currentPage) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = pagerState.currentPage == index,
-                        onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                        text = { Text(title) },
-                    )
-                }
-            }
-        }
-
-        // HorizontalPager wrapping content height — no nested vertical scroll
-        item(key = "pager") {
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxWidth().wrapContentHeight(),
-                verticalAlignment = Alignment.Top,
-                beyondViewportPageCount = 1,
-            ) { page ->
-                Box(modifier = Modifier.fillMaxWidth().heightIn(min = pagerMinHeight)) {
-                    when (page) {
-                        0 ->
-                            IngredientsContent(
-                                lines = ingredientLines,
-                                crossedOut = crossedOut,
-                                onRecipeLinkClick = onRecipeLinkClick,
-                                modifier =
-                                    Modifier.fillMaxWidth().onSizeChanged {
-                                        ingredientsHeightPx = it.height
-                                    },
-                            )
-                        1 ->
-                            DirectionsContent(
-                                directions = recipe.directions,
-                                highlightedIndex = highlightedDirectionIndex,
-                                onHighlightedIndexChanged = { highlightedDirectionIndex = it },
-                                onRecipeLinkClick = onRecipeLinkClick,
-                                modifier =
-                                    Modifier.fillMaxWidth().onSizeChanged {
-                                        directionsHeightPx = it.height
-                                    },
-                            )
-                    }
-                }
-            }
-        }
-    }
-}
-
-/**
- * Phone landscape layout: condensed hero (image + key details) scrolls on the left ~40%, sticky
- * tabs + ingredients/directions pager on the right ~60%. Triggered when the available height is
- * short (< 500dp), regardless of width — so it covers landscape phones whether they fall into
- * COMPACT (<600dp wide) or EXPANDED (>=840dp wide) by the width-only breakpoint.
- */
-@Composable
-private fun ColumnScope.RecipeDetailLandscapeContent(
-    recipe: Recipe,
-    createdAt: TextData,
-    updatedAt: TextData,
-    formattedPrepTime: TextData?,
-    formattedCookTime: TextData?,
-    formattedTotalTime: TextData?,
-    onSourceUrlClicked: (String) -> Unit,
-    onImageClicked: () -> Unit,
-    onRecipeLinkClick: (String) -> Unit,
-) {
-    val padding = ChefMateTheme.dimens.paddingNormal
-    val navBarBottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
-    val toolbarClearance = 96.dp + navBarBottom
-
-    val ingredientLines = remember(recipe.ingredients) { splitLines(recipe.ingredients) }
-    val crossedOut =
-        remember(recipe.ingredients) {
-            mutableStateListOf(*BooleanArray(ingredientLines.size) { false }.toTypedArray())
-        }
-    var highlightedDirectionIndex by remember(recipe.directions) { mutableStateOf(-1) }
-
-    val pagerState = rememberPagerState(pageCount = { 2 })
-    val tabs =
-        listOf(
-            stringResource(Res.string.recipe_detail_ingredients),
-            stringResource(Res.string.recipe_detail_directions),
+        ingredientItems(
+            lines = ingredientLines,
+            crossedOut = crossedOut,
+            onRecipeLinkClick = onRecipeLinkClick,
+            itemPadding = padding,
         )
-    val scope = rememberCoroutineScope()
 
-    Row(
-        modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = padding),
-        horizontalArrangement = Arrangement.spacedBy(padding),
-    ) {
-        // Left ~40%: condensed hero in a vertically scrolling column
-        Column(
-            modifier = Modifier.weight(0.4f).fillMaxHeight().verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            RecipeImage(
-                imageUrl = recipe.imageUrl,
-                contentDescription = recipe.title,
-                modifier = Modifier.fillMaxWidth().height(140.dp),
-                secondarySharedElementKey = "recipe-image-fullscreen-${recipe.id}",
-                onClick = onImageClicked,
-            )
-            recipe.starRating?.let { rating -> StarRating(rating = rating) }
-            recipe.servings?.let { servings ->
-                DetailRow(
-                    icon = Icons.Default.Restaurant,
-                    label = stringResource(Res.string.recipe_detail_servings),
-                    value = "$servings",
-                )
-            }
-            formattedPrepTime?.let {
-                DetailRow(
-                    icon = Icons.Default.Timer,
-                    label = stringResource(Res.string.recipe_detail_prep_time),
-                    value = it.localized(),
-                )
-            }
-            formattedCookTime?.let {
-                DetailRow(
-                    icon = Icons.Default.Timer,
-                    label = stringResource(Res.string.recipe_detail_cook_time),
-                    value = it.localized(),
-                )
-            }
-            formattedTotalTime?.let {
-                DetailRow(
-                    icon = Icons.Default.Timer,
-                    label = stringResource(Res.string.recipe_detail_total_time),
-                    value = it.localized(),
-                )
-            }
-            recipe.calories?.let { calories ->
-                DetailRow(
-                    icon = Icons.Default.LocalFireDepartment,
-                    label = stringResource(Res.string.recipe_detail_calories),
-                    value =
-                        PhraseModel(
-                                Res.string.recipe_detail_kcal,
-                                "calories" to FixedString(calories.toString()),
-                            )
-                            .localized(),
-                )
-            }
-            recipe.sourceUrl?.let { sourceUrl ->
-                Text(
-                    text = sourceUrl,
-                    modifier = Modifier.fillMaxWidth().clickable { onSourceUrlClicked(sourceUrl) },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    textDecoration = TextDecoration.Underline,
-                    maxLines = 1,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                )
-            }
-            if (recipe.categories.isNotEmpty()) {
-                RecipeCategoriesRow(categories = recipe.categories)
-            }
-            Text(
-                text =
-                    stringResource(Res.string.recipe_detail_created) + " " + createdAt.localized(),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text =
-                    stringResource(Res.string.recipe_detail_updated) + " " + updatedAt.localized(),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(modifier = Modifier.height(toolbarClearance))
-        }
-
-        // Right ~60%: sticky tab row + pager. Each page scrolls independently so swiping
-        // between Ingredients and Directions does not affect the other tab's scroll position.
-        Column(modifier = Modifier.weight(0.6f).fillMaxHeight()) {
-            SecondaryTabRow(selectedTabIndex = pagerState.currentPage) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = pagerState.currentPage == index,
-                        onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                        text = { Text(title) },
-                    )
-                }
-            }
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.weight(1f).fillMaxWidth(),
-                verticalAlignment = Alignment.Top,
-                beyondViewportPageCount = 1,
-            ) { page ->
-                Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-                    when (page) {
-                        0 ->
-                            IngredientsContent(
-                                lines = ingredientLines,
-                                crossedOut = crossedOut,
-                                onRecipeLinkClick = onRecipeLinkClick,
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                        1 ->
-                            DirectionsContent(
-                                directions = recipe.directions,
-                                highlightedIndex = highlightedDirectionIndex,
-                                onHighlightedIndexChanged = { highlightedDirectionIndex = it },
-                                onRecipeLinkClick = onRecipeLinkClick,
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                    }
-                    Spacer(modifier = Modifier.height(toolbarClearance))
-                }
-            }
-        }
+        directionItems(
+            steps = directionParagraphs,
+            highlightedIndex = highlightedDirectionIndex,
+            onHighlightedIndexChanged = { highlightedDirectionIndex = it },
+            onRecipeLinkClick = onRecipeLinkClick,
+            itemPadding = padding,
+        )
     }
 }
 
 /**
- * Tablet layout: 3-column layout with a collapsible/resizable metadata column on the left,
- * ingredients in the middle, and directions on the right. All columns scroll independently with
- * sticky headers on ingredients/directions. The divider between ingredients and directions is also
- * draggable to resize.
+ * Tablet / desktop layout: the same linear reading order as compact, split across two independently
+ * scrolling columns — metadata and ingredients on the left, directions on the right — so the steps
+ * stay in view while scrolling the ingredient list. The divider between them is draggable to
+ * rebalance the split.
  */
 @Composable
-private fun ColumnScope.RecipeDetailExpandedContent(
+private fun ColumnScope.RecipeDetailTwoColumnContent(
     recipe: Recipe,
     createdAt: TextData,
     updatedAt: TextData,
@@ -1090,19 +805,13 @@ private fun ColumnScope.RecipeDetailExpandedContent(
     onSourceUrlClicked: (String) -> Unit,
     onImageClicked: () -> Unit,
     onRecipeLinkClick: (String) -> Unit,
-    metadataCollapsed: Boolean,
-    onMetadataCollapsedChange: (Boolean) -> Unit,
 ) {
-    val padding = ChefMateTheme.dimens.paddingNormal
-    val density = LocalDensity.current
+    val dimens = ChefMateTheme.dimens
+    val padding = dimens.paddingNormal
     val navBarBottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
-    val toolbarClearance = 80.dp + navBarBottom
+    val toolbarClearance = dimens.fabClearance + navBarBottom
 
-    var metadataWidthDp by remember { mutableStateOf(240.dp) }
-    val minMetadataWidth = 160.dp
-    val maxMetadataWidth = 400.dp
-
-    // Ratio for ingredients vs directions (0.0 = all directions, 1.0 = all ingredients)
+    // Ratio for the ingredients column vs the directions column (0.0 = all directions).
     var ingredientsWeight by remember { mutableStateOf(0.5f) }
 
     val ingredientLines = remember(recipe.ingredients) { splitLines(recipe.ingredients) }
@@ -1114,121 +823,57 @@ private fun ColumnScope.RecipeDetailExpandedContent(
     var directionHighlightedIndex by remember(recipe.directions) { mutableStateOf(-1) }
 
     Row(modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = padding)) {
-        if (metadataCollapsed) {
-            // Collapsed: narrow strip with expand button
-            Column(
-                modifier = Modifier.width(48.dp).fillMaxHeight(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                IconButton(onClick = { onMetadataCollapsedChange(false) }) {
-                    Icon(imageVector = Icons.Default.Menu, contentDescription = null)
-                }
-            }
-        } else {
-            // Column 1: Metadata (resizable)
-            LazyColumn(
-                modifier = Modifier.width(metadataWidthDp),
-                verticalArrangement = spacedBy(padding),
-            ) {
-                item(key = "collapse_button") {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End,
-                    ) {
-                        IconButton(onClick = { onMetadataCollapsedChange(true) }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.MenuOpen,
-                                contentDescription = null,
-                            )
-                        }
-                    }
-                }
-                item(key = "image") {
-                    RecipeImage(
-                        imageUrl = recipe.imageUrl,
-                        contentDescription = recipe.title,
-                        modifier = Modifier.fillMaxWidth().height(180.dp),
-                        secondarySharedElementKey = "recipe-image-fullscreen-${recipe.id}",
-                        onClick = onImageClicked,
-                    )
-                }
-                recipe.starRating?.let { rating ->
-                    item(key = "star_rating") { StarRating(rating = rating) }
-                }
-                if (recipe.categories.isNotEmpty()) {
-                    item(key = "categories") { RecipeCategoriesRow(categories = recipe.categories) }
-                }
-                recipe.description?.let { description ->
-                    item(key = "metadata_description") {
-                        Text(
-                            text = description.toInlineMarkdownAnnotatedString(),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-                item(key = "details_card") {
-                    DetailsCard(
-                        recipe = recipe,
-                        formattedPrepTime = formattedPrepTime,
-                        formattedCookTime = formattedCookTime,
-                        formattedTotalTime = formattedTotalTime,
-                    )
-                }
-                recipe.sourceUrl?.let { sourceUrl ->
-                    item(key = "source_url") {
-                        SourceUrlCard(
-                            sourceUrl = sourceUrl,
-                            onSourceUrlClicked = onSourceUrlClicked,
-                        )
-                    }
-                }
-                item(key = "timestamps") {
-                    TimestampsCard(createdAt = createdAt, updatedAt = updatedAt)
-                }
-                if (!metadataCollapsed) {
-                    item(key = "metadata_spacer") {
-                        Spacer(modifier = Modifier.height(toolbarClearance))
-                    }
-                }
-            }
-
-            // Drag handle between metadata and ingredients
-            DragHandle(
-                onDrag = { dragAmountX ->
-                    val deltaDp = with(density) { dragAmountX.toDp() }
-                    metadataWidthDp =
-                        (metadataWidthDp + deltaDp).coerceIn(minMetadataWidth, maxMetadataWidth)
-                }
-            )
-        }
-
-        // Column 2: Ingredients
+        // Column 1: metadata, then ingredients
         LazyColumn(
             modifier = Modifier.weight(ingredientsWeight),
-            verticalArrangement = spacedBy(padding),
+            verticalArrangement = spacedBy(dimens.paddingSmall),
         ) {
-            stickyHeader(key = "ingredients_header") {
-                StickyColumnHeader(title = stringResource(Res.string.recipe_detail_ingredients))
-            }
-            itemsIndexed(ingredientLines, key = { index, _ -> "ingredient_$index" }) { index, line
-                ->
-                IngredientLineItem(
-                    text = line,
-                    crossedOut = ingredientCrossedOut[index],
-                    onClick = { ingredientCrossedOut[index] = !ingredientCrossedOut[index] },
-                    onRecipeLinkClick = onRecipeLinkClick,
+            item(key = "hero") {
+                RecipeHeroSection(
+                    recipe = recipe,
+                    createdAt = createdAt,
+                    updatedAt = updatedAt,
+                    formattedPrepTime = formattedPrepTime,
+                    formattedCookTime = formattedCookTime,
+                    formattedTotalTime = formattedTotalTime,
+                    onSourceUrlClicked = onSourceUrlClicked,
+                    onImageClicked = onImageClicked,
                     modifier = Modifier.padding(horizontal = padding),
                 )
             }
-            if (!metadataCollapsed) {
-                item(key = "ingredients_spacer") {
-                    Spacer(modifier = Modifier.height(toolbarClearance))
+
+            if (recipe.categories.isNotEmpty()) {
+                item(key = "categories") {
+                    RecipeCategoriesRow(
+                        categories = recipe.categories,
+                        modifier = Modifier.padding(horizontal = padding),
+                    )
                 }
+            }
+
+            recipe.description?.let { description ->
+                item(key = "description") {
+                    Text(
+                        text = description.toInlineMarkdownAnnotatedString(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = padding),
+                    )
+                }
+            }
+
+            ingredientItems(
+                lines = ingredientLines,
+                crossedOut = ingredientCrossedOut,
+                onRecipeLinkClick = onRecipeLinkClick,
+                itemPadding = padding,
+            )
+
+            item(key = "ingredients_spacer") {
+                Spacer(modifier = Modifier.height(toolbarClearance))
             }
         }
 
-        // Drag handle between ingredients and directions
         DragHandle(
             onDrag = { dragAmountX ->
                 val delta = dragAmountX * 0.001f
@@ -1236,36 +881,72 @@ private fun ColumnScope.RecipeDetailExpandedContent(
             }
         )
 
-        // Column 3: Directions
+        // Column 2: directions
         LazyColumn(
             modifier = Modifier.weight(1f - ingredientsWeight),
-            verticalArrangement = spacedBy(padding),
+            verticalArrangement = spacedBy(dimens.paddingSmall),
         ) {
-            stickyHeader(key = "directions_header") {
-                StickyColumnHeader(title = stringResource(Res.string.recipe_detail_directions))
-            }
-            itemsIndexed(directionParagraphs, key = { index, _ -> "direction_$index" }) {
-                index,
-                step ->
-                DirectionLineItem(
-                    content = step.content,
-                    marker = step.marker,
-                    isHeader = step.isHeader,
-                    highlighted = directionHighlightedIndex == index,
-                    onClick = {
-                        directionHighlightedIndex =
-                            if (directionHighlightedIndex == index) -1 else index
-                    },
-                    onRecipeLinkClick = onRecipeLinkClick,
-                    modifier = Modifier.padding(horizontal = padding),
-                )
-            }
-            if (!metadataCollapsed) {
-                item(key = "directions_spacer") {
-                    Spacer(modifier = Modifier.height(toolbarClearance))
-                }
+            directionItems(
+                steps = directionParagraphs,
+                highlightedIndex = directionHighlightedIndex,
+                onHighlightedIndexChanged = { directionHighlightedIndex = it },
+                onRecipeLinkClick = onRecipeLinkClick,
+                itemPadding = padding,
+            )
+
+            item(key = "directions_spacer") {
+                Spacer(modifier = Modifier.height(toolbarClearance))
             }
         }
+    }
+}
+
+/**
+ * The ingredients section — sticky header plus one tappable (crossable) line per ingredient — as
+ * `LazyListScope` items so both layouts share the same rendering and the section participates in
+ * whichever scroll it's placed in.
+ */
+private fun LazyListScope.ingredientItems(
+    lines: List<String>,
+    crossedOut: SnapshotStateList<Boolean>,
+    onRecipeLinkClick: (String) -> Unit,
+    itemPadding: Dp,
+) {
+    stickyHeader(key = "ingredients_header") {
+        StickyColumnHeader(title = stringResource(Res.string.recipe_detail_ingredients))
+    }
+    itemsIndexed(lines, key = { index, _ -> "ingredient_$index" }) { index, line ->
+        IngredientLineItem(
+            text = line,
+            crossedOut = crossedOut[index],
+            onClick = { crossedOut[index] = !crossedOut[index] },
+            onRecipeLinkClick = onRecipeLinkClick,
+            modifier = Modifier.padding(horizontal = itemPadding),
+        )
+    }
+}
+
+/** The directions section, as `LazyListScope` items. See [ingredientItems]. */
+private fun LazyListScope.directionItems(
+    steps: List<DirectionStep>,
+    highlightedIndex: Int,
+    onHighlightedIndexChanged: (Int) -> Unit,
+    onRecipeLinkClick: (String) -> Unit,
+    itemPadding: Dp,
+) {
+    stickyHeader(key = "directions_header") {
+        StickyColumnHeader(title = stringResource(Res.string.recipe_detail_directions))
+    }
+    itemsIndexed(steps, key = { index, _ -> "direction_$index" }) { index, step ->
+        DirectionLineItem(
+            content = step.content,
+            marker = step.marker,
+            isHeader = step.isHeader,
+            highlighted = highlightedIndex == index,
+            onClick = { onHighlightedIndexChanged(if (highlightedIndex == index) -1 else index) },
+            onRecipeLinkClick = onRecipeLinkClick,
+            modifier = Modifier.padding(horizontal = itemPadding),
+        )
     }
 }
 
@@ -1347,117 +1028,6 @@ private fun StarRating(rating: Int, modifier: Modifier = Modifier) {
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     },
-            )
-        }
-    }
-}
-
-@Composable
-private fun DescriptionCard(description: String, modifier: Modifier = Modifier) {
-    Card(modifier = modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(
-                text = stringResource(Res.string.recipe_detail_description),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Text(
-                text = description.toInlineMarkdownAnnotatedString(),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
-    }
-}
-
-@Composable
-private fun DetailsCard(
-    recipe: Recipe,
-    formattedPrepTime: TextData?,
-    formattedCookTime: TextData?,
-    formattedTotalTime: TextData?,
-    modifier: Modifier = Modifier,
-) {
-    Card(modifier = modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(
-                text = stringResource(Res.string.recipe_detail_details),
-                style = MaterialTheme.typography.titleMedium,
-            )
-
-            recipe.servings?.let { servings ->
-                DetailRow(
-                    icon = Icons.Default.Restaurant,
-                    label = stringResource(Res.string.recipe_detail_servings),
-                    value = "$servings",
-                )
-            }
-
-            formattedPrepTime?.let {
-                DetailRow(
-                    icon = Icons.Default.Timer,
-                    label = stringResource(Res.string.recipe_detail_prep_time),
-                    value = it.localized(),
-                )
-            }
-
-            formattedCookTime?.let {
-                DetailRow(
-                    icon = Icons.Default.Timer,
-                    label = stringResource(Res.string.recipe_detail_cook_time),
-                    value = it.localized(),
-                )
-            }
-
-            formattedTotalTime?.let {
-                DetailRow(
-                    icon = Icons.Default.Timer,
-                    label = stringResource(Res.string.recipe_detail_total_time),
-                    value = it.localized(),
-                )
-            }
-
-            recipe.calories?.let { calories ->
-                DetailRow(
-                    icon = Icons.Default.LocalFireDepartment,
-                    label = stringResource(Res.string.recipe_detail_calories),
-                    value =
-                        PhraseModel(
-                                Res.string.recipe_detail_kcal,
-                                "calories" to FixedString(calories.toString()),
-                            )
-                            .localized(),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SourceUrlCard(
-    sourceUrl: String,
-    onSourceUrlClicked: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Card(modifier = modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(
-                text = stringResource(Res.string.recipe_detail_source),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Text(
-                text = sourceUrl,
-                modifier = Modifier.clickable { onSourceUrlClicked(sourceUrl) },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary,
-                textDecoration = TextDecoration.Underline,
             )
         }
     }
@@ -1555,33 +1125,6 @@ private fun RecipeHeroSection(
                     stringResource(Res.string.recipe_detail_updated) + " " + updatedAt.localized(),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-@Composable
-private fun TimestampsCard(
-    createdAt: TextData,
-    updatedAt: TextData,
-    modifier: Modifier = Modifier,
-) {
-    Card(modifier = modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(
-                text = stringResource(Res.string.recipe_detail_timestamps),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            DetailRow(
-                label = stringResource(Res.string.recipe_detail_created),
-                value = createdAt.localized(),
-            )
-            DetailRow(
-                label = stringResource(Res.string.recipe_detail_updated),
-                value = updatedAt.localized(),
             )
         }
     }
@@ -1778,59 +1321,6 @@ internal fun directionSteps(directions: String): List<DirectionStep> =
             DirectionStep(content = parsed.content, marker = parsed.marker, isHeader = false)
         }
     }
-
-@Composable
-private fun IngredientsContent(
-    lines: List<String>,
-    crossedOut: SnapshotStateList<Boolean>,
-    onRecipeLinkClick: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val dimens = ChefMateTheme.dimens
-    Column(
-        modifier = modifier.padding(dimens.paddingNormal),
-        verticalArrangement = Arrangement.spacedBy(dimens.paddingExtraSmall),
-    ) {
-        lines.forEachIndexed { index, line ->
-            IngredientLineItem(
-                text = line,
-                crossedOut = crossedOut[index],
-                onClick = { crossedOut[index] = !crossedOut[index] },
-                onRecipeLinkClick = onRecipeLinkClick,
-            )
-        }
-    }
-}
-
-@Composable
-private fun DirectionsContent(
-    directions: String,
-    highlightedIndex: Int,
-    onHighlightedIndexChanged: (Int) -> Unit,
-    onRecipeLinkClick: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val steps = remember(directions) { directionSteps(directions) }
-
-    val dimens = ChefMateTheme.dimens
-    Column(
-        modifier = modifier.padding(dimens.paddingNormal),
-        verticalArrangement = Arrangement.spacedBy(dimens.paddingSmall),
-    ) {
-        steps.forEachIndexed { index, step ->
-            DirectionLineItem(
-                content = step.content,
-                marker = step.marker,
-                isHeader = step.isHeader,
-                highlighted = highlightedIndex == index,
-                onClick = {
-                    onHighlightedIndexChanged(if (highlightedIndex == index) -1 else index)
-                },
-                onRecipeLinkClick = onRecipeLinkClick,
-            )
-        }
-    }
-}
 
 @Composable
 private fun StickyColumnHeader(title: String, modifier: Modifier = Modifier) {
