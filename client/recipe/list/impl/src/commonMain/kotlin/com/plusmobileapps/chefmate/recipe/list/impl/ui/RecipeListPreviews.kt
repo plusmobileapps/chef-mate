@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
+import com.plusmobileapps.chefmate.recipe.list.RecipeBookPickerContent
 import com.plusmobileapps.chefmate.recipe.list.RecipeFilterOption
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
@@ -265,6 +266,27 @@ val previewRecipeListBlocScanError: RecipeListBloc =
         )
     )
 
+/**
+ * Books for the picker previews: the user's own books plus two shared with them by collaborators,
+ * so the "Shared with you" section renders.
+ */
+val previewRecipeBooksWithShared: List<RecipeBook> =
+    RecipeBook.Samples +
+        listOf(
+            RecipeBook.Sample.copy(
+                id = 4L,
+                name = "Grandma’s Classics",
+                isDefault = false,
+                isOwnedByCurrentUser = false,
+            ),
+            RecipeBook.Sample.copy(
+                id = 5L,
+                name = "Book Club Bakes",
+                isDefault = false,
+                isOwnedByCurrentUser = false,
+            ),
+        )
+
 @Preview(showBackground = true, heightDp = 1100)
 @Composable
 internal fun RecipeListPreview() {
@@ -287,4 +309,20 @@ internal fun RecipeListCookingTabletPreview() {
 @Composable
 internal fun RecipeListSelectionPreview() {
     ChefMateTheme { RecipeListScreen(bloc = previewRecipeListBlocSelectionMode) }
+}
+
+@Preview(showBackground = true, heightDp = 700)
+@Composable
+internal fun RecipeBookPickerPreview() {
+    ChefMateTheme {
+        RecipeBookPickerContent(
+            books = previewRecipeBooksWithShared,
+            activeBookId = RecipeBook.Sample.id,
+            isAllRecipesSelected = false,
+            onBookSelected = {},
+            onAllRecipesSelected = {},
+            onEditBook = {},
+            onCreateBook = {},
+        )
+    }
 }
