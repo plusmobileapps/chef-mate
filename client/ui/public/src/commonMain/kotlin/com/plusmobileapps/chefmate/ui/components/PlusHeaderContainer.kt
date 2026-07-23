@@ -77,6 +77,11 @@ fun PlusHeaderContainer(
     floatingHeader: Boolean = false,
     headerContainerAlpha: Float = 1f,
     centerAlignTitle: Boolean = false,
+    // Insets applied to the header itself. Defaults to null, which lets [PlusHeader] reserve the
+    // status bar at the top. Pass insets without a top component when the container is hosted
+    // somewhere already below the status bar (e.g. inside a ModalBottomSheet, where the drag handle
+    // owns that spacing) so the app bar doesn't add a second gap. Ignored when [floatingHeader].
+    headerWindowInsets: WindowInsets? = null,
     // When true the container reserves status-bar + app-bar space at the top *and* applies
     // horizontal display-cutout padding to the content. Pass false when the content manages all
     // its own insets (e.g. Cook Mode applies horizontal insets per body region) so the cutout
@@ -146,7 +151,7 @@ fun PlusHeaderContainer(
             horizontalAlignment = horizontalAlignment,
         ) {
             if (data !is PlusHeaderData.None) {
-                PlusHeader(data = data)
+                PlusHeader(data = data, windowInsets = headerWindowInsets)
             }
 
             Surface(
