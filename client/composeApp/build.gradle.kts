@@ -1,6 +1,7 @@
 import java.util.Properties
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
@@ -446,3 +447,66 @@ tasks
     .configureEach {
         dependsOn(extractSqliteJdbcMacDylib)
     }
+
+// --- Bundle JavaFX's macOS native libraries next to the app jars in the signed app image ---
+// The desktop browser is a JavaFX WebView (see browser/public .../PlatformWebView.jvm.kt), whose
+// native code ships *inside* the `org.openjfx:javafx-*:mac-aarch64` jars. When the WebView opens,
+// JavaFX's NativeLibLoader loads each `.dylib`: it first looks next to the JavaFX jars
+// (loadLibraryFullPath); only if that misses does it extract the lib from the jar to an unsigned
+// cache dir and dlopen() it. The Mac App Store sandbox forbids loading code that isn't part of the
+// signed bundle, so that extracted copy is blocked ("could not verify … free of malware") and
+// opening the browser fails on the Store/TestFlight build (libprism_es2.dylib).
+//
+// Fix (same idea as the sqlite-jdbc block above, but JavaFX searches next to its jars rather than a
+// resources dir): extract the JavaFX dylibs and hand them to jpackage's `files` input so Compose
+// copies them — signed via MacJarSignFileCopyingProcessor, exactly like the bundled skiko native —
+// into the app-image libs dir ($APPDIR) next to the JavaFX jars. loadLibraryFullPath then loads the
+// signed copies and JavaFX never extracts. macOS-only; Linux/Windows builds aren't sandboxed and
+// load JavaFX natives normally, and `./gradlew run` uses the full JDK/JavaFX off the module path.
+val isMacBuildHost =
+    System.getProperty("os.name").orEmpty().lowercase().let {
+        it.contains("mac") || it.contains("darwin")
+    }
+
+if (isMacBuildHost) {
+    val javafxMacNatives: Configuration by configurations.creating {
+        isCanBeConsumed = false
+        isCanBeResolved = true
+    }
+
+    val fxClassifier = osClassifier()
+    val fxVersion = libs.versions.openjfx.get()
+    dependencies {
+        // The same set of JavaFX modules pulled by jvmMain; only some ship dylibs (graphics: prism/
+        // glass/font, web: jfxwebkit, media: jfxmedia) but resolving all keeps this in lockstep.
+        listOf("base", "controls", "graphics", "media", "swing", "web").forEach { module ->
+            javafxMacNatives("org.openjfx:javafx-$module:$fxVersion:$fxClassifier")
+        }
+    }
+
+    val extractJavaFxMacDylibs by
+        tasks.registering(Sync::class) {
+            from(javafxMacNatives.map { zipTree(it) }) {
+                include("**/*.dylib")
+                // The dylibs sit at the jar root; flatten defensively so they land directly in the
+                // output dir (and therefore in $APPDIR, next to the jars) regardless of jar layout.
+                eachFile { path = name }
+                includeEmptyDirs = false
+            }
+            into(layout.buildDirectory.dir("javafxNatives"))
+        }
+
+    // Feed the extracted dylibs into the app-image assembly (createDistributable /
+    // createReleaseDistributable). Compose's prepareWorkingDir copies each non-jar `files` entry
+    // into the libs dir under its own name and signs it — how the skiko native gets signed in
+    // $APPDIR. Not the pkg/dmg packaging tasks: those wrap the already-built app image.
+    tasks
+        .matching { it.name == "createDistributable" || it.name == "createReleaseDistributable" }
+        .withType<AbstractJPackageTask>()
+        .configureEach {
+            // Add the extracted dylibs as individual files (a file tree), not the task's output
+            // directory — prepareWorkingDir copies each `files` entry as-is, so a bare directory
+            // would be copied whole instead of the loose dylibs landing next to the jars.
+            files.from(extractJavaFxMacDylibs.map { fileTree(it.destinationDir) })
+        }
+}
