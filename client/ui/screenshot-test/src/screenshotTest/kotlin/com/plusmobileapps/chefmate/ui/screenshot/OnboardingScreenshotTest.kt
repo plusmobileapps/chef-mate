@@ -175,6 +175,17 @@ fun OnboardingMealPlanningDarkScreenshot() {
     OnboardingScreenshot(content = { previewMealPlanningBloc.Content() }, darkTheme = true)
 }
 
+// Wide-window variant: on desktop/tablet the step content is far wider than a phone, so this guards
+// that the framed preview stays capped at a phone-ish width (centered) instead of filling the
+// window.
+
+@PreviewTest
+@Preview(showBackground = true, widthDp = 1000, heightDp = 900)
+@Composable
+fun OnboardingMealPlanningWideScreenshot() {
+    OnboardingScreenshot(content = { previewMealPlanningBloc.Content() })
+}
+
 // ── Start cooking (Cook Mode) ─────────────────────────────────────────────────
 
 @PreviewTest

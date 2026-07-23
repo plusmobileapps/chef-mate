@@ -13,11 +13,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+
+/**
+ * The widest an onboarding preview (static image or gif) is allowed to grow. Capped at roughly a
+ * phone screen's width so the previews stay phone-sized and don't stretch tall on wide windows
+ * (desktop/tablet), where the step content can otherwise be up to 600dp across.
+ */
+private val PreviewMaxWidth: Dp = 560.dp
 
 /**
  * A framed, phone-shaped preview of a real feature screen shown at the top of an onboarding step so
@@ -39,10 +47,14 @@ internal fun OnboardingPreviewImage(
         contentDescription = null, // decorative; the step title and body describe the feature
         contentScale = ContentScale.Crop,
         alignment = Alignment.TopCenter,
+        // widthIn must come before fillMaxWidth: fillMaxWidth fixes the width to the full available
+        // width (min == max), which a later widthIn can no longer shrink. Capping the incoming
+        // constraint first, then filling up to it, is what actually bounds the width on wide
+        // windows.
         modifier =
             modifier
+                .widthIn(max = PreviewMaxWidth)
                 .fillMaxWidth()
-                .widthIn(max = 240.dp)
                 .aspectRatio(3f / 4f)
                 .onboardingPreviewFrame(),
     )
@@ -65,7 +77,13 @@ internal fun OnboardingGifPreview(
         model = uri,
         contentDescription = null, // decorative; the step title and body describe the feature
         contentScale = ContentScale.Crop,
-        modifier = modifier.fillMaxWidth().aspectRatio(aspectRatio).onboardingPreviewFrame(),
+        // widthIn before fillMaxWidth — see OnboardingPreviewImage for why the order matters.
+        modifier =
+            modifier
+                .widthIn(max = PreviewMaxWidth)
+                .fillMaxWidth()
+                .aspectRatio(aspectRatio)
+                .onboardingPreviewFrame(),
     )
 }
 
