@@ -40,6 +40,26 @@ interface EditRecipeBookBloc : ComposeScreen {
     /** Dismisses the remove-confirmation dialog without removing. */
     fun onDismissRemoveMember()
 
+    /** Owner tapped "Delete book" — asks for confirmation first. */
+    fun onDeleteBookClicked()
+
+    /** Collaborator tapped "Leave book" — asks for confirmation first. */
+    fun onLeaveBookClicked()
+
+    /** Confirms the pending delete or leave. */
+    fun onConfirmBookAction()
+
+    /** Dismisses the delete/leave confirmation dialog without acting. */
+    fun onDismissBookAction()
+
+    /** The destructive action awaiting confirmation in [Model.pendingBookAction]. */
+    enum class BookAction {
+        /** The owner is deleting the book for everyone. */
+        DELETE,
+        /** A collaborator is removing themselves from the book. */
+        LEAVE,
+    }
+
     data class Model(
         val title: TextData,
         val name: String = "",
@@ -55,6 +75,16 @@ interface EditRecipeBookBloc : ComposeScreen {
         val inviteError: TextData? = null,
         /** The collaborator awaiting remove confirmation; non-null shows the confirm dialog. */
         val removingMember: RecipeBookMember? = null,
+        /** True for a saved book the user owns that isn't the undeletable default one. */
+        val canDeleteBook: Boolean = false,
+        /** True for a saved book the user collaborates on rather than owns. */
+        val canLeaveBook: Boolean = false,
+        /** True while the delete or leave is in flight. */
+        val isRemovingBook: Boolean = false,
+        /** Non-null shows the delete/leave confirmation dialog. */
+        val pendingBookAction: BookAction? = null,
+        /** Set when the delete or leave failed, e.g. offline. */
+        val bookActionError: TextData? = null,
     ) {
         val canSave: Boolean
             get() = name.isNotBlank() && !isSaving

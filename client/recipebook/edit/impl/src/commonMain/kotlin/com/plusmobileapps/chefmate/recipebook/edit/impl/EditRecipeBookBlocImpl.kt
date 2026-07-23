@@ -53,6 +53,14 @@ class EditRecipeBookBlocImpl(
 
     override fun onDismissRemoveMember() = viewModel.onDismissRemoveMember()
 
+    override fun onDeleteBookClicked() = viewModel.onDeleteBookClicked()
+
+    override fun onLeaveBookClicked() = viewModel.onLeaveBookClicked()
+
+    override fun onConfirmBookAction() = viewModel.onConfirmBookAction()
+
+    override fun onDismissBookAction() = viewModel.onDismissBookAction()
+
     private fun EditRecipeBookViewModel.State.toBlocModel(): Model =
         Model(
             title = title,
@@ -67,5 +75,10 @@ class EditRecipeBookBlocImpl(
             isInviting = isInviting,
             inviteError = inviteError,
             removingMember = removingMember,
+            canDeleteBook = canDeleteBook,
+            canLeaveBook = canLeaveBook,
+            isRemovingBook = isRemovingBook,
+            pendingBookAction = pendingBookAction,
+            bookActionError = bookActionError,
         )
 }

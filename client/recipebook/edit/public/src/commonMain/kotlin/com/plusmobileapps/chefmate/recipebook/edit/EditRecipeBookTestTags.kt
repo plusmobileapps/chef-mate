@@ -7,4 +7,6 @@ object EditRecipeBookTestTags {
     const val COLLABORATORS = "edit_recipe_book_collaborators"
     const val INVITE_EMAIL_FIELD = "edit_recipe_book_invite_email_field"
     const val INVITE_BUTTON = "edit_recipe_book_invite_button"
+    const val DELETE_BOOK_BUTTON = "edit_recipe_book_delete_book_button"
+    const val LEAVE_BOOK_BUTTON = "edit_recipe_book_leave_book_button"
 }

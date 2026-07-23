@@ -24,4 +24,17 @@
     <string name="edit_recipe_book_remove_message">Remove “{name}” from this book? They’ll lose access.</string>
     <string name="edit_recipe_book_remove_confirm">Remove</string>
     <string name="edit_recipe_book_remove_cancel">Cancel</string>
+
+    <!-- Deleting a book you own / leaving one shared with you -->
+    <string name="edit_recipe_book_delete_button">Delete book</string>
+    <string name="edit_recipe_book_delete_title">Delete recipe book</string>
+    <string name="edit_recipe_book_delete_message">Delete “{name}”? Everyone you shared it with will lose access. Your recipes stay in your library.</string>
+    <string name="edit_recipe_book_delete_confirm">Delete</string>
+    <string name="edit_recipe_book_delete_error">Couldn’t delete this book. Check your connection and try again.</string>
+    <string name="edit_recipe_book_leave_button">Leave book</string>
+    <string name="edit_recipe_book_leave_title">Leave recipe book</string>
+    <string name="edit_recipe_book_leave_message">Leave “{name}”? You’ll lose access to it and its recipes until the owner invites you back.</string>
+    <string name="edit_recipe_book_leave_confirm">Leave</string>
+    <string name="edit_recipe_book_leave_error">Couldn’t leave this book. Check your connection and try again.</string>
+    <string name="edit_recipe_book_cancel">Cancel</string>
 </resources>
