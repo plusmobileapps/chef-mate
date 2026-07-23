@@ -185,4 +185,131 @@ class EditRecipeBookViewModelTest {
 
             finished shouldBe true
         }
+
+    @Test
+    fun an_owner_can_delete_a_non_default_book_after_confirming() =
+        runTest(testDispatcher) {
+            var finished = false
+            val book = book(id = 7, name = "Holiday Baking")
+            val repo = FakeRecipeBookRepository(MutableStateFlow(listOf(book)))
+            val vm =
+                viewModel(
+                    EditRecipeBookBloc.Props.Edit(book.id),
+                    repository = repo,
+                    collaborationRepository = FakeRecipeBookCollaborationRepository(owner = true),
+                    onSaved = { finished = true },
+                )
+
+            vm.state.value.canDeleteBook shouldBe true
+            vm.state.value.canLeaveBook shouldBe false
+
+            vm.onDeleteBookClicked()
+            // Clicking only opens the confirmation — nothing deleted yet.
+            vm.state.value.pendingBookAction shouldBe EditRecipeBookBloc.BookAction.DELETE
+            repo.deleted.isEmpty() shouldBe true
+
+            vm.onConfirmBookAction()
+
+            repo.deleted shouldBe listOf(book.id)
+            finished shouldBe true
+        }
+
+    @Test
+    fun the_default_book_cannot_be_deleted() =
+        runTest(testDispatcher) {
+            val book = book(id = 1, name = "My Recipes", isDefault = true)
+            val repo = FakeRecipeBookRepository(MutableStateFlow(listOf(book)))
+            val vm =
+                viewModel(
+                    EditRecipeBookBloc.Props.Edit(book.id),
+                    repository = repo,
+                    collaborationRepository = FakeRecipeBookCollaborationRepository(owner = true),
+                )
+
+            vm.state.value.canDeleteBook shouldBe false
+
+            vm.onDeleteBookClicked()
+
+            vm.state.value.pendingBookAction shouldBe null
+        }
+
+    @Test
+    fun a_collaborator_leaves_instead_of_deleting() =
+        runTest(testDispatcher) {
+            var finished = false
+            val book = book(id = 7, name = "Shared with me")
+            val collab = FakeRecipeBookCollaborationRepository(owner = false)
+            val vm =
+                viewModel(
+                    EditRecipeBookBloc.Props.Edit(book.id),
+                    repository = FakeRecipeBookRepository(MutableStateFlow(listOf(book))),
+                    collaborationRepository = collab,
+                    onSaved = { finished = true },
+                )
+
+            vm.state.value.canDeleteBook shouldBe false
+            vm.state.value.canLeaveBook shouldBe true
+
+            vm.onLeaveBookClicked()
+            vm.state.value.pendingBookAction shouldBe EditRecipeBookBloc.BookAction.LEAVE
+            collab.left.isEmpty() shouldBe true
+
+            vm.onConfirmBookAction()
+
+            collab.left shouldBe listOf(book.id)
+            finished shouldBe true
+        }
+
+    @Test
+    fun dismissing_the_confirmation_leaves_the_book_alone() =
+        runTest(testDispatcher) {
+            val book = book(id = 7, name = "Holiday Baking")
+            val repo = FakeRecipeBookRepository(MutableStateFlow(listOf(book)))
+            val vm =
+                viewModel(
+                    EditRecipeBookBloc.Props.Edit(book.id),
+                    repository = repo,
+                    collaborationRepository = FakeRecipeBookCollaborationRepository(owner = true),
+                )
+
+            vm.onDeleteBookClicked()
+            vm.onDismissBookAction()
+
+            vm.state.value.pendingBookAction shouldBe null
+            repo.deleted.isEmpty() shouldBe true
+        }
+
+    @Test
+    fun a_failed_leave_surfaces_an_error_and_keeps_the_modal_open() =
+        runTest(testDispatcher) {
+            var finished = false
+            val book = book(id = 7, name = "Shared with me")
+            // The fake throws when asked to leave a book the user owns; force that mismatch by
+            // flipping ownership after the initial load so `canLeaveBook` is already true.
+            val collab = FakeRecipeBookCollaborationRepository(owner = false)
+            val vm =
+                viewModel(
+                    EditRecipeBookBloc.Props.Edit(book.id),
+                    repository = FakeRecipeBookRepository(MutableStateFlow(listOf(book))),
+                    collaborationRepository = collab,
+                    onSaved = { finished = true },
+                )
+            collab.owner = true
+
+            vm.onLeaveBookClicked()
+            vm.onConfirmBookAction()
+
+            (vm.state.value.bookActionError != null) shouldBe true
+            vm.state.value.isRemovingBook shouldBe false
+            finished shouldBe false
+        }
+
+    private fun book(id: Long, name: String, isDefault: Boolean = false) =
+        RecipeBook(
+            id = id,
+            name = name,
+            isDefault = isDefault,
+            createdAt = Instant.DISTANT_PAST,
+            updatedAt = Instant.DISTANT_PAST,
+        )
 }

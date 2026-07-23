@@ -240,6 +240,23 @@ class RecipeRepositoryImpl(
         }
     }
 
+    override suspend fun deleteLocalRecipesInBook(recipeBookId: Long) {
+        withContext(ioContext) {
+            db.transaction {
+                for (recipeId in bookJoinDb.getRecipeIdsForBook(recipeBookId).executeAsList()) {
+                    val books = bookJoinDb.getBookIdsForRecipe(recipeId).executeAsList()
+                    if (books.size <= 1) {
+                        // The join row goes with it via ON DELETE CASCADE. No remote delete and no
+                        // tombstone: the recipe still exists for whoever owns the book.
+                        db.delete(recipeId)
+                    } else {
+                        bookJoinDb.detach(recipeBookId = recipeBookId, recipeId = recipeId)
+                    }
+                }
+            }
+        }
+    }
+
     override suspend fun clearLocalData() {
         withContext(ioContext) { db.deleteAll() }
     }

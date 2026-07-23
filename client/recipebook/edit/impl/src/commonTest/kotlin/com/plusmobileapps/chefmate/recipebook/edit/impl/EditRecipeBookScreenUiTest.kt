@@ -27,14 +27,45 @@ class EditRecipeBookScreenUiTest {
         bloc.saveClicks shouldBe 1
     }
 
-    private class RecordingEditBloc : EditRecipeBookBloc {
+    @Test
+    fun an_owner_sees_delete_and_can_confirm_it() = runComposeUiTest {
+        val bloc =
+            RecordingEditBloc(EditRecipeBookBloc.Model(FixedString("Edit"), canDeleteBook = true))
+        setContent { EditRecipeBookScreen(bloc = bloc) }
+
+        editRecipeBook().assertLeaveBookNotShown().deleteBook()
+
+        bloc.deleteClicks shouldBe 1
+
+        bloc.state.value =
+            bloc.state.value.copy(pendingBookAction = EditRecipeBookBloc.BookAction.DELETE)
+        editRecipeBook().confirmDialog("Delete")
+
+        bloc.confirmClicks shouldBe 1
+    }
+
+    @Test
+    fun a_collaborator_sees_leave_instead_of_delete() = runComposeUiTest {
+        val bloc =
+            RecordingEditBloc(EditRecipeBookBloc.Model(FixedString("Edit"), canLeaveBook = true))
+        setContent { EditRecipeBookScreen(bloc = bloc) }
+
+        editRecipeBook().assertDeleteBookNotShown().leaveBook()
+
+        bloc.leaveClicks shouldBe 1
+    }
+
+    private class RecordingEditBloc(
+        model: EditRecipeBookBloc.Model =
+            EditRecipeBookBloc.Model(title = FixedString("New recipe book"), name = "x")
+    ) : EditRecipeBookBloc {
         var lastName: String? = null
         var saveClicks: Int = 0
+        var deleteClicks: Int = 0
+        var leaveClicks: Int = 0
+        var confirmClicks: Int = 0
 
-        override val state =
-            MutableStateFlow(
-                EditRecipeBookBloc.Model(title = FixedString("New recipe book"), name = "x")
-            )
+        override val state = MutableStateFlow(model)
 
         override fun onNameChanged(name: String) {
             lastName = name
@@ -60,6 +91,20 @@ class EditRecipeBookScreenUiTest {
         override fun onConfirmRemoveMember() = Unit
 
         override fun onDismissRemoveMember() = Unit
+
+        override fun onDeleteBookClicked() {
+            deleteClicks++
+        }
+
+        override fun onLeaveBookClicked() {
+            leaveClicks++
+        }
+
+        override fun onConfirmBookAction() {
+            confirmClicks++
+        }
+
+        override fun onDismissBookAction() = Unit
 
         @Composable
         override fun Content(modifier: Modifier) {

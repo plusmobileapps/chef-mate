@@ -9,6 +9,7 @@ import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextReplacement
 import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookTestTags
@@ -30,6 +31,27 @@ class EditRecipeBookRobot(private val test: ComposeUiTest) {
 
     fun save(): EditRecipeBookRobot = apply {
         test.onNodeWithTag(EditRecipeBookTestTags.SAVE_BUTTON).performClick()
+    }
+
+    fun deleteBook(): EditRecipeBookRobot = apply {
+        test.onNodeWithTag(EditRecipeBookTestTags.DELETE_BOOK_BUTTON).performClick()
+    }
+
+    fun leaveBook(): EditRecipeBookRobot = apply {
+        test.onNodeWithTag(EditRecipeBookTestTags.LEAVE_BOOK_BUTTON).performClick()
+    }
+
+    fun assertDeleteBookNotShown(): EditRecipeBookRobot = apply {
+        test.onNodeWithTag(EditRecipeBookTestTags.DELETE_BOOK_BUTTON).assertDoesNotExist()
+    }
+
+    fun assertLeaveBookNotShown(): EditRecipeBookRobot = apply {
+        test.onNodeWithTag(EditRecipeBookTestTags.LEAVE_BOOK_BUTTON).assertDoesNotExist()
+    }
+
+    /** Taps the confirm button in the delete/leave dialog. */
+    fun confirmDialog(text: String): EditRecipeBookRobot = apply {
+        test.onNodeWithText(text).performClick()
     }
 }
 

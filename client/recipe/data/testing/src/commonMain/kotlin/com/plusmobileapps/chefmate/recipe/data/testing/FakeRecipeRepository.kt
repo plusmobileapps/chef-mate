@@ -69,6 +69,17 @@ class FakeRecipeRepository(
         recipes.value = recipes.value.filterNot { it.id == id }
     }
 
+    override suspend fun deleteLocalRecipesInBook(recipeBookId: Long) {
+        recipes.value =
+            recipes.value.mapNotNull { recipe ->
+                when {
+                    recipeBookId !in recipe.recipeBookIds -> recipe
+                    recipe.recipeBookIds.size <= 1 -> null
+                    else -> recipe.copy(recipeBookIds = recipe.recipeBookIds - recipeBookId)
+                }
+            }
+    }
+
     override suspend fun clearLocalData() {
         recipes.value = emptyList()
     }

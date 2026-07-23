@@ -2,8 +2,10 @@ package com.plusmobileapps.chefmate.recipebook.edit.impl
 
 import chefmate.client.recipebook.edit.public.generated.resources.Res
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_create_title
+import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_delete_error
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_edit_title
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_invite_email_error
+import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_leave_error
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_name_error
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.di.IO
@@ -60,7 +62,15 @@ class EditRecipeBookViewModel(
                     _state.update { it.copy(name = book.name) }
                 }
                 val owner = withContext(ioContext) { collaborationRepository.isOwner(props.bookId) }
-                _state.update { it.copy(canManageCollaborators = owner) }
+                _state.update {
+                    it.copy(
+                        canManageCollaborators = owner,
+                        // The default "My Recipes" book is the fallback for unfiled recipes, so
+                        // it can't be deleted. Only a non-owner has a membership to give up.
+                        canDeleteBook = owner && book?.isDefault == false,
+                        canLeaveBook = !owner,
+                    )
+                }
                 // Everyone on the book sees the collaborator list; only the owner can
                 // invite/remove.
                 loadMembers(props.bookId)
@@ -137,6 +147,62 @@ class EditRecipeBookViewModel(
         }
     }
 
+    fun onDeleteBookClicked() {
+        if (!_state.value.canDeleteBook) return
+        _state.update {
+            it.copy(
+                pendingBookAction = EditRecipeBookBloc.BookAction.DELETE,
+                bookActionError = null,
+            )
+        }
+    }
+
+    fun onLeaveBookClicked() {
+        if (!_state.value.canLeaveBook) return
+        _state.update {
+            it.copy(pendingBookAction = EditRecipeBookBloc.BookAction.LEAVE, bookActionError = null)
+        }
+    }
+
+    fun onDismissBookAction() {
+        _state.update { it.copy(pendingBookAction = null) }
+    }
+
+    fun onConfirmBookAction() {
+        val bookId = (props as? EditRecipeBookBloc.Props.Edit)?.bookId ?: return
+        val current = _state.value
+        val action = current.pendingBookAction ?: return
+        if (current.isRemovingBook) return
+        _state.update { it.copy(pendingBookAction = null, isRemovingBook = true) }
+        scope.launch {
+            try {
+                withContext(ioContext) {
+                    when (action) {
+                        EditRecipeBookBloc.BookAction.DELETE -> repository.deleteBook(bookId)
+                        EditRecipeBookBloc.BookAction.LEAVE ->
+                            collaborationRepository.leaveBook(bookId)
+                    }
+                }
+                onSaved()
+            } catch (_: Throwable) {
+                // Both paths need the server, so a failure here is almost always connectivity.
+                _state.update {
+                    it.copy(
+                        isRemovingBook = false,
+                        bookActionError =
+                            ResourceString(
+                                if (action == EditRecipeBookBloc.BookAction.DELETE) {
+                                    Res.string.edit_recipe_book_delete_error
+                                } else {
+                                    Res.string.edit_recipe_book_leave_error
+                                }
+                            ),
+                    )
+                }
+            }
+        }
+    }
+
     fun onSaveClicked() {
         val current = _state.value
         if (current.isSaving) return
@@ -175,6 +241,11 @@ class EditRecipeBookViewModel(
         val isInviting: Boolean = false,
         val inviteError: TextData? = null,
         val removingMember: RecipeBookMember? = null,
+        val canDeleteBook: Boolean = false,
+        val canLeaveBook: Boolean = false,
+        val isRemovingBook: Boolean = false,
+        val pendingBookAction: EditRecipeBookBloc.BookAction? = null,
+        val bookActionError: TextData? = null,
     )
 
     @AssistedFactory

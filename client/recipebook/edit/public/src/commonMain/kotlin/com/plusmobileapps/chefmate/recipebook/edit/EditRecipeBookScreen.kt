@@ -35,12 +35,21 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import chefmate.client.recipebook.edit.public.generated.resources.Res
+import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_cancel
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_collaborators
+import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_delete_button
+import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_delete_confirm
+import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_delete_message
+import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_delete_title
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_group_editors
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_group_owner
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_group_viewers
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_invite_button
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_invite_email_label
+import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_leave_button
+import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_leave_confirm
+import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_leave_message
+import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_leave_title
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_member_declined
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_member_pending
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_name_label
@@ -107,6 +116,33 @@ fun EditRecipeBookScreen(bloc: EditRecipeBookBloc, modifier: Modifier = Modifier
         if (model.members.isNotEmpty()) {
             CollaboratorsSection(bloc = bloc, model = model)
         }
+
+        if (model.canDeleteBook || model.canLeaveBook) {
+            DangerZone(bloc = bloc, model = model)
+        }
+    }
+
+    model.pendingBookAction?.let { action ->
+        val isDelete = action == EditRecipeBookBloc.BookAction.DELETE
+        PlusDialog(
+            title =
+                (if (isDelete) Res.string.edit_recipe_book_delete_title
+                    else Res.string.edit_recipe_book_leave_title)
+                    .asTextData(),
+            message =
+                PhraseModel(
+                    if (isDelete) Res.string.edit_recipe_book_delete_message
+                    else Res.string.edit_recipe_book_leave_message,
+                    "name" to FixedString(model.name),
+                ),
+            confirmButtonText =
+                (if (isDelete) Res.string.edit_recipe_book_delete_confirm
+                    else Res.string.edit_recipe_book_leave_confirm)
+                    .asTextData(),
+            dismissButtonText = Res.string.edit_recipe_book_cancel.asTextData(),
+            onConfirmClick = bloc::onConfirmBookAction,
+            onDismissRequest = bloc::onDismissBookAction,
+        )
     }
 
     model.removingMember?.let { member ->
@@ -122,6 +158,46 @@ fun EditRecipeBookScreen(bloc: EditRecipeBookBloc, modifier: Modifier = Modifier
             onConfirmClick = bloc::onConfirmRemoveMember,
             onDismissRequest = bloc::onDismissRemoveMember,
         )
+    }
+}
+
+/**
+ * The one destructive control on this screen, kept below everything else. Which one shows follows
+ * from the user's relationship to the book: an owner deletes it for everyone, a collaborator only
+ * removes themselves.
+ */
+@Composable
+private fun DangerZone(bloc: EditRecipeBookBloc, model: EditRecipeBookBloc.Model) {
+    val isDelete = model.canDeleteBook
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(top = ChefMateTheme.dimens.paddingLarge),
+        verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
+    ) {
+        HorizontalDivider()
+        PlusButton(
+            text =
+                (if (isDelete) Res.string.edit_recipe_book_delete_button
+                    else Res.string.edit_recipe_book_leave_button)
+                    .asTextData(),
+            variant = PlusButtonVariant.DESTRUCTIVE,
+            isLoading = model.isRemovingBook,
+            enabled = !model.isRemovingBook,
+            onClick = if (isDelete) bloc::onDeleteBookClicked else bloc::onLeaveBookClicked,
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(top = ChefMateTheme.dimens.paddingSmall)
+                    .testTag(
+                        if (isDelete) EditRecipeBookTestTags.DELETE_BOOK_BUTTON
+                        else EditRecipeBookTestTags.LEAVE_BOOK_BUTTON
+                    ),
+        )
+        model.bookActionError?.let { error ->
+            Text(
+                text = error.localized(),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
     }
 }
 

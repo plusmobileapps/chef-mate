@@ -163,6 +163,92 @@ class RecipeBookRepositoryImplTest {
         }
 
     @Test
+    fun deleteBook_removes_an_unsynced_book_outright() =
+        runTest(testDispatcher) {
+            val repo = repository()
+            val created = repo.createBook("Weeknight Dinners")
+
+            repo.deleteBook(created.id)
+
+            repo.getRecipeBooks().test {
+                awaitItem().map { it.name } shouldNotContain "Weeknight Dinners"
+            }
+        }
+
+    @Test
+    fun deleteBook_falls_the_active_selection_back_to_the_default_book() =
+        runTest(testDispatcher) {
+            val repo = repository()
+            val created = repo.createBook("Weeknight Dinners")
+            repo.setActiveBook(created.id)
+
+            repo.deleteBook(created.id)
+
+            repo.activeBookId.value shouldBe repo.getDefaultBookId()
+        }
+
+    @Test
+    fun deleteBook_ignores_the_default_book() =
+        runTest(testDispatcher) {
+            val repo = repository()
+            val defaultId = repo.getDefaultBookId()
+
+            repo.deleteBook(defaultId)
+
+            repo.getRecipeBooks().test { awaitItem().map { it.id } shouldContain defaultId }
+        }
+
+    @Test
+    fun deleteBook_tombstones_a_synced_book_when_the_remote_delete_fails() =
+        runTest(testDispatcher) {
+            fakeAuth.setAuthenticated()
+            val failingRemote =
+                object : NoopRecipeBookRemote() {
+                    // Stamp a distinct remote id on each push so books count as synced.
+                    override suspend fun upsertRecipeBook(book: RemoteRecipeBook) =
+                        book.copy(id = "remote-${book.name}")
+
+                    override suspend fun deleteRecipeBook(remoteId: String) {
+                        error("offline")
+                    }
+                }
+            val repo = repository(remoteDataSource = failingRemote)
+            val created = repo.createBook("Weeknight Dinners")
+
+            repo.deleteBook(created.id)
+
+            // Hidden from the list right away, but the row survives so sync can retry the remote
+            // delete.
+            repo.getRecipeBooks().test { awaitItem().map { it.id } shouldNotContain created.id }
+            db.recipeBookQueries.getPendingDeletes().executeAsList().map { it.id } shouldContain
+                created.id
+        }
+
+    @Test
+    fun removeLocalBook_drops_the_row_without_deleting_it_remotely() =
+        runTest(testDispatcher) {
+            fakeAuth.setAuthenticated()
+            val deletedRemotely = mutableListOf<String>()
+            val remote =
+                object : NoopRecipeBookRemote() {
+                    override suspend fun upsertRecipeBook(book: RemoteRecipeBook) =
+                        book.copy(id = "remote-${book.name}")
+
+                    override suspend fun deleteRecipeBook(remoteId: String) {
+                        deletedRemotely += remoteId
+                    }
+                }
+            val repo = repository(remoteDataSource = remote)
+            val created = repo.createBook("Shared with me")
+
+            repo.removeLocalBook(created.id)
+
+            repo.getRecipeBooks().test { awaitItem().map { it.id } shouldNotContain created.id }
+            deletedRemotely.isEmpty() shouldBe true
+            db.recipeBookQueries.getPendingDeletes().executeAsList().isEmpty() shouldBe true
+        }
+
+    @Test
     fun pull_skips_books_with_only_a_pending_invite() =
         runTest(testDispatcher) {
             fakeAuth.setAuthenticated()
@@ -203,7 +289,7 @@ class RecipeBookRepositoryImplTest {
             }
         }
 
-    private class NoopRecipeBookRemote : RecipeBookRemoteDataSource {
+    private open class NoopRecipeBookRemote : RecipeBookRemoteDataSource {
         override suspend fun upsertRecipeBook(book: RemoteRecipeBook): RemoteRecipeBook = book
 
         override suspend fun deleteRecipeBook(remoteId: String) = Unit

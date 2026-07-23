@@ -6,6 +6,7 @@ package com.plusmobileapps.chefmate.recipebook.data.impl
 import com.plusmobileapps.chefmate.auth.data.testing.FakeAuthenticationRepository
 import com.plusmobileapps.chefmate.database.Database
 import com.plusmobileapps.chefmate.database.testing.createTestDatabase
+import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookMemberStatus
 import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RecipeBookMemberRemoteDataSource
@@ -13,10 +14,12 @@ import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RemoteCollaborato
 import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RemoteRecipeBookInvite
 import com.plusmobileapps.chefmate.recipebook.data.impl.remote.RemoteRecipeBookMember
 import com.plusmobileapps.chefmate.recipebook.data.testing.FakeRecipeBookRepository
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 
@@ -26,14 +29,18 @@ class RecipeBookCollaborationRepositoryImplTest {
     private val db: Database = createTestDatabase()
     private val fakeAuth = FakeAuthenticationRepository()
 
-    private fun repository(remote: RecipeBookMemberRemoteDataSource) =
+    private fun repository(
+        remote: RecipeBookMemberRemoteDataSource,
+        recipeBookRepository: FakeRecipeBookRepository = FakeRecipeBookRepository(),
+        recipeRepository: FakeRecipeRepository = FakeRecipeRepository(),
+    ) =
         RecipeBookCollaborationRepositoryImpl(
             bookDb = db.recipeBookQueries,
             ioContext = testDispatcher,
             remote = remote,
             authRepository = fakeAuth,
-            recipeBookRepository = FakeRecipeBookRepository(),
-            recipeRepository = FakeRecipeRepository(),
+            recipeBookRepository = recipeBookRepository,
+            recipeRepository = recipeRepository,
         )
 
     /** Creates a synced book (with a remote id) and returns its local id. */
@@ -88,6 +95,63 @@ class RecipeBookCollaborationRepositoryImplTest {
             statusByEmail["alex@example.com"] shouldBe RecipeBookMemberStatus.ACCEPTED
             statusByEmail["sam@example.com"] shouldBe RecipeBookMemberStatus.PENDING
             statusByEmail["jordan@example.com"] shouldBe RecipeBookMemberStatus.REJECTED
+        }
+
+    @Test
+    fun leaveBook_deletes_your_own_membership_and_purges_the_local_copy() =
+        runTest(testDispatcher) {
+            fakeAuth.setAuthenticated()
+            val bookId = createSyncedBook(remoteId = "remote-1")
+            val recipes =
+                MutableStateFlow(
+                    listOf(
+                        Recipe.Sample.copy(id = 1, recipeBookIds = setOf(bookId)),
+                        Recipe.Sample.copy(id = 2, recipeBookIds = setOf(99L)),
+                    )
+                )
+            val remote =
+                RecordingMemberRemote(
+                    collaborators =
+                        listOf(
+                            collaborator("owner@example.com", "accepted", isOwner = true),
+                            // The signed-in user's own membership.
+                            collaborator("test@example.com", "accepted"),
+                        )
+                )
+            val bookRepo = FakeRecipeBookRepository()
+            val repo =
+                repository(
+                    remote,
+                    recipeBookRepository = bookRepo,
+                    recipeRepository = FakeRecipeRepository(recipes),
+                )
+
+            repo.leaveBook(bookId)
+
+            remote.deleted shouldContainExactly listOf("m-test@example.com")
+            bookRepo.locallyRemoved shouldContainExactly listOf(bookId)
+            // The book is gone locally along with the recipes only it held; other books' recipes
+            // are untouched. Nothing was deleted on the server — it's still the owner's book.
+            recipes.value.map { it.id } shouldContainExactly listOf(2L)
+            bookRepo.deleted shouldBe emptyList()
+        }
+
+    @Test
+    fun leaveBook_refuses_when_you_have_no_membership_of_your_own() =
+        runTest(testDispatcher) {
+            fakeAuth.setAuthenticated()
+            val bookId = createSyncedBook(remoteId = "remote-1")
+            // Owner rows carry no member id, so an owner has nothing to give up.
+            val remote =
+                RecordingMemberRemote(
+                    collaborators =
+                        listOf(collaborator("test@example.com", "accepted", isOwner = true))
+                )
+            val repo = repository(remote)
+
+            shouldThrow<IllegalStateException> { repo.leaveBook(bookId) }
+
+            remote.deleted shouldBe emptyList()
         }
 
     private fun collaborator(email: String, status: String, isOwner: Boolean = false) =

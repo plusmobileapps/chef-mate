@@ -85,6 +85,22 @@ class RecipeBookCollaborationRepositoryImpl(
         remote.deleteMember(memberId)
     }
 
+    override suspend fun leaveBook(bookId: Long) {
+        val email = currentUser?.userEmail?.trim()?.lowercase() ?: error("Not signed in")
+        val remoteId = bookRemoteId(bookId) ?: error("Book not synced yet")
+        // Find our own member row. The owner has no member row of their own, so a match here also
+        // proves we're a collaborator rather than the owner.
+        val membership =
+            remote.fetchCollaborators(remoteId).firstOrNull {
+                !it.isOwner && it.email.trim().lowercase() == email
+            } ?: error("Not a collaborator on book $bookId")
+        remote.deleteMember(membership.memberId ?: error("Membership is missing its id"))
+        // Access is gone the moment the member row is deleted, so purge the local copy: the
+        // recipes this book alone held, then the book itself.
+        recipeRepository.deleteLocalRecipesInBook(bookId)
+        recipeBookRepository.removeLocalBook(bookId)
+    }
+
     override suspend fun pendingInvites(): List<RecipeBookInvite> {
         val email = currentUser?.userEmail?.trim()?.lowercase() ?: return emptyList()
         return remote.fetchPendingInvites(email).map {

@@ -15,6 +15,7 @@ class FakeRecipeBookCollaborationRepository(
     val invited: MutableList<Triple<Long, String, RecipeBookRole>> = mutableListOf()
     val removed: MutableList<String> = mutableListOf()
     val accepted: MutableList<String> = mutableListOf()
+    val left: MutableList<Long> = mutableListOf()
     val declined: MutableList<String> = mutableListOf()
 
     override suspend fun isOwner(bookId: Long): Boolean = owner
@@ -35,6 +36,11 @@ class FakeRecipeBookCollaborationRepository(
     override suspend fun removeMember(memberId: String) {
         removed += memberId
         members.removeAll { it.id == memberId }
+    }
+
+    override suspend fun leaveBook(bookId: Long) {
+        if (owner) error("Owners can't leave their own book")
+        left += bookId
     }
 
     override suspend fun pendingInvites(): List<RecipeBookInvite> = invites

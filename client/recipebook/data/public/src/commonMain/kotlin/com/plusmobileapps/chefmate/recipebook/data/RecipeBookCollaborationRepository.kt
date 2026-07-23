@@ -21,6 +21,13 @@ interface RecipeBookCollaborationRepository {
     /** Removes the collaborator / cancels the invite with remote [memberId]. */
     suspend fun removeMember(memberId: String)
 
+    /**
+     * Removes the current user's own membership from the book with local [bookId], then drops the
+     * book — and the recipes only it held — from the local cache. Owners can't leave their own
+     * book; they delete it via [RecipeBookRepository.deleteBook] instead.
+     */
+    suspend fun leaveBook(bookId: Long)
+
     /** Pending invites addressed to the current user's email. */
     suspend fun pendingInvites(): List<RecipeBookInvite>
 
