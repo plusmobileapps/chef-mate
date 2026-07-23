@@ -38,7 +38,6 @@ import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FilterList
@@ -101,9 +100,6 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_add_on
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_add_recipe
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_apply
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_all_recipes
-import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_create
-import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_edit
-import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_picker_title
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_selector
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_ai
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_appetizer
@@ -295,7 +291,7 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                                     // The dropdown is anchored to the selector on tablet/desktop
                                     // widths.
                                     if (windowSizeClass != WindowSizeClass.COMPACT) {
-                                        BookPickerDropdown(
+                                        RecipeBookPickerDropdown(
                                             expanded = state.isBookPickerOpen,
                                             books = state.recipeBooks,
                                             activeBookId = state.activeBook?.id,
@@ -528,7 +524,7 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
 
             // On phone widths the book picker is a bottom sheet rather than an anchored dropdown.
             if (state.isBookPickerOpen && windowSizeClass == WindowSizeClass.COMPACT) {
-                BookPickerSheet(
+                RecipeBookPickerSheet(
                     books = state.recipeBooks,
                     activeBookId = state.activeBook?.id,
                     isAllRecipesSelected = state.isAllRecipesSelected,
@@ -828,151 +824,6 @@ private fun BookSelector(
             )
         }
         dropdown()
-    }
-}
-
-@Composable
-private fun BookPickerDropdown(
-    expanded: Boolean,
-    books: List<com.plusmobileapps.chefmate.recipebook.data.RecipeBook>,
-    activeBookId: Long?,
-    isAllRecipesSelected: Boolean,
-    onDismiss: () -> Unit,
-    onBookSelected: (Long) -> Unit,
-    onAllRecipesSelected: () -> Unit,
-    onEditBook: (Long) -> Unit,
-    onCreateBook: () -> Unit,
-) {
-    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
-        DropdownMenuItem(
-            text = { Text(stringResource(Res.string.recipe_list_book_all_recipes)) },
-            onClick = onAllRecipesSelected,
-            leadingIcon = {
-                if (isAllRecipesSelected) {
-                    Icon(Icons.Default.Check, contentDescription = null)
-                } else {
-                    Spacer(modifier = Modifier.size(24.dp))
-                }
-            },
-        )
-        books.forEach { book ->
-            DropdownMenuItem(
-                text = { Text(book.name) },
-                onClick = { onBookSelected(book.id) },
-                leadingIcon = {
-                    if (book.id == activeBookId) {
-                        Icon(Icons.Default.Check, contentDescription = null)
-                    } else {
-                        Spacer(modifier = Modifier.size(24.dp))
-                    }
-                },
-                trailingIcon = {
-                    IconButton(onClick = { onEditBook(book.id) }) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = stringResource(Res.string.recipe_list_book_edit),
-                        )
-                    }
-                },
-            )
-        }
-        DropdownMenuItem(
-            text = { Text(stringResource(Res.string.recipe_list_book_create)) },
-            leadingIcon = { Icon(Icons.Default.Add, contentDescription = null) },
-            onClick = onCreateBook,
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun BookPickerSheet(
-    books: List<com.plusmobileapps.chefmate.recipebook.data.RecipeBook>,
-    activeBookId: Long?,
-    isAllRecipesSelected: Boolean,
-    onDismiss: () -> Unit,
-    onBookSelected: (Long) -> Unit,
-    onAllRecipesSelected: () -> Unit,
-    onEditBook: (Long) -> Unit,
-    onCreateBook: () -> Unit,
-) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-        Column(modifier = Modifier.fillMaxWidth().navigationBarsPadding()) {
-            Text(
-                text = stringResource(Res.string.recipe_list_book_picker_title),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(ChefMateTheme.dimens.paddingNormal),
-            )
-            Row(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .clickable { onAllRecipesSelected() }
-                        .padding(
-                            horizontal = ChefMateTheme.dimens.paddingNormal,
-                            vertical = ChefMateTheme.dimens.paddingSmall,
-                        ),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    imageVector =
-                        if (isAllRecipesSelected) Icons.Default.Check else Icons.Outlined.Circle,
-                    contentDescription = null,
-                )
-                Spacer(modifier = Modifier.width(ChefMateTheme.dimens.paddingNormal))
-                Text(
-                    text = stringResource(Res.string.recipe_list_book_all_recipes),
-                    modifier = Modifier.weight(1f),
-                )
-            }
-            books.forEach { book ->
-                Row(
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .clickable { onBookSelected(book.id) }
-                            .padding(
-                                horizontal = ChefMateTheme.dimens.paddingNormal,
-                                vertical = ChefMateTheme.dimens.paddingSmall,
-                            ),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        imageVector =
-                            if (book.id == activeBookId) Icons.Default.Check
-                            else Icons.Outlined.Circle,
-                        contentDescription = null,
-                    )
-                    Spacer(modifier = Modifier.width(ChefMateTheme.dimens.paddingNormal))
-                    Text(text = book.name, modifier = Modifier.weight(1f))
-                    IconButton(onClick = { onEditBook(book.id) }) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = stringResource(Res.string.recipe_list_book_edit),
-                        )
-                    }
-                }
-            }
-            DropdownRowCreate(onCreateBook = onCreateBook)
-            Spacer(modifier = Modifier.height(ChefMateTheme.dimens.paddingNormal))
-        }
-    }
-}
-
-@Composable
-private fun DropdownRowCreate(onCreateBook: () -> Unit) {
-    Row(
-        modifier =
-            Modifier.fillMaxWidth()
-                .clickable(onClick = onCreateBook)
-                .padding(
-                    horizontal = ChefMateTheme.dimens.paddingNormal,
-                    vertical = ChefMateTheme.dimens.paddingSmall,
-                ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(imageVector = Icons.Default.Add, contentDescription = null)
-        Spacer(modifier = Modifier.width(ChefMateTheme.dimens.paddingNormal))
-        Text(text = stringResource(Res.string.recipe_list_book_create))
     }
 }
 

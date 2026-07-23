@@ -13,4 +13,8 @@ object RecipeListTestTags {
     const val SCANNING_DIALOG: String = "recipe_list_scanning_dialog"
     const val SCAN_ERROR_DIALOG: String = "recipe_list_scan_error_dialog"
     const val BOOK_SELECTOR: String = "recipe_list_book_selector"
+    const val BOOK_PICKER: String = "recipe_list_book_picker"
+    const val BOOK_PICKER_ALL_RECIPES: String = "recipe_list_book_picker_all_recipes"
+    const val BOOK_PICKER_CREATE: String = "recipe_list_book_picker_create"
+    const val BOOK_PICKER_SHARED_HEADER: String = "recipe_list_book_picker_shared_header"
 }
