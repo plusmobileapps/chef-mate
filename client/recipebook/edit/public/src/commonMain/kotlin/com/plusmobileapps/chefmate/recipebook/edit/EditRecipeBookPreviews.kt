@@ -5,6 +5,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import chefmate.client.recipebook.edit.public.generated.resources.Res
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_create_title
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_edit_title
+import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_leave_error
 import chefmate.client.recipebook.edit.public.generated.resources.edit_recipe_book_name_error
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookMember
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookMemberStatus
@@ -35,6 +36,14 @@ private fun editRecipeBookBloc(model: Model): EditRecipeBookBloc =
         override fun onConfirmRemoveMember() = Unit
 
         override fun onDismissRemoveMember() = Unit
+
+        override fun onDeleteBookClicked() = Unit
+
+        override fun onLeaveBookClicked() = Unit
+
+        override fun onConfirmBookAction() = Unit
+
+        override fun onDismissBookAction() = Unit
     }
 
 val previewEditRecipeBookCreateBloc: EditRecipeBookBloc =
@@ -76,6 +85,7 @@ val previewEditRecipeBookCollaboratorsBloc: EditRecipeBookBloc =
             name = "Weeknight Dinners",
             isCreate = false,
             canManageCollaborators = true,
+            canDeleteBook = true,
             members =
                 listOf(
                     RecipeBookMember(
@@ -110,7 +120,7 @@ val previewEditRecipeBookCollaboratorsBloc: EditRecipeBookBloc =
         )
     )
 
-/** A non-owner collaborator viewing the book: read-only list, no invite controls. */
+/** A non-owner collaborator viewing the book: read-only list, no invite controls, can leave. */
 val previewEditRecipeBookMemberViewBloc: EditRecipeBookBloc =
     editRecipeBookBloc(
         Model(
@@ -118,6 +128,7 @@ val previewEditRecipeBookMemberViewBloc: EditRecipeBookBloc =
             name = "Weeknight Dinners",
             isCreate = false,
             canManageCollaborators = false,
+            canLeaveBook = true,
             members =
                 listOf(
                     RecipeBookMember(
@@ -182,6 +193,43 @@ val previewEditRecipeBookRemoveConfirmBloc: EditRecipeBookBloc =
         )
     )
 
+/** Owner view with the delete-book confirmation dialog showing. */
+val previewEditRecipeBookDeleteConfirmBloc: EditRecipeBookBloc =
+    editRecipeBookBloc(
+        Model(
+            title = Res.string.edit_recipe_book_edit_title.asTextData(),
+            name = "Weeknight Dinners",
+            isCreate = false,
+            canManageCollaborators = true,
+            canDeleteBook = true,
+            pendingBookAction = EditRecipeBookBloc.BookAction.DELETE,
+        )
+    )
+
+/** Collaborator view with the leave-book confirmation dialog showing. */
+val previewEditRecipeBookLeaveConfirmBloc: EditRecipeBookBloc =
+    editRecipeBookBloc(
+        Model(
+            title = Res.string.edit_recipe_book_edit_title.asTextData(),
+            name = "Weeknight Dinners",
+            isCreate = false,
+            canLeaveBook = true,
+            pendingBookAction = EditRecipeBookBloc.BookAction.LEAVE,
+        )
+    )
+
+/** Collaborator view after a failed leave — the destructive button carries an inline error. */
+val previewEditRecipeBookLeaveErrorBloc: EditRecipeBookBloc =
+    editRecipeBookBloc(
+        Model(
+            title = Res.string.edit_recipe_book_edit_title.asTextData(),
+            name = "Weeknight Dinners",
+            isCreate = false,
+            canLeaveBook = true,
+            bookActionError = Res.string.edit_recipe_book_leave_error.asTextData(),
+        )
+    )
+
 @Preview
 @Composable
 internal fun EditRecipeBookCreatePreview() {
@@ -216,4 +264,16 @@ internal fun EditRecipeBookCollaboratorsPreview() {
 @Composable
 internal fun EditRecipeBookMemberViewPreview() {
     ChefMateTheme { EditRecipeBookScreen(bloc = previewEditRecipeBookMemberViewBloc) }
+}
+
+@Preview
+@Composable
+internal fun EditRecipeBookDeleteConfirmPreview() {
+    ChefMateTheme { EditRecipeBookScreen(bloc = previewEditRecipeBookDeleteConfirmBloc) }
+}
+
+@Preview
+@Composable
+internal fun EditRecipeBookLeaveConfirmPreview() {
+    ChefMateTheme { EditRecipeBookScreen(bloc = previewEditRecipeBookLeaveConfirmBloc) }
 }

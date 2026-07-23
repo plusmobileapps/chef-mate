@@ -7,8 +7,11 @@ import com.android.tools.screenshot.PreviewTest
 import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookScreen
 import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookCollaboratorsBloc
 import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookCreateBloc
+import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookDeleteConfirmBloc
 import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookEditBloc
 import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookErrorBloc
+import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookLeaveConfirmBloc
+import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookLeaveErrorBloc
 import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookMemberViewBloc
 import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookRemoveConfirmBloc
 import com.plusmobileapps.chefmate.recipebook.edit.previewEditRecipeBookSavingBloc
@@ -68,4 +71,25 @@ fun EditRecipeBookMemberViewScreenshot() {
 @Composable
 fun EditRecipeBookRemoveConfirmScreenshot() {
     ChefMateTheme { EditRecipeBookScreen(bloc = previewEditRecipeBookRemoveConfirmBloc) }
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+fun EditRecipeBookDeleteConfirmScreenshot() {
+    ChefMateTheme { EditRecipeBookScreen(bloc = previewEditRecipeBookDeleteConfirmBloc) }
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+fun EditRecipeBookLeaveConfirmScreenshot() {
+    ChefMateTheme { EditRecipeBookScreen(bloc = previewEditRecipeBookLeaveConfirmBloc) }
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+fun EditRecipeBookLeaveErrorScreenshot() {
+    ChefMateTheme { EditRecipeBookScreen(bloc = previewEditRecipeBookLeaveErrorBloc) }
 }
