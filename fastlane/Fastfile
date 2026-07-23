@@ -47,6 +47,15 @@ platform :mac do
   # generate_apple_certs: false forces the LEGACY, platform-specific cert types instead of the
   # unified "Apple Distribution" cert. Compose's MacSigner only understands the legacy
   # "3rd Party Mac Developer Application:" name, so the modern unified cert can't sign the app.
+  #
+  # git_branch keeps the macOS assets on their own branch of the certificates repo, because match
+  # derives its storage path from the cert TYPE alone (appstore -> certs/distribution) and ignores
+  # `platform`. On a shared branch the "3rd Party Mac Developer Application" cert lands in the same
+  # folder as the iOS Distribution cert and match installs whichever one it happens to pick — which
+  # is what broke `ios release` with `No signing certificate "iOS Distribution" found`. The two
+  # platforms can only share a branch if they share a cert, and the unified cert is ruled out above.
+  MATCH_BRANCH = "macos"
+
   def fetch_mac_app_store_signing(api_key, readonly:, force: false)
     match(
       type: "appstore",
@@ -54,6 +63,7 @@ platform :mac do
       app_identifier: MAC_APP_IDENTIFIER,
       additional_cert_types: ["mac_installer_distribution"],
       generate_apple_certs: false,
+      git_branch: MATCH_BRANCH,
       readonly: readonly,
       force: force,
       api_key: api_key,
