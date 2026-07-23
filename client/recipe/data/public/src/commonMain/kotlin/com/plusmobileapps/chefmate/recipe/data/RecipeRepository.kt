@@ -55,6 +55,14 @@ interface RecipeRepository {
 
     suspend fun deleteRecipe(id: Long)
 
+    /**
+     * Drops the recipes that live *only* in the book with local id [recipeBookId] from the local
+     * cache, and detaches the rest from that book. Nothing is deleted remotely — this is for
+     * leaving a shared book, where the recipes belong to the book's owner and must survive on the
+     * server. Recipes also filed under another book are kept locally.
+     */
+    suspend fun deleteLocalRecipesInBook(recipeBookId: Long)
+
     suspend fun clearLocalData()
 
     suspend fun syncAllUnsynced()

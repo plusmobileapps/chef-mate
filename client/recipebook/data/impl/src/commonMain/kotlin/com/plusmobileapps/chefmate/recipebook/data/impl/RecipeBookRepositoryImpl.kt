@@ -129,6 +129,44 @@ class RecipeBookRepositoryImpl(
         return book
     }
 
+    override suspend fun deleteBook(id: Long) {
+        val entity = withContext(ioContext) { db.getById(id).executeAsOneOrNull() } ?: return
+        // "My Recipes" is the fallback book new recipes file under — it always has to exist.
+        if (entity.isDefault) return
+        val remoteId = entity.remoteId
+
+        if (remoteId == null) {
+            // Never synced, so there's nothing on the server to tombstone for.
+            withContext(ioContext) { db.delete(id) }
+            resetActiveBookIfRemoved(id)
+            return
+        }
+
+        withContext(ioContext) { db.markPendingDelete(id) }
+        resetActiveBookIfRemoved(id)
+
+        if (authRepository.state.value !is AuthState.Authenticated) return
+
+        try {
+            remoteDataSource.deleteRecipeBook(remoteId)
+            withContext(ioContext) { db.delete(id) }
+        } catch (t: Throwable) {
+            // Leave the tombstone for syncWithRemote to retry the remote delete.
+            Logger.e(throwable = t, tag = TAG) { "deleteBook failed remotely (localId=$id)" }
+        }
+    }
+
+    override suspend fun removeLocalBook(id: Long) {
+        withContext(ioContext) { db.delete(id) }
+        resetActiveBookIfRemoved(id)
+    }
+
+    /** Falls the selection back to "My Recipes" when the book that just went away was active. */
+    private suspend fun resetActiveBookIfRemoved(id: Long) {
+        if (_activeBookId.value != id) return
+        setActiveBook(ensureDefaultBookId())
+    }
+
     override suspend fun syncAllUnsynced() {
         val authState = authRepository.state.value
         if (authState is AuthState.Authenticated) {

@@ -57,6 +57,30 @@ class FakeRecipeBookRepository(
         return books.value.first { it.id == id }
     }
 
+    /** Local ids passed to [deleteBook], in call order. */
+    val deleted: MutableList<Long> = mutableListOf()
+
+    /** Local ids passed to [removeLocalBook], in call order. */
+    val locallyRemoved: MutableList<Long> = mutableListOf()
+
+    override suspend fun deleteBook(id: Long) {
+        if (books.value.firstOrNull { it.id == id }?.isDefault == true) return
+        deleted += id
+        removeBook(id)
+    }
+
+    override suspend fun removeLocalBook(id: Long) {
+        locallyRemoved += id
+        removeBook(id)
+    }
+
+    private fun removeBook(id: Long) {
+        books.value = books.value.filterNot { it.id == id }
+        if (_activeBookId.value == id) {
+            _activeBookId.value = books.value.firstOrNull { it.isDefault }?.id
+        }
+    }
+
     override suspend fun syncAllUnsynced() {}
 
     override suspend fun clearLocalData() {

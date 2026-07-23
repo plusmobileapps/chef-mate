@@ -35,6 +35,21 @@ interface RecipeBookRepository {
 
     suspend fun renameBook(id: Long, name: String): RecipeBook
 
+    /**
+     * Deletes the book [id] the current user owns, locally and remotely. The delete is tombstoned
+     * first so a failed remote call is retried on the next sync. No-op for the default "My Recipes"
+     * book — it's the fallback every unfiled recipe lands in, so it can't be removed.
+     *
+     * Recipes filed under the book are kept; they simply stop being listed under it.
+     */
+    suspend fun deleteBook(id: Long)
+
+    /**
+     * Drops the book [id] from the local cache without touching the remote copy. Used after leaving
+     * a shared book: the book lives on for its owner, the current user just loses access to it.
+     */
+    suspend fun removeLocalBook(id: Long)
+
     suspend fun syncAllUnsynced()
 
     suspend fun clearLocalData()
