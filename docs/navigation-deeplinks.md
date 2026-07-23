@@ -47,7 +47,11 @@ Without `force-stop`, Android delivers the intent to the already-running activit
 
 ## Desktop (JVM)
 
-`main(args: Array<String>)` takes the first CLI argument and parses it as a deeplink.
+### Dev loop (`./gradlew run`)
+
+`main(args: Array<String>)` takes the first CLI argument and parses it as the cold-start deeplink.
+Scheme registration and single-instance forwarding are no-ops under Gradle (there is no installed
+launcher), so this is the way to exercise a deeplink during development:
 
 ```bash
 ./gradlew :client:composeApp:run --args="chefmate://recipe/1"
@@ -56,6 +60,38 @@ Without `force-stop`, Android delivers the intent to the already-running activit
 ./gradlew :client:composeApp:run --args="chefmate://settings"
 ./gradlew :client:composeApp:run --args="chefmate://signin"
 ./gradlew :client:composeApp:run --args="chefmate://signup"
+```
+
+### Packaged builds (how a real deeplink reaches the app)
+
+Unlike Android/iOS, a desktop app cannot claim an `https://` link — Windows and Linux have no App
+Links / Universal Links, and the browser owns `https:`. So the invite-email `https://` link lands on
+the [chefmate-site](https://chefmate.plusmobileapps.com) `/notifications` page, which redirects the
+browser to `chefmate://notifications`. The desktop app registers that custom scheme so the OS routes
+it back:
+
+- **macOS** — declared via `CFBundleURLTypes` in the packaged Info.plist
+  (`client/composeApp/build.gradle.kts`, `macOS { infoPlist { … } }`). LaunchServices registers it
+  when the `.app` is installed. macOS delivers the URL as an Apple Event, caught by
+  `Desktop.setOpenURIHandler` in `main.kt` (not as a command-line arg), for both cold and warm launches.
+- **Windows / Linux** — self-registered at runtime by
+  `client/composeApp/src/jvmMain/.../deeplink/SchemeRegistrar.kt` (a per-user registry entry / a
+  `~/.local/share/applications` `.desktop` handler). No admin, idempotent, re-derived from the
+  installed launcher each launch. The OS starts a **new process** per open, so
+  `deeplink/SingleInstance.kt` elects one primary via a file lock + loopback socket and forwards
+  later launches' links into it, raising the existing window instead of opening a second one.
+
+Warm deliveries (macOS Apple Event, or a forwarded Windows/Linux launch) flow through
+`deeplink/DeepLinkCoordinator.kt` into `RootBloc.handleDeepLink(url)`; cold-start links are still
+applied as the initial navigation stack.
+
+Test against an **installed** packaged build (`packageReleasePkg` / `packageReleaseMsi` /
+`packageReleaseDeb`), with the app both closed and already open:
+
+```bash
+open "chefmate://notifications"                 # macOS
+xdg-open "chefmate://notifications"             # Linux
+start "" "chefmate://notifications"             # Windows (cmd)
 ```
 
 ## iOS
