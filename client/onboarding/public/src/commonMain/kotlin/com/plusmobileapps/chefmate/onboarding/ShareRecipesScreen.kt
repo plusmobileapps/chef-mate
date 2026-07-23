@@ -14,27 +14,26 @@ import com.plusmobileapps.chefmate.currentPlatform
 
 @Composable
 fun ShareRecipesScreen(bloc: ShareRecipesBloc, modifier: Modifier = Modifier) {
-    // Desktop copies the URL from the address bar; mobile shares the page to ChefMate directly.
     ShareRecipesScreen(
-        isDesktop = currentPlatform == Platform.JVM,
+        platform = currentPlatform,
         onNextClick = bloc::onNextClicked,
         modifier = modifier,
     )
 }
 
 /**
- * Platform-parameterized body, split out so both the mobile and desktop variants can be previewed
- * and snapshot-tested independently of the host platform.
+ * Platform-parameterized body, split out so each platform variant can be previewed and
+ * snapshot-tested independently of the host platform. Desktop copies the URL from the address bar
+ * (no share sheet), so it keeps the icon layout; iOS and Android each show their own share-sheet
+ * gif because the flow — and the sheet chrome — differs between them.
  */
 @Composable
 fun ShareRecipesScreen(
-    isDesktop: Boolean,
+    platform: Platform,
     onNextClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Desktop has no share-sheet screenshot to show (it copies the URL from the address bar), so it
-    // keeps the icon layout; mobile shows the real browser share sheet capture.
-    if (isDesktop) {
+    if (platform == Platform.JVM) {
         OnboardingIconLayout(
             icon = Icons.Default.ContentCopy,
             title = Res.string.onboarding_share_recipes_title,
@@ -46,6 +45,12 @@ fun ShareRecipesScreen(
             modifier = modifier,
         )
     } else {
+        // Each gif's aspect ratio is its own native capture size (width / height).
+        val (gifPath, gifAspectRatio) =
+            when (platform) {
+                Platform.IOS -> "files/onboarding_share_ios.gif" to 480f / 1044f
+                else -> "files/onboarding_share_android.gif" to 480f / 1067f
+            }
         OnboardingInfoLayout(
             title = Res.string.onboarding_share_recipes_title,
             message = Res.string.onboarding_share_recipes_message_mobile,
@@ -55,10 +60,7 @@ fun ShareRecipesScreen(
             buttonTestTag = OnboardingTestTags.SHARE_RECIPES_NEXT_BUTTON,
             modifier = modifier,
             preview = {
-                OnboardingGifPreview(
-                    uri = Res.getUri("files/onboarding_share_android.gif"),
-                    aspectRatio = 281f / 500f, // the capture's native size
-                )
+                OnboardingGifPreview(uri = Res.getUri(gifPath), aspectRatio = gifAspectRatio)
             },
         )
     }

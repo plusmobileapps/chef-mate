@@ -2,6 +2,7 @@ package com.plusmobileapps.chefmate.onboarding.impl.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import com.plusmobileapps.chefmate.Platform
 import com.plusmobileapps.chefmate.onboarding.AddToGroceryBloc
 import com.plusmobileapps.chefmate.onboarding.AddToGroceryScreen
 import com.plusmobileapps.chefmate.onboarding.CookModeBloc
@@ -115,14 +116,20 @@ internal fun WelcomeScreenSignedInPreview() {
 
 @Preview
 @Composable
-internal fun ShareRecipesScreenMobilePreview() {
-    ChefMateTheme { ShareRecipesScreen(isDesktop = false, onNextClick = {}) }
+internal fun ShareRecipesScreenAndroidPreview() {
+    ChefMateTheme { ShareRecipesScreen(platform = Platform.ANDROID, onNextClick = {}) }
+}
+
+@Preview
+@Composable
+internal fun ShareRecipesScreenIosPreview() {
+    ChefMateTheme { ShareRecipesScreen(platform = Platform.IOS, onNextClick = {}) }
 }
 
 @Preview
 @Composable
 internal fun ShareRecipesScreenDesktopPreview() {
-    ChefMateTheme { ShareRecipesScreen(isDesktop = true, onNextClick = {}) }
+    ChefMateTheme { ShareRecipesScreen(platform = Platform.JVM, onNextClick = {}) }
 }
 
 @Preview

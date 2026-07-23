@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
+import com.plusmobileapps.chefmate.Platform
 import com.plusmobileapps.chefmate.onboarding.OnboardingNavBar
 import com.plusmobileapps.chefmate.onboarding.ShareRecipesScreen
 import com.plusmobileapps.chefmate.onboarding.impl.ui.previewAddToGroceryBloc
@@ -90,22 +91,43 @@ fun OnboardingWelcomeSignedInDarkScreenshot() {
 }
 
 // ── Share recipes (own browser) ──────────────────────────────────────────────
-// Platform-specific copy: the mobile variant describes the share sheet, desktop describes copying
-// the address bar. Both are captured directly since the guidance is chosen by platform, not Bloc.
+// Platform-specific: iOS and Android each show their own share-sheet gif, desktop describes copying
+// the address bar. Captured directly since the variant is chosen by platform, not by the Bloc.
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 900)
 @Composable
-fun OnboardingShareRecipesMobileLightScreenshot() {
-    OnboardingScreenshot(content = { ShareRecipesScreen(isDesktop = false, onNextClick = {}) })
+fun OnboardingShareRecipesAndroidLightScreenshot() {
+    OnboardingScreenshot(
+        content = { ShareRecipesScreen(platform = Platform.ANDROID, onNextClick = {}) }
+    )
 }
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 900, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun OnboardingShareRecipesMobileDarkScreenshot() {
+fun OnboardingShareRecipesAndroidDarkScreenshot() {
     OnboardingScreenshot(
-        content = { ShareRecipesScreen(isDesktop = false, onNextClick = {}) },
+        content = { ShareRecipesScreen(platform = Platform.ANDROID, onNextClick = {}) },
+        darkTheme = true,
+    )
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900)
+@Composable
+fun OnboardingShareRecipesIosLightScreenshot() {
+    OnboardingScreenshot(
+        content = { ShareRecipesScreen(platform = Platform.IOS, onNextClick = {}) }
+    )
+}
+
+@PreviewTest
+@Preview(showBackground = true, heightDp = 900, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun OnboardingShareRecipesIosDarkScreenshot() {
+    OnboardingScreenshot(
+        content = { ShareRecipesScreen(platform = Platform.IOS, onNextClick = {}) },
         darkTheme = true,
     )
 }
@@ -114,7 +136,9 @@ fun OnboardingShareRecipesMobileDarkScreenshot() {
 @Preview(showBackground = true, heightDp = 900)
 @Composable
 fun OnboardingShareRecipesDesktopLightScreenshot() {
-    OnboardingScreenshot(content = { ShareRecipesScreen(isDesktop = true, onNextClick = {}) })
+    OnboardingScreenshot(
+        content = { ShareRecipesScreen(platform = Platform.JVM, onNextClick = {}) }
+    )
 }
 
 @PreviewTest
@@ -122,7 +146,7 @@ fun OnboardingShareRecipesDesktopLightScreenshot() {
 @Composable
 fun OnboardingShareRecipesDesktopDarkScreenshot() {
     OnboardingScreenshot(
-        content = { ShareRecipesScreen(isDesktop = true, onNextClick = {}) },
+        content = { ShareRecipesScreen(platform = Platform.JVM, onNextClick = {}) },
         darkTheme = true,
     )
 }
