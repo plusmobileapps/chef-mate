@@ -68,6 +68,33 @@ class RecipeListRobot(private val test: ComposeUiTest) {
     fun openBookPicker(): RecipeListRobot = apply {
         test.onNodeWithTag(RecipeListTestTags.BOOK_SELECTOR).performClick()
     }
+
+    // The picker renders in a sheet/popup outside [RecipeListTestTags.SCREEN], so the matchers
+    // below are scoped to the picker's own root tag instead of the screen's.
+
+    private val inBookPicker = hasAnyAncestor(hasTestTag(RecipeListTestTags.BOOK_PICKER))
+
+    fun assertBookListed(name: String): RecipeListRobot = apply {
+        test.waitUntilExactlyOneExists(hasText(name) and inBookPicker)
+        test.onNode(hasText(name) and inBookPicker).assertIsDisplayed()
+    }
+
+    /** Asserts the picker groups collaborators' books under their own "Shared with you" header. */
+    fun assertSharedBooksSectionShown(): RecipeListRobot = apply {
+        test.onNodeWithTag(RecipeListTestTags.BOOK_PICKER_SHARED_HEADER).assertIsDisplayed()
+    }
+
+    fun selectBook(name: String): RecipeListRobot = apply {
+        test.onNode(hasText(name) and inBookPicker).performClick()
+    }
+
+    fun selectAllRecipes(): RecipeListRobot = apply {
+        test.onNodeWithTag(RecipeListTestTags.BOOK_PICKER_ALL_RECIPES).performClick()
+    }
+
+    fun tapCreateBook(): RecipeListRobot = apply {
+        test.onNodeWithTag(RecipeListTestTags.BOOK_PICKER_CREATE).performClick()
+    }
 }
 
 fun ComposeUiTest.recipeList(): RecipeListRobot = RecipeListRobot(this)
