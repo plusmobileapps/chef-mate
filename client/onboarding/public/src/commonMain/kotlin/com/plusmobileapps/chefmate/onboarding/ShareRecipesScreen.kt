@@ -2,7 +2,6 @@ package com.plusmobileapps.chefmate.onboarding
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.IosShare
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import chefmate.client.onboarding.public.generated.resources.Res
@@ -33,19 +32,34 @@ fun ShareRecipesScreen(
     onNextClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    OnboardingIconLayout(
-        icon = if (isDesktop) Icons.Default.ContentCopy else Icons.Default.IosShare,
-        title = Res.string.onboarding_share_recipes_title,
-        message =
-            if (isDesktop) {
-                Res.string.onboarding_share_recipes_message_desktop
-            } else {
-                Res.string.onboarding_share_recipes_message_mobile
+    // Desktop has no share-sheet screenshot to show (it copies the URL from the address bar), so it
+    // keeps the icon layout; mobile shows the real browser share sheet capture.
+    if (isDesktop) {
+        OnboardingIconLayout(
+            icon = Icons.Default.ContentCopy,
+            title = Res.string.onboarding_share_recipes_title,
+            message = Res.string.onboarding_share_recipes_message_desktop,
+            buttonText = Res.string.onboarding_next,
+            onButtonClick = onNextClick,
+            screenTestTag = OnboardingTestTags.SHARE_RECIPES_SCREEN,
+            buttonTestTag = OnboardingTestTags.SHARE_RECIPES_NEXT_BUTTON,
+            modifier = modifier,
+        )
+    } else {
+        OnboardingInfoLayout(
+            title = Res.string.onboarding_share_recipes_title,
+            message = Res.string.onboarding_share_recipes_message_mobile,
+            buttonText = Res.string.onboarding_next,
+            onButtonClick = onNextClick,
+            screenTestTag = OnboardingTestTags.SHARE_RECIPES_SCREEN,
+            buttonTestTag = OnboardingTestTags.SHARE_RECIPES_NEXT_BUTTON,
+            modifier = modifier,
+            preview = {
+                OnboardingGifPreview(
+                    uri = Res.getUri("files/onboarding_share_android.gif"),
+                    aspectRatio = 281f / 500f, // the capture's native size
+                )
             },
-        buttonText = Res.string.onboarding_next,
-        onButtonClick = onNextClick,
-        screenTestTag = OnboardingTestTags.SHARE_RECIPES_SCREEN,
-        buttonTestTag = OnboardingTestTags.SHARE_RECIPES_NEXT_BUTTON,
-        modifier = modifier,
-    )
+        )
+    }
 }

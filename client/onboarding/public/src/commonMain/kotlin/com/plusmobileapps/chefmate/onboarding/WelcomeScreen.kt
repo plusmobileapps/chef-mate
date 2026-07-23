@@ -41,6 +41,7 @@ fun WelcomeScreen(bloc: WelcomeBloc, modifier: Modifier = Modifier) {
             }
         },
     ) {
+        OnboardingAppIcon()
         Text(
             text = stringResource(Res.string.onboarding_welcome_title),
             style = MaterialTheme.typography.headlineMedium,

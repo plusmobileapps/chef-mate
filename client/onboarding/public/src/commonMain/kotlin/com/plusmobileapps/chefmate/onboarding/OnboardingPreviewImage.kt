@@ -14,6 +14,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -32,7 +33,6 @@ internal fun OnboardingPreviewImage(
     modifier: Modifier = Modifier,
 ) {
     val isDark = ChefMateTheme.colorScheme.surface.luminance() < 0.5f
-    val shape = RoundedCornerShape(20.dp)
 
     Image(
         painter = painterResource(if (isDark) dark else light),
@@ -44,8 +44,39 @@ internal fun OnboardingPreviewImage(
                 .fillMaxWidth()
                 .widthIn(max = 240.dp)
                 .aspectRatio(3f / 4f)
-                .shadow(elevation = 8.dp, shape = shape)
-                .clip(shape)
-                .border(1.dp, ChefMateTheme.colorScheme.outlineVariant, shape),
+                .onboardingPreviewFrame(),
     )
+}
+
+/**
+ * An animated preview of a real feature (e.g. a share-sheet capture) shown at the top of an
+ * onboarding step. Unlike [OnboardingPreviewImage], [uri] has no light/dark variant. The frame is
+ * sized to fill the step's width and takes the capture's own [aspectRatio] (width / height) so the
+ * gif fills the whole frame edge-to-edge with no letterboxing and no stretching — a tall/portrait
+ * capture therefore grows downward to fill the available space.
+ */
+@Composable
+internal fun OnboardingGifPreview(
+    uri: String,
+    aspectRatio: Float,
+    modifier: Modifier = Modifier,
+) {
+    AsyncImage(
+        model = uri,
+        contentDescription = null, // decorative; the step title and body describe the feature
+        contentScale = ContentScale.Crop,
+        modifier = modifier.fillMaxWidth().aspectRatio(aspectRatio).onboardingPreviewFrame(),
+    )
+}
+
+/**
+ * Shared framing (rounded card, shadow, outline) for onboarding preview media, so a static
+ * [OnboardingPreviewImage] and an animated [OnboardingGifPreview] look consistent.
+ */
+@Composable
+internal fun Modifier.onboardingPreviewFrame(): Modifier {
+    val shape = RoundedCornerShape(20.dp)
+    return this.shadow(elevation = 8.dp, shape = shape)
+        .clip(shape)
+        .border(1.dp, ChefMateTheme.colorScheme.outlineVariant, shape)
 }

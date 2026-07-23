@@ -12,8 +12,6 @@ import chefmate.client.onboarding.public.generated.resources.onboarding_save_rec
 @Composable
 fun SaveRecipesScreen(bloc: SaveRecipesBloc, modifier: Modifier = Modifier) {
     OnboardingInfoLayout(
-        previewLight = Res.drawable.onboarding_preview_save_recipes,
-        previewDark = Res.drawable.onboarding_preview_save_recipes_dark,
         title = Res.string.onboarding_save_recipes_title,
         message = Res.string.onboarding_save_recipes_message,
         buttonText = Res.string.onboarding_next,
@@ -21,5 +19,11 @@ fun SaveRecipesScreen(bloc: SaveRecipesBloc, modifier: Modifier = Modifier) {
         screenTestTag = OnboardingTestTags.SAVE_RECIPES_SCREEN,
         buttonTestTag = OnboardingTestTags.SAVE_RECIPES_NEXT_BUTTON,
         modifier = modifier,
+        preview = {
+            OnboardingPreviewImage(
+                light = Res.drawable.onboarding_preview_save_recipes,
+                dark = Res.drawable.onboarding_preview_save_recipes_dark,
+            )
+        },
     )
 }

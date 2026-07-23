@@ -132,6 +132,9 @@ kotlin {
             implementation(libs.ktor.client.cio)
             implementation(libs.bugsnag.kmp)
             implementation(libs.kermit.bugsnag)
+            // Animated-gif decoding is Android-only in Coil; non-Android targets render the gif's
+            // first frame statically via Coil's built-in Skia decoder (see addAnimatedGifDecoder).
+            implementation(libs.coil.gif)
         }
         jvmMain.dependencies {
             implementation(libs.ktor.client.cio)
