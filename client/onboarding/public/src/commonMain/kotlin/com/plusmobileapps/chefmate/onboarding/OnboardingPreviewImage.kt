@@ -2,7 +2,6 @@ package com.plusmobileapps.chefmate.onboarding
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -54,38 +53,7 @@ internal fun OnboardingPreviewImage(
     )
 }
 
-/**
- * An animated preview of a real feature (e.g. a share-sheet capture) shown at the top of an
- * onboarding step. Unlike [OnboardingPreviewImage], [resourcePath] (a Compose resource path like
- * "files/onboarding_share_ios.gif") has no light/dark variant. The frame is sized to fill the
- * step's width and takes the capture's own [aspectRatio] (width / height) so the gif fills the
- * whole frame edge-to-edge with no letterboxing and no stretching — a tall/portrait capture
- * therefore grows downward to fill the available space. Animation is handled per platform by
- * [AnimatedGif].
- */
-@Composable
-internal fun OnboardingGifPreview(
-    resourcePath: String,
-    aspectRatio: Float,
-    modifier: Modifier = Modifier,
-) {
-    AnimatedGif(
-        resourcePath = resourcePath,
-        contentScale = ContentScale.Crop,
-        // widthIn before fillMaxWidth — see OnboardingPreviewImage for why the order matters.
-        modifier =
-            modifier
-                .widthIn(max = PreviewMaxWidth)
-                .fillMaxWidth()
-                .aspectRatio(aspectRatio)
-                .onboardingPreviewFrame(),
-    )
-}
-
-/**
- * Shared framing (rounded card, shadow, outline) for onboarding preview media, so a static
- * [OnboardingPreviewImage] and an animated [OnboardingGifPreview] look consistent.
- */
+/** Shared framing (rounded card, shadow, outline) for an onboarding preview image. */
 @Composable
 internal fun Modifier.onboardingPreviewFrame(): Modifier {
     val shape = RoundedCornerShape(20.dp)

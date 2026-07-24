@@ -91,13 +91,13 @@ fun OnboardingWelcomeSignedInDarkScreenshot() {
 }
 
 // ── Share recipes (own browser) ──────────────────────────────────────────────
-// Platform-specific: iOS and Android each show their own share-sheet gif, desktop describes copying
-// the address bar. Captured directly since the variant is chosen by platform, not by the Bloc.
+// Platform-specific: mobile shows a share-sheet preview image, desktop describes copying the
+// address bar. Captured directly since the variant is chosen by platform, not by the Bloc.
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 900)
 @Composable
-fun OnboardingShareRecipesAndroidLightScreenshot() {
+fun OnboardingShareRecipesMobileLightScreenshot() {
     OnboardingScreenshot(
         content = { ShareRecipesScreen(platform = Platform.ANDROID, onNextClick = {}) }
     )
@@ -106,28 +106,9 @@ fun OnboardingShareRecipesAndroidLightScreenshot() {
 @PreviewTest
 @Preview(showBackground = true, heightDp = 900, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun OnboardingShareRecipesAndroidDarkScreenshot() {
+fun OnboardingShareRecipesMobileDarkScreenshot() {
     OnboardingScreenshot(
         content = { ShareRecipesScreen(platform = Platform.ANDROID, onNextClick = {}) },
-        darkTheme = true,
-    )
-}
-
-@PreviewTest
-@Preview(showBackground = true, heightDp = 900)
-@Composable
-fun OnboardingShareRecipesIosLightScreenshot() {
-    OnboardingScreenshot(
-        content = { ShareRecipesScreen(platform = Platform.IOS, onNextClick = {}) }
-    )
-}
-
-@PreviewTest
-@Preview(showBackground = true, heightDp = 900, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun OnboardingShareRecipesIosDarkScreenshot() {
-    OnboardingScreenshot(
-        content = { ShareRecipesScreen(platform = Platform.IOS, onNextClick = {}) },
         darkTheme = true,
     )
 }

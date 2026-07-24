@@ -6,6 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import chefmate.client.onboarding.public.generated.resources.Res
 import chefmate.client.onboarding.public.generated.resources.onboarding_next
+import chefmate.client.onboarding.public.generated.resources.onboarding_preview_share
+import chefmate.client.onboarding.public.generated.resources.onboarding_preview_share_dark
 import chefmate.client.onboarding.public.generated.resources.onboarding_share_recipes_message_desktop
 import chefmate.client.onboarding.public.generated.resources.onboarding_share_recipes_message_mobile
 import chefmate.client.onboarding.public.generated.resources.onboarding_share_recipes_title
@@ -24,8 +26,8 @@ fun ShareRecipesScreen(bloc: ShareRecipesBloc, modifier: Modifier = Modifier) {
 /**
  * Platform-parameterized body, split out so each platform variant can be previewed and
  * snapshot-tested independently of the host platform. Desktop copies the URL from the address bar
- * (no share sheet), so it keeps the icon layout; iOS and Android each show their own share-sheet
- * gif because the flow — and the sheet chrome — differs between them.
+ * (no share sheet), so it keeps the icon layout; mobile (iOS and Android) shares from the system
+ * share sheet, so it shows a preview image of that flow.
  */
 @Composable
 fun ShareRecipesScreen(
@@ -45,12 +47,6 @@ fun ShareRecipesScreen(
             modifier = modifier,
         )
     } else {
-        // Each gif's aspect ratio is its own native capture size (width / height).
-        val (gifPath, gifAspectRatio) =
-            when (platform) {
-                Platform.IOS -> "files/onboarding_share_ios.gif" to 480f / 1044f
-                else -> "files/onboarding_share_android.gif" to 480f / 1067f
-            }
         OnboardingInfoLayout(
             title = Res.string.onboarding_share_recipes_title,
             message = Res.string.onboarding_share_recipes_message_mobile,
@@ -60,7 +56,10 @@ fun ShareRecipesScreen(
             buttonTestTag = OnboardingTestTags.SHARE_RECIPES_NEXT_BUTTON,
             modifier = modifier,
             preview = {
-                OnboardingGifPreview(resourcePath = gifPath, aspectRatio = gifAspectRatio)
+                OnboardingPreviewImage(
+                    light = Res.drawable.onboarding_preview_share,
+                    dark = Res.drawable.onboarding_preview_share_dark,
+                )
             },
         )
     }
