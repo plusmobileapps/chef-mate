@@ -112,13 +112,20 @@ internal fun WelcomeScreenSignedInPreview() {
     ChefMateTheme { WelcomeScreen(bloc = previewWelcomeSignedInBloc) }
 }
 
-// Share recipes differs by platform (mobile share sheet vs desktop address-bar copy), so it's
-// previewed by variant rather than through a fake Bloc.
+// Share recipes is platform-specific (iOS and Android show their own share sheet, desktop copies
+// the
+// address bar), so it's previewed by variant rather than through a fake Bloc.
 
 @Preview
 @Composable
-internal fun ShareRecipesScreenMobilePreview() {
+internal fun ShareRecipesScreenAndroidPreview() {
     ChefMateTheme { ShareRecipesScreen(platform = Platform.ANDROID, onNextClick = {}) }
+}
+
+@Preview
+@Composable
+internal fun ShareRecipesScreenIosPreview() {
+    ChefMateTheme { ShareRecipesScreen(platform = Platform.IOS, onNextClick = {}) }
 }
 
 @Preview
