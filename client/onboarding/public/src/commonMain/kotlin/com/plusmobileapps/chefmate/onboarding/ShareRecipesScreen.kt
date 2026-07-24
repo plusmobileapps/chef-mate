@@ -6,6 +6,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import chefmate.client.onboarding.public.generated.resources.Res
 import chefmate.client.onboarding.public.generated.resources.onboarding_next
+import chefmate.client.onboarding.public.generated.resources.onboarding_preview_share_android
+import chefmate.client.onboarding.public.generated.resources.onboarding_preview_share_android_dark
+import chefmate.client.onboarding.public.generated.resources.onboarding_preview_share_ios
+import chefmate.client.onboarding.public.generated.resources.onboarding_preview_share_ios_dark
 import chefmate.client.onboarding.public.generated.resources.onboarding_share_recipes_message_desktop
 import chefmate.client.onboarding.public.generated.resources.onboarding_share_recipes_message_mobile
 import chefmate.client.onboarding.public.generated.resources.onboarding_share_recipes_title
@@ -24,8 +28,8 @@ fun ShareRecipesScreen(bloc: ShareRecipesBloc, modifier: Modifier = Modifier) {
 /**
  * Platform-parameterized body, split out so each platform variant can be previewed and
  * snapshot-tested independently of the host platform. Desktop copies the URL from the address bar
- * (no share sheet), so it keeps the icon layout; iOS and Android each show their own share-sheet
- * gif because the flow — and the sheet chrome — differs between them.
+ * (no share sheet), so it keeps the icon layout; iOS and Android each show a capture of their own
+ * system share sheet, which look different enough to warrant a per-platform image.
  */
 @Composable
 fun ShareRecipesScreen(
@@ -45,11 +49,14 @@ fun ShareRecipesScreen(
             modifier = modifier,
         )
     } else {
-        // Each gif's aspect ratio is its own native capture size (width / height).
-        val (gifPath, gifAspectRatio) =
+        val (light, dark) =
             when (platform) {
-                Platform.IOS -> "files/onboarding_share_ios.gif" to 480f / 1044f
-                else -> "files/onboarding_share_android.gif" to 480f / 1067f
+                Platform.IOS ->
+                    Res.drawable.onboarding_preview_share_ios to
+                        Res.drawable.onboarding_preview_share_ios_dark
+                else ->
+                    Res.drawable.onboarding_preview_share_android to
+                        Res.drawable.onboarding_preview_share_android_dark
             }
         OnboardingInfoLayout(
             title = Res.string.onboarding_share_recipes_title,
@@ -59,9 +66,7 @@ fun ShareRecipesScreen(
             screenTestTag = OnboardingTestTags.SHARE_RECIPES_SCREEN,
             buttonTestTag = OnboardingTestTags.SHARE_RECIPES_NEXT_BUTTON,
             modifier = modifier,
-            preview = {
-                OnboardingGifPreview(resourcePath = gifPath, aspectRatio = gifAspectRatio)
-            },
+            preview = { OnboardingPreviewImage(light = light, dark = dark) },
         )
     }
 }

@@ -91,8 +91,9 @@ fun OnboardingWelcomeSignedInDarkScreenshot() {
 }
 
 // ── Share recipes (own browser) ──────────────────────────────────────────────
-// Platform-specific: iOS and Android each show their own share-sheet gif, desktop describes copying
-// the address bar. Captured directly since the variant is chosen by platform, not by the Bloc.
+// Platform-specific: iOS and Android each show a capture of their own share sheet, desktop
+// describes copying the address bar. Captured directly since the variant is chosen by platform,
+// not by the Bloc.
 
 @PreviewTest
 @Preview(showBackground = true, heightDp = 900)

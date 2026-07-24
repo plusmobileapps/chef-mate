@@ -13,14 +13,7 @@ import com.plusmobileapps.chefmate.toast.ToastService
 @Composable
 fun App(rootBloc: RootBloc, toastService: ToastService, modifier: Modifier = Modifier) {
     setSingletonImageLoaderFactory { context ->
-        ImageLoader.Builder(context)
-            .components {
-                add(KtorNetworkFetcherFactory())
-                // The gif decoder is platform-specific: coil3.gif.GifDecoder/AnimatedImageDecoder
-                // only exist on Android, while other targets use the Skia-based decoder.
-                addAnimatedGifDecoder()
-            }
-            .build()
+        ImageLoader.Builder(context).components { add(KtorNetworkFetcherFactory()) }.build()
     }
     ToastScaffold(toastService = toastService) { RootScreen(rootBloc, modifier) }
 }
