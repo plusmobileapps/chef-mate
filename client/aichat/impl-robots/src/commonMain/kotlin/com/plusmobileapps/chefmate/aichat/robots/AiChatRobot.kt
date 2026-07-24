@@ -62,9 +62,29 @@ class AiChatRobot(private val test: ComposeUiTest) {
         test.onNode(hasTestTag(AiChatTestTags.SEND_BUTTON) and onPeek).performClick()
     }
 
+    /** Taps the peek's new-conversation button. */
+    fun tapNewChatFromPeek(): AiChatRobot = apply {
+        test.onNode(hasTestTag(AiChatTestTags.NEW_CHAT_BUTTON) and onPeek).performClick()
+    }
+
     /** Waits for the expanded, full-screen chat (its header) to be shown. */
     fun awaitExpanded(): AiChatRobot = apply {
         test.waitUntilExactlyOneExists(hasTestTag(AiChatTestTags.SCREEN))
+    }
+
+    /** Closes the expanded sheet via its app-bar close (X) button. */
+    fun closeFromExpanded(): AiChatRobot = apply {
+        test.onNode(hasTestTag(AiChatTestTags.CLOSE_BUTTON) and onScreen).performClick()
+    }
+
+    /** Waits for the peek's conversation excerpt (shown when the recipe already has a chat). */
+    fun awaitPeekExcerptShown(): AiChatRobot = apply {
+        test.waitUntilExactlyOneExists(hasTestTag(AiChatTestTags.PEEK_EXCERPT))
+    }
+
+    /** Asserts the peek (its excerpt) shows text containing [text]. */
+    fun assertPeekShowsText(text: String): AiChatRobot = apply {
+        test.onNode(hasText(text, substring = true) and onPeek).assertIsDisplayed()
     }
 
     fun tapSend(): AiChatRobot = apply {

@@ -29,6 +29,9 @@ interface AiChatBloc : BackClickBloc, ComposeScreen {
 
     fun onHistoryClick()
 
+    /** Starts a fresh conversation for the same recipe, replacing the current one in the sheet. */
+    fun onNewChatClick()
+
     fun onAddRecipeClick()
 
     /**
@@ -69,6 +72,9 @@ interface AiChatBloc : BackClickBloc, ComposeScreen {
         data object Back : Output()
 
         data object OpenHistory : Output()
+
+        /** Reset the sheet to a brand-new conversation for the current recipe. */
+        data object NewConversation : Output()
 
         data class AddAsRecipe(
             val extracted: ExtractedRecipeData,

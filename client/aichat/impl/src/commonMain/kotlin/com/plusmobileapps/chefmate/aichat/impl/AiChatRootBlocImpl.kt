@@ -32,6 +32,7 @@ class AiChatRootBlocImpl(
     @Assisted private val output: Consumer<AiChatRootBloc.Output>,
     private val chatFactory: AiChatBloc.Factory,
     private val historyFactory: AiChatHistoryBloc.Factory,
+    private val repository: AiChatRepository,
 ) : AiChatRootBloc, BlocContext by context {
 
     private val navigation = StackNavigation<Configuration>()
@@ -41,7 +42,17 @@ class AiChatRootBlocImpl(
             source = navigation,
             serializer = Configuration.serializer(),
             initialStack = {
-                listOf(Configuration.Chat(conversationId = null, recipeContextId = recipeContextId))
+                // Reopen the recipe's most recent conversation if one exists, so returning to the
+                // chat picks up where it left off (still grounded in the recipe); otherwise start a
+                // fresh one. The lookup is a single indexed local read.
+                val existingConversationId =
+                    recipeContextId?.let(repository::latestConversationIdForRecipe)
+                listOf(
+                    Configuration.Chat(
+                        conversationId = existingConversationId,
+                        recipeContextId = recipeContextId,
+                    )
+                )
             },
             handleBackButton = true,
             key = "AiChatRootRouter",
@@ -87,6 +98,8 @@ class AiChatRootBlocImpl(
         when (out) {
             AiChatBloc.Output.Back -> output.onNext(AiChatRootBloc.Output.Finished)
             AiChatBloc.Output.OpenHistory -> navigation.bringToFront(Configuration.History)
+            AiChatBloc.Output.NewConversation ->
+                navigation.navigate { listOf(freshChatForRecipe()) }
             is AiChatBloc.Output.AddAsRecipe ->
                 output.onNext(
                     AiChatRootBloc.Output.AddAsRecipe(
@@ -103,9 +116,14 @@ class AiChatRootBlocImpl(
             is AiChatHistoryBloc.Output.OpenConversation ->
                 navigation.navigate { listOf(Configuration.Chat(out.conversationId)) }
             AiChatHistoryBloc.Output.NewConversation ->
-                navigation.navigate { listOf(Configuration.Chat(conversationId = null)) }
+                navigation.navigate { listOf(freshChatForRecipe()) }
         }
     }
+
+    // A brand-new conversation that keeps this sheet's recipe grounding, so "new chat" from the
+    // recipe stays about that recipe rather than dropping to an ungrounded chat.
+    private fun freshChatForRecipe() =
+        Configuration.Chat(conversationId = null, recipeContextId = recipeContextId)
 
     @Serializable
     private sealed class Configuration {

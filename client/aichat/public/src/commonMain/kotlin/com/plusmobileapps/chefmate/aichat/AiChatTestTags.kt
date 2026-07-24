@@ -3,9 +3,11 @@ package com.plusmobileapps.chefmate.aichat
 object AiChatTestTags {
     const val SCREEN = "AiChatScreen"
     const val PEEK = "AiChatPeek"
+    const val PEEK_EXCERPT = "AiChatPeekExcerpt"
     const val INPUT = "AiChatInput"
     const val SEND_BUTTON = "AiChatSendButton"
     const val HISTORY_BUTTON = "AiChatHistoryButton"
+    const val NEW_CHAT_BUTTON = "AiChatNewChatButton"
     const val CLOSE_BUTTON = "AiChatCloseButton"
     const val MESSAGE_LIST = "AiChatMessageList"
     const val THINKING_INDICATOR = "AiChatThinkingIndicator"

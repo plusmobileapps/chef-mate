@@ -57,7 +57,11 @@ class AiChatViewModel(
             }
         )
 
-    private val recipeContextId = (props as? AiChatBloc.Props.NewConversation)?.recipeContextId
+    // The recipe to persist when this chat lazily creates its conversation on first send. Only a
+    // fresh chat creates a conversation, so it's the only case that needs to record the recipe; an
+    // existing conversation already has its recipe stored.
+    private val newConversationRecipeId =
+        (props as? AiChatBloc.Props.NewConversation)?.recipeContextId
 
     // The recipe this chat is grounded in (title drives the chip; full details are folded into the
     // outgoing prompt). Loaded once from the local DB when a context recipe was supplied; stays
@@ -112,9 +116,21 @@ class AiChatViewModel(
             .stateIn(scope, SharingStarted.Eagerly, AiChatBloc.Model())
 
     init {
-        // Load the context recipe (if any) so the chip and prompt preamble can use its details.
-        recipeContextId?.let { id ->
-            scope.launch { recipeRepository.getRecipe(id).collect { _recipeContext.value = it } }
+        // Load the context recipe (if any) so the chip and prompt preamble can use its details. A
+        // fresh chat is grounded via its props; a reopened conversation recovers its recipe from
+        // the
+        // stored conversation row, so reopening a recipe's chat (or an old one from history) stays
+        // grounded.
+        scope.launch {
+            val recipeId =
+                when (props) {
+                    is AiChatBloc.Props.NewConversation -> props.recipeContextId
+                    is AiChatBloc.Props.ExistingConversation ->
+                        repository.recipeContextIdFor(props.conversationId)
+                }
+            recipeId?.let { id ->
+                recipeRepository.getRecipe(id).collect { _recipeContext.value = it }
+            }
         }
     }
 
@@ -135,6 +151,7 @@ class AiChatViewModel(
                 repository.sendMessage(
                     conversationId = _conversationId.value,
                     text = message,
+                    recipeContextId = newConversationRecipeId,
                     recipeContextPreamble = preamble,
                 ) { startedId ->
                     // Publish the conversation id as soon as the user message is persisted so the

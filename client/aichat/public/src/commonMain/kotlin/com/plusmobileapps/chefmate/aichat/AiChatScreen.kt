@@ -38,6 +38,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Close
@@ -88,6 +89,7 @@ import chefmate.client.aichat.public.generated.resources.aichat_empty_title
 import chefmate.client.aichat.public.generated.resources.aichat_extracting_recipe
 import chefmate.client.aichat.public.generated.resources.aichat_history
 import chefmate.client.aichat.public.generated.resources.aichat_input_hint
+import chefmate.client.aichat.public.generated.resources.aichat_new_chat
 import chefmate.client.aichat.public.generated.resources.aichat_recipe_context
 import chefmate.client.aichat.public.generated.resources.aichat_role_gemini
 import chefmate.client.aichat.public.generated.resources.aichat_role_you
@@ -219,6 +221,45 @@ private fun HistoryButton(onClick: () -> Unit) {
     }
 }
 
+/** Starts a fresh conversation for the current recipe. */
+@Composable
+private fun NewChatButton(onClick: () -> Unit) {
+    IconButton(onClick = onClick, modifier = Modifier.testTag(AiChatTestTags.NEW_CHAT_BUTTON)) {
+        Icon(
+            imageVector = Icons.Default.Add,
+            contentDescription = stringResource(Res.string.aichat_new_chat),
+        )
+    }
+}
+
+/**
+ * A short, truncated excerpt of the most recent turns, shown in the peek when the recipe already
+ * has a conversation. Deliberately compact (a couple of clipped lines each) so the sheet stays
+ * small; dragging up expands to the full chat.
+ */
+@Composable
+private fun PeekExcerpt(messages: List<ChatMessage>, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.testTag(AiChatTestTags.PEEK_EXCERPT),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        messages.takeLast(PEEK_EXCERPT_MESSAGE_COUNT).forEach { message ->
+            val isUser = message.role == ChatMessage.Role.USER
+            val label =
+                if (isUser) stringResource(Res.string.aichat_role_you)
+                else stringResource(Res.string.aichat_role_gemini)
+            Text(
+                text = "$label: ${message.content}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
 /**
  * Collapsed "peek" presentation used by the recipe-grounded sheet: a compact action bar (history +
  * close) over the recipe-context chip and the input, so the sheet stays small over the dimmed
@@ -259,14 +300,15 @@ private fun AiChatPeek(bloc: AiChatBloc, state: AiChatBloc.Model, modifier: Modi
                     onDragStopped = { dragAccumulation = 0f },
                 )
     ) {
-        // Compact action bar: history and close, mirroring the expanded sheet's app-bar
-        // accessories.
+        // Compact action bar: history, new conversation, and close — mirroring the expanded sheet's
+        // app-bar accessories.
         Row(
             modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 4.dp),
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             HistoryButton(onClick = bloc::onHistoryClick)
+            NewChatButton(onClick = bloc::onNewChatClick)
             IconButton(
                 onClick = bloc::onBackClicked,
                 modifier = Modifier.testTag(AiChatTestTags.CLOSE_BUTTON),
@@ -283,6 +325,16 @@ private fun AiChatPeek(bloc: AiChatBloc, state: AiChatBloc.Model, modifier: Modi
                 modifier =
                     Modifier.fillMaxWidth()
                         .padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 4.dp),
+            )
+        }
+        // When the recipe already has a conversation, surface a short excerpt of its most recent
+        // turns above the input so reopening lands on the conversation in progress. Dragging up on
+        // it expands to the full chat.
+        if (state.messages.isNotEmpty()) {
+            PeekExcerpt(
+                messages = state.messages,
+                modifier =
+                    Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, bottom = 4.dp),
             )
         }
         AiChatInput(
@@ -316,6 +368,9 @@ private const val PEEK_DRAG_EXPAND_THRESHOLD = -40f
  * before expanding the sheet, so the two animations don't run on top of each other.
  */
 private const val PEEK_SEND_EXPAND_DELAY_MS = 100L
+
+/** How many of the most recent messages the peek shows as a preview excerpt. */
+private const val PEEK_EXCERPT_MESSAGE_COUNT = 2
 
 @Composable
 private fun MessageList(

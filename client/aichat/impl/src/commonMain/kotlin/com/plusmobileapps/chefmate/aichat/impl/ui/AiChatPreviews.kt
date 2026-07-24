@@ -27,6 +27,8 @@ private fun aiChatBloc(model: AiChatBloc.Model, input: String = ""): AiChatBloc 
 
         override fun onHistoryClick() = Unit
 
+        override fun onNewChatClick() = Unit
+
         override fun onAddRecipeClick() = Unit
 
         override fun onPhotoPicked(bytes: ByteArray, fileExtension: String) = Unit
