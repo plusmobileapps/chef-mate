@@ -598,73 +598,54 @@ class RootBlocTest {
     }
 
     @Test
-    fun When_recipe_root_opens_ai_chat_Then_it_is_shown_in_the_sheet_slot_not_the_stack() {
+    fun When_recipe_root_opens_ai_chat_Then_ai_chat_is_pushed_full_screen() {
         bottomNavOutput.onNext(BottomNavBloc.Output.OpenRecipe(123L))
         rootBloc.instance() should instanceOf<RootBloc.Child.RecipeRoot>()
 
         recipeOutput.onNext(RecipeRootBloc.Output.OpenAiChat(recipeId = 123L))
 
-        // The chat opens as a sheet over the recipe — the stack top is unchanged (still RecipeRoot)
-        // and no full-screen AiChat child was pushed.
-        rootBloc.instance() should instanceOf<RootBloc.Child.RecipeRoot>()
-        rootBloc.state.value.backStack.size shouldBe 1
-        rootBloc.aiChatSheetSlot.value.child?.instance should
-            instanceOf<RootBloc.AiChatSheet.Chat>()
+        // The chat is pushed full-screen over the recipe.
+        rootBloc.instance() should instanceOf<RootBloc.Child.AiChat>()
+        rootBloc.state.value.backStack.size shouldBe 2
     }
 
     @Test
-    fun When_cook_mode_opens_ai_chat_Then_it_is_shown_in_the_sheet_slot() {
+    fun When_cook_mode_opens_ai_chat_Then_ai_chat_is_pushed_full_screen() {
         bottomNavOutput.onNext(BottomNavBloc.Output.OpenCookMode(7L))
         rootBloc.instance() should instanceOf<RootBloc.Child.CookMode>()
 
         cookModeOutput.onNext(CookModeBloc.Output.OpenAiChat(recipeId = 7L))
 
-        rootBloc.instance() should instanceOf<RootBloc.Child.CookMode>()
-        rootBloc.aiChatSheetSlot.value.child?.instance should
-            instanceOf<RootBloc.AiChatSheet.Chat>()
+        rootBloc.instance() should instanceOf<RootBloc.Child.AiChat>()
     }
 
     @Test
-    fun Given_ai_chat_sheet_open_When_dismissed_Then_slot_is_cleared() {
+    fun Given_ai_chat_open_When_back_clicked_Then_it_pops_back_to_the_recipe() {
         bottomNavOutput.onNext(BottomNavBloc.Output.OpenRecipe(123L))
         recipeOutput.onNext(RecipeRootBloc.Output.OpenAiChat(recipeId = 123L))
-        rootBloc.aiChatSheetSlot.value.child?.instance should
-            instanceOf<RootBloc.AiChatSheet.Chat>()
-
-        rootBloc.onAiChatSheetDismiss()
-
-        rootBloc.aiChatSheetSlot.value.child shouldBe null
-    }
-
-    @Test
-    fun Given_ai_chat_sheet_open_When_back_clicked_Then_sheet_closes_before_the_stack() {
-        bottomNavOutput.onNext(BottomNavBloc.Output.OpenRecipe(123L))
-        recipeOutput.onNext(RecipeRootBloc.Output.OpenAiChat(recipeId = 123L))
+        rootBloc.instance() should instanceOf<RootBloc.Child.AiChat>()
 
         rootBloc.onBackClicked()
 
-        // Back closes the sheet, leaving the recipe underneath untouched.
-        rootBloc.aiChatSheetSlot.value.child shouldBe null
         rootBloc.instance() should instanceOf<RootBloc.Child.RecipeRoot>()
         rootBloc.state.value.backStack.size shouldBe 1
     }
 
     @Test
-    fun Given_ai_chat_sheet_When_output_Finished_Then_slot_is_cleared() {
+    fun Given_ai_chat_open_When_output_Finished_Then_it_pops_back_to_the_recipe() {
         bottomNavOutput.onNext(BottomNavBloc.Output.OpenRecipe(123L))
         recipeOutput.onNext(RecipeRootBloc.Output.OpenAiChat(recipeId = 123L))
 
-        // Activating the slot re-captures aiChatOutput as the sheet's output handler.
         aiChatOutput.onNext(AiChatRootBloc.Output.Finished)
 
-        rootBloc.aiChatSheetSlot.value.child shouldBe null
+        rootBloc.instance() should instanceOf<RootBloc.Child.RecipeRoot>()
     }
 
     @Test
-    fun Given_ai_chat_sheet_When_AddAsRecipe_Then_slot_cleared_and_recipe_root_shown() {
+    fun Given_recipe_ai_chat_When_AddAsRecipe_Then_recipe_root_shown() {
         val extracted =
             ExtractedRecipeData(
-                title = "Sheet-extracted",
+                title = "Chat-extracted",
                 description = "From the grounded chat",
                 ingredients = listOf("eggs", "flour"),
                 directions = listOf("whisk", "cook"),
@@ -682,7 +663,6 @@ class RootBlocTest {
 
         aiChatOutput.onNext(AiChatRootBloc.Output.AddAsRecipe(extracted))
 
-        rootBloc.aiChatSheetSlot.value.child shouldBe null
         rootBloc.instance() should instanceOf<RootBloc.Child.RecipeRoot>()
         recipeProps shouldBe RecipeRootBloc.Props.CreateFromExtracted(extracted, fromAi = true)
     }

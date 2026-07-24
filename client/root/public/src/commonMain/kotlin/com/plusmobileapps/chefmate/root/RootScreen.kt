@@ -2,17 +2,11 @@
 
 package com.plusmobileapps.chefmate.root
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
 import com.arkivanov.decompose.FaultyDecomposeApi
@@ -55,38 +49,18 @@ fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
                         isModal = { it.isModal() },
                     ),
             ) { child ->
-                child.instance.bloc.Content()
-            }
-        }
-        // Recipe-grounded AI chat, layered full-screen over the current screen.
-        AiChatModal(rootBloc)
-    }
-}
-
-/**
- * The recipe-grounded AI chat, opened from a recipe or Cook Mode. It covers the screen as a
- * full-screen modal that slides up from the bottom, and is dismissed by its close button or the
- * system back gesture (handled by the host slot's back callback).
- */
-@Composable
-private fun AiChatModal(rootBloc: RootBloc) {
-    val slot by rootBloc.aiChatSheetSlot.subscribeAsState()
-    val child = slot.child?.instance
-
-    // Keep the last child composed through the slide-out animation after the slot dismisses.
-    var lastChild by remember { mutableStateOf(child) }
-    if (child != null) lastChild = child
-
-    AnimatedVisibility(
-        visible = child != null,
-        enter = slideInVertically { it },
-        exit = slideOutVertically { it },
-    ) {
-        lastChild?.let { current ->
-            CompositionLocalProvider(
-                LocalAiChatPresentation provides AiChatPresentation.SheetExpanded
-            ) {
-                Surface(modifier = Modifier.fillMaxSize()) { current.bloc.Content() }
+                val instance = child.instance
+                if (instance is RootBloc.Child.AiChat) {
+                    // The AI chat is a full-screen modal: its app bar carries a close (X) plus
+                    // history and new-conversation actions rather than a back arrow.
+                    CompositionLocalProvider(
+                        LocalAiChatPresentation provides AiChatPresentation.SheetExpanded
+                    ) {
+                        instance.bloc.Content()
+                    }
+                } else {
+                    instance.bloc.Content()
+                }
             }
         }
     }
@@ -97,6 +71,7 @@ private fun RootBloc.Child.isModal(): Boolean =
     this is RootBloc.Child.Browser ||
         this is RootBloc.Child.MealPlanner ||
         this is RootBloc.Child.CookMode ||
+        this is RootBloc.Child.AiChat ||
         this is RootBloc.Child.EditRecipeBook ||
         this is RootBloc.Child.EditGroceryList
 
