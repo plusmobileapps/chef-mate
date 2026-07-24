@@ -43,6 +43,20 @@ class AiChatRepository(
             }
         }
 
+    /**
+     * The id of the most recently updated conversation started from [recipeId], or null if none
+     * exists yet. Read synchronously (a single indexed lookup) so the chat host can decide up front
+     * whether to reopen a recipe's prior conversation or start a fresh one.
+     */
+    fun latestConversationIdForRecipe(recipeId: Long): Long? =
+        conversationQueries.getMostRecentForRecipe(recipeId).executeAsOneOrNull()?.id
+
+    /** The recipe [conversationId] was started from, if any. */
+    suspend fun recipeContextIdFor(conversationId: Long): Long? =
+        withContext(ioContext) {
+            conversationQueries.getById(conversationId).executeAsOneOrNull()?.recipeContextId
+        }
+
     fun observeMessages(conversationId: Long): Flow<List<ChatMessage>> =
         messageQueries.getAllForConversation(conversationId).asFlow().mapToList(ioContext).map {
             rows ->
@@ -70,6 +84,7 @@ class AiChatRepository(
     suspend fun sendMessage(
         conversationId: Long?,
         text: String,
+        recipeContextId: Long? = null,
         recipeContextPreamble: String? = null,
         onConversationStarted: (Long) -> Unit = {},
     ): Long? {
@@ -86,6 +101,7 @@ class AiChatRepository(
                             title = trimmed.take(TITLE_MAX_LENGTH),
                             createdAt = now,
                             updatedAt = now,
+                            recipeContextId = recipeContextId,
                         )
                         .executeAsOne()
             }

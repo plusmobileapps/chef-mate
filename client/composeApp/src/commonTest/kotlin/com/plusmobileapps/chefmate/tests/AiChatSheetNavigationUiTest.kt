@@ -15,17 +15,16 @@ import kotlin.test.Test
 class AiChatSheetNavigationUiTest {
 
     /**
-     * Opening the AI chat from a recipe shows it as a collapsed sheet "peek" (input over the
-     * recipe), and focusing the input expands it to the full-screen chat — the recipe detail
-     * underneath is never replaced by a full-screen chat child.
+     * Opening the AI chat from a recipe shows it full-screen with the recipe-grounded app bar
+     * (history, new conversation, close).
      */
     @Test
-    fun ai_chat_from_recipe_detail_opens_as_a_peek_then_expands() = runRootBlocTest { component ->
+    fun ai_chat_from_recipe_detail_opens_full_screen() = runRootBlocTest { component ->
         component.testFeatureFlags.set(FeatureFlagRegistry.AiChat, true)
 
         recipeList().clickRecipe(TestRecipes.fullyPopulated.title)
         recipeDetail().awaitDisplayed().tapAiChat()
 
-        aiChat().awaitPeekShown().expandFromPeek().awaitExpanded()
+        aiChat().awaitShown().assertModalActionsShown()
     }
 }

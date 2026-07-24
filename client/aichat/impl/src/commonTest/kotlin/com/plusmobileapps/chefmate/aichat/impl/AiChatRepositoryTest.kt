@@ -153,4 +153,52 @@ class AiChatRepositoryTest {
 
             conversationQueries.observeAll().executeAsList() shouldBe emptyList()
         }
+
+    @Test
+    fun sendMessage_persists_recipeContextId_and_latest_lookup_finds_it() =
+        runTest(testDispatcher) {
+            every { geminiClient.streamReply(any()) } returns flow { emit("hi") }
+
+            val id =
+                repository.sendMessage(
+                    conversationId = null,
+                    text = "how long?",
+                    recipeContextId = 7L,
+                )!!
+
+            repository.latestConversationIdForRecipe(7L) shouldBe id
+            repository.recipeContextIdFor(id) shouldBe 7L
+        }
+
+    @Test
+    fun latestConversationIdForRecipe_returns_most_recent_and_null_for_unknown() =
+        runTest(testDispatcher) {
+            every { geminiClient.streamReply(any()) } returns flow { emit("hi") }
+
+            dateTimeUtil.fakeNow = Instant.fromEpochMilliseconds(1L)
+            repository.sendMessage(conversationId = null, text = "older", recipeContextId = 7L)
+            dateTimeUtil.fakeNow = Instant.fromEpochMilliseconds(2L)
+            val newer =
+                repository.sendMessage(
+                    conversationId = null,
+                    text = "newer",
+                    recipeContextId = 7L,
+                )!!
+
+            // A different recipe's conversation must not be picked up.
+            dateTimeUtil.fakeNow = Instant.fromEpochMilliseconds(3L)
+            repository.sendMessage(conversationId = null, text = "other", recipeContextId = 8L)
+
+            repository.latestConversationIdForRecipe(7L) shouldBe newer
+            repository.latestConversationIdForRecipe(999L) shouldBe null
+        }
+
+    @Test
+    fun recipeContextIdFor_is_null_when_conversation_had_no_recipe() =
+        runTest(testDispatcher) {
+            every { geminiClient.streamReply(any()) } returns flow { emit("hi") }
+            val id = repository.sendMessage(conversationId = null, text = "standalone")!!
+
+            repository.recipeContextIdFor(id) shouldBe null
+        }
 }

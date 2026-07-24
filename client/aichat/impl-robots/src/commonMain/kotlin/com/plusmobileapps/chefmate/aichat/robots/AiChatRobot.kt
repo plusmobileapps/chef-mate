@@ -6,6 +6,7 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performClick
@@ -20,25 +21,14 @@ import com.plusmobileapps.chefmate.aichat.AiChatTestTags
 class AiChatRobot(private val test: ComposeUiTest) {
 
     private val onScreen = hasAnyAncestor(hasTestTag(AiChatTestTags.SCREEN))
-    private val onPeek = hasAnyAncestor(hasTestTag(AiChatTestTags.PEEK))
+
+    /** Waits for the AI chat screen (its header) to be shown. */
+    fun awaitShown(): AiChatRobot = apply {
+        test.waitUntilExactlyOneExists(hasTestTag(AiChatTestTags.SCREEN))
+    }
 
     fun typeMessage(text: String): AiChatRobot = apply {
         test.onNode(hasTestTag(AiChatTestTags.INPUT) and onScreen).performTextInput(text)
-    }
-
-    /** Waits for the collapsed sheet "peek" (input over the recipe, no header) to appear. */
-    fun awaitPeekShown(): AiChatRobot = apply {
-        test.waitUntilExactlyOneExists(hasTestTag(AiChatTestTags.PEEK))
-    }
-
-    /** Focuses the peek input, which asks the sheet to expand to the full-screen chat. */
-    fun expandFromPeek(): AiChatRobot = apply {
-        test.onNode(hasTestTag(AiChatTestTags.INPUT) and onPeek).performClick()
-    }
-
-    /** Waits for the expanded, full-screen chat (its header) to be shown. */
-    fun awaitExpanded(): AiChatRobot = apply {
-        test.waitUntilExactlyOneExists(hasTestTag(AiChatTestTags.SCREEN))
     }
 
     fun tapSend(): AiChatRobot = apply {
@@ -47,6 +37,25 @@ class AiChatRobot(private val test: ComposeUiTest) {
 
     fun tapHistory(): AiChatRobot = apply {
         test.onNode(hasTestTag(AiChatTestTags.HISTORY_BUTTON) and onScreen).performClick()
+    }
+
+    /** Taps the new-conversation button in the chat's app bar. */
+    fun tapNewChat(): AiChatRobot = apply {
+        test.onNode(hasTestTag(AiChatTestTags.NEW_CHAT_BUTTON) and onScreen).performClick()
+    }
+
+    /**
+     * Closes the recipe-grounded modal via its app-bar close (X) — the standard modal-header close.
+     */
+    fun close(): AiChatRobot = apply {
+        test.onNode(hasContentDescription("Close") and onScreen).performClick()
+    }
+
+    /** Asserts the recipe-grounded modal's app bar shows history, new-conversation, and close. */
+    fun assertModalActionsShown(): AiChatRobot = apply {
+        test.onNode(hasTestTag(AiChatTestTags.HISTORY_BUTTON) and onScreen).assertIsDisplayed()
+        test.onNode(hasTestTag(AiChatTestTags.NEW_CHAT_BUTTON) and onScreen).assertIsDisplayed()
+        test.onNode(hasContentDescription("Close") and onScreen).assertIsDisplayed()
     }
 
     /** Asserts the attach-photo button (recipe-from-photo entry) is present in the input row. */

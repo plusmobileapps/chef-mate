@@ -2,10 +2,15 @@ CREATE TABLE AiChatConversation (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     title TEXT,
     createdAt INTEGER NOT NULL,
-    updatedAt INTEGER NOT NULL
+    updatedAt INTEGER NOT NULL,
+    -- The recipe this conversation was started from, if any (see migration 10.sqm). Lets the chat
+    -- reopen a recipe's most recent conversation and keep it grounded in that recipe. Null for the
+    -- standalone chat opened from the More tab.
+    recipeContextId INTEGER
 );
 
 CREATE INDEX idx_ai_chat_conversation_updated_at ON AiChatConversation(updatedAt);
+CREATE INDEX idx_ai_chat_conversation_recipe ON AiChatConversation(recipeContextId);
 
 observeAll:
 SELECT * FROM AiChatConversation ORDER BY updatedAt DESC, id DESC;
@@ -13,9 +18,15 @@ SELECT * FROM AiChatConversation ORDER BY updatedAt DESC, id DESC;
 getById:
 SELECT * FROM AiChatConversation WHERE id = ?;
 
+getMostRecentForRecipe:
+SELECT * FROM AiChatConversation
+WHERE recipeContextId = ?
+ORDER BY updatedAt DESC, id DESC
+LIMIT 1;
+
 insertConversation:
-INSERT INTO AiChatConversation(title, createdAt, updatedAt)
-VALUES (?, ?, ?)
+INSERT INTO AiChatConversation(title, createdAt, updatedAt, recipeContextId)
+VALUES (?, ?, ?, ?)
 RETURNING id;
 
 setTitle:

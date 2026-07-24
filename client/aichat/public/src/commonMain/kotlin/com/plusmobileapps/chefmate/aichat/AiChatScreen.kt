@@ -9,9 +9,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,9 +35,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.AssistChip
@@ -76,13 +73,13 @@ import androidx.compose.ui.unit.dp
 import chefmate.client.aichat.public.generated.resources.Res
 import chefmate.client.aichat.public.generated.resources.aichat_add_recipe
 import chefmate.client.aichat.public.generated.resources.aichat_attach_photo
-import chefmate.client.aichat.public.generated.resources.aichat_close
 import chefmate.client.aichat.public.generated.resources.aichat_done
 import chefmate.client.aichat.public.generated.resources.aichat_empty_description
 import chefmate.client.aichat.public.generated.resources.aichat_empty_title
 import chefmate.client.aichat.public.generated.resources.aichat_extracting_recipe
 import chefmate.client.aichat.public.generated.resources.aichat_history
 import chefmate.client.aichat.public.generated.resources.aichat_input_hint
+import chefmate.client.aichat.public.generated.resources.aichat_new_chat
 import chefmate.client.aichat.public.generated.resources.aichat_recipe_context
 import chefmate.client.aichat.public.generated.resources.aichat_role_gemini
 import chefmate.client.aichat.public.generated.resources.aichat_role_you
@@ -104,34 +101,18 @@ import org.jetbrains.compose.resources.stringResource
 fun AiChatScreen(bloc: AiChatBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
 
-    // When hosted in the recipe-grounded sheet at its collapsed detent, render just the input (plus
-    // the recipe chip) so the sheet hugs a small "peek" over the dimmed recipe. Tapping, focusing,
-    // or dragging up expands the sheet to the full-screen chat below.
-    if (LocalAiChatPresentation.current == AiChatPresentation.SheetPeek) {
-        AiChatPeek(bloc = bloc, state = state, modifier = modifier)
-        return
-    }
-
-    // In the expanded sheet there's no navigation stack to pop, so the app bar drops the back
-    // arrow and instead carries History plus a Close (X) on the right; the X dismisses the whole
-    // sheet (onBackClicked finishes the chat, which the host tears down). The standalone,
-    // full-screen chat (More tab) keeps its back arrow.
+    // Presented as a modal (from a recipe or Cook Mode): a Close (X) leads the app bar — consistent
+    // with the app's other modal screens — and History + New conversation are the trailing actions.
+    // The standalone, full-screen chat (More tab) keeps its back arrow.
     val headerData =
         if (LocalAiChatPresentation.current == AiChatPresentation.SheetExpanded) {
-            PlusHeaderData.Parent(
+            PlusHeaderData.Modal(
                 title = Res.string.aichat_title.asTextData(),
+                onCloseClick = bloc::onBackClicked,
                 trailingAccessory =
                     PlusHeaderData.TrailingAccessory.Custom {
                         HistoryButton(onClick = bloc::onHistoryClick)
-                        IconButton(
-                            onClick = bloc::onBackClicked,
-                            modifier = Modifier.testTag(AiChatTestTags.CLOSE_BUTTON),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = stringResource(Res.string.aichat_close),
-                            )
-                        }
+                        NewChatButton(onClick = bloc::onNewChatClick)
                     },
             )
         } else {
@@ -213,56 +194,16 @@ private fun HistoryButton(onClick: () -> Unit) {
     }
 }
 
-/**
- * Collapsed "peek" presentation used by the recipe-grounded sheet: only the recipe-context chip and
- * the input, so the sheet stays small over the dimmed recipe. Focusing the input, or dragging the
- * strip upward, asks the host to expand to the full-screen chat.
- */
+/** Starts a fresh conversation for the current recipe. */
 @Composable
-private fun AiChatPeek(bloc: AiChatBloc, state: AiChatBloc.Model, modifier: Modifier = Modifier) {
-    val onExpand = LocalAiChatRequestExpand.current
-    var dragAccumulation by remember { mutableStateOf(0f) }
-
-    Column(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .testTag(AiChatTestTags.PEEK)
-                .draggable(
-                    orientation = Orientation.Vertical,
-                    state =
-                        rememberDraggableState { delta ->
-                            dragAccumulation += delta
-                            if (dragAccumulation < PEEK_DRAG_EXPAND_THRESHOLD) {
-                                dragAccumulation = 0f
-                                onExpand()
-                            }
-                        },
-                    onDragStopped = { dragAccumulation = 0f },
-                )
-    ) {
-        state.recipeContextTitle?.let { title ->
-            RecipeContextChip(
-                title = title,
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 4.dp),
-            )
-        }
-        AiChatInput(
-            inputText = bloc.inputText,
-            isSending = state.isSending,
-            isExtracting = state.isExtractingRecipe,
-            onInputChange = bloc::onInputChange,
-            onSendClick = bloc::onSendClick,
-            onPhotoPicked = bloc::onPhotoPicked,
-            onFocused = onExpand,
+private fun NewChatButton(onClick: () -> Unit) {
+    IconButton(onClick = onClick, modifier = Modifier.testTag(AiChatTestTags.NEW_CHAT_BUTTON)) {
+        Icon(
+            imageVector = Icons.Default.Add,
+            contentDescription = stringResource(Res.string.aichat_new_chat),
         )
     }
 }
-
-/** Upward drag (negative delta) past this many pixels on the peek strip expands the sheet. */
-private const val PEEK_DRAG_EXPAND_THRESHOLD = -40f
 
 @Composable
 private fun MessageList(
@@ -576,7 +517,6 @@ private fun AiChatInput(
     onSendClick: () -> Unit,
     onPhotoPicked: (ByteArray, String) -> Unit,
     modifier: Modifier = Modifier,
-    onFocused: () -> Unit = {},
 ) {
     val text by inputText.collectAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -593,9 +533,9 @@ private fun AiChatInput(
             modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surface)
-                // Keep the input above the keyboard when open and above the navigation/gesture bar
-                // when closed. Unioning the two insets pads by whichever is larger (the IME inset
-                // already includes the navigation bar) so they never stack.
+                // Lift the input above whichever is larger — the keyboard when open, or the
+                // navigation bar when closed (the ime inset already includes the nav bar, so they
+                // never stack).
                 .windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars))
                 .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -619,10 +559,7 @@ private fun AiChatInput(
             onValueChange = onInputChange,
             modifier =
                 Modifier.weight(1f)
-                    .onFocusChanged {
-                        isFocused = it.isFocused
-                        if (it.isFocused) onFocused()
-                    }
+                    .onFocusChanged { isFocused = it.isFocused }
                     .testTag(AiChatTestTags.INPUT),
             placeholder = { Text(stringResource(Res.string.aichat_input_hint)) },
             keyboardOptions =

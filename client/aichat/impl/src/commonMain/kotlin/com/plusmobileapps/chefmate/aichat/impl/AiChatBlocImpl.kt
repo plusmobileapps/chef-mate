@@ -44,6 +44,10 @@ class AiChatBlocImpl(
         output.onNext(AiChatBloc.Output.OpenHistory)
     }
 
+    override fun onNewChatClick() {
+        output.onNext(AiChatBloc.Output.NewConversation)
+    }
+
     override fun onAddRecipeClick() {
         viewModel.extractRecipe()
     }

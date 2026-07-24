@@ -1,0 +1,6 @@
+-- Recipe-grounded AI chat: remember which recipe a conversation was started from so the sheet can
+-- reopen the recipe's most recent conversation (grounded in that recipe) instead of always starting
+-- fresh. Nullable — existing conversations and the standalone chat have no recipe.
+ALTER TABLE AiChatConversation ADD COLUMN recipeContextId INTEGER;
+
+CREATE INDEX idx_ai_chat_conversation_recipe ON AiChatConversation(recipeContextId);

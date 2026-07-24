@@ -356,4 +356,26 @@ class AiChatViewModelTest {
                 state.messages.first().role shouldBe ChatMessage.Role.USER
             }
         }
+
+    @Test
+    fun reopened_recipe_conversation_recovers_its_recipe_grounding() =
+        runTest(dispatcher) {
+            // A conversation started from a recipe records that recipe; reopening it via
+            // ExistingConversation should recover the recipe context (title + prompt grounding)
+            // from the stored row, without the recipe id being passed in the props.
+            everySuspend { geminiClient.streamReply(any()) } returns flow { emit("reply") }
+            recipes.value = listOf(Recipe.Sample.copy(id = 42L, title = "Grandma’s Lasagna"))
+
+            val seed = newViewModel(AiChatBloc.Props.NewConversation(recipeContextId = 42L))
+            seed.onInputChange("how long do I bake it?")
+            seed.send()
+            val conversationId = db.aiChatConversationQueries.observeAll().executeAsOne().id
+
+            val reopened =
+                newViewModel(AiChatBloc.Props.ExistingConversation(conversationId = conversationId))
+
+            reopened.state.test {
+                expectMostRecentItem().recipeContextTitle shouldBe "Grandma’s Lasagna"
+            }
+        }
 }
