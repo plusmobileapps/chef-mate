@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -63,6 +64,19 @@ private enum class NavigationLayout {
 
 @Composable
 fun BottomNavigationScreen(bloc: BottomNavBloc, modifier: Modifier = Modifier) {
+    // The active tab's Children stack is kept in movable content so that crossing the 600dp
+    // breakpoint on rotation/resize *moves* the running composition between the bottom-bar and
+    // nav-rail shells rather than disposing one and composing the other fresh. Without this, every
+    // tab screen's in-composition state — most visibly the list scroll position — resets on
+    // rotation. Android papers over it by restoring rememberSaveable values from the Activity's
+    // saved-instance bundle; iOS and desktop have no such bundle, so there the position is simply
+    // lost. Moving the content keeps the state alive on every platform.
+    val tabContent =
+        remember(bloc) {
+            movableContentOf<Modifier> { contentModifier ->
+                BottomNavContentContainer(modifier = contentModifier, bloc = bloc)
+            }
+        }
     BoxWithConstraints(modifier = modifier) {
         val layout =
             when {
@@ -71,11 +85,21 @@ fun BottomNavigationScreen(bloc: BottomNavBloc, modifier: Modifier = Modifier) {
                 else -> NavigationLayout.SIDE_EXPANDED
             }
         when (layout) {
-            NavigationLayout.BOTTOM -> MobileBottomNavContent(bloc = bloc)
+            NavigationLayout.BOTTOM -> MobileBottomNavContent(bloc = bloc, content = tabContent)
             NavigationLayout.SIDE_COMPACT ->
-                SideNavContent(modifier = Modifier.imePadding(), bloc = bloc, expandedItems = false)
+                SideNavContent(
+                    modifier = Modifier.imePadding(),
+                    bloc = bloc,
+                    expandedItems = false,
+                    content = tabContent,
+                )
             NavigationLayout.SIDE_EXPANDED ->
-                SideNavContent(modifier = Modifier.imePadding(), bloc = bloc, expandedItems = true)
+                SideNavContent(
+                    modifier = Modifier.imePadding(),
+                    bloc = bloc,
+                    expandedItems = true,
+                    content = tabContent,
+                )
         }
     }
 }
@@ -84,6 +108,7 @@ fun BottomNavigationScreen(bloc: BottomNavBloc, modifier: Modifier = Modifier) {
 private fun SideNavContent(
     bloc: BottomNavBloc,
     expandedItems: Boolean,
+    content: @Composable (Modifier) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state = bloc.state.collectAsState()
@@ -107,12 +132,16 @@ private fun SideNavContent(
         modifier = modifier.fillMaxSize(),
         navRail = navRailItems,
         expandedItems = expandedItems,
-        content = { BottomNavContentContainer(modifier = Modifier.padding(it), bloc = bloc) },
+        content = { content(Modifier.padding(it)) },
     )
 }
 
 @Composable
-private fun MobileBottomNavContent(bloc: BottomNavBloc, modifier: Modifier = Modifier) {
+private fun MobileBottomNavContent(
+    bloc: BottomNavBloc,
+    content: @Composable (Modifier) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val state = bloc.state.collectAsState()
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -126,11 +155,7 @@ private fun MobileBottomNavContent(bloc: BottomNavBloc, modifier: Modifier = Mod
         // paddingValues) as consumed, so imePadding only adds the *remaining* keyboard height.
         // Without this, the open keyboard would be padded on top of the nav-bar inset that it
         // already covers, leaving a gap the size of the bottom bar between the input and keyboard.
-        BottomNavContentContainer(
-            modifier =
-                Modifier.padding(paddingValues).consumeWindowInsets(paddingValues).imePadding(),
-            bloc = bloc,
-        )
+        content(Modifier.padding(paddingValues).consumeWindowInsets(paddingValues).imePadding())
     }
 }
 

@@ -39,7 +39,9 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddShoppingCart
@@ -295,6 +297,17 @@ private fun RecipeDetailBody(
                     ?: bloc.onSourceUrlClicked(url)
             }
         }
+
+    // Scroll states are hoisted above [PlusResponsiveContainer] so they outlive the
+    // compact <-> two-column layout swap that a rotation triggers when the window crosses the
+    // 600dp breakpoint. If they lived inside each layout composable, rotating (or rotating away and
+    // back) would dispose the active layout's LazyColumn and its position would reset to the top.
+    // rememberLazyListState is itself rememberSaveable-backed, so this also restores across an
+    // Android Activity recreation.
+    val compactListState = rememberLazyListState()
+    val ingredientsListState = rememberLazyListState()
+    val directionsListState = rememberLazyListState()
+
     Box(modifier = Modifier.fillMaxSize().testTag(RecipeDetailTestTags.SCREEN)) {
         PlusResponsiveContainer(modifier = Modifier.fillMaxSize()) { windowSizeClass ->
             val isCompact = windowSizeClass == WindowSizeClass.COMPACT
@@ -438,6 +451,7 @@ private fun RecipeDetailBody(
                         onSourceUrlClicked = bloc::onSourceUrlClicked,
                         onImageClicked = bloc::onImageClicked,
                         onRecipeLinkClick = onRecipeLinkClick,
+                        listState = compactListState,
                         modifier = Modifier.weight(1f),
                     )
                 } else {
@@ -451,6 +465,8 @@ private fun RecipeDetailBody(
                         onSourceUrlClicked = bloc::onSourceUrlClicked,
                         onImageClicked = bloc::onImageClicked,
                         onRecipeLinkClick = onRecipeLinkClick,
+                        ingredientsListState = ingredientsListState,
+                        directionsListState = directionsListState,
                     )
                 }
             }
@@ -715,6 +731,7 @@ private fun RecipeDetailCompactContent(
     onSourceUrlClicked: (String) -> Unit,
     onImageClicked: () -> Unit,
     onRecipeLinkClick: (String) -> Unit,
+    listState: LazyListState = rememberLazyListState(),
     modifier: Modifier = Modifier,
 ) {
     val dimens = ChefMateTheme.dimens
@@ -732,6 +749,7 @@ private fun RecipeDetailCompactContent(
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
+        state = listState,
         verticalArrangement = spacedBy(dimens.paddingSmall),
         contentPadding = PaddingValues(bottom = dimens.fabClearance + navBarBottom),
     ) {
@@ -805,6 +823,8 @@ private fun ColumnScope.RecipeDetailTwoColumnContent(
     onSourceUrlClicked: (String) -> Unit,
     onImageClicked: () -> Unit,
     onRecipeLinkClick: (String) -> Unit,
+    ingredientsListState: LazyListState = rememberLazyListState(),
+    directionsListState: LazyListState = rememberLazyListState(),
 ) {
     val dimens = ChefMateTheme.dimens
     val padding = dimens.paddingNormal
@@ -826,6 +846,7 @@ private fun ColumnScope.RecipeDetailTwoColumnContent(
         // Column 1: metadata, then ingredients
         LazyColumn(
             modifier = Modifier.weight(ingredientsWeight),
+            state = ingredientsListState,
             verticalArrangement = spacedBy(dimens.paddingSmall),
         ) {
             item(key = "hero") {
@@ -884,6 +905,7 @@ private fun ColumnScope.RecipeDetailTwoColumnContent(
         // Column 2: directions
         LazyColumn(
             modifier = Modifier.weight(1f - ingredientsWeight),
+            state = directionsListState,
             verticalArrangement = spacedBy(dimens.paddingSmall),
         ) {
             directionItems(
