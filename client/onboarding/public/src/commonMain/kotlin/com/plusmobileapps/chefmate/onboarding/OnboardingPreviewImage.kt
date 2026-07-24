@@ -14,7 +14,6 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -57,20 +56,21 @@ internal fun OnboardingPreviewImage(
 
 /**
  * An animated preview of a real feature (e.g. a share-sheet capture) shown at the top of an
- * onboarding step. Unlike [OnboardingPreviewImage], [uri] has no light/dark variant. The frame is
- * sized to fill the step's width and takes the capture's own [aspectRatio] (width / height) so the
- * gif fills the whole frame edge-to-edge with no letterboxing and no stretching — a tall/portrait
- * capture therefore grows downward to fill the available space.
+ * onboarding step. Unlike [OnboardingPreviewImage], [resourcePath] (a Compose resource path like
+ * "files/onboarding_share_ios.gif") has no light/dark variant. The frame is sized to fill the
+ * step's width and takes the capture's own [aspectRatio] (width / height) so the gif fills the
+ * whole frame edge-to-edge with no letterboxing and no stretching — a tall/portrait capture
+ * therefore grows downward to fill the available space. Animation is handled per platform by
+ * [AnimatedGif].
  */
 @Composable
 internal fun OnboardingGifPreview(
-    uri: String,
+    resourcePath: String,
     aspectRatio: Float,
     modifier: Modifier = Modifier,
 ) {
-    AsyncImage(
-        model = uri,
-        contentDescription = null, // decorative; the step title and body describe the feature
+    AnimatedGif(
+        resourcePath = resourcePath,
         contentScale = ContentScale.Crop,
         // widthIn before fillMaxWidth — see OnboardingPreviewImage for why the order matters.
         modifier =
