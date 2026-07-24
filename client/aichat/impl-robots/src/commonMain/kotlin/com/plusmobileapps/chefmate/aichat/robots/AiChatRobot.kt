@@ -6,6 +6,7 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performClick
@@ -43,16 +44,18 @@ class AiChatRobot(private val test: ComposeUiTest) {
         test.onNode(hasTestTag(AiChatTestTags.NEW_CHAT_BUTTON) and onScreen).performClick()
     }
 
-    /** Closes the recipe-grounded modal via its app-bar close (X) button. */
+    /**
+     * Closes the recipe-grounded modal via its app-bar close (X) — the standard modal-header close.
+     */
     fun close(): AiChatRobot = apply {
-        test.onNode(hasTestTag(AiChatTestTags.CLOSE_BUTTON) and onScreen).performClick()
+        test.onNode(hasContentDescription("Close") and onScreen).performClick()
     }
 
     /** Asserts the recipe-grounded modal's app bar shows history, new-conversation, and close. */
     fun assertModalActionsShown(): AiChatRobot = apply {
         test.onNode(hasTestTag(AiChatTestTags.HISTORY_BUTTON) and onScreen).assertIsDisplayed()
         test.onNode(hasTestTag(AiChatTestTags.NEW_CHAT_BUTTON) and onScreen).assertIsDisplayed()
-        test.onNode(hasTestTag(AiChatTestTags.CLOSE_BUTTON) and onScreen).assertIsDisplayed()
+        test.onNode(hasContentDescription("Close") and onScreen).assertIsDisplayed()
     }
 
     /** Asserts the attach-photo button (recipe-from-photo entry) is present in the input row. */

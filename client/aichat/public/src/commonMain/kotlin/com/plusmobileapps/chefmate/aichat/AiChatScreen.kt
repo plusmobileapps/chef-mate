@@ -38,7 +38,6 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.AssistChip
@@ -74,7 +73,6 @@ import androidx.compose.ui.unit.dp
 import chefmate.client.aichat.public.generated.resources.Res
 import chefmate.client.aichat.public.generated.resources.aichat_add_recipe
 import chefmate.client.aichat.public.generated.resources.aichat_attach_photo
-import chefmate.client.aichat.public.generated.resources.aichat_close
 import chefmate.client.aichat.public.generated.resources.aichat_done
 import chefmate.client.aichat.public.generated.resources.aichat_empty_description
 import chefmate.client.aichat.public.generated.resources.aichat_empty_title
@@ -103,28 +101,18 @@ import org.jetbrains.compose.resources.stringResource
 fun AiChatScreen(bloc: AiChatBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
 
-    // The recipe-grounded modal has no navigation stack to pop, so its app bar drops the back arrow
-    // and instead carries History, New conversation, and a Close (X) that dismisses the whole modal
-    // (onBackClicked finishes the chat, which the host tears down). The standalone, full-screen
-    // chat
-    // (More tab) keeps its back arrow.
+    // Presented as a modal (from a recipe or Cook Mode): a Close (X) leads the app bar — consistent
+    // with the app's other modal screens — and History + New conversation are the trailing actions.
+    // The standalone, full-screen chat (More tab) keeps its back arrow.
     val headerData =
         if (LocalAiChatPresentation.current == AiChatPresentation.SheetExpanded) {
-            PlusHeaderData.Parent(
+            PlusHeaderData.Modal(
                 title = Res.string.aichat_title.asTextData(),
+                onCloseClick = bloc::onBackClicked,
                 trailingAccessory =
                     PlusHeaderData.TrailingAccessory.Custom {
                         HistoryButton(onClick = bloc::onHistoryClick)
                         NewChatButton(onClick = bloc::onNewChatClick)
-                        IconButton(
-                            onClick = bloc::onBackClicked,
-                            modifier = Modifier.testTag(AiChatTestTags.CLOSE_BUTTON),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = stringResource(Res.string.aichat_close),
-                            )
-                        }
                     },
             )
         } else {
