@@ -9,9 +9,10 @@ import androidx.compose.ui.layout.ContentScale
  * "files/onboarding_share_ios.gif".
  *
  * Android decodes and animates it with Coil (the framework/`coil-gif` decoder registered on the
- * app's ImageLoader). iOS and desktop have no Coil gif decoder, so they decode frames with
- * `org.jetbrains.skia.Codec` and drive the animation themselves — otherwise Coil's Skia fallback
- * would only ever show the first frame.
+ * app's ImageLoader). Desktop has no Coil gif decoder, so it decodes frames with
+ * `org.jetbrains.skia.Codec` and drives the animation itself. iOS also has no Coil gif decoder, but
+ * unlike desktop its Skia build has no gif codec at all (`Codec.makeFromData` throws "Unsupported
+ * format" for gif bytes), so it falls back to Coil, which shows a static first frame.
  */
 @Composable
 internal expect fun AnimatedGif(

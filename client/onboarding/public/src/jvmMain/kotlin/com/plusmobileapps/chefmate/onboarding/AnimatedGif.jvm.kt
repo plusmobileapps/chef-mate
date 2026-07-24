@@ -22,10 +22,12 @@ import org.jetbrains.skia.Image
 // Desktop has no Coil gif decoder, so decode frames with Skia's Codec and swap them on a timer.
 // Frames are read sequentially into one reused bitmap so each frame composes correctly on top of
 // the
-// previous one; a fresh ImageBitmap snapshot per frame is what triggers recomposition. Kept
-// byte-for-
-// byte identical to the iOS AnimatedGif.ios.kt (both skiko targets), mirroring the repo's
-// ImageProcessingUtil pattern of duplicating Skia code across iosMain/jvmMain.
+// previous one; a fresh ImageBitmap snapshot per frame is what triggers recomposition.
+//
+// This does NOT work on iOS: its Skia build has no gif codec at all (Codec.makeFromData throws
+// "Unsupported format" for gif bytes, confirmed via a failing iosSimulatorArm64Test run), whereas
+// desktop's Skia build does include one. So AnimatedGif.ios.kt falls back to Coil (static first
+// frame) instead of sharing this implementation.
 @Composable
 internal actual fun AnimatedGif(
     resourcePath: String,
