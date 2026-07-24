@@ -1,36 +1,25 @@
 package com.plusmobileapps.chefmate.aichat
 
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.staticCompositionLocalOf
 
 /**
- * How the AI chat is currently being presented. The chat screen renders the same content in every
- * case except [SheetPeek], where it collapses to a compact "peek" (just the input over the recipe)
- * so it can be dragged up to full screen.
+ * How the AI chat is currently being presented. The chat body is identical in both cases; only the
+ * app bar's leading control differs.
  *
  * Defaults to [FullScreen] so the standalone chat (opened from the More tab) and all previews
- * render exactly as before — only the recipe-grounded sheet flips this to a sheet value.
+ * render with a back arrow — the recipe-grounded modal flips this to [SheetExpanded] for a close
+ * button.
  */
 enum class AiChatPresentation {
-    /** Standalone, full-screen chat (More tab). Header + messages + input. */
+    /** Standalone, full-screen chat (More tab), with a back arrow in the app bar. */
     FullScreen,
 
     /**
-     * Bottom sheet at its partially-expanded detent — show only the input to invite a first tap.
+     * The recipe-grounded chat, opened full-screen over a recipe or Cook Mode. Same layout as
+     * [FullScreen] but the app bar carries a close (X) instead of a back arrow.
      */
-    SheetPeek,
-
-    /** Bottom sheet dragged up to full height — same layout as [FullScreen]. */
     SheetExpanded,
 }
 
 /** The active presentation for the chat below this point in the tree. */
 val LocalAiChatPresentation = compositionLocalOf { AiChatPresentation.FullScreen }
-
-/**
- * Requests that the hosting sheet expand to full height. The peek stays collapsed while the user
- * types over the recipe; it grows to the full conversation only when they drag the strip up or send
- * a message. Wired by the sheet host; a no-op in the full-screen presentation. Static because the
- * callback identity rarely changes.
- */
-val LocalAiChatRequestExpand = staticCompositionLocalOf<() -> Unit> { {} }

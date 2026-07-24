@@ -1,27 +1,18 @@
-@file:OptIn(FaultyDecomposeApi::class, ExperimentalMaterial3Api::class)
+@file:OptIn(FaultyDecomposeApi::class)
 
 package com.plusmobileapps.chefmate.root
 
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.material3.BottomSheetDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
 import com.arkivanov.decompose.FaultyDecomposeApi
@@ -34,7 +25,6 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimator
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.plusmobileapps.chefmate.aichat.AiChatPresentation
 import com.plusmobileapps.chefmate.aichat.LocalAiChatPresentation
-import com.plusmobileapps.chefmate.aichat.LocalAiChatRequestExpand
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.backAnimation
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -68,80 +58,35 @@ fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
                 child.instance.bloc.Content()
             }
         }
-        // Recipe-grounded AI chat, layered over the current screen as an expandable bottom sheet.
-        AiChatSheet(rootBloc)
+        // Recipe-grounded AI chat, layered full-screen over the current screen.
+        AiChatModal(rootBloc)
     }
 }
 
 /**
- * The recipe-grounded AI chat sheet. It opens as a small "peek" (just the input over the dimmed
- * recipe) and grows to full screen once [AiChatPresentation.SheetExpanded] is requested — by
- * focusing the input, dragging the peek strip up, or sending a message.
+ * The recipe-grounded AI chat, opened from a recipe or Cook Mode. It covers the screen as a
+ * full-screen modal that slides up from the bottom, and is dismissed by its close button or the
+ * system back gesture (handled by the host slot's back callback).
  */
 @Composable
-private fun AiChatSheet(rootBloc: RootBloc) {
+private fun AiChatModal(rootBloc: RootBloc) {
     val slot by rootBloc.aiChatSheetSlot.subscribeAsState()
     val child = slot.child?.instance
 
-    // Keep the last child in composition through the hide animation after the slot dismisses.
-    var sheetChild by remember { mutableStateOf(child) }
-    if (child != null) sheetChild = child
+    // Keep the last child composed through the slide-out animation after the slot dismisses.
+    var lastChild by remember { mutableStateOf(child) }
+    if (child != null) lastChild = child
 
-    // Peek vs full is host state (not a Material detent) so the peek can hug just the input. Keyed
-    // on the child so each newly-opened chat starts collapsed, while staying stable (and expanded)
-    // through the dismiss animation. The peek stays collapsed while the user types; it flips to
-    // expanded only when the strip is dragged up or a message is sent (see
-    // LocalAiChatRequestExpand).
-    var expanded by remember(sheetChild) { mutableStateOf(false) }
-
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    LaunchedEffect(child) {
-        if (child == null && sheetChild != null) {
-            sheetState.hide()
-            sheetChild = null
-        }
-    }
-
-    val currentChild = sheetChild ?: return
-    ModalBottomSheet(
-        onDismissRequest = rootBloc::onAiChatSheetDismiss,
-        sheetState = sheetState,
-        contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
-        // When expanded the chat's own header is the top of the sheet; the drag handle only shows
-        // in
-        // the peek, where it invites the drag-to-expand gesture.
-        dragHandle = if (expanded) null else ({ BottomSheetDefaults.DragHandle() }),
+    AnimatedVisibility(
+        visible = child != null,
+        enter = slideInVertically { it },
+        exit = slideOutVertically { it },
     ) {
-        CompositionLocalProvider(
-            LocalAiChatPresentation provides
-                if (expanded) AiChatPresentation.SheetExpanded else AiChatPresentation.SheetPeek,
-            LocalAiChatRequestExpand provides { expanded = true },
-        ) {
-            // Grow (and shrink) the sheet smoothly between the compact peek and the full-height
-            // chat instead of snapping. Anchoring the size change to the bottom keeps the input
-            // pinned to the bottom edge while the app bar and messages fill in above as it expands.
-            //
-            // ModalBottomSheet's Dialog measures its content with a *tight* height constraint
-            // matching the full window (see androidx.compose.ui.window.RootMeasurePolicy) rather
-            // than a loose "up to this much" one, and nothing in Material3's Surface/Column relaxes
-            // it. Without wrapContentHeight(unbounded = true) here, the peek content is forced to
-            // report that full window height regardless of how small it actually is, leaving the
-            // input pinned near the top of an otherwise-empty full-height sheet. Only applied while
-            // collapsed: the expanded chat wants to actually fill the available height.
-            Box(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .then(
-                            if (expanded) Modifier
-                            else Modifier.wrapContentHeight(Alignment.Top, unbounded = true)
-                        )
-                        .animateContentSize(
-                            animationSpec = tween(),
-                            alignment = Alignment.BottomCenter,
-                        )
+        lastChild?.let { current ->
+            CompositionLocalProvider(
+                LocalAiChatPresentation provides AiChatPresentation.SheetExpanded
             ) {
-                currentChild.bloc.Content()
+                Surface(modifier = Modifier.fillMaxSize()) { current.bloc.Content() }
             }
         }
     }

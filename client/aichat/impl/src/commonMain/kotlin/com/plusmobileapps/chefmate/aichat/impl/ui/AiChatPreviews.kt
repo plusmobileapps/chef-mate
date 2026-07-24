@@ -172,13 +172,16 @@ internal fun AiChatScreenErrorPreview() {
 }
 
 /**
- * Collapsed sheet "peek" — only the recipe chip and input, as shown before the sheet is expanded.
+ * Recipe-grounded full-screen modal — the app bar carries History, New conversation, and a Close
+ * (X) instead of a back arrow.
  */
-@Preview(showBackground = true, heightDp = 240)
+@Preview(showBackground = true, heightDp = 900)
 @Composable
-internal fun AiChatScreenPeekPreview() {
+internal fun AiChatScreenModalPreview() {
     ChefMateTheme {
-        CompositionLocalProvider(LocalAiChatPresentation provides AiChatPresentation.SheetPeek) {
+        CompositionLocalProvider(
+            LocalAiChatPresentation provides AiChatPresentation.SheetExpanded
+        ) {
             previewAiChatBlocWithRecipeContext.Content()
         }
     }
