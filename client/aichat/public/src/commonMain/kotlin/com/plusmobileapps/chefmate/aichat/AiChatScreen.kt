@@ -62,6 +62,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -235,7 +236,9 @@ private fun AiChatPeek(bloc: AiChatBloc, state: AiChatBloc.Model, modifier: Modi
                             dragAccumulation += delta
                             if (dragAccumulation < PEEK_DRAG_EXPAND_THRESHOLD) {
                                 dragAccumulation = 0f
-                                onExpand()
+                                // Dragging up is to browse, not necessarily to type — don't force
+                                // the keyboard open the way focusing the input below does.
+                                onExpand(false)
                             }
                         },
                     onDragStopped = { dragAccumulation = 0f },
@@ -256,7 +259,7 @@ private fun AiChatPeek(bloc: AiChatBloc, state: AiChatBloc.Model, modifier: Modi
             onInputChange = bloc::onInputChange,
             onSendClick = bloc::onSendClick,
             onPhotoPicked = bloc::onPhotoPicked,
-            onFocused = onExpand,
+            onFocused = { onExpand(true) },
         )
     }
 }
@@ -582,6 +585,7 @@ private fun AiChatInput(
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     val isIos = isIosPlatform()
+    val presentation = LocalAiChatPresentation.current
     var isFocused by remember { mutableStateOf(false) }
     val canSend = text.isNotBlank() && !isSending
     val pickPhoto = rememberImagePickerLauncher { picked ->
@@ -595,8 +599,20 @@ private fun AiChatInput(
                 .background(MaterialTheme.colorScheme.surface)
                 // Keep the input above the keyboard when open and above the navigation/gesture bar
                 // when closed. Unioning the two insets pads by whichever is larger (the IME inset
-                // already includes the navigation bar) so they never stack.
-                .windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars))
+                // already includes the navigation bar) so they never stack. Only needed in the
+                // standalone full-screen chat: when hosted in the recipe-grounded sheet,
+                // Material3's
+                // ModalBottomSheet Dialog already applies imePadding() to its own outer content, so
+                // adding the ime inset again here would double-count the keyboard height and leave
+                // a
+                // gap between the input and the keyboard.
+                .windowInsetsPadding(
+                    if (presentation == AiChatPresentation.FullScreen) {
+                        WindowInsets.ime.union(WindowInsets.navigationBars)
+                    } else {
+                        WindowInsets.navigationBars
+                    }
+                )
                 .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -619,6 +635,9 @@ private fun AiChatInput(
             onValueChange = onInputChange,
             modifier =
                 Modifier.weight(1f)
+                    // Shared with whichever AiChatInput is composed next (peek vs. expanded), so a
+                    // focus request from the host survives the structural swap between them.
+                    .focusRequester(LocalAiChatInputFocusRequester.current)
                     .onFocusChanged {
                         isFocused = it.isFocused
                         if (it.isFocused) onFocused()
