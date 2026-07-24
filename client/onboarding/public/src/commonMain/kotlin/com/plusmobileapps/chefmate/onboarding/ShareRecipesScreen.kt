@@ -60,7 +60,7 @@ fun ShareRecipesScreen(
             buttonTestTag = OnboardingTestTags.SHARE_RECIPES_NEXT_BUTTON,
             modifier = modifier,
             preview = {
-                OnboardingGifPreview(uri = Res.getUri(gifPath), aspectRatio = gifAspectRatio)
+                OnboardingGifPreview(resourcePath = gifPath, aspectRatio = gifAspectRatio)
             },
         )
     }
