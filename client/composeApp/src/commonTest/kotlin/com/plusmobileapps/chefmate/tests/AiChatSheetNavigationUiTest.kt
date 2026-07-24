@@ -16,16 +16,20 @@ class AiChatSheetNavigationUiTest {
 
     /**
      * Opening the AI chat from a recipe shows it as a collapsed sheet "peek" (input over the
-     * recipe), and focusing the input expands it to the full-screen chat — the recipe detail
-     * underneath is never replaced by a full-screen chat child.
+     * recipe) that stays collapsed while the user types, and only expands to the full-screen chat
+     * once a message is sent — the recipe detail underneath is never replaced by a full-screen chat
+     * child.
      */
     @Test
-    fun ai_chat_from_recipe_detail_opens_as_a_peek_then_expands() = runRootBlocTest { component ->
-        component.testFeatureFlags.set(FeatureFlagRegistry.AiChat, true)
+    fun ai_chat_from_recipe_detail_stays_a_peek_while_typing_then_expands_on_send() =
+        runRootBlocTest { component ->
+            component.testFeatureFlags.set(FeatureFlagRegistry.AiChat, true)
 
-        recipeList().clickRecipe(TestRecipes.fullyPopulated.title)
-        recipeDetail().awaitDisplayed().tapAiChat()
+            recipeList().clickRecipe(TestRecipes.fullyPopulated.title)
+            recipeDetail().awaitDisplayed().tapAiChat()
 
-        aiChat().awaitPeekShown().expandFromPeek().awaitExpanded()
-    }
+            aiChat().awaitPeekShown().typeInPeek("How long do I roast this?").assertStillPeek()
+
+            aiChat().sendFromPeek().awaitExpanded()
+        }
 }

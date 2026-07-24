@@ -31,9 +31,21 @@ class AiChatRobot(private val test: ComposeUiTest) {
         test.waitUntilExactlyOneExists(hasTestTag(AiChatTestTags.PEEK))
     }
 
-    /** Focuses the peek input, which asks the sheet to expand to the full-screen chat. */
-    fun expandFromPeek(): AiChatRobot = apply {
-        test.onNode(hasTestTag(AiChatTestTags.INPUT) and onPeek).performClick()
+    /** Types into the peek's input. The peek stays collapsed while typing — it does not expand. */
+    fun typeInPeek(text: String): AiChatRobot = apply {
+        test.onNode(hasTestTag(AiChatTestTags.INPUT) and onPeek).performTextInput(text)
+    }
+
+    /**
+     * Asserts the collapsed peek is still shown (i.e. typing/focusing did not expand the sheet).
+     */
+    fun assertStillPeek(): AiChatRobot = apply {
+        test.onNode(hasTestTag(AiChatTestTags.PEEK)).assertIsDisplayed()
+    }
+
+    /** Taps the peek's send button, which sends the message and then expands the sheet. */
+    fun sendFromPeek(): AiChatRobot = apply {
+        test.onNode(hasTestTag(AiChatTestTags.SEND_BUTTON) and onPeek).performClick()
     }
 
     /** Waits for the expanded, full-screen chat (its header) to be shown. */

@@ -2,7 +2,6 @@ package com.plusmobileapps.chefmate.aichat
 
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.focus.FocusRequester
 
 /**
  * How the AI chat is currently being presented. The chat screen renders the same content in every
@@ -29,20 +28,9 @@ enum class AiChatPresentation {
 val LocalAiChatPresentation = compositionLocalOf { AiChatPresentation.FullScreen }
 
 /**
- * Requests that the hosting sheet expand to full height. When [focusInput] is true — the user
- * focused the peek's input, as opposed to dragging the strip up just to browse — the host also
- * refocuses [LocalAiChatInputFocusRequester] once the expanded input has composed, so the keyboard
- * stays open through the peek -> expanded transition instead of requiring a second tap. Wired by
- * the sheet host; a no-op in the full-screen presentation. Static because the callback identity
- * rarely changes.
+ * Requests that the hosting sheet expand to full height. The peek stays collapsed while the user
+ * types over the recipe; it grows to the full conversation only when they drag the strip up or send
+ * a message. Wired by the sheet host; a no-op in the full-screen presentation. Static because the
+ * callback identity rarely changes.
  */
-val LocalAiChatRequestExpand = staticCompositionLocalOf<(focusInput: Boolean) -> Unit> { {} }
-
-/**
- * Shared focus target for the AI chat's input field. The peek and expanded presentations render
- * structurally different `AiChatInput` composables, so a [FocusRequester] local to either one alone
- * can't survive the swap between them — the host attaches this same instance to whichever input is
- * currently composed and calls `requestFocus()` on it after expanding (see
- * [LocalAiChatRequestExpand]).
- */
-val LocalAiChatInputFocusRequester = staticCompositionLocalOf { FocusRequester() }
+val LocalAiChatRequestExpand = staticCompositionLocalOf<() -> Unit> { {} }

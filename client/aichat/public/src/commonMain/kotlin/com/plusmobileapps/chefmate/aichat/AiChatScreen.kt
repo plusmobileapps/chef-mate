@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -59,10 +60,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -99,6 +100,7 @@ import com.plusmobileapps.chefmate.ui.isIosPlatform
 import com.plusmobileapps.chefmate.util.rememberImagePickerLauncher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -216,12 +218,14 @@ private fun HistoryButton(onClick: () -> Unit) {
 
 /**
  * Collapsed "peek" presentation used by the recipe-grounded sheet: only the recipe-context chip and
- * the input, so the sheet stays small over the dimmed recipe. Focusing the input, or dragging the
- * strip upward, asks the host to expand to the full-screen chat.
+ * the input, so the sheet stays small over the dimmed recipe while the user types. It grows to the
+ * full-screen chat only when the strip is dragged up, or when a message is sent.
  */
 @Composable
 private fun AiChatPeek(bloc: AiChatBloc, state: AiChatBloc.Model, modifier: Modifier = Modifier) {
     val onExpand = LocalAiChatRequestExpand.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val scope = rememberCoroutineScope()
     var dragAccumulation by remember { mutableStateOf(0f) }
 
     Column(
@@ -236,9 +240,7 @@ private fun AiChatPeek(bloc: AiChatBloc, state: AiChatBloc.Model, modifier: Modi
                             dragAccumulation += delta
                             if (dragAccumulation < PEEK_DRAG_EXPAND_THRESHOLD) {
                                 dragAccumulation = 0f
-                                // Dragging up is to browse, not necessarily to type — don't force
-                                // the keyboard open the way focusing the input below does.
-                                onExpand(false)
+                                onExpand()
                             }
                         },
                     onDragStopped = { dragAccumulation = 0f },
@@ -257,15 +259,31 @@ private fun AiChatPeek(bloc: AiChatBloc, state: AiChatBloc.Model, modifier: Modi
             isSending = state.isSending,
             isExtracting = state.isExtractingRecipe,
             onInputChange = bloc::onInputChange,
-            onSendClick = bloc::onSendClick,
+            // The peek stays collapsed while the user types over the recipe — sending is what grows
+            // it to the full conversation. Close the keyboard first, then expand a beat later so
+            // the
+            // keyboard-collapse and sheet-expand animations don't fight each other.
+            onSendClick = {
+                keyboardController?.hide()
+                bloc.onSendClick()
+                scope.launch {
+                    delay(PEEK_SEND_EXPAND_DELAY_MS)
+                    onExpand()
+                }
+            },
             onPhotoPicked = bloc::onPhotoPicked,
-            onFocused = { onExpand(true) },
         )
     }
 }
 
 /** Upward drag (negative delta) past this many pixels on the peek strip expands the sheet. */
 private const val PEEK_DRAG_EXPAND_THRESHOLD = -40f
+
+/**
+ * After sending from the peek, wait this long — enough for the keyboard to start collapsing —
+ * before expanding the sheet, so the two animations don't run on top of each other.
+ */
+private const val PEEK_SEND_EXPAND_DELAY_MS = 100L
 
 @Composable
 private fun MessageList(
@@ -579,7 +597,6 @@ private fun AiChatInput(
     onSendClick: () -> Unit,
     onPhotoPicked: (ByteArray, String) -> Unit,
     modifier: Modifier = Modifier,
-    onFocused: () -> Unit = {},
 ) {
     val text by inputText.collectAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -597,20 +614,20 @@ private fun AiChatInput(
             modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surface)
-                // Keep the input above the keyboard when open and above the navigation/gesture bar
-                // when closed. Unioning the two insets pads by whichever is larger (the IME inset
-                // already includes the navigation bar) so they never stack. Only needed in the
-                // standalone full-screen chat: when hosted in the recipe-grounded sheet,
-                // Material3's
-                // ModalBottomSheet Dialog already applies imePadding() to its own outer content, so
-                // adding the ime inset again here would double-count the keyboard height and leave
-                // a
-                // gap between the input and the keyboard.
                 .windowInsetsPadding(
                     if (presentation == AiChatPresentation.FullScreen) {
+                        // Standalone full-screen chat: nothing else handles the keyboard, so lift
+                        // the input above whichever is larger — the keyboard or the navigation bar.
                         WindowInsets.ime.union(WindowInsets.navigationBars)
                     } else {
-                        WindowInsets.navigationBars
+                        // Inside the recipe-grounded sheet, Material3's ModalBottomSheet already
+                        // applies imePadding() to its content, lifting the whole sheet above the
+                        // keyboard. Adding the ime inset again here would double it, and a plain
+                        // navigationBars inset would leave a gap the height of the nav bar / home
+                        // indicator floating between the input and the keyboard. Subtracting ime
+                        // collapses this to zero while the keyboard is open, and pads only the nav
+                        // bar / home indicator once it closes.
+                        WindowInsets.navigationBars.exclude(WindowInsets.ime)
                     }
                 )
                 .padding(horizontal = 12.dp, vertical = 8.dp),
@@ -635,13 +652,7 @@ private fun AiChatInput(
             onValueChange = onInputChange,
             modifier =
                 Modifier.weight(1f)
-                    // Shared with whichever AiChatInput is composed next (peek vs. expanded), so a
-                    // focus request from the host survives the structural swap between them.
-                    .focusRequester(LocalAiChatInputFocusRequester.current)
-                    .onFocusChanged {
-                        isFocused = it.isFocused
-                        if (it.isFocused) onFocused()
-                    }
+                    .onFocusChanged { isFocused = it.isFocused }
                     .testTag(AiChatTestTags.INPUT),
             placeholder = { Text(stringResource(Res.string.aichat_input_hint)) },
             keyboardOptions =

@@ -21,12 +21,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import com.arkivanov.decompose.FaultyDecomposeApi
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.StackAnimator
@@ -36,7 +33,6 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimator
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.plusmobileapps.chefmate.aichat.AiChatPresentation
-import com.plusmobileapps.chefmate.aichat.LocalAiChatInputFocusRequester
 import com.plusmobileapps.chefmate.aichat.LocalAiChatPresentation
 import com.plusmobileapps.chefmate.aichat.LocalAiChatRequestExpand
 import com.plusmobileapps.chefmate.ui.Content
@@ -93,17 +89,10 @@ private fun AiChatSheet(rootBloc: RootBloc) {
 
     // Peek vs full is host state (not a Material detent) so the peek can hug just the input. Keyed
     // on the child so each newly-opened chat starts collapsed, while staying stable (and expanded)
-    // through the dismiss animation.
+    // through the dismiss animation. The peek stays collapsed while the user types; it flips to
+    // expanded only when the strip is dragged up or a message is sent (see
+    // LocalAiChatRequestExpand).
     var expanded by remember(sheetChild) { mutableStateOf(false) }
-
-    // The peek and expanded presentations render structurally different AiChatInput composables, so
-    // the peek's OutlinedTextField (and its keyboard) is disposed when expanding. This tracks that
-    // the expand was triggered by focusing the input (not by dragging the peek strip up, which
-    // shouldn't force the keyboard open) so the freshly-composed expanded input can be refocused
-    // once, via the shared inputFocusRequester below.
-    var pendingInputFocus by remember(sheetChild) { mutableStateOf(false) }
-    val inputFocusRequester = remember(sheetChild) { FocusRequester() }
-    val keyboardController = LocalSoftwareKeyboardController.current
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -111,16 +100,6 @@ private fun AiChatSheet(rootBloc: RootBloc) {
         if (child == null && sheetChild != null) {
             sheetState.hide()
             sheetChild = null
-        }
-    }
-
-    LaunchedEffect(expanded, pendingInputFocus) {
-        if (expanded && pendingInputFocus) {
-            pendingInputFocus = false
-            // Let the expanded AiChatInput compose and attach to inputFocusRequester first.
-            withFrameNanos {}
-            runCatching { inputFocusRequester.requestFocus() }
-            keyboardController?.show()
         }
     }
 
@@ -137,12 +116,7 @@ private fun AiChatSheet(rootBloc: RootBloc) {
         CompositionLocalProvider(
             LocalAiChatPresentation provides
                 if (expanded) AiChatPresentation.SheetExpanded else AiChatPresentation.SheetPeek,
-            LocalAiChatRequestExpand provides
-                { focusInput ->
-                    expanded = true
-                    if (focusInput) pendingInputFocus = true
-                },
-            LocalAiChatInputFocusRequester provides inputFocusRequester,
+            LocalAiChatRequestExpand provides { expanded = true },
         ) {
             // Grow (and shrink) the sheet smoothly between the compact peek and the full-height
             // chat instead of snapping. Anchoring the size change to the bottom keeps the input
