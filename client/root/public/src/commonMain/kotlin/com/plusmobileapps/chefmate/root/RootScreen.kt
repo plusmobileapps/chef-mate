@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
@@ -118,9 +119,21 @@ private fun AiChatSheet(rootBloc: RootBloc) {
             // Grow (and shrink) the sheet smoothly between the compact peek and the full-height
             // chat instead of snapping. Anchoring the size change to the bottom keeps the input
             // pinned to the bottom edge while the app bar and messages fill in above as it expands.
+            //
+            // ModalBottomSheet's Dialog measures its content with a *tight* height constraint
+            // matching the full window (see androidx.compose.ui.window.RootMeasurePolicy) rather
+            // than a loose "up to this much" one, and nothing in Material3's Surface/Column relaxes
+            // it. Without wrapContentHeight(unbounded = true) here, the peek content is forced to
+            // report that full window height regardless of how small it actually is, leaving the
+            // input pinned near the top of an otherwise-empty full-height sheet. Only applied while
+            // collapsed: the expanded chat wants to actually fill the available height.
             Box(
                 modifier =
                     Modifier.fillMaxWidth()
+                        .then(
+                            if (expanded) Modifier
+                            else Modifier.wrapContentHeight(Alignment.Top, unbounded = true)
+                        )
                         .animateContentSize(
                             animationSpec = tween(),
                             alignment = Alignment.BottomCenter,
