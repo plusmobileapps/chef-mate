@@ -5,6 +5,7 @@ package com.plusmobileapps.chefmate.aichat.robots
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -41,6 +42,19 @@ class AiChatRobot(private val test: ComposeUiTest) {
      */
     fun assertStillPeek(): AiChatRobot = apply {
         test.onNode(hasTestTag(AiChatTestTags.PEEK)).assertIsDisplayed()
+    }
+
+    /** Asserts the peek's action bar shows both the history and close buttons. */
+    fun assertPeekActionsShown(): AiChatRobot = apply {
+        test.onNode(hasTestTag(AiChatTestTags.HISTORY_BUTTON) and onPeek).assertIsDisplayed()
+        test.onNode(hasTestTag(AiChatTestTags.CLOSE_BUTTON) and onPeek).assertIsDisplayed()
+    }
+
+    /**
+     * Asserts the peek's input is focused (opening the sheet drops the user straight into typing).
+     */
+    fun assertPeekInputFocused(): AiChatRobot = apply {
+        test.onNode(hasTestTag(AiChatTestTags.INPUT) and onPeek).assertIsFocused()
     }
 
     /** Taps the peek's send button, which sends the message and then expands the sheet. */

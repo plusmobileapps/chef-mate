@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -56,6 +55,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -64,7 +64,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -217,9 +220,11 @@ private fun HistoryButton(onClick: () -> Unit) {
 }
 
 /**
- * Collapsed "peek" presentation used by the recipe-grounded sheet: only the recipe-context chip and
- * the input, so the sheet stays small over the dimmed recipe while the user types. It grows to the
- * full-screen chat only when the strip is dragged up, or when a message is sent.
+ * Collapsed "peek" presentation used by the recipe-grounded sheet: a compact action bar (history +
+ * close) over the recipe-context chip and the input, so the sheet stays small over the dimmed
+ * recipe while the user types. It grows to the full-screen chat only when the strip is dragged up,
+ * or when a message is sent. Opening the sheet focuses the input and raises the keyboard right
+ * away.
  */
 @Composable
 private fun AiChatPeek(bloc: AiChatBloc, state: AiChatBloc.Model, modifier: Modifier = Modifier) {
@@ -227,6 +232,14 @@ private fun AiChatPeek(bloc: AiChatBloc, state: AiChatBloc.Model, modifier: Modi
     val keyboardController = LocalSoftwareKeyboardController.current
     val scope = rememberCoroutineScope()
     var dragAccumulation by remember { mutableStateOf(0f) }
+
+    // Opening the recipe-grounded sheet drops the user straight into typing: focus the input and
+    // raise the keyboard as soon as the peek composes.
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        runCatching { focusRequester.requestFocus() }
+        keyboardController?.show()
+    }
 
     Column(
         modifier =
@@ -246,6 +259,24 @@ private fun AiChatPeek(bloc: AiChatBloc, state: AiChatBloc.Model, modifier: Modi
                     onDragStopped = { dragAccumulation = 0f },
                 )
     ) {
+        // Compact action bar: history and close, mirroring the expanded sheet's app-bar
+        // accessories.
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 4.dp),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            HistoryButton(onClick = bloc::onHistoryClick)
+            IconButton(
+                onClick = bloc::onBackClicked,
+                modifier = Modifier.testTag(AiChatTestTags.CLOSE_BUTTON),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = stringResource(Res.string.aichat_close),
+                )
+            }
+        }
         state.recipeContextTitle?.let { title ->
             RecipeContextChip(
                 title = title,
@@ -272,6 +303,7 @@ private fun AiChatPeek(bloc: AiChatBloc, state: AiChatBloc.Model, modifier: Modi
                 }
             },
             onPhotoPicked = bloc::onPhotoPicked,
+            focusRequester = focusRequester,
         )
     }
 }
@@ -597,6 +629,7 @@ private fun AiChatInput(
     onSendClick: () -> Unit,
     onPhotoPicked: (ByteArray, String) -> Unit,
     modifier: Modifier = Modifier,
+    focusRequester: FocusRequester? = null,
 ) {
     val text by inputText.collectAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -609,25 +642,42 @@ private fun AiChatInput(
         picked?.let { onPhotoPicked(it.bytes, it.fileExtension) }
     }
 
+    // Inside the recipe-grounded sheet, Material3's ModalBottomSheet already applies imePadding()
+    // to
+    // its content — and consumes the ime inset — so it has lifted the whole sheet above the
+    // keyboard
+    // by the time we get here. A windowInsetsPadding of ime/navigationBars therefore can't see the
+    // keyboard (ime reads as consumed-to-zero) and would just add the raw nav-bar height, leaving a
+    // gap floating above the keyboard. Read the *raw* ime height instead to tell whether the
+    // keyboard is up: while it is, add nothing; once it's down, reserve the nav bar / home
+    // indicator.
+    val density = LocalDensity.current
+    val imeInsets = WindowInsets.ime
+    val navInsets = WindowInsets.navigationBars
+    val sheetBottomPadding by
+        remember(density, imeInsets, navInsets) {
+            derivedStateOf {
+                with(density) {
+                    if (imeInsets.getBottom(density) > 0) 0.dp
+                    else navInsets.getBottom(density).toDp()
+                }
+            }
+        }
+
     Row(
         modifier =
             modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surface)
-                .windowInsetsPadding(
+                .then(
                     if (presentation == AiChatPresentation.FullScreen) {
                         // Standalone full-screen chat: nothing else handles the keyboard, so lift
                         // the input above whichever is larger — the keyboard or the navigation bar.
-                        WindowInsets.ime.union(WindowInsets.navigationBars)
+                        Modifier.windowInsetsPadding(
+                            WindowInsets.ime.union(WindowInsets.navigationBars)
+                        )
                     } else {
-                        // Inside the recipe-grounded sheet, Material3's ModalBottomSheet already
-                        // applies imePadding() to its content, lifting the whole sheet above the
-                        // keyboard. Adding the ime inset again here would double it, and a plain
-                        // navigationBars inset would leave a gap the height of the nav bar / home
-                        // indicator floating between the input and the keyboard. Subtracting ime
-                        // collapses this to zero while the keyboard is open, and pads only the nav
-                        // bar / home indicator once it closes.
-                        WindowInsets.navigationBars.exclude(WindowInsets.ime)
+                        Modifier.padding(bottom = sheetBottomPadding)
                     }
                 )
                 .padding(horizontal = 12.dp, vertical = 8.dp),
@@ -652,6 +702,10 @@ private fun AiChatInput(
             onValueChange = onInputChange,
             modifier =
                 Modifier.weight(1f)
+                    .then(
+                        if (focusRequester != null) Modifier.focusRequester(focusRequester)
+                        else Modifier
+                    )
                     .onFocusChanged { isFocused = it.isFocused }
                     .testTag(AiChatTestTags.INPUT),
             placeholder = { Text(stringResource(Res.string.aichat_input_hint)) },
