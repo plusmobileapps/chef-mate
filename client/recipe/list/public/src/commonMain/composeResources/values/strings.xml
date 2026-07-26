@@ -102,6 +102,13 @@
     <string name="recipe_list_selection_select_all">Select all</string>
     <string name="recipe_list_selection_deselect_all">Deselect all</string>
     <string name="recipe_list_selection_export">Export selected</string>
+    <string name="recipe_list_selection_more">More actions</string>
+    <string name="recipe_list_selection_add_to_book">Add to recipe book</string>
+    <string name="recipe_list_selection_add_to_category">Add to category</string>
+    <string name="recipe_list_bulk_book_title">Add to recipe book</string>
+    <string name="recipe_list_bulk_category_title">Add to category</string>
+    <string name="recipe_list_bulk_added_to_book">Added {count} recipes to {book}</string>
+    <string name="recipe_list_bulk_added_to_category">Added {count} recipes to {category}</string>
 
     <!-- Cooking Session -->
     <string name="recipe_list_continue_cooking">Continue cooking</string>

@@ -7,6 +7,7 @@ import app.cash.turbine.test
 import com.plusmobileapps.chefmate.cook.data.CookingSessionRepository
 import com.plusmobileapps.chefmate.di.CoachMarkController
 import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
+import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeCategoryRepository
@@ -22,6 +23,7 @@ import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.TextData
+import com.plusmobileapps.chefmate.toast.testing.FakeToastService
 import com.plusmobileapps.chefmate.util.TimeFormatterUtil
 import com.russhwolf.settings.MapSettings
 import com.russhwolf.settings.Settings
@@ -65,6 +67,7 @@ class RecipeListBlocImplTest {
     private val imageExtractor = FakeRecipeImageExtractor()
     private val pendingPhotoStore = FakePendingRecipePhotoStore()
     private val featureFlags = FakeFeatureFlags()
+    private val toastService = FakeToastService()
 
     private val bloc =
         RecipeListBlocImpl(
@@ -86,6 +89,7 @@ class RecipeListBlocImplTest {
                 )
             },
             timeFormatterUtil = timeFormatterUtil,
+            toastService = toastService,
         )
 
     private fun recipe(
@@ -357,6 +361,50 @@ class RecipeListBlocImplTest {
             bloc.onToggleSelectAllVisible()
             awaitItem().selectedRecipeIds shouldBe emptySet()
         }
+    }
+
+    @Test
+    fun When_long_press_outside_selection_Then_enters_selection_with_that_recipe() = runTest {
+        bloc.state.test {
+            awaitItem() // initial
+            recipes.value = listOf(recipe(1), recipe(2))
+            awaitItem() // recipes loaded
+
+            bloc.onRecipeLongClicked(listItem(id = 2))
+            val next = awaitItem()
+            next.isSelectionMode shouldBe true
+            next.selectedRecipeIds shouldBe setOf(2L)
+        }
+        output.values shouldBe emptyList()
+    }
+
+    @Test
+    fun When_long_press_in_selection_mode_Then_toggles_like_a_tap() = runTest {
+        bloc.state.test {
+            awaitItem()
+            recipes.value = listOf(recipe(1), recipe(2))
+            awaitItem()
+            bloc.onEnterSelectionMode()
+            awaitItem()
+
+            bloc.onRecipeLongClicked(listItem(id = 1))
+            awaitItem().selectedRecipeIds shouldBe setOf(1L)
+            bloc.onRecipeLongClicked(listItem(id = 1))
+            awaitItem().selectedRecipeIds shouldBe emptySet()
+        }
+    }
+
+    @Test
+    fun When_bulk_category_add_completes_Then_confirmation_toast_shown() = runTest {
+        recipes.value = listOf(recipe(1))
+        bloc.onEnterSelectionMode()
+        bloc.onToggleRecipeSelected(listItem(id = 1))
+
+        bloc.onAddSelectedToBuiltinCategory(BuiltinCategory.DINNER)
+
+        toastService.shown.size shouldBe 1
+        recipes.value.first().categories.map { it.builtinId } shouldBe
+            listOf(BuiltinCategory.DINNER.id)
     }
 
     @Test

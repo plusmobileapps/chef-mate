@@ -108,6 +108,46 @@ class RecipeRepositoryImplTest {
         }
 
     @Test
+    fun addRecipesToCategory_attaches_the_category_to_every_selected_recipe() =
+        runTest(testDispatcher) {
+            val breakfast = categoryRepository.materializeBuiltin(BuiltinCategory.BREAKFAST)
+            val one = recipeRepository.createRecipe(blankRecipe(title = "One"))
+            val two = recipeRepository.createRecipe(blankRecipe(title = "Two"))
+
+            recipeRepository.addRecipesToCategory(setOf(one.id, two.id), breakfast)
+
+            recipeRepository.getRecipes().test {
+                val recipes = awaitItem()
+                recipes.forEach { recipe ->
+                    recipe.categories.map { it.builtinId } shouldBe
+                        listOf(BuiltinCategory.BREAKFAST.id)
+                }
+            }
+        }
+
+    @Test
+    fun addRecipesToBook_files_every_selected_recipe_under_the_book() =
+        runTest(testDispatcher) {
+            db.recipeBookQueries.create(
+                name = "Weeknight",
+                isDefault = false,
+                createdAt = dateTimeUtil.now.toString(),
+                updatedAt = dateTimeUtil.now.toString(),
+                clientId = "book-client-1",
+                ownerId = null,
+            )
+            val bookId = db.recipeBookQueries.lastInsertId().executeAsOne().MAX!!
+            val one = recipeRepository.createRecipe(blankRecipe(title = "One"))
+            val two = recipeRepository.createRecipe(blankRecipe(title = "Two"))
+
+            recipeRepository.addRecipesToBook(setOf(one.id, two.id), bookId)
+
+            recipeRepository.getRecipes().test {
+                awaitItem().forEach { recipe -> (bookId in recipe.recipeBookIds) shouldBe true }
+            }
+        }
+
+    @Test
     fun getRecipes_filters_by_preset_using_attached_categories() =
         runTest(testDispatcher) {
             val breakfast = categoryRepository.materializeBuiltin(BuiltinCategory.BREAKFAST)

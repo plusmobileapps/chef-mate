@@ -114,7 +114,23 @@ private fun recipeListBloc(model: RecipeListBloc.Model): RecipeListBloc =
 
         override fun onToggleRecipeSelected(recipe: RecipeListItem) = Unit
 
+        override fun onRecipeLongClicked(recipe: RecipeListItem) = Unit
+
         override fun onToggleSelectAllVisible() = Unit
+
+        override fun onAddToBookClicked() = Unit
+
+        override fun onBulkBookPickerDismissed() = Unit
+
+        override fun onAddSelectedToBook(bookId: Long) = Unit
+
+        override fun onAddToCategoryClicked() = Unit
+
+        override fun onBulkCategoryPickerDismissed() = Unit
+
+        override fun onAddSelectedToBuiltinCategory(category: BuiltinCategory) = Unit
+
+        override fun onAddSelectedToUserCategory(categoryId: Long) = Unit
 
         override fun onExportClicked() = Unit
 

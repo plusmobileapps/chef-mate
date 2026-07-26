@@ -1,6 +1,18 @@
 package com.plusmobileapps.chefmate.recipe.list.impl
 
 import chefmate.client.recipe.list.public.generated.resources.Res
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_bulk_added_to_book
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_bulk_added_to_category
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_ai
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_appetizer
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_breakfast
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_dessert
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_dinner
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_drink
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_lunch
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_other
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_side
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_snack
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_scan_failed
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_scan_no_api_key
 import com.plusmobileapps.chefmate.ViewModel
@@ -28,6 +40,8 @@ import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookCollaborationRepository
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookInvite
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBookRepository
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.util.mimeTypeForImageExtension
@@ -50,6 +64,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.StringResource
 
 @Inject
 class RecipeListViewModel(
@@ -121,6 +136,19 @@ class RecipeListViewModel(
      * [com.plusmobileapps.chefmate.recipe.list.RecipeListBloc.Output.OpenScannedRecipe].
      */
     val scannedRecipe: SharedFlow<ExtractedRecipeData> = _scannedRecipe.asSharedFlow()
+
+    private val _bulkActionMessage =
+        MutableSharedFlow<TextData>(
+            replay = 0,
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST,
+        )
+
+    /**
+     * Emits a confirmation message each time a bulk selection action (add-to-book, add-to-category)
+     * completes. Collected by the BlocImpl, which surfaces it through the app-wide toast host.
+     */
+    val bulkActionMessage: SharedFlow<TextData> = _bulkActionMessage.asSharedFlow()
 
     init {
         // Queue every recipe-list coach mark in order; the controller shows them one at a time.
@@ -392,8 +420,100 @@ class RecipeListViewModel(
         _state.update { it.copy(isSelectionMode = true, selectedRecipeIds = emptySet()) }
     }
 
+    /** Enters selection mode with a single recipe pre-selected — the long-press gesture. */
+    fun enterSelectionModeWith(recipeId: Long) {
+        _state.update { it.copy(isSelectionMode = true, selectedRecipeIds = setOf(recipeId)) }
+    }
+
     fun exitSelectionMode() {
-        _state.update { it.copy(isSelectionMode = false, selectedRecipeIds = emptySet()) }
+        _state.update {
+            it.copy(
+                isSelectionMode = false,
+                selectedRecipeIds = emptySet(),
+                isBulkBookPickerOpen = false,
+                isBulkCategoryPickerOpen = false,
+            )
+        }
+    }
+
+    fun openBulkBookPicker() {
+        _state.update { it.copy(isBulkBookPickerOpen = true) }
+    }
+
+    fun dismissBulkBookPicker() {
+        _state.update { it.copy(isBulkBookPickerOpen = false) }
+    }
+
+    fun openBulkCategoryPicker() {
+        _state.update { it.copy(isBulkCategoryPickerOpen = true) }
+    }
+
+    fun dismissBulkCategoryPicker() {
+        _state.update { it.copy(isBulkCategoryPickerOpen = false) }
+    }
+
+    /** Files the current selection under [bookId], confirms via toast, and exits selection mode. */
+    fun addSelectedToBook(bookId: Long) {
+        val ids = _state.value.selectedRecipeIds
+        val bookName = _state.value.recipeBooks.firstOrNull { it.id == bookId }?.name
+        if (ids.isEmpty() || bookName == null) {
+            dismissBulkBookPicker()
+            return
+        }
+        scope.launch {
+            repository.addRecipesToBook(ids, bookId)
+            _bulkActionMessage.tryEmit(
+                PhraseModel(
+                    Res.string.recipe_list_bulk_added_to_book,
+                    "count" to FixedString(ids.size.toString()),
+                    "book" to FixedString(bookName),
+                )
+            )
+            exitSelectionMode()
+        }
+    }
+
+    /**
+     * Tags the current selection with the built-in [category], materializing its row first, then
+     * confirms via toast and exits selection mode.
+     */
+    fun addSelectedToBuiltinCategory(category: BuiltinCategory) {
+        val ids = _state.value.selectedRecipeIds
+        if (ids.isEmpty()) {
+            dismissBulkCategoryPicker()
+            return
+        }
+        scope.launch {
+            val materialized = categoryRepository.materializeBuiltin(category)
+            repository.addRecipesToCategory(ids, materialized)
+            emitCategoryAddedMessage(ids.size, ResourceString(category.labelRes()))
+            exitSelectionMode()
+        }
+    }
+
+    /** Tags the current selection with the user category [categoryId]. */
+    fun addSelectedToUserCategory(categoryId: Long) {
+        val ids = _state.value.selectedRecipeIds
+        val category = _state.value.availableUserCategories.firstOrNull { it.id == categoryId }
+        if (ids.isEmpty() || category == null) {
+            dismissBulkCategoryPicker()
+            return
+        }
+        scope.launch {
+            repository.addRecipesToCategory(ids, category)
+            emitCategoryAddedMessage(ids.size, FixedString(category.name))
+            exitSelectionMode()
+        }
+    }
+
+    private fun emitCategoryAddedMessage(count: Int, categoryLabel: TextData) {
+        _bulkActionMessage.tryEmit(
+            PhraseModel(
+                Res.string.recipe_list_bulk_added_to_category,
+                "count" to FixedString(count.toString()),
+                "category" to categoryLabel,
+            )
+        )
     }
 
     fun toggleRecipeSelected(recipeId: Long) {
@@ -435,6 +555,8 @@ class RecipeListViewModel(
         val showDoneCookingDialog: Boolean = false,
         val isSelectionMode: Boolean = false,
         val selectedRecipeIds: Set<Long> = emptySet(),
+        val isBulkBookPickerOpen: Boolean = false,
+        val isBulkCategoryPickerOpen: Boolean = false,
         val isScanning: Boolean = false,
         val scanError: TextData? = null,
         val isScanFromPhotoEnabled: Boolean = false,
@@ -458,6 +580,20 @@ class RecipeListViewModel(
                     .let { applySort(it, currentSort) }
     }
 }
+
+private fun BuiltinCategory.labelRes(): StringResource =
+    when (this) {
+        BuiltinCategory.BREAKFAST -> Res.string.recipe_list_category_breakfast
+        BuiltinCategory.LUNCH -> Res.string.recipe_list_category_lunch
+        BuiltinCategory.DINNER -> Res.string.recipe_list_category_dinner
+        BuiltinCategory.APPETIZER -> Res.string.recipe_list_category_appetizer
+        BuiltinCategory.SIDE -> Res.string.recipe_list_category_side
+        BuiltinCategory.DESSERT -> Res.string.recipe_list_category_dessert
+        BuiltinCategory.SNACK -> Res.string.recipe_list_category_snack
+        BuiltinCategory.DRINK -> Res.string.recipe_list_category_drink
+        BuiltinCategory.OTHER -> Res.string.recipe_list_category_other
+        BuiltinCategory.AI -> Res.string.recipe_list_category_ai
+    }
 
 private const val KEY_IS_GRID_VIEW = "recipe_list_is_grid_view"
 private const val KEY_SORT_OPTION = "recipe_list_sort_option"

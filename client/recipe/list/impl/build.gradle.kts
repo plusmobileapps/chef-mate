@@ -15,6 +15,7 @@ kotlin {
             implementation(projects.client.recipe.data.public)
             implementation(projects.client.recipebook.data.public)
             implementation(projects.client.cook.public)
+            implementation(projects.client.toast.public)
             implementation(projects.client.util.public)
             implementation(projects.client.featureflag.public)
             implementation(libs.multiplatform.settings)
@@ -24,6 +25,7 @@ kotlin {
             implementation(projects.client.recipe.data.testing)
             implementation(projects.client.featureflag.testing)
             implementation(projects.client.recipebook.data.testing)
+            implementation(projects.client.toast.testing)
             implementation(libs.multiplatform.settings.test)
         }
     }

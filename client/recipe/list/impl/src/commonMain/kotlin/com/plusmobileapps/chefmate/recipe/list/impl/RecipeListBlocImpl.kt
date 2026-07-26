@@ -13,6 +13,7 @@ import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc
 import com.plusmobileapps.chefmate.recipe.list.RecipeListBloc.Output
 import com.plusmobileapps.chefmate.recipe.list.RecipeListItem
 import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
+import com.plusmobileapps.chefmate.toast.ToastService
 import com.plusmobileapps.chefmate.util.TimeFormatterUtil
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
@@ -33,6 +34,7 @@ class RecipeListBlocImpl(
     @Assisted private val output: Consumer<Output>,
     private val viewModelFactory: Provider<RecipeListViewModel>,
     private val timeFormatterUtil: TimeFormatterUtil,
+    private val toastService: ToastService,
 ) : RecipeListBloc, BlocContext by context {
     private val viewModel: RecipeListViewModel = instanceKeeper.getViewModel { viewModelFactory() }
     private val scope = createScope()
@@ -41,6 +43,7 @@ class RecipeListBlocImpl(
         viewModel.scannedRecipe
             .onEach { output.onNext(Output.OpenScannedRecipe(it)) }
             .launchIn(scope)
+        viewModel.bulkActionMessage.onEach { toastService.show(it) }.launchIn(scope)
     }
 
     override val state: StateFlow<RecipeListBloc.Model> =
@@ -63,6 +66,8 @@ class RecipeListBlocImpl(
                 showDoneCookingDialog = it.showDoneCookingDialog,
                 isSelectionMode = it.isSelectionMode,
                 selectedRecipeIds = it.selectedRecipeIds,
+                isBulkBookPickerOpen = it.isBulkBookPickerOpen,
+                isBulkCategoryPickerOpen = it.isBulkCategoryPickerOpen,
                 isScanning = it.isScanning,
                 scanError = it.scanError,
                 isScanFromPhotoEnabled = it.isScanFromPhotoEnabled,
@@ -173,8 +178,44 @@ class RecipeListBlocImpl(
         viewModel.toggleRecipeSelected(recipe.id)
     }
 
+    override fun onRecipeLongClicked(recipe: RecipeListItem) {
+        if (viewModel.state.value.isSelectionMode) {
+            viewModel.toggleRecipeSelected(recipe.id)
+        } else {
+            viewModel.enterSelectionModeWith(recipe.id)
+        }
+    }
+
     override fun onToggleSelectAllVisible() {
         viewModel.toggleSelectAllVisible()
+    }
+
+    override fun onAddToBookClicked() {
+        viewModel.openBulkBookPicker()
+    }
+
+    override fun onBulkBookPickerDismissed() {
+        viewModel.dismissBulkBookPicker()
+    }
+
+    override fun onAddSelectedToBook(bookId: Long) {
+        viewModel.addSelectedToBook(bookId)
+    }
+
+    override fun onAddToCategoryClicked() {
+        viewModel.openBulkCategoryPicker()
+    }
+
+    override fun onBulkCategoryPickerDismissed() {
+        viewModel.dismissBulkCategoryPicker()
+    }
+
+    override fun onAddSelectedToBuiltinCategory(category: BuiltinCategory) {
+        viewModel.addSelectedToBuiltinCategory(category)
+    }
+
+    override fun onAddSelectedToUserCategory(categoryId: Long) {
+        viewModel.addSelectedToUserCategory(categoryId)
     }
 
     override fun onExportClicked() {

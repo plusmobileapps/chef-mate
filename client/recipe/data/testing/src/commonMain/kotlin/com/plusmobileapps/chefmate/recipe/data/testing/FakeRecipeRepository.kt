@@ -1,6 +1,7 @@
 package com.plusmobileapps.chefmate.recipe.data.testing
 
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
+import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import kotlinx.coroutines.flow.Flow
@@ -63,6 +64,20 @@ class FakeRecipeRepository(
         lastSetPublic = id to isPublic
         recipes.value = recipes.value.map { if (it.id == id) it.copy(isPublic = isPublic) else it }
         return setPublicResult
+    }
+
+    override suspend fun addRecipesToBook(recipeIds: Set<Long>, bookId: Long) {
+        recipes.value =
+            recipes.value.map {
+                if (it.id in recipeIds) it.copy(recipeBookIds = it.recipeBookIds + bookId) else it
+            }
+    }
+
+    override suspend fun addRecipesToCategory(recipeIds: Set<Long>, category: Category) {
+        recipes.value =
+            recipes.value.map {
+                if (it.id in recipeIds) it.copy(categories = it.categories + category) else it
+            }
     }
 
     override suspend fun deleteRecipe(id: Long) {

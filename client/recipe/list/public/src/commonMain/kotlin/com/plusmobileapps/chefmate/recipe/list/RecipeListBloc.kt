@@ -77,7 +77,35 @@ interface RecipeListBloc : ComposeScreen {
 
     fun onToggleRecipeSelected(recipe: RecipeListItem)
 
+    /**
+     * Long-press on a recipe row. Outside selection mode this enters it with [recipe] pre-selected
+     * (the standard mobile "long-press to multi-select" gesture); inside selection mode it toggles
+     * the row like a tap.
+     */
+    fun onRecipeLongClicked(recipe: RecipeListItem)
+
     fun onToggleSelectAllVisible()
+
+    /** Opens the picker to file the selected recipes under a recipe book. */
+    fun onAddToBookClicked()
+
+    fun onBulkBookPickerDismissed()
+
+    /** Files every selected recipe under book [bookId], then leaves selection mode. */
+    fun onAddSelectedToBook(bookId: Long)
+
+    /** Opens the picker to tag the selected recipes with a category. */
+    fun onAddToCategoryClicked()
+
+    fun onBulkCategoryPickerDismissed()
+
+    /** Tags every selected recipe with the built-in [category], then leaves selection mode. */
+    fun onAddSelectedToBuiltinCategory(category: BuiltinCategory)
+
+    /**
+     * Tags every selected recipe with the user category [categoryId], then leaves selection mode.
+     */
+    fun onAddSelectedToUserCategory(categoryId: Long)
 
     fun onExportClicked()
 
@@ -136,6 +164,10 @@ interface RecipeListBloc : ComposeScreen {
         val showDoneCookingDialog: Boolean = false,
         val isSelectionMode: Boolean = false,
         val selectedRecipeIds: Set<Long> = emptySet(),
+        /** True while the "add selected recipes to a book" picker is open. */
+        val isBulkBookPickerOpen: Boolean = false,
+        /** True while the "add selected recipes to a category" picker is open. */
+        val isBulkCategoryPickerOpen: Boolean = false,
         /** True while a picked photo is being scanned into a recipe via Gemini vision. */
         val isScanning: Boolean = false,
         /** Non-null when the most recent photo scan failed. */
