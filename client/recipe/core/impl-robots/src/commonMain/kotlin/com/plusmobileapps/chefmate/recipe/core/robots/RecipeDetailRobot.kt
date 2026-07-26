@@ -2,6 +2,7 @@ package com.plusmobileapps.chefmate.recipe.core.robots
 
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
@@ -26,6 +27,35 @@ class RecipeDetailRobot(private val test: ComposeUiTest) {
 
     fun assertRecipeDisplayed(recipeName: String): RecipeDetailRobot = apply {
         test.onNode(hasText(recipeName) and hasAnyAncestor(onScreen)).assertIsDisplayed()
+    }
+
+    /** Asserts an ingredient line with exactly [text] is on screen (e.g. a scaled amount). */
+    fun assertIngredientDisplayed(text: String): RecipeDetailRobot = apply {
+        test.onNode(hasText(text) and hasAnyAncestor(onScreen)).assertIsDisplayed()
+    }
+
+    /**
+     * Opens the ingredients scale dropdown and picks the option with [label] (e.g. `2×`), scaling
+     * every ingredient amount by that factor.
+     */
+    fun selectIngredientScale(label: String): RecipeDetailRobot = apply {
+        test
+            .onNode(
+                hasTestTag(RecipeDetailTestTags.INGREDIENT_SCALE_BUTTON) and
+                    hasAnyAncestor(onScreen)
+            )
+            .performClick()
+        test.onNode(hasText(label)).performClick()
+    }
+
+    /** Asserts the ingredients scale button currently reads [label] (e.g. `2×`). */
+    fun assertIngredientScale(label: String): RecipeDetailRobot = apply {
+        test
+            .onNode(
+                hasTestTag(RecipeDetailTestTags.INGREDIENT_SCALE_BUTTON) and
+                    hasAnyAncestor(onScreen)
+            )
+            .assert(hasText(label))
     }
 
     /** Taps the AI chat action, opening the recipe-grounded chat sheet. */
