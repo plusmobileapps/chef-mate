@@ -215,6 +215,37 @@ class RecipeRepositoryImpl(
         return withContext(ioContext) { db.getById(id).executeAsOneOrNull()?.remoteId }
     }
 
+    override suspend fun addRecipesToBook(recipeIds: Set<Long>, bookId: Long) {
+        if (recipeIds.isEmpty()) return
+        withContext(ioContext) {
+            db.transaction {
+                val now = dateTimeUtil.now.toString()
+                for (recipeId in recipeIds) {
+                    // attach is INSERT OR IGNORE, so a recipe already in the book is untouched.
+                    bookJoinDb.attach(recipeBookId = bookId, recipeId = recipeId)
+                    db.markDirty(id = recipeId, updatedAt = now)
+                }
+            }
+        }
+        // Push each in the background so the bulk action returns as soon as the local write lands;
+        // the dirty flag guarantees a retry on the next full sync if a push fails.
+        for (recipeId in recipeIds) scope.launch { pushUpdateToRemote(recipeId) }
+    }
+
+    override suspend fun addRecipesToCategory(recipeIds: Set<Long>, category: Category) {
+        if (recipeIds.isEmpty()) return
+        withContext(ioContext) {
+            db.transaction {
+                val now = dateTimeUtil.now.toString()
+                for (recipeId in recipeIds) {
+                    joinDb.attach(recipeId = recipeId, categoryId = category.id)
+                    db.markDirty(id = recipeId, updatedAt = now)
+                }
+            }
+        }
+        for (recipeId in recipeIds) scope.launch { pushUpdateToRemote(recipeId) }
+    }
+
     override suspend fun deleteRecipe(id: Long) {
         val entity = withContext(ioContext) { db.getById(id).executeAsOneOrNull() } ?: return
         val remoteId = entity.remoteId

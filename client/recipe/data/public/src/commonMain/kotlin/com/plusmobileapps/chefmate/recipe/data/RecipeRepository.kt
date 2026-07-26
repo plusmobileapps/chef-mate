@@ -53,6 +53,23 @@ interface RecipeRepository {
      */
     suspend fun setRecipePublic(id: Long, isPublic: Boolean): String?
 
+    /**
+     * Files every recipe in [recipeIds] under the book with local id [bookId], in a single
+     * transaction. Book membership is additive and many-to-many — a recipe already in [bookId] is
+     * left untouched, and its existing book memberships are preserved. Each affected recipe is
+     * marked dirty so the new attachment syncs to the remote. No-op when [recipeIds] is empty.
+     */
+    suspend fun addRecipesToBook(recipeIds: Set<Long>, bookId: Long)
+
+    /**
+     * Attaches [category] to every recipe in [recipeIds], in a single transaction. Additive and
+     * idempotent — a recipe already tagged with [category] is left untouched and its other
+     * categories are preserved. Each affected recipe is marked dirty so the new attachment syncs to
+     * the remote. Callers pass a materialized [Category] (see
+     * [CategoryRepository.materializeBuiltin]). No-op when [recipeIds] is empty.
+     */
+    suspend fun addRecipesToCategory(recipeIds: Set<Long>, category: Category)
+
     suspend fun deleteRecipe(id: Long)
 
     /**
