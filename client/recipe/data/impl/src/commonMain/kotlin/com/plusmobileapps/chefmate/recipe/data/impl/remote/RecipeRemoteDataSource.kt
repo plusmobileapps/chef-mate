@@ -7,7 +7,10 @@ interface RecipeRemoteDataSource {
 
     /**
      * Every recipe the current user can access — owned plus those in books shared with them.
-     * Row-level security scopes the result, so no owner filter is applied.
+     * Deliberately does **not** include recipes that are merely public: a plain `select()` would OR
+     * in every `is_public` row via the public-read RLS policy, so a new account would pull down the
+     * whole public catalog (#487). Backed by the `get_accessible_recipes` RPC, whose
+     * owned-or-shared scope is the sole gate.
      */
     suspend fun fetchAccessibleRecipes(): List<RemoteRecipe>
 
