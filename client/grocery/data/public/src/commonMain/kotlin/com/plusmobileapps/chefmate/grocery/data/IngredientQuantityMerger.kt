@@ -20,28 +20,41 @@ object IngredientQuantityMerger {
         val parsedA = a?.let { parseAmountAndUnit(it) }
         val parsedB = b?.let { parseAmountAndUnit(it) }
 
-        // A bare item (no quantity at all) is an implicit count of 1, so re-adding "red bell
-        // pepper" to a list that already has one yields "2 red bell pepper" instead of silently
-        // doing nothing. This only combines when both sides are plain counts (unit == null); a
-        // bare add against a unit-bearing quantity like "2 cups flour" can't be summed, so the
-        // existing quantity is kept.
+        // A bare item (no quantity at all) is an implicit count of 1 with no unit.
         val amountA = if (a == null) 1.0 else parsedA?.amount
         val amountB = if (b == null) 1.0 else parsedB?.amount
         val unitA = if (a == null) null else parsedA?.unit
         val unitB = if (b == null) null else parsedB?.unit
 
-        return if (amountA != null && amountB != null && unitA == unitB) {
-            formatQuantity(amountA + amountB, unitA)
-        } else {
-            // Units differ or a quantity couldn't be parsed. Keep the side that actually
-            // specifies a quantity; if both do, list them so neither is lost.
-            when {
-                a == null -> b
-                b == null -> a
-                else -> "$a + $b"
-            }
+        if (amountA == null || amountB == null) {
+            // A non-null quantity we couldn't pull an amount from; keep something visible.
+            return keepSpecified(a, b)
         }
+
+        // Decide whether the two amounts can be summed, and under which unit.
+        //  - Same unit → sum (e.g. "2 cups" + "1 cup", or "2 large" + "1 large").
+        //  - A bare re-add (implicit count of 1) combines with a *countable* unit or descriptor
+        //    like "large" or "clove", adopting it: "2 large red bell pepper" + a bare re-add
+        //    means three of them. It cannot combine with a volume/weight measurement, since a
+        //    dimensionless "+1" onto "2 cups" is meaningless — that keeps its measured quantity.
+        val combinedUnit: String? =
+            when {
+                unitA == unitB -> unitA
+                a == null && unitB !in MEASUREMENT_UNITS -> unitB
+                b == null && unitA !in MEASUREMENT_UNITS -> unitA
+                else -> return keepSpecified(a, b)
+            }
+        return formatQuantity(amountA + amountB, combinedUnit)
     }
+
+    // Units couldn't be combined: keep the side that actually specifies a quantity; if both do,
+    // list them so neither is lost.
+    private fun keepSpecified(a: String?, b: String?): String? =
+        when {
+            a == null -> b
+            b == null -> a
+            else -> "$a + $b"
+        }
 
     private data class AmountAndUnit(val amount: Double, val unit: String?)
 
@@ -117,6 +130,12 @@ object IngredientQuantityMerger {
             '⅝' to 5.0 / 8,
             '⅞' to 7.0 / 8,
         )
+
+    // Canonical volume/weight units. Unlike countable units and size descriptors (cans, cloves,
+    // "large", "medium"…), these measure a continuous quantity, so a bare re-add — an implicit
+    // count of 1 with no unit — can't be summed into them.
+    private val MEASUREMENT_UNITS: Set<String> =
+        setOf("cup", "tbsp", "tsp", "oz", "lb", "g", "kg", "ml", "l", "qt", "gal", "pt")
 
     private val UNIT_SYNONYMS: Map<String, String> = buildMap {
         fun canonical(unit: String, vararg aliases: String) {

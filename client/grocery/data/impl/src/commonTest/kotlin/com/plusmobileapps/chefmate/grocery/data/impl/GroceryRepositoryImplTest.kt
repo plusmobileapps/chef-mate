@@ -893,6 +893,29 @@ class GroceryRepositoryImplTest {
         }
 
     @Test
+    fun addGrocery_bumps_a_large_recipe_item_when_re_adding_it_bare() =
+        runTest(testDispatcher) {
+            // Reproduces the reported no-op with a size descriptor: a recipe adds "2 large red bell
+            // pepper (sliced)", then the user manually re-adds the bare name. "large" describes a
+            // countable item, so it should count up to three rather than leaving the row unchanged.
+            val listId = repository.ensureDefaultList()
+            repository.addGroceries(
+                listId,
+                listOf("2 large red bell pepper (sliced)"),
+                recipeName = "Pad Krapow",
+            )
+
+            repository.addGrocery(listId, "red bell pepper (sliced)")
+
+            repository.getGroceries(listId).test {
+                val items = awaitItem()
+                items.size shouldBe 1
+                items.first().name shouldBe "3 large red bell pepper (sliced)"
+                items.first().recipeName shouldBe "Pad Krapow"
+            }
+        }
+
+    @Test
     fun addGroceries_merges_two_matching_lines_within_the_same_call() =
         runTest(testDispatcher) {
             val listId = repository.ensureDefaultList()

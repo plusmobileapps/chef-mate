@@ -44,12 +44,42 @@ class IngredientQuantityMergerTest {
     }
 
     @Test
-    fun merge_keeps_known_quantity_when_the_other_has_none() {
+    fun merge_bumps_a_size_descriptor_count_when_the_other_is_bare() {
+        // "large" describes a countable item, not a measurement, so a bare re-add of
+        // "red bell pepper (sliced)" against "2 large red bell pepper (sliced)" means three of
+        // them — not a silent no-op.
+        val existingLarge =
+            IngredientQuantityMerger.merge(
+                "2 large red bell pepper (sliced)",
+                "red bell pepper (sliced)",
+            )
+        val newLarge =
+            IngredientQuantityMerger.merge(
+                "red bell pepper (sliced)",
+                "2 large red bell pepper (sliced)",
+            )
+
+        assertEquals("3 large red bell pepper (sliced)", existingLarge)
+        assertEquals("3 large red bell pepper (sliced)", newLarge)
+    }
+
+    @Test
+    fun merge_bumps_a_countable_unit_when_the_other_is_bare() {
+        val result = IngredientQuantityMerger.merge("8 cloves garlic", "garlic")
+        assertEquals("9 cloves garlic", result)
+    }
+
+    @Test
+    fun merge_keeps_a_measurement_quantity_when_the_other_has_none() {
+        // A dimensionless "+1" can't be summed onto a volume/weight measurement, so the measured
+        // quantity is kept rather than mangled.
         val existingKnown = IngredientQuantityMerger.merge("2 tsp salt", "salt")
         val newKnown = IngredientQuantityMerger.merge("salt", "2 tsp salt")
+        val cups = IngredientQuantityMerger.merge("2 cups flour", "flour")
 
         assertEquals("2 tsp salt", existingKnown)
         assertEquals("2 tsp salt", newKnown)
+        assertEquals("2 cups flour", cups)
     }
 
     @Test
