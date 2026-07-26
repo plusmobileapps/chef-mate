@@ -873,6 +873,26 @@ class GroceryRepositoryImplTest {
         }
 
     @Test
+    fun addGrocery_bumps_the_count_when_re_adding_a_bare_recipe_item() =
+        runTest(testDispatcher) {
+            // Reproduces the reported no-op: a recipe adds "1 red bell pepper", then the user
+            // manually adds a bare "red bell pepper" from the grocery list screen. The two should
+            // combine into a count of two rather than leaving the row unchanged. The recipe
+            // attribution on the existing row is preserved.
+            val listId = repository.ensureDefaultList()
+            repository.addGroceries(listId, listOf("1 red bell pepper"), recipeName = "Fajitas")
+
+            repository.addGrocery(listId, "red bell pepper")
+
+            repository.getGroceries(listId).test {
+                val items = awaitItem()
+                items.size shouldBe 1
+                items.first().name shouldBe "2 red bell pepper"
+                items.first().recipeName shouldBe "Fajitas"
+            }
+        }
+
+    @Test
     fun addGroceries_merges_two_matching_lines_within_the_same_call() =
         runTest(testDispatcher) {
             val listId = repository.ensureDefaultList()

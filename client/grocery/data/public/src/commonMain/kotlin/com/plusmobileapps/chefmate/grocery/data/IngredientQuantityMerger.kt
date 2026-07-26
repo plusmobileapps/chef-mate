@@ -17,14 +17,29 @@ object IngredientQuantityMerger {
     }
 
     private fun mergeQuantities(a: String?, b: String?): String? {
-        if (a == null) return b
-        if (b == null) return a
-        val parsedA = parseAmountAndUnit(a)
-        val parsedB = parseAmountAndUnit(b)
-        return if (parsedA != null && parsedB != null && parsedA.unit == parsedB.unit) {
-            formatQuantity(parsedA.amount + parsedB.amount, parsedA.unit)
+        val parsedA = a?.let { parseAmountAndUnit(it) }
+        val parsedB = b?.let { parseAmountAndUnit(it) }
+
+        // A bare item (no quantity at all) is an implicit count of 1, so re-adding "red bell
+        // pepper" to a list that already has one yields "2 red bell pepper" instead of silently
+        // doing nothing. This only combines when both sides are plain counts (unit == null); a
+        // bare add against a unit-bearing quantity like "2 cups flour" can't be summed, so the
+        // existing quantity is kept.
+        val amountA = if (a == null) 1.0 else parsedA?.amount
+        val amountB = if (b == null) 1.0 else parsedB?.amount
+        val unitA = if (a == null) null else parsedA?.unit
+        val unitB = if (b == null) null else parsedB?.unit
+
+        return if (amountA != null && amountB != null && unitA == unitB) {
+            formatQuantity(amountA + amountB, unitA)
         } else {
-            "$a + $b"
+            // Units differ or a quantity couldn't be parsed. Keep the side that actually
+            // specifies a quantity; if both do, list them so neither is lost.
+            when {
+                a == null -> b
+                b == null -> a
+                else -> "$a + $b"
+            }
         }
     }
 

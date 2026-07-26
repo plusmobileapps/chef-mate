@@ -53,9 +53,23 @@ class IngredientQuantityMergerTest {
     }
 
     @Test
-    fun merge_returns_bare_name_when_neither_has_a_quantity() {
-        val result = IngredientQuantityMerger.merge("salt", "salt")
-        assertEquals("salt", result)
+    fun merge_bumps_count_when_neither_has_a_quantity() {
+        // A bare item is an implicit count of 1, so re-adding it bumps a plain count instead of
+        // silently no-op'ing (issue #483 follow-up: adding a second "red bell pepper").
+        val result = IngredientQuantityMerger.merge("red bell pepper", "red bell pepper")
+        assertEquals("2 red bell pepper", result)
+    }
+
+    @Test
+    fun merge_bumps_count_when_only_existing_has_a_bare_number() {
+        // Recipe line "1 red bell pepper" merged with a manual bare "red bell pepper" should
+        // still count as two, not stay at one.
+        val existingNumbered =
+            IngredientQuantityMerger.merge("1 red bell pepper", "red bell pepper")
+        val newNumbered = IngredientQuantityMerger.merge("red bell pepper", "1 red bell pepper")
+
+        assertEquals("2 red bell pepper", existingNumbered)
+        assertEquals("2 red bell pepper", newNumbered)
     }
 
     @Test
