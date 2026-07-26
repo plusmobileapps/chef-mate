@@ -341,6 +341,11 @@ private fun RecipeDetailBody(
                     ),
                 verticalArrangement = spacedBy(ChefMateTheme.dimens.paddingNormal),
                 scrollEnabled = false,
+                // Compact is a single linear scroll, so the title can grow large and collapse as
+                // the
+                // content scrolls. The two-column layout has two independent scrolls with no single
+                // driver, so it keeps the standard fixed header.
+                largeCollapsingTitle = isCompact,
                 maxContentWidth = if (isCompact) 600.dp else Dp.Unspecified,
                 floatingToolbar = {
                     PlusToolbar(

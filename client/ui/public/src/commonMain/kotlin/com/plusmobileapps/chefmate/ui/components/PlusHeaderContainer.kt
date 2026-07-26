@@ -35,14 +35,17 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
@@ -77,6 +80,12 @@ fun PlusHeaderContainer(
     floatingHeader: Boolean = false,
     headerContainerAlpha: Float = 1f,
     centerAlignTitle: Boolean = false,
+    // When true the header renders as a large, collapsing title: the full title shows on its own
+    // row while the content is at the top, then shrinks to a single-line ellipsized app-bar title
+    // as the content scrolls up. Wired via a Material [TopAppBarScrollBehavior] whose nested-scroll
+    // connection is attached to the container root, so the content's own scroll (e.g. an inner
+    // LazyColumn) drives the collapse. Only honored in the standard (non-floating) layout.
+    largeCollapsingTitle: Boolean = false,
     // Insets applied to the header itself. Defaults to null, which lets [PlusHeader] reserve the
     // status bar at the top. Pass insets without a top component when the container is hosted
     // somewhere already below the status bar (e.g. inside a ModalBottomSheet, where the drag handle
@@ -145,13 +154,25 @@ fun PlusHeaderContainer(
             }
         }
     } else {
+        val scrollBehavior =
+            if (largeCollapsingTitle) TopAppBarDefaults.exitUntilCollapsedScrollBehavior() else null
+        val rootModifier =
+            if (scrollBehavior != null) {
+                modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+            } else {
+                modifier
+            }
         Column(
-            modifier = modifier.fillMaxSize().background(ChefMateTheme.colorScheme.background),
+            modifier = rootModifier.fillMaxSize().background(ChefMateTheme.colorScheme.background),
             verticalArrangement = verticalArrangement,
             horizontalAlignment = horizontalAlignment,
         ) {
             if (data !is PlusHeaderData.None) {
-                PlusHeader(data = data, windowInsets = headerWindowInsets)
+                PlusHeader(
+                    data = data,
+                    windowInsets = headerWindowInsets,
+                    scrollBehavior = scrollBehavior,
+                )
             }
 
             Surface(
@@ -255,6 +276,9 @@ fun PlusHeader(
     windowInsets: WindowInsets? = null,
     containerAlpha: Float = 1f,
     centerAlign: Boolean = false,
+    // When non-null the header renders as a large, collapsing app bar driven by this behavior. The
+    // title spans up to two lines while expanded and collapses to a single ellipsized line.
+    scrollBehavior: TopAppBarScrollBehavior? = null,
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
@@ -274,11 +298,19 @@ fun PlusHeader(
         } else {
             TopAppBarDefaults.topAppBarColors()
         }
+    // A collapsing large title shows up to two lines while expanded, then shrinks to a single
+    // ellipsized line once mostly collapsed. A regular app bar keeps the existing two-line title.
+    val titleMaxLines =
+        when {
+            scrollBehavior == null -> 2
+            scrollBehavior.state.collapsedFraction < 0.5f -> 2
+            else -> 1
+        }
     val title: @Composable () -> Unit = {
         Text(
             text = data.title.localized(),
             color = ChefMateTheme.colorScheme.onBackground,
-            maxLines = 2,
+            maxLines = titleMaxLines,
             overflow = TextOverflow.Ellipsis,
         )
     }
@@ -334,7 +366,17 @@ fun PlusHeader(
             }
         }
     }
-    if (centerAlign) {
+    if (scrollBehavior != null) {
+        LargeTopAppBar(
+            modifier = modifier,
+            windowInsets = resolvedInsets,
+            title = title,
+            navigationIcon = navigationIcon,
+            actions = actions,
+            colors = colors,
+            scrollBehavior = scrollBehavior,
+        )
+    } else if (centerAlign) {
         CenterAlignedTopAppBar(
             modifier = modifier,
             windowInsets = resolvedInsets,
