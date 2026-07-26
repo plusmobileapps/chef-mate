@@ -106,4 +106,14 @@ class IngredientScalerTest {
     fun falls_back_to_a_trimmed_decimal_when_no_common_fraction_is_close() {
         assertEquals("0.1 cup", IngredientScaler.scale("⅕ cup", 0.5))
     }
+
+    @Test
+    fun labels_a_half_factor_with_a_vulgar_glyph() {
+        assertEquals("½×", IngredientScaler.label(0.5))
+    }
+
+    @Test
+    fun labels_a_whole_factor_without_a_decimal() {
+        assertEquals("2×", IngredientScaler.label(2.0))
+    }
 }

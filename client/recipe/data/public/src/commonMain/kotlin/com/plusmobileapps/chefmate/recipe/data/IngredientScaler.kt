@@ -23,6 +23,12 @@ import kotlin.math.round
  */
 object IngredientScaler {
 
+    /** The scale factors offered by the ingredient-scale controls (½× through 4×). */
+    val DEFAULT_FACTORS: List<Double> = listOf(0.5, 1.0, 2.0, 3.0, 4.0)
+
+    /** A short display label for a scale [factor], e.g. `½×`, `2×`. */
+    fun label(factor: Double): String = if (factor == 0.5) "½×" else "${factor.toInt()}×"
+
     /** Vulgar-fraction glyph -> its value, for parsing an amount that uses one. */
     private val VULGAR_VALUES: Map<Char, Double> =
         mapOf(

@@ -970,11 +970,6 @@ private fun LazyListScope.ingredientItems(
     }
 }
 
-/** Predefined ingredient-scaling factors offered in the ingredients header dropdown. */
-private val INGREDIENT_SCALE_OPTIONS = listOf(0.5, 1.0, 2.0, 3.0, 4.0)
-
-private fun scaleLabel(scale: Double): String = if (scale == 0.5) "½×" else "${scale.toInt()}×"
-
 /**
  * The Ingredients section header: the title on the left and a scale dropdown on the right that
  * multiplies every ingredient amount by the chosen factor (½× through 4×). Matches
@@ -1008,7 +1003,7 @@ private fun IngredientsStickyHeader(
 
 /**
  * A compact dropdown button showing the current ingredient scale (e.g. `2×`). Tapping it opens a
- * menu of [INGREDIENT_SCALE_OPTIONS] with the active one check-marked.
+ * menu of [IngredientScaler.DEFAULT_FACTORS] with the active one check-marked.
  */
 @Composable
 private fun IngredientScaleSelector(
@@ -1022,16 +1017,16 @@ private fun IngredientScaleSelector(
             onClick = { expanded = true },
             modifier = Modifier.testTag(RecipeDetailTestTags.INGREDIENT_SCALE_BUTTON),
         ) {
-            Text(scaleLabel(scale))
+            Text(IngredientScaler.label(scale))
             Icon(
                 imageVector = Icons.Default.ArrowDropDown,
                 contentDescription = stringResource(Res.string.recipe_detail_scale_ingredients),
             )
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            INGREDIENT_SCALE_OPTIONS.forEach { option ->
+            IngredientScaler.DEFAULT_FACTORS.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(scaleLabel(option)) },
+                    text = { Text(IngredientScaler.label(option)) },
                     trailingIcon = {
                         if (option == scale) {
                             Icon(imageVector = Icons.Default.Check, contentDescription = null)
