@@ -45,8 +45,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddShoppingCart
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
@@ -124,6 +126,7 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_ingr
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_kcal
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_prep_time
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_remove_favorite
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_scale_ingredients
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_servings
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_cancel
@@ -145,6 +148,7 @@ import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.recipe.categories.pickerLabelRes
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
+import com.plusmobileapps.chefmate.recipe.data.IngredientScaler
 import com.plusmobileapps.chefmate.recipe.data.IngredientSection
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.FixedString
@@ -749,6 +753,7 @@ private fun RecipeDetailCompactContent(
         }
     val directionParagraphs = remember(recipe.directions) { directionSteps(recipe.directions) }
     var highlightedDirectionIndex by remember(recipe.directions) { mutableStateOf(-1) }
+    var ingredientScale by remember(recipe.ingredients) { mutableStateOf(1.0) }
 
     val navBarBottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
 
@@ -797,6 +802,8 @@ private fun RecipeDetailCompactContent(
         ingredientItems(
             lines = ingredientLines,
             crossedOut = crossedOut,
+            scale = ingredientScale,
+            onScaleChange = { ingredientScale = it },
             onRecipeLinkClick = onRecipeLinkClick,
             itemPadding = padding,
         )
@@ -846,6 +853,7 @@ private fun ColumnScope.RecipeDetailTwoColumnContent(
         }
     val directionParagraphs = remember(recipe.directions) { directionSteps(recipe.directions) }
     var directionHighlightedIndex by remember(recipe.directions) { mutableStateOf(-1) }
+    var ingredientScale by remember(recipe.ingredients) { mutableStateOf(1.0) }
 
     Row(modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = padding)) {
         // Column 1: metadata, then ingredients
@@ -891,6 +899,8 @@ private fun ColumnScope.RecipeDetailTwoColumnContent(
             ingredientItems(
                 lines = ingredientLines,
                 crossedOut = ingredientCrossedOut,
+                scale = ingredientScale,
+                onScaleChange = { ingredientScale = it },
                 onRecipeLinkClick = onRecipeLinkClick,
                 itemPadding = padding,
             )
@@ -936,20 +946,104 @@ private fun ColumnScope.RecipeDetailTwoColumnContent(
 private fun LazyListScope.ingredientItems(
     lines: List<String>,
     crossedOut: SnapshotStateList<Boolean>,
+    scale: Double,
+    onScaleChange: (Double) -> Unit,
     onRecipeLinkClick: (String) -> Unit,
     itemPadding: Dp,
 ) {
     stickyHeader(key = "ingredients_header") {
-        StickyColumnHeader(title = stringResource(Res.string.recipe_detail_ingredients))
+        IngredientsStickyHeader(
+            title = stringResource(Res.string.recipe_detail_ingredients),
+            scale = scale,
+            onScaleChange = onScaleChange,
+        )
     }
     itemsIndexed(lines, key = { index, _ -> "ingredient_$index" }) { index, line ->
         IngredientLineItem(
             text = line,
+            scale = scale,
             crossedOut = crossedOut[index],
             onClick = { crossedOut[index] = !crossedOut[index] },
             onRecipeLinkClick = onRecipeLinkClick,
             modifier = Modifier.padding(horizontal = itemPadding),
         )
+    }
+}
+
+/** Predefined ingredient-scaling factors offered in the ingredients header dropdown. */
+private val INGREDIENT_SCALE_OPTIONS = listOf(0.5, 1.0, 2.0, 3.0, 4.0)
+
+private fun scaleLabel(scale: Double): String = if (scale == 0.5) "½×" else "${scale.toInt()}×"
+
+/**
+ * The Ingredients section header: the title on the left and a scale dropdown on the right that
+ * multiplies every ingredient amount by the chosen factor (½× through 4×). Matches
+ * [StickyColumnHeader]'s surface so it reads as the same sticky bar the Directions section uses.
+ */
+@Composable
+private fun IngredientsStickyHeader(
+    title: String,
+    scale: Double,
+    onScaleChange: (Double) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 2.dp,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.weight(1f).padding(vertical = 16.dp),
+            )
+            IngredientScaleSelector(scale = scale, onScaleChange = onScaleChange)
+        }
+    }
+}
+
+/**
+ * A compact dropdown button showing the current ingredient scale (e.g. `2×`). Tapping it opens a
+ * menu of [INGREDIENT_SCALE_OPTIONS] with the active one check-marked.
+ */
+@Composable
+private fun IngredientScaleSelector(
+    scale: Double,
+    onScaleChange: (Double) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier) {
+        var expanded by remember { mutableStateOf(false) }
+        TextButton(
+            onClick = { expanded = true },
+            modifier = Modifier.testTag(RecipeDetailTestTags.INGREDIENT_SCALE_BUTTON),
+        ) {
+            Text(scaleLabel(scale))
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = stringResource(Res.string.recipe_detail_scale_ingredients),
+            )
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            INGREDIENT_SCALE_OPTIONS.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(scaleLabel(option)) },
+                    trailingIcon = {
+                        if (option == scale) {
+                            Icon(imageVector = Icons.Default.Check, contentDescription = null)
+                        }
+                    },
+                    onClick = {
+                        expanded = false
+                        onScaleChange(option)
+                    },
+                )
+            }
+        }
     }
 }
 
@@ -1220,6 +1314,7 @@ private fun recipeLinkStyle(): SpanStyle =
 @Composable
 private fun IngredientLineItem(
     text: String,
+    scale: Double,
     crossedOut: Boolean,
     onClick: () -> Unit,
     onRecipeLinkClick: (String) -> Unit,
@@ -1244,8 +1339,12 @@ private fun IngredientLineItem(
     }
     val linkStyle = recipeLinkStyle()
     val rendered =
-        remember(text, linkStyle, onRecipeLinkClick) {
-            parseListLine(text).toDisplayAnnotatedString(linkStyle, onRecipeLinkClick)
+        remember(text, scale, linkStyle, onRecipeLinkClick) {
+            // Scale the marker-stripped content so a leading "- "/"* " bullet doesn't hide the
+            // amount from the scaler; the bullet is re-attached when the line is rendered.
+            val parsed = parseListLine(text)
+            val scaled = ListLine(parsed.marker, IngredientScaler.scale(parsed.content, scale))
+            scaled.toDisplayAnnotatedString(linkStyle, onRecipeLinkClick)
         }
     Text(
         text = rendered,
