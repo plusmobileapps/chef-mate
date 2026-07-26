@@ -343,7 +343,7 @@ fun AuthenticationSwitcher(isSignIn: Boolean, onToggleMode: () -> Unit) {
             style = MaterialTheme.typography.titleMedium,
         )
         Spacer(modifier = Modifier.height(ChefMateTheme.dimens.paddingNormal))
-        Button(
+        TextButton(
             onClick = {
                 keyboardController?.hide()
                 onToggleMode()
