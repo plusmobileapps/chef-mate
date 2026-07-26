@@ -8,8 +8,10 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.waitUntilExactlyOneExists
 import com.plusmobileapps.chefmate.recipe.list.RecipeListTestTags
 
@@ -95,6 +97,58 @@ class RecipeListRobot(private val test: ComposeUiTest) {
     fun tapCreateBook(): RecipeListRobot = apply {
         test.onNodeWithTag(RecipeListTestTags.BOOK_PICKER_CREATE).performClick()
     }
+
+    // region Multi-select
+
+    /** Long-presses a recipe row to enter multi-select mode with that recipe pre-selected. */
+    fun longPressRecipe(title: String): RecipeListRobot = apply {
+        test.onNode(hasText(title) and onScreen).assertIsDisplayed().performTouchInput {
+            longClick()
+        }
+    }
+
+    /** Opens the selection-mode overflow menu holding the bulk add-to-book/category actions. */
+    fun openSelectionOverflow(): RecipeListRobot = apply {
+        test.onNode(hasTestTag(RecipeListTestTags.SELECTION_OVERFLOW) and onScreen).performClick()
+    }
+
+    // The overflow items render in a popup outside the screen root, so these are not
+    // ancestor-scoped.
+
+    fun tapAddToBook(): RecipeListRobot = apply {
+        test.waitUntilExactlyOneExists(hasTestTag(RecipeListTestTags.SELECTION_ADD_TO_BOOK))
+        test.onNodeWithTag(RecipeListTestTags.SELECTION_ADD_TO_BOOK).performClick()
+    }
+
+    fun tapAddToCategory(): RecipeListRobot = apply {
+        test.waitUntilExactlyOneExists(hasTestTag(RecipeListTestTags.SELECTION_ADD_TO_CATEGORY))
+        test.onNodeWithTag(RecipeListTestTags.SELECTION_ADD_TO_CATEGORY).performClick()
+    }
+
+    fun assertBulkBookSheetShown(): RecipeListRobot = apply {
+        test.waitUntilExactlyOneExists(hasTestTag(RecipeListTestTags.BULK_BOOK_SHEET))
+        test.onNodeWithTag(RecipeListTestTags.BULK_BOOK_SHEET).assertIsDisplayed()
+    }
+
+    fun assertBulkCategorySheetShown(): RecipeListRobot = apply {
+        test.waitUntilExactlyOneExists(hasTestTag(RecipeListTestTags.BULK_CATEGORY_SHEET))
+        test.onNodeWithTag(RecipeListTestTags.BULK_CATEGORY_SHEET).assertIsDisplayed()
+    }
+
+    private val inBulkBookSheet = hasAnyAncestor(hasTestTag(RecipeListTestTags.BULK_BOOK_SHEET))
+
+    private val inBulkCategorySheet =
+        hasAnyAncestor(hasTestTag(RecipeListTestTags.BULK_CATEGORY_SHEET))
+
+    fun selectBulkBook(name: String): RecipeListRobot = apply {
+        test.onNode(hasText(name) and inBulkBookSheet).performClick()
+    }
+
+    fun selectBulkCategory(name: String): RecipeListRobot = apply {
+        test.onNode(hasText(name) and inBulkCategorySheet).performClick()
+    }
+
+    // endregion
 }
 
 fun ComposeUiTest.recipeList(): RecipeListRobot = RecipeListRobot(this)
