@@ -6,6 +6,7 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
 
 @Inject
@@ -30,7 +31,11 @@ class SupabaseRecipeRemoteDataSource(private val supabaseClient: SupabaseClient)
     }
 
     override suspend fun fetchAccessibleRecipes(): List<RemoteRecipe> =
-        supabaseClient.from("recipes").select().decodeList<RemoteRecipe>()
+        // Deliberately NOT a blanket `from("recipes").select()`: the permissive "Anyone can view
+        // public recipes" RLS policy would OR every is_public row into the result, so a fresh
+        // account would sync down the entire public catalog (#487). The get_accessible_recipes()
+        // RPC returns exactly owned + shared-book recipes.
+        supabaseClient.postgrest.rpc("get_accessible_recipes").decodeList<RemoteRecipe>()
 
     override suspend fun fetchPublicRecipe(remoteId: String): RemoteRecipe? =
         supabaseClient
