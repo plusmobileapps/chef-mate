@@ -42,6 +42,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Restaurant
@@ -52,6 +53,8 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -65,6 +68,7 @@ import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberStandardBottomSheetState
@@ -107,10 +111,12 @@ import chefmate.client.cook.public.generated.resources.cook_mode_layout_split
 import chefmate.client.cook.public.generated.resources.cook_mode_layout_stacked
 import chefmate.client.cook.public.generated.resources.cook_mode_loading
 import chefmate.client.cook.public.generated.resources.cook_mode_no_active_recipe
+import chefmate.client.cook.public.generated.resources.cook_mode_scale_ingredients
 import chefmate.client.cook.public.generated.resources.cook_mode_whats_cooking
 import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.cook.WhatsCookingBloc
 import com.plusmobileapps.chefmate.di.CoachMarkId
+import com.plusmobileapps.chefmate.recipe.data.IngredientScaler
 import com.plusmobileapps.chefmate.recipe.data.IngredientSection
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.FixedString
@@ -136,6 +142,10 @@ fun CookModeScreen(bloc: CookModeBloc, modifier: Modifier = Modifier) {
     if (state.keepScreenOn) {
         KeepScreenOn()
     }
+    // Ingredient scale multiplier, reset whenever the active recipe changes. Hoisted here so it
+    // survives the compact <-> tablet layout swap and drives both the header control and the body.
+    var ingredientScale by remember(state.activeRecipe?.id) { mutableStateOf(1.0) }
+
     Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val windowSizeClass =
@@ -146,15 +156,56 @@ fun CookModeScreen(bloc: CookModeBloc, modifier: Modifier = Modifier) {
                 }
             val isCompactHeight = maxHeight < 480.dp
             if (windowSizeClass == WindowSizeClass.COMPACT) {
-                CookModeMobileLayout(bloc = bloc, state = state, windowSizeClass = windowSizeClass)
+                CookModeMobileLayout(
+                    bloc = bloc,
+                    state = state,
+                    windowSizeClass = windowSizeClass,
+                    scale = ingredientScale,
+                    onScaleChange = { ingredientScale = it },
+                )
             } else {
                 CookModeTabletLayout(
                     bloc = bloc,
                     state = state,
                     windowSizeClass = windowSizeClass,
                     isCompactHeight = isCompactHeight,
+                    scale = ingredientScale,
+                    onScaleChange = { ingredientScale = it },
                 )
             }
+        }
+    }
+}
+
+/**
+ * Header dropdown that multiplies every ingredient amount in the active recipe by the chosen factor
+ * (½× through 4×). Placed in the top-bar so it applies uniformly across Cook Mode's stacked, split,
+ * and tabbed layouts.
+ */
+@Composable
+private fun CookModeScaleButton(scale: Double, onScaleChange: (Double) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    TextButton(onClick = { expanded = true }) {
+        Text(IngredientScaler.label(scale))
+        Icon(
+            imageVector = Icons.Default.ArrowDropDown,
+            contentDescription = stringResource(Res.string.cook_mode_scale_ingredients),
+        )
+    }
+    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        IngredientScaler.DEFAULT_FACTORS.forEach { option ->
+            DropdownMenuItem(
+                text = { Text(IngredientScaler.label(option)) },
+                trailingIcon = {
+                    if (option == scale) {
+                        Icon(imageVector = Icons.Default.Check, contentDescription = null)
+                    }
+                },
+                onClick = {
+                    expanded = false
+                    onScaleChange(option)
+                },
+            )
         }
     }
 }
@@ -230,6 +281,8 @@ private fun CookModeTabletLayout(
     state: CookModeBloc.Model,
     windowSizeClass: WindowSizeClass,
     isCompactHeight: Boolean,
+    scale: Double,
+    onScaleChange: (Double) -> Unit,
 ) {
     var showWhatsCooking by remember { mutableStateOf(false) }
 
@@ -254,6 +307,7 @@ private fun CookModeTabletLayout(
                                 visible = state.showAiChat,
                                 onClick = bloc::onAiChatClicked,
                             )
+                            CookModeScaleButton(scale = scale, onScaleChange = onScaleChange)
                             CookModeCoachMark(
                                 id = CoachMarkId.COOK_MODE_KEEP_SCREEN_ON,
                                 text = Res.string.cook_mode_keep_screen_on_onboarding.asTextData(),
@@ -314,6 +368,7 @@ private fun CookModeTabletLayout(
                 recipe = state.activeRecipe,
                 layoutMode = state.layoutMode,
                 windowSizeClass = windowSizeClass,
+                scale = scale,
                 bottomReserve = if (isCompactHeight) 0.dp else BottomBarReserve,
                 modifier = Modifier.fillMaxSize(),
             )
@@ -366,6 +421,8 @@ private fun CookModeMobileLayout(
     bloc: CookModeBloc,
     state: CookModeBloc.Model,
     windowSizeClass: WindowSizeClass,
+    scale: Double,
+    onScaleChange: (Double) -> Unit,
 ) {
     val sheetState = rememberStandardBottomSheetState(initialValue = SheetValue.PartiallyExpanded)
     val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = sheetState)
@@ -409,6 +466,7 @@ private fun CookModeMobileLayout(
                                     visible = state.showAiChat,
                                     onClick = bloc::onAiChatClicked,
                                 )
+                                CookModeScaleButton(scale = scale, onScaleChange = onScaleChange)
                                 CookModeCoachMark(
                                     id = CoachMarkId.COOK_MODE_KEEP_SCREEN_ON,
                                     text =
@@ -473,6 +531,7 @@ private fun CookModeMobileLayout(
                     recipe = state.activeRecipe,
                     layoutMode = state.layoutMode,
                     windowSizeClass = windowSizeClass,
+                    scale = scale,
                     bottomReserve = bodyPadding.calculateBottomPadding(),
                     // The sheet peek already sits above the nav bar and covers it, so don't add the
                     // bottom system inset on top of the reserve — that's what left the clipped gap.
@@ -517,6 +576,7 @@ private fun CookModeBody(
     recipe: Recipe?,
     layoutMode: CookModeBloc.LayoutMode,
     windowSizeClass: WindowSizeClass,
+    scale: Double,
     bottomReserve: Dp,
     modifier: Modifier = Modifier,
     applyBottomInset: Boolean = true,
@@ -545,6 +605,7 @@ private fun CookModeBody(
                         StackedLayout(
                             ingredientLines = ingredientLines,
                             crossedOut = crossedOut,
+                            scale = scale,
                             directionParagraphs = directionParagraphs,
                             highlightedIndex = highlightedDirectionIndex,
                             onDirectionToggled = onDirectionToggled,
@@ -557,6 +618,7 @@ private fun CookModeBody(
                                 SplitCompactLayout(
                                     ingredientLines = ingredientLines,
                                     crossedOut = crossedOut,
+                                    scale = scale,
                                     directionParagraphs = directionParagraphs,
                                     highlightedIndex = highlightedDirectionIndex,
                                     onDirectionToggled = onDirectionToggled,
@@ -568,6 +630,7 @@ private fun CookModeBody(
                                 SplitWideLayout(
                                     ingredientLines = ingredientLines,
                                     crossedOut = crossedOut,
+                                    scale = scale,
                                     directionParagraphs = directionParagraphs,
                                     highlightedIndex = highlightedDirectionIndex,
                                     onDirectionToggled = onDirectionToggled,
@@ -638,6 +701,7 @@ private fun bodyContentPadding(bottomReserve: Dp, applyBottomInset: Boolean = tr
 private fun StackedLayout(
     ingredientLines: List<String>,
     crossedOut: SnapshotStateList<Boolean>,
+    scale: Double,
     directionParagraphs: List<String>,
     highlightedIndex: Int,
     onDirectionToggled: (Int) -> Unit,
@@ -688,6 +752,7 @@ private fun StackedLayout(
             itemsIndexed(ingredientLines, key = { i, _ -> "ingredient_$i" }) { index, line ->
                 IngredientRow(
                     text = line,
+                    scale = scale,
                     crossedOut = crossedOut[index],
                     onClick = { crossedOut[index] = !crossedOut[index] },
                 )
@@ -720,6 +785,7 @@ private fun StackedLayout(
 private fun SplitCompactLayout(
     ingredientLines: List<String>,
     crossedOut: SnapshotStateList<Boolean>,
+    scale: Double,
     directionParagraphs: List<String>,
     highlightedIndex: Int,
     onDirectionToggled: (Int) -> Unit,
@@ -774,6 +840,7 @@ private fun SplitCompactLayout(
                         ingredientLines.forEachIndexed { index, line ->
                             IngredientRow(
                                 text = line,
+                                scale = scale,
                                 crossedOut = crossedOut[index],
                                 onClick = { crossedOut[index] = !crossedOut[index] },
                             )
@@ -796,6 +863,7 @@ private fun SplitCompactLayout(
 private fun SplitWideLayout(
     ingredientLines: List<String>,
     crossedOut: SnapshotStateList<Boolean>,
+    scale: Double,
     directionParagraphs: List<String>,
     highlightedIndex: Int,
     onDirectionToggled: (Int) -> Unit,
@@ -838,6 +906,7 @@ private fun SplitWideLayout(
             itemsIndexed(ingredientLines, key = { i, _ -> "ingredient_$i" }) { index, line ->
                 IngredientRow(
                     text = line,
+                    scale = scale,
                     crossedOut = crossedOut[index],
                     onClick = { crossedOut[index] = !crossedOut[index] },
                 )
@@ -911,7 +980,7 @@ private fun CookSectionHeader(title: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun IngredientRow(text: String, crossedOut: Boolean, onClick: () -> Unit) {
+private fun IngredientRow(text: String, scale: Double, crossedOut: Boolean, onClick: () -> Unit) {
     if (IngredientSection.isHeader(text)) {
         // Sub-section header (e.g. "For the sauce:") — bold and not crossable.
         Text(
@@ -928,7 +997,14 @@ private fun IngredientRow(text: String, crossedOut: Boolean, onClick: () -> Unit
         )
         return
     }
-    val rendered = remember(text) { parseListLine(text).toDisplayAnnotatedString() }
+    // Scale the marker-stripped content so a leading bullet doesn't hide the amount.
+    val rendered =
+        remember(text, scale) {
+            val parsed = parseListLine(text)
+            parsed
+                .copy(content = IngredientScaler.scale(parsed.content, scale))
+                .toDisplayAnnotatedString()
+        }
     Text(
         text = rendered,
         style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 22.sp),
