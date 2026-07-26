@@ -16,7 +16,7 @@
     <string name="onboarding_save_recipes_message">Prefer to stay in the app? Open the built-in browser to search the web for recipes. When you land on one you like, tap Download and ChefMate saves the ingredients, steps, and photo directly to your account.</string>
 
     <string name="onboarding_add_to_grocery_title">Add to your grocery list</string>
-    <string name="onboarding_add_to_grocery_message">Open any recipe and tap the cart in the toolbar to send its ingredients straight to a grocery list.</string>
+    <string name="onboarding_add_to_grocery_message">Open any recipe and tap the cart in the toolbar to send its ingredients straight to a grocery list. ChefMate combines duplicates so you never buy the same thing twice.</string>
 
     <string name="onboarding_meal_planning_title">Add it to your meal plan</string>
     <string name="onboarding_meal_planning_message">Tap the calendar in the recipe toolbar to drop a recipe onto any day of the week. Map out breakfast, lunch, and dinner so there’s never a question of what’s for dinner.</string>

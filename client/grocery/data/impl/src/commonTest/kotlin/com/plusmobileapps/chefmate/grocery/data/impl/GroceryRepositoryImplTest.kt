@@ -855,6 +855,91 @@ class GroceryRepositoryImplTest {
             }
         }
 
+    // ─── addGroceries dedup (issue #483) ─────────────────────────────────────
+
+    @Test
+    fun addGroceries_merges_matching_quantities_into_the_existing_row() =
+        runTest(testDispatcher) {
+            val listId = repository.ensureDefaultList()
+            repository.addGrocery(listId, "2 cups flour")
+
+            repository.addGroceries(listId, listOf("1 cup flour"), recipeName = "Bread")
+
+            repository.getGroceries(listId).test {
+                val items = awaitItem()
+                items.size shouldBe 1
+                items.first().name shouldBe "3 cups flour"
+            }
+        }
+
+    @Test
+    fun addGroceries_merges_two_matching_lines_within_the_same_call() =
+        runTest(testDispatcher) {
+            val listId = repository.ensureDefaultList()
+
+            repository.addGroceries(listId, listOf("2 eggs", "3 eggs"), recipeName = "Cake")
+
+            repository.getGroceries(listId).test {
+                val items = awaitItem()
+                items.size shouldBe 1
+                items.first().name shouldBe "5 eggs"
+            }
+        }
+
+    @Test
+    fun addGroceries_does_not_merge_items_across_different_lists() =
+        runTest(testDispatcher) {
+            val listId1 = repository.ensureDefaultList()
+            val listId2 = repository.createGroceryList("Second List")
+            repository.addGrocery(listId1, "2 cups flour")
+
+            repository.addGroceries(listId2, listOf("1 cup flour"), recipeName = null)
+
+            repository.getGroceries(listId1).test {
+                awaitItem().first().name shouldBe "2 cups flour"
+            }
+            repository.getGroceries(listId2).test {
+                awaitItem().first().name shouldBe "1 cup flour"
+            }
+        }
+
+    @Test
+    fun addGroceries_unchecks_an_already_purchased_item_when_merging_into_it() =
+        runTest(testDispatcher) {
+            val listId = repository.ensureDefaultList()
+            repository.addGrocery(listId, "flour")
+            val existing = repository.getGroceries(listId).first().first()
+            repository.updateChecked(existing, isChecked = true)
+
+            repository.addGroceries(listId, listOf("flour"), recipeName = null)
+
+            repository.getGroceries(listId).test { awaitItem().first().isChecked shouldBe false }
+        }
+
+    @Test
+    fun addGroceries_pushes_a_merged_update_to_an_already_synced_item() =
+        runTest(testDispatcher) {
+            fakeAuth.setState(
+                AuthState.Authenticated(
+                    ChefMateUser(
+                        userId = "user-1",
+                        userName = "Test",
+                        userEmail = "test@test.com",
+                        userProfileImageUrl = null,
+                    )
+                )
+            )
+            val listId = repository.ensureDefaultList()
+            repository.addGrocery(listId, "2 cups flour")
+            advanceUntilIdle()
+
+            repository.addGroceries(listId, listOf("1 cup flour"), recipeName = null)
+            advanceUntilIdle()
+
+            val pushed = fakeRemote.remoteItems.values.flatten().first { it.name.endsWith("flour") }
+            pushed.name shouldBe "3 cups flour"
+        }
+
     @Test
     fun updateChecked_pushes_the_new_checked_state_to_the_backend() =
         runTest(testDispatcher) {

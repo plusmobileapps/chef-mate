@@ -18,6 +18,9 @@ CREATE TABLE Grocery (
 create:
 INSERT INTO Grocery (name, isChecked, createdAt, updatedAt, clientId, listId, recipeName) VALUES (?, ?, ?, ?, ?, ?, ?);
 
+lastId:
+SELECT MAX(id) FROM Grocery;
+
 createWithRemoteId:
 INSERT INTO Grocery (name, isChecked, createdAt, updatedAt, remoteId, listRemoteId, clientId, listId, recipeName, aisle)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)

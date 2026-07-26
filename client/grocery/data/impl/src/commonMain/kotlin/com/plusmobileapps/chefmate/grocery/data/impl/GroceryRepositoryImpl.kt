@@ -18,6 +18,7 @@ import com.plusmobileapps.chefmate.grocery.data.GroceryListInvite
 import com.plusmobileapps.chefmate.grocery.data.GroceryListModel
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.grocery.data.IngredientParser
+import com.plusmobileapps.chefmate.grocery.data.IngredientQuantityMerger
 import com.plusmobileapps.chefmate.grocery.data.ListCollaborator
 import com.plusmobileapps.chefmate.grocery.data.ListRole
 import com.plusmobileapps.chefmate.grocery.data.SyncStatus
@@ -160,86 +161,65 @@ class GroceryRepositoryImpl(
             .flowOn(ioContext)
 
     override suspend fun addGrocery(name: String) {
-        withContext(ioContext) {
-            val defaultListId = ensureDefaultList()
-            val now = dateTimeUtil.now.toString()
-            val clientId = Uuid.random().toString()
-            queries.create(
-                name = name,
-                isChecked = false,
-                createdAt = now,
-                updatedAt = now,
-                clientId = clientId,
-                listId = defaultListId,
-                recipeName = null,
-            )
-        }
-        pushAddToRemote(name)
+        val result =
+            withContext(ioContext) {
+                val defaultListId = ensureDefaultList()
+                insertOrMergeGroceries(defaultListId, listOf(name), recipeName = null).first()
+            }
+        pushMergeResultToRemote(result)
     }
 
     override suspend fun addGrocery(listId: Long, name: String) {
-        withContext(ioContext) {
-            val now = dateTimeUtil.now.toString()
-            val clientId = Uuid.random().toString()
-            queries.create(
-                name = name,
-                isChecked = false,
-                createdAt = now,
-                updatedAt = now,
-                clientId = clientId,
-                listId = listId,
-                recipeName = null,
-            )
-        }
-        pushAddToRemote(name)
+        val result =
+            withContext(ioContext) {
+                insertOrMergeGroceries(listId, listOf(name), recipeName = null).first()
+            }
+        pushMergeResultToRemote(result)
     }
 
     override suspend fun addGroceries(names: List<String>) {
-        withContext(ioContext) {
-            val defaultListId = ensureDefaultList()
-            val now = dateTimeUtil.now.toString()
-            queries.transaction {
-                names.forEach { name ->
-                    queries.create(
-                        name = name,
-                        isChecked = false,
-                        createdAt = now,
-                        updatedAt = now,
-                        clientId = Uuid.random().toString(),
-                        listId = defaultListId,
-                        recipeName = null,
-                    )
-                }
+        val results =
+            withContext(ioContext) {
+                val defaultListId = ensureDefaultList()
+                insertOrMergeGroceries(defaultListId, names, recipeName = null)
             }
-        }
-        names.forEach { pushAddToRemote(it) }
+        results.forEach { pushMergeResultToRemote(it) }
     }
 
     override suspend fun addGroceries(listId: Long, names: List<String>) {
-        withContext(ioContext) {
-            val now = dateTimeUtil.now.toString()
-            queries.transaction {
-                names.forEach { name ->
-                    queries.create(
-                        name = name,
-                        isChecked = false,
-                        createdAt = now,
-                        updatedAt = now,
-                        clientId = Uuid.random().toString(),
-                        listId = listId,
-                        recipeName = null,
-                    )
-                }
-            }
-        }
-        names.forEach { pushAddToRemote(it) }
+        val results =
+            withContext(ioContext) { insertOrMergeGroceries(listId, names, recipeName = null) }
+        results.forEach { pushMergeResultToRemote(it) }
     }
 
     override suspend fun addGroceries(listId: Long, names: List<String>, recipeName: String?) {
-        withContext(ioContext) {
-            val now = dateTimeUtil.now.toString()
-            queries.transaction {
-                names.forEach { name ->
+        val results = withContext(ioContext) { insertOrMergeGroceries(listId, names, recipeName) }
+        results.forEach { pushMergeResultToRemote(it) }
+    }
+
+    /**
+     * Inserts each name as a new row unless an existing row in [listId] resolves to the same
+     * [IngredientParser] name, in which case the two lines are combined via
+     * [IngredientQuantityMerger] and the existing row is updated instead — this is what prevents
+     * adding a recipe's ingredients from creating duplicate rows for something already on the list.
+     * Matching is scoped to a single call's [names] plus what's already in the list, so two
+     * matching lines within the same recipe also merge with each other.
+     */
+    private fun insertOrMergeGroceries(
+        listId: Long,
+        names: List<String>,
+        recipeName: String?,
+    ): List<MergeResult> {
+        val now = dateTimeUtil.now.toString()
+        return queries.transactionWithResult {
+            val existingByKey =
+                queries.readByListId(listId).executeAsList().associateByTo(mutableMapOf()) {
+                    mergeKey(it.name)
+                }
+            names.map { name ->
+                val key = mergeKey(name)
+                val existing = existingByKey[key]
+                if (existing == null) {
                     queries.create(
                         name = name,
                         isChecked = false,
@@ -249,10 +229,33 @@ class GroceryRepositoryImpl(
                         listId = listId,
                         recipeName = recipeName,
                     )
+                    val newId = queries.lastId().executeAsOne().MAX!!
+                    existingByKey[key] = queries.getGroceryById(newId).executeAsOne()
+                    MergeResult(id = newId, isNew = true)
+                } else {
+                    val mergedName = IngredientQuantityMerger.merge(existing.name, name)
+                    queries.update(
+                        name = mergedName,
+                        isChecked = false,
+                        aisle = existing.aisle,
+                        updatedAt = now,
+                        id = existing.id,
+                    )
+                    existingByKey[key] =
+                        existing.copy(name = mergedName, isChecked = false, updatedAt = now)
+                    MergeResult(id = existing.id, isNew = false)
                 }
             }
         }
-        names.forEach { pushAddToRemote(it) }
+    }
+
+    private fun mergeKey(rawName: String): String =
+        IngredientParser.parse(rawName).name.trim().lowercase()
+
+    private data class MergeResult(val id: Long, val isNew: Boolean)
+
+    private fun pushMergeResultToRemote(result: MergeResult) {
+        if (result.isNew) pushAddToRemote(result.id) else pushUpdateToRemote(result.id)
     }
 
     override suspend fun updateChecked(item: GroceryItem, isChecked: Boolean) {
@@ -421,48 +424,46 @@ class GroceryRepositoryImpl(
         }
     }
 
-    private fun pushAddToRemote(name: String) {
+    private fun pushAddToRemote(id: Long) {
         val authState = authRepository.state.value
         if (authState !is AuthState.Authenticated) return
         scope.launch {
             try {
-                val unsyncedItems = queries.getUnsynced().executeAsList()
-                val match = unsyncedItems.firstOrNull { it.name == name }
-                if (match != null) {
-                    val clientId =
-                        match.clientId
-                            ?: Uuid.random().toString().also { newId ->
-                                queries.updateClientId(clientId = newId, id = match.id)
-                            }
-                    // Resolve the list's remoteId
-                    val listRemoteId =
-                        match.listId?.let { localListId ->
-                            listQueries.getById(localListId).executeAsOneOrNull()?.remoteId
-                        } ?: remoteDataSource.ensureDefaultList(authState.user.userId)
+                val match = queries.getGroceryById(id).executeAsOneOrNull() ?: return@launch
+                if (match.remoteId != null) return@launch
+                val clientId =
+                    match.clientId
+                        ?: Uuid.random().toString().also { newId ->
+                            queries.updateClientId(clientId = newId, id = match.id)
+                        }
+                // Resolve the list's remoteId
+                val listRemoteId =
+                    match.listId?.let { localListId ->
+                        listQueries.getById(localListId).executeAsOneOrNull()?.remoteId
+                    } ?: remoteDataSource.ensureDefaultList(authState.user.userId)
 
-                    syncingIds.update { it + match.id }
-                    try {
-                        val remoteItem =
-                            remoteDataSource.upsertGroceryItem(
-                                RemoteGroceryItem(
-                                    listId = listRemoteId,
-                                    name = match.name,
-                                    isChecked = match.isChecked,
-                                    createdAt = match.createdAt,
-                                    updatedAt = match.updatedAt,
-                                    clientId = clientId,
-                                    recipeName = match.recipeName,
-                                    aisle = match.aisle,
-                                )
+                syncingIds.update { it + match.id }
+                try {
+                    val remoteItem =
+                        remoteDataSource.upsertGroceryItem(
+                            RemoteGroceryItem(
+                                listId = listRemoteId,
+                                name = match.name,
+                                isChecked = match.isChecked,
+                                createdAt = match.createdAt,
+                                updatedAt = match.updatedAt,
+                                clientId = clientId,
+                                recipeName = match.recipeName,
+                                aisle = match.aisle,
                             )
-                        queries.updateRemoteId(
-                            remoteId = remoteItem.id,
-                            listRemoteId = listRemoteId,
-                            id = match.id,
                         )
-                    } finally {
-                        syncingIds.update { it - match.id }
-                    }
+                    queries.updateRemoteId(
+                        remoteId = remoteItem.id,
+                        listRemoteId = listRemoteId,
+                        id = match.id,
+                    )
+                } finally {
+                    syncingIds.update { it - match.id }
                 }
             } catch (t: Throwable) {
                 if (t is CancellationException) throw t
