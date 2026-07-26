@@ -3,8 +3,10 @@ package com.plusmobileapps.chefmate.recipe.list
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,10 +33,12 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
@@ -68,8 +72,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -101,6 +107,8 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_add_re
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_apply
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_all_recipes
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_book_selector
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_bulk_book_title
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_bulk_category_title
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_ai
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_appetizer
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_category_breakfast
@@ -152,10 +160,13 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_search
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_empty
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_empty_book_hint
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_search_placeholder
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_selection_add_to_book
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_selection_add_to_category
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_selection_count
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_selection_deselect_all
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_selection_exit
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_selection_export
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_selection_more
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_selection_select_all
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort_a_to_z
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort_and_filter
@@ -174,7 +185,9 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_sync_syncin
 import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.letIfTrue
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
+import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.SyncStatus
+import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.ResourceString
@@ -264,6 +277,11 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                                         stringResource(Res.string.recipe_list_selection_export),
                                 )
                             }
+                            SelectionOverflowMenu(
+                                enabled = state.selectedRecipeIds.isNotEmpty(),
+                                onAddToBookClicked = bloc::onAddToBookClicked,
+                                onAddToCategoryClicked = bloc::onAddToCategoryClicked,
+                            )
                             IconButton(onClick = bloc::onExitSelectionMode) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
@@ -455,6 +473,7 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                                     modifier = Modifier.fillMaxSize(),
                                     recipes = state.recipes,
                                     onRecipeClicked = bloc::onRecipeClicked,
+                                    onRecipeLongClicked = bloc::onRecipeLongClicked,
                                     state = gridState,
                                     bottomContentPadding =
                                         if (state.cookingRecipeCount > 0) FabStackReserve else 0.dp,
@@ -467,6 +486,7 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                                     modifier = Modifier.fillMaxSize(),
                                     recipes = state.recipes,
                                     onRecipeClicked = bloc::onRecipeClicked,
+                                    onRecipeLongClicked = bloc::onRecipeLongClicked,
                                     state = listState,
                                     bottomContentPadding =
                                         if (state.cookingRecipeCount > 0) FabStackReserve else 0.dp,
@@ -533,6 +553,23 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                     onAllRecipesSelected = bloc::onAllRecipesSelected,
                     onEditBook = bloc::onEditBookClicked,
                     onCreateBook = bloc::onCreateBookClicked,
+                )
+            }
+
+            if (state.isBulkBookPickerOpen) {
+                BulkAddToBookSheet(
+                    books = state.recipeBooks,
+                    onDismiss = bloc::onBulkBookPickerDismissed,
+                    onBookSelected = bloc::onAddSelectedToBook,
+                )
+            }
+
+            if (state.isBulkCategoryPickerOpen) {
+                BulkAddToCategorySheet(
+                    userCategories = state.availableUserCategories,
+                    onDismiss = bloc::onBulkCategoryPickerDismissed,
+                    onBuiltinSelected = bloc::onAddSelectedToBuiltinCategory,
+                    onUserCategorySelected = bloc::onAddSelectedToUserCategory,
                 )
             }
         }
@@ -787,6 +824,143 @@ private fun OverflowMenu(
                     onCollaborateClicked()
                 },
             )
+        }
+    }
+}
+
+/**
+ * Overflow menu shown in the selection-mode app bar. Holds the bulk actions that don't warrant
+ * their own icon — filing the selection under a recipe book or tagging it with a category. Disabled
+ * while nothing is selected.
+ */
+@Composable
+private fun SelectionOverflowMenu(
+    enabled: Boolean,
+    onAddToBookClicked: () -> Unit,
+    onAddToCategoryClicked: () -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        IconButton(
+            onClick = { expanded = true },
+            enabled = enabled,
+            modifier = Modifier.testTag(RecipeListTestTags.SELECTION_OVERFLOW),
+        ) {
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = stringResource(Res.string.recipe_list_selection_more),
+            )
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.recipe_list_selection_add_to_book)) },
+                leadingIcon = {
+                    Icon(Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null)
+                },
+                modifier = Modifier.testTag(RecipeListTestTags.SELECTION_ADD_TO_BOOK),
+                onClick = {
+                    expanded = false
+                    onAddToBookClicked()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.recipe_list_selection_add_to_category)) },
+                leadingIcon = { Icon(Icons.Default.Category, contentDescription = null) },
+                modifier = Modifier.testTag(RecipeListTestTags.SELECTION_ADD_TO_CATEGORY),
+                onClick = {
+                    expanded = false
+                    onAddToCategoryClicked()
+                },
+            )
+        }
+    }
+}
+
+/** Bottom sheet listing the user's recipe books so the current selection can be filed under one. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BulkAddToBookSheet(
+    books: List<RecipeBook>,
+    onDismiss: () -> Unit,
+    onBookSelected: (Long) -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        Column(
+            modifier = Modifier.navigationBarsPadding().testTag(RecipeListTestTags.BULK_BOOK_SHEET)
+        ) {
+            Text(
+                text = stringResource(Res.string.recipe_list_bulk_book_title),
+                style = MaterialTheme.typography.titleLarge,
+                modifier =
+                    Modifier.padding(
+                        horizontal = ChefMateTheme.dimens.paddingNormal,
+                        vertical = ChefMateTheme.dimens.paddingSmall,
+                    ),
+            )
+            HorizontalDivider()
+            books.forEach { book ->
+                ListItem(
+                    headlineContent = { Text(book.name) },
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.MenuBook,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth().clickable { onBookSelected(book.id) },
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Bottom sheet of category chips — built-in presets followed by the user's own categories — so the
+ * current selection can be tagged. Tapping a chip adds and closes.
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+private fun BulkAddToCategorySheet(
+    userCategories: List<Category>,
+    onDismiss: () -> Unit,
+    onBuiltinSelected: (BuiltinCategory) -> Unit,
+    onUserCategorySelected: (Long) -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        Column(
+            modifier =
+                Modifier.padding(horizontal = ChefMateTheme.dimens.paddingNormal)
+                    .navigationBarsPadding()
+                    .testTag(RecipeListTestTags.BULK_CATEGORY_SHEET)
+        ) {
+            Text(
+                text = stringResource(Res.string.recipe_list_bulk_category_title),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(vertical = ChefMateTheme.dimens.paddingSmall),
+            )
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                BuiltinCategory.entries.forEach { category ->
+                    FilterChip(
+                        selected = false,
+                        onClick = { onBuiltinSelected(category) },
+                        label = { Text(stringResource(category.labelRes())) },
+                    )
+                }
+                // User categories that aren't just a preset in disguise (those render above).
+                userCategories
+                    .filter { it.builtinId == null }
+                    .forEach { category ->
+                        FilterChip(
+                            selected = false,
+                            onClick = { onUserCategorySelected(category.id) },
+                            label = { Text(category.name) },
+                        )
+                    }
+            }
+            Spacer(Modifier.height(ChefMateTheme.dimens.paddingNormal))
         }
     }
 }
@@ -1222,6 +1396,7 @@ private fun RecipeGrid(
     recipes: List<RecipeListItem>,
     onRecipeClicked: (RecipeListItem) -> Unit,
     modifier: Modifier = Modifier,
+    onRecipeLongClicked: (RecipeListItem) -> Unit = {},
     state: LazyGridState = rememberLazyGridState(),
     bottomContentPadding: androidx.compose.ui.unit.Dp = 0.dp,
     isSelectionMode: Boolean = false,
@@ -1246,6 +1421,7 @@ private fun RecipeGrid(
             RecipeGridItem(
                 recipe = recipe,
                 onClick = { onRecipeClicked(recipe) },
+                onLongClick = { onRecipeLongClicked(recipe) },
                 isSelectionMode = isSelectionMode,
                 isSelected = recipe.id in selectedRecipeIds,
             )
@@ -1253,17 +1429,24 @@ private fun RecipeGrid(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun RecipeGridItem(
     recipe: RecipeListItem,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onLongClick: () -> Unit = {},
     isSelectionMode: Boolean = false,
     isSelected: Boolean = false,
 ) {
     Card(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    onClick = onClick,
+                    onLongClick = onLongClick,
+                ),
         colors =
             CardDefaults.cardColors(
                 containerColor =
@@ -1343,6 +1526,7 @@ private fun RecipeList(
     recipes: List<RecipeListItem>,
     onRecipeClicked: (RecipeListItem) -> Unit,
     modifier: Modifier = Modifier,
+    onRecipeLongClicked: (RecipeListItem) -> Unit = {},
     state: LazyListState = rememberLazyListState(),
     bottomContentPadding: androidx.compose.ui.unit.Dp = 0.dp,
     isSelectionMode: Boolean = false,
@@ -1358,6 +1542,7 @@ private fun RecipeList(
             RecipeListItemContent(
                 recipe = recipe,
                 onClick = { onRecipeClicked(recipe) },
+                onLongClick = { onRecipeLongClicked(recipe) },
                 isSelectionMode = isSelectionMode,
                 isSelected = recipe.id in selectedRecipeIds,
             )
@@ -1368,12 +1553,13 @@ private fun RecipeList(
 /** Approximate height of the Continue/Done Cooking FAB stack plus breathing room. */
 private val FabStackReserve = 152.dp
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 private fun RecipeListItemContent(
     recipe: RecipeListItem,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onLongClick: () -> Unit = {},
     isSelectionMode: Boolean = false,
     isSelected: Boolean = false,
 ) {
@@ -1384,7 +1570,7 @@ private fun RecipeListItemContent(
         modifier =
             modifier
                 .fillMaxWidth()
-                .clickable(onClick = onClick)
+                .combinedClickable(onClick = onClick, onLongClick = onLongClick)
                 .background(background)
                 .padding(16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),

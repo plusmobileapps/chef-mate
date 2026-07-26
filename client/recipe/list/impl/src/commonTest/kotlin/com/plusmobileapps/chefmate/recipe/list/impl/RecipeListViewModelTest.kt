@@ -25,6 +25,8 @@ import com.plusmobileapps.chefmate.recipe.list.RecipeSortOption
 import com.plusmobileapps.chefmate.recipebook.data.RecipeBook
 import com.plusmobileapps.chefmate.recipebook.data.testing.FakeRecipeBookCollaborationRepository
 import com.plusmobileapps.chefmate.recipebook.data.testing.FakeRecipeBookRepository
+import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.PhraseModel
 import com.russhwolf.settings.MapSettings
 import com.russhwolf.settings.Settings
 import dev.mokkery.answering.returns
@@ -33,6 +35,7 @@ import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import dev.mokkery.verify
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlin.test.Test
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -826,6 +829,115 @@ class RecipeListViewModelTest {
         viewModel.clearFilters()
         viewModel.state.value.activeFilters shouldBe emptySet()
         viewModel.state.value.activeCategories shouldBe emptySet()
+    }
+
+    // endregion
+
+    // region Multi-select bulk actions
+
+    private fun booksViewModel(): RecipeListViewModel =
+        RecipeListViewModel(
+            mainContext = UnconfinedTestDispatcher(),
+            repository = repository,
+            recipeBookRepository = FakeRecipeBookRepository(MutableStateFlow(RecipeBook.Samples)),
+            collaborationRepository = FakeRecipeBookCollaborationRepository(),
+            categoryRepository = categoryRepository,
+            cookingSessionRepository = cookingSessionRepository,
+            imageExtractor = imageExtractor,
+            pendingPhotoStore = pendingPhotoStore,
+            featureFlags = featureFlags,
+            settings = settings,
+            coachMarkController = CoachMarkController(MapSettings()),
+        )
+
+    @Test
+    fun When_long_press_Then_selection_mode_entered_with_that_recipe() {
+        recipes.value = listOf(recipe(1), recipe(2))
+        viewModel.enterSelectionModeWith(2)
+        viewModel.state.value.isSelectionMode shouldBe true
+        viewModel.state.value.selectedRecipeIds shouldBe setOf(2L)
+    }
+
+    @Test
+    fun When_add_selected_to_book_Then_recipes_filed_and_selection_exited() = runTest {
+        recipes.value =
+            listOf(
+                recipe(1, recipeBookIds = setOf(1L)),
+                recipe(2, recipeBookIds = setOf(1L)),
+            )
+        val vm = booksViewModel()
+        vm.enterSelectionModeWith(1)
+        vm.toggleRecipeSelected(2)
+
+        vm.addSelectedToBook(3L)
+
+        recipes.value.first { it.id == 1L }.recipeBookIds shouldBe setOf(1L, 3L)
+        recipes.value.first { it.id == 2L }.recipeBookIds shouldBe setOf(1L, 3L)
+        vm.state.value.isSelectionMode shouldBe false
+        vm.state.value.selectedRecipeIds shouldBe emptySet()
+    }
+
+    @Test
+    fun When_add_selected_to_book_Then_confirmation_message_emitted() = runTest {
+        recipes.value = listOf(recipe(1, recipeBookIds = setOf(1L)))
+        val vm = booksViewModel()
+        vm.enterSelectionModeWith(1)
+
+        vm.bulkActionMessage.test {
+            vm.addSelectedToBook(3L)
+            val message = awaitItem()
+            message.shouldBeInstanceOf<PhraseModel>()
+            (message.args["book"] as FixedString).value shouldBe "Holiday Baking"
+            (message.args["count"] as FixedString).value shouldBe "1"
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun When_add_selected_to_builtin_category_Then_category_materialized_and_attached() = runTest {
+        recipes.value = listOf(recipe(1), recipe(2))
+        viewModel.enterSelectionModeWith(1)
+        viewModel.toggleRecipeSelected(2)
+
+        viewModel.addSelectedToBuiltinCategory(BuiltinCategory.DESSERT)
+
+        recipes.value.forEach { r ->
+            r.categories.map { it.builtinId } shouldBe listOf(BuiltinCategory.DESSERT.id)
+        }
+        // The preset was materialized into a concrete row as a side effect.
+        (categoryRepository.findBuiltin(BuiltinCategory.DESSERT) != null) shouldBe true
+        viewModel.state.value.isSelectionMode shouldBe false
+    }
+
+    @Test
+    fun When_add_selected_to_user_category_Then_attached_and_selection_exited() = runTest {
+        recipes.value = listOf(recipe(1))
+        val userCategory = categoryRepository.createUserCategory("Weeknight")
+        viewModel.enterSelectionModeWith(1)
+
+        viewModel.addSelectedToUserCategory(userCategory.id)
+
+        recipes.value.first().categories.map { it.id } shouldBe listOf(userCategory.id)
+        viewModel.state.value.isSelectionMode shouldBe false
+    }
+
+    @Test
+    fun When_bulk_book_picker_toggled_Then_flag_tracks_state() {
+        viewModel.openBulkBookPicker()
+        viewModel.state.value.isBulkBookPickerOpen shouldBe true
+        viewModel.dismissBulkBookPicker()
+        viewModel.state.value.isBulkBookPickerOpen shouldBe false
+    }
+
+    @Test
+    fun When_exit_selection_mode_Then_open_pickers_are_dismissed() {
+        viewModel.enterSelectionModeWith(1)
+        viewModel.openBulkCategoryPicker()
+
+        viewModel.exitSelectionMode()
+
+        viewModel.state.value.isSelectionMode shouldBe false
+        viewModel.state.value.isBulkCategoryPickerOpen shouldBe false
     }
 
     // endregion
