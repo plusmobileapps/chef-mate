@@ -269,4 +269,20 @@ class IngredientParserTest {
         val result = IngredientParser.parse("1 box fish sticks")
         assertEquals(GroceryCategory.FROZEN, result.category)
     }
+
+    @Test
+    fun parse_mixed_unicode_fraction_quantity() {
+        val result = IngredientParser.parse("1½ lbs chicken thighs")
+        assertEquals("chicken thighs", result.name)
+        assertEquals("1½ lbs", result.quantity)
+        assertEquals(GroceryCategory.MEAT, result.category)
+    }
+
+    @Test
+    fun parse_bare_unicode_fraction_quantity() {
+        val result = IngredientParser.parse("½ cup soy sauce")
+        assertEquals("soy sauce", result.name)
+        assertEquals("½ cup", result.quantity)
+        assertEquals(GroceryCategory.CONDIMENTS, result.category)
+    }
 }

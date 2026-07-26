@@ -4,9 +4,12 @@ data class ParsedIngredient(val name: String, val quantity: String?, val categor
 
 object IngredientParser {
 
+    // The leading number may be a plain integer/decimal run or a unicode vulgar fraction
+    // (bare, like "½", or attached to a whole number, like "1½") — recipes commonly use these
+    // glyphs instead of "1/2".
     private val QUANTITY_PATTERN =
         Regex(
-            """^\s*(\d+[\d/.  -]*\s*(?:cups?|tbsp|tsp|tablespoons?|teaspoons?|oz|ounces?|lbs?|pounds?|g|grams?|kg|kilograms?|ml|milliliters?|liters?|l|quarts?|qt|gallons?|gal|pints?|pt|cans?|bottles?|packages?|pkgs?|bags?|bunche?s?|heads?|cloves?|stalks?|slices?|pieces?|sticks?|sprigs?|ears?|large|medium|small|whole|pinch(?:es)?|dash(?:es)?|handful(?:s)?)?)\s+(.+)$""",
+            """^\s*((?:\d+|[½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞])[\d/.  ½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞-]*\s*(?:cups?|tbsp|tsp|tablespoons?|teaspoons?|oz|ounces?|lbs?|pounds?|g|grams?|kg|kilograms?|ml|milliliters?|liters?|l|quarts?|qt|gallons?|gal|pints?|pt|cans?|bottles?|packages?|pkgs?|bags?|bunche?s?|heads?|cloves?|stalks?|slices?|pieces?|sticks?|sprigs?|ears?|large|medium|small|whole|pinch(?:es)?|dash(?:es)?|handful(?:s)?)?)\s+(.+)$""",
             RegexOption.IGNORE_CASE,
         )
 
