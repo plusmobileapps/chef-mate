@@ -343,7 +343,16 @@ private fun RecipeDetailBody(
                                 )
                             },
                     ),
-                verticalArrangement = spacedBy(ChefMateTheme.dimens.paddingNormal),
+                // Compact's app bar collapses as the inner LazyColumn scrolls, so the header and
+                // content need to move as one continuous surface. A fixed arrangement gap here
+                // would sit outside the scroll and stay put while the header shrinks underneath
+                // it, leaving a seam that clips the first row of content — so compact carries its
+                // breathing room as the list's own top content padding instead (see
+                // RecipeDetailCompactContent) and this arrangement contributes none. The
+                // two-column layout keeps a fixed header, so its gap can stay a static spacing.
+                verticalArrangement =
+                    if (isCompact) Arrangement.Top
+                    else spacedBy(ChefMateTheme.dimens.paddingNormal),
                 scrollEnabled = false,
                 // Compact is a single linear scroll, so the title can grow large and collapse as
                 // the
@@ -761,7 +770,11 @@ private fun RecipeDetailCompactContent(
         modifier = modifier.fillMaxSize(),
         state = listState,
         verticalArrangement = spacedBy(dimens.paddingSmall),
-        contentPadding = PaddingValues(bottom = dimens.fabClearance + navBarBottom),
+        // The top inset lives here instead of as a fixed gap above the LazyColumn (see
+        // RecipeDetailScreen's PlusHeaderContainer call) so it scrolls away with the rest of the
+        // content as the collapsing app bar shrinks, instead of sitting still as a seam beneath it.
+        contentPadding =
+            PaddingValues(top = dimens.paddingNormal, bottom = dimens.fabClearance + navBarBottom),
     ) {
         // Hero section: image + key details side by side
         item(key = "hero") {
