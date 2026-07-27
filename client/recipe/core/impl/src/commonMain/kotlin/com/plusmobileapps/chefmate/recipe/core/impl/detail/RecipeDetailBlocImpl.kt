@@ -121,6 +121,7 @@ class RecipeDetailBlocImpl(
                     it.recipe.cookTime?.let { time -> timeFormatterUtil.formatMinutes(time) },
                 formattedTotalTime =
                     it.recipe.totalTime?.let { time -> timeFormatterUtil.formatMinutes(time) },
+                ingredientScale = it.ingredientScale,
                 activeCoachMark = it.activeCoachMark,
                 showAiChat = it.showAiChat,
             )
@@ -204,6 +205,10 @@ class RecipeDetailBlocImpl(
 
     override fun onStopSharingClicked() {
         viewModel.onStopSharing()
+    }
+
+    override fun onScaleChanged(scale: Double) {
+        viewModel.setScale(scale)
     }
 
     override fun onDismissSheet() {

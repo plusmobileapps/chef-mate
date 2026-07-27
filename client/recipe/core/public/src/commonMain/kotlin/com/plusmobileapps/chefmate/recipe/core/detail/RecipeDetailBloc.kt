@@ -8,6 +8,7 @@ import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc
+import com.plusmobileapps.chefmate.recipe.data.DEFAULT_INGREDIENT_SCALE
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.ui.ComposeScreen
@@ -83,6 +84,12 @@ interface RecipeDetailBloc : BackClickBloc, ComposeScreen {
     /** Make a shared recipe private again so its link stops resolving for others. */
     fun onStopSharingClicked()
 
+    /**
+     * Pick a new ingredient scale factor (e.g. `2.0` for 2×). Persisted per recipe so the choice
+     * carries over to Cook Mode and survives leaving this screen.
+     */
+    fun onScaleChanged(scale: Double)
+
     fun onDismissSheet()
 
     data class Model(
@@ -97,6 +104,8 @@ interface RecipeDetailBloc : BackClickBloc, ComposeScreen {
         val formattedPrepTime: TextData? = null,
         val formattedCookTime: TextData? = null,
         val formattedTotalTime: TextData? = null,
+        /** The ingredient scale factor to render amounts at (1× = the author's amounts). */
+        val ingredientScale: Double = DEFAULT_INGREDIENT_SCALE,
         /** Id of the coach mark currently allowed to show on this screen, or null. */
         val activeCoachMark: String? = null,
         /** Gated on the AI Chat feature flag — hides the chat button entirely when off. */
