@@ -4,9 +4,11 @@ package com.plusmobileapps.chefmate
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,6 +32,8 @@ import com.plusmobileapps.chefmate.deeplink.DeepLinkCoordinator
 import com.plusmobileapps.chefmate.deeplink.SchemeRegistrar
 import com.plusmobileapps.chefmate.deeplink.SingleInstance
 import com.plusmobileapps.chefmate.root.DeepLink
+import com.plusmobileapps.chefmate.ui.LocalRecipeWindowOpener
+import com.plusmobileapps.chefmate.ui.RecipeWindowOpener
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import com.plusmobileapps.chefmate.update.DesktopUpdater
 import com.plusmobileapps.chefmate.update.UpdateBanner
@@ -76,6 +80,9 @@ fun main(args: Array<String>) {
     val backDispatcher = BackDispatcher()
     val appComponent = dev.zacsweers.metro.createGraph<JvmApplicationComponent>()
     val updater = DesktopUpdater()
+    // Lives outside the application block, like the lifecycle above: a recomposition of
+    // `application { }` must never drop a window the user has open.
+    val recipeWindows = RecipeWindowManager(appComponent)
 
     val settings = appComponent.settings
     val initialSize =
@@ -144,6 +151,7 @@ fun main(args: Array<String>) {
         Window(
             onCloseRequest = {
                 updater.close()
+                recipeWindows.closeAll()
                 exitApplication()
             },
             state = windowState,
@@ -169,8 +177,23 @@ fun main(args: Array<String>) {
                     window.requestFocus()
                 }
             }
+            // Anything a detached recipe window can't service itself (the grocery list, cook mode,
+            // AI chat, the meal planner, a web link) is routed into this window's stack, and this
+            // window comes forward so the user sees where it landed.
+            LaunchedEffect(rootBloc) {
+                recipeWindows.outputs.collect { output ->
+                    rootBloc.handleRecipeWindowOutput(output)
+                    window.toFront()
+                    window.requestFocus()
+                }
+            }
+            val windowOpener = remember { RecipeWindowOpener(recipeWindows::open) }
             Box(modifier = Modifier.fillMaxSize()) {
-                App(rootBloc = rootBloc, toastService = appComponent.toastService)
+                // Only desktop provides this, which is what turns the recipe list's right-click
+                // "open in new window" entry on — the other targets see a null opener and omit it.
+                CompositionLocalProvider(LocalRecipeWindowOpener provides windowOpener) {
+                    App(rootBloc = rootBloc, toastService = appComponent.toastService)
+                }
                 val updateState by updater.state.collectAsState()
                 ChefMateTheme {
                     UpdateBanner(
@@ -183,6 +206,9 @@ fun main(args: Array<String>) {
                 }
             }
         }
+
+        // Sibling windows of the main one, so closing a recipe leaves the app running.
+        RecipeWindows(manager = recipeWindows, toastService = appComponent.toastService)
     }
 }
 

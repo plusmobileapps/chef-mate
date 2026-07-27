@@ -150,6 +150,7 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_e
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_select
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_menu_sync
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_more_actions
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_open_in_new_window
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_scan_failed_title
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_scan_from_photo
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_scanning_message
@@ -193,6 +194,9 @@ import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
+import com.plusmobileapps.chefmate.ui.LocalRecipeWindowOpener
+import com.plusmobileapps.chefmate.ui.components.PlusContextMenuArea
+import com.plusmobileapps.chefmate.ui.components.PlusContextMenuItem
 import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusDialogScaffold
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
@@ -1389,6 +1393,31 @@ private fun FilterEmptyState(
 
 // endregion
 
+// region Context Menu
+
+/**
+ * Adds the desktop right-click menu to a recipe row or card. On Android and iOS
+ * [LocalRecipeWindowOpener] is null — there is nothing to put in the menu and no mouse to open it
+ * with — so the item renders exactly as it did before.
+ */
+@Composable
+private fun RecipeContextMenu(recipe: RecipeListItem, content: @Composable () -> Unit) {
+    val windowOpener = LocalRecipeWindowOpener.current
+    if (windowOpener == null) {
+        content()
+        return
+    }
+    val label = stringResource(Res.string.recipe_list_open_in_new_window)
+    PlusContextMenuArea(
+        items = {
+            listOf(PlusContextMenuItem(label) { windowOpener.open(recipe.id, recipe.title) })
+        },
+        content = content,
+    )
+}
+
+// endregion
+
 // region Grid View
 
 @Composable
@@ -1418,13 +1447,15 @@ private fun RecipeGrid(
     ) {
         items(recipes.size, key = { recipes[it].id }) { index ->
             val recipe = recipes[index]
-            RecipeGridItem(
-                recipe = recipe,
-                onClick = { onRecipeClicked(recipe) },
-                onLongClick = { onRecipeLongClicked(recipe) },
-                isSelectionMode = isSelectionMode,
-                isSelected = recipe.id in selectedRecipeIds,
-            )
+            RecipeContextMenu(recipe) {
+                RecipeGridItem(
+                    recipe = recipe,
+                    onClick = { onRecipeClicked(recipe) },
+                    onLongClick = { onRecipeLongClicked(recipe) },
+                    isSelectionMode = isSelectionMode,
+                    isSelected = recipe.id in selectedRecipeIds,
+                )
+            }
         }
     }
 }
@@ -1539,13 +1570,15 @@ private fun RecipeList(
     ) {
         items(recipes.size, key = { recipes[it].id }) { index ->
             val recipe = recipes[index]
-            RecipeListItemContent(
-                recipe = recipe,
-                onClick = { onRecipeClicked(recipe) },
-                onLongClick = { onRecipeLongClicked(recipe) },
-                isSelectionMode = isSelectionMode,
-                isSelected = recipe.id in selectedRecipeIds,
-            )
+            RecipeContextMenu(recipe) {
+                RecipeListItemContent(
+                    recipe = recipe,
+                    onClick = { onRecipeClicked(recipe) },
+                    onLongClick = { onRecipeLongClicked(recipe) },
+                    isSelectionMode = isSelectionMode,
+                    isSelected = recipe.id in selectedRecipeIds,
+                )
+            }
         }
     }
 }

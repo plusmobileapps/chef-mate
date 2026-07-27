@@ -110,6 +110,9 @@
     <string name="recipe_list_bulk_added_to_book">Added {count} recipes to {book}</string>
     <string name="recipe_list_bulk_added_to_category">Added {count} recipes to {category}</string>
 
+    <!-- Context Menu (desktop) -->
+    <string name="recipe_list_open_in_new_window">Open in new window</string>
+
     <!-- Cooking Session -->
     <string name="recipe_list_continue_cooking">Continue cooking</string>
     <string name="recipe_list_done_cooking">Done cooking</string>

@@ -174,6 +174,13 @@ class RootBlocImpl(
         }
     }
 
+    override fun handleRecipeWindowOutput(output: RecipeRootBloc.Output) {
+        // Finished means "the detached window is done" — it closes itself, and the main window's
+        // stack has nothing to pop in response.
+        if (output == RecipeRootBloc.Output.Finished) return
+        handleRecipeRootOutput(output)
+    }
+
     private fun selectBottomNavTab(tab: BottomNavBloc.Tab) {
         stack.value.items
             .map { it.instance }

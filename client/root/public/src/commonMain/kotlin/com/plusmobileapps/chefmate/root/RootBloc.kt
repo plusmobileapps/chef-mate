@@ -37,6 +37,16 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
      */
     fun handleDeepLink(url: String)
 
+    /**
+     * Route an output from a detached recipe window (desktop) into this — the main — window's
+     * stack. Such a window renders only the recipe stack, so anything that leaves it (the grocery
+     * list, cook mode, AI chat, the meal planner, a web link) has to land here instead.
+     *
+     * [RecipeRootBloc.Output.Finished] is ignored: the detached window closes itself on that, and
+     * popping the main window's stack in sympathy would be wrong.
+     */
+    fun handleRecipeWindowOutput(output: RecipeRootBloc.Output)
+
     sealed class Child {
 
         abstract val bloc: ComposeScreen
