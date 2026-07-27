@@ -666,6 +666,43 @@ class RootBlocTest {
         rootBloc.instance() should instanceOf<RootBloc.Child.RecipeRoot>()
         recipeProps shouldBe RecipeRootBloc.Props.CreateFromExtracted(extracted, fromAi = true)
     }
+
+    // A detached desktop recipe window has no stack of its own beyond the recipe, so anything that
+    // leaves it is forwarded here.
+
+    @Test
+    fun Given_a_detached_recipe_window_When_it_outputs_OpenCookMode_Then_cook_mode_is_shown() {
+        rootBloc.handleRecipeWindowOutput(RecipeRootBloc.Output.OpenCookMode(recipeId = 123L))
+
+        rootBloc.instance() should instanceOf<RootBloc.Child.CookMode>()
+    }
+
+    @Test
+    fun Given_a_detached_recipe_window_When_it_outputs_OpenGroceryList_Then_groceries_tab_shown() {
+        val bottomNavChild =
+            rootBloc.state.value.items
+                .map { it.instance }
+                .filterIsInstance<RootBloc.Child.BottomNavigation>()
+                .first()
+                .bloc
+
+        rootBloc.handleRecipeWindowOutput(RecipeRootBloc.Output.OpenGroceryList)
+
+        rootBloc.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
+        dev.mokkery.verify { bottomNavChild.onTabSelected(BottomNavBloc.Tab.GROCERIES) }
+    }
+
+    @Test
+    fun Given_a_detached_recipe_window_When_it_outputs_Finished_Then_this_stack_is_untouched() {
+        // The window closes itself; popping the main stack in sympathy would strand the user.
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenRecipe(123L))
+        val backStackBefore = rootBloc.state.value.backStack.size
+
+        rootBloc.handleRecipeWindowOutput(RecipeRootBloc.Output.Finished)
+
+        rootBloc.instance() should instanceOf<RootBloc.Child.RecipeRoot>()
+        rootBloc.state.value.backStack.size shouldBe backStackBefore
+    }
 }
 
 private const val EMAIL = "chef@example.com"
