@@ -58,6 +58,15 @@ class RecipeDetailRobot(private val test: ComposeUiTest) {
             .assert(hasText(label))
     }
 
+    /** Taps the add-to-grocery-list action, opening the ingredient-picking sheet. */
+    fun tapAddToGroceryList(): RecipeDetailRobot = apply {
+        test
+            .onNode(
+                hasTestTag(RecipeDetailTestTags.ADD_TO_GROCERY_BUTTON) and hasAnyAncestor(onScreen)
+            )
+            .performClick()
+    }
+
     /** Taps the AI chat action, opening the recipe-grounded chat sheet. */
     fun tapAiChat(): RecipeDetailRobot = apply {
         test
