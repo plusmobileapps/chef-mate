@@ -122,8 +122,9 @@ enum WatchGroceryFilter: String, CaseIterable, Identifiable {
     }
 }
 
-/// One aisle's worth of items, ready to render as a sticky-header section.
-struct WatchGroceryGroup: Identifiable {
+/// One aisle's worth of items, ready to render as a sticky-header section. `Equatable` so the items
+/// screen can drive its animations off the whole grouped list changing.
+struct WatchGroceryGroup: Identifiable, Equatable {
     let category: WatchGroceryCategory
     let items: [WatchGroceryItem]
     var id: String { category.rawValue }

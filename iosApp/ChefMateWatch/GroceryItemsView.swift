@@ -36,6 +36,7 @@ struct GroceryItemsView: View {
                             .foregroundStyle(WatchTheme.onSurfaceVariant)
                             .padding(.horizontal, hInset)
                             .padding(.top, 6)
+                            .transition(.opacity)
                     }
 
                     ForEach(groups) { group in
@@ -45,16 +46,22 @@ struct GroceryItemsView: View {
                                     store.setChecked(itemId: item.id, isChecked: !item.isChecked)
                                 }
                                 .padding(.horizontal, hInset)
+                                .transition(.itemRemoval)
                                 if index < group.items.count - 1 {
-                                    Divider().padding(.leading, hInset)
+                                    Divider().padding(.leading, hInset).transition(.opacity)
                                 }
                             }
                         } header: {
                             CategoryHeader(title: group.title, textInset: hInset)
+                                .transition(.opacity)
                         }
                     }
                 }
                 .padding(.bottom, 8)
+                // Scoped to `groups` so only list changes animate — a filter switch, a phone
+                // snapshot, or an item leaving because it was just checked off. Rows below the
+                // departing one slide up to close the gap.
+                .animation(.snappy, value: groups)
             }
         }
         .ignoresSafeArea(.container, edges: .horizontal)
@@ -82,6 +89,18 @@ struct GroceryItemsView: View {
         .sheet(isPresented: $showingFilter) {
             GroceryFilterView(selection: $filter)
         }
+    }
+}
+
+extension AnyTransition {
+    /// How a row enters and leaves the list. Departures slide off toward the leading edge as they
+    /// fade — the item is being struck off — while arrivals just fade in, so a newly added item
+    /// doesn't fly across the screen on its way to the bottom.
+    static var itemRemoval: AnyTransition {
+        .asymmetric(
+            insertion: .opacity,
+            removal: .move(edge: .leading).combined(with: .opacity)
+        )
     }
 }
 
@@ -146,6 +165,7 @@ private struct GroceryItemRow: View {
                 Image(systemName: item.isChecked ? "checkmark.square.fill" : "square")
                     .font(.title3)
                     .foregroundStyle(item.isChecked ? WatchTheme.primary : WatchTheme.onSurfaceVariant)
+                    .contentTransition(.symbolEffect(.replace))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)
                         .foregroundStyle(item.isChecked ? WatchTheme.onSurfaceVariant : WatchTheme.onSurface)
