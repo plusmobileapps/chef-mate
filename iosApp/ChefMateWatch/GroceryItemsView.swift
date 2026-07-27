@@ -8,8 +8,15 @@ struct GroceryItemsView: View {
 
     @EnvironmentObject private var store: GroceryStore
     @State private var showingAdd = false
+    @State private var showingFilter = false
 
-    private var groups: [WatchGroceryGroup] { store.items(for: listId).groupedByAisle() }
+    /// Persisted like the phone's filter preference, and shared across lists for the same reason:
+    /// the choice is about how you shop, not about one particular list.
+    @AppStorage("groceryFilter") private var filter: WatchGroceryFilter = .all
+
+    private var groups: [WatchGroceryGroup] {
+        store.items(for: listId).filtered(by: filter).groupedByAisle()
+    }
 
     var body: some View {
         // The list extends edge-to-edge horizontally so category headers can run the full width of
@@ -22,6 +29,14 @@ struct GroceryItemsView: View {
                     AddItemRow { showingAdd = true }
                         .padding(.horizontal, hInset)
                         .padding(.top, 2)
+
+                    if groups.isEmpty {
+                        Text(filter.emptyMessage)
+                            .font(.footnote)
+                            .foregroundStyle(WatchTheme.onSurfaceVariant)
+                            .padding(.horizontal, hInset)
+                            .padding(.top, 6)
+                    }
 
                     ForEach(groups) { group in
                         Section {
@@ -44,11 +59,62 @@ struct GroceryItemsView: View {
         }
         .ignoresSafeArea(.container, edges: .horizontal)
         .navigationTitle(title)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showingFilter = true
+                } label: {
+                    Image(
+                        systemName: filter == .all
+                            ? "line.3.horizontal.decrease.circle"
+                            : "line.3.horizontal.decrease.circle.fill"
+                    )
+                }
+                .foregroundStyle(filter == .all ? WatchTheme.onSurfaceVariant : WatchTheme.primary)
+                .accessibilityLabel("Filter: \(filter.displayName)")
+            }
+        }
         .sheet(isPresented: $showingAdd) {
             AddItemView { name in
                 store.addItem(listId: listId, name: name)
             }
         }
+        .sheet(isPresented: $showingFilter) {
+            GroceryFilterView(selection: $filter)
+        }
+    }
+}
+
+/// Filter picker, mirroring the options in the phone's Sort & Filter sheet.
+private struct GroceryFilterView: View {
+    @Binding var selection: WatchGroceryFilter
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List(WatchGroceryFilter.allCases) { option in
+                Button {
+                    selection = option
+                    dismiss()
+                } label: {
+                    HStack(spacing: 8) {
+                        Text(option.displayName)
+                            .foregroundStyle(WatchTheme.onSurface)
+                        Spacer(minLength: 0)
+                        if option == selection {
+                            Image(systemName: "checkmark")
+                                .foregroundStyle(WatchTheme.primary)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            .listStyle(.plain)
+            .navigationTitle("Filter")
+        }
+        .tint(WatchTheme.primary)
     }
 }
 
