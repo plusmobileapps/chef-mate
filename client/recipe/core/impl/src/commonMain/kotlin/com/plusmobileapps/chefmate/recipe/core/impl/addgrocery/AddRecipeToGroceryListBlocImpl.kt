@@ -37,6 +37,7 @@ class AddRecipeToGroceryListBlocImpl(
                 groupedIngredients = it.groupedIngredients.toImmutableList(),
                 groceryLists = it.groceryLists.toImmutableList(),
                 selectedGroceryList = it.selectedGroceryList,
+                ingredientScale = it.ingredientScale,
             )
         }
 
@@ -61,6 +62,10 @@ class AddRecipeToGroceryListBlocImpl(
 
     override fun onGroceryListSelected(listId: Long) {
         viewModel.onGroceryListSelected(listId)
+    }
+
+    override fun onScaleChanged(scale: Double) {
+        viewModel.setScale(scale)
     }
 
     override fun onSaveClicked() {

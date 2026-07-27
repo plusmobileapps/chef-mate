@@ -45,10 +45,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddShoppingCart
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
@@ -126,7 +124,6 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_ingr
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_kcal
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_prep_time
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_remove_favorite
-import chefmate.client.recipe.core.public.generated.resources.recipe_detail_scale_ingredients
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_servings
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_cancel
@@ -146,6 +143,7 @@ import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.ChefMateUrls
 import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.recipe.categories.pickerLabelRes
+import com.plusmobileapps.chefmate.recipe.core.ingredients.IngredientScaleSelector
 import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.IngredientScaler
@@ -391,7 +389,11 @@ private fun RecipeDetailBody(
                             isLoading = state.isLoading,
                             onDismiss = bloc::onCoachMarkDismissed,
                         ) {
-                            IconButton(onClick = bloc::onAddToGroceryListClicked) {
+                            IconButton(
+                                onClick = bloc::onAddToGroceryListClicked,
+                                modifier =
+                                    Modifier.testTag(RecipeDetailTestTags.ADD_TO_GROCERY_BUTTON),
+                            ) {
                                 Icon(
                                     imageVector = Icons.Default.AddShoppingCart,
                                     contentDescription =
@@ -1015,48 +1017,11 @@ private fun IngredientsStickyHeader(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.weight(1f).padding(vertical = 16.dp),
             )
-            IngredientScaleSelector(scale = scale, onScaleChange = onScaleChange)
-        }
-    }
-}
-
-/**
- * A compact dropdown button showing the current ingredient scale (e.g. `2×`). Tapping it opens a
- * menu of [IngredientScaler.DEFAULT_FACTORS] with the active one check-marked.
- */
-@Composable
-private fun IngredientScaleSelector(
-    scale: Double,
-    onScaleChange: (Double) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(modifier = modifier) {
-        var expanded by remember { mutableStateOf(false) }
-        TextButton(
-            onClick = { expanded = true },
-            modifier = Modifier.testTag(RecipeDetailTestTags.INGREDIENT_SCALE_BUTTON),
-        ) {
-            Text(IngredientScaler.label(scale))
-            Icon(
-                imageVector = Icons.Default.ArrowDropDown,
-                contentDescription = stringResource(Res.string.recipe_detail_scale_ingredients),
+            IngredientScaleSelector(
+                scale = scale,
+                onScaleChange = onScaleChange,
+                buttonTestTag = RecipeDetailTestTags.INGREDIENT_SCALE_BUTTON,
             )
-        }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            IngredientScaler.DEFAULT_FACTORS.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(IngredientScaler.label(option)) },
-                    trailingIcon = {
-                        if (option == scale) {
-                            Icon(imageVector = Icons.Default.Check, contentDescription = null)
-                        }
-                    },
-                    onClick = {
-                        expanded = false
-                        onScaleChange(option)
-                    },
-                )
-            }
         }
     }
 }
