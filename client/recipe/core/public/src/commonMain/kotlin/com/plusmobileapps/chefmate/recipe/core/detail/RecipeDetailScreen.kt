@@ -55,7 +55,6 @@ import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SoupKitchen
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Timer
@@ -159,6 +158,7 @@ import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.LocalAnimatedVisibilityScope
 import com.plusmobileapps.chefmate.ui.LocalSecondaryAnimatedVisibilityScope
 import com.plusmobileapps.chefmate.ui.LocalSharedTransitionScope
+import com.plusmobileapps.chefmate.ui.PlusShareIcon
 import com.plusmobileapps.chefmate.ui.components.PlusDialog
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
@@ -568,7 +568,7 @@ private fun ShareActionButton(
         var showShareMenu by remember { mutableStateOf(false) }
         IconButton(onClick = { showShareMenu = true }) {
             Icon(
-                imageVector = Icons.Default.Share,
+                imageVector = PlusShareIcon,
                 contentDescription = stringResource(Res.string.recipe_detail_share),
             )
         }
@@ -636,7 +636,7 @@ private fun RecipeShareMenuItems(
 ) {
     DropdownMenuItem(
         text = { Text(stringResource(Res.string.recipe_detail_share_link)) },
-        leadingIcon = { Icon(Icons.Default.Share, contentDescription = null) },
+        leadingIcon = { Icon(PlusShareIcon, contentDescription = null) },
         onClick = {
             onClose()
             onShareLink()
@@ -645,7 +645,7 @@ private fun RecipeShareMenuItems(
     recipe.sourceUrl?.let { url ->
         DropdownMenuItem(
             text = { Text(stringResource(Res.string.recipe_detail_share_url)) },
-            leadingIcon = { Icon(Icons.Default.Share, contentDescription = null) },
+            leadingIcon = { Icon(PlusShareIcon, contentDescription = null) },
             onClick = {
                 onClose()
                 onShare(url)
@@ -654,7 +654,7 @@ private fun RecipeShareMenuItems(
     }
     DropdownMenuItem(
         text = { Text(stringResource(Res.string.recipe_detail_share_text)) },
-        leadingIcon = { Icon(Icons.Default.Share, contentDescription = null) },
+        leadingIcon = { Icon(PlusShareIcon, contentDescription = null) },
         onClick = {
             onClose()
             onShare(formatRecipeAsText(recipe))
