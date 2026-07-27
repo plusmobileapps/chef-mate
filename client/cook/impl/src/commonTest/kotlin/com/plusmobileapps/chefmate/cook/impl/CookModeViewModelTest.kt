@@ -10,6 +10,7 @@ import com.plusmobileapps.chefmate.di.KeepScreenOnRepository
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
 import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
 import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.recipe.data.testing.FakeIngredientScalePreferences
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import com.russhwolf.settings.MapSettings
 import dev.mokkery.answering.returns
@@ -28,12 +29,14 @@ class CookModeViewModelTest {
 
     private val recipes = MutableStateFlow<List<Recipe>>(emptyList())
     private val recipeRepository = FakeRecipeRepository(recipes)
+    private val recipeIds = MutableStateFlow<List<Long>>(emptyList())
     private val sessionRepository: CookingSessionRepository = mock {
-        every { observeRecipeIds() } returns MutableStateFlow(emptyList())
+        every { observeRecipeIds() } returns recipeIds
         everySuspend { start(any()) } returns Unit
         everySuspend { markSelected(any()) } returns Unit
         everySuspend { stopAll() } returns Unit
     }
+    private val scalePreferences = FakeIngredientScalePreferences()
 
     private fun createViewModel(
         coachMarkController: CoachMarkController = CoachMarkController(MapSettings()),
@@ -45,6 +48,7 @@ class CookModeViewModelTest {
             recipeRepository = recipeRepository,
             sessionRepository = sessionRepository,
             settings = MapSettings(),
+            scalePreferences = scalePreferences,
             keepScreenOnRepository = KeepScreenOnRepository(MapSettings()),
             coachMarkController = coachMarkController,
             featureFlags = featureFlags,
@@ -91,6 +95,35 @@ class CookModeViewModelTest {
 
         verifySuspend { sessionRepository.stopAll() }
         finished shouldBe true
+    }
+
+    @Test
+    fun When_recipe_has_saved_scale_Then_state_reflects_it() {
+        scalePreferences.setScale(1L, 2.0)
+        recipes.value = listOf(Recipe.Sample.copy(id = 1L))
+        recipeIds.value = listOf(1L)
+
+        val vm = createViewModel()
+
+        vm.state.value.ingredientScale shouldBe 2.0
+    }
+
+    @Test
+    fun When_setScale_called_Then_persisted_for_active_recipe_and_state_updates() {
+        recipes.value = listOf(Recipe.Sample.copy(id = 1L))
+        recipeIds.value = listOf(1L)
+        val vm = createViewModel()
+
+        vm.setScale(3.0)
+
+        scalePreferences.scaleFor(1L).value shouldBe 3.0
+        vm.state.value.ingredientScale shouldBe 3.0
+    }
+
+    @Test
+    fun When_no_active_recipe_Then_scale_defaults_to_one() {
+        val vm = createViewModel()
+        vm.state.value.ingredientScale shouldBe 1.0
     }
 
     @Test

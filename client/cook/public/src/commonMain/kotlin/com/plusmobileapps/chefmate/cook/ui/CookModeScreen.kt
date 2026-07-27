@@ -142,9 +142,10 @@ fun CookModeScreen(bloc: CookModeBloc, modifier: Modifier = Modifier) {
     if (state.keepScreenOn) {
         KeepScreenOn()
     }
-    // Ingredient scale multiplier, reset whenever the active recipe changes. Hoisted here so it
-    // survives the compact <-> tablet layout swap and drives both the header control and the body.
-    var ingredientScale by remember(state.activeRecipe?.id) { mutableStateOf(1.0) }
+    // Ingredient scale multiplier for the active recipe. Owned by the BLoC so it persists per
+    // recipe
+    // across Cook Mode / recipe detail; the header control and body both read it from state.
+    val ingredientScale = state.ingredientScale
 
     Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -161,7 +162,7 @@ fun CookModeScreen(bloc: CookModeBloc, modifier: Modifier = Modifier) {
                     state = state,
                     windowSizeClass = windowSizeClass,
                     scale = ingredientScale,
-                    onScaleChange = { ingredientScale = it },
+                    onScaleChange = bloc::onScaleChanged,
                 )
             } else {
                 CookModeTabletLayout(
@@ -170,7 +171,7 @@ fun CookModeScreen(bloc: CookModeBloc, modifier: Modifier = Modifier) {
                     windowSizeClass = windowSizeClass,
                     isCompactHeight = isCompactHeight,
                     scale = ingredientScale,
-                    onScaleChange = { ingredientScale = it },
+                    onScaleChange = bloc::onScaleChanged,
                 )
             }
         }

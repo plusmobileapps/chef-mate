@@ -45,6 +45,8 @@ private fun cookBloc(model: CookModeBloc.Model): CookModeBloc =
 
         override fun onRecipeChipClicked(recipeId: Long) = Unit
 
+        override fun onScaleChanged(scale: Double) = Unit
+
         override fun onAiChatClicked() = Unit
 
         override fun onLayoutToggled() = Unit

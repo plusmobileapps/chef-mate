@@ -37,6 +37,7 @@ class CookModeBlocImpl(
             CookModeBloc.Model(
                 isLoading = vm.isLoading,
                 activeRecipe = active,
+                ingredientScale = vm.ingredientScale,
                 activeSessions =
                     vm.cookingRecipes
                         .map { recipe ->
@@ -65,6 +66,10 @@ class CookModeBlocImpl(
 
     override fun onRecipeChipClicked(recipeId: Long) {
         viewModel.selectRecipe(recipeId)
+    }
+
+    override fun onScaleChanged(scale: Double) {
+        viewModel.setScale(scale)
     }
 
     override fun onAiChatClicked() {
