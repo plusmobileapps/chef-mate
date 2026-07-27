@@ -11,6 +11,8 @@ import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
 import com.plusmobileapps.chefmate.featureflag.FeatureFlags
 import com.plusmobileapps.chefmate.featureflag.isEnabled
+import com.plusmobileapps.chefmate.recipe.data.DEFAULT_INGREDIENT_SCALE
+import com.plusmobileapps.chefmate.recipe.data.IngredientScalePreferences
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import com.russhwolf.settings.Settings
@@ -19,12 +21,17 @@ import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @AssistedInject
 class CookModeViewModel(
     @Assisted private val initialRecipeId: Long,
@@ -32,6 +39,7 @@ class CookModeViewModel(
     private val recipeRepository: RecipeRepository,
     private val sessionRepository: CookingSessionRepository,
     settings: Settings,
+    private val scalePreferences: IngredientScalePreferences,
     private val keepScreenOnRepository: KeepScreenOnRepository,
     private val coachMarkController: CoachMarkController,
     featureFlags: FeatureFlags,
@@ -94,10 +102,28 @@ class CookModeViewModel(
                 _state.update { it.copy(keepScreenOn = keepScreenOn) }
             }
         }
+        // Track the persisted scale of whichever recipe is active, switching the source flow as the
+        // user changes recipes so each shows its own saved factor (and one set here persists back).
+        scope.launch {
+            _state
+                .map { it.activeRecipeId }
+                .distinctUntilChanged()
+                .flatMapLatest { id ->
+                    if (id == null) MutableStateFlow(DEFAULT_INGREDIENT_SCALE)
+                    else scalePreferences.scaleFor(id)
+                }
+                .collect { scale -> _state.update { it.copy(ingredientScale = scale) } }
+        }
     }
 
     fun selectRecipe(recipeId: Long) {
         scope.launch { sessionRepository.markSelected(recipeId) }
+    }
+
+    /** Persist the chosen ingredient [scale] for the active recipe; the state flow reflects it. */
+    fun setScale(scale: Double) {
+        val recipeId = _state.value.activeRecipeId ?: return
+        scalePreferences.setScale(recipeId, scale)
     }
 
     /**
@@ -147,6 +173,7 @@ class CookModeViewModel(
         val isLoading: Boolean = true,
         val cookingRecipes: List<Recipe> = emptyList(),
         val activeRecipeId: Long? = null,
+        val ingredientScale: Double = DEFAULT_INGREDIENT_SCALE,
         val layoutMode: CookModeBloc.LayoutMode = CookModeBloc.LayoutMode.Split,
         val keepScreenOn: Boolean = true,
         val activeCoachMark: String? = null,

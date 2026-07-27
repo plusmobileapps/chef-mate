@@ -469,6 +469,8 @@ private fun RecipeDetailBody(
                         onSourceUrlClicked = bloc::onSourceUrlClicked,
                         onImageClicked = bloc::onImageClicked,
                         onRecipeLinkClick = onRecipeLinkClick,
+                        scale = state.ingredientScale,
+                        onScaleChange = bloc::onScaleChanged,
                         listState = compactListState,
                         modifier = Modifier.weight(1f),
                     )
@@ -483,6 +485,8 @@ private fun RecipeDetailBody(
                         onSourceUrlClicked = bloc::onSourceUrlClicked,
                         onImageClicked = bloc::onImageClicked,
                         onRecipeLinkClick = onRecipeLinkClick,
+                        scale = state.ingredientScale,
+                        onScaleChange = bloc::onScaleChanged,
                         ingredientsListState = ingredientsListState,
                         directionsListState = directionsListState,
                     )
@@ -749,6 +753,8 @@ private fun RecipeDetailCompactContent(
     onSourceUrlClicked: (String) -> Unit,
     onImageClicked: () -> Unit,
     onRecipeLinkClick: (String) -> Unit,
+    scale: Double,
+    onScaleChange: (Double) -> Unit,
     listState: LazyListState = rememberLazyListState(),
     modifier: Modifier = Modifier,
 ) {
@@ -762,7 +768,6 @@ private fun RecipeDetailCompactContent(
         }
     val directionParagraphs = remember(recipe.directions) { directionSteps(recipe.directions) }
     var highlightedDirectionIndex by remember(recipe.directions) { mutableStateOf(-1) }
-    var ingredientScale by remember(recipe.ingredients) { mutableStateOf(1.0) }
 
     val navBarBottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
 
@@ -815,8 +820,8 @@ private fun RecipeDetailCompactContent(
         ingredientItems(
             lines = ingredientLines,
             crossedOut = crossedOut,
-            scale = ingredientScale,
-            onScaleChange = { ingredientScale = it },
+            scale = scale,
+            onScaleChange = onScaleChange,
             onRecipeLinkClick = onRecipeLinkClick,
             itemPadding = padding,
         )
@@ -848,6 +853,8 @@ private fun ColumnScope.RecipeDetailTwoColumnContent(
     onSourceUrlClicked: (String) -> Unit,
     onImageClicked: () -> Unit,
     onRecipeLinkClick: (String) -> Unit,
+    scale: Double,
+    onScaleChange: (Double) -> Unit,
     ingredientsListState: LazyListState = rememberLazyListState(),
     directionsListState: LazyListState = rememberLazyListState(),
 ) {
@@ -866,7 +873,6 @@ private fun ColumnScope.RecipeDetailTwoColumnContent(
         }
     val directionParagraphs = remember(recipe.directions) { directionSteps(recipe.directions) }
     var directionHighlightedIndex by remember(recipe.directions) { mutableStateOf(-1) }
-    var ingredientScale by remember(recipe.ingredients) { mutableStateOf(1.0) }
 
     Row(modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = padding)) {
         // Column 1: metadata, then ingredients
@@ -912,8 +918,8 @@ private fun ColumnScope.RecipeDetailTwoColumnContent(
             ingredientItems(
                 lines = ingredientLines,
                 crossedOut = ingredientCrossedOut,
-                scale = ingredientScale,
-                onScaleChange = { ingredientScale = it },
+                scale = scale,
+                onScaleChange = onScaleChange,
                 onRecipeLinkClick = onRecipeLinkClick,
                 itemPadding = padding,
             )
@@ -1659,6 +1665,10 @@ val previewRecipeDetailBloc: RecipeDetailBloc =
         }
 
         override fun onStopSharingClicked() {
+            // Preview no-op
+        }
+
+        override fun onScaleChanged(scale: Double) {
             // Preview no-op
         }
 

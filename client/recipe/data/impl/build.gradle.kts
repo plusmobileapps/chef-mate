@@ -22,6 +22,7 @@ kotlin {
             implementation(projects.client.recipe.data.testing)
             implementation(projects.client.recipebook.data.testing)
             implementation(projects.client.util.testing)
+            implementation(libs.multiplatform.settings.test)
         }
         jvmMain.dependencies { implementation(libs.ktor.client.cio) }
         androidMain.dependencies { implementation(libs.ktor.client.cio) }

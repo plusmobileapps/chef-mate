@@ -12,6 +12,8 @@ import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
 import com.plusmobileapps.chefmate.featureflag.FeatureFlags
 import com.plusmobileapps.chefmate.featureflag.isEnabled
+import com.plusmobileapps.chefmate.recipe.data.DEFAULT_INGREDIENT_SCALE
+import com.plusmobileapps.chefmate.recipe.data.IngredientScalePreferences
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
 import com.plusmobileapps.chefmate.text.ResourceString
@@ -36,6 +38,7 @@ class RecipeDetailViewModel(
     private val repository: RecipeRepository,
     private val coachMarkController: CoachMarkController,
     private val toastService: ToastService,
+    private val scalePreferences: IngredientScalePreferences,
     featureFlags: FeatureFlags,
 ) : ViewModel(mainContext) {
 
@@ -50,15 +53,23 @@ class RecipeDetailViewModel(
     private val showAiChat = featureFlags.isEnabled(FeatureFlagRegistry.AiChat)
 
     // Surface the shared controller's active mark so the screen can show one coach mark at a time;
-    // only ids in CoachMarkId.recipeDetailSequence are anchored on this screen.
+    // only ids in CoachMarkId.recipeDetailSequence are anchored on this screen. The persisted
+    // ingredient scale for this recipe is folded in so the picker reflects (and shares) whatever
+    // factor was last chosen — including one set over in Cook Mode.
     val state: StateFlow<State> =
         combineStates(
-            combineStates(_state, coachMarkController.activeCoachMark) { state, activeCoachMark ->
-                state.copy(activeCoachMark = activeCoachMark)
+            combineStates(
+                combineStates(_state, coachMarkController.activeCoachMark) { state, activeCoachMark
+                    ->
+                    state.copy(activeCoachMark = activeCoachMark)
+                },
+                showAiChat,
+            ) { state, showChat ->
+                state.copy(showAiChat = showChat)
             },
-            showAiChat,
-        ) { state, showChat ->
-            state.copy(showAiChat = showChat)
+            scalePreferences.scaleFor(recipeId),
+        ) { state, scale ->
+            state.copy(ingredientScale = scale)
         }
 
     init {
@@ -130,6 +141,13 @@ class RecipeDetailViewModel(
     }
 
     /**
+     * Persist the chosen ingredient [scale] for this recipe; the state flow reflects it in turn.
+     */
+    fun setScale(scale: Double) {
+        scalePreferences.setScale(recipeId, scale)
+    }
+
+    /**
      * Resolve a tapped recipe-to-recipe link's [clientId] to a locally-stored recipe and open it. A
      * miss (the target isn't in this device's collection) surfaces a toast instead of navigating.
      */
@@ -169,6 +187,7 @@ class RecipeDetailViewModel(
         val showDeleteConfirmationDialog: Boolean = false,
         val showShareConfirmation: Boolean = false,
         val recipe: Recipe = Recipe.Empty,
+        val ingredientScale: Double = DEFAULT_INGREDIENT_SCALE,
         val activeCoachMark: String? = null,
         val showAiChat: Boolean = false,
     )

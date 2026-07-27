@@ -6,6 +6,7 @@ import com.plusmobileapps.chefmate.BackClickBloc
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.cook.ui.CookModeScreen
+import com.plusmobileapps.chefmate.recipe.data.DEFAULT_INGREDIENT_SCALE
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.ui.ComposeScreen
 import kotlinx.collections.immutable.ImmutableList
@@ -27,6 +28,12 @@ interface CookModeBloc : BackClickBloc, ComposeScreen {
     fun onFinishClicked()
 
     fun onRecipeChipClicked(recipeId: Long)
+
+    /**
+     * Pick a new ingredient scale factor (e.g. `2.0` for 2×) for the active recipe. Persisted per
+     * recipe so it carries over from recipe detail and survives leaving Cook Mode.
+     */
+    fun onScaleChanged(scale: Double)
 
     /** Open the AI chat grounded in the active recipe. Only surfaced when [Model.showAiChat]. */
     fun onAiChatClicked()
@@ -51,6 +58,10 @@ interface CookModeBloc : BackClickBloc, ComposeScreen {
     data class Model(
         val isLoading: Boolean = true,
         val activeRecipe: Recipe? = null,
+        /**
+         * Scale factor applied to the active recipe's ingredient amounts (1× = author's amounts).
+         */
+        val ingredientScale: Double = DEFAULT_INGREDIENT_SCALE,
         val activeSessions: ImmutableList<Chip> = persistentListOf(),
         val layoutMode: LayoutMode = LayoutMode.Split,
         val keepScreenOn: Boolean = true,

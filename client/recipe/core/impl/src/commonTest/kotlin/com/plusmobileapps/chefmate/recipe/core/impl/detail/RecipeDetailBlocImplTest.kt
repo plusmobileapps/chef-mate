@@ -15,6 +15,7 @@ import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.recipe.data.testing.FakeIngredientScalePreferences
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
 import com.plusmobileapps.chefmate.testing.TestBlocContext
 import com.plusmobileapps.chefmate.testing.TestConsumer
@@ -44,6 +45,7 @@ class RecipeDetailBlocImplTest {
     private val recipes = MutableStateFlow<List<Recipe>>(emptyList())
     private val repository = FakeRecipeRepository(recipes)
     private val toastService = FakeToastService()
+    private val scalePreferences = FakeIngredientScalePreferences()
 
     private val sampleRecipe =
         Recipe(
@@ -83,6 +85,7 @@ class RecipeDetailBlocImplTest {
                 repository = repository,
                 coachMarkController = coachMarkController,
                 toastService = toastService,
+                scalePreferences = scalePreferences,
                 featureFlags = featureFlags,
             )
         }
@@ -266,6 +269,29 @@ class RecipeDetailBlocImplTest {
         val bloc = createBloc(sampleRecipe.copy(isPublic = true, remoteId = "already-public"))
         bloc.onStopSharingClicked()
         repository.lastSetPublic shouldBe (sampleRecipe.id to false)
+    }
+
+    @Test
+    fun When_recipe_has_saved_scale_Then_state_reflects_it() {
+        scalePreferences.setScale(sampleRecipe.id, 2.0)
+        val bloc = createBloc()
+        bloc.state.value.ingredientScale shouldBe 2.0
+    }
+
+    @Test
+    fun When_onScaleChanged_Then_persisted_and_state_updates() {
+        val bloc = createBloc()
+
+        bloc.onScaleChanged(0.5)
+
+        scalePreferences.scaleFor(sampleRecipe.id).value shouldBe 0.5
+        bloc.state.value.ingredientScale shouldBe 0.5
+    }
+
+    @Test
+    fun When_never_scaled_Then_scale_defaults_to_one() {
+        val bloc = createBloc()
+        bloc.state.value.ingredientScale shouldBe 1.0
     }
 
     @Test
