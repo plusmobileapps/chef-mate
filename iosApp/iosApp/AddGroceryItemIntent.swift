@@ -33,8 +33,10 @@ struct AddGroceryItemIntent: AppIntent {
 
         await withCheckedContinuation { continuation in
             bridge.ensureDefaultList { listId in
-                bridge.addItem(listId: listId.int64Value, name: name)
-                continuation.resume()
+                // Resume only once the add has actually been persisted. `addItem` applies the write
+                // on a coroutine, so resuming as soon as it returned let `perform()` finish — and
+                // the system tear down the background-launched process — before the item was saved.
+                bridge.addItem(listId: listId.int64Value, name: name) { continuation.resume() }
             }
         }
 

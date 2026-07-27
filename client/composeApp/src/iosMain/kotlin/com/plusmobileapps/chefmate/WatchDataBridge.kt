@@ -62,16 +62,39 @@ class WatchDataBridge(
         scope.launch { onResult(snapshotFlow.first()) }
     }
 
-    fun addItem(listId: Long, name: String) {
+    /**
+     * Adds [name] to [listId] and pushes it to Supabase, invoking [onComplete] once the write has
+     * landed.
+     *
+     * [onComplete] is what lets the Swift caller hold the app alive while this runs. iOS wakes the
+     * phone app in the background purely to hand `WatchDataSender` a queued watch mutation and
+     * suspends it again the moment the delegate callback returns — so a fire-and-forget [launch]
+     * here is killed before it reaches the database, and the phone's next snapshot push then
+     * overwrites the watch's optimistic edit. See `WatchDataSender.keepingAlive`.
+     */
+    fun addItem(listId: Long, name: String, onComplete: () -> Unit) {
         scope.launch {
-            repository.addGrocery(listId, name)
-            repository.syncAllUnsynced()
+            try {
+                repository.addGrocery(listId, name)
+                repository.syncAllUnsynced()
+            } finally {
+                onComplete()
+            }
         }
     }
 
-    fun setChecked(itemId: Long, isChecked: Boolean) {
+    /** Toggles an item and pushes it to Supabase. [onComplete] behaves as in [addItem]. */
+    fun setChecked(itemId: Long, isChecked: Boolean, onComplete: () -> Unit) {
         scope.launch {
-            repository.getGrocery(itemId)?.let { repository.updateChecked(it, isChecked) }
+            try {
+                repository.getGrocery(itemId)?.let { repository.updateChecked(it, isChecked) }
+                // The local row is already marked dirty and self-heals on the next reconcile, but
+                // the phone may not be opened for hours — push now so a collaborator on a shared
+                // list sees the check without waiting for that.
+                repository.syncAllUnsynced()
+            } finally {
+                onComplete()
+            }
         }
     }
 
