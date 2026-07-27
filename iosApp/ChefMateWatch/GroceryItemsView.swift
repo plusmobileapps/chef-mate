@@ -71,13 +71,18 @@ struct GroceryItemsView: View {
                 Button {
                     showingFilter = true
                 } label: {
-                    Image(
-                        systemName: filter == .all
-                            ? "line.3.horizontal.decrease.circle"
-                            : "line.3.horizontal.decrease.circle.fill"
-                    )
+                    // Bare glyph, no `.circle` variant: the watchOS toolbar already draws a circular
+                    // button behind it, and a circled symbol inside that reads as a ring on a ring.
+                    // The glyph has to be colored explicitly — the button fills its circle with the
+                    // tint and leaves the label near-white, which all but disappears on purple200.
+                    Image(systemName: "line.3.horizontal.decrease")
+                        .foregroundStyle(
+                            filter == .all ? WatchTheme.onSurface : WatchTheme.onPrimary
+                        )
                 }
-                .foregroundStyle(filter == .all ? WatchTheme.onSurfaceVariant : WatchTheme.primary)
+                // Tint colors the button's circle rather than the glyph, so an active filter reads
+                // as a filled purple chip and the default state stays a neutral surface chip.
+                .tint(filter == .all ? WatchTheme.surfaceVariant : WatchTheme.primary)
                 .accessibilityLabel("Filter: \(filter.displayName)")
             }
         }
