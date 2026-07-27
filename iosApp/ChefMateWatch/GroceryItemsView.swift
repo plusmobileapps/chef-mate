@@ -8,8 +8,15 @@ struct GroceryItemsView: View {
 
     @EnvironmentObject private var store: GroceryStore
     @State private var showingAdd = false
+    @State private var showingFilter = false
 
-    private var groups: [WatchGroceryGroup] { store.items(for: listId).groupedByAisle() }
+    /// Persisted like the phone's filter preference, and shared across lists for the same reason:
+    /// the choice is about how you shop, not about one particular list.
+    @AppStorage("groceryFilter") private var filter: WatchGroceryFilter = .all
+
+    private var groups: [WatchGroceryGroup] {
+        store.items(for: listId).filtered(by: filter).groupedByAisle()
+    }
 
     var body: some View {
         // The list extends edge-to-edge horizontally so category headers can run the full width of
@@ -23,6 +30,15 @@ struct GroceryItemsView: View {
                         .padding(.horizontal, hInset)
                         .padding(.top, 2)
 
+                    if groups.isEmpty {
+                        Text(filter.emptyMessage)
+                            .font(.footnote)
+                            .foregroundStyle(WatchTheme.onSurfaceVariant)
+                            .padding(.horizontal, hInset)
+                            .padding(.top, 6)
+                            .transition(.opacity)
+                    }
+
                     ForEach(groups) { group in
                         Section {
                             ForEach(Array(group.items.enumerated()), id: \.element.id) { index, item in
@@ -30,25 +46,94 @@ struct GroceryItemsView: View {
                                     store.setChecked(itemId: item.id, isChecked: !item.isChecked)
                                 }
                                 .padding(.horizontal, hInset)
+                                .transition(.itemRemoval)
                                 if index < group.items.count - 1 {
-                                    Divider().padding(.leading, hInset)
+                                    Divider().padding(.leading, hInset).transition(.opacity)
                                 }
                             }
                         } header: {
                             CategoryHeader(title: group.title, textInset: hInset)
+                                .transition(.opacity)
                         }
                     }
                 }
                 .padding(.bottom, 8)
+                // Scoped to `groups` so only list changes animate — a filter switch, a phone
+                // snapshot, or an item leaving because it was just checked off. Rows below the
+                // departing one slide up to close the gap.
+                .animation(.snappy, value: groups)
             }
         }
         .ignoresSafeArea(.container, edges: .horizontal)
         .navigationTitle(title)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showingFilter = true
+                } label: {
+                    Image(
+                        systemName: filter == .all
+                            ? "line.3.horizontal.decrease.circle"
+                            : "line.3.horizontal.decrease.circle.fill"
+                    )
+                }
+                .foregroundStyle(filter == .all ? WatchTheme.onSurfaceVariant : WatchTheme.primary)
+                .accessibilityLabel("Filter: \(filter.displayName)")
+            }
+        }
         .sheet(isPresented: $showingAdd) {
             AddItemView { name in
                 store.addItem(listId: listId, name: name)
             }
         }
+        .sheet(isPresented: $showingFilter) {
+            GroceryFilterView(selection: $filter)
+        }
+    }
+}
+
+extension AnyTransition {
+    /// How a row enters and leaves the list. Departures slide off toward the leading edge as they
+    /// fade — the item is being struck off — while arrivals just fade in, so a newly added item
+    /// doesn't fly across the screen on its way to the bottom.
+    static var itemRemoval: AnyTransition {
+        .asymmetric(
+            insertion: .opacity,
+            removal: .move(edge: .leading).combined(with: .opacity)
+        )
+    }
+}
+
+/// Filter picker, mirroring the options in the phone's Sort & Filter sheet.
+private struct GroceryFilterView: View {
+    @Binding var selection: WatchGroceryFilter
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List(WatchGroceryFilter.allCases) { option in
+                Button {
+                    selection = option
+                    dismiss()
+                } label: {
+                    HStack(spacing: 8) {
+                        Text(option.displayName)
+                            .foregroundStyle(WatchTheme.onSurface)
+                        Spacer(minLength: 0)
+                        if option == selection {
+                            Image(systemName: "checkmark")
+                                .foregroundStyle(WatchTheme.primary)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            .listStyle(.plain)
+            .navigationTitle("Filter")
+        }
+        .tint(WatchTheme.primary)
     }
 }
 
@@ -80,6 +165,7 @@ private struct GroceryItemRow: View {
                 Image(systemName: item.isChecked ? "checkmark.square.fill" : "square")
                     .font(.title3)
                     .foregroundStyle(item.isChecked ? WatchTheme.primary : WatchTheme.onSurfaceVariant)
+                    .contentTransition(.symbolEffect(.replace))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)
                         .foregroundStyle(item.isChecked ? WatchTheme.onSurfaceVariant : WatchTheme.onSurface)

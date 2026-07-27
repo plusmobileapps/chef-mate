@@ -85,8 +85,46 @@ enum WatchGroceryCategory: String, CaseIterable {
     }
 }
 
-/// One aisle's worth of items, ready to render as a sticky-header section.
-struct WatchGroceryGroup: Identifiable {
+// MARK: - Filtering (mirrors the shared `GroceryListBloc.GroceryFilter`)
+
+/// The purchased/unpurchased views the phone offers in its Sort & Filter sheet. Raw values match
+/// the Kotlin enum names so the labels — and any future hand-off to the phone — line up.
+enum WatchGroceryFilter: String, CaseIterable, Identifiable {
+    case all = "ALL"
+    case unpurchased = "UNPURCHASED"
+    case purchased = "PURCHASED"
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .all: return "All"
+        case .unpurchased: return "Unpurchased"
+        case .purchased: return "Purchased"
+        }
+    }
+
+    /// Shown when the filter hides every item in the list.
+    var emptyMessage: String {
+        switch self {
+        case .all: return "No items yet."
+        case .unpurchased: return "Everything's purchased."
+        case .purchased: return "Nothing purchased yet."
+        }
+    }
+
+    func matches(_ item: WatchGroceryItem) -> Bool {
+        switch self {
+        case .all: return true
+        case .unpurchased: return !item.isChecked
+        case .purchased: return item.isChecked
+        }
+    }
+}
+
+/// One aisle's worth of items, ready to render as a sticky-header section. `Equatable` so the items
+/// screen can drive its animations off the whole grouped list changing.
+struct WatchGroceryGroup: Identifiable, Equatable {
     let category: WatchGroceryCategory
     let items: [WatchGroceryItem]
     var id: String { category.rawValue }
@@ -94,6 +132,11 @@ struct WatchGroceryGroup: Identifiable {
 }
 
 extension Array where Element == WatchGroceryItem {
+    /// Keeps only the items the given filter admits.
+    func filtered(by filter: WatchGroceryFilter) -> [WatchGroceryItem] {
+        filter == .all ? self : self.filter { filter.matches($0) }
+    }
+
     /// Groups items by aisle and orders the groups the way the phone does (by the shared enum's
     /// declaration order), preserving each item's incoming order within a group. Any unrecognised
     /// category falls into `OTHER`.
