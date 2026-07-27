@@ -8,6 +8,19 @@ struct WatchSnapshot: Codable {
     let items: [WatchGroceryItem]
 
     static let empty = WatchSnapshot(lists: [], items: [])
+
+    /// Re-applies locally-made checks that the phone hasn't confirmed yet (see
+    /// `GroceryStore.pendingChecks`).
+    func applyingChecked(_ overrides: [Int64: Bool]) -> WatchSnapshot {
+        guard !overrides.isEmpty else { return self }
+        return WatchSnapshot(
+            lists: lists,
+            items: items.map { item in
+                guard let isChecked = overrides[item.id] else { return item }
+                return item.settingChecked(isChecked)
+            }
+        )
+    }
 }
 
 struct WatchGroceryList: Codable, Identifiable, Hashable {
@@ -24,10 +37,10 @@ struct WatchGroceryItem: Codable, Identifiable, Hashable {
     let category: String
     let isChecked: Bool
 
-    func toggled() -> WatchGroceryItem {
+    func settingChecked(_ isChecked: Bool) -> WatchGroceryItem {
         WatchGroceryItem(
             id: id, listId: listId, name: name, quantity: quantity, category: category,
-            isChecked: !isChecked
+            isChecked: isChecked
         )
     }
 }

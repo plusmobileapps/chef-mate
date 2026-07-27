@@ -1,5 +1,6 @@
 package com.plusmobileapps.chefmate
 
+import co.touchlab.kermit.Logger
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
@@ -62,16 +63,51 @@ class WatchDataBridge(
         scope.launch { onResult(snapshotFlow.first()) }
     }
 
-    fun addItem(listId: Long, name: String) {
+    /**
+     * Adds [name] to [listId] and pushes it to Supabase, invoking [onComplete] once the write has
+     * landed.
+     *
+     * [onComplete] is what lets the Swift caller hold the app alive while this runs. iOS wakes the
+     * phone app in the background purely to hand `WatchDataSender` a queued watch mutation and
+     * suspends it again the moment the delegate callback returns — so a fire-and-forget [launch]
+     * here is killed before it reaches the database, and the phone's next snapshot push then
+     * overwrites the watch's optimistic edit. See `WatchDataSender.keepingAlive`.
+     */
+    fun addItem(listId: Long, name: String, onComplete: () -> Unit) {
         scope.launch {
-            repository.addGrocery(listId, name)
-            repository.syncAllUnsynced()
+            try {
+                repository.addGrocery(listId, name)
+                repository.syncAllUnsynced()
+            } finally {
+                onComplete()
+            }
         }
     }
 
-    fun setChecked(itemId: Long, isChecked: Boolean) {
+    /**
+     * Toggles an item. [onComplete] behaves as in [addItem].
+     *
+     * Deliberately does *not* call `syncAllUnsynced()`: [GroceryRepository.updateChecked] already
+     * marks the row dirty and pushes it, and kicking off a full reconcile alongside that push races
+     * it — the reconcile can pull a pre-toggle copy of the row and write it back over the check
+     * once the push clears the dirty flag. The dirty row self-heals on the next reconcile either
+     * way.
+     */
+    fun setChecked(itemId: Long, isChecked: Boolean, onComplete: () -> Unit) {
         scope.launch {
-            repository.getGrocery(itemId)?.let { repository.updateChecked(it, isChecked) }
+            try {
+                val item = repository.getGrocery(itemId)
+                if (item == null) {
+                    // The watch is holding ids from a snapshot that no longer matches the
+                    // database (a remote reconcile can delete and recreate rows). Dropping this
+                    // silently is what makes a watch toggle look like it never happened.
+                    Logger.w(tag = TAG) { "setChecked: no local grocery with id=$itemId" }
+                } else {
+                    repository.updateChecked(item, isChecked)
+                }
+            } finally {
+                onComplete()
+            }
         }
     }
 
@@ -95,6 +131,10 @@ class WatchDataBridge(
             }
         }
         return json.encodeToString(WatchSnapshot(lists, items))
+    }
+
+    private companion object {
+        const val TAG = "WatchDataBridge"
     }
 }
 
