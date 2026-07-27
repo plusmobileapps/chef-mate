@@ -11,11 +11,31 @@ final class GroceryStore: ObservableObject {
 
     private let connectivity = WatchConnectivityManager.shared
 
+    /// Checks made here that the phone hasn't confirmed yet, keyed by item id.
+    ///
+    /// Our mutation goes out on `transferUserInfo`, so the phone can already be mid-push with
+    /// pre-toggle data when it lands — that snapshot legitimately still shows the old value and
+    /// would visibly undo the tap. Re-applying pending checks on top of every incoming snapshot
+    /// holds the user's change until the phone agrees with it. Entries also expire, so a mutation
+    /// the phone genuinely dropped surfaces instead of being masked here forever.
+    private var pendingChecks: [Int64: (isChecked: Bool, sentAt: Date)] = [:]
+    private let pendingCheckTimeout: TimeInterval = 60
+
     init() {
         connectivity.onSnapshot = { [weak self] snapshot in
-            self?.snapshot = snapshot
-            self?.hasLoaded = true
+            self?.apply(snapshot)
         }
+    }
+
+    private func apply(_ incoming: WatchSnapshot) {
+        let now = Date()
+        pendingChecks = pendingChecks.filter { id, pending in
+            guard now.timeIntervalSince(pending.sentAt) < pendingCheckTimeout else { return false }
+            guard let item = incoming.items.first(where: { $0.id == id }) else { return false }
+            return item.isChecked != pending.isChecked  // still unconfirmed — keep overriding
+        }
+        snapshot = incoming.applyingChecked(pendingChecks.mapValues(\.isChecked))
+        hasLoaded = true
     }
 
     var lists: [WatchGroceryList] { snapshot.lists }
@@ -30,8 +50,8 @@ final class GroceryStore: ObservableObject {
     }
 
     func setChecked(itemId: Int64, isChecked: Bool) {
-        let updated = snapshot.items.map { $0.id == itemId ? $0.toggled() : $0 }
-        snapshot = WatchSnapshot(lists: snapshot.lists, items: updated)
+        pendingChecks[itemId] = (isChecked: isChecked, sentAt: Date())
+        snapshot = snapshot.applyingChecked([itemId: isChecked])
         connectivity.sendSetChecked(itemId: itemId, isChecked: isChecked)
     }
 
