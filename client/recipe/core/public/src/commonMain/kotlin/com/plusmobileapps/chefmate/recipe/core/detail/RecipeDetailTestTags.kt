@@ -7,5 +7,6 @@ package com.plusmobileapps.chefmate.recipe.core.detail
 object RecipeDetailTestTags {
     const val SCREEN: String = "recipe_detail_screen"
     const val AI_CHAT_BUTTON: String = "recipe_detail_ai_chat_button"
+    const val ADD_TO_GROCERY_BUTTON: String = "recipe_detail_add_to_grocery_button"
     const val INGREDIENT_SCALE_BUTTON: String = "recipe_detail_ingredient_scale_button"
 }

@@ -32,7 +32,7 @@
     <string name="recipe_detail_kcal">{calories} kcal</string>
     <string name="recipe_detail_source">Source</string>
     <string name="recipe_detail_ingredients">Ingredients</string>
-    <string name="recipe_detail_scale_ingredients">Scale ingredient amounts</string>
+    <string name="recipe_scale_ingredients">Scale ingredient amounts</string>
     <string name="recipe_detail_directions">Directions</string>
     <string name="recipe_detail_timestamps">Timestamps</string>
     <string name="recipe_detail_created">Created</string>
