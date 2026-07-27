@@ -78,7 +78,49 @@ final class WatchDataSender: NSObject, WCSessionDelegate {
         }
     }
 
-    // Watch pulls the latest snapshot when it opens.
+    /// Applies one watch action, invoking `done` once it has been durably handled.
+    ///
+    /// Shared by both delivery routes: the watch sends mutations with `sendMessage` when the phone
+    /// is reachable and falls back to a queued `transferUserInfo`, so the same payload can arrive
+    /// through either delegate callback and must behave identically.
+    private func apply(_ payload: [String: Any], _ done: @escaping () -> Void) {
+        let type = payload["type"] as? String
+        switch type {
+        case "requestSnapshot":
+            bridge.currentSnapshot { [weak self] json in
+                self?.push(json)
+                done()
+            }
+        case "setChecked":
+            guard let itemId = (payload["itemId"] as? NSNumber)?.int64Value,
+                  let isChecked = (payload["isChecked"] as? NSNumber)?.boolValue else {
+                log.error("setChecked payload malformed: \(payload.keys.sorted())")
+                return done()
+            }
+            log.info("applying setChecked (itemId=\(itemId), isChecked=\(isChecked))")
+            bridge.setChecked(itemId: itemId, isChecked: isChecked, onComplete: done)
+        case "addItem":
+            guard let name = payload["name"] as? String, !name.isEmpty else {
+                log.error("addItem payload malformed: \(payload.keys.sorted())")
+                return done()
+            }
+            log.info("applying addItem")
+            if let listId = (payload["listId"] as? NSNumber)?.int64Value {
+                bridge.addItem(listId: listId, name: name, onComplete: done)
+            } else {
+                bridge.ensureDefaultList { [weak self] listId in
+                    guard let self else { return done() }
+                    self.bridge.addItem(listId: listId.int64Value, name: name, onComplete: done)
+                }
+            }
+        default:
+            log.error("ignoring unknown watch payload type: \(type ?? "nil")")
+            done()
+        }
+    }
+
+    // Immediate path: the watch uses `sendMessage` for snapshot pulls and, when the phone is
+    // reachable, for mutations too. Replying is what releases the watch's send.
     func session(
         _ session: WCSession,
         didReceiveMessage message: [String: Any],
@@ -87,48 +129,27 @@ final class WatchDataSender: NSObject, WCSessionDelegate {
         if message["type"] as? String == "requestSnapshot" {
             bridge.currentSnapshot { json in replyHandler(["snapshot": json]) }
         } else {
+            // Reply straight away — the watch only needs the handoff acknowledged, and holding the
+            // reply until the write finished would risk tripping WatchConnectivity's reply timeout.
             replyHandler([:])
+            keepingAlive("watch-message") { [weak self] done in
+                guard let self else { return done() }
+                self.apply(message, done)
+            }
         }
     }
 
-    // Watch toggle/add actions plus its queued snapshot request (all reliable, delivered even when
-    // the phone was unreachable when the watch acted).
+    // Queued path: whatever the watch couldn't hand over immediately (phone out of range, or the
+    // watch acted while the phone app wasn't reachable).
     //
-    // Every branch runs inside `keepingAlive` because this is usually called on a background wake,
-    // where returning from here is what gets us suspended — see that method for why an unguarded
-    // bridge call silently loses the watch's edit.
+    // Runs inside `keepingAlive` because this is usually a background wake, where returning from
+    // here is what gets us suspended — see that method for why an unguarded bridge call silently
+    // loses the watch's edit.
     func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
-        switch userInfo["type"] as? String {
-        case "requestSnapshot":
-            // Watch asked while we were unreachable; push the current snapshot so it can load.
-            keepingAlive("watch-snapshot") { [weak self] done in
-                guard let self else { return done() }
-                self.bridge.currentSnapshot { json in
-                    self.push(json)
-                    done()
-                }
-            }
-        case "setChecked":
-            guard let itemId = (userInfo["itemId"] as? NSNumber)?.int64Value,
-                  let isChecked = userInfo["isChecked"] as? Bool else { return }
-            keepingAlive("watch-set-checked") { [weak self] done in
-                guard let self else { return done() }
-                self.bridge.setChecked(itemId: itemId, isChecked: isChecked, onComplete: done)
-            }
-        case "addItem":
-            guard let name = userInfo["name"] as? String, !name.isEmpty else { return }
-            keepingAlive("watch-add-item") { [weak self] done in
-                guard let self else { return done() }
-                if let listId = (userInfo["listId"] as? NSNumber)?.int64Value {
-                    self.bridge.addItem(listId: listId, name: name, onComplete: done)
-                } else {
-                    self.bridge.ensureDefaultList { listId in
-                        self.bridge.addItem(listId: listId.int64Value, name: name, onComplete: done)
-                    }
-                }
-            }
-        default:
-            break
+        log.info("didReceiveUserInfo: \(userInfo["type"] as? String ?? "?")")
+        keepingAlive("watch-userinfo") { [weak self] done in
+            guard let self else { return done() }
+            self.apply(userInfo, done)
         }
     }
 

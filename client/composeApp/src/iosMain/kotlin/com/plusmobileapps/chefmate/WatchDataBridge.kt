@@ -1,5 +1,6 @@
 package com.plusmobileapps.chefmate
 
+import co.touchlab.kermit.Logger
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.IO
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
@@ -83,15 +84,27 @@ class WatchDataBridge(
         }
     }
 
-    /** Toggles an item and pushes it to Supabase. [onComplete] behaves as in [addItem]. */
+    /**
+     * Toggles an item. [onComplete] behaves as in [addItem].
+     *
+     * Deliberately does *not* call `syncAllUnsynced()`: [GroceryRepository.updateChecked] already
+     * marks the row dirty and pushes it, and kicking off a full reconcile alongside that push races
+     * it — the reconcile can pull a pre-toggle copy of the row and write it back over the check
+     * once the push clears the dirty flag. The dirty row self-heals on the next reconcile either
+     * way.
+     */
     fun setChecked(itemId: Long, isChecked: Boolean, onComplete: () -> Unit) {
         scope.launch {
             try {
-                repository.getGrocery(itemId)?.let { repository.updateChecked(it, isChecked) }
-                // The local row is already marked dirty and self-heals on the next reconcile, but
-                // the phone may not be opened for hours — push now so a collaborator on a shared
-                // list sees the check without waiting for that.
-                repository.syncAllUnsynced()
+                val item = repository.getGrocery(itemId)
+                if (item == null) {
+                    // The watch is holding ids from a snapshot that no longer matches the
+                    // database (a remote reconcile can delete and recreate rows). Dropping this
+                    // silently is what makes a watch toggle look like it never happened.
+                    Logger.w(tag = TAG) { "setChecked: no local grocery with id=$itemId" }
+                } else {
+                    repository.updateChecked(item, isChecked)
+                }
             } finally {
                 onComplete()
             }
@@ -118,6 +131,10 @@ class WatchDataBridge(
             }
         }
         return json.encodeToString(WatchSnapshot(lists, items))
+    }
+
+    private companion object {
+        const val TAG = "WatchDataBridge"
     }
 }
 

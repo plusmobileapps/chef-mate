@@ -52,23 +52,48 @@ final class WatchConnectivityManager: NSObject, WCSessionDelegate {
         WCSession.default.transferUserInfo(["type": "requestSnapshot"])
     }
 
+    /// Sends a mutation to the phone, preferring immediate delivery over a queued transfer.
+    ///
+    /// `transferUserInfo` on its own is not enough. It is an *opportunistic* transfer — the system
+    /// delivers it whenever it feels like it, which can be many minutes — so a checked item would
+    /// routinely still be sitting in the queue when the phone next pushed a snapshot built without
+    /// it, silently undoing the change. `sendMessage` delivers now and background-launches the phone
+    /// app if it isn't running; this is the same pattern `requestSnapshot` already uses, which is
+    /// why that path worked while these two didn't. The queued transfer stays as the out-of-range
+    /// fallback so nothing is lost when the phone genuinely isn't there.
+    private func send(_ info: [String: Any]) {
+        let session = WCSession.default
+        let type = info["type"] as? String ?? "?"
+        guard session.activationState == .activated else {
+            log.error("send(\(type)) skipped: session not activated")
+            return
+        }
+        guard session.isReachable else {
+            log.info("send(\(type)): phone unreachable, queueing transferUserInfo")
+            session.transferUserInfo(info)
+            return
+        }
+        session.sendMessage(info, replyHandler: { [weak self] _ in
+            self?.log.info("send(\(type)): delivered via sendMessage")
+        }, errorHandler: { [weak self] error in
+            self?.log.error("send(\(type)) sendMessage failed, queueing: \(error.localizedDescription)")
+            session.transferUserInfo(info)
+        })
+    }
+
     func sendSetChecked(itemId: Int64, isChecked: Bool) {
-        WCSession.default.transferUserInfo(["type": "setChecked", "itemId": itemId, "isChecked": isChecked])
+        send(["type": "setChecked", "itemId": itemId, "isChecked": isChecked])
     }
 
     /// `listId == nil` tells the phone to use the default list (used by the Siri intent).
     ///
-    /// Guards on activation state because `transferUserInfo` before the session is activated is a
-    /// programmer error (it throws). On a cold Siri launch use `sendAddItemAwaitingActivation`, which
-    /// waits for activation first.
+    /// [send] drops the call if the session isn't activated yet — sending before then is a
+    /// programmer error that throws. On a cold Siri launch use `sendAddItemAwaitingActivation`,
+    /// which waits for activation first.
     func sendAddItem(listId: Int64?, name: String) {
-        guard WCSession.default.activationState == .activated else {
-            log.info("sendAddItem skipped: session not activated")
-            return
-        }
         var info: [String: Any] = ["type": "addItem", "name": name]
         if let listId { info["listId"] = listId }
-        WCSession.default.transferUserInfo(info)
+        send(info)
     }
 
     /// Adds an item, waiting up to ~5s for the session to activate first.
@@ -106,5 +131,21 @@ final class WatchConnectivityManager: NSObject, WCSessionDelegate {
 
     func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
         decode(applicationContext)
+    }
+
+    /// Reports the fate of a queued `transferUserInfo`. Without this a fallback transfer that the
+    /// system never delivered looked identical to one the phone silently ignored, which is what made
+    /// the watch→phone direction so hard to pin down.
+    func session(
+        _ session: WCSession,
+        didFinish userInfoTransfer: WCSessionUserInfoTransfer,
+        error: Error?
+    ) {
+        let type = userInfoTransfer.userInfo["type"] as? String ?? "?"
+        if let error {
+            log.error("queued transfer(\(type)) failed: \(error.localizedDescription)")
+        } else {
+            log.info("queued transfer(\(type)) delivered")
+        }
     }
 }
