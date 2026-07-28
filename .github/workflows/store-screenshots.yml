@@ -1,0 +1,81 @@
+name: Store Screenshots
+
+# Renders the store listing screenshots from the Compose previews and uploads them to the Play
+# Store and/or App Store Connect.
+#
+# Deliberately manual and separate from the release workflows: a listing update changes what every
+# visitor to the storefront sees, on a completely different cadence from a binary release.
+#
+# No macOS runner is needed. The screenshots come from the Compose preview renderer (pure JVM) and
+# both upload paths are Ruby against the stores' web APIs — Xcode is never involved.
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Which store listing to update
+        type: choice
+        default: both
+        options: [both, android, ios]
+      publish:
+        description: "Publish for real. Leave off to render, validate with Google, and just upload the assets as an artifact."
+        type: boolean
+        default: false
+      refresh:
+        description: Re-render from the Compose previews instead of using the committed assets
+        type: boolean
+        default: true
+
+jobs:
+  screenshots:
+    name: Store screenshots
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+
+      - name: Render screenshots
+        if: inputs.refresh
+        run: ./gradlew :client:ui:store-screenshots:collectStoreScreenshots
+
+      # Uploaded before any store call so the assets can be eyeballed even when a later step
+      # rejects them — and so a dry run still produces something reviewable.
+      - name: Upload rendered assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: store-screenshots
+          path: |
+            fastlane/metadata/android/*/images/
+            fastlane/screenshots/
+
+      - name: Show what changed
+        if: inputs.refresh
+        run: git --no-pager diff --stat -- fastlane/metadata fastlane/screenshots
+
+      - name: Play Store listing
+        if: inputs.platform == 'both' || inputs.platform == 'android'
+        env:
+          SUPPLY_JSON_KEY_DATA: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
+          STORE_SCREENSHOTS_UPLOAD: ${{ inputs.publish }}
+        run: bundle exec fastlane android screenshots
+
+      - name: App Store Connect listing
+        if: inputs.platform == 'both' || inputs.platform == 'ios'
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.ASC_API_KEY }}
+          STORE_SCREENSHOTS_UPLOAD: ${{ inputs.publish }}
+        run: bundle exec fastlane ios screenshots

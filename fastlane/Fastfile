@@ -1,6 +1,57 @@
 default_platform(:android)
 
+# ── Store listing screenshots ────────────────────────────────────────────────
+#
+# The screenshots are rendered from the same Compose previews that back the regression snapshot
+# suite (see :client:ui:store-screenshots) and are committed under fastlane/metadata (Play) and
+# fastlane/screenshots (App Store Connect). The Gradle task enforces each store's pixel sizes and
+# flattens the alpha channel, so by the time fastlane sees them they are already store-legal.
+#
+# Screenshot upload is deliberately NOT part of the `release` lanes. A listing update and a binary
+# release have different cadences and different blast radii — folding them together would push
+# marketing art on every TestFlight build, and would make a rejected screenshot fail a build that
+# had nothing to do with it.
+
+# Uploading replaces what customers see on the storefront, so every lane below no-ops unless this
+# is set. Mirrors the MAC_UPLOAD guard on the mac release lane.
+def screenshot_upload_enabled?
+  ENV["STORE_SCREENSHOTS_UPLOAD"] == "true"
+end
+
+desc "Re-render the store listing screenshots from the Compose previews."
+desc "Rewrites fastlane/metadata/android/**/images and fastlane/screenshots — commit the diff."
+lane :render_screenshots do
+  gradle(task: ":client:ui:store-screenshots:collectStoreScreenshots")
+end
+
 platform :android do
+  desc "Upload the Play Store listing screenshots (phone + 10\" tablet)."
+  desc "Pass refresh:true to re-render them from the Compose previews first."
+  desc "Set STORE_SCREENSHOTS_UPLOAD=true to actually publish; otherwise Google only validates."
+  lane :screenshots do |options|
+    render_screenshots if options.fetch(:refresh, false)
+
+    # validate_only sends the whole edit to Google and reports what it would reject, then discards
+    # it. That makes the default path a genuine server-side check rather than a local guess.
+    validate_only = !screenshot_upload_enabled?
+    UI.important("STORE_SCREENSHOTS_UPLOAD != true — validating with Google, not publishing.") if validate_only
+
+    supply(
+      package_name: "com.plusmobileapps.chefmate",
+      json_key_data: ENV["SUPPLY_JSON_KEY_DATA"],
+      metadata_path: "fastlane/metadata/android",
+      validate_only: validate_only,
+      # Listing art only: no binary, no store text, and no icon/feature-graphic (those aren't
+      # generated from Compose and are managed by hand in the Play Console).
+      skip_upload_aab: true,
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: false,
+    )
+  end
+
   desc "Build release AAB and upload to Play Store internal track"
   lane :release do
     gradle(
@@ -214,6 +265,46 @@ platform :ios do
       readonly: false,
       force: options.fetch(:force, false),
       api_key: api_key,
+    )
+  end
+
+  desc "Upload the App Store listing screenshots (6.9\" iPhone + 13\" iPad)."
+  desc "Pass refresh:true to re-render them from the Compose previews first."
+  desc "Set STORE_SCREENSHOTS_UPLOAD=true to actually publish."
+  lane :screenshots do |options|
+    render_screenshots if options.fetch(:refresh, false)
+
+    unless screenshot_upload_enabled?
+      UI.important(
+        "STORE_SCREENSHOTS_UPLOAD != true — skipping the App Store Connect upload. " \
+        "#{Dir[File.expand_path('screenshots/en-US/*.png', __dir__)].count} screenshot(s) are ready to send."
+      )
+      next
+    end
+
+    # Screenshots attach to the version that is currently editable, so there must be a version in
+    # "Prepare for Submission" on the App Store Connect record. With no editable version this fails
+    # rather than silently updating the live listing.
+    #
+    # WARNING: overwrite_screenshots clears EVERY screenshot slot on that version before uploading,
+    # including the Apple Watch slot. Chef Mate ships a watchOS companion whose screenshots cannot
+    # be rendered from Compose, so re-add those in App Store Connect (or drop PNGs sized for a
+    # watch into fastlane/screenshots/en-US, where deliver will pick them up by resolution).
+    UI.important("overwrite_screenshots clears all slots first — re-check the Apple Watch screenshots afterwards.")
+
+    upload_to_app_store(
+      api_key: asc_api_key,
+      app_identifier: "com.plusmobileapps.chefmate.ChefMate",
+      screenshots_path: "fastlane/screenshots",
+      skip_binary_upload: true,
+      skip_metadata: true,
+      skip_screenshots: false,
+      overwrite_screenshots: true,
+      submit_for_review: false,
+      run_precheck_before_submit: false,
+      precheck_include_in_app_purchases: false,
+      # Skips deliver's interactive HTML preview confirmation, which would hang a CI run.
+      force: true,
     )
   end
 

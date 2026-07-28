@@ -13,7 +13,32 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 # Available Actions
 
+### render_screenshots
+
+```sh
+[bundle exec] fastlane render_screenshots
+```
+
+Re-render the store listing screenshots from the Compose previews.
+
+Rewrites fastlane/metadata/android/**/images and fastlane/screenshots — commit the diff.
+
+----
+
+
 ## Android
+
+### android screenshots
+
+```sh
+[bundle exec] fastlane android screenshots
+```
+
+Upload the Play Store listing screenshots (phone + 10" tablet).
+
+Pass refresh:true to re-render them from the Compose previews first.
+
+Set STORE_SCREENSHOTS_UPLOAD=true to actually publish; otherwise Google only validates.
 
 ### android release
 
@@ -64,6 +89,18 @@ Generate/refresh signing certificates and provisioning profiles (read-write matc
 Run this once after adding an app id (e.g. the watch app) so its profile is registered.
 
 Pass force:true to regenerate profiles after enabling a new capability on an App ID.
+
+### ios screenshots
+
+```sh
+[bundle exec] fastlane ios screenshots
+```
+
+Upload the App Store listing screenshots (6.9" iPhone + 13" iPad).
+
+Pass refresh:true to re-render them from the Compose previews first.
+
+Set STORE_SCREENSHOTS_UPLOAD=true to actually publish.
 
 ### ios release
 
