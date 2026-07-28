@@ -1,7 +1,10 @@
 package com.plusmobileapps.chefmate.browser.impl
 
 import com.fleeksoft.ksoup.Ksoup
+import com.fleeksoft.ksoup.nodes.Document
 import com.fleeksoft.ksoup.nodes.Element
+import com.fleeksoft.ksoup.nodes.Node
+import com.fleeksoft.ksoup.nodes.TextNode
 import com.fleeksoft.ksoup.parser.Parser
 import com.plusmobileapps.chefmate.ChefMateUrls
 import com.plusmobileapps.chefmate.di.AppScope
@@ -69,13 +72,16 @@ class RecipeExtractorServiceImpl(
             val jsonLdScripts = document.select("script[type=application/ld+json]")
 
             for (script in jsonLdScripts) {
-                val jsonText = script.data()
-                val recipeJson = findRecipeJson(jsonText) ?: continue
-                val data = parseRecipeFromJson(recipeJson, url)
+                val data = parseRecipeJsonText(script.data(), url) ?: continue
                 // schema.org flattens grouped ingredients, so recover any sub-section headers
                 // (e.g. "For the sauce:") from the page markup when present.
                 val grouped = parseIngredientSections(document)
                 return@withContext if (grouped != null) data.copy(ingredients = grouped) else data
+            }
+
+            // No JSON-LD recipe — fall back to microdata/microformat markup.
+            parseMicrodataRecipe(document, url)?.let {
+                return@withContext it
             }
 
             throw IllegalStateException("No recipe data found on this page")
@@ -144,10 +150,108 @@ class RecipeExtractorServiceImpl(
         return if (notes.isNotEmpty()) "$head, $notes" else head
     }
 
-    private fun findRecipeJson(jsonText: String): JsonObject? {
-        val element = json.parseToJsonElement(jsonText)
-        return findRecipeInElement(element)
+    /**
+     * Fallback for pages that describe their recipe with schema.org **microdata** or an
+     * **hrecipe/h-recipe microformat** instead of JSON-LD — most notably the Jetpack Recipe
+     * shortcode used by Smitten Kitchen and other WordPress.com-hosted blogs. Returns `null` when
+     * the page has no such markup, so the caller can report that no recipe was found.
+     */
+    internal fun parseMicrodataRecipe(html: String, sourceUrl: String): ExtractedRecipeData? =
+        parseMicrodataRecipe(Ksoup.parse(html), sourceUrl)
+
+    private fun parseMicrodataRecipe(document: Document, sourceUrl: String): ExtractedRecipeData? {
+        val root = document.selectFirst(RECIPE_ROOT_SELECTOR) ?: return null
+
+        val ingredients =
+            root.select(INGREDIENT_SELECTOR).mapNotNull { it.text().trim().nullIfBlank() }
+        val directions = root.selectFirst(INSTRUCTIONS_SELECTOR)?.let(::textBlocks).orEmpty()
+        // Both empty means we matched some unrelated markup, not a real recipe.
+        if (ingredients.isEmpty() && directions.isEmpty()) return null
+
+        val title =
+            root.selectFirst(NAME_SELECTOR)?.text()?.trim().nullIfBlank()
+                ?: document.metaContent("og:title")
+                ?: ""
+
+        return ExtractedRecipeData(
+            title = title,
+            description =
+                root.selectFirst(DESCRIPTION_SELECTOR)?.text()?.trim().nullIfBlank()
+                    ?: document.metaContent("og:description"),
+            ingredients = ingredients,
+            directions = directions,
+            imageUrl =
+                root.selectFirst(IMAGE_SELECTOR)?.imageUrl() ?: document.metaContent("og:image"),
+            sourceUrl = sourceUrl,
+            servings = root.selectFirst(YIELD_SELECTOR)?.text().firstNumber(),
+            prepTime = root.selectFirst(PREP_TIME_SELECTOR).durationMinutes(),
+            cookTime = root.selectFirst(COOK_TIME_SELECTOR).durationMinutes(),
+            totalTime = root.selectFirst(TOTAL_TIME_SELECTOR).durationMinutes(),
+            calories = root.selectFirst(CALORIES_SELECTOR)?.text().firstNumber(),
+        )
     }
+
+    private fun Document.metaContent(property: String): String? =
+        selectFirst("meta[property='$property'], meta[name='$property']")
+            ?.attr("content")
+            ?.trim()
+            .nullIfBlank()
+
+    /** Microdata/microformat markup carries the image url on any of these, depending on the tag. */
+    private fun Element.imageUrl(): String? =
+        listOf("src", "content", "href").firstNotNullOfOrNull { attr(it).trim().nullIfBlank() }
+
+    /**
+     * Durations are published as an ISO-8601 `datetime`/`title` attribute in well-formed markup,
+     * but plugins routinely put prose there instead (`datetime="1 hour, plus chopping"`), so fall
+     * back to reading the value as English.
+     */
+    private fun Element?.durationMinutes(): Int? {
+        if (this == null) return null
+        val candidates =
+            listOf(attr("datetime").trim(), attr("title").trim(), text().trim()).filter {
+                it.isNotEmpty()
+            }
+        return candidates.firstNotNullOfOrNull { parseDuration(it) }
+            ?: candidates.firstNotNullOfOrNull { parseLooseDuration(it) }
+    }
+
+    /**
+     * Splits an element's rendered text into one entry per block-level child, so a directions
+     * container written as a run of `<p>`s (or `<li>`s, or `<br>`-separated text) becomes one
+     * direction per line. Text sitting directly on the container counts as its own block, which
+     * matters because WordPress's auto-paragraph mangling routinely leaves the first step
+     * unwrapped.
+     */
+    private fun textBlocks(element: Element): List<String> {
+        val blocks = mutableListOf<String>()
+        val current = StringBuilder()
+
+        fun flush() {
+            val text = current.toString().collapseWhitespace()
+            if (text.isNotEmpty()) blocks += text
+            current.clear()
+        }
+
+        fun visit(node: Node) {
+            when (node) {
+                is TextNode -> current.append(node.text())
+                is Element -> {
+                    val isBlock = node.tagName() in BLOCK_TAGS
+                    if (isBlock) flush()
+                    node.childNodes().forEach(::visit)
+                    if (isBlock) flush()
+                }
+            }
+        }
+
+        element.childNodes().forEach(::visit)
+        flush()
+        return blocks
+    }
+
+    private fun findRecipeJson(jsonText: String): JsonObject? =
+        findRecipeInElement(json.parseToJsonElement(jsonText))
 
     private fun findRecipeInElement(element: JsonElement): JsonObject? {
         return when (element) {
@@ -176,10 +280,16 @@ class RecipeExtractorServiceImpl(
         }
     }
 
-    internal fun parseRecipeJsonText(jsonText: String, sourceUrl: String): ExtractedRecipeData? {
-        val recipeJson = findRecipeJson(jsonText) ?: return null
-        return parseRecipeFromJson(recipeJson, sourceUrl)
-    }
+    /**
+     * Returns `null` for anything that isn't a well-formed schema.org `Recipe`, including malformed
+     * JSON and unexpected value shapes, so one bad `ld+json` block on a page can't stop us from
+     * trying the remaining blocks — or the microdata fallback.
+     */
+    internal fun parseRecipeJsonText(jsonText: String, sourceUrl: String): ExtractedRecipeData? =
+        runCatching {
+            findRecipeJson(jsonText)?.let { parseRecipeFromJson(it, sourceUrl) }
+        }
+        .getOrNull()
 
     private fun String.decodeHtmlEntities(): String = Parser.unescapeEntities(this, false)
 
@@ -261,24 +371,14 @@ class RecipeExtractorServiceImpl(
     private fun parseServings(obj: JsonObject): Int? {
         val yield = obj["recipeYield"] ?: return null
         return when (yield) {
-            is JsonArray ->
-                yield
-                    .firstOrNull()
-                    ?.jsonPrimitive
-                    ?.contentOrNull
-                    ?.filter { it.isDigit() }
-                    ?.toIntOrNull()
-            else -> yield.jsonPrimitive.contentOrNull?.filter { it.isDigit() }?.toIntOrNull()
+            is JsonArray -> yield.firstOrNull()?.jsonPrimitive?.contentOrNull.firstNumber()
+            else -> yield.jsonPrimitive.contentOrNull.firstNumber()
         }
     }
 
     private fun parseCalories(obj: JsonObject): Int? {
         val nutrition = obj["nutrition"]?.jsonObject ?: return null
-        return nutrition["calories"]
-            ?.jsonPrimitive
-            ?.contentOrNull
-            ?.filter { it.isDigit() }
-            ?.toIntOrNull()
+        return nutrition["calories"]?.jsonPrimitive?.contentOrNull.firstNumber()
     }
 
     companion object {
@@ -287,6 +387,61 @@ class RecipeExtractorServiceImpl(
         private const val USER_AGENT =
             "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 " +
                 "(KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
+
+        // schema.org microdata first, then the older hrecipe/h-recipe microformat class names.
+        private const val RECIPE_ROOT_SELECTOR =
+            "[itemtype*=schema.org/Recipe], .hrecipe, .h-recipe"
+        private const val NAME_SELECTOR = "[itemprop=name], .fn, .p-name"
+        private const val DESCRIPTION_SELECTOR =
+            "[itemprop=description], .summary, .p-summary, .e-summary"
+        private const val INGREDIENT_SELECTOR =
+            "[itemprop=recipeIngredient], [itemprop=ingredients], .ingredient, .p-ingredient"
+        private const val INSTRUCTIONS_SELECTOR =
+            "[itemprop=recipeInstructions], .instructions, .e-instructions"
+        private const val IMAGE_SELECTOR = "[itemprop=image], .photo, .u-photo"
+        private const val YIELD_SELECTOR = "[itemprop=recipeYield], .yield, .p-yield"
+        private const val PREP_TIME_SELECTOR = "[itemprop=prepTime], .preptime, .dt-preptime"
+        private const val COOK_TIME_SELECTOR = "[itemprop=cookTime], .cooktime, .dt-cooktime"
+        private const val TOTAL_TIME_SELECTOR =
+            "[itemprop=totalTime], .totaltime, .dt-totaltime, .duration, .dt-duration"
+        private const val CALORIES_SELECTOR = "[itemprop=calories]"
+
+        private val BLOCK_TAGS =
+            setOf("p", "li", "div", "br", "tr", "h1", "h2", "h3", "h4", "h5", "h6")
+
+        private val WHITESPACE = Regex("\\s+")
+        private val NUMBER = Regex("\\d[\\d,]*")
+        // "1 hour", "1 hr 20 min", "1.5 hours", "45 minutes"
+        private val LOOSE_DURATION =
+            Regex(
+                "(\\d+(?:\\.\\d+)?)\\s*(hours?|hrs?|h|minutes?|mins?|m)\\b",
+                RegexOption.IGNORE_CASE,
+            )
+
+        private fun String?.nullIfBlank(): String? = this?.takeIf { it.isNotBlank() }
+
+        private fun String.collapseWhitespace(): String = replace(WHITESPACE, " ").trim()
+
+        /**
+         * Reads the leading count out of a free-form value. Yields are routinely written as a range
+         * ("Servings: 6 to 8"), where stripping every non-digit would produce a nonsense 68.
+         */
+        private fun String?.firstNumber(): Int? =
+            this?.let { NUMBER.find(it)?.value?.replace(",", "")?.toIntOrNull() }
+
+        /** Parses an English duration ("1 hour, plus chopping") into minutes. */
+        fun parseLooseDuration(text: String?): Int? {
+            if (text == null) return null
+            // Trailing "plus …" clauses describe unattended time we shouldn't add to the total.
+            val head = text.split(Regex("\\bplus\\b", RegexOption.IGNORE_CASE)).first()
+            var minutes = 0.0
+            for (match in LOOSE_DURATION.findAll(head)) {
+                val value = match.groupValues[1].toDoubleOrNull() ?: continue
+                val isHours = match.groupValues[2].lowercase().startsWith("h")
+                minutes += if (isHours) value * 60 else value
+            }
+            return minutes.toInt().takeIf { it > 0 }
+        }
 
         fun parseDuration(iso8601: String?): Int? {
             if (iso8601 == null) return null
