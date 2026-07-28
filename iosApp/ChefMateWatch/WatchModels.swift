@@ -53,6 +53,7 @@ struct WatchGroceryItem: Codable, Identifiable, Hashable {
 /// values.
 enum WatchTheme {
     static let primary = Color(red: 0xBB / 255, green: 0x86 / 255, blue: 0xFC / 255) // purple200
+    static let onPrimary = Color(red: 0x37 / 255, green: 0x1E / 255, blue: 0x73 / 255)
     static let secondary = Color(red: 0x03 / 255, green: 0xDA / 255, blue: 0xC5 / 255) // teal200
     static let surfaceVariant = Color(red: 0x49 / 255, green: 0x45 / 255, blue: 0x4F / 255)
     static let onSurface = Color(red: 0xE6 / 255, green: 0xE1 / 255, blue: 0xE5 / 255)
