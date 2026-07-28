@@ -31,8 +31,13 @@ keystore.properties
 # Fastlane
 fastlane/report.xml
 fastlane/Preview.html
-fastlane/screenshots/
 fastlane/test_output/
+# fastlane/screenshots and fastlane/metadata/**/images hold the generated store listing art. They
+# are committed (via LFS) so the assets can be reviewed in a PR and uploaded without a Gradle build.
+
+# Intermediate renders behind those assets — collectStoreScreenshots turns these into the trees
+# above, so only the collected output is worth tracking.
+client/ui/store-screenshots/src/screenshotTestDebug/
 
 # Bundler
 vendor/bundle/
