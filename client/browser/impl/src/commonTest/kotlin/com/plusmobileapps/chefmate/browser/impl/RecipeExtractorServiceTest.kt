@@ -52,6 +52,40 @@ class RecipeExtractorServiceTest {
 
     // endregion
 
+    // region parseLooseDuration
+
+    @Test
+    fun parseLooseDuration_null_returns_null() {
+        RecipeExtractorServiceImpl.parseLooseDuration(null) shouldBe null
+    }
+
+    @Test
+    fun parseLooseDuration_hours_only() {
+        RecipeExtractorServiceImpl.parseLooseDuration("1 hour") shouldBe 60
+    }
+
+    @Test
+    fun parseLooseDuration_hours_and_minutes() {
+        RecipeExtractorServiceImpl.parseLooseDuration("1 hr 20 min") shouldBe 80
+    }
+
+    @Test
+    fun parseLooseDuration_fractional_hours() {
+        RecipeExtractorServiceImpl.parseLooseDuration("1.5 hours") shouldBe 90
+    }
+
+    @Test
+    fun parseLooseDuration_ignores_trailing_plus_clause() {
+        RecipeExtractorServiceImpl.parseLooseDuration("1 hour, plus 8 hours chilling") shouldBe 60
+    }
+
+    @Test
+    fun parseLooseDuration_without_a_duration_returns_null() {
+        RecipeExtractorServiceImpl.parseLooseDuration("overnight") shouldBe null
+    }
+
+    // endregion
+
     // region HTML entity decoding
 
     @Test
@@ -122,6 +156,18 @@ class RecipeExtractorServiceTest {
             """{"@graph":[{"@type":"Recipe","name":"Soup &amp; Salad","recipeIngredient":[],"recipeInstructions":[]}]}"""
         val recipe = service.parseRecipeJsonText(json, SOURCE_URL)
         recipe?.title shouldBe "Soup & Salad"
+    }
+
+    @Test
+    fun When_recipe_yield_is_a_range_Then_the_lower_bound_is_used() {
+        val json = """{"@type":"Recipe","name":"Chili","recipeYield":"6 to 8 servings"}"""
+        service.parseRecipeJsonText(json, SOURCE_URL)?.servings shouldBe 6
+    }
+
+    @Test
+    fun When_calories_are_comma_separated_Then_parsed_as_one_number() {
+        val json = """{"@type":"Recipe","name":"Feast","nutrition":{"calories":"1,240 kcal"}}"""
+        service.parseRecipeJsonText(json, SOURCE_URL)?.calories shouldBe 1240
     }
 
     // endregion
@@ -217,6 +263,116 @@ class RecipeExtractorServiceTest {
 
     private fun wprmIngredients(vararg groups: String): String =
         """<html><body>${groups.joinToString("")}</body></html>"""
+
+    // endregion
+
+    // region microdata / hrecipe fallback
+
+    @Test
+    fun When_page_has_no_json_ld_Then_hrecipe_markup_is_extracted() {
+        val recipe = service.parseMicrodataRecipe(JETPACK_RECIPE_PAGE, SOURCE_URL)
+
+        recipe?.title shouldBe "Baked Farro with Summer Vegetables"
+        recipe?.ingredients shouldBe
+            listOf("Olive oil", "Kosher salt", "1 cup (210 grams) uncooked farro")
+        recipe?.directions shouldBe
+            listOf(
+                "If you have an ovenproof 11-inch pan with a lid, use it here.",
+                "Heat your oven to 375°F.",
+                "Bake for 30 to 40 minutes, until the farro is cooked.",
+            )
+        recipe?.sourceUrl shouldBe SOURCE_URL
+    }
+
+    @Test
+    fun When_hrecipe_yield_is_a_range_Then_the_lower_bound_is_used() {
+        // "Servings: 6 to 8" — stripping non-digits would give a nonsense 68.
+        service.parseMicrodataRecipe(JETPACK_RECIPE_PAGE, SOURCE_URL)?.servings shouldBe 6
+    }
+
+    @Test
+    fun When_hrecipe_time_is_prose_Then_it_is_read_as_english() {
+        // The Jetpack shortcode puts prose in datetime, so ISO-8601 parsing can't apply.
+        service.parseMicrodataRecipe(JETPACK_RECIPE_PAGE, SOURCE_URL)?.totalTime shouldBe 60
+    }
+
+    @Test
+    fun When_hrecipe_has_no_image_or_description_Then_open_graph_tags_are_used() {
+        val recipe = service.parseMicrodataRecipe(JETPACK_RECIPE_PAGE, SOURCE_URL)
+
+        recipe?.imageUrl shouldBe "https://example.com/farro.jpg"
+        recipe?.description shouldBe "A pinnacle-of-summer baked grain dish."
+    }
+
+    @Test
+    fun When_page_has_no_recipe_markup_at_all_Then_returns_null() {
+        val html = "<html><body><p>Just a blog post.</p></body></html>"
+        service.parseMicrodataRecipe(html, SOURCE_URL) shouldBe null
+    }
+
+    @Test
+    fun When_recipe_root_has_no_ingredients_or_directions_Then_returns_null() {
+        val html =
+            """<html><body><div class="hrecipe"><h3 class="fn">Just a title</h3></div></body></html>"""
+        service.parseMicrodataRecipe(html, SOURCE_URL) shouldBe null
+    }
+
+    @Test
+    fun When_directions_use_list_items_Then_each_becomes_a_step() {
+        val html =
+            """
+            |<html><body><div class="hrecipe">
+            |<li class="ingredient">1 cup flour</li>
+            |<ol class="instructions"><li>Mix it.</li><li>Bake it.</li></ol>
+            |</div></body></html>
+            """
+                .trimMargin()
+
+        service.parseMicrodataRecipe(html, SOURCE_URL)?.directions shouldBe
+            listOf("Mix it.", "Bake it.")
+    }
+
+    @Test
+    fun When_directions_are_separated_by_line_breaks_Then_each_becomes_a_step() {
+        val html =
+            """
+            |<html><body><div class="hrecipe">
+            |<li class="ingredient">1 cup flour</li>
+            |<div class="instructions">Mix it.<br>Bake it.</div>
+            |</div></body></html>
+            """
+                .trimMargin()
+
+        service.parseMicrodataRecipe(html, SOURCE_URL)?.directions shouldBe
+            listOf("Mix it.", "Bake it.")
+    }
+
+    @Test
+    fun When_a_json_ld_script_is_malformed_Then_it_does_not_break_extraction() {
+        service.parseRecipeJsonText("{ not json", SOURCE_URL) shouldBe null
+    }
+
+    /**
+     * Mirrors the markup Smitten Kitchen (and other Jetpack Recipe shortcode blogs) publishes:
+     * schema.org microdata plus hrecipe classes, no JSON-LD, and WordPress's auto-paragraph
+     * mangling that leaves the first direction unwrapped and `<p>` tags interleaved with `</div>`.
+     */
+    private val JETPACK_RECIPE_PAGE =
+        """
+        |<html><head>
+        |<meta property="og:description" content="A pinnacle-of-summer baked grain dish." />
+        |<meta property="og:image" content="https://example.com/farro.jpg" />
+        |</head><body>
+        |<div class="hrecipe h-recipe jetpack-recipe" itemscope itemtype="https://schema.org/Recipe"><h3 class="p-name jetpack-recipe-title fn" itemprop="name">Baked Farro with Summer Vegetables</h3><ul class="jetpack-recipe-meta"><li class="jetpack-recipe-servings p-yield yield" itemprop="recipeYield"><strong>Servings: </strong>6 to 8</li><li class="jetpack-recipe-time"><time itemprop="totalTime" datetime="1 hour, plus chopping"><strong>Time:</strong> <span class="time">1 hour, plus chopping</span></time></li></ul><div class="jetpack-recipe-content"></p>
+        |<p><div class="jetpack-recipe-ingredients"><ul><li class="jetpack-recipe-ingredient p-ingredient ingredient" itemprop="recipeIngredient">Olive oil</li><li class="jetpack-recipe-ingredient p-ingredient ingredient" itemprop="recipeIngredient">Kosher salt</li><li class="jetpack-recipe-ingredient p-ingredient ingredient" itemprop="recipeIngredient">1 cup (210 grams) uncooked farro</li></ul></div></p>
+        |<p><div class="jetpack-recipe-directions e-instructions">If you have an ovenproof 11-inch pan with a lid, use it here.</p>
+        |<p>Heat your oven to 375°F.</p>
+        |<p>Bake for 30 to 40 minutes, until the farro is cooked.</p>
+        |<p></div></p>
+        |<p></div></div>
+        |</body></html>
+        """
+            .trimMargin()
 
     // endregion
 
