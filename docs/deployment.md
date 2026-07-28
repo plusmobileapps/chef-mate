@@ -21,6 +21,8 @@ Either way, the tag triggers three independent workflows that run in parallel:
 
 All workflows also support manual triggering via the "Run workflow" button in the GitHub Actions UI (`workflow_dispatch`).
 
+Store **listing screenshots** are deployed separately, on their own cadence — see [Store Listing Screenshots](#store-listing-screenshots).
+
 ### Desktop update strategy
 
 Desktop distribution + updates depend on platform:
@@ -711,6 +713,59 @@ CLI flags are also available for non-interactive use:
 ./scripts/bump-version.sh --version 1.0.0 --build-number 1 # set both
 ```
 
+## Store Listing Screenshots
+
+The phone/tablet screenshots on the Play Store and App Store listings are **generated from the same Compose previews that back the snapshot tests**, not captured by hand. One Kotlin source produces both stores' assets, so there is no XCUITest target and no simulator involved — the whole pipeline runs on a Linux runner.
+
+### How it works
+
+1. `client/ui/store-screenshots` is a screenshot-test module (same `com.android.compose.screenshot` plugin as `client/ui/screenshot-test`, kept separate so 24 large marketing renders don't slow down the PR-gating snapshot job). `StoreScreenshots.kt` declares one `@PreviewTest` per **scene × store slot**, reusing the public `previewXxxBloc` values.
+2. `collectStoreScreenshots` renders them, then validates and lays out the assets.
+3. `fastlane android screenshots` / `fastlane ios screenshots` upload them.
+
+```bash
+./gradlew :client:ui:store-screenshots:collectStoreScreenshots
+```
+
+That rewrites the two committed asset trees — review the diff before committing:
+
+| Slot | Committed to | Pixels |
+|------|--------------|--------|
+| Play phone | `fastlane/metadata/android/en-US/images/phoneScreenshots/` | 1080 × 2100 |
+| Play 10" tablet | `fastlane/metadata/android/en-US/images/tenInchScreenshots/` | 1440 × 2560 |
+| App Store 6.9" iPhone | `fastlane/screenshots/en-US/iphone_6_9_*.png` | 1320 × 2868 |
+| App Store 13" iPad | `fastlane/screenshots/en-US/ipad_13_*.png` | 2064 × 2752 |
+
+The PNGs are tracked in Git LFS, like the snapshot references. The intermediate renders under `client/ui/store-screenshots/src/screenshotTestDebug/` are gitignored.
+
+### Adding or changing a scene
+
+Add all four wrappers (`PlayPhone`, `PlayTablet`, `IosPhone`, `IosTablet`) at the same two-digit index, so both stores tell the same story in the same order. `collectStoreScreenshots` derives the file name and ordering from the function name — `PlayPhone04GroceryList` becomes `04_grocery_list.png` — and fails the build on an unparseable name, a duplicate index, a wrong pixel size, or a slot count outside the store's limits.
+
+Two constraints are easy to trip over and are enforced for you:
+
+- **The preview renderer snaps `dpi` to the nearest standard density bucket.** An off-bucket value is silently ignored — `dpi=400` renders at 420 and produces 1134×2016 instead of 1080×1920. Stick to 160 / 240 / 320 / 480 / 640 in `StoreDevices.kt`.
+- **Play requires 24-bit PNG with no alpha**, and the renderer emits 32-bit RGBA. The collector flattens onto white.
+
+The two stores need genuinely different sizes, so renders cannot be shared: Play caps the longer side at twice the shorter, while Apple's 6.9" iPhone slot is 2.17:1.
+
+### Uploading
+
+Uploads run from the **Store Screenshots** workflow (`store-screenshots.yml`), triggered manually with a platform choice and a `publish` toggle. Every lane no-ops unless `STORE_SCREENSHOTS_UPLOAD=true`, so the default run is a dry run: it renders, uploads the assets as a build artifact for review, and asks Google to *validate* the listing edit without committing it.
+
+Screenshot upload is intentionally **not** part of the `release` lanes. A listing update and a binary release have different cadences and different blast radii — folding them together would push marketing art on every TestFlight build and let a rejected screenshot fail an unrelated release.
+
+Locally:
+
+```bash
+bundle exec fastlane android screenshots refresh:true
+```
+
+Two things to know before publishing for real:
+
+- **App Store Connect needs an editable version.** Screenshots attach to the version in "Prepare for Submission"; with no editable version the lane fails rather than touching the live listing.
+- **`overwrite_screenshots` clears every slot first, including Apple Watch.** Chef Mate ships a watchOS companion whose screenshots can't be rendered from Compose, so re-add those in App Store Connect afterwards — or drop watch-sized PNGs into `fastlane/screenshots/en-US/`, where `deliver` picks them up by resolution.
+
 ## Known Limitations
 
 - **Windows MSI and Linux DEB are unsigned.** macOS ships a Store-signed `.pkg` to the Mac App Store (see [macOS: Mac App Store](#macos-mac-app-store)) and Windows ships via the Microsoft Store (Store-signed), so this only affects the fallback MSI and the Linux DEB.
@@ -718,3 +773,7 @@ CLI flags are also available for non-interactive use:
 - **MSStore CLI is in preview** — the `publish-store` job's action ref and `publish` flags should be verified against current docs on first real submission.
 - **Store releases lag** — Microsoft Store certification review delays Windows releases relative to the GitHub Release and mobile stores.
 - **R8/ProGuard is disabled** — Android release builds are not minified. Enabling R8 requires ProGuard rules for KMP libraries (Ktor, Supabase, kotlinx.serialization, Decompose).
+- **Store screenshots render Android chrome on the iOS slots.** They come from the Compose preview renderer, so the App Store images show Material components at iPhone/iPad dimensions rather than real iOS rendering. Acceptable because the app's UI is Compose Multiplatform everywhere, but it is not a true iOS capture.
+- **Store screenshots show placeholder recipe images.** The preview Blocs carry no bitmaps, so recipe thumbnails render as empty image icons. Give the preview Blocs real sample imagery before treating the generated assets as final marketing art.
+- **Store screenshots are raw screens** — no device frames and no caption text, which most polished listings have. `frameit` can add both, but it needs ImageMagick plus frame/caption assets that don't exist in this repo yet.
+- **Store listings are `en-US` only**, matching the single `values/strings.xml`. Other locales inherit the default listing.

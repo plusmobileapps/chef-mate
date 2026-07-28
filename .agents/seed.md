@@ -35,6 +35,9 @@ This file provides shared guidance to Claude Code and Codex when working with co
 # Snapshot tests (record then verify)
 ./gradlew :client:ui:screenshot-test:updateDebugScreenshotTest
 ./gradlew :client:ui:screenshot-test:validateDebugScreenshotTest
+
+# Store listing screenshots (renders the Play + App Store art from the Compose previews)
+./gradlew :client:ui:store-screenshots:collectStoreScreenshots
 ```
 
 For iOS, open `/iosApp` in Xcode or use the IDE run configuration.
