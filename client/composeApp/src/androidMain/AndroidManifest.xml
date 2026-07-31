@@ -57,6 +57,11 @@
                         android:scheme="https"
                         android:host="chefmate.plusmobileapps.com"
                         android:pathPrefix="/recipe" />
+                <!-- Public profiles: https://chefmate.plusmobileapps.com/@handle -->
+                <data
+                        android:scheme="https"
+                        android:host="chefmate.plusmobileapps.com"
+                        android:pathPrefix="/@" />
             </intent-filter>
         </activity>
 

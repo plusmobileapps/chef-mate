@@ -239,6 +239,7 @@ class BottomNavBlocImpl(
             SettingsBloc.Output.OpenSignIn -> OpenSignIn
             SettingsBloc.Output.OpenSignUp -> OpenSignUp
             SettingsBloc.Output.OpenManageProfile -> OpenManageProfile
+            SettingsBloc.Output.OpenMyProfile -> BottomNavBloc.Output.OpenMyProfile
             SettingsBloc.Output.OpenNotifications -> BottomNavBloc.Output.OpenNotifications
             SettingsBloc.Output.OpenAppSettings -> OpenAppSettings
             SettingsBloc.Output.OpenAiChat -> BottomNavBloc.Output.OpenAiChat

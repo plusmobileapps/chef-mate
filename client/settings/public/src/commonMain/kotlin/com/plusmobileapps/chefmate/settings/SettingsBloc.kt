@@ -29,6 +29,8 @@ interface SettingsBloc : ComposeScreen {
 
     fun onManageProfileClicked()
 
+    fun onMyProfileClicked()
+
     fun onNotificationsClicked()
 
     fun onUrlClicked(url: String)
@@ -64,6 +66,9 @@ interface SettingsBloc : ComposeScreen {
         data object OpenSignIn : Output()
 
         data object OpenManageProfile : Output()
+
+        /** Open the signed-in user's own public profile. */
+        data object OpenMyProfile : Output()
 
         data object OpenNotifications : Output()
 

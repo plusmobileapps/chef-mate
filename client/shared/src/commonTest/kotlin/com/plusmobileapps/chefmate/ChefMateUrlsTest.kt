@@ -69,4 +69,30 @@ class ChefMateUrlsTest {
             ChefMateUrls.recipeShareUrlRemoteId("https://${ChefMateUrls.WEB_HOST}/groceries")
         )
     }
+
+    @Test
+    fun profileShareUrl_builds_the_at_handle_form() {
+        assertEquals(
+            "https://${ChefMateUrls.WEB_HOST}/@juliachild",
+            ChefMateUrls.profileShareUrl("juliachild"),
+        )
+    }
+
+    @Test
+    fun profileShareUrlHandle_round_trips() {
+        val url = ChefMateUrls.profileShareUrl("juliachild")
+        assertEquals("juliachild", ChefMateUrls.profileShareUrlHandle(url))
+        assertEquals("juliachild", ChefMateUrls.profileShareUrlHandle("$url/"))
+        assertEquals("juliachild", ChefMateUrls.profileShareUrlHandle("$url?ref=share"))
+        assertEquals("juliachild", ChefMateUrls.profileShareUrlHandle("$url#top"))
+    }
+
+    @Test
+    fun profileShareUrlHandle_rejects_unrelated_and_blank_urls() {
+        assertNull(ChefMateUrls.profileShareUrlHandle("https://example.com/@juliachild"))
+        assertNull(ChefMateUrls.profileShareUrlHandle("https://${ChefMateUrls.WEB_HOST}/@"))
+        assertNull(
+            ChefMateUrls.profileShareUrlHandle("https://${ChefMateUrls.WEB_HOST}/recipe/id42")
+        )
+    }
 }

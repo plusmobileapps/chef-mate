@@ -36,6 +36,7 @@ import chefmate.client.settings.public.generated.resources.developer_settings
 import chefmate.client.settings.public.generated.resources.greeting_authenticated
 import chefmate.client.settings.public.generated.resources.manage_profile
 import chefmate.client.settings.public.generated.resources.more
+import chefmate.client.settings.public.generated.resources.my_profile
 import chefmate.client.settings.public.generated.resources.privacy_policy
 import chefmate.client.settings.public.generated.resources.settings
 import chefmate.client.settings.public.generated.resources.settings_ai_chat
@@ -109,6 +110,11 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
                         GreetingSection(greeting = greeting)
                         HorizontalDivider()
                     }
+                    SettingsRow(
+                        name = Res.string.my_profile.asTextData(),
+                        onClick = bloc::onMyProfileClicked,
+                    )
+                    HorizontalDivider()
                     SettingsRow(
                         name = Res.string.manage_profile.asTextData(),
                         onClick = bloc::onManageProfileClicked,
@@ -311,6 +317,8 @@ private val previewBlocUnauthenticated =
 
         override fun onManageProfileClicked() = Unit
 
+        override fun onMyProfileClicked() = Unit
+
         override fun onNotificationsClicked() = Unit
 
         override fun onUrlClicked(url: String) = Unit
@@ -351,6 +359,8 @@ private val previewBlocAuthenticated =
 
         override fun onManageProfileClicked() = Unit
 
+        override fun onMyProfileClicked() = Unit
+
         override fun onNotificationsClicked() = Unit
 
         override fun onUrlClicked(url: String) = Unit
@@ -386,6 +396,8 @@ private val previewBlocAnonymous =
         override fun onSignOutDismissed() = Unit
 
         override fun onManageProfileClicked() = Unit
+
+        override fun onMyProfileClicked() = Unit
 
         override fun onNotificationsClicked() = Unit
 

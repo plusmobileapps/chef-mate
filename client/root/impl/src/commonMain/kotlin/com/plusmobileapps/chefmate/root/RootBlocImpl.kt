@@ -30,6 +30,7 @@ import com.plusmobileapps.chefmate.grocery.core.edit.EditGroceryListBloc
 import com.plusmobileapps.chefmate.notifications.NotificationsBloc
 import com.plusmobileapps.chefmate.onboarding.OnboardingRootBloc
 import com.plusmobileapps.chefmate.profile.ManageProfileBloc
+import com.plusmobileapps.chefmate.profile.ProfileBloc
 import com.plusmobileapps.chefmate.recipe.bottomnav.BottomNavBloc
 import com.plusmobileapps.chefmate.recipe.core.addmeal.MealPlannerRootBloc
 import com.plusmobileapps.chefmate.recipe.core.root.RecipeRootBloc
@@ -63,6 +64,7 @@ class RootBlocImpl(
     private val otpBloc: OtpBloc.Factory,
     private val settingsRoot: SettingsRootBloc.Factory,
     private val manageProfile: ManageProfileBloc.Factory,
+    private val profile: ProfileBloc.Factory,
     private val notifications: NotificationsBloc.Factory,
     private val developerSettings: DeveloperSettingsBloc.Factory,
     private val cookMode: CookModeBloc.Factory,
@@ -114,6 +116,11 @@ class RootBlocImpl(
                     Configuration.BottomNavigation,
                     Configuration.PublicRecipe(deepLink.remoteId),
                 )
+            is DeepLink.Profile ->
+                listOf(
+                    Configuration.BottomNavigation,
+                    Configuration.Profile(ProfileBloc.Props(handle = deepLink.handle)),
+                )
             DeepLink.AppSettings ->
                 listOf(Configuration.BottomNavigation, Configuration.SettingsRoot())
             DeepLink.Notifications ->
@@ -154,6 +161,10 @@ class RootBlocImpl(
                 navigation.bringToFront(RecipeRoot(Detail(deepLink.recipeId)))
             is DeepLink.PublicRecipe ->
                 navigation.bringToFront(Configuration.PublicRecipe(deepLink.remoteId))
+            is DeepLink.Profile ->
+                navigation.bringToFront(
+                    Configuration.Profile(ProfileBloc.Props(handle = deepLink.handle))
+                )
             DeepLink.Groceries -> {
                 selectBottomNavTab(BottomNavBloc.Tab.GROCERIES)
                 navigation.bringToFront(Configuration.BottomNavigation)
@@ -234,6 +245,16 @@ class RootBlocImpl(
                             context = context,
                             remoteId = config.remoteId,
                             output = ::handlePublicRecipeOutput,
+                        )
+                )
+
+            is Configuration.Profile ->
+                RootBloc.Child.Profile(
+                    bloc =
+                        profile.create(
+                            context = context,
+                            props = config.props,
+                            output = ::handleProfileOutput,
                         )
                 )
 
@@ -448,6 +469,11 @@ class RootBlocImpl(
                 navigation.bringToFront(Configuration.MealPlanner(output.props))
             }
 
+            BottomNavBloc.Output.OpenMyProfile -> {
+                // Null handle means "my own profile" — the bloc resolves it from the session, and
+                // shows the create-profile empty state if no handle has been claimed yet.
+                navigation.bringToFront(Configuration.Profile(ProfileBloc.Props(handle = null)))
+            }
             BottomNavBloc.Output.OpenManageProfile -> {
                 navigation.bringToFront(Configuration.ManageProfile)
             }
@@ -582,6 +608,8 @@ class RootBlocImpl(
             is RecipeRootBloc.Output.OpenUrl -> {
                 navigation.bringToFront(Configuration.Browser(output.url))
             }
+            RecipeRootBloc.Output.OpenManageProfile ->
+                navigation.bringToFront(Configuration.ManageProfile)
             RecipeRootBloc.Output.OpenGroceryList -> {
                 val bottomNavChild =
                     stack.value.items
@@ -643,6 +671,18 @@ class RootBlocImpl(
                 navigation.replaceCurrent(RecipeRoot(Detail(output.recipeId)))
             is PublicRecipeBloc.Output.OpenUrl ->
                 navigation.bringToFront(Configuration.Browser(output.url))
+        }
+    }
+
+    private fun handleProfileOutput(output: ProfileBloc.Output) {
+        when (output) {
+            ProfileBloc.Output.Back -> navigation.pop()
+            // Published recipes are read through the same public preview a share link opens — it
+            // already resolves "already in my library" vs "offer to save a copy".
+            is ProfileBloc.Output.OpenRecipe ->
+                navigation.bringToFront(Configuration.PublicRecipe(output.remoteId))
+            ProfileBloc.Output.OpenManageProfile ->
+                navigation.bringToFront(Configuration.ManageProfile)
         }
     }
 
@@ -714,6 +754,8 @@ class RootBlocImpl(
         @Serializable data class RecipeRoot(val props: RecipeRootBloc.Props) : Configuration()
 
         @Serializable data class PublicRecipe(val remoteId: String) : Configuration()
+
+        @Serializable data class Profile(val props: ProfileBloc.Props) : Configuration()
 
         @Serializable
         data class Authentication(val props: AuthenticationBloc.Props) : Configuration()
