@@ -51,6 +51,14 @@ class ManageProfileBlocImpl(
         viewModel.setDisplayName(displayName)
     }
 
+    override fun onHandleChanged(handle: String) {
+        viewModel.setHandle(handle)
+    }
+
+    override fun onBioChanged(bio: String) {
+        viewModel.setBio(bio)
+    }
+
     override fun onPhotoPicked(image: PickedImage) {
         viewModel.setPhoto(image)
     }

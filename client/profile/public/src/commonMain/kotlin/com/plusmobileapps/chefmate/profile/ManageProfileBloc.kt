@@ -21,6 +21,10 @@ interface ManageProfileBloc : ComposeScreen {
 
     fun onDisplayNameChanged(displayName: String)
 
+    fun onHandleChanged(handle: String)
+
+    fun onBioChanged(bio: String)
+
     fun onPhotoPicked(image: PickedImage)
 
     fun onSaveClicked()
@@ -36,6 +40,17 @@ interface ManageProfileBloc : ComposeScreen {
     data class Model(
         val displayName: String = "",
         val email: String = "",
+        /**
+         * The public @handle. Empty until claimed. Editable only while [isHandleClaimed] is false —
+         * handles are permanent, so the field locks once the profile exists.
+         */
+        val handle: String = "",
+        /** True once a profile exists, which makes [handle] read-only for good. */
+        val isHandleClaimed: Boolean = false,
+        /** Result of the debounced availability check, or null while unknown/in flight. */
+        val handleStatus: HandleStatus? = null,
+        /** Public bio shown on the profile. */
+        val bio: String = "",
         /** Remote avatar URL, shown when no fresh photo has been picked this session. */
         val photoUrl: String? = null,
         /** Bytes of a just-picked photo, previewed before it's uploaded on save. */
@@ -48,9 +63,18 @@ interface ManageProfileBloc : ComposeScreen {
         val isDeleting: Boolean = false,
         val deleteError: TextData? = null,
     ) {
-        /** Save is enabled once a non-blank name exists and no save/delete is in flight. */
+        /**
+         * Save is enabled once a non-blank name exists, no save/delete is in flight, and — when the
+         * user is claiming a handle for the first time — that handle is known to be usable. An
+         * unclaimed blank handle is fine: a profile is opt-in, so saving without one just updates
+         * the account and leaves the user without a public profile.
+         */
         val canSave: Boolean
-            get() = displayName.isNotBlank() && !isSaving && !isDeleting
+            get() =
+                displayName.isNotBlank() &&
+                    !isSaving &&
+                    !isDeleting &&
+                    (isHandleClaimed || handle.isBlank() || handleStatus == HandleStatus.Available)
 
         /**
          * Deletion is only allowed once the typed confirmation matches the account email
@@ -64,6 +88,10 @@ interface ManageProfileBloc : ComposeScreen {
             if (other !is Model) return false
             if (displayName != other.displayName) return false
             if (email != other.email) return false
+            if (handle != other.handle) return false
+            if (isHandleClaimed != other.isHandleClaimed) return false
+            if (handleStatus != other.handleStatus) return false
+            if (bio != other.bio) return false
             if (photoUrl != other.photoUrl) return false
             if (!pickedPhoto.contentEqualsNullable(other.pickedPhoto)) return false
             if (isSaving != other.isSaving) return false
@@ -78,6 +106,10 @@ interface ManageProfileBloc : ComposeScreen {
         override fun hashCode(): Int {
             var result = displayName.hashCode()
             result = 31 * result + email.hashCode()
+            result = 31 * result + handle.hashCode()
+            result = 31 * result + isHandleClaimed.hashCode()
+            result = 31 * result + (handleStatus?.hashCode() ?: 0)
+            result = 31 * result + bio.hashCode()
             result = 31 * result + (photoUrl?.hashCode() ?: 0)
             result = 31 * result + (pickedPhoto?.contentHashCode() ?: 0)
             result = 31 * result + isSaving.hashCode()
@@ -95,6 +127,18 @@ interface ManageProfileBloc : ComposeScreen {
                 this == null || other == null -> false
                 else -> this.contentEquals(other)
             }
+    }
+
+    /** Outcome of checking a typed handle, driving the inline hint under the field. */
+    enum class HandleStatus {
+        Checking,
+        Available,
+
+        /** Someone already has it, or it's on the server's reserved list. */
+        Taken,
+
+        /** Wrong length, or characters outside `a-z`, `0-9`, `_`. */
+        InvalidFormat,
     }
 
     sealed class Output {
