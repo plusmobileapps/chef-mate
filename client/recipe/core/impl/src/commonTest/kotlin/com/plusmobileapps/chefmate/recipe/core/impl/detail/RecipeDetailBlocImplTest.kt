@@ -5,13 +5,17 @@ package com.plusmobileapps.chefmate.recipe.core.impl.detail
 
 import chefmate.client.recipe.core.public.generated.resources.Res
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_linked_recipe_not_found
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_published
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_sign_in_required
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_unpublished
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.Consumer
 import com.plusmobileapps.chefmate.di.CoachMarkController
 import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
 import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
+import com.plusmobileapps.chefmate.profile.data.SocialProfile
+import com.plusmobileapps.chefmate.profile.data.testing.FakeProfileRepository
 import com.plusmobileapps.chefmate.recipe.core.addgrocery.AddRecipeToGroceryListBloc
 import com.plusmobileapps.chefmate.recipe.core.detail.RecipeDetailBloc
 import com.plusmobileapps.chefmate.recipe.data.Recipe
@@ -46,6 +50,7 @@ class RecipeDetailBlocImplTest {
     private val repository = FakeRecipeRepository(recipes)
     private val toastService = FakeToastService()
     private val scalePreferences = FakeIngredientScalePreferences()
+    private val profileRepository = FakeProfileRepository()
 
     private val sampleRecipe =
         Recipe(
@@ -86,6 +91,7 @@ class RecipeDetailBlocImplTest {
                 coachMarkController = coachMarkController,
                 toastService = toastService,
                 scalePreferences = scalePreferences,
+                profileRepository = profileRepository,
                 featureFlags = featureFlags,
             )
         }
@@ -262,6 +268,100 @@ class RecipeDetailBlocImplTest {
         bloc.state.value.showShareConfirmation shouldBe false
         emitted shouldBe listOf("https://chefmate.plusmobileapps.com/recipe/already-public")
         job.cancel()
+    }
+
+    @Test
+    fun When_publish_clicked_without_a_profile_Then_the_profile_editor_is_opened() {
+        // No handle claimed, so there's nothing to publish *to* — send them to claim one rather
+        // than showing a prompt they can't complete.
+        val bloc = createBloc(sampleRecipe)
+
+        bloc.onPublishClicked()
+
+        bloc.state.value.showPublishConfirmation shouldBe false
+        output.values.last() shouldBe RecipeDetailBloc.Output.OpenManageProfile
+    }
+
+    @Test
+    fun When_publish_clicked_with_a_profile_Then_confirmation_is_shown() {
+        givenProfile()
+        val bloc = createBloc(sampleRecipe)
+
+        bloc.onPublishClicked()
+
+        bloc.state.value.showPublishConfirmation shouldBe true
+    }
+
+    @Test
+    fun When_publish_confirmed_Then_recipe_is_published_and_made_public() {
+        givenProfile()
+        val bloc = createBloc(sampleRecipe.copy(isPublic = false))
+
+        bloc.onPublishClicked()
+        bloc.onPublishConfirmed()
+
+        bloc.state.value.showPublishConfirmation shouldBe false
+        repository.lastSetPublished shouldBe (sampleRecipe.id to true)
+        toastService.shown shouldBe listOf(ResourceString(Res.string.recipe_detail_published))
+    }
+
+    @Test
+    fun When_publish_confirmed_but_not_signed_in_Then_sign_in_toast_is_shown() {
+        givenProfile()
+        repository.setPublishedResult = null
+        val bloc = createBloc(sampleRecipe)
+
+        bloc.onPublishClicked()
+        bloc.onPublishConfirmed()
+
+        toastService.shown shouldBe
+            listOf(ResourceString(Res.string.recipe_detail_share_sign_in_required))
+    }
+
+    @Test
+    fun When_publish_dismissed_Then_nothing_is_published() {
+        givenProfile()
+        val bloc = createBloc(sampleRecipe)
+
+        bloc.onPublishClicked()
+        bloc.onPublishDismissed()
+
+        bloc.state.value.showPublishConfirmation shouldBe false
+        repository.lastSetPublished shouldBe null
+    }
+
+    @Test
+    fun When_unpublish_clicked_Then_recipe_is_delisted() {
+        val bloc = createBloc(sampleRecipe.copy(isPublic = true, remoteId = "already-public"))
+
+        bloc.onUnpublishClicked()
+
+        repository.lastSetPublished shouldBe (sampleRecipe.id to false)
+        toastService.shown shouldBe listOf(ResourceString(Res.string.recipe_detail_unpublished))
+    }
+
+    @Test
+    fun When_sharing_a_link_Then_the_recipe_is_not_published_to_the_profile() {
+        // The distinction the whole feature rests on: a share link is unlisted.
+        repository.setPublicResult = "abc-remote-id"
+        val bloc = createBloc(sampleRecipe.copy(isPublic = false))
+
+        bloc.onShareLinkClicked()
+        bloc.onShareConfirmed()
+
+        repository.lastSetPublished shouldBe null
+    }
+
+    private fun givenProfile() {
+        profileRepository.addProfile(
+            SocialProfile(
+                id = profileRepository.currentUserId,
+                handle = "juliachild",
+                displayName = "Julia Child",
+                bio = "",
+                avatarUrl = null,
+            )
+        )
     }
 
     @Test

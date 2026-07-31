@@ -2,7 +2,9 @@ package com.plusmobileapps.chefmate.recipe.core.impl.detail
 
 import chefmate.client.recipe.core.public.generated.resources.Res
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_linked_recipe_not_found
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_published
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_sign_in_required
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_unpublished
 import com.plusmobileapps.chefmate.ChefMateUrls
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.combineStates
@@ -12,6 +14,7 @@ import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
 import com.plusmobileapps.chefmate.featureflag.FeatureFlags
 import com.plusmobileapps.chefmate.featureflag.isEnabled
+import com.plusmobileapps.chefmate.profile.data.ProfileRepository
 import com.plusmobileapps.chefmate.recipe.data.DEFAULT_INGREDIENT_SCALE
 import com.plusmobileapps.chefmate.recipe.data.IngredientScalePreferences
 import com.plusmobileapps.chefmate.recipe.data.Recipe
@@ -39,6 +42,7 @@ class RecipeDetailViewModel(
     private val coachMarkController: CoachMarkController,
     private val toastService: ToastService,
     private val scalePreferences: IngredientScalePreferences,
+    private val profileRepository: ProfileRepository,
     featureFlags: FeatureFlags,
 ) : ViewModel(mainContext) {
 
@@ -140,6 +144,47 @@ class RecipeDetailViewModel(
         scope.launch { repository.setRecipePublic(recipeId, isPublic = false) }
     }
 
+    fun onPublishClicked() {
+        scope.launch {
+            // Publishing needs a public identity to publish *to*. Route to the editor to claim a
+            // handle rather than showing a prompt the user can't complete.
+            val profile = profileRepository.getMyProfile().getOrNull()
+            if (profile == null) {
+                _output.send(Output.OpenManageProfile)
+                return@launch
+            }
+            _state.update { it.copy(showPublishConfirmation = true) }
+        }
+    }
+
+    fun onPublishConfirmed() {
+        _state.update { it.copy(showPublishConfirmation = false, isPublishing = true) }
+        scope.launch {
+            val remoteId = repository.setRecipePublished(recipeId, published = true)
+            _state.update { it.copy(isPublishing = false) }
+            if (remoteId != null) {
+                toastService.show(ResourceString(Res.string.recipe_detail_published))
+            } else {
+                // Same cause as the share path: a profile listing is keyed by the remote row, so
+                // this fails when the recipe can't be synced.
+                toastService.show(ResourceString(Res.string.recipe_detail_share_sign_in_required))
+            }
+        }
+    }
+
+    fun onPublishDismissed() {
+        _state.update { it.copy(showPublishConfirmation = false) }
+    }
+
+    fun onUnpublish() {
+        _state.update { it.copy(isPublishing = true) }
+        scope.launch {
+            repository.setRecipePublished(recipeId, published = false)
+            _state.update { it.copy(isPublishing = false) }
+            toastService.show(ResourceString(Res.string.recipe_detail_unpublished))
+        }
+    }
+
     /**
      * Persist the chosen ingredient [scale] for this recipe; the state flow reflects it in turn.
      */
@@ -186,6 +231,8 @@ class RecipeDetailViewModel(
         val isDeleting: Boolean = false,
         val showDeleteConfirmationDialog: Boolean = false,
         val showShareConfirmation: Boolean = false,
+        val showPublishConfirmation: Boolean = false,
+        val isPublishing: Boolean = false,
         val recipe: Recipe = Recipe.Empty,
         val ingredientScale: Double = DEFAULT_INGREDIENT_SCALE,
         val activeCoachMark: String? = null,
@@ -194,6 +241,8 @@ class RecipeDetailViewModel(
 
     sealed class Output {
         data object RecipeDeleted : Output()
+
+        data object OpenManageProfile : Output()
 
         /** A tapped recipe link resolved to the local recipe with this id. */
         data class OpenRecipe(val recipeId: Long) : Output()

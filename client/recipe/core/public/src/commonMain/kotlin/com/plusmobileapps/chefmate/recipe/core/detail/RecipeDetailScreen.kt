@@ -54,6 +54,8 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.SoupKitchen
 import androidx.compose.material.icons.filled.Star
@@ -122,6 +124,10 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_favo
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_ingredients
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_kcal
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_prep_time
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_publish
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_publish_confirm_body
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_publish_confirm_button
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_publish_confirm_title
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_remove_favorite
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_servings
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share
@@ -134,6 +140,7 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_shar
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_share_url
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_stop_sharing
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_total_time
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_unpublish
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_updated
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.ChildSlot
@@ -213,6 +220,18 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
             dismissButtonText = ResourceString(Res.string.recipe_detail_share_cancel),
             onConfirmClick = bloc::onShareConfirmed,
             onDismissRequest = bloc::onShareDismissed,
+        )
+    }
+
+    // "This will be listed on your public profile" confirmation before a first publish.
+    if (state.showPublishConfirmation) {
+        PlusDialog(
+            title = ResourceString(Res.string.recipe_detail_publish_confirm_title),
+            message = ResourceString(Res.string.recipe_detail_publish_confirm_body),
+            confirmButtonText = ResourceString(Res.string.recipe_detail_publish_confirm_button),
+            dismissButtonText = ResourceString(Res.string.recipe_detail_share_cancel),
+            onConfirmClick = bloc::onPublishConfirmed,
+            onDismissRequest = bloc::onPublishDismissed,
         )
     }
 
@@ -338,6 +357,8 @@ private fun RecipeDetailBody(
                                     },
                                     onShareLink = bloc::onShareLinkClicked,
                                     onStopSharing = bloc::onStopSharingClicked,
+                                    onPublish = bloc::onPublishClicked,
+                                    onUnpublish = bloc::onUnpublishClicked,
                                 )
                             },
                     ),
@@ -515,6 +536,8 @@ private fun RecipeDetailActions(
     onShare: (String) -> Unit,
     onShareLink: () -> Unit,
     onStopSharing: () -> Unit,
+    onPublish: () -> Unit,
+    onUnpublish: () -> Unit,
 ) {
     // A single Share button owns every share option in both layouts. Edit/Delete are surfaced
     // inline on wide windows and collapsed into a three-dot overflow on compact ones.
@@ -530,6 +553,8 @@ private fun RecipeDetailActions(
             onShare = onShare,
             onShareLink = onShareLink,
             onStopSharing = onStopSharing,
+            onPublish = onPublish,
+            onUnpublish = onUnpublish,
         )
         IconButton(onClick = onDelete) {
             Icon(
@@ -543,6 +568,8 @@ private fun RecipeDetailActions(
             onShare = onShare,
             onShareLink = onShareLink,
             onStopSharing = onStopSharing,
+            onPublish = onPublish,
+            onUnpublish = onUnpublish,
         )
         EditDeleteOverflow(
             expanded = showOverflowMenu,
@@ -563,6 +590,8 @@ private fun ShareActionButton(
     onShare: (String) -> Unit,
     onShareLink: () -> Unit,
     onStopSharing: () -> Unit,
+    onPublish: () -> Unit,
+    onUnpublish: () -> Unit,
 ) {
     Box {
         var showShareMenu by remember { mutableStateOf(false) }
@@ -579,6 +608,8 @@ private fun ShareActionButton(
                 onShare = onShare,
                 onShareLink = onShareLink,
                 onStopSharing = onStopSharing,
+                onPublish = onPublish,
+                onUnpublish = onUnpublish,
             )
         }
     }
@@ -633,6 +664,8 @@ private fun RecipeShareMenuItems(
     onShare: (String) -> Unit,
     onShareLink: () -> Unit,
     onStopSharing: () -> Unit,
+    onPublish: () -> Unit,
+    onUnpublish: () -> Unit,
 ) {
     DropdownMenuItem(
         text = { Text(stringResource(Res.string.recipe_detail_share_link)) },
@@ -667,6 +700,27 @@ private fun RecipeShareMenuItems(
             onClick = {
                 onClose()
                 onStopSharing()
+            },
+        )
+    }
+    // Publishing is a separate, louder action than sharing a link: it lists the recipe on a page
+    // strangers can browse, where a share link stays unlisted.
+    if (recipe.isPublished) {
+        DropdownMenuItem(
+            text = { Text(stringResource(Res.string.recipe_detail_unpublish)) },
+            leadingIcon = { Icon(Icons.Default.PersonRemove, contentDescription = null) },
+            onClick = {
+                onClose()
+                onUnpublish()
+            },
+        )
+    } else {
+        DropdownMenuItem(
+            text = { Text(stringResource(Res.string.recipe_detail_publish)) },
+            leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+            onClick = {
+                onClose()
+                onPublish()
             },
         )
     }
@@ -1628,6 +1682,14 @@ val previewRecipeDetailBloc: RecipeDetailBloc =
         override fun onShareDismissed() {
             // Preview no-op
         }
+
+        override fun onPublishClicked() = Unit
+
+        override fun onPublishConfirmed() = Unit
+
+        override fun onPublishDismissed() = Unit
+
+        override fun onUnpublishClicked() = Unit
 
         override fun onStopSharingClicked() {
             // Preview no-op
