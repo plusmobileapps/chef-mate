@@ -22,7 +22,8 @@ CREATE TABLE Recipe (
     isDirty INTEGER AS Boolean NOT NULL DEFAULT 0,
     ownerId TEXT,
     isPendingDelete INTEGER AS Boolean NOT NULL DEFAULT 0,
-    isPublic INTEGER AS Boolean NOT NULL DEFAULT 0
+    isPublic INTEGER AS Boolean NOT NULL DEFAULT 0,
+    publishedAt TEXT
 );
 
 getAll:
@@ -42,8 +43,8 @@ INSERT INTO Recipe (title, description, ingredients, directions, imageUrl, sourc
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 createWithRemoteId:
-INSERT INTO Recipe (title, description, ingredients, directions, imageUrl, sourceUrl, servings, prepTime, cookTime, totalTime, calories, starRating, isFavorite, createdAt, updatedAt, remoteId, clientId, ownerId, isPublic)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO Recipe (title, description, ingredients, directions, imageUrl, sourceUrl, servings, prepTime, cookTime, totalTime, calories, starRating, isFavorite, createdAt, updatedAt, remoteId, clientId, ownerId, isPublic, publishedAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(remoteId) DO UPDATE SET
     title = excluded.title,
     description = excluded.description,
@@ -61,7 +62,8 @@ ON CONFLICT(remoteId) DO UPDATE SET
     updatedAt = excluded.updatedAt,
     clientId = excluded.clientId,
     ownerId = excluded.ownerId,
-    isPublic = excluded.isPublic;
+    isPublic = excluded.isPublic,
+    publishedAt = excluded.publishedAt;
 
 lastInsertId:
 SELECT MAX(id) FROM Recipe;
@@ -96,6 +98,15 @@ SELECT * FROM Recipe WHERE isPendingDelete = 1 AND remoteId IS NOT NULL;
 
 setPublic:
 UPDATE Recipe SET isPublic = ?, isDirty = 1, updatedAt = ? WHERE id = ?;
+
+-- Callers publishing a recipe must also setPublic(true) — a listed recipe has to be readable. The
+-- repository sequences the two in one transaction. Unpublishing (publishedAt = NULL) deliberately
+-- leaves isPublic alone, so a share link already handed out keeps working.
+setPublished:
+UPDATE Recipe SET publishedAt = ?, isDirty = 1, updatedAt = ? WHERE id = ?;
+
+getPublished:
+SELECT * FROM Recipe WHERE publishedAt IS NOT NULL AND isPendingDelete = 0 ORDER BY publishedAt DESC;
 
 updateRemoteId:
 UPDATE Recipe SET remoteId = ?, isDirty = 0 WHERE id = ?;

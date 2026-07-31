@@ -8,6 +8,8 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 
 @Inject
 @SingleIn(AppScope::class)
@@ -47,6 +49,22 @@ class SupabaseRecipeRemoteDataSource(private val supabaseClient: SupabaseClient)
                 }
             }
             .decodeSingleOrNull<RemoteRecipe>()
+
+    override suspend fun fetchPublishedRecipes(
+        profileId: String,
+        limit: Int,
+        offset: Int,
+    ): List<RemoteRecipe> =
+        supabaseClient.postgrest
+            .rpc(
+                "get_published_recipes",
+                buildJsonObject {
+                    put("p_profile_id", JsonPrimitive(profileId))
+                    put("p_limit", JsonPrimitive(limit))
+                    put("p_offset", JsonPrimitive(offset))
+                },
+            )
+            .decodeList<RemoteRecipe>()
 
     override suspend fun setRecipeCategories(
         recipeRemoteId: String,

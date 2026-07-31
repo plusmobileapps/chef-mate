@@ -467,6 +467,82 @@ class RecipeRepositoryImplTest {
         }
 
     @Test
+    fun setRecipePublished_lists_the_recipe_and_forces_it_public() =
+        runTest(testDispatcher) {
+            fakeAuth.setAuthenticated()
+            val created = recipeRepository.createRecipe(blankRecipe("Profile Pasta"))
+
+            val remoteId = recipeRepository.setRecipePublished(created.id, published = true)
+
+            val published = recipeRepository.getRecipe(created.id).first()
+            published?.isPublished shouldBe true
+            // A recipe listed on a profile has to be readable by whoever browses it.
+            published?.isPublic shouldBe true
+            (remoteId != null) shouldBe true
+        }
+
+    @Test
+    fun unpublishing_delists_but_leaves_the_share_link_working() =
+        runTest(testDispatcher) {
+            fakeAuth.setAuthenticated()
+            val created = recipeRepository.createRecipe(blankRecipe("Delisted Dal"))
+            recipeRepository.setRecipePublished(created.id, published = true)
+
+            recipeRepository.setRecipePublished(created.id, published = false)
+
+            val unpublished = recipeRepository.getRecipe(created.id).first()
+            unpublished?.isPublished shouldBe false
+            // Deliberate: revoking a link the user already handed out is a separate action.
+            unpublished?.isPublic shouldBe true
+        }
+
+    @Test
+    fun sharing_a_link_does_not_publish_to_the_profile() =
+        runTest(testDispatcher) {
+            fakeAuth.setAuthenticated()
+            val created = recipeRepository.createRecipe(blankRecipe("Link Only Loaf"))
+
+            recipeRepository.setRecipePublic(created.id, isPublic = true)
+
+            // The regression this whole split exists to prevent: a recipe shared by link must not
+            // appear on the owner's public profile.
+            val shared = recipeRepository.getRecipe(created.id).first()
+            shared?.isPublic shouldBe true
+            shared?.isPublished shouldBe false
+        }
+
+    @Test
+    fun setRecipePublished_when_unauthenticated_returns_null() =
+        runTest(testDispatcher) {
+            val created = recipeRepository.createRecipe(blankRecipe("Anonymous Aioli"))
+            recipeRepository.setRecipePublished(created.id, published = true) shouldBe null
+        }
+
+    @Test
+    fun fetchPublishedRecipes_maps_remote_rows_to_transient_previews() =
+        runTest(testDispatcher) {
+            recipeRemote.publishedRecipes =
+                listOf(
+                    RemoteRecipe(
+                        id = "remote-published",
+                        ownerId = "chef-1",
+                        title = "Published Pie",
+                        isPublic = true,
+                        publishedAt = "2026-07-31T00:00:00Z",
+                    )
+                )
+
+            val result = recipeRepository.fetchPublishedRecipes("chef-1")
+
+            val recipes = result.getOrThrow()
+            recipes.single().title shouldBe "Published Pie"
+            recipes.single().isPublished shouldBe true
+            // Transient preview, not persisted locally.
+            recipes.single().id shouldBe -1
+            recipeRemote.publishedFetchCalls.single().first shouldBe "chef-1"
+        }
+
+    @Test
     fun fetchPublicRecipe_maps_a_public_remote_recipe() =
         runTest(testDispatcher) {
             recipeRemote.publicRecipe =
@@ -568,6 +644,18 @@ class RecipeRepositoryImplTest {
             publicRecipe?.takeIf {
                 it.id == remoteId
             }
+
+        var publishedRecipes: List<RemoteRecipe> = emptyList()
+        val publishedFetchCalls: MutableList<Triple<String, Int, Int>> = mutableListOf()
+
+        override suspend fun fetchPublishedRecipes(
+            profileId: String,
+            limit: Int,
+            offset: Int,
+        ): List<RemoteRecipe> {
+            publishedFetchCalls += Triple(profileId, limit, offset)
+            return publishedRecipes.filter { it.ownerId == profileId }
+        }
 
         override suspend fun setRecipeCategories(
             recipeRemoteId: String,

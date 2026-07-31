@@ -35,11 +35,23 @@ data class Recipe(
      * is the identifier embedded in recipe-to-recipe links (`chefmate://recipe/<clientId>`).
      */
     val clientId: String? = null,
-    /** True when the owner has published this recipe so anyone with its share link can view it. */
+    /** True when the owner has shared this recipe so anyone with its share link can view it. */
     val isPublic: Boolean = false,
+    /**
+     * When the owner listed this recipe on their public profile, or null when it isn't listed.
+     *
+     * Distinct from [isPublic], which only means "readable by anyone holding the link" and is
+     * deliberately unlisted. Publishing implies [isPublic]; sharing a link does not imply
+     * publishing.
+     */
+    val publishedAt: Instant? = null,
     val createdAt: Instant,
     val updatedAt: Instant,
 ) {
+    /** Convenience for the UI: whether this recipe is listed on the owner's profile. */
+    val isPublished: Boolean
+        get() = publishedAt != null
+
     companion object {
         val Empty =
             Recipe(

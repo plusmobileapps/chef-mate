@@ -1,0 +1,11 @@
+-- Publishing a recipe to the owner's public profile. Mirrors the server-side
+-- `recipes.published_at` column (see the Supabase migration 20260731_add_social_profiles.sql).
+--
+-- Deliberately separate from isPublic (added in 9.sqm): isPublic means "readable by anyone holding
+-- the share link" and is unlisted, while publishedAt means "listed on my profile". Publishing
+-- implies isPublic, but not the reverse — otherwise every recipe a user had ever shared by link
+-- would appear on their profile the moment they created one.
+--
+-- NULL (the default, and what every existing row gets) means unpublished. Stored as TEXT to match
+-- the createdAt/updatedAt timestamps on this table.
+ALTER TABLE Recipe ADD COLUMN publishedAt TEXT;

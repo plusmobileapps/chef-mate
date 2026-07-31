@@ -47,11 +47,35 @@ interface RecipeRepository {
     suspend fun fetchPublicRecipe(remoteId: String): Result<Recipe>
 
     /**
+     * Fetches the recipes [profileId] has published to their public profile, newest first. Like
+     * [fetchPublicRecipe] the results are transient previews (local [Recipe.id] is -1) — call
+     * [createRecipe] to save an owned copy.
+     *
+     * Only published recipes come back, never merely-shared ones: a recipe made public for a share
+     * link is deliberately unlisted, so it must not appear on anyone's profile.
+     */
+    suspend fun fetchPublishedRecipes(
+        profileId: String,
+        limit: Int = 50,
+        offset: Int = 0,
+    ): Result<List<Recipe>>
+
+    /**
      * Marks the recipe [id] public or private, ensuring it is pushed to the remote first (so it has
      * a [Recipe.remoteId]). Returns the recipe's remote id — the identifier a share link embeds —
      * or null if it couldn't be synced (e.g. signed out, or the push failed).
      */
     suspend fun setRecipePublic(id: Long, isPublic: Boolean): String?
+
+    /**
+     * Lists the recipe [id] on the owner's public profile, or removes it. Publishing implies
+     * [setRecipePublic] — a listed recipe must be readable — so this pushes both flags;
+     * unpublishing leaves [Recipe.isPublic] alone so any share link already handed out keeps
+     * working.
+     *
+     * Returns the recipe's remote id, or null if it couldn't be synced (e.g. signed out).
+     */
+    suspend fun setRecipePublished(id: Long, published: Boolean): String?
 
     /**
      * Files every recipe in [recipeIds] under the book with local id [bookId], in a single
