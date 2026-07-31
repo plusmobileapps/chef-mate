@@ -18,6 +18,10 @@ private fun manageProfileBloc(model: Model): ManageProfileBloc =
 
         override fun onDisplayNameChanged(displayName: String) = Unit
 
+        override fun onHandleChanged(handle: String) = Unit
+
+        override fun onBioChanged(bio: String) = Unit
+
         override fun onPhotoPicked(image: PickedImage) = Unit
 
         override fun onSaveClicked() = Unit
@@ -53,6 +57,41 @@ val previewManageProfileDeleteDialogConfirmableBloc: ManageProfileBloc =
             email = "julia@example.com",
             showDeleteDialog = true,
             deleteConfirmation = "julia@example.com",
+        )
+    )
+
+/** First-time claim: the handle field is editable and the typed handle is free. */
+val previewManageProfileClaimHandleBloc: ManageProfileBloc =
+    manageProfileBloc(
+        Model(
+            displayName = "Julia Child",
+            email = "julia@example.com",
+            handle = "juliachild",
+            bio = "French cooking, demystified.",
+            handleStatus = ManageProfileBloc.HandleStatus.Available,
+        )
+    )
+
+/** Someone got there first — the save button stays disabled. */
+val previewManageProfileHandleTakenBloc: ManageProfileBloc =
+    manageProfileBloc(
+        Model(
+            displayName = "Julia Child",
+            email = "julia@example.com",
+            handle = "julia",
+            handleStatus = ManageProfileBloc.HandleStatus.Taken,
+        )
+    )
+
+/** Already claimed: the handle is locked and explained as permanent. */
+val previewManageProfileClaimedBloc: ManageProfileBloc =
+    manageProfileBloc(
+        Model(
+            displayName = "Julia Child",
+            email = "julia@example.com",
+            handle = "juliachild",
+            isHandleClaimed = true,
+            bio = "French cooking, demystified.",
         )
     )
 
