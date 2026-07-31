@@ -30,6 +30,8 @@ class MoreRobot(private val test: ComposeUiTest) {
 
     fun clickManageProfileRow(): MoreRobot = clickRow("Manage Profile")
 
+    fun clickMyProfileRow(): MoreRobot = clickRow("My Public Profile")
+
     fun clickNotificationsRow(): MoreRobot = clickRow("Notifications")
 
     private fun clickRow(label: String): MoreRobot = apply {
