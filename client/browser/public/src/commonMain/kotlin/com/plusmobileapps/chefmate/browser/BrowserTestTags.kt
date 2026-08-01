@@ -10,5 +10,8 @@ object BrowserTestTags {
     /** The engine dropdown control on the landing screen. */
     const val LANDING_ENGINE_DROPDOWN = "BrowserLandingEngineDropdown"
 
+    /** Address-bar action that hands the current page to the device's default browser. */
+    const val OPEN_IN_DEFAULT_BROWSER = "BrowserOpenInDefaultBrowser"
+
     fun engineOption(engine: SearchEngine): String = "$ENGINE_OPTION_PREFIX${engine.id}"
 }
