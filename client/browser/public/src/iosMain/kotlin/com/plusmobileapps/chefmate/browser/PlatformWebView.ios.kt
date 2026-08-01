@@ -26,6 +26,12 @@ actual fun PlatformWebView(
     modifier: Modifier,
 ) {
     val webViewState = rememberSaveableWebViewState(url = url)
+    // The WebView library defaults the WKWebView to non-opaque, so a page that doesn't paint its
+    // own background lets the app's surface show through — which reads as a black page in dark
+    // mode. An opaque WKWebView falls back to its own white canvas (and derives the overscroll
+    // colour from the page), matching what a real browser shows. Sites that do support dark mode
+    // paint over it. Must be set before the UIKitView factory runs.
+    webViewState.webSettings.iOSWebSettings.opaque = true
     val webViewNavigator = rememberWebViewNavigator()
     var lastCommandedUrl by rememberSaveable { mutableStateOf("") }
 
