@@ -783,6 +783,49 @@ class GroceryRepositoryImplTest {
         }
 
     @Test
+    fun session_refresh_re_runs_sync_without_an_auth_state_change() =
+        runTest(testDispatcher) {
+            repository.ensureDefaultList()
+            val remoteListId = "remote-list-session-refresh"
+            fakeRemote.remoteLists["user-1"] =
+                mutableListOf(
+                    RemoteGroceryList(
+                        id = remoteListId,
+                        name = "My Grocery List",
+                        ownerId = "user-1",
+                    )
+                )
+            fakeAuth.setState(
+                AuthState.Authenticated(
+                    ChefMateUser(
+                        userId = "user-1",
+                        userName = "Test",
+                        userEmail = "test@test.com",
+                        userProfileImageUrl = null,
+                    )
+                )
+            )
+            advanceUntilIdle()
+            repository.getGroceries().first().size shouldBe 0
+
+            fakeRemote.remoteItems[remoteListId] =
+                mutableListOf(
+                    RemoteGroceryItem(
+                        id = "item-remote-1",
+                        listId = remoteListId,
+                        name = "Eggs",
+                        clientId = Uuid.random().toString(),
+                    )
+                )
+            // A silent token refresh hands back the same user, so AuthState never changes and the
+            // StateFlow stays quiet — the session signal is the only thing that fires.
+            fakeAuth.emitSessionRefresh()
+            advanceUntilIdle()
+
+            repository.getGroceries().test { awaitItem().single().name shouldBe "Eggs" }
+        }
+
+    @Test
     fun realtime_change_pulls_an_updated_checked_state_for_an_existing_item() =
         runTest(testDispatcher) {
             // Local list already linked to a remote list with one synced, unchecked item —

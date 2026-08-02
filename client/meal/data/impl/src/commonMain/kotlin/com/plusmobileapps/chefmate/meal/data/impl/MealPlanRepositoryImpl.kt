@@ -49,12 +49,11 @@ class MealPlanRepositoryImpl(
     private val syncMutex = Mutex()
 
     init {
+        // Every session — the first sign-in and every silent token refresh after it. A refresh
+        // means anything stranded by the expired token can finally be pushed, and on desktop
+        // (a process that stays up for days) that is the only automatic retry there is.
         scope.launch {
-            authRepository.state.collect { state ->
-                if (state is AuthState.Authenticated) {
-                    syncWithRemote(state.user.userId)
-                }
-            }
+            authRepository.authenticatedSessions.collect { user -> syncWithRemote(user.userId) }
         }
     }
 
@@ -154,6 +153,9 @@ class MealPlanRepositoryImpl(
     }
 
     private suspend fun syncWithRemote(userId: String) = syncMutex.withLock {
+        // An expired access token makes every call below fail silently, and outside Android
+        // nothing else re-arms the SDK's refresh timer. Cheap no-op while the token is healthy.
+        authRepository.refreshSessionIfNeeded()
         try {
             // Meal plans reference their recipe by the recipe's remote UUID, so the recipes have
             // to be present locally before we pull meals — otherwise every remote meal is skipped
