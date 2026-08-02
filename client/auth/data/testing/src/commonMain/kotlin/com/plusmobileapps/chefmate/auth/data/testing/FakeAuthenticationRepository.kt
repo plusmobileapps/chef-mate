@@ -5,12 +5,23 @@ import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.auth.data.ChefMateUser
 import com.plusmobileapps.chefmate.auth.data.OtpFlow
 import com.plusmobileapps.chefmate.auth.data.SignUpResult
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
 class FakeAuthenticationRepository : AuthenticationRepository {
     private val _state = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
     override val state: StateFlow<AuthState> = _state
+
+    private val _authenticatedSessions =
+        MutableSharedFlow<ChefMateUser>(
+            replay = 1,
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST,
+        )
+    override val authenticatedSessions: SharedFlow<ChefMateUser> = _authenticatedSessions
 
     var signInResult: Result<Unit> = Result.success(Unit)
     var signUpResult: Result<SignUpResult> = Result.success(SignUpResult.Success)
@@ -40,16 +51,21 @@ class FakeAuthenticationRepository : AuthenticationRepository {
     var lastResendOtpFlow: OtpFlow? = null
         private set
 
+    var refreshSessionResult: Boolean = true
+
+    var refreshSessionCallCount: Int = 0
+        private set
+
     fun setState(state: AuthState) {
-        _state.value = state
+        emitState(state)
     }
 
     fun setAuthenticated(user: ChefMateUser = fakeUser()) {
-        _state.value = AuthState.Authenticated(user)
+        emitState(AuthState.Authenticated(user))
     }
 
     fun setAnonymous(userId: String = "anon-test-id") {
-        _state.value =
+        emitState(
             AuthState.Authenticated(
                 ChefMateUser(
                     userId = userId,
@@ -59,6 +75,25 @@ class FakeAuthenticationRepository : AuthenticationRepository {
                     isAnonymous = true,
                 )
             )
+        )
+    }
+
+    /**
+     * Emits a fresh session for the currently-signed-in user without changing [state] — what a
+     * silent token refresh looks like to collectors. `StateFlow` swallows the identical
+     * `Authenticated` value, so this is the only way sync triggers hear about it.
+     */
+    fun emitSessionRefresh() {
+        val user = (_state.value as? AuthState.Authenticated)?.user ?: return
+        _authenticatedSessions.tryEmit(user)
+    }
+
+    private fun emitState(state: AuthState) {
+        _state.value = state
+        when (state) {
+            is AuthState.Authenticated -> _authenticatedSessions.tryEmit(state.user)
+            else -> _authenticatedSessions.resetReplayCache()
+        }
     }
 
     override suspend fun ensureSession(): Result<Unit> {
@@ -77,7 +112,12 @@ class FakeAuthenticationRepository : AuthenticationRepository {
     ): Result<SignUpResult> = signUpResult
 
     override suspend fun signOut() {
-        _state.value = AuthState.Unauthenticated
+        emitState(AuthState.Unauthenticated)
+    }
+
+    override suspend fun refreshSessionIfNeeded(): Boolean {
+        refreshSessionCallCount += 1
+        return refreshSessionResult
     }
 
     override suspend fun updateProfile(displayName: String, avatarUrl: String?): Result<Unit> {
@@ -86,7 +126,7 @@ class FakeAuthenticationRepository : AuthenticationRepository {
         return updateProfileResult.also { result ->
             if (result.isSuccess) {
                 (_state.value as? AuthState.Authenticated)?.let { authenticated ->
-                    _state.value =
+                    emitState(
                         AuthState.Authenticated(
                             authenticated.user.copy(
                                 userName = displayName,
@@ -94,6 +134,7 @@ class FakeAuthenticationRepository : AuthenticationRepository {
                                     avatarUrl ?: authenticated.user.userProfileImageUrl,
                             )
                         )
+                    )
                 }
             }
         }
@@ -112,7 +153,7 @@ class FakeAuthenticationRepository : AuthenticationRepository {
     override suspend fun verifyEmailOtp(email: String, token: String, flow: OtpFlow): Result<Unit> {
         lastVerifyOtpFlow = flow
         return verifyEmailOtpResult.also { result ->
-            if (result.isSuccess) _state.value = AuthState.Authenticated(fakeUser(email))
+            if (result.isSuccess) emitState(AuthState.Authenticated(fakeUser(email)))
         }
     }
 

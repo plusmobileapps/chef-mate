@@ -1,10 +1,38 @@
 package com.plusmobileapps.chefmate.auth.data
 
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 
 interface AuthenticationRepository {
     val state: StateFlow<AuthState>
+
+    /**
+     * Emits every time a usable session becomes available: the initial sign-in *and* every silent
+     * token refresh after it.
+     *
+     * [state] can't carry this. A refresh produces an [AuthState.Authenticated] equal to the one
+     * already there, and `StateFlow` drops equal values — so a process that stays alive for days
+     * (the desktop app) never learns that a dead token came back, and anything stranded by it stays
+     * unsynced until the app is restarted. Sync triggers observe this instead of [state].
+     *
+     * The current session is replayed to late subscribers, so a repository constructed after
+     * sign-in still syncs. The replay cache is cleared on sign-out so one constructed afterwards
+     * never sees a stale user.
+     */
+    val authenticatedSessions: SharedFlow<ChefMateUser>
+
+    /**
+     * Forces the access token back into a usable state, returning whether there is a valid session
+     * afterwards. A comfortably-valid token is left alone, so this is cheap enough to call before
+     * every sync; one that has expired (or is about to) is refreshed inline.
+     *
+     * Needed because the SDK's auto-refresh is a single in-process timer with no lifecycle backstop
+     * outside Android. After the machine sleeps or the process is throttled, that timer can miss
+     * its window; every request then fails with an expired JWT and nothing re-arms it. Refreshing
+     * here both restores the token and restarts that timer.
+     */
+    suspend fun refreshSessionIfNeeded(): Boolean
 
     /**
      * Idempotently ensures a Supabase session exists. Returns immediately if already authenticated
