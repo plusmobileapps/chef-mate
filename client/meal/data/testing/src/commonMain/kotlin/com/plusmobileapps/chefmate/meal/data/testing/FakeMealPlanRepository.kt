@@ -38,8 +38,11 @@ class FakeMealPlanRepository : MealPlanRepository {
         _meals.update { items -> items.filter { it.id != id } }
     }
 
+    var syncAllUnsyncedCallCount: Int = 0
+        private set
+
     override suspend fun syncAllUnsynced() {
-        // No-op in fake
+        syncAllUnsyncedCallCount += 1
     }
 
     override suspend fun clearLocalData() {

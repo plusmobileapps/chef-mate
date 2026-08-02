@@ -16,6 +16,7 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -38,15 +39,24 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import com.plusmobileapps.chefmate.update.DesktopUpdater
 import com.plusmobileapps.chefmate.update.UpdateBanner
 import java.awt.Desktop
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filter
 
 private const val KEY_WINDOW_WIDTH = "window.width"
 private const val KEY_WINDOW_HEIGHT = "window.height"
 private const val KEY_WINDOW_X = "window.x"
 private const val KEY_WINDOW_Y = "window.y"
 private const val KEY_WINDOW_PLACEMENT = "window.placement"
+
+/**
+ * How often an idle window reconciles with the remote. The other targets get this for free — the OS
+ * kills the process and the next launch syncs — but this one can sit open for days.
+ */
+private val SYNC_HEARTBEAT = 15.minutes
 
 @OptIn(ExperimentalTime::class, FlowPreview::class)
 fun main(args: Array<String>) {
@@ -187,6 +197,24 @@ fun main(args: Array<String>) {
                     window.requestFocus()
                 }
             }
+            // Coming back to the window is the strongest hint that the machine woke up, and a
+            // slept-through token refresh is exactly what leaves this process unable to sync.
+            // The coordinator throttles, so a burst of focus changes costs nothing.
+            val windowInfo = LocalWindowInfo.current
+            LaunchedEffect(windowInfo) {
+                snapshotFlow { windowInfo.isWindowFocused }
+                    .filter { it }
+                    .collect { appComponent.syncCoordinator.syncAll() }
+            }
+
+            // Backstop for a window left focused and untouched for hours.
+            LaunchedEffect(Unit) {
+                while (true) {
+                    delay(SYNC_HEARTBEAT)
+                    appComponent.syncCoordinator.syncAll()
+                }
+            }
+
             val windowOpener = remember { RecipeWindowOpener(recipeWindows::open) }
             Box(modifier = Modifier.fillMaxSize()) {
                 // Only desktop provides this, which is what turns the recipe list's right-click
