@@ -27,6 +27,33 @@ val previewBrowserSelectEngineBloc: BrowserSelectEngineBloc =
         override fun onEngineSelected(engine: SearchEngine) = Unit
     }
 
+/**
+ * The browser's address bar in isolation. [BrowserScreen] itself can't be previewed because
+ * [PlatformWebView] needs a live platform WebView, so the bar is snapshotted on its own.
+ */
+@Composable
+fun PreviewBrowserAddressBar(modifier: Modifier = Modifier) {
+    BrowserAddressBar(
+        url = "https://www.seriouseats.com/classic-banana-bread-recipe",
+        canGoBack = true,
+        canGoForward = false,
+        canOpenExternally = true,
+        onUrlChanged = {},
+        onNavigate = {},
+        onGoBack = {},
+        onGoForward = {},
+        onAddressBarFocused = {},
+        onOpenInDefaultBrowser = {},
+        modifier = modifier,
+    )
+}
+
+@Preview
+@Composable
+internal fun BrowserAddressBarPreview() {
+    ChefMateTheme { Surface { PreviewBrowserAddressBar() } }
+}
+
 @Preview
 @Composable
 internal fun BrowserLandingScreenPreview() {

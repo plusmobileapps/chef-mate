@@ -17,6 +17,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -36,6 +37,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
@@ -48,6 +51,7 @@ import chefmate.client.browser.public.generated.resources.browser_download
 import chefmate.client.browser.public.generated.resources.browser_extraction_failed_body
 import chefmate.client.browser.public.generated.resources.browser_forward
 import chefmate.client.browser.public.generated.resources.browser_navigate
+import chefmate.client.browser.public.generated.resources.browser_open_in_default_browser
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusButton
@@ -62,6 +66,7 @@ fun BrowserScreen(
     modifier: Modifier = Modifier,
 ) {
     val viewState by bloc.state.collectAsState()
+    val uriHandler = LocalUriHandler.current
 
     val failureMessage = viewState.extractionFailureMessage
     if (failureMessage != null) {
@@ -76,15 +81,22 @@ fun BrowserScreen(
 
     Column(modifier = modifier.fillMaxSize()) {
         if (viewState.showControls) {
-            AddressBar(
+            BrowserAddressBar(
                 url = viewState.addressBarText,
                 canGoBack = viewState.canGoBack,
                 canGoForward = viewState.canGoForward,
+                canOpenExternally = viewState.currentUrl.isNotBlank(),
                 onUrlChanged = bloc::onUrlChanged,
                 onNavigate = bloc::onNavigate,
                 onGoBack = bloc::onGoBack,
                 onGoForward = bloc::onGoForward,
                 onAddressBarFocused = bloc::onAddressBarFocused,
+                // Hand the page that's actually loaded (not the possibly half-typed address text)
+                // to the OS, which routes it to the user's default browser. Guarded because a
+                // scheme with no handler installed makes the platform handler throw.
+                onOpenInDefaultBrowser = {
+                    runCatching { uriHandler.openUri(viewState.currentUrl) }
+                },
                 sharedTransitionScope = sharedTransitionScope,
                 animatedVisibilityScope = animatedVisibilityScope,
             )
@@ -110,16 +122,19 @@ fun BrowserScreen(
     }
 }
 
+/** Public so `client/ui/screenshot-test` can snapshot it without a live [PlatformWebView]. */
 @Composable
-private fun AddressBar(
+fun BrowserAddressBar(
     url: String,
     canGoBack: Boolean,
     canGoForward: Boolean,
+    canOpenExternally: Boolean,
     onUrlChanged: (String) -> Unit,
     onNavigate: () -> Unit,
     onGoBack: () -> Unit,
     onGoForward: () -> Unit,
     onAddressBarFocused: () -> Unit,
+    onOpenInDefaultBrowser: () -> Unit,
     sharedTransitionScope: SharedTransitionScope? = null,
     animatedVisibilityScope: AnimatedVisibilityScope? = null,
     modifier: Modifier = Modifier,
@@ -213,6 +228,16 @@ private fun AddressBar(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = stringResource(Res.string.browser_navigate),
+            )
+        }
+        IconButton(
+            onClick = onOpenInDefaultBrowser,
+            enabled = canOpenExternally,
+            modifier = Modifier.testTag(BrowserTestTags.OPEN_IN_DEFAULT_BROWSER),
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                contentDescription = stringResource(Res.string.browser_open_in_default_browser),
             )
         }
     }

@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import com.arkivanov.essenty.instancekeeper.InstanceKeeper
 import com.multiplatform.webview.web.WebView
 import com.multiplatform.webview.web.rememberSaveableWebViewState
@@ -26,6 +27,11 @@ actual fun PlatformWebView(
     modifier: Modifier,
 ) {
     val webViewState = rememberSaveableWebViewState(url = url)
+    // The WebView library defaults its background to transparent, so a page that doesn't paint one
+    // lets the app's surface show through — which reads as a black page in dark mode. Browsers
+    // render on white; do the same so a site without dark styling stays legible. Sites that do
+    // support dark mode paint over this. Must be set before the AndroidView factory runs.
+    webViewState.webSettings.backgroundColor = Color.White
     val webViewNavigator = rememberWebViewNavigator()
     var lastCommandedUrl by rememberSaveable { mutableStateOf("") }
 

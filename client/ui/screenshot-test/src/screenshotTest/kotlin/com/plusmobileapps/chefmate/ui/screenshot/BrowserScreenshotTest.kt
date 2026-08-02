@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
+import com.plusmobileapps.chefmate.browser.PreviewBrowserAddressBar
 import com.plusmobileapps.chefmate.browser.previewBrowserLandingBloc
 import com.plusmobileapps.chefmate.browser.previewBrowserSelectEngineBloc
 import com.plusmobileapps.chefmate.ui.Content
@@ -46,4 +47,18 @@ fun BrowserLandingDarkScreenshot() {
     ChefMateTheme(darkTheme = true) {
         Surface(modifier = Modifier.fillMaxSize()) { previewBrowserLandingBloc.Content() }
     }
+}
+
+@PreviewTest
+@Preview(showBackground = true)
+@Composable
+fun BrowserAddressBarLightScreenshot() {
+    ChefMateTheme { Surface { PreviewBrowserAddressBar() } }
+}
+
+@PreviewTest
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun BrowserAddressBarDarkScreenshot() {
+    ChefMateTheme(darkTheme = true) { Surface { PreviewBrowserAddressBar() } }
 }
