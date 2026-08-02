@@ -4,6 +4,7 @@ package com.plusmobileapps.chefmate
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -25,6 +26,8 @@ import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import chefmate.client.ui.public.generated.resources.Res
+import chefmate.client.ui.public.generated.resources.sync_session_expired
 import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.backhandler.BackDispatcher
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
@@ -33,6 +36,8 @@ import com.plusmobileapps.chefmate.deeplink.DeepLinkCoordinator
 import com.plusmobileapps.chefmate.deeplink.SchemeRegistrar
 import com.plusmobileapps.chefmate.deeplink.SingleInstance
 import com.plusmobileapps.chefmate.root.DeepLink
+import com.plusmobileapps.chefmate.sync.SyncOutcome
+import com.plusmobileapps.chefmate.text.ResourceString
 import com.plusmobileapps.chefmate.ui.LocalRecipeWindowOpener
 import com.plusmobileapps.chefmate.ui.RecipeWindowOpener
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -204,14 +209,14 @@ fun main(args: Array<String>) {
             LaunchedEffect(windowInfo) {
                 snapshotFlow { windowInfo.isWindowFocused }
                     .filter { it }
-                    .collect { appComponent.syncCoordinator.syncAll() }
+                    .collect { appComponent.syncAndReport() }
             }
 
             // Backstop for a window left focused and untouched for hours.
             LaunchedEffect(Unit) {
                 while (true) {
                     delay(SYNC_HEARTBEAT)
-                    appComponent.syncCoordinator.syncAll()
+                    appComponent.syncAndReport()
                 }
             }
 
@@ -237,6 +242,20 @@ fun main(args: Array<String>) {
 
         // Sibling windows of the main one, so closing a recipe leaves the app running.
         RecipeWindows(manager = recipeWindows, toastService = appComponent.toastService)
+    }
+}
+
+/**
+ * Reconciles, and says so when it can't. A dead session is otherwise indistinguishable from the app
+ * quietly doing nothing — the exact failure that used to end with the user force-quitting.
+ * Throttled runs stay silent, so a flurry of focus changes can't turn into a flurry of snackbars.
+ */
+private suspend fun ApplicationComponent.syncAndReport() {
+    if (syncCoordinator.syncAll() == SyncOutcome.SessionExpired) {
+        toastService.show(
+            message = ResourceString(Res.string.sync_session_expired),
+            duration = SnackbarDuration.Long,
+        )
     }
 }
 

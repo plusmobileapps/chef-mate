@@ -20,4 +20,5 @@
     <string name="coach_mark_dismiss">Got it</string>
     <string name="sign_in">Sign In</string>
     <string name="sign_up">Sign Up</string>
+    <string name="sync_session_expired">Can\'t sync right now — check your connection, or sign in again</string>
 </resources>
