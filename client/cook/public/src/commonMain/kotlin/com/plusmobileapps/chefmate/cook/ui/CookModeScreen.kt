@@ -96,6 +96,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import chefmate.client.cook.public.generated.resources.Res
 import chefmate.client.cook.public.generated.resources.cook_mode_ai_chat
+import chefmate.client.cook.public.generated.resources.cook_mode_ai_chat_premium
 import chefmate.client.cook.public.generated.resources.cook_mode_allow_screen_off
 import chefmate.client.cook.public.generated.resources.cook_mode_directions
 import chefmate.client.cook.public.generated.resources.cook_mode_finish
@@ -119,6 +120,8 @@ import com.plusmobileapps.chefmate.di.CoachMarkId
 import com.plusmobileapps.chefmate.recipe.data.IngredientScaler
 import com.plusmobileapps.chefmate.recipe.data.IngredientSection
 import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.subscription.ui.PremiumLockedIcon
+import com.plusmobileapps.chefmate.subscription.ui.PremiumRequiredDialog
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
@@ -141,6 +144,10 @@ fun CookModeScreen(bloc: CookModeBloc, modifier: Modifier = Modifier) {
     val state by bloc.state.collectAsState()
     if (state.keepScreenOn) {
         KeepScreenOn()
+    }
+    // Upsell shown when a non-subscriber taps the AI chat button.
+    if (state.showPremiumRequiredDialog) {
+        PremiumRequiredDialog(onDismiss = bloc::onPremiumRequiredDismissed)
     }
     // Ingredient scale multiplier for the active recipe. Owned by the BLoC so it persists per
     // recipe
@@ -236,15 +243,25 @@ private fun CookModeCoachMark(
 /**
  * Header control that opens the AI chat grounded in the active recipe. Rendered only when the AI
  * Chat feature flag is on (via [visible]); nothing is emitted otherwise.
+ *
+ * Without [subscribed] the control stays tappable but dimmed — the click opens the premium upsell
+ * rather than the chat, so disabling it would be misleading.
  */
 @Composable
-private fun CookModeAiChatButton(visible: Boolean, onClick: () -> Unit) {
+private fun CookModeAiChatButton(visible: Boolean, subscribed: Boolean, onClick: () -> Unit) {
     if (!visible) return
     IconButton(onClick = onClick) {
-        Icon(
-            imageVector = Icons.Default.AutoAwesome,
-            contentDescription = stringResource(Res.string.cook_mode_ai_chat),
-        )
+        if (subscribed) {
+            Icon(
+                imageVector = Icons.Default.AutoAwesome,
+                contentDescription = stringResource(Res.string.cook_mode_ai_chat),
+            )
+        } else {
+            PremiumLockedIcon(
+                imageVector = Icons.Default.AutoAwesome,
+                contentDescription = stringResource(Res.string.cook_mode_ai_chat_premium),
+            )
+        }
     }
 }
 
@@ -306,6 +323,7 @@ private fun CookModeTabletLayout(
                             }
                             CookModeAiChatButton(
                                 visible = state.showAiChat,
+                                subscribed = state.isSubscribed,
                                 onClick = bloc::onAiChatClicked,
                             )
                             CookModeScaleButton(scale = scale, onScaleChange = onScaleChange)
@@ -465,6 +483,7 @@ private fun CookModeMobileLayout(
                             PlusHeaderData.TrailingAccessory.Custom {
                                 CookModeAiChatButton(
                                     visible = state.showAiChat,
+                                    subscribed = state.isSubscribed,
                                     onClick = bloc::onAiChatClicked,
                                 )
                                 CookModeScaleButton(scale = scale, onScaleChange = onScaleChange)

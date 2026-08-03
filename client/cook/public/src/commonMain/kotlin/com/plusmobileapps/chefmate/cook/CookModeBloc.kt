@@ -35,8 +35,14 @@ interface CookModeBloc : BackClickBloc, ComposeScreen {
      */
     fun onScaleChanged(scale: Double)
 
-    /** Open the AI chat grounded in the active recipe. Only surfaced when [Model.showAiChat]. */
+    /**
+     * Open the AI chat grounded in the active recipe. Only surfaced when [Model.showAiChat]. For a
+     * non-subscriber this opens the premium upsell instead — see [Model.isSubscribed].
+     */
     fun onAiChatClicked()
+
+    /** Dismiss the "ChefMate Premium required" dialog. */
+    fun onPremiumRequiredDismissed()
 
     fun onLayoutToggled()
 
@@ -69,6 +75,13 @@ interface CookModeBloc : BackClickBloc, ComposeScreen {
         val activeCoachMark: String? = null,
         /** Gated on the AI Chat feature flag — hides the chat button entirely when off. */
         val showAiChat: Boolean = false,
+        /**
+         * ChefMate Premium entitlement. Unlike [showAiChat] this doesn't hide the button: a
+         * non-subscriber still sees it, marked as premium, and tapping it opens the upsell.
+         */
+        val isSubscribed: Boolean = false,
+        /** True while the premium upsell dialog is shown. */
+        val showPremiumRequiredDialog: Boolean = false,
     ) {
         data class Chip(val recipeId: Long, val title: String, val isActive: Boolean)
     }
