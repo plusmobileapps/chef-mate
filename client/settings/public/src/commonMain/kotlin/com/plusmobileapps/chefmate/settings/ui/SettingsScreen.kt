@@ -53,6 +53,8 @@ import chefmate.client.settings.public.generated.resources.terms_of_use
 import chefmate.client.settings.public.generated.resources.version_label
 import com.plusmobileapps.chefmate.settings.SettingsBloc
 import com.plusmobileapps.chefmate.settings.SettingsTestTags
+import com.plusmobileapps.chefmate.subscription.ui.PremiumLockBadge
+import com.plusmobileapps.chefmate.subscription.ui.PremiumRequiredDialog
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.TextData
@@ -62,6 +64,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import com.plusmobileapps.chefmate.util.rememberEmailLauncher
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /** Support inbox surfaced by the "Contact Us" row in the More tab. */
 private const val SUPPORT_EMAIL = "support@plusmobileapps.com"
@@ -80,6 +83,11 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
             onConfirmClick = bloc::onSignOutConfirmed,
             onDismissRequest = bloc::onSignOutDismissed,
         )
+    }
+
+    // Upsell shown when a non-subscriber taps the AI chat row.
+    if (viewState.showPremiumRequiredDialog) {
+        PremiumRequiredDialog(onDismiss = bloc::onPremiumRequiredDismissed)
     }
 
     PlusNavContainer(
@@ -151,9 +159,11 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
             )
             if (viewState.isAiChatEnabled) {
                 HorizontalDivider()
+                // Still tappable for a non-subscriber — the click opens the premium upsell.
                 SettingsRow(
                     name = Res.string.settings_ai_chat.asTextData(),
                     onClick = bloc::onAiChatClicked,
+                    trailing = if (viewState.isSubscribed) null else ({ PremiumLockBadge() }),
                 )
             }
             HorizontalDivider()
@@ -274,7 +284,12 @@ private fun VersionLabel(versionName: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-internal fun SettingsRow(name: TextData, onClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun SettingsRow(
+    name: TextData,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    trailing: (@Composable () -> Unit)? = null,
+) {
     val contentDescription = name.localized()
     Row(
         modifier =
@@ -288,7 +303,13 @@ internal fun SettingsRow(name: TextData, onClick: () -> Unit, modifier: Modifier
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(name.localized(), style = ChefMateTheme.typography.titleMedium)
-        Icon(Icons.Default.ChevronRight, contentDescription = null)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingSmall),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            trailing?.invoke()
+            Icon(Icons.Default.ChevronRight, contentDescription = null)
+        }
     }
 }
 
@@ -318,6 +339,8 @@ private val previewBlocUnauthenticated =
         override fun onAppSettingsClicked() = Unit
 
         override fun onAiChatClicked() = Unit
+
+        override fun onPremiumRequiredDismissed() = Unit
 
         override fun onDeveloperSettingsClicked() = Unit
 
@@ -359,6 +382,8 @@ private val previewBlocAuthenticated =
 
         override fun onAiChatClicked() = Unit
 
+        override fun onPremiumRequiredDismissed() = Unit
+
         override fun onDeveloperSettingsClicked() = Unit
 
         override fun onReplayOnboardingClicked() = Unit
@@ -395,10 +420,51 @@ private val previewBlocAnonymous =
 
         override fun onAiChatClicked() = Unit
 
+        override fun onPremiumRequiredDismissed() = Unit
+
         override fun onDeveloperSettingsClicked() = Unit
 
         override fun onReplayOnboardingClicked() = Unit
     }
+
+/**
+ * AI Chat row surfaced for a subscriber — no badge, tapping opens the chat. Public so
+ * `:client:ui:screenshot-test` can reuse it.
+ */
+val previewSettingsBlocAiChatUnlocked: SettingsBloc =
+    object : SettingsBloc by previewBlocAuthenticated {
+        override val state =
+            MutableStateFlow(
+                previewBlocAuthenticated.state.value.copy(
+                    isAiChatEnabled = true,
+                    isSubscribed = true,
+                )
+            )
+    }
+
+/** AI Chat row surfaced for a non-subscriber — badged "Premium", tapping opens the upsell. */
+val previewSettingsBlocAiChatLocked: SettingsBloc =
+    object : SettingsBloc by previewBlocAuthenticated {
+        override val state =
+            MutableStateFlow(
+                previewBlocAuthenticated.state.value.copy(
+                    isAiChatEnabled = true,
+                    isSubscribed = false,
+                )
+            )
+    }
+
+@Preview(showBackground = true)
+@Composable
+internal fun SettingsScreenAiChatUnlockedPreview() {
+    ChefMateTheme { SettingsScreen(bloc = previewSettingsBlocAiChatUnlocked) }
+}
+
+@Preview(showBackground = true)
+@Composable
+internal fun SettingsScreenAiChatLockedPreview() {
+    ChefMateTheme { SettingsScreen(bloc = previewSettingsBlocAiChatLocked) }
+}
 
 @Preview(showBackground = true)
 @Composable

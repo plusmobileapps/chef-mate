@@ -8,6 +8,7 @@ import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagRegistry
 import com.plusmobileapps.chefmate.featureflag.FeatureFlags
 import com.plusmobileapps.chefmate.featureflag.isEnabled
+import com.plusmobileapps.chefmate.subscription.SubscriptionRepository
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +25,7 @@ class SettingsViewModel(
     private val authenticationRepository: AuthenticationRepository,
     private val signOutUseCase: SignOutUseCase,
     featureFlags: FeatureFlags,
+    subscriptionRepository: SubscriptionRepository,
 ) : ViewModel(mainContext) {
     private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state.asStateFlow()
@@ -31,15 +33,38 @@ class SettingsViewModel(
     private val aiChatEnabled: StateFlow<Boolean> =
         featureFlags.isEnabled(FeatureFlagRegistry.AiChat)
 
+    private val isSubscribed: StateFlow<Boolean> = subscriptionRepository.isSubscribed
+
     init {
         observeAuthState()
         observeAiChatFlag()
+        observeSubscription()
     }
 
     private fun observeAiChatFlag() {
         aiChatEnabled
             .onEach { enabled -> _state.update { it.copy(isAiChatEnabled = enabled) } }
             .launchIn(scope)
+    }
+
+    private fun observeSubscription() {
+        isSubscribed
+            .onEach { subscribed -> _state.update { it.copy(isSubscribed = subscribed) } }
+            .launchIn(scope)
+    }
+
+    /**
+     * Gate for the AI chat row. Returns true when the caller should emit the open-chat output;
+     * otherwise it has raised the premium upsell and the caller should do nothing.
+     */
+    fun requestAiChat(): Boolean {
+        if (_state.value.isSubscribed) return true
+        _state.update { it.copy(showPremiumRequiredDialog = true) }
+        return false
+    }
+
+    fun dismissPremiumRequiredDialog() {
+        _state.update { it.copy(showPremiumRequiredDialog = false) }
     }
 
     private fun observeAuthState() {
@@ -113,6 +138,8 @@ class SettingsViewModel(
         val emailAwaitingVerification: String? = null,
         val showSignOutConfirmationDialog: Boolean = false,
         val isAiChatEnabled: Boolean = false,
+        val isSubscribed: Boolean = false,
+        val showPremiumRequiredDialog: Boolean = false,
     ) {
         /**
          * Apply an auth-state change, leaving everything the auth stream doesn't own alone. Written
