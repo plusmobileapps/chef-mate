@@ -59,31 +59,34 @@ class SettingsViewModel(
                                 authState.user.userEmail.isNotBlank() -> authState.user.userEmail
                                 else -> null
                             }
-                        _state.value =
-                            State(
+                        _state.update {
+                            it.authState(
                                 isAuthenticated = true,
                                 isAnonymous = isAnonymous,
                                 userName = displayName,
                                 emailAwaitingVerification = null,
                             )
+                        }
                     }
                     is AuthState.Unauthenticated -> {
-                        _state.value =
-                            State(
+                        _state.update {
+                            it.authState(
                                 isAuthenticated = false,
                                 isAnonymous = false,
                                 userName = null,
                                 emailAwaitingVerification = null,
                             )
+                        }
                     }
                     is AuthState.AwaitingEmailVerification -> {
-                        _state.value =
-                            State(
+                        _state.update {
+                            it.authState(
                                 isAuthenticated = false,
                                 isAnonymous = false,
                                 userName = null,
                                 emailAwaitingVerification = authState.email,
                             )
+                        }
                     }
                 }
             }
@@ -110,5 +113,26 @@ class SettingsViewModel(
         val emailAwaitingVerification: String? = null,
         val showSignOutConfirmationDialog: Boolean = false,
         val isAiChatEnabled: Boolean = false,
-    )
+    ) {
+        /**
+         * Apply an auth-state change, leaving everything the auth stream doesn't own alone. Written
+         * as a copy rather than a fresh [State] because the AI Chat flag and the premium
+         * entitlement arrive on their own streams — rebuilding the object here used to silently
+         * reset them to `false` whenever auth emitted after they had resolved.
+         */
+        fun authState(
+            isAuthenticated: Boolean,
+            isAnonymous: Boolean,
+            userName: String?,
+            emailAwaitingVerification: String?,
+        ): State =
+            copy(
+                isAuthenticated = isAuthenticated,
+                isAnonymous = isAnonymous,
+                userName = userName,
+                emailAwaitingVerification = emailAwaitingVerification,
+                // An auth change closes a pending sign-out confirmation, as it did before.
+                showSignOutConfirmationDialog = false,
+            )
+    }
 }
