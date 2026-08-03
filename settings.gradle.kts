@@ -208,6 +208,12 @@ include(":client:developer-settings:public")
 
 include(":client:shared")
 
+include(":client:subscription:impl")
+
+include(":client:subscription:public")
+
+include(":client:subscription:testing")
+
 include(":client:testing")
 
 include(":client:text:public")
