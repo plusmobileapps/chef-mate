@@ -73,6 +73,10 @@ class DeveloperSettingsBlocImpl(
         output.onNext(Output.OpenFeatureFlags)
     }
 
+    override fun onSubscribedToggled(subscribed: Boolean) {
+        viewModel.setSubscribed(subscribed)
+    }
+
     override fun onClearCoachMarksClicked() {
         viewModel.clearCoachMarks()
     }

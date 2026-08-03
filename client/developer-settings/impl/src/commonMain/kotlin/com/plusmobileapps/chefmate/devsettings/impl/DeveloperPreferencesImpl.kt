@@ -3,6 +3,7 @@ package com.plusmobileapps.chefmate.devsettings.impl
 import com.plusmobileapps.chefmate.Environment
 import com.plusmobileapps.chefmate.EnvironmentProvider
 import com.plusmobileapps.chefmate.devsettings.DEV_ENVIRONMENT_KEY
+import com.plusmobileapps.chefmate.devsettings.DEV_SUBSCRIBED_KEY
 import com.plusmobileapps.chefmate.devsettings.DEV_USER_INDEX_KEY
 import com.plusmobileapps.chefmate.devsettings.DeveloperPreferences
 import com.plusmobileapps.chefmate.di.AppScope
@@ -39,6 +40,11 @@ class DeveloperPreferencesImpl(private val settings: Settings) : DeveloperPrefer
 
     override val selectedUserIndex: StateFlow<Int?> = _selectedUserIndex.asStateFlow()
 
+    private val _isSubscribed =
+        MutableStateFlow(settings.getBoolean(DEV_SUBSCRIBED_KEY, defaultValue = false))
+
+    override val isSubscribed: StateFlow<Boolean> = _isSubscribed.asStateFlow()
+
     override fun setEnvironment(environment: Environment) {
         settings.putString(DEV_ENVIRONMENT_KEY, environment.name)
         _environment.value = environment
@@ -51,6 +57,11 @@ class DeveloperPreferencesImpl(private val settings: Settings) : DeveloperPrefer
             settings.putInt(DEV_USER_INDEX_KEY, index)
         }
         _selectedUserIndex.value = index
+    }
+
+    override fun setSubscribed(subscribed: Boolean) {
+        settings.putBoolean(DEV_SUBSCRIBED_KEY, subscribed)
+        _isSubscribed.value = subscribed
     }
 }
 
