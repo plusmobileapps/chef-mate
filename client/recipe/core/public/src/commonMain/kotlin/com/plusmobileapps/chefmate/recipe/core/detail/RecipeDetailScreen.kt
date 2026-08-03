@@ -103,6 +103,7 @@ import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_to_meal_plan
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_add_to_meal_plan_onboarding
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_ai_chat
+import chefmate.client.recipe.core.public.generated.resources.recipe_detail_ai_chat_premium
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_calories
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_cook_mode
 import chefmate.client.recipe.core.public.generated.resources.recipe_detail_cook_mode_onboarding
@@ -148,6 +149,8 @@ import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.IngredientScaler
 import com.plusmobileapps.chefmate.recipe.data.IngredientSection
 import com.plusmobileapps.chefmate.recipe.data.Recipe
+import com.plusmobileapps.chefmate.subscription.ui.PremiumLockedIcon
+import com.plusmobileapps.chefmate.subscription.ui.PremiumRequiredDialog
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.ResourceString
@@ -214,6 +217,11 @@ fun RecipeDetailScreen(bloc: RecipeDetailBloc, modifier: Modifier = Modifier) {
             onConfirmClick = bloc::onShareConfirmed,
             onDismissRequest = bloc::onShareDismissed,
         )
+    }
+
+    // Upsell shown when a non-subscriber taps the AI chat button.
+    if (state.showPremiumRequiredDialog) {
+        PremiumRequiredDialog(onDismiss = bloc::onPremiumRequiredDismissed)
     }
 
     // Delete confirmation dialog
@@ -442,15 +450,27 @@ private fun RecipeDetailBody(
                             }
                         }
                         if (state.showAiChat) {
+                            // Still tappable for a non-subscriber — the click opens the premium
+                            // upsell instead of the chat, so this is dimmed rather than disabled.
                             IconButton(
                                 onClick = bloc::onAiChatClicked,
                                 modifier = Modifier.testTag(RecipeDetailTestTags.AI_CHAT_BUTTON),
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.AutoAwesome,
-                                    contentDescription =
-                                        stringResource(Res.string.recipe_detail_ai_chat),
-                                )
+                                if (state.isSubscribed) {
+                                    Icon(
+                                        imageVector = Icons.Default.AutoAwesome,
+                                        contentDescription =
+                                            stringResource(Res.string.recipe_detail_ai_chat),
+                                    )
+                                } else {
+                                    PremiumLockedIcon(
+                                        imageVector = Icons.Default.AutoAwesome,
+                                        contentDescription =
+                                            stringResource(
+                                                Res.string.recipe_detail_ai_chat_premium
+                                            ),
+                                    )
+                                }
                             }
                         }
                     }
@@ -1605,6 +1625,10 @@ val previewRecipeDetailBloc: RecipeDetailBloc =
             TODO("Not yet implemented")
         }
 
+        override fun onPremiumRequiredDismissed() {
+            // Preview no-op
+        }
+
         override fun onCoachMarkDismissed(id: String) {
             TODO("Not yet implemented")
         }
@@ -1648,11 +1672,24 @@ val previewRecipeDetailBloc: RecipeDetailBloc =
         @Composable override fun Content(modifier: Modifier) = RecipeDetailScreen(this, modifier)
     }
 
-/** Same as [previewRecipeDetailBloc] but with the AI Chat toolbar button surfaced. */
+/** Same as [previewRecipeDetailBloc] but with the AI Chat toolbar button surfaced, unlocked. */
 val previewRecipeDetailBlocWithAiChat: RecipeDetailBloc =
     object : RecipeDetailBloc by previewRecipeDetailBloc {
         override val state: StateFlow<RecipeDetailBloc.Model> =
-            MutableStateFlow(previewRecipeDetailBloc.state.value.copy(showAiChat = true))
+            MutableStateFlow(
+                previewRecipeDetailBloc.state.value.copy(showAiChat = true, isSubscribed = true)
+            )
+
+        @Composable override fun Content(modifier: Modifier) = RecipeDetailScreen(this, modifier)
+    }
+
+/** AI Chat surfaced for a non-subscriber: the button is dimmed and opens the upsell. */
+val previewRecipeDetailBlocWithLockedAiChat: RecipeDetailBloc =
+    object : RecipeDetailBloc by previewRecipeDetailBloc {
+        override val state: StateFlow<RecipeDetailBloc.Model> =
+            MutableStateFlow(
+                previewRecipeDetailBloc.state.value.copy(showAiChat = true, isSubscribed = false)
+            )
 
         @Composable override fun Content(modifier: Modifier) = RecipeDetailScreen(this, modifier)
     }
