@@ -6,6 +6,7 @@ import com.plusmobileapps.chefmate.fakes.FakeGeminiClient
 import com.plusmobileapps.chefmate.fakes.FakeGeminiRecipeExtractor
 import com.plusmobileapps.chefmate.fakes.TestAuthenticationRepository
 import com.plusmobileapps.chefmate.fakes.TestFeatureFlags
+import com.plusmobileapps.chefmate.fakes.TestSubscriptionRepository
 
 interface TestApplicationComponent : ApplicationComponent {
     val fakeDatabase: FakeDatabase
@@ -13,6 +14,7 @@ interface TestApplicationComponent : ApplicationComponent {
     val fakeGeminiClient: FakeGeminiClient
     val fakeGeminiRecipeExtractor: FakeGeminiRecipeExtractor
     val testFeatureFlags: TestFeatureFlags
+    val testSubscriptionRepository: TestSubscriptionRepository
 }
 
 expect fun createTestApplicationComponent(): TestApplicationComponent
