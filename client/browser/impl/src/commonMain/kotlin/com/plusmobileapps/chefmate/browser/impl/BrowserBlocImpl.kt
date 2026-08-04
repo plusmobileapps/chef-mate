@@ -41,6 +41,7 @@ class BrowserBlocImpl(
                 canGoForward = it.canGoForward,
                 goBackTrigger = it.goBackTrigger,
                 goForwardTrigger = it.goForwardTrigger,
+                captureHtmlTrigger = it.captureHtmlTrigger,
             )
         }
 
@@ -62,6 +63,10 @@ class BrowserBlocImpl(
 
     override fun onExtractRecipe() {
         viewModel.extractRecipe()
+    }
+
+    override fun onHtmlCaptured(html: String?) {
+        viewModel.onHtmlCaptured(html)
     }
 
     override fun onDismissMessage() {

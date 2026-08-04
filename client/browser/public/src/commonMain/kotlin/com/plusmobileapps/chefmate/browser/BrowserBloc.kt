@@ -30,6 +30,8 @@ interface BrowserBloc : ComposeScreen {
 
     fun onExtractRecipe()
 
+    fun onHtmlCaptured(html: String?)
+
     fun onDismissMessage()
 
     fun onCanNavigateChanged(canGoBack: Boolean, canGoForward: Boolean)
@@ -52,6 +54,7 @@ interface BrowserBloc : ComposeScreen {
         val canGoForward: Boolean = false,
         val goBackTrigger: Int = 0,
         val goForwardTrigger: Int = 0,
+        val captureHtmlTrigger: Int = 0,
     )
 
     sealed class Output {

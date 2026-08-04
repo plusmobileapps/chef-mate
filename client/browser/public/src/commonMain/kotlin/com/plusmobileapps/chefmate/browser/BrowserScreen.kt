@@ -108,6 +108,8 @@ fun BrowserScreen(
             onCanNavigateChanged = bloc::onCanNavigateChanged,
             goBackTrigger = viewState.goBackTrigger,
             goForwardTrigger = viewState.goForwardTrigger,
+            captureHtmlTrigger = viewState.captureHtmlTrigger,
+            onHtmlCaptured = bloc::onHtmlCaptured,
             instanceKeeper = bloc.instanceKeeper,
             modifier = Modifier.fillMaxWidth().weight(1f),
         )
