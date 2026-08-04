@@ -20,6 +20,8 @@ import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.toast.ToastService
 import com.plusmobileapps.chefmate.util.DateTimeUtil
+import com.russhwolf.settings.Settings
+import com.russhwolf.settings.string
 import dev.zacsweers.metro.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlinx.collections.immutable.toImmutableList
@@ -42,9 +44,16 @@ class MealPlanViewModel(
     private val dateTimeUtil: DateTimeUtil,
     private val coachMarkController: CoachMarkController,
     private val toastService: ToastService,
+    settings: Settings,
 ) : ViewModel(mainContext) {
 
-    private val _state = MutableStateFlow(State())
+    // Persisted so the day/week/month tab the user last picked is still selected next launch.
+    private var viewModePref by settings.string(KEY_VIEW_MODE, MealPlanBloc.ViewMode.DAY.name)
+
+    private val initialViewMode =
+        MealPlanBloc.ViewMode.entries.find { it.name == viewModePref } ?: MealPlanBloc.ViewMode.DAY
+
+    private val _state = MutableStateFlow(State(viewMode = initialViewMode))
 
     // Fold the shared controller's active mark into state so the screen shows at most one coach
     // mark at a time across the whole app.
@@ -69,6 +78,7 @@ class MealPlanViewModel(
     }
 
     fun selectViewMode(mode: MealPlanBloc.ViewMode) {
+        viewModePref = mode.name
         _state.update { it.copy(viewMode = mode) }
         observeMeals()
     }
@@ -325,4 +335,8 @@ class MealPlanViewModel(
         val pendingReplaceCookMode: List<MealPlanItem>? = null,
         val activeCoachMark: String? = null,
     )
+
+    companion object {
+        private const val KEY_VIEW_MODE = "meal_plan_view_mode"
+    }
 }
