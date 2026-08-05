@@ -62,9 +62,13 @@ class MealPlanBlocTest {
 
     val toastService = FakeToastService()
 
-    val bloc =
+    val settings = MapSettings()
+
+    val bloc = createBloc()
+
+    private fun createBloc() =
         MealPlanBlocImpl(
-            context = context,
+            context = TestBlocContext.create(),
             output = output,
             viewModelFactory = {
                 MealPlanViewModel(
@@ -74,6 +78,7 @@ class MealPlanBlocTest {
                     dateTimeUtil = dateTimeUtil,
                     coachMarkController = coachMarkController,
                     toastService = toastService,
+                    settings = settings,
                 )
             },
         )
@@ -218,6 +223,28 @@ class MealPlanBlocTest {
         bloc.onViewModeSelected(MealPlanBloc.ViewMode.MONTH)
 
         bloc.state.test { awaitItem().viewMode shouldBe MealPlanBloc.ViewMode.MONTH }
+    }
+
+    @Test
+    fun WHEN_view_mode_selected_THEN_it_is_restored_on_next_launch() = runTest {
+        every { repository.getMealsByDateRange("2026-04-01", "2026-04-30") } returns mealsFlow
+
+        bloc.onViewModeSelected(MealPlanBloc.ViewMode.MONTH)
+
+        // A new bloc backed by the same settings stands in for a relaunch of the app.
+        createBloc().state.test { awaitItem().viewMode shouldBe MealPlanBloc.ViewMode.MONTH }
+    }
+
+    @Test
+    fun WHEN_no_view_mode_persisted_THEN_day_mode_is_used() = runTest {
+        createBloc().state.test { awaitItem().viewMode shouldBe MealPlanBloc.ViewMode.DAY }
+    }
+
+    @Test
+    fun WHEN_persisted_view_mode_is_unknown_THEN_day_mode_is_used() = runTest {
+        settings.putString("meal_plan_view_mode", "YEAR")
+
+        createBloc().state.test { awaitItem().viewMode shouldBe MealPlanBloc.ViewMode.DAY }
     }
 
     @Test
@@ -420,6 +447,7 @@ class MealPlanBlocTest {
                             dateTimeUtil = dateTimeUtil,
                             coachMarkController = CoachMarkController(MapSettings()),
                             toastService = toastService,
+                            settings = MapSettings(),
                         )
                     },
                 )
