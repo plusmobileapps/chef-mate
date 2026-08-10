@@ -912,7 +912,15 @@ private fun GroceryListInput(
                 enter = fadeIn() + expandHorizontally(),
                 exit = fadeOut() + shrinkHorizontally(),
             ) {
-                TextButton(onClick = dismissKeyboard) {
+                // Done finishes what the user was typing: anything left in the field is added
+                // before the keyboard goes away, so half-typed text isn't silently abandoned.
+                TextButton(
+                    onClick = {
+                        if (trimmedQuery.isNotEmpty()) onAddClick()
+                        dismissKeyboard()
+                    },
+                    modifier = Modifier.testTag(GroceryListTestTags.DONE_BUTTON),
+                ) {
                     Text(stringResource(Res.string.grocery_done))
                 }
             }
