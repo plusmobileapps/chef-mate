@@ -90,7 +90,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import chefmate.client.grocery.core.public.generated.resources.Res
 import chefmate.client.grocery.core.public.generated.resources.grocery_accept
-import chefmate.client.grocery.core.public.generated.resources.grocery_add_item
 import chefmate.client.grocery.core.public.generated.resources.grocery_add_item_hint
 import chefmate.client.grocery.core.public.generated.resources.grocery_apply
 import chefmate.client.grocery.core.public.generated.resources.grocery_cancel
@@ -1002,7 +1001,8 @@ private fun GroceryItemNameTextField(
                 capitalization = KeyboardCapitalization.Sentences,
                 imeAction = ImeAction.Send,
             ),
-        // Submits the item and keeps the keyboard open so the user can keep entering items. On an
+        // The IME action (or Enter on desktop) is the only way to submit — there is no in-field add
+        // button. Submitting keeps the keyboard open so the user can keep entering items. On an
         // empty field the action instead dismisses the keyboard, matching the Done button and
         // scroll-to-dismiss gestures.
         keyboardActions =
@@ -1011,14 +1011,6 @@ private fun GroceryItemNameTextField(
                     if (fieldValue.text.isNotBlank()) onAddClick() else onDismissKeyboard()
                 }
             ),
-        trailingIcon = {
-            IconButton(onClick = onAddClick, enabled = fieldValue.text.isNotBlank()) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = stringResource(Res.string.grocery_add_item),
-                )
-            }
-        },
     )
 }
 
