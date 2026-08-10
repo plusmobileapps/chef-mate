@@ -66,7 +66,7 @@ private const val HIGHLIGHT_PEAK_ALPHA = 0.5f
  * phones/tablets only. On desktop the row's trailing delete button is the way to remove an item,
  * and a mouse drag across a row would be an easy way to lose one by accident.
  */
-private val supportsSwipeToDelete: Boolean
+internal val supportsSwipeToDelete: Boolean
     get() = currentPlatform == Platform.ANDROID || currentPlatform == Platform.IOS
 
 @OptIn(ExperimentalFoundationApi::class)

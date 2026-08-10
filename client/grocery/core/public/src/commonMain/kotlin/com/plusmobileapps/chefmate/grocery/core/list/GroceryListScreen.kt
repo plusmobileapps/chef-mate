@@ -375,11 +375,14 @@ fun GroceryListScreen(
                                     GroceryItemTrailingContent(
                                         item = item,
                                         onDeleteClick = { bloc.onGroceryItemDelete(item) },
+                                        // Where the row can be swiped away, the always-visible
+                                        // delete button sits right under a thumb and is too easy
+                                        // to hit by accident; the swipe is the deliberate gesture.
+                                        showDeleteButton = !supportsSwipeToDelete,
                                     )
                                 }
                             },
-                            // A second way to delete alongside the trailing button; the list
-                            // ignores it on platforms without touch input.
+                            swipeToDeleteEnabled = supportsSwipeToDelete,
                             onSwipeToDelete = { displayItem ->
                                 itemLookup[displayItem.key as Long]?.let(bloc::onGroceryItemDelete)
                             },
@@ -1028,33 +1031,50 @@ private fun GroceryItemNameTextField(
 }
 
 @Composable
-private fun GroceryItemTrailingContent(item: GroceryItem, onDeleteClick: () -> Unit) {
+private fun GroceryItemTrailingContent(
+    item: GroceryItem,
+    onDeleteClick: () -> Unit,
+    showDeleteButton: Boolean,
+) {
     val syncingDescription = stringResource(Res.string.grocery_sync_syncing)
-    when (item.syncStatus) {
-        SyncStatus.NOT_SYNCED ->
-            Icon(
-                imageVector = Icons.Outlined.CloudOff,
-                contentDescription = stringResource(Res.string.grocery_sync_not_synced),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp),
-            )
-        SyncStatus.SYNCING ->
-            PlusLoadingIndicator(
-                modifier = Modifier.size(16.dp),
-                contentDescription = syncingDescription,
-                strokeWidth = 2.dp,
-            )
-        SyncStatus.SYNCED ->
-            Icon(
-                imageVector = Icons.Outlined.CloudDone,
-                contentDescription = stringResource(Res.string.grocery_sync_synced),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp),
-            )
+    // Without the delete button the sync icon is last in the row, and it carries none of the
+    // padding an IconButton builds in — so it needs its own inset off the trailing edge.
+    Box(
+        modifier =
+            if (showDeleteButton) {
+                Modifier
+            } else {
+                Modifier.padding(end = ChefMateTheme.dimens.paddingNormal)
+            }
+    ) {
+        when (item.syncStatus) {
+            SyncStatus.NOT_SYNCED ->
+                Icon(
+                    imageVector = Icons.Outlined.CloudOff,
+                    contentDescription = stringResource(Res.string.grocery_sync_not_synced),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp),
+                )
+            SyncStatus.SYNCING ->
+                PlusLoadingIndicator(
+                    modifier = Modifier.size(16.dp),
+                    contentDescription = syncingDescription,
+                    strokeWidth = 2.dp,
+                )
+            SyncStatus.SYNCED ->
+                Icon(
+                    imageVector = Icons.Outlined.CloudDone,
+                    contentDescription = stringResource(Res.string.grocery_sync_synced),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp),
+                )
+        }
     }
 
-    IconButton(onClick = onDeleteClick) {
-        Icon(Icons.Default.Delete, stringResource(Res.string.grocery_delete_item))
+    if (showDeleteButton) {
+        IconButton(onClick = onDeleteClick) {
+            Icon(Icons.Default.Delete, stringResource(Res.string.grocery_delete_item))
+        }
     }
 }
 
