@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,12 +18,15 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -31,13 +35,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import chefmate.client.grocery.core.public.generated.resources.Res
 import chefmate.client.grocery.core.public.generated.resources.grocery_checked
+import chefmate.client.grocery.core.public.generated.resources.grocery_delete_item
 import chefmate.client.grocery.core.public.generated.resources.grocery_not_checked
 import chefmate.client.grocery.core.public.generated.resources.grocery_recipe_source
+import com.plusmobileapps.chefmate.Platform
+import com.plusmobileapps.chefmate.currentPlatform
 import com.plusmobileapps.chefmate.grocery.core.displayName
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.ui.text.toInlineMarkdownAnnotatedString
+import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
 
 data class GroceryDisplayItem(
@@ -53,6 +61,14 @@ data class GroceryDisplayGroup(val category: GroceryCategory, val items: List<Gr
 /** Peak opacity of the brief highlight shown on a freshly added grocery item. */
 private const val HIGHLIGHT_PEAK_ALPHA = 0.5f
 
+/**
+ * Default for `swipeToDeleteEnabled`. Swipe-to-delete is a touch idiom, so it's offered on
+ * phones/tablets only. On desktop the row's trailing delete button is the way to remove an item,
+ * and a mouse drag across a row would be an easy way to lose one by accident.
+ */
+private val supportsSwipeToDelete: Boolean
+    get() = currentPlatform == Platform.ANDROID || currentPlatform == Platform.IOS
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun GroceryGroupedList(
@@ -64,6 +80,8 @@ fun GroceryGroupedList(
     showHeaders: Boolean = true,
     highlightedKey: Any? = null,
     trailingContent: (@Composable (GroceryDisplayItem) -> Unit)? = null,
+    onSwipeToDelete: ((GroceryDisplayItem) -> Unit)? = null,
+    swipeToDeleteEnabled: Boolean = supportsSwipeToDelete,
     footer: (LazyListScope.() -> Unit)? = null,
 ) {
     LazyColumn(state = state, modifier = modifier.fillMaxSize()) {
@@ -81,6 +99,10 @@ fun GroceryGroupedList(
                     onClick = { onItemClick(item.key) },
                     trailingContent = trailingContent,
                     highlighted = item.key == highlightedKey,
+                    onSwipeToDelete =
+                        onSwipeToDelete
+                            ?.takeIf { swipeToDeleteEnabled }
+                            ?.let { delete -> { delete(item) } },
                     modifier = Modifier.animateItem(),
                 )
                 HorizontalDivider()
@@ -104,6 +126,69 @@ internal fun CategoryHeader(category: GroceryCategory, modifier: Modifier = Modi
 
 @Composable
 private fun GroceryDisplayListItem(
+    item: GroceryDisplayItem,
+    onCheckedChange: () -> Unit,
+    onClick: () -> Unit,
+    trailingContent: (@Composable (GroceryDisplayItem) -> Unit)?,
+    modifier: Modifier = Modifier,
+    highlighted: Boolean = false,
+    onSwipeToDelete: (() -> Unit)? = null,
+) {
+    if (onSwipeToDelete != null) {
+        val dismissState = rememberSwipeToDismissBoxState()
+        SwipeToDismissBox(
+            state = dismissState,
+            modifier = modifier,
+            // Start-to-end is left alone so the swipe doesn't fight the Android system back
+            // gesture, which starts at the leading edge. Delete is a swipe towards the trailing
+            // edge only.
+            enableDismissFromStartToEnd = false,
+            onDismiss = { onSwipeToDelete() },
+            backgroundContent = { DeleteSwipeBackground() },
+        ) {
+            GroceryItemRow(
+                item = item,
+                onCheckedChange = onCheckedChange,
+                onClick = onClick,
+                trailingContent = trailingContent,
+                highlighted = highlighted,
+                // The row is normally transparent over the screen background; it needs to be
+                // opaque here so the red delete background stays hidden until it's swiped aside.
+                modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+            )
+        }
+    } else {
+        GroceryItemRow(
+            item = item,
+            onCheckedChange = onCheckedChange,
+            onClick = onClick,
+            trailingContent = trailingContent,
+            highlighted = highlighted,
+            modifier = modifier,
+        )
+    }
+}
+
+/** Revealed behind a grocery row as it's swiped away, signalling what the gesture will do. */
+@Composable
+private fun DeleteSwipeBackground() {
+    Box(
+        modifier =
+            Modifier.fillMaxSize()
+                .background(MaterialTheme.colorScheme.errorContainer)
+                .padding(horizontal = ChefMateTheme.dimens.paddingNormal),
+        contentAlignment = Alignment.CenterEnd,
+    ) {
+        Icon(
+            imageVector = Icons.Default.Delete,
+            contentDescription = stringResource(Res.string.grocery_delete_item),
+            tint = MaterialTheme.colorScheme.onErrorContainer,
+        )
+    }
+}
+
+@Composable
+private fun GroceryItemRow(
     item: GroceryDisplayItem,
     onCheckedChange: () -> Unit,
     onClick: () -> Unit,

@@ -378,6 +378,11 @@ fun GroceryListScreen(
                                     )
                                 }
                             },
+                            // A second way to delete alongside the trailing button; the list
+                            // ignores it on platforms without touch input.
+                            onSwipeToDelete = { displayItem ->
+                                itemLookup[displayItem.key as Long]?.let(bloc::onGroceryItemDelete)
+                            },
                         )
                     }
                 }
