@@ -1,0 +1,38 @@
+-- Read cache of the family's members, refreshed wholesale from the family_members_with_profiles
+-- RPC. Cached rather than fetched per-view so the Family screen can expose an observable Flow and
+-- render offline; recipe-book collaboration went remote-only and can only offer one-shot suspend
+-- reads, which is the shape this deliberately avoids repeating.
+--
+-- The owner row is synthesized server-side by the RPC, so it arrives with a null remoteId — isOwner
+-- distinguishes it rather than role alone.
+CREATE TABLE FamilyMember (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    familyLocalId INTEGER NOT NULL,
+    remoteId TEXT UNIQUE,
+    userId TEXT,
+    userEmail TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'member',
+    status TEXT NOT NULL DEFAULT 'pending',
+    isOwner INTEGER NOT NULL DEFAULT 0,
+    displayName TEXT,
+    avatarUrl TEXT,
+    FOREIGN KEY (familyLocalId) REFERENCES Family(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_family_member_family ON FamilyMember(familyLocalId);
+
+-- Owner first, then accepted members, then pending/declined invites — matching the RPC's ordering
+-- so the on-device list looks the same whether it came from cache or a fresh fetch.
+getByFamilyId:
+SELECT * FROM FamilyMember WHERE familyLocalId = ?
+ORDER BY isOwner DESC, status = 'accepted' DESC, userEmail ASC;
+
+insert:
+INSERT INTO FamilyMember (familyLocalId, remoteId, userId, userEmail, role, status, isOwner, displayName, avatarUrl)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteByFamilyId:
+DELETE FROM FamilyMember WHERE familyLocalId = ?;
+
+deleteAll:
+DELETE FROM FamilyMember;
