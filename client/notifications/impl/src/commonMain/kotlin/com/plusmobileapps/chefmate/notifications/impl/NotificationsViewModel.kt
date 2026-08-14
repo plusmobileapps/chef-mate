@@ -2,11 +2,13 @@ package com.plusmobileapps.chefmate.notifications.impl
 
 import chefmate.client.notifications.public.generated.resources.Res
 import chefmate.client.notifications.public.generated.resources.notifications_accept_error
+import chefmate.client.notifications.public.generated.resources.notifications_already_in_family
 import chefmate.client.notifications.public.generated.resources.notifications_decline_error
 import com.plusmobileapps.chefmate.ViewModel
 import com.plusmobileapps.chefmate.auth.data.AuthState
 import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.di.Main
+import com.plusmobileapps.chefmate.family.data.AlreadyInFamilyException
 import com.plusmobileapps.chefmate.notifications.NotificationsBloc.Model
 import com.plusmobileapps.chefmate.notifications.data.AppNotification
 import com.plusmobileapps.chefmate.notifications.data.NotificationsRepository
@@ -72,7 +74,17 @@ class NotificationsViewModel(
         processing.update { it.add(notification.key) }
         scope.launch {
             runCatching { action(notification) }
-                .onFailure { toastService.show(errorMessage.asTextData()) }
+                .onFailure { error ->
+                    // A user can only belong to one family, so this failure is actionable — tell
+                    // them what to do rather than showing the generic "try again".
+                    val message =
+                        if (error is AlreadyInFamilyException) {
+                            Res.string.notifications_already_in_family
+                        } else {
+                            errorMessage
+                        }
+                    toastService.show(message.asTextData())
+                }
             processing.update { it.remove(notification.key) }
         }
     }

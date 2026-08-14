@@ -2,6 +2,7 @@
     <string name="notifications_title">Notifications</string>
     <string name="notifications_grocery_invite_message">You’ve been invited to collaborate on the grocery list “{list}”.</string>
     <string name="notifications_recipe_book_invite_message">You’ve been invited to collaborate on the recipe book “{book}”.</string>
+    <string name="notifications_family_invite_message">You’ve been invited to join the family “{family}”. You’ll share grocery lists, recipe books, and a meal plan.</string>
     <string name="notifications_accept">Accept</string>
     <string name="notifications_decline">Decline</string>
     <string name="notifications_empty_title">You’re all caught up</string>
@@ -9,5 +10,6 @@
     <string name="notifications_signed_out_title">You’re signed out</string>
     <string name="notifications_signed_out">Sign in to see invitations addressed to your account.</string>
     <string name="notifications_accept_error">Couldn’t accept the invitation. Please try again.</string>
+    <string name="notifications_already_in_family">You’re already in a family. Leave it first to join another.</string>
     <string name="notifications_decline_error">Couldn’t decline the invitation. Please try again.</string>
 </resources>

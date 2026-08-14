@@ -13,12 +13,14 @@ kotlin {
             implementation(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
             implementation(projects.client.auth.data.public)
+            implementation(projects.client.family.data.public)
             implementation(projects.client.toast.public)
             implementation(compose.components.resources)
         }
         commonTest.dependencies {
             implementation(projects.client.notifications.data.testing)
             implementation(projects.client.auth.data.testing)
+            implementation(projects.client.family.data.testing)
             implementation(projects.client.toast.testing)
         }
     }
