@@ -1,0 +1,33 @@
+-- Read cache of the user's family. A user belongs to at most one family (enforced server-side by a
+-- partial unique index on family_members), so this table holds zero or one row.
+--
+-- Deliberately NOT offline-first: unlike GroceryList / RecipeBook there are no clientId / isDirty /
+-- getUnsynced columns. Membership is inherently a server concept — creating a family offline could
+-- collide with an invite accepted on another device, and the "one family" rule can only be arbitrated
+-- by the database. Mutations therefore go remote-first and this table is refreshed from the result,
+-- which is also how RecipeBookCollaborationRepository treats collaboration state.
+CREATE TABLE Family (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    remoteId TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    ownerId TEXT,
+    createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+    updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+getCurrent:
+SELECT * FROM Family LIMIT 1;
+
+getByRemoteId:
+SELECT * FROM Family WHERE remoteId = ?;
+
+upsert:
+INSERT INTO Family (remoteId, name, ownerId, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?)
+ON CONFLICT(remoteId) DO UPDATE SET
+    name = excluded.name,
+    ownerId = excluded.ownerId,
+    updatedAt = excluded.updatedAt;
+
+deleteAll:
+DELETE FROM Family;
