@@ -84,6 +84,18 @@ include(":client:featureflag:testing")
 
 include(":client:database:testing")
 
+include(":client:family:core:impl")
+
+include(":client:family:core:impl-robots")
+
+include(":client:family:core:public")
+
+include(":client:family:data:impl")
+
+include(":client:family:data:public")
+
+include(":client:family:data:testing")
+
 include(":client:grocery:autocomplete:impl")
 
 include(":client:grocery:autocomplete:impl-robots")

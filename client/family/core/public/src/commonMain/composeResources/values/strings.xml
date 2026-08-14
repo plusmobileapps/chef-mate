@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <string name="family_title">Family</string>
+
+    <string name="family_signed_out_title">Sign in to start a family</string>
+    <string name="family_signed_out">A family shares grocery lists, recipe books, and a meal plan across everyone’s devices, so it needs an account.</string>
+
+    <string name="family_empty_title">You’re not in a family yet</string>
+    <string name="family_empty_message">Create one to share grocery lists, recipe books, and a meal plan with the people you cook for. Everyone you invite can add and edit what’s shared.</string>
+    <string name="family_name_label">Family name</string>
+    <string name="family_create_button">Create family</string>
+    <string name="family_create_error">Couldn’t create the family. Check your connection and try again.</string>
+    <string name="family_already_in_family">You’re already in a family. Leave it first to join or create another.</string>
+
+    <string name="family_rename">Rename family</string>
+    <string name="family_rename_confirm">Save</string>
+    <string name="family_rename_cancel">Cancel</string>
+    <string name="family_rename_error">Couldn’t rename the family. Check your connection and try again.</string>
+
+    <string name="family_member_pending">Invited</string>
+    <string name="family_member_declined">Declined</string>
+    <string name="family_group_owner">Owner</string>
+    <string name="family_group_members">Members</string>
+    <string name="family_remove_member">Remove %1$s</string>
+
+    <string name="family_invite_email_label">Invite by email</string>
+    <string name="family_invite_button">Send invite</string>
+    <string name="family_invite_error">Couldn’t send that invite. Check the address and your connection.</string>
+    <string name="family_invite_hint">They’ll get an email and an in-app notification. Nothing is shared until they accept.</string>
+
+    <string name="family_remove_title">Remove member?</string>
+    <string name="family_remove_message">{email} will lose access to everything shared with the family.</string>
+    <string name="family_remove_confirm">Remove</string>
+    <string name="family_remove_cancel">Cancel</string>
+
+    <string name="family_leave_button">Leave family</string>
+    <string name="family_leave_title">Leave this family?</string>
+    <string name="family_leave_message">You’ll lose access to the grocery lists, recipe books, and meal plan shared with the family. Anything you created stays yours.</string>
+    <string name="family_leave_confirm">Leave</string>
+
+    <string name="family_delete_button">Delete family</string>
+    <string name="family_delete_title">Delete this family?</string>
+    <string name="family_delete_message">Everyone loses access to what the family shares. Each person keeps the lists, books, and recipes they created.</string>
+    <string name="family_delete_confirm">Delete</string>
+
+    <string name="family_action_cancel">Cancel</string>
+    <string name="family_action_error">That didn’t go through. Check your connection and try again.</string>
+</resources>

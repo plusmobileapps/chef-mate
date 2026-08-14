@@ -7,6 +7,7 @@ kotlin {
             implementation(projects.client.shared)
             implementation(projects.client.aichat.public)
             implementation(projects.client.auth.data.public)
+            implementation(projects.client.family.data.public)
             implementation(projects.client.grocery.data.public)
             implementation(projects.client.meal.data.public)
             implementation(projects.client.recipe.data.public)
@@ -14,6 +15,7 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(projects.client.auth.data.testing)
+            implementation(projects.client.family.data.testing)
             implementation(projects.client.grocery.data.testing)
             implementation(projects.client.meal.data.testing)
             implementation(projects.client.recipe.data.testing)
