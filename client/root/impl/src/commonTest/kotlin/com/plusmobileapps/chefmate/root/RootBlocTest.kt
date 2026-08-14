@@ -12,6 +12,7 @@ import com.plusmobileapps.chefmate.auth.ui.otp.OtpBloc
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.di.OnboardingRepository
+import com.plusmobileapps.chefmate.family.core.FamilyBloc
 import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
 import com.plusmobileapps.chefmate.notifications.NotificationsBloc
 import com.plusmobileapps.chefmate.onboarding.OnboardingRootBloc
@@ -46,6 +47,7 @@ class RootBlocTest {
     var notificationsOutput:
         Consumer<com.plusmobileapps.chefmate.notifications.NotificationsBloc.Output> =
         Consumer {}
+    var familyOutput: Consumer<FamilyBloc.Output> = Consumer {}
     var developerSettingsOutput:
         Consumer<com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc.Output> =
         Consumer {}
@@ -128,6 +130,10 @@ class RootBlocTest {
             },
             notifications = { _, output ->
                 notificationsOutput = output
+                mock()
+            },
+            family = { _, output ->
+                familyOutput = output
                 mock()
             },
             developerSettings = { _, output ->
@@ -357,6 +363,29 @@ class RootBlocTest {
         notificationsOutput.onNext(NotificationsBloc.Output.OpenSignUp)
         rootBloc.instance() should instanceOf<RootBloc.Child.Authentication>()
         authProps shouldBe AuthenticationBloc.Props.SignUp
+    }
+
+    @Test
+    fun When_bottom_nav_opens_family_Then_family_is_shown() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenFamily)
+        rootBloc.instance() should instanceOf<RootBloc.Child.Family>()
+        rootBloc.state.value.backStack.size shouldBe 1
+    }
+
+    @Test
+    fun Given_family_When_back_outputted_Then_bottom_nav_is_shown() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenFamily)
+        rootBloc.instance() should instanceOf<RootBloc.Child.Family>()
+        familyOutput.onNext(FamilyBloc.Output.Back)
+        rootBloc.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
+    }
+
+    @Test
+    fun Given_family_When_open_sign_in_outputted_Then_authentication_is_shown() {
+        bottomNavOutput.onNext(BottomNavBloc.Output.OpenFamily)
+        familyOutput.onNext(FamilyBloc.Output.OpenSignIn)
+        rootBloc.instance() should instanceOf<RootBloc.Child.Authentication>()
+        authProps shouldBe AuthenticationBloc.Props.SignIn
     }
 
     @Test

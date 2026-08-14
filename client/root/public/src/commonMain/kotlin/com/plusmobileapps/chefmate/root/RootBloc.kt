@@ -11,6 +11,7 @@ import com.plusmobileapps.chefmate.auth.ui.otp.OtpBloc
 import com.plusmobileapps.chefmate.browser.BrowserRootBloc
 import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc
+import com.plusmobileapps.chefmate.family.core.FamilyBloc
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagsBloc
 import com.plusmobileapps.chefmate.grocery.core.edit.EditGroceryListBloc
 import com.plusmobileapps.chefmate.notifications.NotificationsBloc
@@ -72,6 +73,8 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
         data class ManageProfile(override val bloc: ManageProfileBloc) : Child()
 
         data class Notifications(override val bloc: NotificationsBloc) : Child()
+
+        data class Family(override val bloc: FamilyBloc) : Child()
 
         data class DeveloperSettings(override val bloc: DeveloperSettingsBloc) : Child()
 

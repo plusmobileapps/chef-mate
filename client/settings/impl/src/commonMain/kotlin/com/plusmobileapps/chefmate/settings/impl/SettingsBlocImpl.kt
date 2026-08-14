@@ -72,6 +72,10 @@ class SettingsBlocImpl(
         output.onNext(Output.OpenNotifications)
     }
 
+    override fun onFamilyClicked() {
+        output.onNext(Output.OpenFamily)
+    }
+
     override fun onUrlClicked(url: String) {
         output.onNext(Output.OpenUrl(url))
     }
