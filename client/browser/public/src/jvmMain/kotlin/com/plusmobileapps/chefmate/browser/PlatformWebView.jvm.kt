@@ -26,6 +26,8 @@ actual fun PlatformWebView(
     onCanNavigateChanged: (canGoBack: Boolean, canGoForward: Boolean) -> Unit,
     goBackTrigger: Int,
     goForwardTrigger: Int,
+    captureHtmlTrigger: Int,
+    onHtmlCaptured: (String?) -> Unit,
     instanceKeeper: InstanceKeeper,
     modifier: Modifier,
 ) {
@@ -46,6 +48,10 @@ actual fun PlatformWebView(
     LaunchedEffect(goBackTrigger) { if (goBackTrigger > 0) holder.goBack() }
 
     LaunchedEffect(goForwardTrigger) { if (goForwardTrigger > 0) holder.goForward() }
+
+    LaunchedEffect(captureHtmlTrigger) {
+        if (captureHtmlTrigger > 0) holder.captureHtml(onHtmlCaptured)
+    }
 
     SwingPanel(
         modifier = modifier,
@@ -79,6 +85,19 @@ private class WebViewHolder : InstanceKeeper.Instance {
             webView?.engine?.history?.let { history ->
                 if (history.currentIndex < history.entries.size - 1) history.go(1)
             }
+        }
+    }
+
+    /**
+     * Reads the loaded page's markup off the JavaFX application thread, where the engine requires
+     * every call to happen. [onCaptured] therefore runs on that thread, not the caller's.
+     */
+    fun captureHtml(onCaptured: (String?) -> Unit) {
+        Platform.runLater {
+            onCaptured(
+                runCatching { webView?.engine?.executeScript(CAPTURE_HTML_SCRIPT) as? String }
+                    .getOrNull()
+            )
         }
     }
 

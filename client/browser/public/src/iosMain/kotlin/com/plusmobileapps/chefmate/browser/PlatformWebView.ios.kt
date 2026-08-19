@@ -22,6 +22,8 @@ actual fun PlatformWebView(
     onCanNavigateChanged: (canGoBack: Boolean, canGoForward: Boolean) -> Unit,
     goBackTrigger: Int,
     goForwardTrigger: Int,
+    captureHtmlTrigger: Int,
+    onHtmlCaptured: (String?) -> Unit,
     instanceKeeper: InstanceKeeper,
     modifier: Modifier,
 ) {
@@ -59,6 +61,12 @@ actual fun PlatformWebView(
 
     LaunchedEffect(goForwardTrigger) {
         if (goForwardTrigger > 0) webViewNavigator.navigateForward()
+    }
+
+    LaunchedEffect(captureHtmlTrigger) {
+        if (captureHtmlTrigger > 0) {
+            webViewNavigator.evaluateJavaScript(CAPTURE_HTML_SCRIPT) { onHtmlCaptured(it) }
+        }
     }
 
     WebView(state = webViewState, modifier = modifier, navigator = webViewNavigator)

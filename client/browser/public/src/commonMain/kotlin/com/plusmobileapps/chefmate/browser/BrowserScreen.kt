@@ -108,6 +108,8 @@ fun BrowserScreen(
             onCanNavigateChanged = bloc::onCanNavigateChanged,
             goBackTrigger = viewState.goBackTrigger,
             goForwardTrigger = viewState.goForwardTrigger,
+            captureHtmlTrigger = viewState.captureHtmlTrigger,
+            onHtmlCaptured = bloc::onHtmlCaptured,
             instanceKeeper = bloc.instanceKeeper,
             modifier = Modifier.fillMaxWidth().weight(1f),
         )
@@ -115,7 +117,6 @@ fun BrowserScreen(
             BrowserBottomBar(
                 showExtract = viewState.currentUrl.isNotBlank(),
                 isExtracting = viewState.isExtracting,
-                isWebViewLoading = viewState.isWebViewLoading,
                 onExtractRecipe = bloc::onExtractRecipe,
             )
         }
@@ -243,11 +244,18 @@ fun BrowserAddressBar(
     }
 }
 
+/**
+ * The extract button deliberately reflects only [isExtracting], not whether the WebView is still
+ * loading. A load that never reports a terminal state — one stalled subresource on a heavy recipe
+ * page is enough — would otherwise leave the button disabled with no way to retry. Extracting
+ * against a half-rendered page is the safer failure: it surfaces a dismissible error the user can
+ * retry, and the extractor already falls back to fetching the URL when the captured markup carries
+ * no recipe.
+ */
 @Composable
 private fun BrowserBottomBar(
     showExtract: Boolean,
     isExtracting: Boolean,
-    isWebViewLoading: Boolean,
     onExtractRecipe: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -260,7 +268,7 @@ private fun BrowserBottomBar(
         if (showExtract) {
             PlusButton(
                 text = Res.string.browser_download.asTextData(),
-                isLoading = isExtracting || isWebViewLoading,
+                isLoading = isExtracting,
                 onClick = onExtractRecipe,
             )
         }
