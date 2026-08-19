@@ -2,11 +2,19 @@
 
 package com.plusmobileapps.chefmate.browser.impl
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.Dp
+import chefmate.client.browser.public.generated.resources.Res
+import chefmate.client.browser.public.generated.resources.browser_open_in_default_browser
 import com.arkivanov.decompose.Cancellation
 import com.arkivanov.decompose.DelicateDecomposeApi
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
@@ -28,6 +36,7 @@ import com.plusmobileapps.chefmate.browser.BrowserRootScreen
 import com.plusmobileapps.chefmate.browser.BrowserSelectEngineBloc
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.text.FixedString
+import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderContainer
 import com.plusmobileapps.chefmate.ui.components.PlusHeaderData
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
@@ -99,14 +108,41 @@ class BrowserRootBlocImpl(
         when (val p = presentation) {
             BrowserRootBloc.Presentation.Embedded ->
                 BrowserRootScreen(bloc = this, modifier = modifier)
-            is BrowserRootBloc.Presentation.Modal ->
+            is BrowserRootBloc.Presentation.Modal -> {
+                val childStack by routerState.subscribeAsState()
+                val activeChild = childStack.active.instance
+                val currentUrl =
+                    if (activeChild is BrowserRootBloc.Child.Browser) {
+                        activeChild.bloc.state.collectAsState().value.currentUrl
+                    } else {
+                        ""
+                    }
+                val uriHandler = LocalUriHandler.current
                 PlusHeaderContainer(
                     modifier = modifier,
-                    data = PlusHeaderData.Modal(title = FixedString(""), onCloseClick = p.onClose),
+                    data =
+                        PlusHeaderData.Modal(
+                            title = FixedString(""),
+                            onCloseClick = p.onClose,
+                            trailingAccessory =
+                                if (currentUrl.isBlank()) null
+                                else
+                                    PlusHeaderData.TrailingAccessory.Icon(
+                                        icon = Icons.AutoMirrored.Filled.OpenInNew,
+                                        contentDesc =
+                                            Res.string.browser_open_in_default_browser.asTextData(),
+                                        // Guarded because a scheme with no handler installed makes
+                                        // the platform handler throw.
+                                        onClick = {
+                                            runCatching { uriHandler.openUri(currentUrl) }
+                                        },
+                                    ),
+                        ),
                     scrollEnabled = false,
                     maxContentWidth = Dp.Unspecified,
                     content = { BrowserRootScreen(bloc = this@BrowserRootBlocImpl) },
                 )
+            }
         }
     }
 
