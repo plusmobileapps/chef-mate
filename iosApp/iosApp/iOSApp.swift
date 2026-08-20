@@ -28,6 +28,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     override init() {
         super.init()
         BugsnagStartup_iosKt.initializeBugsnag()
+        SubscriptionStartup_iosKt.initializeSubscriptions()
     }
 
     func application(

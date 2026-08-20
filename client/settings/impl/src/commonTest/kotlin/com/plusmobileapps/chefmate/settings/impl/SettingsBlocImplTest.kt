@@ -124,6 +124,12 @@ class SettingsBlocImplTest {
     }
 
     @Test
+    fun When_subscription_clicked_Then_OpenSubscription_output_emitted() {
+        bloc.onSubscriptionClicked()
+        output.lastValue shouldBe SettingsBloc.Output.OpenSubscription
+    }
+
+    @Test
     fun When_replay_onboarding_clicked_Then_OpenOnboarding_output_emitted() {
         bloc.onReplayOnboardingClicked()
         output.lastValue shouldBe SettingsBloc.Output.OpenOnboarding

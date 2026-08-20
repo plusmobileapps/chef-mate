@@ -21,6 +21,7 @@ kotlin {
             api(projects.client.recipebook.edit.public)
             api(projects.client.auth.ui.public)
             api(projects.client.settings.root.public)
+            api(projects.client.subscription.public)
             api(libs.arkivanov.decompose.core)
             implementation(projects.client.shared)
             implementation(projects.client.ui.public)

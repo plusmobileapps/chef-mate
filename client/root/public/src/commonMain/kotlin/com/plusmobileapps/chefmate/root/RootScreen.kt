@@ -19,6 +19,7 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimator
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.plusmobileapps.chefmate.aichat.AiChatPresentation
 import com.plusmobileapps.chefmate.aichat.LocalAiChatPresentation
+import com.plusmobileapps.chefmate.subscription.PremiumRequiredDialog
 import com.plusmobileapps.chefmate.ui.Content
 import com.plusmobileapps.chefmate.ui.backAnimation
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -26,7 +27,14 @@ import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 @Composable
 fun RootScreen(rootBloc: RootBloc, modifier: Modifier = Modifier) {
     val stack by rootBloc.state.subscribeAsState()
+    val showPremiumDialog by rootBloc.premiumDialog.subscribeAsState()
     ChefMateTheme {
+        if (showPremiumDialog) {
+            PremiumRequiredDialog(
+                onConfirm = rootBloc::onPremiumDialogConfirmed,
+                onDismiss = rootBloc::onPremiumDialogDismissed,
+            )
+        }
         // Surface paints the theme background behind the navigation stack so the
         // Android predictive-back gesture reveals the themed color (white in light,
         // black in dark) instead of the Activity's hardcoded light window background.

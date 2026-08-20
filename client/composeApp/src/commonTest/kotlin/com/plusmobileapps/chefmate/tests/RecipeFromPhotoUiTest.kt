@@ -46,6 +46,7 @@ class RecipeFromPhotoUiTest {
     @Test
     fun ai_chat_shows_attach_photo_button() = runRootBlocTest { component ->
         component.testFeatureFlags.set(FeatureFlagRegistry.AiChat, true)
+        component.testSubscriptionRepository.setPremium(true)
 
         bottomNav().clickMoreTab()
         more().awaitDisplayed().clickAiChatRow()

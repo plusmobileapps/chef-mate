@@ -93,6 +93,8 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
 
         data object OpenAppSettings : Output()
 
+        data object OpenSubscription : Output()
+
         data object OpenAiChat : Output()
 
         data object OpenDeveloperSettings : Output()

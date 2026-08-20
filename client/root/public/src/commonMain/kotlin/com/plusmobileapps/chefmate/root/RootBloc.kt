@@ -23,10 +23,24 @@ import com.plusmobileapps.chefmate.recipe.core.share.PublicRecipeBloc
 import com.plusmobileapps.chefmate.recipe.exporter.ExportRecipesBloc
 import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookBloc
 import com.plusmobileapps.chefmate.settings.root.SettingsRootBloc
+import com.plusmobileapps.chefmate.subscription.SubscriptionBloc
 import com.plusmobileapps.chefmate.ui.ComposeScreen
 
 interface RootBloc : BackHandlerOwner, BackClickBloc {
     val state: Value<ChildStack<*, Child>>
+
+    /**
+     * Whether the "premium required" gate dialog is showing. Raised when a non-subscriber taps a
+     * premium feature (AI chat); confirming opens the paywall. Rendered as an overlay by
+     * RootScreen.
+     */
+    val premiumDialog: Value<Boolean>
+
+    /** Confirm the premium gate dialog: dismiss it and open the paywall. */
+    fun onPremiumDialogConfirmed()
+
+    /** Dismiss the premium gate dialog without opening the paywall. */
+    fun onPremiumDialogDismissed()
 
     fun handleSharedUrl(url: String)
 
@@ -85,6 +99,8 @@ interface RootBloc : BackHandlerOwner, BackClickBloc {
          * RootScreen).
          */
         data class AiChat(override val bloc: AiChatRootBloc) : Child()
+
+        data class Subscription(override val bloc: SubscriptionBloc) : Child()
 
         data class ExportRecipes(override val bloc: ExportRecipesBloc) : Child()
 

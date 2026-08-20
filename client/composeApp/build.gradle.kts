@@ -1,3 +1,4 @@
+import com.plusmobileapps.chefmate.linkSwiftBackCompatIntoIosTestBinaries
 import java.util.Properties
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
@@ -121,6 +122,10 @@ kotlin {
             api(projects.client.util.impl)
             api(projects.client.settings.impl)
             api(projects.client.settings.root.impl)
+            api(projects.client.subscription.data.public)
+            api(projects.client.subscription.data.impl)
+            api(projects.client.subscription.public)
+            api(projects.client.subscription.impl)
             api(projects.client.developerSettings.impl)
             api(projects.client.toast.impl)
             api(projects.client.toast.public)
@@ -159,6 +164,8 @@ kotlin {
             implementation(projects.client.testing)
             implementation(projects.client.database.testing)
             implementation(projects.client.auth.data.testing)
+            implementation(projects.client.subscription.data.testing)
+            implementation(projects.client.subscription.implRobots)
             implementation(projects.client.aichat.implRobots)
             implementation(projects.client.bottomnav.implRobots)
             implementation(projects.client.browser.implRobots)
@@ -188,6 +195,9 @@ kotlin {
         }
     }
 }
+
+// RevenueCat is pulled in transitively via :client:subscription:data:impl.
+linkSwiftBackCompatIntoIosTestBinaries()
 
 android {
     namespace = "com.plusmobileapps.chefmate"

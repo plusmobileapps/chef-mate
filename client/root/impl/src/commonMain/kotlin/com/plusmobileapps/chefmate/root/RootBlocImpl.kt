@@ -11,6 +11,7 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.popWhile
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.router.stack.replaceCurrent
+import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.aichat.AiChatRootBloc
@@ -40,6 +41,8 @@ import com.plusmobileapps.chefmate.recipebook.edit.EditRecipeBookBloc
 import com.plusmobileapps.chefmate.root.RootBloc.Child.BottomNavigation
 import com.plusmobileapps.chefmate.root.RootBlocImpl.Configuration.RecipeRoot
 import com.plusmobileapps.chefmate.settings.root.SettingsRootBloc
+import com.plusmobileapps.chefmate.subscription.SubscriptionBloc
+import com.plusmobileapps.chefmate.subscription.data.SubscriptionRepository
 import com.plusmobileapps.metro.extensions.assistedfactory.ContributesAssistedFactory
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedInject
@@ -72,10 +75,38 @@ class RootBlocImpl(
     private val exportRecipes: ExportRecipesBloc.Factory,
     private val editRecipeBook: EditRecipeBookBloc.Factory,
     private val editGroceryList: EditGroceryListBloc.Factory,
+    private val subscriptionRepository: SubscriptionRepository,
+    private val subscription: SubscriptionBloc.Factory,
 ) : RootBloc, BlocContext by context {
 
     init {
         createScope().launch { featureFlags.refresh() }
+        // Warm the subscription state so the AI-chat gate reads an accurate premium flag.
+        createScope().launch { subscriptionRepository.refresh() }
+    }
+
+    private val _premiumDialog = MutableValue(false)
+    override val premiumDialog: Value<Boolean> = _premiumDialog
+
+    override fun onPremiumDialogConfirmed() {
+        _premiumDialog.value = false
+        navigation.bringToFront(Configuration.Subscription)
+    }
+
+    override fun onPremiumDialogDismissed() {
+        _premiumDialog.value = false
+    }
+
+    /**
+     * Central premium gate for the AI chat. Premium users open it directly; everyone else gets the
+     * "premium required" dialog, whose confirmation routes to the paywall.
+     */
+    private fun openAiChat(recipeContextId: Long?) {
+        if (subscriptionRepository.state.value.isPremium) {
+            navigation.bringToFront(Configuration.AiChat(recipeContextId))
+        } else {
+            _premiumDialog.value = true
+        }
     }
 
     private val initialBottomNavTab: BottomNavBloc.Tab? =
@@ -346,6 +377,15 @@ class RootBlocImpl(
                         )
                 )
 
+            Configuration.Subscription ->
+                RootBloc.Child.Subscription(
+                    bloc =
+                        subscription.create(
+                            context = context,
+                            output = ::handleSubscriptionOutput,
+                        )
+                )
+
             is Configuration.ExportRecipes ->
                 RootBloc.Child.ExportRecipes(
                     bloc =
@@ -467,7 +507,11 @@ class RootBlocImpl(
             }
 
             BottomNavBloc.Output.OpenAiChat -> {
-                navigation.bringToFront(Configuration.AiChat())
+                openAiChat(recipeContextId = null)
+            }
+
+            BottomNavBloc.Output.OpenSubscription -> {
+                navigation.bringToFront(Configuration.Subscription)
             }
 
             BottomNavBloc.Output.OpenDeveloperSettings -> {
@@ -598,7 +642,7 @@ class RootBlocImpl(
                 navigation.bringToFront(Configuration.CookMode(output.recipeId))
             }
             is RecipeRootBloc.Output.OpenAiChat -> {
-                navigation.bringToFront(Configuration.AiChat(recipeContextId = output.recipeId))
+                openAiChat(recipeContextId = output.recipeId)
             }
         }
     }
@@ -606,8 +650,7 @@ class RootBlocImpl(
     private fun handleCookModeOutput(output: CookModeBloc.Output) {
         when (output) {
             CookModeBloc.Output.Finished -> navigation.pop()
-            is CookModeBloc.Output.OpenAiChat ->
-                navigation.bringToFront(Configuration.AiChat(recipeContextId = output.recipeId))
+            is CookModeBloc.Output.OpenAiChat -> openAiChat(recipeContextId = output.recipeId)
         }
     }
 
@@ -624,6 +667,12 @@ class RootBlocImpl(
                         )
                     )
                 )
+        }
+    }
+
+    private fun handleSubscriptionOutput(output: SubscriptionBloc.Output) {
+        when (output) {
+            SubscriptionBloc.Output.Finished -> navigation.pop()
         }
     }
 
@@ -741,6 +790,8 @@ class RootBlocImpl(
         @Serializable data class CookMode(val recipeId: Long) : Configuration()
 
         @Serializable data class AiChat(val recipeContextId: Long? = null) : Configuration()
+
+        @Serializable data object Subscription : Configuration()
 
         @Serializable data class ExportRecipes(val recipeIds: Set<Long>?) : Configuration()
 

@@ -80,6 +80,10 @@ class SettingsBlocImpl(
         output.onNext(Output.OpenAppSettings)
     }
 
+    override fun onSubscriptionClicked() {
+        output.onNext(Output.OpenSubscription)
+    }
+
     override fun onAiChatClicked() {
         output.onNext(Output.OpenAiChat)
     }

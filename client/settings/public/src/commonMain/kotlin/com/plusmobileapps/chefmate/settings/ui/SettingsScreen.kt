@@ -42,6 +42,7 @@ import chefmate.client.settings.public.generated.resources.settings_ai_chat
 import chefmate.client.settings.public.generated.resources.settings_guest_banner
 import chefmate.client.settings.public.generated.resources.settings_notifications
 import chefmate.client.settings.public.generated.resources.settings_replay_onboarding
+import chefmate.client.settings.public.generated.resources.settings_subscription
 import chefmate.client.settings.public.generated.resources.sign_in
 import chefmate.client.settings.public.generated.resources.sign_out
 import chefmate.client.settings.public.generated.resources.sign_out_confirmation_cancel
@@ -148,6 +149,11 @@ fun SettingsScreen(bloc: SettingsBloc, modifier: Modifier = Modifier) {
             SettingsRow(
                 name = Res.string.settings.asTextData(),
                 onClick = bloc::onAppSettingsClicked,
+            )
+            HorizontalDivider()
+            SettingsRow(
+                name = Res.string.settings_subscription.asTextData(),
+                onClick = bloc::onSubscriptionClicked,
             )
             if (viewState.isAiChatEnabled) {
                 HorizontalDivider()
@@ -317,6 +323,8 @@ private val previewBlocUnauthenticated =
 
         override fun onAppSettingsClicked() = Unit
 
+        override fun onSubscriptionClicked() = Unit
+
         override fun onAiChatClicked() = Unit
 
         override fun onDeveloperSettingsClicked() = Unit
@@ -357,6 +365,8 @@ private val previewBlocAuthenticated =
 
         override fun onAppSettingsClicked() = Unit
 
+        override fun onSubscriptionClicked() = Unit
+
         override fun onAiChatClicked() = Unit
 
         override fun onDeveloperSettingsClicked() = Unit
@@ -392,6 +402,8 @@ private val previewBlocAnonymous =
         override fun onUrlClicked(url: String) = Unit
 
         override fun onAppSettingsClicked() = Unit
+
+        override fun onSubscriptionClicked() = Unit
 
         override fun onAiChatClicked() = Unit
 

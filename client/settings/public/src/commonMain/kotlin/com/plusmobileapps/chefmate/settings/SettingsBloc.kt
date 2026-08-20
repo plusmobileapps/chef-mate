@@ -35,6 +35,8 @@ interface SettingsBloc : ComposeScreen {
 
     fun onAppSettingsClicked()
 
+    fun onSubscriptionClicked()
+
     fun onAiChatClicked()
 
     fun onDeveloperSettingsClicked()
@@ -68,6 +70,8 @@ interface SettingsBloc : ComposeScreen {
         data object OpenNotifications : Output()
 
         data object OpenAppSettings : Output()
+
+        data object OpenSubscription : Output()
 
         data object OpenAiChat : Output()
 
