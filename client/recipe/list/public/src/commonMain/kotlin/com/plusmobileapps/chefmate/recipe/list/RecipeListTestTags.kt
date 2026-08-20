@@ -22,4 +22,5 @@ object RecipeListTestTags {
     const val SELECTION_ADD_TO_CATEGORY: String = "recipe_list_selection_add_to_category"
     const val BULK_BOOK_SHEET: String = "recipe_list_bulk_book_sheet"
     const val BULK_CATEGORY_SHEET: String = "recipe_list_bulk_category_sheet"
+    const val FILTER_SIDEBAR: String = "recipe_list_filter_sidebar"
 }
