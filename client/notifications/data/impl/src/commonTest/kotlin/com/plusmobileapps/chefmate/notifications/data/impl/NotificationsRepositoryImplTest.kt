@@ -1,6 +1,7 @@
 package com.plusmobileapps.chefmate.notifications.data.impl
 
 import app.cash.turbine.test
+import com.plusmobileapps.chefmate.family.data.testing.FakeFamilyRepository
 import com.plusmobileapps.chefmate.grocery.data.GroceryListInvite
 import com.plusmobileapps.chefmate.grocery.data.ListRole
 import com.plusmobileapps.chefmate.grocery.data.testing.FakeGroceryRepository
@@ -18,11 +19,13 @@ class NotificationsRepositoryImplTest {
 
     private val grocery = FakeGroceryRepository()
     private val recipeBook = FakeRecipeBookCollaborationRepository()
+    private val family = FakeFamilyRepository()
 
     private val repository =
         NotificationsRepositoryImpl(
             groceryRepository = grocery,
             recipeBookCollaborationRepository = recipeBook,
+            familyRepository = family,
         )
 
     @Test

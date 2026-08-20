@@ -4,6 +4,7 @@ package com.plusmobileapps.chefmate.auth.usecase.impl
 
 import com.plusmobileapps.chefmate.aichat.AiChatLocalDataCleaner
 import com.plusmobileapps.chefmate.auth.data.testing.FakeAuthenticationRepository
+import com.plusmobileapps.chefmate.family.data.testing.FakeFamilyRepository
 import com.plusmobileapps.chefmate.grocery.data.testing.FakeGroceryAutocompleteRepository
 import com.plusmobileapps.chefmate.grocery.data.testing.FakeGroceryRepository
 import com.plusmobileapps.chefmate.meal.data.testing.FakeMealPlanRepository
@@ -35,6 +36,7 @@ class SignOutUseCaseImplTest {
         )
     private val categoryRepository = FakeCategoryRepository(categories)
     private val groceryAutocompleteRepository = FakeGroceryAutocompleteRepository()
+    private val familyRepository = FakeFamilyRepository()
     private var aiChatCleared = false
     private val aiChatLocalDataCleaner = AiChatLocalDataCleaner { aiChatCleared = true }
 
@@ -47,6 +49,7 @@ class SignOutUseCaseImplTest {
             recipeBookRepository = recipeBookRepository,
             categoryRepository = categoryRepository,
             groceryAutocompleteRepository = groceryAutocompleteRepository,
+            familyRepository = familyRepository,
             aiChatLocalDataCleaner = aiChatLocalDataCleaner,
         )
 

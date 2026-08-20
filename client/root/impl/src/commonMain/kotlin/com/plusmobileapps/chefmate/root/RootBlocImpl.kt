@@ -24,6 +24,7 @@ import com.plusmobileapps.chefmate.cook.CookModeBloc
 import com.plusmobileapps.chefmate.devsettings.DeveloperSettingsBloc
 import com.plusmobileapps.chefmate.di.AppScope
 import com.plusmobileapps.chefmate.di.OnboardingRepository
+import com.plusmobileapps.chefmate.family.core.FamilyBloc
 import com.plusmobileapps.chefmate.featureflag.FeatureFlags
 import com.plusmobileapps.chefmate.featureflag.FeatureFlagsBloc
 import com.plusmobileapps.chefmate.grocery.core.edit.EditGroceryListBloc
@@ -64,6 +65,7 @@ class RootBlocImpl(
     private val settingsRoot: SettingsRootBloc.Factory,
     private val manageProfile: ManageProfileBloc.Factory,
     private val notifications: NotificationsBloc.Factory,
+    private val family: FamilyBloc.Factory,
     private val developerSettings: DeveloperSettingsBloc.Factory,
     private val cookMode: CookModeBloc.Factory,
     private val featureFlags: FeatureFlags,
@@ -308,6 +310,11 @@ class RootBlocImpl(
                         )
                 )
 
+            Configuration.Family ->
+                RootBloc.Child.Family(
+                    bloc = family.create(context = context, output = ::handleFamilyOutput)
+                )
+
             Configuration.DeveloperSettings ->
                 RootBloc.Child.DeveloperSettings(
                     bloc =
@@ -456,6 +463,10 @@ class RootBlocImpl(
                 navigation.bringToFront(Configuration.Notifications)
             }
 
+            BottomNavBloc.Output.OpenFamily -> {
+                navigation.bringToFront(Configuration.Family)
+            }
+
             BottomNavBloc.Output.OpenAppSettings -> {
                 navigation.bringToFront(Configuration.SettingsRoot())
             }
@@ -555,6 +566,20 @@ class RootBlocImpl(
                     Configuration.Authentication(AuthenticationBloc.Props.SignIn)
                 )
             NotificationsBloc.Output.OpenSignUp ->
+                navigation.bringToFront(
+                    Configuration.Authentication(AuthenticationBloc.Props.SignUp)
+                )
+        }
+    }
+
+    private fun handleFamilyOutput(output: FamilyBloc.Output) {
+        when (output) {
+            FamilyBloc.Output.Back -> navigation.pop()
+            FamilyBloc.Output.OpenSignIn ->
+                navigation.bringToFront(
+                    Configuration.Authentication(AuthenticationBloc.Props.SignIn)
+                )
+            FamilyBloc.Output.OpenSignUp ->
                 navigation.bringToFront(
                     Configuration.Authentication(AuthenticationBloc.Props.SignUp)
                 )
@@ -733,6 +758,8 @@ class RootBlocImpl(
         @Serializable data object ManageProfile : Configuration()
 
         @Serializable data object Notifications : Configuration()
+
+        @Serializable data object Family : Configuration()
 
         @Serializable data object DeveloperSettings : Configuration()
 

@@ -13,6 +13,7 @@ kotlin {
             api(projects.client.developerSettings.public)
             api(projects.client.featureflag.public)
             api(projects.client.grocery.core.public)
+            api(projects.client.family.core.public)
             api(projects.client.notifications.public)
             api(projects.client.onboarding.public)
             api(projects.client.profile.public)

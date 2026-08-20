@@ -3,6 +3,7 @@ plugins { alias(libs.plugins.kmpLibrary) }
 kotlin {
     sourceSets {
         commonMain.dependencies {
+            api(projects.client.family.data.public)
             api(projects.client.grocery.data.public)
             api(projects.client.recipebook.data.public)
             implementation(projects.client.shared)

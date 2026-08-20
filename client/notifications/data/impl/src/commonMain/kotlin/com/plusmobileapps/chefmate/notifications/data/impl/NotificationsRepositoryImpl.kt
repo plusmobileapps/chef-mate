@@ -1,6 +1,7 @@
 package com.plusmobileapps.chefmate.notifications.data.impl
 
 import com.plusmobileapps.chefmate.di.AppScope
+import com.plusmobileapps.chefmate.family.data.FamilyRepository
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import com.plusmobileapps.chefmate.notifications.data.AppNotification
 import com.plusmobileapps.chefmate.notifications.data.NotificationsRepository
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.update
 class NotificationsRepositoryImpl(
     private val groceryRepository: GroceryRepository,
     private val recipeBookCollaborationRepository: RecipeBookCollaborationRepository,
+    private val familyRepository: FamilyRepository,
 ) : NotificationsRepository {
 
     // Bumped by refresh()/accept()/decline() to force both the grocery flow and the recipe-book
@@ -42,7 +44,10 @@ class NotificationsRepositoryImpl(
                         .getOrDefault(emptyList())
                 )
             },
-        ) { groceryInvites, recipeBookInvites ->
+            // Family invites come from a hot flow the repository keeps fresh over realtime, so
+            // unlike the recipe-book source this needs no re-fetch wrapper.
+            familyRepository.pendingInvites(),
+        ) { groceryInvites, recipeBookInvites, familyInvites ->
             groceryInvites.map {
                 AppNotification.GroceryInvite(
                     memberId = it.memberId,
@@ -56,6 +61,12 @@ class NotificationsRepositoryImpl(
                         bookName = it.bookName,
                         role = it.role,
                     )
+                } +
+                familyInvites.map {
+                    AppNotification.FamilyInvite(
+                        memberId = it.memberId,
+                        familyName = it.familyName,
+                    )
                 }
         }
     }
@@ -66,6 +77,9 @@ class NotificationsRepositoryImpl(
                 groceryRepository.acceptInvitation(notification.memberId)
             is AppNotification.RecipeBookInvite ->
                 recipeBookCollaborationRepository.acceptInvite(notification.memberId)
+            // Throws AlreadyInFamilyException when the user is already in a family — a user can
+            // only belong to one. The caller turns that into a message telling them to leave first.
+            is AppNotification.FamilyInvite -> familyRepository.acceptInvite(notification.memberId)
         }
         refresh()
     }
@@ -76,6 +90,7 @@ class NotificationsRepositoryImpl(
                 groceryRepository.rejectInvitation(notification.memberId)
             is AppNotification.RecipeBookInvite ->
                 recipeBookCollaborationRepository.declineInvite(notification.memberId)
+            is AppNotification.FamilyInvite -> familyRepository.declineInvite(notification.memberId)
         }
         refresh()
     }

@@ -32,6 +32,8 @@ class MoreRobot(private val test: ComposeUiTest) {
 
     fun clickNotificationsRow(): MoreRobot = clickRow("Notifications")
 
+    fun clickFamilyRow(): MoreRobot = clickRow("Family")
+
     private fun clickRow(label: String): MoreRobot = apply {
         test.waitUntilExactlyOneExists(hasText(label) and onScreen)
         test.onNode(hasText(label) and onScreen).performClick()

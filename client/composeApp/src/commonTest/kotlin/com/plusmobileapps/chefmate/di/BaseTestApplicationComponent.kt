@@ -6,6 +6,8 @@ import com.plusmobileapps.chefmate.database.BrowserHistoryQueries
 import com.plusmobileapps.chefmate.database.CategoryQueries
 import com.plusmobileapps.chefmate.database.CookingSessionQueries
 import com.plusmobileapps.chefmate.database.Database
+import com.plusmobileapps.chefmate.database.FamilyMemberQueries
+import com.plusmobileapps.chefmate.database.FamilyQueries
 import com.plusmobileapps.chefmate.database.GroceryAutocompleteItemQueries
 import com.plusmobileapps.chefmate.database.GroceryListMemberQueries
 import com.plusmobileapps.chefmate.database.GroceryListQueries
@@ -37,6 +39,12 @@ abstract class BaseTestApplicationComponent : TestApplicationComponent {
 
     @Provides
     fun providesGroceryQueries(database: Database): GroceryQueries = database.groceryQueries
+
+    @Provides fun providesFamilyQueries(database: Database): FamilyQueries = database.familyQueries
+
+    @Provides
+    fun providesFamilyMemberQueries(database: Database): FamilyMemberQueries =
+        database.familyMemberQueries
 
     @Provides
     fun providesGroceryListQueries(database: Database): GroceryListQueries =

@@ -31,6 +31,8 @@ interface SettingsBloc : ComposeScreen {
 
     fun onNotificationsClicked()
 
+    fun onFamilyClicked()
+
     fun onUrlClicked(url: String)
 
     fun onAppSettingsClicked()
@@ -66,6 +68,8 @@ interface SettingsBloc : ComposeScreen {
         data object OpenManageProfile : Output()
 
         data object OpenNotifications : Output()
+
+        data object OpenFamily : Output()
 
         data object OpenAppSettings : Output()
 

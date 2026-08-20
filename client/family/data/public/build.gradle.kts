@@ -1,0 +1,15 @@
+plugins {
+    alias(libs.plugins.kmpLibrary)
+    alias(libs.plugins.kotlinSerialization)
+}
+
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation(projects.client.shared)
+            implementation(libs.kotlinx.serialization.json)
+        }
+    }
+}
+
+plusLibrary { namespace = "com.plusmobileapps.chefmate.family.data" }

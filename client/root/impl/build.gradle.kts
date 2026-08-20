@@ -15,6 +15,7 @@ kotlin {
             implementation(projects.client.cook.public)
             implementation(projects.client.featureflag.public)
             implementation(projects.client.grocery.core.public)
+            implementation(projects.client.family.core.public)
             implementation(projects.client.notifications.public)
             implementation(projects.client.onboarding.public)
             implementation(projects.client.profile.public)
