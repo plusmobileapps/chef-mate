@@ -26,6 +26,7 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -45,6 +46,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Inject
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
@@ -102,7 +104,7 @@ class SupabaseAuthenticationRepository(
                     }
                     is SessionStatus.RefreshFailure -> {
                         // Keep the last known state: the SDK retries on its own, and
-                        // [refreshSessionIfNeeded] forces the issue on the next sync. Logged
+                        // [ExpiredTokenRetry] repairs the token on the next 401. Logged
                         // because it is otherwise invisible — the app keeps looking signed in
                         // while every request fails on an expired JWT.
                         Logger.w(tag = TAG) {

@@ -5,12 +5,14 @@ import com.plusmobileapps.chefmate.auth.data.AuthenticationRepository
 import com.plusmobileapps.chefmate.auth.data.ChefMateUser
 import com.plusmobileapps.chefmate.auth.data.OtpFlow
 import com.plusmobileapps.chefmate.auth.data.SignUpResult
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class FakeAuthenticationRepository : AuthenticationRepository {
     private val _state = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
     override val state: StateFlow<AuthState> = _state

@@ -153,9 +153,6 @@ class MealPlanRepositoryImpl(
     }
 
     private suspend fun syncWithRemote(userId: String) = syncMutex.withLock {
-        // An expired access token makes every call below fail silently, and outside Android
-        // nothing else re-arms the SDK's refresh timer. Cheap no-op while the token is healthy.
-        authRepository.refreshSessionIfNeeded()
         try {
             // Meal plans reference their recipe by the recipe's remote UUID, so the recipes have
             // to be present locally before we pull meals — otherwise every remote meal is skipped

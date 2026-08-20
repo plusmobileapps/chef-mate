@@ -253,9 +253,6 @@ class RecipeBookRepositoryImpl(
     }
 
     private suspend fun syncWithRemote(userId: String) = syncMutex.withLock {
-        // An expired access token makes every call below fail silently, and outside Android
-        // nothing else re-arms the SDK's refresh timer. Cheap no-op while the token is healthy.
-        authRepository.refreshSessionIfNeeded()
         try {
             // Retry remote deletes for any locally tombstoned books.
             val pendingDeletes = withContext(ioContext) { db.getPendingDeletes().executeAsList() }

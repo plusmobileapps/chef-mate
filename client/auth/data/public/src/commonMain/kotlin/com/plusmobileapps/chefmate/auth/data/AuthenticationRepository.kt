@@ -23,14 +23,13 @@ interface AuthenticationRepository {
     val authenticatedSessions: SharedFlow<ChefMateUser>
 
     /**
-     * Forces the access token back into a usable state, returning whether there is a valid session
-     * afterwards. A comfortably-valid token is left alone, so this is cheap enough to call before
-     * every sync; one that has expired (or is about to) is refreshed inline.
+     * Answers "is this session going to work?", renewing an expired or nearly-expired token to find
+     * out. A comfortably-valid token is left alone.
      *
-     * Needed because the SDK's auto-refresh is a single in-process timer with no lifecycle backstop
-     * outside Android. After the machine sleeps or the process is throttled, that timer can miss
-     * its window; every request then fails with an expired JWT and nothing re-arms it. Refreshing
-     * here both restores the token and restarts that timer.
+     * Individual requests don't need this — a 401 repairs the token at the transport layer and the
+     * request is replayed. This exists for the one caller that wants to know *before* committing to
+     * a sync, so a session it can't revive can be reported to the user instead of turning into a
+     * pile of swallowed failures.
      */
     suspend fun refreshSessionIfNeeded(): Boolean
 

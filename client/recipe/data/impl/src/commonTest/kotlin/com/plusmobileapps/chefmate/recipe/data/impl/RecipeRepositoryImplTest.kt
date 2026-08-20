@@ -535,17 +535,6 @@ class RecipeRepositoryImplTest {
             db.recipeQueries.getById(created.id).executeAsOneOrNull()?.remoteId shouldNotBe null
         }
 
-    @Test
-    fun sync_refreshes_an_expiring_session_before_talking_to_the_remote() =
-        runTest(testDispatcher) {
-            fakeAuth.setAuthenticated()
-            val callsAfterSignIn = fakeAuth.refreshSessionCallCount
-
-            recipeRepository.syncAllUnsynced()
-
-            fakeAuth.refreshSessionCallCount shouldBe callsAfterSignIn + 1
-        }
-
     private fun blankRecipe(title: String, categories: Set<Category> = emptySet()) =
         Recipe(
             id = -1,
