@@ -207,6 +207,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.components.PlusOnboardingTooltip
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
+import com.plusmobileapps.chefmate.ui.components.PlusResponsiveModal
 import com.plusmobileapps.chefmate.ui.components.PlusTextField
 import com.plusmobileapps.chefmate.ui.components.PlusTooltipPlacement
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
@@ -549,7 +550,7 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
             )
 
             if (showSortFilterSheet) {
-                SortFilterBottomSheet(
+                SortFilterModal(
                     showFilters = !showFilterSidebar,
                     currentSort = state.currentSort,
                     activeFilters = state.activeFilters,
@@ -1053,9 +1054,13 @@ private fun BookSelector(
 
 // region Sort & Filter Bottom Sheet
 
+/**
+ * Sort & filter controls, presented as a bottom sheet on phone/tablet widths and as a centered
+ * dialog on expanded ones — [PlusResponsiveModal] picks the presentation.
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-private fun SortFilterBottomSheet(
+private fun SortFilterModal(
     showFilters: Boolean,
     currentSort: RecipeSortOption,
     activeFilters: Set<RecipeFilterOption>,
@@ -1071,8 +1076,9 @@ private fun SortFilterBottomSheet(
         ) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+    // The content renders its own "Sort & Filter" heading, so the modal chrome stays bare — a
+    // second title/close row would only crowd it, and Apply already dismisses.
+    PlusResponsiveModal(onDismissRequest = onDismiss) {
         SortFilterSheetContent(
             showFilters = showFilters,
             initialSort = currentSort,
