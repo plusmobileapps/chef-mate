@@ -43,6 +43,9 @@ class RootBlocTest {
     var manageProfileOutput:
         Consumer<com.plusmobileapps.chefmate.profile.ManageProfileBloc.Output> =
         Consumer {}
+    var profileOutput: Consumer<com.plusmobileapps.chefmate.profile.ProfileBloc.Output> =
+        Consumer {}
+    var profileProps: com.plusmobileapps.chefmate.profile.ProfileBloc.Props? = null
     var notificationsOutput:
         Consumer<com.plusmobileapps.chefmate.notifications.NotificationsBloc.Output> =
         Consumer {}
@@ -124,6 +127,11 @@ class RootBlocTest {
             },
             manageProfile = { _, output ->
                 manageProfileOutput = output
+                mock()
+            },
+            profile = { _, props, output ->
+                profileProps = props
+                profileOutput = output
                 mock()
             },
             notifications = { _, output ->

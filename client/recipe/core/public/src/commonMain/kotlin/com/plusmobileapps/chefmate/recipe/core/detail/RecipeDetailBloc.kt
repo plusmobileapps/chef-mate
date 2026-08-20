@@ -85,6 +85,22 @@ interface RecipeDetailBloc : BackClickBloc, ComposeScreen {
     fun onStopSharingClicked()
 
     /**
+     * List this recipe on the owner's public profile. Distinct from [onShareLinkClicked]: sharing
+     * hands out an unlisted capability link, publishing puts the recipe on a page anyone can
+     * browse. Prompts first, and routes to the profile editor if no handle has been claimed.
+     */
+    fun onPublishClicked()
+
+    /** Confirm the "this will appear on your public profile" prompt. */
+    fun onPublishConfirmed()
+
+    /** Dismiss the publish prompt without publishing. */
+    fun onPublishDismissed()
+
+    /** Remove the recipe from the owner's public profile. Any share link keeps working. */
+    fun onUnpublishClicked()
+
+    /**
      * Pick a new ingredient scale factor (e.g. `2.0` for 2×). Persisted per recipe so the choice
      * carries over to Cook Mode and survives leaving this screen.
      */
@@ -98,6 +114,10 @@ interface RecipeDetailBloc : BackClickBloc, ComposeScreen {
         val showDeleteConfirmationDialog: Boolean,
         /** True while the "anyone with the link can view this" confirmation dialog is shown. */
         val showShareConfirmation: Boolean = false,
+        /** True while the "this will appear on your public profile" dialog is shown. */
+        val showPublishConfirmation: Boolean = false,
+        /** True while a publish/unpublish round-trip is in flight. */
+        val isPublishing: Boolean = false,
         val recipe: Recipe,
         val createdAt: TextData,
         val updatedAt: TextData,
@@ -128,6 +148,12 @@ interface RecipeDetailBloc : BackClickBloc, ComposeScreen {
         data object OpenGroceryList : Output()
 
         data class OpenMealPlanner(val recipeId: Long) : Output()
+
+        /**
+         * Publishing needs a claimed handle, and the user doesn't have one — send them to the
+         * profile editor to pick one rather than failing with an error they can't act on.
+         */
+        data object OpenManageProfile : Output()
 
         data class OpenCookMode(val recipeId: Long) : Output()
     }

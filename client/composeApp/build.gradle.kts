@@ -118,6 +118,8 @@ kotlin {
             api(projects.client.recipebook.data.impl)
             api(projects.client.recipebook.edit.impl)
             api(projects.client.profile.impl)
+            api(projects.client.profile.data.impl)
+            api(projects.client.profile.data.public)
             api(projects.client.util.impl)
             api(projects.client.settings.impl)
             api(projects.client.settings.root.impl)
@@ -171,6 +173,7 @@ kotlin {
             implementation(projects.client.settings.implRobots)
             implementation(projects.client.settings.root.implRobots)
             implementation(projects.client.profile.implRobots)
+            implementation(projects.client.profile.data.testing)
             implementation(projects.client.notifications.implRobots)
             implementation(projects.client.onboarding.implRobots)
         }

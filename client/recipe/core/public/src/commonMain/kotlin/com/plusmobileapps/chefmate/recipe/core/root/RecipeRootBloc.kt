@@ -39,6 +39,9 @@ interface RecipeRootBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
 
         data object OpenGroceryList : Output()
 
+        /** Publishing needs a claimed handle — open the profile editor so the user can pick one. */
+        data object OpenManageProfile : Output()
+
         data class OpenMealPlanner(val props: MealPlannerRootBloc.Props) : Output()
 
         data class OpenCookMode(val recipeId: Long) : Output()

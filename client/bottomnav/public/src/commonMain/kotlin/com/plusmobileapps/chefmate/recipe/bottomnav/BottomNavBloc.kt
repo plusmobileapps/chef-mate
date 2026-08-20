@@ -89,6 +89,8 @@ interface BottomNavBloc : BackHandlerOwner, BackClickBloc, ComposeScreen {
 
         data object OpenManageProfile : Output()
 
+        data object OpenMyProfile : Output()
+
         data object OpenNotifications : Output()
 
         data object OpenAppSettings : Output()

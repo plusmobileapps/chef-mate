@@ -4,6 +4,7 @@ import com.plusmobileapps.chefmate.recipe.data.BuiltinCategory
 import com.plusmobileapps.chefmate.recipe.data.Category
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.RecipeRepository
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,6 +24,21 @@ class FakeRecipeRepository(
 
     /** Records the last [setRecipePublic] invocation for assertions. */
     var lastSetPublic: Pair<Long, Boolean>? = null
+
+    /** Recipes returned by [fetchPublishedRecipes], keyed by the owner's profile id. */
+    val publishedRecipes: MutableMap<String, List<Recipe>> = mutableMapOf()
+
+    /** Set to make [fetchPublishedRecipes] fail, for exercising the offline state. */
+    var fetchPublishedFailure: Throwable? = null
+
+    /** Records the last [setRecipePublished] invocation for assertions. */
+    var lastSetPublished: Pair<Long, Boolean>? = null
+
+    /** Remote id returned by [setRecipePublished]; null simulates a signed-out publish. */
+    var setPublishedResult: String? = "remote-id"
+
+    /** A fixed timestamp so published recipes are deterministic in tests. */
+    var publishedAt: Instant = Instant.DISTANT_PAST
 
     override fun getRecipes(): Flow<List<Recipe>> = recipes.asStateFlow()
 
@@ -64,6 +80,29 @@ class FakeRecipeRepository(
         lastSetPublic = id to isPublic
         recipes.value = recipes.value.map { if (it.id == id) it.copy(isPublic = isPublic) else it }
         return setPublicResult
+    }
+
+    override suspend fun fetchPublishedRecipes(
+        profileId: String,
+        limit: Int,
+        offset: Int,
+    ): Result<List<Recipe>> =
+        fetchPublishedFailure?.let { Result.failure(it) }
+            ?: Result.success(publishedRecipes[profileId].orEmpty().drop(offset).take(limit))
+
+    override suspend fun setRecipePublished(id: Long, published: Boolean): String? {
+        lastSetPublished = id to published
+        recipes.value =
+            recipes.value.map {
+                when {
+                    it.id != id -> it
+                    // Mirrors the real repository: publishing forces isPublic on, unpublishing
+                    // leaves it alone so an existing share link keeps working.
+                    published -> it.copy(publishedAt = publishedAt, isPublic = true)
+                    else -> it.copy(publishedAt = null)
+                }
+            }
+        return setPublishedResult
     }
 
     override suspend fun addRecipesToBook(recipeIds: Set<Long>, bookId: Long) {

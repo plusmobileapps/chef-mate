@@ -90,4 +90,37 @@ class DeepLinkTest {
         DeepLink.parse("https://chefmate.plusmobileapps.com.evil.com/notifications") shouldBe
             DeepLink.None
     }
+
+    @Test
+    fun parse_profile_links() {
+        DeepLink.parse("https://chefmate.plusmobileapps.com/@juliachild") shouldBe
+            DeepLink.Profile("juliachild")
+        DeepLink.parse("https://chefmate.plusmobileapps.com/@juliachild/") shouldBe
+            DeepLink.Profile("juliachild")
+        DeepLink.parse("https://chefmate.plusmobileapps.com/@juliachild?ref=share") shouldBe
+            DeepLink.Profile("juliachild")
+        DeepLink.parse("chefmate://profile/juliachild") shouldBe DeepLink.Profile("juliachild")
+    }
+
+    @Test
+    fun parse_returns_none_for_a_bare_at_sign() {
+        DeepLink.parse("https://chefmate.plusmobileapps.com/@") shouldBe DeepLink.None
+        DeepLink.parse("chefmate://profile/") shouldBe DeepLink.None
+    }
+
+    @Test
+    fun profile_links_from_other_hosts_are_ignored() {
+        // The `@` branch must not bypass the host check that guards every other route.
+        DeepLink.parse("https://evil.com/@juliachild") shouldBe DeepLink.None
+        DeepLink.parse("https://chefmate.plusmobileapps.com.evil.com/@juliachild") shouldBe
+            DeepLink.None
+    }
+
+    @Test
+    fun a_handle_cannot_impersonate_a_route() {
+        // "@settings" is a profile, not the settings screen — the namespaces never overlap.
+        DeepLink.parse("https://chefmate.plusmobileapps.com/@settings") shouldBe
+            DeepLink.Profile("settings")
+        DeepLink.parse("https://chefmate.plusmobileapps.com/settings") shouldBe DeepLink.AppSettings
+    }
 }

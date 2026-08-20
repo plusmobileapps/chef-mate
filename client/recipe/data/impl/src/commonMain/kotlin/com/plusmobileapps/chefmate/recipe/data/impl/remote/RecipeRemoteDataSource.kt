@@ -22,6 +22,18 @@ interface RecipeRemoteDataSource {
     suspend fun fetchPublicRecipe(remoteId: String): RemoteRecipe?
 
     /**
+     * The recipes [profileId] has listed on their public profile, newest first. Backed by the
+     * `get_published_recipes` RPC rather than a filtered `select()` for the same reason as
+     * [fetchAccessibleRecipes]: the RPC's WHERE clause is the sole gate, instead of leaning on how
+     * permissive RLS policies happen to compose.
+     */
+    suspend fun fetchPublishedRecipes(
+        profileId: String,
+        limit: Int,
+        offset: Int,
+    ): List<RemoteRecipe>
+
+    /**
      * Replaces the recipe's attached-category set in the `recipe_categories` join table: deletes
      * any rows for [recipeRemoteId] whose `category_id` isn't in [categoryRemoteIds], then inserts
      * the missing rows. Idempotent — safe to call repeatedly with the same set.

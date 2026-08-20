@@ -58,6 +58,8 @@ class RecipeDetailBlocImpl(
             viewModel.output.collect { viewModelOutput ->
                 when (viewModelOutput) {
                     RecipeDetailViewModel.Output.RecipeDeleted -> output.onNext(Output.Finished)
+                    RecipeDetailViewModel.Output.OpenManageProfile ->
+                        output.onNext(Output.OpenManageProfile)
                     is RecipeDetailViewModel.Output.OpenRecipe ->
                         output.onNext(Output.OpenRecipe(viewModelOutput.recipeId))
                 }
@@ -112,6 +114,8 @@ class RecipeDetailBlocImpl(
                 isDeleting = it.isDeleting,
                 showDeleteConfirmationDialog = it.showDeleteConfirmationDialog,
                 showShareConfirmation = it.showShareConfirmation,
+                showPublishConfirmation = it.showPublishConfirmation,
+                isPublishing = it.isPublishing,
                 recipe = it.recipe,
                 createdAt = FixedString(dateTimeUtil.formatDateTime(instant = it.recipe.createdAt)),
                 updatedAt = FixedString(dateTimeUtil.formatDateTime(instant = it.recipe.updatedAt)),
@@ -201,6 +205,22 @@ class RecipeDetailBlocImpl(
 
     override fun onShareDismissed() {
         viewModel.onShareDismissed()
+    }
+
+    override fun onPublishClicked() {
+        viewModel.onPublishClicked()
+    }
+
+    override fun onPublishConfirmed() {
+        viewModel.onPublishConfirmed()
+    }
+
+    override fun onPublishDismissed() {
+        viewModel.onPublishDismissed()
+    }
+
+    override fun onUnpublishClicked() {
+        viewModel.onUnpublish()
     }
 
     override fun onStopSharingClicked() {

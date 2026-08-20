@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
@@ -29,6 +30,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import chefmate.client.profile.public.generated.resources.Res
 import chefmate.client.profile.public.generated.resources.manage_profile_avatar_content_description
+import chefmate.client.profile.public.generated.resources.manage_profile_bio_hint
+import chefmate.client.profile.public.generated.resources.manage_profile_bio_label
 import chefmate.client.profile.public.generated.resources.manage_profile_change_photo
 import chefmate.client.profile.public.generated.resources.manage_profile_delete_account
 import chefmate.client.profile.public.generated.resources.manage_profile_delete_dialog_cancel
@@ -40,11 +43,20 @@ import chefmate.client.profile.public.generated.resources.manage_profile_delete_
 import chefmate.client.profile.public.generated.resources.manage_profile_display_name_hint
 import chefmate.client.profile.public.generated.resources.manage_profile_display_name_label
 import chefmate.client.profile.public.generated.resources.manage_profile_email_label
+import chefmate.client.profile.public.generated.resources.manage_profile_handle_available
+import chefmate.client.profile.public.generated.resources.manage_profile_handle_checking
+import chefmate.client.profile.public.generated.resources.manage_profile_handle_help
+import chefmate.client.profile.public.generated.resources.manage_profile_handle_hint
+import chefmate.client.profile.public.generated.resources.manage_profile_handle_invalid
+import chefmate.client.profile.public.generated.resources.manage_profile_handle_label
+import chefmate.client.profile.public.generated.resources.manage_profile_handle_permanent
+import chefmate.client.profile.public.generated.resources.manage_profile_handle_taken
 import chefmate.client.profile.public.generated.resources.manage_profile_save
 import chefmate.client.profile.public.generated.resources.manage_profile_title
 import coil3.compose.AsyncImage
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
+import com.plusmobileapps.chefmate.text.TextData
 import com.plusmobileapps.chefmate.text.asTextData
 import com.plusmobileapps.chefmate.ui.components.PlusButton
 import com.plusmobileapps.chefmate.ui.components.PlusButtonVariant
@@ -112,6 +124,26 @@ fun ManageProfileScreen(bloc: ManageProfileBloc, modifier: Modifier = Modifier) 
                     error = state.saveError,
                 )
 
+                HandleField(
+                    handle = state.handle,
+                    isClaimed = state.isHandleClaimed,
+                    status = state.handleStatus,
+                    enabled = !state.isSaving && !state.isDeleting,
+                    onValueChange = bloc::onHandleChanged,
+                )
+
+                PlusTextField(
+                    value = state.bio,
+                    onValueChange = bloc::onBioChanged,
+                    modifier = Modifier.fillMaxWidth().testTag(ManageProfileTestTags.BIO),
+                    label = { Text(Res.string.manage_profile_bio_label.asTextData().localized()) },
+                    placeholder = {
+                        Text(Res.string.manage_profile_bio_hint.asTextData().localized())
+                    },
+                    singleLine = false,
+                    enabled = !state.isSaving && !state.isDeleting,
+                )
+
                 PlusTextField(
                     value = state.email,
                     onValueChange = {},
@@ -153,6 +185,67 @@ fun ManageProfileScreen(bloc: ManageProfileBloc, modifier: Modifier = Modifier) 
             }
         },
     )
+}
+
+/**
+ * The @handle field. Editable only until the handle is claimed — after that it renders read-only
+ * with a note explaining why, because handles are permanent server-side and a field the user can
+ * type into but never save would be a lie.
+ */
+@Composable
+private fun HandleField(
+    handle: String,
+    isClaimed: Boolean,
+    status: ManageProfileBloc.HandleStatus?,
+    enabled: Boolean,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(ChefMateTheme.dimens.paddingExtraSmall),
+    ) {
+        PlusTextField(
+            value = handle,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth().testTag(ManageProfileTestTags.HANDLE),
+            label = { Text(Res.string.manage_profile_handle_label.asTextData().localized()) },
+            placeholder = { Text(Res.string.manage_profile_handle_hint.asTextData().localized()) },
+            leadingIcon = { Text("@") },
+            singleLine = true,
+            enabled = enabled && !isClaimed,
+            readOnly = isClaimed,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
+        )
+
+        val message: TextData =
+            when {
+                isClaimed -> Res.string.manage_profile_handle_permanent.asTextData()
+                status == ManageProfileBloc.HandleStatus.Checking ->
+                    Res.string.manage_profile_handle_checking.asTextData()
+                status == ManageProfileBloc.HandleStatus.Available ->
+                    Res.string.manage_profile_handle_available.asTextData()
+                status == ManageProfileBloc.HandleStatus.Taken ->
+                    Res.string.manage_profile_handle_taken.asTextData()
+                status == ManageProfileBloc.HandleStatus.InvalidFormat ->
+                    Res.string.manage_profile_handle_invalid.asTextData()
+                else -> Res.string.manage_profile_handle_help.asTextData()
+            }
+        val color: Color =
+            when (status.takeUnless { isClaimed }) {
+                ManageProfileBloc.HandleStatus.Available -> ChefMateTheme.colorScheme.primary
+                ManageProfileBloc.HandleStatus.Taken,
+                ManageProfileBloc.HandleStatus.InvalidFormat -> MaterialTheme.colorScheme.error
+                else -> ChefMateTheme.colorScheme.onSurfaceVariant
+            }
+
+        Text(
+            message.localized(),
+            style = ChefMateTheme.typography.bodySmall,
+            color = color,
+            modifier = Modifier.fillMaxWidth().testTag(ManageProfileTestTags.HANDLE_STATUS),
+        )
+    }
 }
 
 @Composable

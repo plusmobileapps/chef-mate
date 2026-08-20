@@ -42,6 +42,26 @@ object ChefMateUrls {
     }
 
     /**
+     * The shareable web link to a public profile: `https://<host>/@handle`. The `@` form is the
+     * convention users already expect from other social apps, and it keeps profiles in their own
+     * URL namespace so a handle can never collide with a route like `/recipe` or `/settings` (the
+     * server's reserved-handle list enforces the same thing from the other side).
+     */
+    fun profileShareUrl(handle: String): String = "https://$WEB_HOST/@$handle"
+
+    /** Extracts the handle from a [profileShareUrl], or null if [url] is not one. */
+    fun profileShareUrlHandle(url: String): String? {
+        val prefix = "https://$WEB_HOST/@"
+        if (!url.startsWith(prefix, ignoreCase = true)) return null
+        val handle =
+            url.substring(prefix.length)
+                .substringBefore('/')
+                .substringBefore('?')
+                .substringBefore('#')
+        return handle.ifBlank { null }
+    }
+
+    /**
      * Extracts the remoteId from a [recipeShareUrl], or null if [url] is not one. The share page
      * itself renders its recipe content client-side (fetched from Supabase after load), so it has
      * no server-rendered markup for a generic scraper to parse — callers that recognize our own

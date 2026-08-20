@@ -128,6 +128,9 @@ class RecipeRootBlocImpl(
             RecipeDetailBloc.Output.OpenGroceryList -> {
                 this.output.onNext(RecipeRootBloc.Output.OpenGroceryList)
             }
+            RecipeDetailBloc.Output.OpenManageProfile -> {
+                this.output.onNext(RecipeRootBloc.Output.OpenManageProfile)
+            }
             is RecipeDetailBloc.Output.OpenMealPlanner -> {
                 this.output.onNext(
                     RecipeRootBloc.Output.OpenMealPlanner(

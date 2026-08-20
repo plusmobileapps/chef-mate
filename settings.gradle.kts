@@ -138,6 +138,12 @@ include(":client:recipe:categories:impl-robots")
 
 include(":client:recipe:categories:public")
 
+include(":client:profile:data:impl")
+
+include(":client:profile:data:public")
+
+include(":client:profile:data:testing")
+
 include(":client:profile:impl")
 
 include(":client:profile:impl-robots")

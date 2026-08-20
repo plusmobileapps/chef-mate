@@ -215,6 +215,42 @@ class RecipeRepositoryImpl(
         return withContext(ioContext) { db.getById(id).executeAsOneOrNull()?.remoteId }
     }
 
+    override suspend fun setRecipePublished(id: Long, published: Boolean): String? {
+        // Same constraint as setRecipePublic: a profile listing is keyed by the remote row.
+        if (authRepository.state.value !is AuthState.Authenticated) return null
+        val now = dateTimeUtil.now
+        withContext(ioContext) {
+            db.transaction {
+                // Publishing forces the share flag on, because a recipe listed on a profile has to
+                // be readable by the people browsing it (the server enforces the same coupling via
+                // the recipes_published_implies_public CHECK). Unpublishing leaves isPublic alone
+                // so a link already handed out keeps working.
+                if (published) {
+                    db.setPublic(isPublic = true, updatedAt = now.toString(), id = id)
+                }
+                db.setPublished(
+                    publishedAt = if (published) now.toString() else null,
+                    updatedAt = now.toString(),
+                    id = id,
+                )
+            }
+        }
+        val existingRemoteId =
+            withContext(ioContext) { db.getById(id).executeAsOneOrNull()?.remoteId }
+        if (existingRemoteId == null) pushAddToRemote(id) else pushUpdateToRemote(id)
+        return withContext(ioContext) { db.getById(id).executeAsOneOrNull()?.remoteId }
+    }
+
+    override suspend fun fetchPublishedRecipes(
+        profileId: String,
+        limit: Int,
+        offset: Int,
+    ): Result<List<Recipe>> = runCatching {
+        remoteDataSource.fetchPublishedRecipes(profileId, limit, offset).map {
+            it.toPublicPreview()
+        }
+    }
+
     override suspend fun addRecipesToBook(recipeIds: Set<Long>, bookId: Long) {
         if (recipeIds.isEmpty()) return
         withContext(ioContext) {
@@ -330,6 +366,7 @@ class RecipeRepositoryImpl(
                             starRating = entity.starRating?.toInt(),
                             isFavorite = entity.isFavorite,
                             isPublic = entity.isPublic,
+                            publishedAt = entity.publishedAt,
                             createdAt = entity.createdAt,
                             updatedAt = entity.updatedAt,
                             clientId = clientId,
@@ -380,6 +417,7 @@ class RecipeRepositoryImpl(
                         starRating = entity.starRating?.toInt(),
                         isFavorite = entity.isFavorite,
                         isPublic = entity.isPublic,
+                        publishedAt = entity.publishedAt,
                         updatedAt = entity.updatedAt,
                         clientId = entity.clientId,
                     )
@@ -437,6 +475,7 @@ class RecipeRepositoryImpl(
                                 starRating = recipe.starRating?.toInt(),
                                 isFavorite = recipe.isFavorite,
                                 isPublic = recipe.isPublic,
+                                publishedAt = recipe.publishedAt,
                                 createdAt = recipe.createdAt,
                                 updatedAt = recipe.updatedAt,
                                 clientId = clientId,
@@ -481,6 +520,7 @@ class RecipeRepositoryImpl(
                             starRating = recipe.starRating?.toInt(),
                             isFavorite = recipe.isFavorite,
                             isPublic = recipe.isPublic,
+                            publishedAt = recipe.publishedAt,
                             updatedAt = recipe.updatedAt,
                             clientId = recipe.clientId,
                         )
@@ -531,6 +571,7 @@ class RecipeRepositoryImpl(
                             // current user's own; defensively fall back to the syncing user.
                             ownerId = remote.ownerId.ifBlank { userId },
                             isPublic = remote.isPublic,
+                            publishedAt = remote.publishedAt,
                         )
                     }
                 }
@@ -712,6 +753,7 @@ class RecipeRepositoryImpl(
             remoteId = remoteId,
             clientId = clientId,
             isPublic = isPublic,
+            publishedAt = publishedAt?.let { Instant.parse(it) },
             createdAt = Instant.parse(createdAt),
             updatedAt = Instant.parse(updatedAt),
         )
@@ -739,6 +781,7 @@ class RecipeRepositoryImpl(
             syncStatus = SyncStatus.SYNCED,
             remoteId = id,
             isPublic = isPublic,
+            publishedAt = publishedAt?.let { Instant.parse(it) },
             createdAt = createdAt?.let { Instant.parse(it) } ?: Instant.DISTANT_PAST,
             updatedAt = updatedAt?.let { Instant.parse(it) } ?: Instant.DISTANT_PAST,
         )

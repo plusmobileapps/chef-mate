@@ -5,6 +5,17 @@
     <string name="manage_profile_email_label">Email</string>
     <string name="manage_profile_change_photo">Change photo</string>
     <string name="manage_profile_avatar_content_description">Profile photo</string>
+    <string name="manage_profile_handle_label">Handle</string>
+    <string name="manage_profile_handle_hint">yourname</string>
+    <string name="manage_profile_handle_help">Your public profile lives at chefmate.plusmobileapps.com/@yourname. Letters, numbers and underscores only.</string>
+    <string name="manage_profile_handle_permanent">Your handle is permanent and can’t be changed.</string>
+    <string name="manage_profile_handle_checking">Checking availability…</string>
+    <string name="manage_profile_handle_available">That handle is available.</string>
+    <string name="manage_profile_handle_taken">That handle is already taken.</string>
+    <string name="manage_profile_handle_invalid">Use 3–30 letters, numbers or underscores.</string>
+    <string name="manage_profile_handle_taken_error">That handle was just taken. Please pick another.</string>
+    <string name="manage_profile_bio_label">Bio</string>
+    <string name="manage_profile_bio_hint">Tell people what you like to cook</string>
     <string name="manage_profile_save">Save</string>
     <string name="manage_profile_save_error">Couldn’t save your profile. Please try again.</string>
     <string name="manage_profile_delete_account">Delete Account</string>
@@ -15,4 +26,18 @@
     <string name="manage_profile_delete_dialog_confirm">Delete</string>
     <string name="manage_profile_delete_dialog_cancel">Cancel</string>
     <string name="manage_profile_delete_error">Couldn’t delete your account. Please try again.</string>
+
+    <string name="profile_title">Profile</string>
+    <string name="profile_avatar_content_description">Profile photo</string>
+    <string name="profile_share_content_description">Share profile</string>
+    <string name="profile_manage">Edit profile</string>
+    <string name="profile_recipe_count">{count} published recipes</string>
+    <string name="profile_recipe_count_one">1 published recipe</string>
+    <string name="profile_empty_own">You haven’t published any recipes yet. Open a recipe and choose “Publish to profile” to share it here.</string>
+    <string name="profile_empty_other">This cook hasn’t published any recipes yet.</string>
+    <string name="profile_no_profile_message">Create a public profile to share the recipes you’re proud of. You’ll pick a handle that becomes your profile link.</string>
+    <string name="profile_create">Create profile</string>
+    <string name="profile_not_found">We couldn’t find that profile.</string>
+    <string name="profile_offline">Couldn’t load this profile. Check your connection and try again.</string>
+    <string name="profile_retry">Try again</string>
 </resources>

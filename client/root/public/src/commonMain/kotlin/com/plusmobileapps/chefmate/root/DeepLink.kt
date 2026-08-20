@@ -14,6 +14,12 @@ sealed class DeepLink {
      */
     data class PublicRecipe(val remoteId: String) : DeepLink()
 
+    /**
+     * A public profile link, `https://chefmate.plusmobileapps.com/@handle` (or
+     * `chefmate://profile/<handle>`).
+     */
+    data class Profile(val handle: String) : DeepLink()
+
     data object Groceries : DeepLink()
 
     data object MealPlanner : DeepLink()
@@ -39,6 +45,12 @@ sealed class DeepLink {
             if (uri.isNullOrBlank()) return None
             val segments = pathSegments(uri) ?: return None
             val host = segments.firstOrNull() ?: return None
+            // The web form of a profile link is `/@handle`, so the handle IS the first segment.
+            // Checked before the route table so an `@`-prefixed segment can never fall through to
+            // a route name.
+            if (host.startsWith("@")) {
+                return host.drop(1).ifBlank { null }?.let { Profile(it) } ?: None
+            }
             return when (host) {
                 "recipe" -> {
                     val segment = segments.getOrNull(1) ?: return None
@@ -46,6 +58,9 @@ sealed class DeepLink {
                     // non-numeric segment is a global remote UUID from a cross-user share link.
                     segment.toLongOrNull()?.let { RecipeDetail(it) } ?: PublicRecipe(segment)
                 }
+                // Profiles live in their own `@`-prefixed namespace, so a handle can never be
+                // mistaken for a route like "settings" (the server also refuses those as handles).
+                "profile" -> segments.getOrNull(1)?.ifBlank { null }?.let { Profile(it) } ?: None
                 "groceries" -> Groceries
                 "meal-planner" -> MealPlanner
                 "settings" -> AppSettings

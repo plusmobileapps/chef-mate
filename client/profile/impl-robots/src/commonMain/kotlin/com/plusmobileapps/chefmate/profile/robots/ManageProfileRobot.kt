@@ -10,6 +10,7 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.waitUntilExactlyOneExists
@@ -38,6 +39,36 @@ class ManageProfileRobot(private val test: ComposeUiTest) {
                     hasAnyAncestor(hasTestTag(ManageProfileTestTags.DISPLAY_NAME))
             )
             .performTextReplacement(name)
+    }
+
+    fun setHandle(handle: String): ManageProfileRobot = apply {
+        test
+            .onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag(ManageProfileTestTags.HANDLE)))
+            .performTextReplacement(handle)
+    }
+
+    fun setBio(bio: String): ManageProfileRobot = apply {
+        test
+            .onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag(ManageProfileTestTags.BIO)))
+            .performTextReplacement(bio)
+    }
+
+    /**
+     * Waits for Save to become enabled. Claiming a handle debounces an availability check before
+     * the button unlocks, so a test that types a handle and taps Save immediately would race it.
+     */
+    fun awaitSaveEnabled(): ManageProfileRobot = apply {
+        test.waitUntilExactlyOneExists(
+            hasTestTag(ManageProfileTestTags.SAVE) and onScreen and isEnabled()
+        )
+    }
+
+    fun assertSaveEnabled(): ManageProfileRobot = apply {
+        test.onNode(hasTestTag(ManageProfileTestTags.SAVE) and onScreen).assertIsEnabled()
+    }
+
+    fun assertSaveDisabled(): ManageProfileRobot = apply {
+        test.onNode(hasTestTag(ManageProfileTestTags.SAVE) and onScreen).assertIsNotEnabled()
     }
 
     fun tapSave(): ManageProfileRobot = apply {

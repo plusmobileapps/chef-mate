@@ -15,9 +15,15 @@ kotlin {
             implementation(projects.client.shared)
             implementation(projects.client.auth.data.public)
             implementation(projects.client.auth.usecase.public)
+            implementation(projects.client.profile.data.public)
+            implementation(projects.client.recipe.data.public)
             implementation(compose.components.resources)
         }
-        commonTest.dependencies { implementation(projects.client.auth.data.testing) }
+        commonTest.dependencies {
+            implementation(projects.client.auth.data.testing)
+            implementation(projects.client.profile.data.testing)
+            implementation(projects.client.recipe.data.testing)
+        }
     }
 }
 
