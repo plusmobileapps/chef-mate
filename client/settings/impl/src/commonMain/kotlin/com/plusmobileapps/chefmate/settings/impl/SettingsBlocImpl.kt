@@ -40,6 +40,8 @@ class SettingsBlocImpl(
                 showSignOutConfirmationDialog = it.showSignOutConfirmationDialog,
                 isDebugBuild = isDebugBuild,
                 isAiChatEnabled = it.isAiChatEnabled,
+                isSubscribed = it.isSubscribed,
+                showPremiumRequiredDialog = it.showPremiumRequiredDialog,
                 versionName = BuildConfig.VERSION_NAME,
             )
         }
@@ -81,7 +83,13 @@ class SettingsBlocImpl(
     }
 
     override fun onAiChatClicked() {
-        output.onNext(Output.OpenAiChat)
+        if (viewModel.requestAiChat()) {
+            output.onNext(Output.OpenAiChat)
+        }
+    }
+
+    override fun onPremiumRequiredDismissed() {
+        viewModel.dismissPremiumRequiredDialog()
     }
 
     override fun onDeveloperSettingsClicked() {

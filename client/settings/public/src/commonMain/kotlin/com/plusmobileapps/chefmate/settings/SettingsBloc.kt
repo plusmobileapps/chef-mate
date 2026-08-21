@@ -35,7 +35,14 @@ interface SettingsBloc : ComposeScreen {
 
     fun onAppSettingsClicked()
 
+    /**
+     * Open the AI chat. For a non-subscriber this opens the premium upsell instead — see
+     * [Model.isSubscribed].
+     */
     fun onAiChatClicked()
+
+    /** Dismiss the "ChefMate Premium required" dialog. */
+    fun onPremiumRequiredDismissed()
 
     fun onDeveloperSettingsClicked()
 
@@ -55,6 +62,13 @@ interface SettingsBloc : ComposeScreen {
         val showSignOutConfirmationDialog: Boolean = false,
         val isDebugBuild: Boolean = false,
         val isAiChatEnabled: Boolean = false,
+        /**
+         * ChefMate Premium entitlement. Unlike [isAiChatEnabled] this doesn't hide the row: a
+         * non-subscriber still sees it, badged as premium, and tapping it opens the upsell.
+         */
+        val isSubscribed: Boolean = false,
+        /** True while the premium upsell dialog is shown. */
+        val showPremiumRequiredDialog: Boolean = false,
         val versionName: String = "",
     )
 

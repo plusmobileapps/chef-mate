@@ -12,6 +12,7 @@ import com.plusmobileapps.chefmate.featureflag.testing.FakeFeatureFlags
 import com.plusmobileapps.chefmate.recipe.data.Recipe
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeIngredientScalePreferences
 import com.plusmobileapps.chefmate.recipe.data.testing.FakeRecipeRepository
+import com.plusmobileapps.chefmate.subscription.testing.FakeSubscriptionRepository
 import com.russhwolf.settings.MapSettings
 import dev.mokkery.answering.returns
 import dev.mokkery.every
@@ -41,6 +42,7 @@ class CookModeViewModelTest {
     private fun createViewModel(
         coachMarkController: CoachMarkController = CoachMarkController(MapSettings()),
         featureFlags: FakeFeatureFlags = FakeFeatureFlags(),
+        subscriptionRepository: FakeSubscriptionRepository = FakeSubscriptionRepository(),
     ) =
         CookModeViewModel(
             initialRecipeId = 1L,
@@ -52,6 +54,7 @@ class CookModeViewModelTest {
             keepScreenOnRepository = KeepScreenOnRepository(MapSettings()),
             coachMarkController = coachMarkController,
             featureFlags = featureFlags,
+            subscriptionRepository = subscriptionRepository,
         )
 
     @Test
@@ -84,6 +87,55 @@ class CookModeViewModelTest {
                 featureFlags = FakeFeatureFlags(mapOf(FeatureFlagRegistry.AiChat to true))
             )
         vm.state.value.showAiChat shouldBe true
+    }
+
+    @Test
+    fun When_subscribed_Then_requestAiChat_allows_opening_the_chat() {
+        val vm = createViewModel(subscriptionRepository = FakeSubscriptionRepository(true))
+
+        vm.requestAiChat() shouldBe true
+        vm.state.value.showPremiumRequiredDialog shouldBe false
+    }
+
+    @Test
+    fun When_not_subscribed_Then_requestAiChat_raises_the_upsell_instead() {
+        val vm = createViewModel()
+
+        vm.requestAiChat() shouldBe false
+        vm.state.value.showPremiumRequiredDialog shouldBe true
+    }
+
+    @Test
+    fun When_upsell_dismissed_Then_dialog_hidden() {
+        val vm = createViewModel()
+        vm.requestAiChat()
+
+        vm.dismissPremiumRequiredDialog()
+
+        vm.state.value.showPremiumRequiredDialog shouldBe false
+    }
+
+    @Test
+    fun When_subscription_starts_while_cooking_Then_state_reflects_it() {
+        val subscriptions = FakeSubscriptionRepository()
+        val vm = createViewModel(subscriptionRepository = subscriptions)
+        vm.state.value.isSubscribed shouldBe false
+
+        subscriptions.setSubscribed(true)
+
+        vm.state.value.isSubscribed shouldBe true
+    }
+
+    @Test
+    fun When_not_subscribed_Then_ai_chat_button_still_shown() {
+        // The gate is an upsell, not a hide — only the feature flag removes the button.
+        val vm =
+            createViewModel(
+                featureFlags = FakeFeatureFlags(mapOf(FeatureFlagRegistry.AiChat to true))
+            )
+
+        vm.state.value.showAiChat shouldBe true
+        vm.state.value.isSubscribed shouldBe false
     }
 
     @Test
