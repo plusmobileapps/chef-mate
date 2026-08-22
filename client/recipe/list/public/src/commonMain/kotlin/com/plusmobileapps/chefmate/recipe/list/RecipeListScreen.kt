@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -32,6 +33,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Add
@@ -169,6 +171,7 @@ import chefmate.client.recipe.list.public.generated.resources.recipe_list_select
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_selection_export
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_selection_more
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_selection_select_all
+import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort_a_to_z
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort_and_filter
 import chefmate.client.recipe.list.public.generated.resources.recipe_list_sort_by
@@ -204,6 +207,7 @@ import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
 import com.plusmobileapps.chefmate.ui.components.PlusNavContainer
 import com.plusmobileapps.chefmate.ui.components.PlusOnboardingTooltip
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveContainer
+import com.plusmobileapps.chefmate.ui.components.PlusResponsiveModal
 import com.plusmobileapps.chefmate.ui.components.PlusTextField
 import com.plusmobileapps.chefmate.ui.components.PlusTooltipPlacement
 import com.plusmobileapps.chefmate.ui.components.RecipeImage
@@ -238,6 +242,11 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
     }
 
     PlusResponsiveContainer { windowSizeClass ->
+        // Wide windows get a permanent filter rail down the left edge; the same options are then
+        // dropped from the sort & filter sheet so they only live in one place. Pointless before the
+        // user has any recipes, so it waits for the library to be non-empty.
+        val showFilterSidebar =
+            windowSizeClass == WindowSizeClass.EXPANDED && state.totalRecipeCount > 0
         // The selector stands in for the title once any book exists — it names the active book, or
         // "All recipes" when the cross-book view is active.
         val showBookSelector = state.recipeBooks.isNotEmpty()
@@ -376,22 +385,28 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                                         showSortFilterSheet = true
                                     }
                                 ) {
-                                    val filterCount = state.totalActiveFilterCount
+                                    // With the rail visible the filters live there, so this action
+                                    // narrows to sort-only and drops the active-filter badge.
+                                    val icon =
+                                        if (showFilterSidebar) Icons.AutoMirrored.Filled.Sort
+                                        else Icons.Default.FilterList
+                                    val label =
+                                        stringResource(
+                                            if (showFilterSidebar) Res.string.recipe_list_sort
+                                            else Res.string.recipe_list_filter
+                                        )
+                                    val filterCount =
+                                        if (showFilterSidebar) 0 else state.totalActiveFilterCount
                                     if (filterCount > 0) {
                                         BadgedBox(badge = { Badge { Text("$filterCount") } }) {
                                             Icon(
-                                                imageVector = Icons.Default.FilterList,
-                                                contentDescription =
-                                                    stringResource(Res.string.recipe_list_filter),
+                                                imageVector = icon,
+                                                contentDescription = label,
                                                 tint = MaterialTheme.colorScheme.primary,
                                             )
                                         }
                                     } else {
-                                        Icon(
-                                            imageVector = Icons.Default.FilterList,
-                                            contentDescription =
-                                                stringResource(Res.string.recipe_list_filter),
-                                        )
+                                        Icon(imageVector = icon, contentDescription = label)
                                     }
                                 }
                             }
@@ -444,59 +459,90 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
                             onDecline = { bloc.onDeclineInvite(invite.memberId) },
                         )
                     }
-                    PullToRefreshBox(
-                        isRefreshing = state.isSyncing,
-                        onRefresh = bloc::onSyncClicked,
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        when {
-                            !state.isLoading && state.totalRecipeCount == 0 -> {
-                                NoRecipesEmptyState(
-                                    onBrowseClicked = bloc::onBrowseRecipesClicked,
-                                    onCreateClicked = bloc::onAddRecipeClicked,
-                                    modifier = Modifier.fillMaxSize(),
-                                )
-                            }
-                            state.recipes.isEmpty() && state.isSearchActive -> {
-                                SearchEmptyState(
-                                    canSearchAllRecipes = !state.isAllRecipesSelected,
-                                    onSearchAllRecipes = bloc::onAllRecipesSelected,
-                                    modifier = Modifier.fillMaxSize(),
-                                )
-                            }
-                            state.recipes.isEmpty() && state.totalActiveFilterCount > 0 -> {
-                                FilterEmptyState(
-                                    activeFilters = state.activeFilters,
-                                    activeCategories = state.activeCategories,
-                                    onClearFilters = bloc::onClearFilters,
-                                    modifier = Modifier.fillMaxSize(),
-                                )
-                            }
-                            state.isGridView -> {
-                                RecipeGrid(
-                                    modifier = Modifier.fillMaxSize(),
-                                    recipes = state.recipes,
-                                    onRecipeClicked = bloc::onRecipeClicked,
-                                    onRecipeLongClicked = bloc::onRecipeLongClicked,
-                                    state = gridState,
-                                    bottomContentPadding =
-                                        if (state.cookingRecipeCount > 0) FabStackReserve else 0.dp,
-                                    isSelectionMode = state.isSelectionMode,
-                                    selectedRecipeIds = state.selectedRecipeIds,
-                                )
-                            }
-                            else -> {
-                                RecipeList(
-                                    modifier = Modifier.fillMaxSize(),
-                                    recipes = state.recipes,
-                                    onRecipeClicked = bloc::onRecipeClicked,
-                                    onRecipeLongClicked = bloc::onRecipeLongClicked,
-                                    state = listState,
-                                    bottomContentPadding =
-                                        if (state.cookingRecipeCount > 0) FabStackReserve else 0.dp,
-                                    isSelectionMode = state.isSelectionMode,
-                                    selectedRecipeIds = state.selectedRecipeIds,
-                                )
+                    Row(modifier = Modifier.weight(1f)) {
+                        if (showFilterSidebar) {
+                            RecipeFilterSidebar(
+                                activeFilters = state.activeFilters,
+                                activeCategories = state.activeCategories,
+                                activeUserCategoryIds = state.activeUserCategoryIds,
+                                availableUserCategories = state.availableUserCategories,
+                                onFilterToggled = bloc::onFilterToggled,
+                                onCategoryToggled = { category ->
+                                    bloc.onApplySortAndFilters(
+                                        sort = state.currentSort,
+                                        filters = state.activeFilters,
+                                        categories = state.activeCategories.toggle(category),
+                                        userCategoryIds = state.activeUserCategoryIds,
+                                    )
+                                },
+                                onUserCategoryToggled = { categoryId ->
+                                    bloc.onApplySortAndFilters(
+                                        sort = state.currentSort,
+                                        filters = state.activeFilters,
+                                        categories = state.activeCategories,
+                                        userCategoryIds =
+                                            state.activeUserCategoryIds.toggle(categoryId),
+                                    )
+                                },
+                                onClearFilters = bloc::onClearFilters,
+                            )
+                        }
+                        PullToRefreshBox(
+                            isRefreshing = state.isSyncing,
+                            onRefresh = bloc::onSyncClicked,
+                            modifier = Modifier.weight(1f).fillMaxHeight(),
+                        ) {
+                            when {
+                                !state.isLoading && state.totalRecipeCount == 0 -> {
+                                    NoRecipesEmptyState(
+                                        onBrowseClicked = bloc::onBrowseRecipesClicked,
+                                        onCreateClicked = bloc::onAddRecipeClicked,
+                                        modifier = Modifier.fillMaxSize(),
+                                    )
+                                }
+                                state.recipes.isEmpty() && state.isSearchActive -> {
+                                    SearchEmptyState(
+                                        canSearchAllRecipes = !state.isAllRecipesSelected,
+                                        onSearchAllRecipes = bloc::onAllRecipesSelected,
+                                        modifier = Modifier.fillMaxSize(),
+                                    )
+                                }
+                                state.recipes.isEmpty() && state.totalActiveFilterCount > 0 -> {
+                                    FilterEmptyState(
+                                        activeFilters = state.activeFilters,
+                                        activeCategories = state.activeCategories,
+                                        onClearFilters = bloc::onClearFilters,
+                                        modifier = Modifier.fillMaxSize(),
+                                    )
+                                }
+                                state.isGridView -> {
+                                    RecipeGrid(
+                                        modifier = Modifier.fillMaxSize(),
+                                        recipes = state.recipes,
+                                        onRecipeClicked = bloc::onRecipeClicked,
+                                        onRecipeLongClicked = bloc::onRecipeLongClicked,
+                                        state = gridState,
+                                        bottomContentPadding =
+                                            if (state.cookingRecipeCount > 0) FabStackReserve
+                                            else 0.dp,
+                                        isSelectionMode = state.isSelectionMode,
+                                        selectedRecipeIds = state.selectedRecipeIds,
+                                    )
+                                }
+                                else -> {
+                                    RecipeList(
+                                        modifier = Modifier.fillMaxSize(),
+                                        recipes = state.recipes,
+                                        onRecipeClicked = bloc::onRecipeClicked,
+                                        onRecipeLongClicked = bloc::onRecipeLongClicked,
+                                        state = listState,
+                                        bottomContentPadding =
+                                            if (state.cookingRecipeCount > 0) FabStackReserve
+                                            else 0.dp,
+                                        isSelectionMode = state.isSelectionMode,
+                                        selectedRecipeIds = state.selectedRecipeIds,
+                                    )
+                                }
                             }
                         }
                     }
@@ -504,7 +550,8 @@ fun RecipeListScreen(bloc: RecipeListBloc, modifier: Modifier = Modifier) {
             )
 
             if (showSortFilterSheet) {
-                SortFilterBottomSheet(
+                SortFilterModal(
+                    showFilters = !showFilterSidebar,
                     currentSort = state.currentSort,
                     activeFilters = state.activeFilters,
                     activeCategories = state.activeCategories,
@@ -1007,9 +1054,14 @@ private fun BookSelector(
 
 // region Sort & Filter Bottom Sheet
 
+/**
+ * Sort & filter controls, presented as a bottom sheet on phone/tablet widths and as a centered
+ * dialog on expanded ones — [PlusResponsiveModal] picks the presentation.
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-private fun SortFilterBottomSheet(
+private fun SortFilterModal(
+    showFilters: Boolean,
     currentSort: RecipeSortOption,
     activeFilters: Set<RecipeFilterOption>,
     activeCategories: Set<BuiltinCategory>,
@@ -1024,9 +1076,11 @@ private fun SortFilterBottomSheet(
         ) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+    // The content renders its own "Sort & Filter" heading, so the modal chrome stays bare — a
+    // second title/close row would only crowd it, and Apply already dismisses.
+    PlusResponsiveModal(onDismissRequest = onDismiss) {
         SortFilterSheetContent(
+            showFilters = showFilters,
             initialSort = currentSort,
             initialFilters = activeFilters,
             initialCategories = activeCategories,
@@ -1053,6 +1107,11 @@ fun SortFilterSheetContent(
             userCategoryIds: Set<Long>,
         ) -> Unit,
     modifier: Modifier = Modifier,
+    /**
+     * When false the "Filter by" and "Category" sections are omitted and only sort remains — used
+     * at expanded widths where those filters live in [RecipeFilterSidebar] instead.
+     */
+    showFilters: Boolean = true,
 ) {
     var selectedSort by remember { mutableStateOf(initialSort) }
     var selectedFilters by remember { mutableStateOf(initialFilters) }
@@ -1065,7 +1124,11 @@ fun SortFilterSheetContent(
 
     Column(modifier = modifier.padding(horizontal = 16.dp).navigationBarsPadding()) {
         Text(
-            text = stringResource(Res.string.recipe_list_sort_and_filter),
+            text =
+                stringResource(
+                    if (showFilters) Res.string.recipe_list_sort_and_filter
+                    else Res.string.recipe_list_sort
+                ),
             style = MaterialTheme.typography.titleLarge,
         )
         Spacer(Modifier.height(16.dp))
@@ -1088,83 +1151,87 @@ fun SortFilterSheetContent(
         }
         Spacer(Modifier.height(16.dp))
 
-        // Filter by
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+        if (showFilters) {
+            // Filter by
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(Res.string.recipe_list_filter_by),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                if (anyFilterActive) {
+                    TextButton(
+                        onClick = {
+                            selectedFilters = emptySet()
+                            selectedCategories = emptySet()
+                            selectedUserCategoryIds = emptySet()
+                        }
+                    ) {
+                        Text(stringResource(Res.string.recipe_list_clear_filters))
+                    }
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                RecipeFilterOption.entries.forEach { filter ->
+                    FilterChip(
+                        selected = filter in selectedFilters,
+                        onClick = {
+                            selectedFilters =
+                                if (filter in selectedFilters) selectedFilters - filter
+                                else selectedFilters + filter
+                        },
+                        label = { Text(stringResource(filter.labelRes())) },
+                    )
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+
+            // Filter by Category — presets first (in enum order) followed by user-created
+            // categories.
             Text(
-                text = stringResource(Res.string.recipe_list_filter_by),
+                text = stringResource(Res.string.recipe_list_filter_by_category),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            if (anyFilterActive) {
-                TextButton(
-                    onClick = {
-                        selectedFilters = emptySet()
-                        selectedCategories = emptySet()
-                        selectedUserCategoryIds = emptySet()
-                    }
-                ) {
-                    Text(stringResource(Res.string.recipe_list_clear_filters))
-                }
-            }
-        }
-        Spacer(Modifier.height(8.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            RecipeFilterOption.entries.forEach { filter ->
-                FilterChip(
-                    selected = filter in selectedFilters,
-                    onClick = {
-                        selectedFilters =
-                            if (filter in selectedFilters) selectedFilters - filter
-                            else selectedFilters + filter
-                    },
-                    label = { Text(stringResource(filter.labelRes())) },
-                )
-            }
-        }
-        Spacer(Modifier.height(16.dp))
-
-        // Filter by Category — presets first (in enum order) followed by user-created categories.
-        Text(
-            text = stringResource(Res.string.recipe_list_filter_by_category),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(8.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            BuiltinCategory.entries.forEach { category ->
-                FilterChip(
-                    selected = category in selectedCategories,
-                    onClick = {
-                        selectedCategories =
-                            if (category in selectedCategories) {
-                                selectedCategories - category
-                            } else {
-                                selectedCategories + category
-                            }
-                    },
-                    label = { Text(stringResource(category.labelRes())) },
-                )
-            }
-            // User-created categories: filter out any that masquerade as a preset (by builtinId)
-            // so we don't render a duplicate chip when both representations are present.
-            availableUserCategories
-                .filter { it.builtinId == null }
-                .forEach { category ->
-                    val isSelected = category.id in selectedUserCategoryIds
+            Spacer(Modifier.height(8.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                BuiltinCategory.entries.forEach { category ->
                     FilterChip(
-                        selected = isSelected,
+                        selected = category in selectedCategories,
                         onClick = {
-                            selectedUserCategoryIds =
-                                if (isSelected) selectedUserCategoryIds - category.id
-                                else selectedUserCategoryIds + category.id
+                            selectedCategories =
+                                if (category in selectedCategories) {
+                                    selectedCategories - category
+                                } else {
+                                    selectedCategories + category
+                                }
                         },
-                        label = { Text(category.name) },
+                        label = { Text(stringResource(category.labelRes())) },
                     )
                 }
+                // User-created categories: filter out any that masquerade as a preset (by
+                // builtinId)
+                // so we don't render a duplicate chip when both representations are present.
+                availableUserCategories
+                    .filter { it.builtinId == null }
+                    .forEach { category ->
+                        val isSelected = category.id in selectedUserCategoryIds
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                selectedUserCategoryIds =
+                                    if (isSelected) selectedUserCategoryIds - category.id
+                                    else selectedUserCategoryIds + category.id
+                            },
+                            label = { Text(category.name) },
+                        )
+                    }
+            }
         }
         Spacer(Modifier.height(16.dp))
         Button(
@@ -1181,6 +1248,9 @@ fun SortFilterSheetContent(
 
 // endregion
 
+/** Adds [value] to the set when absent and removes it when present. */
+private fun <T> Set<T>.toggle(value: T): Set<T> = if (value in this) this - value else this + value
+
 private fun RecipeSortOption.labelRes(): StringResource =
     when (this) {
         RecipeSortOption.RECENTLY_ADDED -> Res.string.recipe_list_sort_recently_added
@@ -1190,14 +1260,14 @@ private fun RecipeSortOption.labelRes(): StringResource =
         RecipeSortOption.TOP_RATED -> Res.string.recipe_list_sort_top_rated
     }
 
-private fun RecipeFilterOption.labelRes(): StringResource =
+internal fun RecipeFilterOption.labelRes(): StringResource =
     when (this) {
         RecipeFilterOption.FAVORITES -> Res.string.recipe_list_filter_favorites
         RecipeFilterOption.RATED -> Res.string.recipe_list_filter_rated
         RecipeFilterOption.QUICK_RECIPES -> Res.string.recipe_list_filter_quick_recipes
     }
 
-private fun BuiltinCategory.labelRes(): StringResource =
+internal fun BuiltinCategory.labelRes(): StringResource =
     when (this) {
         BuiltinCategory.BREAKFAST -> Res.string.recipe_list_category_breakfast
         BuiltinCategory.LUNCH -> Res.string.recipe_list_category_lunch
