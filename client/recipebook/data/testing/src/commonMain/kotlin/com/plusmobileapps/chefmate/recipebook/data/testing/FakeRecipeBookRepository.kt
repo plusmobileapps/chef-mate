@@ -81,7 +81,12 @@ class FakeRecipeBookRepository(
         }
     }
 
-    override suspend fun syncAllUnsynced() {}
+    var syncAllUnsyncedCallCount: Int = 0
+        private set
+
+    override suspend fun syncAllUnsynced() {
+        syncAllUnsyncedCallCount += 1
+    }
 
     override suspend fun clearLocalData() {
         books.value = emptyList()

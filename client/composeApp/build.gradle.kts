@@ -181,6 +181,13 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.uiTestJUnit4)
                 implementation(compose.desktop.currentOs)
+                // Plain-logic tests for app-scoped coordinators. Kept out of commonTest so the
+                // Android instrumented variant doesn't have to carry the fakes.
+                implementation(projects.client.util.testing)
+                implementation(projects.client.recipe.data.testing)
+                implementation(projects.client.recipebook.data.testing)
+                implementation(projects.client.grocery.data.testing)
+                implementation(projects.client.meal.data.testing)
             }
         }
         val androidInstrumentedTest by getting {

@@ -22,9 +22,18 @@ import io.github.jan.supabase.functions.functions
 import kotlin.coroutines.CoroutineContext
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.minutes
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -37,6 +46,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Inject
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
@@ -44,10 +54,21 @@ class SupabaseAuthenticationRepository(
     private val supabaseClient: SupabaseClient,
     @Main private val mainContext: CoroutineContext,
 ) : AuthenticationRepository {
-    private val scope = CoroutineScope(mainContext)
+    // SupervisorJob so a throw inside the session collector below can't tear the scope down and
+    // freeze the auth state for the rest of the process' life.
+    private val scope = CoroutineScope(mainContext + SupervisorJob())
 
     private val _state = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
     override val state: StateFlow<AuthState> = _state.asStateFlow()
+
+    private val _authenticatedSessions =
+        MutableSharedFlow<ChefMateUser>(
+            replay = 1,
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST,
+        )
+    override val authenticatedSessions: SharedFlow<ChefMateUser> =
+        _authenticatedSessions.asSharedFlow()
 
     init {
         // Mirror the Supabase session state into our AuthState. The NotAuthenticated branch no
@@ -62,18 +83,34 @@ class SupabaseAuthenticationRepository(
                         val user = sessionStatus.session.user
                         val isAnon = isAnonymousJwt(sessionStatus.session.accessToken)
                         user?.let {
-                            _state.value =
-                                AuthState.Authenticated(it.toChefMateUser(isAnonymous = isAnon))
+                            val chefMateUser = it.toChefMateUser(isAnonymous = isAnon)
+                            _state.value = AuthState.Authenticated(chefMateUser)
+                            // Fires on every refresh, not only the first sign-in — this is the
+                            // signal sync triggers hang off, since [state] dedupes the equal
+                            // Authenticated value a refresh produces.
+                            _authenticatedSessions.tryEmit(chefMateUser)
                         }
                     }
                     is SessionStatus.NotAuthenticated -> {
+                        // Drop the replayed session so a repository constructed after sign-out
+                        // doesn't immediately sync as the signed-out user.
+                        _authenticatedSessions.resetReplayCache()
                         if (_state.value !is AuthState.AwaitingEmailVerification) {
                             _state.value = AuthState.Unauthenticated
                         }
                     }
-                    is SessionStatus.Initializing,
+                    is SessionStatus.Initializing -> {
+                        // Keep current state during initialization
+                    }
                     is SessionStatus.RefreshFailure -> {
-                        // Keep current state during initialization or refresh failures
+                        // Keep the last known state: the SDK retries on its own, and
+                        // [ExpiredTokenRetry] repairs the token on the next 401. Logged
+                        // because it is otherwise invisible — the app keeps looking signed in
+                        // while every request fails on an expired JWT.
+                        Logger.w(tag = TAG) {
+                            "Supabase session refresh failed; keeping the last known auth state. " +
+                                "Requests will fail until the token recovers."
+                        }
                     }
                 }
             }
@@ -89,6 +126,22 @@ class SupabaseAuthenticationRepository(
         } catch (t: Throwable) {
             Logger.w(throwable = t, tag = TAG) { "Anonymous sign-in failed" }
             Result.failure(t)
+        }
+    }
+
+    override suspend fun refreshSessionIfNeeded(): Boolean {
+        val session = supabaseClient.auth.currentSessionOrNull() ?: return false
+        if (Clock.System.now() < session.expiresAt - EXPIRY_MARGIN) return true
+        return try {
+            // Besides handing back a live token, this re-arms the SDK's auto-refresh job — which
+            // is the thing that actually died when the machine slept through its timer.
+            supabaseClient.auth.refreshCurrentSession()
+            true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (t: Throwable) {
+            Logger.w(throwable = t, tag = TAG) { "Forced session refresh failed" }
+            false
         }
     }
 
@@ -288,5 +341,11 @@ class SupabaseAuthenticationRepository(
 
     private companion object {
         const val TAG = "SupabaseAuthenticationRepository"
+
+        /**
+         * Refresh this far ahead of expiry so a sync that starts with a barely-valid token doesn't
+         * have it expire mid-run.
+         */
+        val EXPIRY_MARGIN = 5.minutes
     }
 }

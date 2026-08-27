@@ -519,6 +519,22 @@ class RecipeRepositoryImplTest {
             recipeRepository.getRecipeByClientId("no-such-client-id") shouldBe null
         }
 
+    @Test
+    fun session_refresh_pushes_a_recipe_that_was_stranded_by_a_dead_token() =
+        runTest(testDispatcher) {
+            fakeAuth.setAuthenticated()
+            recipeRemote.upsertFailure = { RuntimeException("JWT expired") }
+            val created = recipeRepository.createRecipe(blankRecipe(title = "Stranded"))
+            db.recipeQueries.getById(created.id).executeAsOneOrNull()?.remoteId shouldBe null
+
+            // A silent token refresh: same user, so AuthState is unchanged and only the session
+            // signal fires. This is the recovery the desktop app had no path to before.
+            recipeRemote.upsertFailure = null
+            fakeAuth.emitSessionRefresh()
+
+            db.recipeQueries.getById(created.id).executeAsOneOrNull()?.remoteId shouldNotBe null
+        }
+
     private fun blankRecipe(title: String, categories: Set<Category> = emptySet()) =
         Recipe(
             id = -1,
@@ -549,11 +565,14 @@ class RecipeRepositoryImplTest {
         val attachmentCalls: MutableList<Pair<String, Set<String>>> = mutableListOf()
         val deleteCalls: MutableList<String> = mutableListOf()
         var deleteFailure: (() -> Throwable)? = null
+        var upsertFailure: (() -> Throwable)? = null
         var fetchResult: List<RemoteRecipe> = emptyList()
 
-        override suspend fun upsertRecipe(recipe: RemoteRecipe): RemoteRecipe =
+        override suspend fun upsertRecipe(recipe: RemoteRecipe): RemoteRecipe {
+            upsertFailure?.invoke()?.let { throw it }
             // Stamp a stable remote id derived from the client id so tests can correlate.
-            recipe.copy(id = recipe.id ?: "remote-${recipe.clientId.orEmpty()}")
+            return recipe.copy(id = recipe.id ?: "remote-${recipe.clientId.orEmpty()}")
+        }
 
         override suspend fun deleteRecipe(remoteId: String) {
             deleteCalls += remoteId

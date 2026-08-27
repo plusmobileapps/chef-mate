@@ -13,6 +13,7 @@ kotlin {
             implementation(libs.supabase.storage)
             implementation(libs.supabase.functions)
         }
+        commonTest.dependencies { implementation(libs.ktor.client.mock) }
         jvmMain.dependencies { implementation(libs.ktor.client.cio) }
         androidMain.dependencies { implementation(libs.ktor.client.cio) }
         appleMain.dependencies { implementation(libs.ktor.client.darwin) }

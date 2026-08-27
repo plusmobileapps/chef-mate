@@ -66,12 +66,11 @@ class RecipeBookRepositoryImpl(
                     else -> defaultId
                 }
         }
+        // Every session — the first sign-in and every silent token refresh after it. A refresh
+        // means anything stranded by the expired token can finally be pushed, and on desktop
+        // (a process that stays up for days) that is the only automatic retry there is.
         scope.launch {
-            authRepository.state.collect { state ->
-                if (state is AuthState.Authenticated) {
-                    syncWithRemote(state.user.userId)
-                }
-            }
+            authRepository.authenticatedSessions.collect { user -> syncWithRemote(user.userId) }
         }
     }
 

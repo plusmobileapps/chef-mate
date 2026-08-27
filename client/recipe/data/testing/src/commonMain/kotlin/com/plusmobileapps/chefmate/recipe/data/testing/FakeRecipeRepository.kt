@@ -99,7 +99,12 @@ class FakeRecipeRepository(
         recipes.value = emptyList()
     }
 
-    override suspend fun syncAllUnsynced() {}
+    var syncAllUnsyncedCallCount: Int = 0
+        private set
+
+    override suspend fun syncAllUnsynced() {
+        syncAllUnsyncedCallCount += 1
+    }
 
     private fun Recipe.matchesFilter(presets: Set<BuiltinCategory>): Boolean {
         val recipeBuiltins = categories.mapNotNull { BuiltinCategory.fromId(it.builtinId) }.toSet()

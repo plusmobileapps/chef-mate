@@ -90,7 +90,12 @@ class FakeGroceryRepository : GroceryRepository {
 
     override suspend fun getGrocery(id: Long): GroceryItem? = _groceries.value.find { it.id == id }
 
-    override suspend fun syncAllUnsynced() {}
+    var syncAllUnsyncedCallCount: Int = 0
+        private set
+
+    override suspend fun syncAllUnsynced() {
+        syncAllUnsyncedCallCount += 1
+    }
 
     override suspend fun updateGrocery(item: GroceryItem) {
         _groceries.update { items -> items.map { if (it.id == item.id) item else it } }
