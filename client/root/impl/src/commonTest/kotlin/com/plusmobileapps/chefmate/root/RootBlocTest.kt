@@ -509,6 +509,39 @@ class RootBlocTest {
     }
 
     @Test
+    fun Given_public_recipe_preview_When_it_resolves_to_a_recipe_Then_it_is_swapped_for_detail() {
+        val uuid = "3f2504e0-4f89-41d3-9a0c-0305e82c3301"
+        rootBloc.handleDeepLink("https://chefmate.plusmobileapps.com/recipe/$uuid")
+
+        publicRecipeOutput.onNext(PublicRecipeBloc.Output.OpenRecipe(recipeId = 7L))
+
+        rootBloc.instance() should instanceOf<RootBloc.Child.RecipeRoot>()
+        recipeProps shouldBe RecipeRootBloc.Props.Detail(recipeId = 7L)
+        // The read-only preview is gone — back returns to the bottom nav, not to it.
+        rootBloc.state.value.backStack.size shouldBe 1
+        rootBloc.state.value.backStack.first().instance should
+            instanceOf<RootBloc.Child.BottomNavigation>()
+    }
+
+    @Test
+    fun Given_recipe_already_open_When_its_share_link_is_opened_Then_detail_is_not_duplicated() {
+        // Opening a share link for a recipe already on the stack used to leave two identical
+        // RecipeRoot configurations behind, which Decompose rejects ("Configurations must be
+        // unique") — a crash on every tap of a deep link to the recipe already being viewed.
+        val uuid = "3f2504e0-4f89-41d3-9a0c-0305e82c3301"
+        val root = createRoot(DeepLink.RecipeDetail(recipeId = 18L))
+        root.handleDeepLink("https://chefmate.plusmobileapps.com/recipe/$uuid")
+
+        publicRecipeOutput.onNext(PublicRecipeBloc.Output.OpenRecipe(recipeId = 18L))
+
+        root.instance() should instanceOf<RootBloc.Child.RecipeRoot>()
+        recipeProps shouldBe RecipeRootBloc.Props.Detail(recipeId = 18L)
+        root.state.value.backStack.size shouldBe 1
+        root.state.value.backStack.first().instance should
+            instanceOf<RootBloc.Child.BottomNavigation>()
+    }
+
+    @Test
     fun Given_groceries_deeplink_When_initialized_Then_bottom_nav_uses_groceries_tab() {
         val root = createRoot(DeepLink.Groceries)
         root.instance() should instanceOf<RootBloc.Child.BottomNavigation>()
