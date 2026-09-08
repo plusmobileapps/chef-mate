@@ -24,6 +24,10 @@ private fun groceryDetailBloc(
 
         override fun onGroceryQuantityChanged(quantity: String) = Unit
 
+        override fun onQuantityIncrementClicked() = Unit
+
+        override fun onQuantityDecrementClicked() = Unit
+
         override fun onGroceryCheckedChanged(isChecked: Boolean) = Unit
 
         override fun onAisleChanged(category: GroceryCategory) = Unit
@@ -65,6 +69,10 @@ val previewGroceryDetailBlocFromRecipe: GroceryDetailBloc =
 val previewGroceryDetailBlocAlwaysFileHere: GroceryDetailBloc =
     groceryDetailBloc(sampleItem, alwaysFileHere = true)
 
+/** Free-form quantity the stepper can't read — exercises the disabled +/- buttons. */
+val previewGroceryDetailBlocUnsteppableQuantity: GroceryDetailBloc =
+    groceryDetailBloc(sampleItem.copy(name = "a pinch Saffron", quantity = "a pinch"))
+
 /** Loading state — exercises the spinner. */
 val previewGroceryDetailBlocLoading: GroceryDetailBloc =
     object : GroceryDetailBloc {
@@ -74,6 +82,10 @@ val previewGroceryDetailBlocLoading: GroceryDetailBloc =
         override fun onGroceryNameChanged(name: String) = Unit
 
         override fun onGroceryQuantityChanged(quantity: String) = Unit
+
+        override fun onQuantityIncrementClicked() = Unit
+
+        override fun onQuantityDecrementClicked() = Unit
 
         override fun onGroceryCheckedChanged(isChecked: Boolean) = Unit
 
@@ -105,6 +117,12 @@ internal fun GroceryDetailSheetPurchasedPreview() {
 @Composable
 internal fun GroceryDetailSheetFromRecipePreview() {
     ChefMateTheme { GroceryDetailSheetContent(bloc = previewGroceryDetailBlocFromRecipe) }
+}
+
+@Preview(showBackground = true, heightDp = 500)
+@Composable
+internal fun GroceryDetailSheetUnsteppableQuantityPreview() {
+    ChefMateTheme { GroceryDetailSheetContent(bloc = previewGroceryDetailBlocUnsteppableQuantity) }
 }
 
 @Preview(showBackground = true, heightDp = 300)

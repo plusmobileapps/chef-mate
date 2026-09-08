@@ -5,6 +5,7 @@ import com.plusmobileapps.chefmate.di.Main
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategoryOverrideRepository
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
+import com.plusmobileapps.chefmate.grocery.data.GroceryQuantityStepper
 import com.plusmobileapps.chefmate.grocery.data.GroceryRepository
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -48,10 +49,20 @@ class GroceryDetailViewModel(
     }
 
     fun onGroceryQuantityChanged(quantity: String) {
+        setQuantity(quantity.ifBlank { null })
+    }
+
+    private fun setQuantity(quantity: String?) {
         _state.value =
-            _state.value.copy(
-                groceryItem = _state.value.groceryItem.copy(quantity = quantity.ifBlank { null })
-            )
+            _state.value.copy(groceryItem = _state.value.groceryItem.copy(quantity = quantity))
+    }
+
+    fun onQuantityIncrement() {
+        setQuantity(GroceryQuantityStepper.increment(_state.value.groceryItem.quantity))
+    }
+
+    fun onQuantityDecrement() {
+        setQuantity(GroceryQuantityStepper.decrement(_state.value.groceryItem.quantity))
     }
 
     fun onGroceryCheckedChanged(isChecked: Boolean) {

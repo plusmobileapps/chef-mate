@@ -22,6 +22,12 @@ interface GroceryDetailBloc : BackClickBloc, ComposeScreen {
 
     fun onGroceryQuantityChanged(quantity: String)
 
+    /** Bumps the quantity's leading amount up by one, leaving any unit in place. */
+    fun onQuantityIncrementClicked()
+
+    /** Bumps the quantity's leading amount down by one, never below one. */
+    fun onQuantityDecrementClicked()
+
     fun onGroceryCheckedChanged(isChecked: Boolean)
 
     fun onAisleChanged(category: GroceryCategory)
