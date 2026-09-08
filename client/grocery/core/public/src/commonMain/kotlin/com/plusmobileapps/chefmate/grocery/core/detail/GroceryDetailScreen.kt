@@ -7,9 +7,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
@@ -63,25 +69,47 @@ fun GroceryDetailSheetContent(bloc: GroceryDetailBloc, modifier: Modifier = Modi
             modifier
                 .testTag(GroceryDetailTestTags.SHEET)
                 .fillMaxWidth()
-                .padding(horizontal = dimens.paddingNormal)
-                .navigationBarsPadding(),
-        verticalArrangement = Arrangement.spacedBy(dimens.paddingNormal),
+                // Lift the whole sheet above whichever is larger — the keyboard when a field is
+                // focused, or the navigation bar when it isn't (the ime inset already includes the
+                // nav bar, so the two never stack). Without this the save button sits behind the
+                // keyboard with no way to reach it.
+                .windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars))
     ) {
         when (val model = state) {
             is GroceryDetailBloc.Model.Loading ->
                 Box(
-                    modifier = Modifier.fillMaxWidth().padding(dimens.paddingLarge),
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = dimens.paddingNormal)
+                            .padding(dimens.paddingLarge),
                     contentAlignment = Alignment.Center,
                 ) {
                     PlusLoadingIndicator()
                 }
             is GroceryDetailBloc.Model.Loaded -> {
-                GroceryDetailFields(
-                    item = model.item,
-                    alwaysFileHere = model.alwaysFileHere,
-                    bloc = bloc,
-                )
-                Button(onClick = bloc::onSaveClicked, modifier = Modifier.fillMaxWidth()) {
+                // The fields scroll within whatever height is left once the keyboard has claimed
+                // its share; `fill = false` keeps the sheet wrapping its content when there is
+                // room to spare. The save button lives outside the scroll so it stays anchored.
+                Column(
+                    modifier =
+                        Modifier.weight(1f, fill = false)
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = dimens.paddingNormal),
+                    verticalArrangement = Arrangement.spacedBy(dimens.paddingNormal),
+                ) {
+                    GroceryDetailFields(
+                        item = model.item,
+                        alwaysFileHere = model.alwaysFileHere,
+                        bloc = bloc,
+                    )
+                }
+                Button(
+                    onClick = bloc::onSaveClicked,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = dimens.paddingNormal)
+                            .padding(top = dimens.paddingNormal),
+                ) {
                     Text(stringResource(CommonRes.string.save))
                 }
             }
