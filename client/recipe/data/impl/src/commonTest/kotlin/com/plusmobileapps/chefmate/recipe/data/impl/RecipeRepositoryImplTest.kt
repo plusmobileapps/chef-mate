@@ -399,6 +399,75 @@ class RecipeRepositoryImplTest {
         }
 
     @Test
+    fun syncWithRemote_prunes_an_owned_recipe_deleted_on_another_device() =
+        runTest(testDispatcher) {
+            fakeAuth.setAuthenticated()
+            val kept = recipeRepository.createRecipe(blankRecipe(title = "Kept"))
+            val deletedElsewhere = recipeRepository.createRecipe(blankRecipe(title = "Gone"))
+            val keptRemoteId = db.recipeQueries.getById(kept.id).executeAsOne().remoteId!!
+
+            // The remote no longer lists "Gone" — it was deleted from another device.
+            recipeRemote.fetchResult =
+                listOf(RemoteRecipe(id = keptRemoteId, ownerId = "test-id", title = "Kept"))
+
+            recipeRepository.syncAllUnsynced()
+
+            db.recipeQueries.getById(kept.id).executeAsOneOrNull() shouldNotBe null
+            db.recipeQueries.getById(deletedElsewhere.id).executeAsOneOrNull() shouldBe null
+        }
+
+    @Test
+    fun syncWithRemote_prune_leaves_recipes_shared_by_someone_else_alone() =
+        runTest(testDispatcher) {
+            fakeAuth.setAuthenticated()
+            // A recipe shared through someone else's book, cached locally on a previous sync.
+            db.recipeQueries.createWithRemoteId(
+                title = "Theirs",
+                description = null,
+                ingredients = null,
+                directions = null,
+                imageUrl = null,
+                sourceUrl = null,
+                servings = null,
+                prepTime = null,
+                cookTime = null,
+                totalTime = null,
+                calories = null,
+                starRating = null,
+                isFavorite = false,
+                createdAt = "now",
+                updatedAt = "now",
+                remoteId = "remote-theirs",
+                clientId = "theirs-client",
+                ownerId = "someone-else",
+                isPublic = false,
+            )
+            val sharedId = db.recipeQueries.getByRemoteId("remote-theirs").executeAsOne().id
+
+            // Access was revoked, so the RPC no longer returns it. Losing access must not delete
+            // the local copy here — deleteLocalRecipesInBook owns that decision.
+            recipeRemote.fetchResult = emptyList()
+
+            recipeRepository.syncAllUnsynced()
+
+            db.recipeQueries.getById(sharedId).executeAsOneOrNull() shouldNotBe null
+        }
+
+    @Test
+    fun syncWithRemote_prune_leaves_a_recipe_with_unpushed_local_edits_alone() =
+        runTest(testDispatcher) {
+            val created = recipeRepository.createRecipe(blankRecipe(title = "Chili"))
+            db.recipeQueries.updateRemoteId(remoteId = "remote-chili", id = created.id)
+            db.recipeQueries.markDirty(id = created.id, updatedAt = "2026-02-02T00:00:00Z")
+            recipeRemote.upsertFailure = { RuntimeException("network") }
+            recipeRemote.fetchResult = emptyList()
+
+            fakeAuth.setAuthenticated()
+
+            db.recipeQueries.getById(created.id).executeAsOneOrNull() shouldNotBe null
+        }
+
+    @Test
     fun syncWithRemote_pull_does_not_resurrect_tombstoned_recipe() =
         runTest(testDispatcher) {
             db.recipeQueries.create(

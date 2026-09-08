@@ -74,6 +74,9 @@ SELECT * FROM MealPlan WHERE clientId = ?;
 getUnsynced:
 SELECT * FROM MealPlan WHERE remoteId IS NULL;
 
+getSyncedRemoteIds:
+SELECT id, remoteId FROM MealPlan WHERE remoteId IS NOT NULL;
+
 updateRemoteId:
 UPDATE MealPlan SET remoteId = ?, isDirty = 0 WHERE id = ?;
 
