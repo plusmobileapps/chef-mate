@@ -163,6 +163,11 @@ class MealPlanRepositoryImpl(
             // and is idempotent, so this coalesces with any in-flight recipe sync.
             recipeRepository.syncAllUnsynced()
 
+            // Snapshot the prune candidates before this pass can assign any remote ids — see
+            // the same guard in RecipeRepositoryImpl.
+            val pruneCandidates =
+                withContext(ioContext) { queries.getSyncedRemoteIds().executeAsList() }
+
             // Push unsynced meal plans (no remoteId yet)
             val unsynced = withContext(ioContext) { queries.getUnsynced().executeAsList() }
             for (meal in unsynced) {
@@ -226,6 +231,18 @@ class MealPlanRepositoryImpl(
                             ownerId = userId,
                         )
                     }
+                }
+
+                // Prune meals the user deleted on another device. fetchAllMealPlans is already
+                // filtered to owner_id = userId and meals are never shared, so anything synced
+                // that the remote no longer lists was deleted there. Meals without a remoteId are
+                // still pending their first push and are preserved.
+                val remoteIds = remoteMeals.mapNotNull { it.id }.toSet()
+                for (row in pruneCandidates) {
+                    if (row.remoteId in remoteIds) continue
+                    val current = queries.getById(row.id).executeAsOneOrNull() ?: continue
+                    if (current.remoteId != row.remoteId) continue
+                    queries.delete(row.id)
                 }
             }
         } catch (_: Exception) {}

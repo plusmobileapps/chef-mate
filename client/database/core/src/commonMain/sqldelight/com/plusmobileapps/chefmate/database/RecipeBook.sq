@@ -50,6 +50,9 @@ SELECT MAX(id) FROM RecipeBook;
 rename:
 UPDATE RecipeBook SET name = ?, updatedAt = ?, isDirty = 1 WHERE id = ?;
 
+updateFromRemote:
+UPDATE RecipeBook SET name = ?, ownerId = ?, updatedAt = ? WHERE id = ?;
+
 delete:
 DELETE FROM RecipeBook WHERE id = ?;
 

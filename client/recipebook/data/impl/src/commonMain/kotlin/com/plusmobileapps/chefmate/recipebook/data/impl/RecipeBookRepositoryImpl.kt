@@ -337,7 +337,24 @@ class RecipeBookRepositoryImpl(
                     val remoteId = remote.id ?: continue
                     // Skip books the user only has a pending (un-accepted) invite to.
                     if (remote.ownerId != userId && remoteId in pendingBookIds) continue
-                    if (db.getByRemoteId(remoteId).executeAsOneOrNull() != null) continue
+                    val existing = db.getByRemoteId(remoteId).executeAsOneOrNull()
+                    if (existing != null) {
+                        // Already known locally — fold in a rename made on another device. Books
+                        // with an unpushed local rename are skipped: their dirty push ran earlier
+                        // in this pass, and overwriting here would drop a rename made while we
+                        // were fetching. isDefault is deliberately left alone; it's a local
+                        // sentinel for "My Recipes" that other code (e.g. the orphaned-recipe
+                        // fallback in recipe sync) depends on exactly one book carrying.
+                        if (!existing.isDirty && !existing.isPendingDelete) {
+                            db.updateFromRemote(
+                                name = remote.name,
+                                ownerId = remote.ownerId,
+                                updatedAt = remote.updatedAt ?: existing.updatedAt,
+                                id = existing.id,
+                            )
+                        }
+                        continue
+                    }
 
                     // Adopt the existing remote id onto the matching local book rather than
                     // inserting a duplicate. Match by clientId first, then — for your own default
