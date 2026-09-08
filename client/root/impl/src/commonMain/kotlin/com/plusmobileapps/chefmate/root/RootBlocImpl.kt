@@ -7,10 +7,10 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.bringToFront
 import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.navigate
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.popWhile
 import com.arkivanov.decompose.router.stack.replaceAll
-import com.arkivanov.decompose.router.stack.replaceCurrent
 import com.arkivanov.decompose.value.Value
 import com.plusmobileapps.chefmate.BlocContext
 import com.plusmobileapps.chefmate.aichat.AiChatRootBloc
@@ -640,9 +640,26 @@ class RootBlocImpl(
             // library (either already owned, or just saved as a copy), so back shouldn't return to
             // the read-only preview.
             is PublicRecipeBloc.Output.OpenRecipe ->
-                navigation.replaceCurrent(RecipeRoot(Detail(output.recipeId)))
+                replaceCurrentBringingToFront(RecipeRoot(Detail(output.recipeId)))
             is PublicRecipeBloc.Output.OpenUrl ->
                 navigation.bringToFront(Configuration.Browser(output.url))
+        }
+    }
+
+    /**
+     * Drops the current top of the stack and brings [configuration] to the front, removing any
+     * existing entry of the same class first.
+     *
+     * Plain `replaceCurrent` can't be used here: the screen being replaced may be sitting directly
+     * on top of the very destination it resolves to (open recipe 18 → tap its share link → the
+     * read-only preview resolves back to recipe 18), and appending the destination a second time
+     * makes Decompose fail with "Configurations must be unique". Every other transition in this
+     * stack goes through [bringToFront], so at most one entry per configuration class is the
+     * invariant this preserves.
+     */
+    private fun replaceCurrentBringingToFront(configuration: Configuration) {
+        navigation.navigate { stack ->
+            stack.dropLast(1).filterNot { it::class == configuration::class } + configuration
         }
     }
 
