@@ -161,6 +161,57 @@ class GroceryDetailBlocTest {
     }
 
     @Test
+    fun WHEN_quantity_incremented_THEN_bump_the_amount_and_keep_the_unit() {
+        runTest {
+            bloc.onGroceryQuantityChanged("1 gal")
+            bloc.onQuantityIncrementClicked()
+
+            bloc.models.test {
+                awaitItem() shouldBe
+                    GroceryDetailBloc.Model.Loaded(item = groceryItem.copy(quantity = "2 gal"))
+            }
+        }
+    }
+
+    @Test
+    fun WHEN_quantity_incremented_from_empty_THEN_start_at_one() {
+        runTest {
+            bloc.onQuantityIncrementClicked()
+
+            bloc.models.test {
+                awaitItem() shouldBe
+                    GroceryDetailBloc.Model.Loaded(item = groceryItem.copy(quantity = "1"))
+            }
+        }
+    }
+
+    @Test
+    fun WHEN_quantity_decremented_THEN_lower_the_amount() {
+        runTest {
+            bloc.onGroceryQuantityChanged("3 cups")
+            bloc.onQuantityDecrementClicked()
+
+            bloc.models.test {
+                awaitItem() shouldBe
+                    GroceryDetailBloc.Model.Loaded(item = groceryItem.copy(quantity = "2 cups"))
+            }
+        }
+    }
+
+    @Test
+    fun WHEN_quantity_decremented_at_one_THEN_leave_it_alone() {
+        runTest {
+            bloc.onGroceryQuantityChanged("1 cup")
+            bloc.onQuantityDecrementClicked()
+
+            bloc.models.test {
+                awaitItem() shouldBe
+                    GroceryDetailBloc.Model.Loaded(item = groceryItem.copy(quantity = "1 cup"))
+            }
+        }
+    }
+
+    @Test
     fun WHEN_back_clicked_THEN_emit_finished_output() {
         runTest {
             bloc.onBackClicked()

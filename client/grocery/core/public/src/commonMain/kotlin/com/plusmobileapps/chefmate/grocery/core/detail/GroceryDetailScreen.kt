@@ -39,6 +39,8 @@ import chefmate.client.grocery.core.public.generated.resources.Res
 import chefmate.client.grocery.core.public.generated.resources.grocery_detail_aisle_label
 import chefmate.client.grocery.core.public.generated.resources.grocery_detail_always_file_here
 import chefmate.client.grocery.core.public.generated.resources.grocery_detail_name_label
+import chefmate.client.grocery.core.public.generated.resources.grocery_detail_quantity_decrease
+import chefmate.client.grocery.core.public.generated.resources.grocery_detail_quantity_increase
 import chefmate.client.grocery.core.public.generated.resources.grocery_detail_quantity_label
 import chefmate.client.grocery.core.public.generated.resources.grocery_recipe_source
 import chefmate.client.grocery.core.public.generated.resources.purchased
@@ -47,9 +49,11 @@ import chefmate.client.ui.public.generated.resources.save
 import com.plusmobileapps.chefmate.grocery.core.displayName
 import com.plusmobileapps.chefmate.grocery.data.GroceryCategory
 import com.plusmobileapps.chefmate.grocery.data.GroceryItem
+import com.plusmobileapps.chefmate.grocery.data.GroceryQuantityStepper
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.text.PhraseModel
 import com.plusmobileapps.chefmate.ui.components.PlusLoadingIndicator
+import com.plusmobileapps.chefmate.ui.components.PlusStepperTextField
 import com.plusmobileapps.chefmate.ui.components.PlusTextField
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
 import org.jetbrains.compose.resources.stringResource
@@ -134,12 +138,21 @@ private fun GroceryDetailFields(
             label = { Text(stringResource(Res.string.grocery_detail_name_label)) },
             singleLine = true,
         )
-        PlusTextField(
-            modifier = Modifier.fillMaxWidth(),
+        // Free-form text, so the field stays editable ("a pinch", "2 bunches"); the buttons only
+        // step the leading amount and grey out when there is nothing sensible to step.
+        PlusStepperTextField(
+            modifier = Modifier.fillMaxWidth().testTag(GroceryDetailTestTags.QUANTITY_STEPPER),
             value = item.quantity.orEmpty(),
             onValueChange = bloc::onGroceryQuantityChanged,
+            onDecrement = bloc::onQuantityDecrementClicked,
+            onIncrement = bloc::onQuantityIncrementClicked,
+            decrementContentDescription =
+                stringResource(Res.string.grocery_detail_quantity_decrease),
+            incrementContentDescription =
+                stringResource(Res.string.grocery_detail_quantity_increase),
+            decrementEnabled = GroceryQuantityStepper.canDecrement(item.quantity),
+            incrementEnabled = GroceryQuantityStepper.canIncrement(item.quantity),
             label = { Text(stringResource(Res.string.grocery_detail_quantity_label)) },
-            singleLine = true,
         )
     }
     AisleDropdown(selected = item.category, onSelected = bloc::onAisleChanged)

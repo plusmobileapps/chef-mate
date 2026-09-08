@@ -60,6 +60,14 @@ class GroceryDetailBlocImpl(
         viewModel.onGroceryQuantityChanged(quantity)
     }
 
+    override fun onQuantityIncrementClicked() {
+        viewModel.onQuantityIncrement()
+    }
+
+    override fun onQuantityDecrementClicked() {
+        viewModel.onQuantityDecrement()
+    }
+
     override fun onGroceryCheckedChanged(isChecked: Boolean) {
         viewModel.onGroceryCheckedChanged(isChecked)
     }

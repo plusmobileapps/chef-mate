@@ -20,6 +20,7 @@ import com.plusmobileapps.chefmate.grocery.core.impl.detail.ui.previewGroceryDet
 import com.plusmobileapps.chefmate.grocery.core.impl.detail.ui.previewGroceryDetailBlocLoaded
 import com.plusmobileapps.chefmate.grocery.core.impl.detail.ui.previewGroceryDetailBlocLoading
 import com.plusmobileapps.chefmate.grocery.core.impl.detail.ui.previewGroceryDetailBlocPurchased
+import com.plusmobileapps.chefmate.grocery.core.impl.detail.ui.previewGroceryDetailBlocUnsteppableQuantity
 import com.plusmobileapps.chefmate.text.FixedString
 import com.plusmobileapps.chefmate.ui.components.PlusResponsiveModalDialogSurface
 import com.plusmobileapps.chefmate.ui.theme.ChefMateTheme
@@ -62,6 +63,14 @@ fun GroceryDetailSheetPurchasedLightScreenshot() {
 @Composable
 fun GroceryDetailSheetFromRecipeLightScreenshot() {
     GroceryDetailSheet(bloc = previewGroceryDetailBlocFromRecipe)
+}
+
+// A quantity the stepper can't read — both +/- buttons render disabled.
+@PreviewTest
+@Preview(showBackground = true, heightDp = 500)
+@Composable
+fun GroceryDetailSheetUnsteppableQuantityLightScreenshot() {
+    GroceryDetailSheet(bloc = previewGroceryDetailBlocUnsteppableQuantity)
 }
 
 @PreviewTest
